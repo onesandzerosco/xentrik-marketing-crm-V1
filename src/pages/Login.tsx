@@ -47,7 +47,7 @@ const Login = () => {
         toast({
           title: "Login successful",
           description: "Welcome to the bananaverse 🍌",
-          duration: 6500, // 6.5 seconds
+          duration: 6000, // 6 seconds
           className: "fade-out-toast"
         });
         navigate("/dashboard");
