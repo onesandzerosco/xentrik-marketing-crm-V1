@@ -13,6 +13,7 @@ import { BarChart2, MessageSquare, Save, Tag, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import ImageUploader from "../components/ImageUploader";
+
 const CreatorProfile = () => {
   const {
     id
@@ -41,6 +42,7 @@ const CreatorProfile = () => {
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
   const [isInactive, setIsInactive] = useState(false);
   const [reviewDone, setReviewDone] = useState(false);
+
   const handleSave = () => {
     if (!creator) return;
     updateCreator(creator.id, {
@@ -63,6 +65,7 @@ const CreatorProfile = () => {
       description: "Creator profile has been successfully updated"
     });
   };
+
   if (!creator) {
     return <div className="flex">
         <Sidebar />
@@ -77,6 +80,7 @@ const CreatorProfile = () => {
         </div>
       </div>;
   }
+
   return <div className="flex">
       <Sidebar />
       <div className="ml-60 p-8 w-full">
@@ -305,6 +309,13 @@ const CreatorProfile = () => {
               <div className="flex items-center justify-center py-4">
                 <ImageUploader currentImage={profileImage} name={name} onImageChange={setProfileImage} size="xl" />
               </div>
+              <Button 
+                onClick={handleSave} 
+                className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
             </div>
             
             <div className="bg-card rounded-xl p-6 shadow-sm">
@@ -357,4 +368,5 @@ const CreatorProfile = () => {
       </div>
     </div>;
 };
+
 export default CreatorProfile;
