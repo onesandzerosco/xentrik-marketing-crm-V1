@@ -22,19 +22,23 @@ const Creators = () => {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const { toast } = useToast();
 
   const genderTags = ["Male", "Female", "Trans", "AI"];
   const teamTags = ["A Team", "B Team", "C Team"];
+  const classTags = ["Real", "AI"];
 
   const filteredCreators = filterCreators({
     gender: selectedGenders,
     team: selectedTeams,
+    creatorType: selectedClasses,
   });
 
   const handleClearFilters = () => {
     setSelectedGenders([]);
     setSelectedTeams([]);
+    setSelectedClasses([]);
   };
 
   return (
@@ -60,7 +64,7 @@ const Creators = () => {
                 <SheetHeader>
                   <SheetTitle>Filter Creators</SheetTitle>
                   <SheetDescription>
-                    Filter creators by gender and team
+                    Filter creators by gender, team and class
                   </SheetDescription>
                 </SheetHeader>
                 <div className="py-6 space-y-6">
@@ -82,7 +86,16 @@ const Creators = () => {
                       type="team"
                     />
                   </div>
-                  {(selectedGenders.length > 0 || selectedTeams.length > 0) && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-3">Class</h3>
+                    <TagFilter
+                      tags={classTags}
+                      selectedTags={selectedClasses}
+                      onChange={setSelectedClasses}
+                      type="class"
+                    />
+                  </div>
+                  {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
                     <Button
                       variant="ghost"
                       className="mt-4"
@@ -105,7 +118,7 @@ const Creators = () => {
           </div>
         </div>
 
-        {(selectedGenders.length > 0 || selectedTeams.length > 0) && (
+        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
           <div className="mb-6 flex items-center">
             <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
             <div className="flex flex-wrap gap-2">
@@ -135,7 +148,20 @@ const Creators = () => {
                   </Button>
                 </div>
               ))}
-              {(selectedGenders.length > 0 || selectedTeams.length > 0) && (
+              {selectedClasses.map((classType) => (
+                <div key={classType} className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
+                  {classType}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4 ml-1 p-0"
+                    onClick={() => setSelectedClasses(selectedClasses.filter(c => c !== classType))}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+              {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
                 <Button
                   variant="ghost"
                   size="sm"

@@ -7,7 +7,7 @@ interface TagFilterProps {
   tags: string[];
   selectedTags: string[];
   onChange: (tags: string[]) => void;
-  type: "gender" | "team";
+  type: "gender" | "team" | "class";
 }
 
 const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, type }) => {
@@ -43,6 +43,15 @@ const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, typ
           return "!bg-yellow-600 hover:!bg-yellow-700";
         case "C Team":
           return "!bg-red-600 hover:!bg-red-700";
+        default:
+          return "";
+      }
+    } else if (type === "class") {
+      switch (tag) {
+        case "Real":
+          return "!bg-indigo-600 hover:!bg-indigo-700";
+        case "AI":
+          return "!bg-gray-600 hover:!bg-gray-700";
         default:
           return "";
       }
