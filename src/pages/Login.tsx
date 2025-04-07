@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -21,7 +20,6 @@ const Login = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if there are saved credentials
     const savedCredentials = localStorage.getItem("savedCredentials");
     if (savedCredentials) {
       const credentials = JSON.parse(savedCredentials);
@@ -39,7 +37,6 @@ const Login = () => {
       const success = login(username, password);
       
       if (success) {
-        // Save credentials if remember me is checked
         if (rememberMe) {
           localStorage.setItem("savedCredentials", JSON.stringify({ username, password }));
         } else {
@@ -68,11 +65,10 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <img 
-            src="/lovable-uploads/3c9e6d38-5c74-4704-9832-d34027513d1d.png" 
-            alt="XENTRIK" 
-            className="h-24 mx-auto mb-3"
+            src="/lovable-uploads/6a4f0b60-d110-4a73-9fa1-2ed1b0ea3faf.png" 
+            alt="XENTRIK MARKETING" 
+            className="h-32 mx-auto"
           />
-          <p className="text-xs uppercase tracking-widest">MARKETING</p>
         </div>
         
         <Card>
