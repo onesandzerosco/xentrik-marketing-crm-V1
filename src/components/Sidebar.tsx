@@ -15,12 +15,12 @@ const Sidebar = () => {
 
   return (
     <div className="h-screen w-60 bg-sidebar fixed left-0 top-0 border-r border-border flex flex-col">
-      <div className="p-3">
-        <div className="mb-2 flex justify-center">
+      <div className="p-1.5">
+        <div className="mb-1 flex justify-center">
           <img 
             src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
-            className="h-32 w-auto mb-1"
+            className="h-32 w-auto mb-0.5"
           />
         </div>
 
@@ -53,7 +53,7 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      <div className="mt-auto p-3">
+      <div className="mt-auto p-1.5">
         <Button 
           variant="outline" 
           className="w-full justify-start"
