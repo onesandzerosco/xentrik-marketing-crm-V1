@@ -47,15 +47,16 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
         
         <div className="flex items-center justify-between py-2">
           <div className="space-y-1">
-            <Label htmlFor="review" className="font-medium">Manual Review Done</Label>
+            <Label htmlFor="review" className={needsReview ? "font-medium text-red-400" : "font-medium"}>Manual Review Needed</Label>
             <p className="text-xs text-muted-foreground">
-              {needsReview ? "Mark profile as reviewed" : "Mark profile as needs review"}
+              {needsReview ? "This profile needs review" : "No review needed"}
             </p>
           </div>
           <Switch 
             id="review" 
-            checked={!needsReview} 
-            onCheckedChange={(checked) => setNeedsReview(!checked)} 
+            checked={needsReview}
+            onCheckedChange={setNeedsReview}
+            className={needsReview ? "data-[state=checked]:bg-red-500" : ""}
           />
         </div>
         
