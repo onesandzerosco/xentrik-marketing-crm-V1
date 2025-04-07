@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useCreators } from "../context/CreatorContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Team, Gender, CreatorType } from "../types";
+import ImageUploader from "./ImageUploader";
 
 import {
   Dialog,
@@ -111,16 +112,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
     }
   };
 
-  // Preset avatars to choose from
-  const avatars = [
-    "/avatar1.png",
-    "/avatar2.png",
-    "/avatar3.png",
-    "/avatar4.png",
-    "/avatar5.png",
-    "/avatar6.png",
-  ];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -196,25 +187,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               </div>
             </div>
             
-            <div>
-              <Label>Profile Picture</Label>
-              <div className="grid grid-cols-3 gap-3 mt-2">
-                {avatars.map((avatar, index) => (
-                  <div 
-                    key={index} 
-                    className={`
-                      cursor-pointer rounded-lg p-1 border-2 transition-all
-                      ${profileImage === avatar ? 'border-brand' : 'border-transparent hover:border-muted'}
-                    `}
-                    onClick={() => setProfileImage(avatar)}
-                  >
-                    <img 
-                      src={avatar} 
-                      alt={`Avatar option ${index + 1}`} 
-                      className="w-full h-auto rounded-lg"
-                    />
-                  </div>
-                ))}
+            <div className="flex flex-col items-center justify-center">
+              <Label className="w-full mb-2">Profile Picture</Label>
+              <div className="mt-2">
+                <ImageUploader
+                  currentImage={profileImage}
+                  name={name || "Creator"}
+                  onImageChange={setProfileImage}
+                  size="lg"
+                />
               </div>
             </div>
           </div>

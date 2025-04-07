@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -19,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { BarChart2, MessageSquare, Save, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import ImageUploader from "../components/ImageUploader";
 
 const CreatorProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,16 +65,6 @@ const CreatorProfile = () => {
       description: "Creator profile has been successfully updated",
     });
   };
-
-  // Preset avatars to choose from
-  const avatars = [
-    "/avatar1.png",
-    "/avatar2.png",
-    "/avatar3.png",
-    "/avatar4.png",
-    "/avatar5.png",
-    "/avatar6.png",
-  ];
 
   if (!creator) {
     return (
@@ -356,36 +346,13 @@ const CreatorProfile = () => {
           <div className="space-y-6">
             <div className="bg-card rounded-xl p-6 shadow-sm">
               <h2 className="text-xl font-bold mb-4">Profile Picture</h2>
-              <div className="mb-4">
-                <div className="w-full h-48 rounded-lg overflow-hidden mb-4">
-                  <img
-                    src={profileImage}
-                    alt={name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label className="mb-2 block">Select Avatar</Label>
-                <div className="grid grid-cols-3 gap-3">
-                  {avatars.map((avatar, index) => (
-                    <div 
-                      key={index} 
-                      className={`
-                        cursor-pointer rounded-lg p-1 border-2 transition-all
-                        ${profileImage === avatar ? 'border-brand' : 'border-transparent hover:border-muted'}
-                      `}
-                      onClick={() => setProfileImage(avatar)}
-                    >
-                      <img 
-                        src={avatar} 
-                        alt={`Avatar option ${index + 1}`} 
-                        className="w-full h-auto rounded-lg"
-                      />
-                    </div>
-                  ))}
-                </div>
+              <div className="flex items-center justify-center py-4">
+                <ImageUploader
+                  currentImage={profileImage}
+                  name={name}
+                  onImageChange={setProfileImage}
+                  size="xl"
+                />
               </div>
             </div>
             

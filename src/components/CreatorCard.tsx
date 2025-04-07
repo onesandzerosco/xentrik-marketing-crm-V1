@@ -5,6 +5,7 @@ import { Creator } from "../types";
 import { Button } from "@/components/ui/button";
 import { BarChart2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface CreatorCardProps {
   creator: Creator;
@@ -23,6 +24,16 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       default:
         return "bg-gray-700/70 text-gray-300";
     }
+  };
+
+  // Get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map(part => part[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   // Get social media icons based on available links
@@ -86,13 +97,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   return (
     <div className="creator-card">
       <div className="flex items-center mb-4">
-        <div className="w-12 h-12 rounded-full overflow-hidden mr-3 border border-border">
-          <img
-            src={creator.profileImage}
-            alt={creator.name}
-            className="w-full h-full object-cover"
-          />
-        </div>
+        <Avatar className="w-12 h-12 mr-3 border border-border">
+          <AvatarImage src={creator.profileImage} alt={creator.name} />
+          <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
+        </Avatar>
         <div>
           <h3 className="font-medium text-lg">{creator.name}</h3>
           <div className="mt-1">
