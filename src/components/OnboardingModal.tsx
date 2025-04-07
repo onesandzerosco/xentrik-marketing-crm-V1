@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useCreators } from "../context/CreatorContext";
 import { useToast } from "@/components/ui/use-toast";
-import { Team, Gender } from "../types";
+import { Team, Gender, CreatorType } from "../types";
 
 import {
   Dialog,
@@ -42,6 +42,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
 
   const [name, setName] = useState("");
   const [gender, setGender] = useState<Gender>("Male");
+  const [creatorType, setCreatorType] = useState<CreatorType>("Real");
   const [team, setTeam] = useState<Team>("A Team");
   const [profileImage, setProfileImage] = useState("/avatar1.png"); // Default avatar
   const [instagram, setInstagram] = useState("");
@@ -58,8 +59,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create tags array from gender, team and selected tags
-    const tags = [gender, team, ...selectedTags];
+    // Create tags array from gender, team, creatorType and selected tags
+    const tags = [gender, team, creatorType, ...selectedTags];
 
     // Simulate API call
     setTimeout(() => {
@@ -67,6 +68,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
         name,
         gender,
         team,
+        creatorType,
         profileImage,
         socialLinks: {
           instagram: instagram || undefined,
@@ -86,6 +88,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
       // Reset form
       setName("");
       setGender("Male");
+      setCreatorType("Real");
       setTeam("A Team");
       setProfileImage("/avatar1.png");
       setInstagram("");
@@ -155,6 +158,21 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
                     <SelectItem value="Trans">Trans</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="creatorType">Creator Type</Label>
+                <Select 
+                  value={creatorType} 
+                  onValueChange={(value: CreatorType) => setCreatorType(value)}
+                >
+                  <SelectTrigger id="creatorType">
+                    <SelectValue placeholder="Select creator type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Real">Real</SelectItem>
                     <SelectItem value="AI">AI</SelectItem>
                   </SelectContent>
                 </Select>

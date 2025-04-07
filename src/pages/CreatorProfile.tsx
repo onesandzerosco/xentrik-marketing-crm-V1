@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
-import { Team, Gender } from "../types";
+import { Team, Gender, CreatorType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,7 @@ const CreatorProfile = () => {
   const [name, setName] = useState(creator?.name || "");
   const [gender, setGender] = useState<Gender>(creator?.gender || "Male");
   const [team, setTeam] = useState<Team>(creator?.team || "A Team");
+  const [creatorType, setCreatorType] = useState<CreatorType>(creator?.creatorType || "Real");
   const [profileImage, setProfileImage] = useState(creator?.profileImage || "");
   const [instagram, setInstagram] = useState(creator?.socialLinks.instagram || "");
   const [tiktok, setTiktok] = useState(creator?.socialLinks.tiktok || "");
@@ -47,6 +48,7 @@ const CreatorProfile = () => {
       name,
       gender,
       team,
+      creatorType,
       profileImage,
       socialLinks: {
         instagram: instagram || undefined,
@@ -55,7 +57,7 @@ const CreatorProfile = () => {
         reddit: reddit || undefined,
         chaturbate: chaturbate || undefined,
       },
-      tags: [gender, team],
+      tags: [gender, team, creatorType],
     });
     
     toast({
@@ -101,6 +103,7 @@ const CreatorProfile = () => {
             <div className="flex gap-2">
               <Badge variant="outline">{creator.gender}</Badge>
               <Badge variant="outline">{creator.team}</Badge>
+              <Badge variant="outline">{creator.creatorType}</Badge>
             </div>
           </div>
           <div className="flex gap-3">
@@ -147,6 +150,21 @@ const CreatorProfile = () => {
                       <SelectItem value="Male">Male</SelectItem>
                       <SelectItem value="Female">Female</SelectItem>
                       <SelectItem value="Trans">Trans</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="creatorType">Creator Type</Label>
+                  <Select 
+                    value={creatorType} 
+                    onValueChange={(value: CreatorType) => setCreatorType(value)}
+                  >
+                    <SelectTrigger id="creatorType">
+                      <SelectValue placeholder="Select creator type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Real">Real</SelectItem>
                       <SelectItem value="AI">AI</SelectItem>
                     </SelectContent>
                   </Select>

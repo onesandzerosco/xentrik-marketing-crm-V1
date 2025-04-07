@@ -1,6 +1,6 @@
-
 export type Team = "A Team" | "B Team" | "C Team";
-export type Gender = "Male" | "Female" | "Trans" | "AI";
+export type Gender = "Male" | "Female" | "Trans";
+export type CreatorType = "Real" | "AI";
 
 export interface Creator {
   id: string;
@@ -8,6 +8,7 @@ export interface Creator {
   profileImage: string;
   gender: Gender;
   team: Team;
+  creatorType: CreatorType;
   socialLinks: {
     instagram?: string;
     tiktok?: string;

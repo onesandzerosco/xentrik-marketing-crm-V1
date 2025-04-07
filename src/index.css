@@ -61,6 +61,14 @@
     @apply bg-purple-900/40 text-purple-200;
   }
 
+  .tag-real {
+    @apply bg-green-900/40 text-green-200;
+  }
+
+  .tag-ai {
+    @apply bg-cyan-900/40 text-cyan-200;
+  }
+
   .tag-a-team {
     @apply bg-green-900/40 text-green-200;
   }
@@ -68,7 +76,7 @@
   .tag-b-team {
     @apply bg-yellow-900/40 text-yellow-200;
   }
-
+  
   .tag-c-team {
     @apply bg-red-900/40 text-red-200;
   }

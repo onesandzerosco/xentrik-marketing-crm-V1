@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState } from "react";
-import { Creator, EngagementStats } from "../types";
+import { Creator, EngagementStats, CreatorType } from "../types";
 
 // Mock data for initial creators
 const initialCreators: Creator[] = [
@@ -10,6 +9,7 @@ const initialCreators: Creator[] = [
     profileImage: "/avatar1.png",
     gender: "Male",
     team: "A Team",
+    creatorType: "Real",
     socialLinks: {
       instagram: "https://instagram.com",
       twitter: "https://twitter.com",
@@ -23,6 +23,7 @@ const initialCreators: Creator[] = [
     profileImage: "/avatar2.png",
     gender: "Female",
     team: "B Team",
+    creatorType: "Real",
     socialLinks: {
       instagram: "https://instagram.com",
       tiktok: "https://tiktok.com",
@@ -36,6 +37,7 @@ const initialCreators: Creator[] = [
     profileImage: "/avatar3.png",
     gender: "Trans",
     team: "C Team",
+    creatorType: "Real",
     socialLinks: {
       instagram: "https://instagram.com",
       twitter: "https://twitter.com",
@@ -46,8 +48,9 @@ const initialCreators: Creator[] = [
     id: "4",
     name: "Jorelan",
     profileImage: "/avatar4.png",
-    gender: "AI",
+    gender: "Female",
     team: "B Team",
+    creatorType: "AI",
     socialLinks: {
       instagram: "https://instagram.com",
       tiktok: "https://tiktok.com",
@@ -59,8 +62,9 @@ const initialCreators: Creator[] = [
     id: "5",
     name: "Fremay",
     profileImage: "/avatar5.png",
-    gender: "AI",
+    gender: "Male",
     team: "A Team",
+    creatorType: "AI",
     socialLinks: {
       instagram: "https://instagram.com",
       twitter: "https://twitter.com",
@@ -71,8 +75,9 @@ const initialCreators: Creator[] = [
     id: "6",
     name: "Tremt",
     profileImage: "/avatar6.png",
-    gender: "AI",
+    gender: "Male",
     team: "A Team",
+    creatorType: "AI",
     socialLinks: {
       instagram: "https://instagram.com",
       tiktok: "https://tiktok.com",
@@ -134,7 +139,7 @@ interface CreatorContextType {
   updateCreator: (id: string, updates: Partial<Creator>) => void;
   getCreator: (id: string) => Creator | undefined;
   getCreatorStats: (id: string) => EngagementStats | undefined;
-  filterCreators: (filters: { gender?: string[]; team?: string[] }) => Creator[];
+  filterCreators: (filters: { gender?: string[]; team?: string[]; creatorType?: string[] }) => Creator[];
 }
 
 const CreatorContext = createContext<CreatorContextType>({
@@ -176,10 +181,11 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return stats[id];
   };
 
-  const filterCreators = (filters: { gender?: string[]; team?: string[] }) => {
+  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[] }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
       let teamMatch = true;
+      let creatorTypeMatch = true;
 
       if (filters.gender && filters.gender.length > 0) {
         genderMatch = filters.gender.includes(creator.gender);
@@ -189,7 +195,11 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         teamMatch = filters.team.includes(creator.team);
       }
 
-      return genderMatch && teamMatch;
+      if (filters.creatorType && filters.creatorType.length > 0) {
+        creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
+      }
+
+      return genderMatch && teamMatch && creatorTypeMatch;
     });
   };
 
