@@ -1,16 +1,73 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { BarChart2, LogOut, Users } from "lucide-react";
+import { BarChart2, LogOut, Users, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Sidebar = () => {
-  const { logout } = useAuth();
+  const { logout, updateCredentials } = useAuth();
   const location = useLocation();
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleUpdateAccount = () => {
+    // Validate inputs
+    if (!username) {
+      toast({
+        variant: "destructive",
+        title: "Missing username",
+        description: "Please enter a username",
+      });
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "New password and confirmation must match",
+      });
+      return;
+    }
+
+    // Call the updateCredentials function from AuthContext
+    const success = updateCredentials(username, currentPassword, newPassword, email, emailVerified);
+    
+    if (success) {
+      toast({
+        title: "Account updated",
+        description: "Your account details have been updated successfully",
+      });
+      // Reset form and close dialog
+      setOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: "Current password is incorrect or there was a system error",
+      });
+    }
   };
 
   return (
@@ -53,7 +110,103 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      <div className="mt-auto p-1.5">
+      <div className="mt-auto p-1.5 space-y-2">
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+            >
+              <UserCog className="mr-2 h-4 w-4" />
+              Account Settings
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Account Settings</DialogTitle>
+              <DialogDescription>
+                Update your account details. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="currentPassword" className="text-right">
+                  Current Password
+                </Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="newPassword" className="text-right">
+                  New Password
+                </Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="confirmPassword" className="text-right">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right col-span-3">
+                  Email verification status: {emailVerified ? 'Verified' : 'Not verified'}
+                </Label>
+                <Checkbox
+                  checked={emailVerified}
+                  onCheckedChange={(checked) => setEmailVerified(checked === true)}
+                  className="ml-auto"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleUpdateAccount} className="bg-brand text-black hover:bg-brand/80">
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        
         <Button 
           variant="outline" 
           className="w-full justify-start"
