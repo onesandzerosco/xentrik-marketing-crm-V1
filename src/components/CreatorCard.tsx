@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Creator } from "../types";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Pencil } from "lucide-react";
+import { BarChart2, Pencil, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -95,7 +95,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   };
 
   return (
-    <div className="creator-card">
+    <div className={cn(
+      "creator-card", 
+      creator.needsReview ? "border-2 border-red-500" : ""
+    )}>
       <div className="flex items-center mb-4">
         <Avatar className="w-12 h-12 mr-3 border border-border">
           <AvatarImage src={creator.profileImage} alt={creator.name} />
@@ -107,6 +110,11 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             <span className={cn("tag", getGenderTagClass(creator.gender))}>
               {creator.gender}
             </span>
+            {creator.needsReview && (
+              <span className="tag bg-red-900/40 text-red-200 ml-2">
+                Review
+              </span>
+            )}
           </div>
         </div>
         <div className="ml-auto text-right">
@@ -118,6 +126,12 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
 
       <div className="flex items-center justify-between my-4">
         {renderSocialIcons()}
+        {creator.needsReview && (
+          <div className="text-red-500 flex items-center">
+            <AlertCircle className="h-4 w-4 mr-1" />
+            <span className="text-xs">Needs Review</span>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2 mt-4">

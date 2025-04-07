@@ -16,6 +16,7 @@ const initialCreators: Creator[] = [
       reddit: "https://reddit.com",
     },
     tags: ["Male", "A Team"],
+    needsReview: true,
   },
   {
     id: "2",
@@ -30,6 +31,7 @@ const initialCreators: Creator[] = [
       twitter: "https://twitter.com",
     },
     tags: ["Female", "B Team"],
+    needsReview: false,
   },
   {
     id: "3",
@@ -161,6 +163,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const newCreator = {
       ...creator,
       id: Date.now().toString(),
+      needsReview: true,
     };
     setCreators([...creators, newCreator]);
   };

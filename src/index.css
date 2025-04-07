@@ -89,4 +89,8 @@
   .social-icon {
     @apply w-8 h-8 flex items-center justify-center rounded-full bg-secondary hover:bg-accent transition-colors;
   }
+
+  .needs-review {
+    @apply border-2 border-red-500;
+  }
 }
