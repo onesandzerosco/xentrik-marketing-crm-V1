@@ -18,8 +18,11 @@ const Sidebar = () => {
     <div className="h-screen w-60 bg-sidebar fixed left-0 top-0 border-r border-border flex flex-col">
       <div className="p-6">
         <div className="mb-8">
-          <h1 className="text-xl font-bold">XENTRIK</h1>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest">MARKETING</p>
+          <img 
+            src="/lovable-uploads/6521922f-fa9f-4717-b98c-cea95f9c7723.png" 
+            alt="XENTRIK MARKETING" 
+            className="h-10 mb-2"
+          />
         </div>
 
         <nav className="space-y-2">
