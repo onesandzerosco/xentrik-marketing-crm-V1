@@ -1,337 +1,240 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
+import { ArrowLeft, Download, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Download, UserCog } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const CreatorAnalytics = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const { getCreator, getCreatorStats } = useCreators();
-  const [timeframe, setTimeframe] = useState<"7day" | "30day">("7day");
   
-  const creator = getCreator(id!);
-  const stats = getCreatorStats(id!);
+  const creator = getCreator(id || "");
+  const stats = getCreatorStats(id || "");
   
-  // Mock data for charts
-  const mockDailyData = [
-    { name: "Mon", instagram: 5200, tiktok: 15000, twitter: 3800, reddit: 1200, chaturbate: 2000 },
-    { name: "Tue", instagram: 5800, tiktok: 17000, twitter: 4100, reddit: 1300, chaturbate: 2200 },
-    { name: "Wed", instagram: 6500, tiktok: 18000, twitter: 4500, reddit: 1500, chaturbate: 2500 },
-    { name: "Thu", instagram: 6200, tiktok: 16500, twitter: 4200, reddit: 1400, chaturbate: 2300 },
-    { name: "Fri", instagram: 6800, tiktok: 19000, twitter: 4700, reddit: 1600, chaturbate: 2600 },
-    { name: "Sat", instagram: 7500, tiktok: 22000, twitter: 5200, reddit: 1900, chaturbate: 3000 },
-    { name: "Sun", instagram: 7200, tiktok: 21000, twitter: 5000, reddit: 1800, chaturbate: 2800 },
-  ];
-  
-  const mockMonthlyData = [
-    { name: "Week 1", instagram: 35000, tiktok: 120000, twitter: 28000, reddit: 10000, chaturbate: 18000 },
-    { name: "Week 2", instagram: 38000, tiktok: 135000, twitter: 31000, reddit: 11000, chaturbate: 20000 },
-    { name: "Week 3", instagram: 42000, tiktok: 155000, twitter: 35000, reddit: 12500, chaturbate: 22000 },
-    { name: "Week 4", instagram: 45000, tiktok: 175000, twitter: 38000, reddit: 14000, chaturbate: 24000 },
-  ];
-  
-  const chartData = timeframe === "7day" ? mockDailyData : mockMonthlyData;
-  
-  // Check for significant performance drops
-  const hasPerformanceDrop = stats && (
-    stats.instagram.trend < -30 ||
-    stats.tiktok.trend < -30 ||
-    stats.twitter.trend < -30 ||
-    stats.reddit.trend < -30 ||
-    stats.chaturbate.trend < -30
-  );
-
-  if (!creator) {
+  if (!creator || !stats) {
     return (
-      <div className="flex">
-        <Sidebar />
-        <div className="ml-60 p-8 w-full">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium mb-2">Creator not found</h3>
-            <p className="text-muted-foreground mb-4">The creator you're looking for doesn't exist</p>
-            <Link to="/creators">
-              <Button>Return to creators</Button>
-            </Link>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <p>Creator not found or no stats available.</p>
       </div>
     );
   }
+
+  // Generate mock data for the charts
+  const mockWeeklyData = [
+    { name: "Mon", instagram: 4000, tiktok: 2400, twitter: 2400, reddit: 1200, chaturbate: 3200 },
+    { name: "Tue", instagram: 3000, tiktok: 1398, twitter: 2210, reddit: 980, chaturbate: 2900 },
+    { name: "Wed", instagram: 2000, tiktok: 9800, twitter: 2290, reddit: 1308, chaturbate: 2600 },
+    { name: "Thu", instagram: 2780, tiktok: 3908, twitter: 2000, reddit: 1400, chaturbate: 2200 },
+    { name: "Fri", instagram: 1890, tiktok: 4800, twitter: 2181, reddit: 1500, chaturbate: 2900 },
+    { name: "Sat", instagram: 2390, tiktok: 3800, twitter: 2500, reddit: 1700, chaturbate: 3400 },
+    { name: "Sun", instagram: 3490, tiktok: 4300, twitter: 2100, reddit: 1200, chaturbate: 3700 }
+  ];
+
+  const mockMonthlyData = [
+    { name: "Week 1", instagram: 4000, tiktok: 2400, twitter: 2400, reddit: 1200, chaturbate: 3200 },
+    { name: "Week 2", instagram: 3000, tiktok: 1398, twitter: 2210, reddit: 980, chaturbate: 2900 },
+    { name: "Week 3", instagram: 2000, tiktok: 9800, twitter: 2290, reddit: 1308, chaturbate: 2600 },
+    { name: "Week 4", instagram: 2780, tiktok: 3908, twitter: 2000, reddit: 1400, chaturbate: 2200 }
+  ];
+
+  const renderTrendIcon = (trend: number) => {
+    if (trend > 0) {
+      return <TrendingUp className="h-4 w-4 text-green-500" />;
+    } else {
+      return <TrendingDown className="h-4 w-4 text-red-500" />;
+    }
+  };
 
   return (
     <div className="flex">
       <Sidebar />
       <div className="ml-60 p-8 w-full">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{creator.name}'s Analytics</h1>
-            <p className="text-muted-foreground">
-              Performance metrics across all platforms
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Link to={`/creators/${creator.id}`}>
-              <Button variant="outline">
-                <UserCog className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
-            </Link>
-            <Button>
-              <Download className="h-4 w-4 mr-2" />
-              Download Report
+        <div className="flex items-center mb-8">
+          <Link to={`/creators/${id}`} className="mr-4">
+            <Button variant="outline" size="icon">
+              <ArrowLeft className="h-4 w-4" />
             </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">{creator.name}'s Analytics</h1>
+            <p className="text-muted-foreground">Performance metrics across platforms</p>
           </div>
+          <Button className="ml-auto" variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download Report
+          </Button>
         </div>
 
-        {hasPerformanceDrop && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Performance Alert</AlertTitle>
-            <AlertDescription>
-              This creator has experienced a significant drop in engagement (>30%) on one or more platforms.
-              Immediate action may be required.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Engagement drop warning */}
+        {stats.instagram.trend < -5 || stats.tiktok.trend < -5 || stats.twitter.trend < -5 || stats.reddit.trend < -5 || stats.chaturbate.trend < -5 ? (
+          <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg mb-8">
+            <h3 className="font-bold mb-1">Engagement Drop Warning</h3>
+            <p>Significant engagement drop detected on some platforms. Consider reaching out to this creator.</p>
+          </div>
+        ) : null}
 
-        <div className="mb-6">
-          <Tabs defaultValue="7day" onValueChange={(value) => setTimeframe(value as "7day" | "30day")}>
-            <div className="flex justify-between items-center">
-              <TabsList>
-                <TabsTrigger value="7day">Last 7 Days</TabsTrigger>
-                <TabsTrigger value="30day">Last 30 Days</TabsTrigger>
-              </TabsList>
+        {/* KPI cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Instagram</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stats.instagram.followers.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Followers</p>
+                </div>
+                <div className="flex items-center">
+                  {renderTrendIcon(stats.instagram.trend)}
+                  <span className={`ml-1 text-sm ${stats.instagram.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(stats.instagram.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">TikTok</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stats.tiktok.views.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Views</p>
+                </div>
+                <div className="flex items-center">
+                  {renderTrendIcon(stats.tiktok.trend)}
+                  <span className={`ml-1 text-sm ${stats.tiktok.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(stats.tiktok.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Twitter</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stats.twitter.impressions.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Impressions</p>
+                </div>
+                <div className="flex items-center">
+                  {renderTrendIcon(stats.twitter.trend)}
+                  <span className={`ml-1 text-sm ${stats.twitter.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(stats.twitter.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Reddit</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stats.reddit.upvotes.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Upvotes</p>
+                </div>
+                <div className="flex items-center">
+                  {renderTrendIcon(stats.reddit.trend)}
+                  <span className={`ml-1 text-sm ${stats.reddit.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(stats.reddit.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Chaturbate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{stats.chaturbate.viewers.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground">Viewers</p>
+                </div>
+                <div className="flex items-center">
+                  {renderTrendIcon(stats.chaturbate.trend)}
+                  <span className={`ml-1 text-sm ${stats.chaturbate.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(stats.chaturbate.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Weekly Chart */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>7-Day Performance</CardTitle>
+            <CardDescription>Engagement across platforms for the past week</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={mockWeeklyData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />
+                  <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />
+                  <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />
+                  <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />
+                  <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
-          </Tabs>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {stats && (
-            <>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Instagram</CardTitle>
-                  <CardDescription>
-                    Engagement rate: {stats.instagram.engagement}%
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats.instagram.followers.toLocaleString()} followers
-                  </div>
-                  <div className={`text-sm flex items-center ${stats.instagram.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {stats.instagram.trend > 0 ? "↑" : "↓"} {Math.abs(stats.instagram.trend)}% from last period
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">TikTok</CardTitle>
-                  <CardDescription>
-                    Average views per video
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats.tiktok.views.toLocaleString()} views
-                  </div>
-                  <div className={`text-sm flex items-center ${stats.tiktok.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {stats.tiktok.trend > 0 ? "↑" : "↓"} {Math.abs(stats.tiktok.trend)}% from last period
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Twitter</CardTitle>
-                  <CardDescription>
-                    Impressions per tweet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats.twitter.impressions.toLocaleString()} impressions
-                  </div>
-                  <div className={`text-sm flex items-center ${stats.twitter.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {stats.twitter.trend > 0 ? "↑" : "↓"} {Math.abs(stats.twitter.trend)}% from last period
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Engagement Comparison</CardTitle>
-              <CardDescription>
-                Platform performance for {timeframe === "7day" ? "the last 7 days" : "the last 30 days"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis dataKey="name" stroke="#888" />
-                    <YAxis stroke="#888" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "rgba(25, 25, 28, 0.9)", 
-                        borderColor: "#333",
-                        color: "#fff"
-                      }} 
-                    />
-                    <Legend />
-                    <Line type="monotone" dataKey="instagram" stroke="#E1306C" name="Instagram" strokeWidth={2} />
-                    <Line type="monotone" dataKey="tiktok" stroke="#69C9D0" name="TikTok" strokeWidth={2} />
-                    <Line type="monotone" dataKey="twitter" stroke="#1DA1F2" name="Twitter" strokeWidth={2} />
-                    <Line type="monotone" dataKey="reddit" stroke="#FF4500" name="Reddit" strokeWidth={2} />
-                    <Line type="monotone" dataKey="chaturbate" stroke="#F78642" name="Chaturbate" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Platform Distribution</CardTitle>
-              <CardDescription>
-                Relative engagement across platforms
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={chartData.slice(-1)} // Use only the most recent data
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    layout="vertical"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis type="number" stroke="#888" />
-                    <YAxis dataKey="name" type="category" stroke="#888" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "rgba(25, 25, 28, 0.9)", 
-                        borderColor: "#333",
-                        color: "#fff"
-                      }} 
-                    />
-                    <Legend />
-                    <Bar dataKey="instagram" fill="#E1306C" name="Instagram" />
-                    <Bar dataKey="tiktok" fill="#69C9D0" name="TikTok" />
-                    <Bar dataKey="twitter" fill="#1DA1F2" name="Twitter" />
-                    <Bar dataKey="reddit" fill="#FF4500" name="Reddit" />
-                    <Bar dataKey="chaturbate" fill="#F78642" name="Chaturbate" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Performing Content</CardTitle>
-              <CardDescription>
-                Posts with highest engagement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-start p-3 border border-border rounded-lg">
-                  <div className="w-12 h-12 rounded bg-blue-900/30 flex items-center justify-center mr-3">
-                    <span className="text-xl">📷</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Beach photoshoot highlights</p>
-                    <p className="text-sm text-muted-foreground">Instagram • 3.2k likes</p>
-                  </div>
-                </div>
-                <div className="flex items-start p-3 border border-border rounded-lg">
-                  <div className="w-12 h-12 rounded bg-cyan-900/30 flex items-center justify-center mr-3">
-                    <span className="text-xl">🎵</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">Trending dance challenge</p>
-                    <p className="text-sm text-muted-foreground">TikTok • 45.8k views</p>
-                  </div>
-                </div>
-                <div className="flex items-start p-3 border border-border rounded-lg">
-                  <div className="w-12 h-12 rounded bg-red-900/30 flex items-center justify-center mr-3">
-                    <span className="text-xl">👽</span>
-                  </div>
-                  <div>
-                    <p className="font-medium">AMA Thread</p>
-                    <p className="text-sm text-muted-foreground">Reddit • 876 upvotes</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Recommendations</CardTitle>
-              <CardDescription>
-                AI-generated suggestions for improvement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="p-3 border border-yellow-800/30 bg-yellow-900/10 rounded-lg">
-                  <p className="font-medium mb-1">Increase Instagram posting frequency</p>
-                  <p className="text-sm text-muted-foreground">
-                    Currently posting 2x weekly, recommend increasing to 4-5x for higher engagement.
-                  </p>
-                </div>
-                <div className="p-3 border border-green-800/30 bg-green-900/10 rounded-lg">
-                  <p className="font-medium mb-1">TikTok content is performing well</p>
-                  <p className="text-sm text-muted-foreground">
-                    Continue with trending sound strategy, engagement is 35% above average.
-                  </p>
-                </div>
-                <div className="p-3 border border-red-800/30 bg-red-900/10 rounded-lg">
-                  <p className="font-medium mb-1">Twitter engagement dropping</p>
-                  <p className="text-sm text-muted-foreground">
-                    Schedule more interactive polls and questions to increase follower engagement.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Monthly Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>30-Day Growth</CardTitle>
+            <CardDescription>Monthly performance breakdown</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={mockMonthlyData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="instagram" fill="#8884d8" />
+                  <Bar dataKey="tiktok" fill="#82ca9d" />
+                  <Bar dataKey="twitter" fill="#ffc658" />
+                  <Bar dataKey="reddit" fill="#ff8042" />
+                  <Bar dataKey="chaturbate" fill="#0088fe" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
