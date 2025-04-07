@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Creators from "./pages/Creators";
 import CreatorProfile from "./pages/CreatorProfile";
 import CreatorAnalytics from "./pages/CreatorAnalytics";
+import AccountSettings from "./pages/AccountSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,15 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <CreatorAnalytics />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/account" 
+                element={
+                  <ProtectedRoute>
+                    <AccountSettings />
                   </ProtectedRoute>
                 } 
               />
