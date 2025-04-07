@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,12 +39,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const file = event.target.files?.[0];
     
     if (file) {
-      // Create a local preview
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
-      
-      // In a real app, you'd upload the file to a server here
-      // For this example, we'll just use the object URL
       onImageChange(objectUrl);
     }
   };
@@ -56,7 +51,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleRemove = () => {
-    // Reset to default (just the initials)
     setPreviewImage("");
     onImageChange("");
   };
@@ -68,7 +62,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Get the cropped image from canvas
     const croppedImageUrl = canvas.toDataURL('image/png');
     setPreviewImage(croppedImageUrl);
     onImageChange(croppedImageUrl);
@@ -104,23 +97,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       </div>
       
-      <div className="flex gap-2">
+      <div className="flex flex-col w-full gap-2">
         <Button 
           type="button" 
           variant="outline" 
           size="sm"
           onClick={handleClick}
+          className="w-full"
         >
+          <Upload className="h-4 w-4 mr-1" />
           Upload Photo
         </Button>
 
         {previewImage && (
-          <>
+          <div className="flex gap-2 w-full">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleEdit}
+              className="flex-1"
             >
               <Edit className="h-4 w-4 mr-1" />
               Edit
@@ -128,14 +124,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               size="sm"
               onClick={handleRemove}
+              className="flex-1"
             >
               <Trash2 className="h-4 w-4 mr-1" />
               Remove
             </Button>
-          </>
+          </div>
         )}
       </div>
       
@@ -147,7 +144,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleFileChange}
       />
 
-      {/* Image Crop Modal */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -184,7 +180,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   );
 };
 
-// Simple image cropper component
 interface ImageCropperProps {
   src: string;
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -210,7 +205,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
       const size = canvas.width;
       ctx.clearRect(0, 0, size, size);
       
-      // Calculate position to center the image
       const imgWidth = img.naturalWidth * scale;
       const imgHeight = img.naturalHeight * scale;
       
@@ -224,27 +218,21 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
     };
     
     img.onload = () => {
-      // Set canvas size
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetWidth; // Square aspect ratio
       
-      // Auto-fit image to crop area
       const imgRatio = img.naturalWidth / img.naturalHeight;
       if (imgRatio > 1) {
-        // Landscape: fit height
         setScale(canvas.height / img.naturalHeight);
       } else {
-        // Portrait: fit width
         setScale(canvas.width / img.naturalWidth);
       }
       
       drawImageOnCanvas();
     };
     
-    // Set src after defining onload
     img.src = src;
     
-    // Draw when position or scale changes
     const intervalId = setInterval(drawImageOnCanvas, 10);
     return () => clearInterval(intervalId);
   }, [src, position, scale, canvasRef]);
@@ -283,7 +271,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
       <img
         ref={imgRef}
         src={src}
-        className="hidden" // Hidden source image
+        className="hidden"
         alt="Source"
       />
       <canvas
