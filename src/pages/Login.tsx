@@ -64,11 +64,11 @@ const Login = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
       <div className="w-full max-w-md">
-        <div className="mb-4 text-center">
+        <div className="mb-2 text-center">
           <img 
             src="/lovable-uploads/6a4f0b60-d110-4a73-9fa1-2ed1b0ea3faf.png" 
             alt="XENTRIK MARKETING" 
-            className="h-44 mx-auto" // Changed from h-32 (32 * 1.4 ≈ 44)
+            className="h-44 mx-auto"
           />
         </div>
         
