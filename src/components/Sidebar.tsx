@@ -21,7 +21,7 @@ const Sidebar = () => {
           <img 
             src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
-            className="h-16 w-auto mb-4"
+            className="h-32 w-auto mb-4"
           />
         </div>
 
