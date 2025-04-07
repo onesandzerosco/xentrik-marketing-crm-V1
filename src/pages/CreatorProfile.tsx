@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -154,7 +153,6 @@ const CreatorProfile = () => {
               profileImage={profileImage}
               name={name}
               setProfileImage={setProfileImage}
-              onSave={handleSave}
             />
             
             <ActionsPanel 
