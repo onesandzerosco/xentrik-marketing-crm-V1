@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -15,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { BarChart2, MessageSquare, Save, Tag } from "lucide-react";
+import { BarChart2, MessageSquare, Save, Tag, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import ImageUploader from "../components/ImageUploader";
@@ -87,6 +88,14 @@ const CreatorProfile = () => {
     <div className="flex">
       <Sidebar />
       <div className="ml-60 p-8 w-full">
+        {/* Back button */}
+        <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+          <Button variant="ghost" className="h-8 px-2 gap-1">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Creators
+          </Button>
+        </Link>
+
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">{creator.name}'s Profile</h1>
@@ -370,8 +379,8 @@ const CreatorProfile = () => {
                 
                 <Separator />
                 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="space-y-1">
                     <Label htmlFor="inactive" className="font-medium">Tag as Inactive</Label>
                     <p className="text-xs text-muted-foreground">
                       Temporarily pause management
@@ -384,8 +393,8 @@ const CreatorProfile = () => {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center justify-between py-2">
+                  <div className="space-y-1">
                     <Label htmlFor="review" className="font-medium">Manual Review Done</Label>
                     <p className="text-xs text-muted-foreground">
                       Mark profile as reviewed
