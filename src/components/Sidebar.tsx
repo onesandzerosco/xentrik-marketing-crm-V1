@@ -19,7 +19,7 @@ const Sidebar = () => {
       <div className="p-6">
         <div className="mb-8">
           <img 
-            src="/lovable-uploads/6521922f-fa9f-4717-b98c-cea95f9c7723.png" 
+            src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
             className="h-10 mb-2"
           />
