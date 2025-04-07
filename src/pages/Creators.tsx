@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
 import CreatorCard from "../components/CreatorCard";
@@ -17,17 +17,51 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 
+// Keys for localStorage
+const FILTER_KEYS = {
+  GENDER: 'creator_filter_gender',
+  TEAM: 'creator_filter_team',
+  CLASS: 'creator_filter_class'
+};
+
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  
+  // Initialize state with values from localStorage or empty arrays
+  const [selectedGenders, setSelectedGenders] = useState<string[]>(() => {
+    const saved = localStorage.getItem(FILTER_KEYS.GENDER);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(() => {
+    const saved = localStorage.getItem(FILTER_KEYS.TEAM);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [selectedClasses, setSelectedClasses] = useState<string[]>(() => {
+    const saved = localStorage.getItem(FILTER_KEYS.CLASS);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const { toast } = useToast();
 
   const genderTags = ["Male", "Female", "Trans", "AI"];
   const teamTags = ["A Team", "B Team", "C Team"];
   const classTags = ["Real", "AI"];
+
+  // Save to localStorage whenever filters change
+  useEffect(() => {
+    localStorage.setItem(FILTER_KEYS.GENDER, JSON.stringify(selectedGenders));
+  }, [selectedGenders]);
+  
+  useEffect(() => {
+    localStorage.setItem(FILTER_KEYS.TEAM, JSON.stringify(selectedTeams));
+  }, [selectedTeams]);
+  
+  useEffect(() => {
+    localStorage.setItem(FILTER_KEYS.CLASS, JSON.stringify(selectedClasses));
+  }, [selectedClasses]);
 
   const filteredCreators = filterCreators({
     gender: selectedGenders,
