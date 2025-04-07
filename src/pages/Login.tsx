@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -67,7 +68,7 @@ const Login = () => {
           <img 
             src="/lovable-uploads/6a4f0b60-d110-4a73-9fa1-2ed1b0ea3faf.png" 
             alt="XENTRIK MARKETING" 
-            className="h-32 mx-auto"
+            className="h-44 mx-auto" // Changed from h-32 (32 * 1.4 ≈ 44)
           />
         </div>
         
