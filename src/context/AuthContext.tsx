@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  user: Record<string, any> | null;
   login: (username: string, password: string) => boolean;
   logout: () => void;
   updateCredentials: (
@@ -16,6 +16,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
+  user: null,
   login: () => false,
   logout: () => {},
   updateCredentials: () => false,
@@ -25,13 +26,15 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user, setUser] = useState<Record<string, any> | null>(null);
 
   useEffect(() => {
     // Check if user is authenticated on mount
-    const user = localStorage.getItem("user");
+    const userData = localStorage.getItem("user");
     
-    if (user) {
+    if (userData) {
       // If we have a user in localStorage, they're authenticated
+      setUser(JSON.parse(userData));
       setIsAuthenticated(true);
     } else {
       // Check for saved credentials if no active user session
@@ -40,7 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { username, password } = JSON.parse(savedCredentials);
         // Auto login with saved credentials
         if (username === "admin" && password === "password") {
-          localStorage.setItem("user", JSON.stringify({ username }));
+          const newUser = { username, emailVerified: false };
+          localStorage.setItem("user", JSON.stringify(newUser));
+          setUser(newUser);
           setIsAuthenticated(true);
         }
       }
@@ -50,7 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (username: string, password: string) => {
     // Dummy auth - in a real app, this would call an API
     if (username === "admin" && password === "password") {
-      localStorage.setItem("user", JSON.stringify({ username }));
+      const newUser = { username, emailVerified: false };
+      localStorage.setItem("user", JSON.stringify(newUser));
+      setUser(newUser);
       setIsAuthenticated(true);
       return true;
     }
@@ -59,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("user");
+    setUser(null);
     // Keep saved credentials in localStorage when logging out
     setIsAuthenticated(false);
   };
@@ -88,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Update in localStorage
     localStorage.setItem("user", JSON.stringify(updatedUserData));
+    setUser(updatedUserData);
 
     // Update saved credentials if remember me was enabled
     const savedCredentials = localStorage.getItem("savedCredentials");
@@ -105,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, updateCredentials }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, updateCredentials }}>
       {children}
     </AuthContext.Provider>
   );

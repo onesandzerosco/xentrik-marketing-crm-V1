@@ -2,18 +2,18 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { BarChart2, LogOut, Users, UserCog } from "lucide-react";
+import { BarChart2, LogOut, Users, UserCog, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Sidebar = () => {
-  const { logout, updateCredentials } = useAuth();
+  const { logout, updateCredentials, user } = useAuth();
   const location = useLocation();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
@@ -21,11 +21,29 @@ const Sidebar = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
   const [open, setOpen] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleSendVerification = () => {
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Missing email",
+        description: "Please enter a valid email address",
+      });
+      return;
+    }
+
+    // In a real application, this would make an API call to send verification email
+    setVerificationSent(true);
+    toast({
+      title: "Verification Email Sent",
+      description: `A verification link has been sent to ${email}. Please check your inbox.`,
+    });
   };
 
   const handleUpdateAccount = () => {
@@ -48,8 +66,22 @@ const Sidebar = () => {
       return;
     }
 
+    // Get the current user's email verification status
+    const userData = JSON.parse(localStorage.getItem("user") || '{}');
+    const isEmailVerified = userData.emailVerified || false;
+
+    // Check if trying to change password without verified email
+    if (newPassword && !isEmailVerified) {
+      toast({
+        variant: "destructive",
+        title: "Email not verified",
+        description: "You must verify your email before changing your password",
+      });
+      return;
+    }
+
     // Call the updateCredentials function from AuthContext
-    const success = updateCredentials(username, currentPassword, newPassword, email, emailVerified);
+    const success = updateCredentials(username, currentPassword, newPassword, email, userData.emailVerified);
     
     if (success) {
       toast({
@@ -81,6 +113,17 @@ const Sidebar = () => {
         description: "Current password is incorrect or there was a system error",
       });
     }
+  };
+
+  // Get current user data when the dialog opens
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      const userData = JSON.parse(localStorage.getItem("user") || '{}');
+      setUsername(userData.username || "");
+      setEmail(userData.email || "");
+      setVerificationSent(false);
+    }
+    setOpen(open);
   };
 
   return (
@@ -124,7 +167,7 @@ const Sidebar = () => {
       </div>
 
       <div className="mt-auto p-1.5 space-y-2">
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button 
               variant="outline" 
@@ -157,14 +200,47 @@ const Sidebar = () => {
                 <Label htmlFor="email" className="text-right">
                   Email
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="col-span-3"
-                />
+                <div className="col-span-3 flex space-x-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleSendVerification}
+                    disabled={verificationSent}
+                  >
+                    <Mail className="h-4 w-4 mr-1" />
+                    Verify
+                  </Button>
+                </div>
               </div>
+              
+              {/* Email verification status */}
+              {(() => {
+                const userData = JSON.parse(localStorage.getItem("user") || '{}');
+                const isEmailVerified = userData.emailVerified || false;
+                
+                return (
+                  <div className="col-span-4">
+                    <Alert variant={isEmailVerified ? "default" : "destructive"}>
+                      <AlertTitle className="flex items-center">
+                        Email Verification Status: {isEmailVerified ? 'Verified' : 'Not Verified'}
+                      </AlertTitle>
+                      <AlertDescription>
+                        {isEmailVerified 
+                          ? "Your email is verified. You can change your password." 
+                          : "You must verify your email before you can change your password."}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="currentPassword" className="text-right">
                   Current Password
@@ -199,16 +275,6 @@ const Sidebar = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right col-span-3">
-                  Email verification status: {emailVerified ? 'Verified' : 'Not verified'}
-                </Label>
-                <Checkbox
-                  checked={emailVerified}
-                  onCheckedChange={(checked) => setEmailVerified(checked === true)}
-                  className="ml-auto"
                 />
               </div>
             </div>
