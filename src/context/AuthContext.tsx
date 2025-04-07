@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
@@ -21,7 +20,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check if user is authenticated on mount
     const user = localStorage.getItem("user");
-    if (user) {
+    
+    // Check for saved credentials if no active user session
+    if (!user) {
+      const savedCredentials = localStorage.getItem("savedCredentials");
+      if (savedCredentials) {
+        const { username, password } = JSON.parse(savedCredentials);
+        // Auto login with saved credentials
+        if (username === "admin" && password === "password") {
+          localStorage.setItem("user", JSON.stringify({ username }));
+          setIsAuthenticated(true);
+        }
+      }
+    } else {
       setIsAuthenticated(true);
     }
   }, []);
@@ -38,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("user");
+    // Keep saved credentials in localStorage when logging out
     setIsAuthenticated(false);
   };
 

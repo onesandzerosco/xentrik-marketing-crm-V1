@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,28 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if there are saved credentials
+    const savedCredentials = localStorage.getItem("savedCredentials");
+    if (savedCredentials) {
+      const credentials = JSON.parse(savedCredentials);
+      setUsername(credentials.username);
+      setPassword(credentials.password);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +39,13 @@ const Login = () => {
       const success = login(username, password);
       
       if (success) {
+        // Save credentials if remember me is checked
+        if (rememberMe) {
+          localStorage.setItem("savedCredentials", JSON.stringify({ username, password }));
+        } else {
+          localStorage.removeItem("savedCredentials");
+        }
+        
         toast({
           title: "Login successful",
           description: "Welcome to Creator Management CRM",
@@ -115,6 +135,20 @@ const Login = () => {
                     )}
                   </Button>
                 </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="rememberMe" 
+                  checked={rememberMe} 
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <Label
+                  htmlFor="rememberMe"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Remember me
+                </Label>
               </div>
               
               <Button 
