@@ -67,7 +67,11 @@ const Login = () => {
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">XENTRIK</h1>
+          <img 
+            src="/lovable-uploads/3c9e6d38-5c74-4704-9832-d34027513d1d.png" 
+            alt="XENTRIK" 
+            className="h-12 mx-auto mb-2"
+          />
           <p className="text-xs uppercase tracking-widest">MARKETING</p>
         </div>
         
