@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AccountSettings = () => {
@@ -127,11 +127,22 @@ const AccountSettings = () => {
 
   return (
     <div className="container max-w-4xl py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-        <p className="text-muted-foreground">
-          Update your account information and manage your security settings.
-        </p>
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)} 
+          className="mr-4"
+          size="sm"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
+          <p className="text-muted-foreground">
+            Update your account information and manage your security settings.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6">
