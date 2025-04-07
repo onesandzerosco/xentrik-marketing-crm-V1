@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Creator } from "../types";
 import { Button } from "@/components/ui/button";
-import { BarChart2, MessageSquare, Pencil } from "lucide-react";
+import { BarChart2, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CreatorCardProps {
@@ -125,12 +125,6 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             Edit
           </Button>
         </Link>
-      </div>
-      <div className="mt-2">
-        <Button variant="outline" className="w-full">
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Create Chat
-        </Button>
       </div>
     </div>
   );
