@@ -67,7 +67,7 @@ const Login = () => {
         <Card>
           <div className="text-center pt-6">
             <img 
-              src="/lovable-uploads/6a4f0b60-d110-4a73-9fa1-2ed1b0ea3faf.png" 
+              src="/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png" 
               alt="XENTRIK MARKETING" 
               className="h-44 mx-auto"
             />
