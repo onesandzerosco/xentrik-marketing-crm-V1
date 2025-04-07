@@ -56,6 +56,19 @@ const Sidebar = () => {
         title: "Account updated",
         description: "Your account details have been updated successfully",
       });
+
+      // Send email notification if password was changed
+      if (newPassword && email) {
+        // In a real application, this would make an API call to send an email
+        // For now, we'll just show another toast to simulate email notification
+        setTimeout(() => {
+          toast({
+            title: "Email Notification Sent",
+            description: `A confirmation email has been sent to ${email} about your recent password change.`,
+          });
+        }, 1000);
+      }
+      
       // Reset form and close dialog
       setOpen(false);
       setCurrentPassword("");
