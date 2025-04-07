@@ -116,7 +116,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               variant="outline"
               size="sm"
               onClick={handleEdit}
-              className="flex-1"
+              className="w-1/2"
             >
               <Edit className="h-4 w-4 mr-1" />
               Edit
@@ -127,7 +127,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               variant="destructive"
               size="sm"
               onClick={handleRemove}
-              className="flex-1"
+              className="w-1/2"
             >
               <Trash2 className="h-4 w-4 mr-1" />
               Remove
