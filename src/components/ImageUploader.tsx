@@ -1,8 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, Edit, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface ImageUploaderProps {
   currentImage: string;
@@ -18,7 +20,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   size = "lg" 
 }) => {
   const [previewImage, setPreviewImage] = useState<string>(currentImage);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const sizeClasses = {
     sm: "h-16 w-16",
@@ -45,6 +50,37 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
 
+  const handleEdit = () => {
+    setCropImage(previewImage);
+    setIsEditing(true);
+  };
+
+  const handleRemove = () => {
+    // Reset to default (just the initials)
+    setPreviewImage("");
+    onImageChange("");
+  };
+
+  const handleCropSave = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Get the cropped image from canvas
+    const croppedImageUrl = canvas.toDataURL('image/png');
+    setPreviewImage(croppedImageUrl);
+    onImageChange(croppedImageUrl);
+    setIsEditing(false);
+    setCropImage(null);
+  };
+
+  const handleCropCancel = () => {
+    setIsEditing(false);
+    setCropImage(null);
+  };
+
   const initials = name
     .split(" ")
     .map(part => part[0])
@@ -68,14 +104,40 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       </div>
       
-      <Button 
-        type="button" 
-        variant="outline" 
-        size="sm"
-        onClick={handleClick}
-      >
-        Upload Photo
-      </Button>
+      <div className="flex gap-2">
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm"
+          onClick={handleClick}
+        >
+          Upload Photo
+        </Button>
+
+        {previewImage && (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleRemove}
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Remove
+            </Button>
+          </>
+        )}
+      </div>
       
       <input 
         type="file" 
@@ -84,7 +146,155 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         accept="image/*"
         onChange={handleFileChange}
       />
+
+      {/* Image Crop Modal */}
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Crop Image</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4">
+            <div className="relative border rounded-md overflow-hidden">
+              <AspectRatio ratio={1/1} className="bg-muted">
+                {cropImage && (
+                  <ImageCropper 
+                    src={cropImage} 
+                    canvasRef={canvasRef} 
+                  />
+                )}
+              </AspectRatio>
+            </div>
+            <p className="text-xs text-muted-foreground text-center">
+              Drag the image to adjust the crop. The image will be cropped to a 1:1 ratio.
+            </p>
+          </div>
+          
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button variant="outline" onClick={handleCropCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleCropSave}>
+              Save Crop
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+};
+
+// Simple image cropper component
+interface ImageCropperProps {
+  src: string;
+  canvasRef: React.RefObject<HTMLCanvasElement>;
+}
+
+const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+
+  React.useEffect(() => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    
+    if (!img || !canvas || !src) return;
+    
+    const drawImageOnCanvas = () => {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      const size = canvas.width;
+      ctx.clearRect(0, 0, size, size);
+      
+      // Calculate position to center the image
+      const imgWidth = img.naturalWidth * scale;
+      const imgHeight = img.naturalHeight * scale;
+      
+      ctx.drawImage(
+        img,
+        -position.x, 
+        -position.y, 
+        imgWidth,
+        imgHeight
+      );
+    };
+    
+    img.onload = () => {
+      // Set canvas size
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetWidth; // Square aspect ratio
+      
+      // Auto-fit image to crop area
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      if (imgRatio > 1) {
+        // Landscape: fit height
+        setScale(canvas.height / img.naturalHeight);
+      } else {
+        // Portrait: fit width
+        setScale(canvas.width / img.naturalWidth);
+      }
+      
+      drawImageOnCanvas();
+    };
+    
+    // Set src after defining onload
+    img.src = src;
+    
+    // Draw when position or scale changes
+    const intervalId = setInterval(drawImageOnCanvas, 10);
+    return () => clearInterval(intervalId);
+  }, [src, position, scale, canvasRef]);
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setLastPosition({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - lastPosition.x;
+    const deltaY = e.clientY - lastPosition.y;
+    
+    setPosition(prev => ({
+      x: prev.x - deltaX,
+      y: prev.y - deltaY
+    }));
+    
+    setLastPosition({
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+  
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  
+  return (
+    <>
+      <img
+        ref={imgRef}
+        src={src}
+        className="hidden" // Hidden source image
+        alt="Source"
+      />
+      <canvas
+        ref={canvasRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        className="w-full h-full cursor-move"
+      />
+    </>
   );
 };
 
