@@ -96,6 +96,8 @@
 
 .fade-out-toast {
   animation: slide-out 0.8s ease-out forwards;
-  animation-delay: 5s; /* Start sliding out after 5 seconds */
+  animation-delay: 5.2s; /* Start sliding out after 5.2 seconds */
+  will-change: transform, opacity;
+  transform-origin: center center;
+  backface-visibility: hidden;
 }
-
