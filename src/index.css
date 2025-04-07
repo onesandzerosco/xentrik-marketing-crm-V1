@@ -81,23 +81,3 @@
     @apply w-8 h-8 flex items-center justify-center rounded-full bg-secondary hover:bg-accent transition-colors;
   }
 }
-
-/* Toast animations */
-@keyframes slide-out {
-  0% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.fade-out-toast {
-  animation: slide-out 0.8s ease-out forwards;
-  animation-delay: 5.2s; /* Start sliding out after 5.2 seconds */
-  will-change: transform, opacity;
-  transform-origin: center center;
-  backface-visibility: hidden;
-}

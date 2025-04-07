@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -48,7 +47,6 @@ const Login = () => {
           title: "Login successful",
           description: "Welcome to the bananaverse 🍌",
           duration: 6000, // 6 seconds
-          className: "fade-out-toast"
         });
         navigate("/dashboard");
       } else {
