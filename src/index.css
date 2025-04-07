@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -83,18 +82,16 @@
 }
 
 /* Toast animations */
-@keyframes slide-out-to-right {
+@keyframes fade-out {
   0% {
-    transform: translateX(0);
     opacity: 1;
   }
   100% {
-    transform: translateX(100%);
     opacity: 0;
   }
 }
 
-.slide-out-right-toast {
-  animation: slide-out-to-right 0.5s ease-in-out forwards;
-  animation-delay: 8s; /* Start sliding out after 8 seconds */
+.fade-out-toast {
+  animation: fade-out 0.5s ease-in-out forwards;
+  animation-delay: 6s; /* Start fading out after 6 seconds */
 }
