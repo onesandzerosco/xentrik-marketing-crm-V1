@@ -15,7 +15,7 @@ const Dashboard = () => {
   const maleCreators = creators.filter(c => c.gender === "Male").length;
   const femaleCreators = creators.filter(c => c.gender === "Female").length;
   const transCreators = creators.filter(c => c.gender === "Trans").length;
-  const aiCreators = creators.filter(c => c.gender === "AI").length;
+  const aiCreators = creators.filter(c => c.creatorType === "AI").length;
 
   return (
     <div className="flex">
