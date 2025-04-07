@@ -15,22 +15,13 @@ import { Badge } from "@/components/ui/badge";
 import ImageUploader from "../components/ImageUploader";
 
 const CreatorProfile = () => {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
-  const {
-    getCreator,
-    updateCreator,
-    getCreatorStats
-  } = useCreators();
-  const {
-    toast
-  } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const { getCreator, updateCreator, getCreatorStats } = useCreators();
+  const { toast } = useToast();
   const creator = getCreator(id!);
   const stats = getCreatorStats(id!);
   const [name, setName] = useState(creator?.name || "");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender>(creator?.gender || "Male");
   const [team, setTeam] = useState<Team>(creator?.team || "A Team");
   const [creatorType, setCreatorType] = useState<CreatorType>(creator?.creatorType || "Real");
@@ -44,6 +35,14 @@ const CreatorProfile = () => {
   const [reviewDone, setReviewDone] = useState(false);
 
   const handleSave = () => {
+    setNameError(null);
+    
+    if (!name.trim()) {
+      setNameError("Creator name is required");
+      setTimeout(() => setNameError(null), 3000);
+      return;
+    }
+
     if (!creator) return;
     updateCreator(creator.id, {
       name,
@@ -84,7 +83,6 @@ const CreatorProfile = () => {
   return <div className="flex">
       <Sidebar />
       <div className="ml-60 p-8 w-full">
-        {/* Back button */}
         <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <Button variant="ghost" className="h-8 px-2 gap-1">
             <ArrowLeft className="h-4 w-4" />
@@ -121,8 +119,19 @@ const CreatorProfile = () => {
               <h2 className="text-xl font-bold mb-4">Basic Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="name">Creator Name</Label>
-                  <Input id="name" value={name} onChange={e => setName(e.target.value)} />
+                  <Label htmlFor="name" className={nameError ? "text-red-500" : ""}>Creator Name</Label>
+                  <Input 
+                    id="name" 
+                    value={name} 
+                    onChange={e => {
+                      setName(e.target.value);
+                      if (nameError) setNameError(null);
+                    }} 
+                    className={nameError ? "border-red-500 focus-visible:ring-red-500" : ""}
+                  />
+                  {nameError && (
+                    <p className="text-red-500 text-sm mt-1">{nameError}</p>
+                  )}
                 </div>
                 
                 <div>
