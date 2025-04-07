@@ -17,11 +17,11 @@ const Sidebar = () => {
   return (
     <div className="h-screen w-60 bg-sidebar fixed left-0 top-0 border-r border-border flex flex-col">
       <div className="p-6">
-        <div className="mb-8">
+        <div className="mb-8 flex justify-center">
           <img 
             src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
-            className="h-10 mb-2"
+            className="h-16 w-auto mb-4"
           />
         </div>
 
