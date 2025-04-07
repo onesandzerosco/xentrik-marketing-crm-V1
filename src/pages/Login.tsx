@@ -70,7 +70,7 @@ const Login = () => {
           <img 
             src="/lovable-uploads/3c9e6d38-5c74-4704-9832-d34027513d1d.png" 
             alt="XENTRIK" 
-            className="h-12 mx-auto mb-2"
+            className="h-24 mx-auto mb-3"
           />
           <p className="text-xs uppercase tracking-widest">MARKETING</p>
         </div>
