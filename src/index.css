@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -82,18 +83,19 @@
 }
 
 /* Toast animations */
-@keyframes smooth-fade-out {
+@keyframes slide-out {
   0% {
+    transform: translateX(0);
     opacity: 1;
-    transform: translateY(0);
   }
   100% {
+    transform: translateX(100%);
     opacity: 0;
-    transform: translateY(-10px);
   }
 }
 
 .fade-out-toast {
-  animation: smooth-fade-out 0.8s ease-out forwards;
-  animation-delay: 5s; /* Start fading out after 5 seconds */
+  animation: slide-out 0.8s ease-out forwards;
+  animation-delay: 5s; /* Start sliding out after 5 seconds */
 }
+
