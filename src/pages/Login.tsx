@@ -46,7 +46,7 @@ const Login = () => {
         
         toast({
           title: "Login successful",
-          description: "Welcome to Creator Management CRM",
+          description: "Welcome to the bananaverse 🍌",
         });
         navigate("/dashboard");
       } else {
