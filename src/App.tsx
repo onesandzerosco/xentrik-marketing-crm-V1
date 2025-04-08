@@ -11,6 +11,7 @@ import Creators from './pages/Creators';
 import CreatorProfile from './pages/CreatorProfile';
 import CreatorAnalytics from './pages/CreatorAnalytics';
 import AccountSettings from './pages/AccountSettings';
+import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import TeamManagement from "./pages/TeamManagement";
 
@@ -57,6 +58,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <TeamManagement />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/messages" 
+                  element={
+                    <ProtectedRoute>
+                      <Messages />
                     </ProtectedRoute>
                   } 
                 />

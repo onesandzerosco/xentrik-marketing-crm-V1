@@ -1,8 +1,8 @@
+
 import React from "react";
 import { 
   Home, 
   FileText, 
-  AlertOctagon, 
   MessageSquare, 
   Settings, 
   LogOut,
@@ -27,9 +27,7 @@ const Sidebar: React.FC = () => {
     { icon: <Home />, label: "Dashboard", path: "/dashboard" },
     { icon: <Users />, label: "Creators", path: "/creators" },
     { icon: <Banana />, label: "Team", path: "/team" },
-    { icon: <AlertOctagon />, label: "Content Moderation", path: "#" },
-    { icon: <FileText />, label: "Reports", path: "#" },
-    { icon: <MessageSquare />, label: "Messages", path: "#" },
+    { icon: <MessageSquare />, label: "Messages", path: "/messages" },
   ];
 
   const isActive = (path: string) => {
@@ -43,12 +41,12 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
-      <div className="p-5 border-b flex items-center justify-center">
+      <div className="p-6 border-b flex items-center justify-center">
         <Link to="/dashboard" className="flex justify-center">
           <img 
             src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png" 
             alt="Xentrik Marketing" 
-            className="h-[45px] w-auto object-contain" 
+            className="h-[40px] w-auto object-contain" 
           />
         </Link>
       </div>

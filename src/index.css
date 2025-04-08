@@ -11,28 +11,28 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
+    --primary: 54 100% 60%;    /* Banana yellow */
     --primary-foreground: 240 5.9% 10%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 54 100% 65%;     /* Slightly lighter banana yellow */
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 54 100% 60%;      /* Banana yellow for focus ring */
     --radius: 0.75rem;
     --sidebar-background: 240 10% 3.9%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 60 100% 60%;
+    --sidebar-primary: 54 100% 60%;   /* Banana yellow */
     --sidebar-primary-foreground: 240 5.9% 10%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 240 4.9% 83.9%;
+    --sidebar-ring: 54 100% 60%;      /* Banana yellow ring */
   }
 
   * {
@@ -71,7 +71,7 @@
   }
 
   .tag-a-team {
-    @apply bg-green-900/40 text-green-200;
+    @apply bg-brand-yellow/40 text-brand-yellow;
   }
 
   .tag-b-team {
@@ -92,6 +92,32 @@
 
   .needs-review {
     @apply border-2 border-red-500;
+  }
+  
+  /* Banner-like UI elements with banana theme */
+  .banana-banner {
+    @apply bg-brand-dark border border-brand-yellow/30 rounded-lg p-4 shadow-md;
+  }
+  
+  .banana-card {
+    @apply bg-card rounded-xl border border-brand-yellow/20 shadow-lg hover:border-brand-yellow/40 transition-all duration-300;
+  }
+  
+  .banana-button {
+    @apply bg-brand-yellow text-black font-medium hover:bg-brand-highlight transition-colors duration-300;
+  }
+  
+  /* Message elements */
+  .message-bubble {
+    @apply rounded-2xl p-3 max-w-[85%] shadow-sm;
+  }
+  
+  .message-outgoing {
+    @apply message-bubble bg-brand-yellow text-black ml-auto;
+  }
+  
+  .message-incoming {
+    @apply message-bubble bg-secondary text-white mr-auto;
   }
   
   /* Apple-like animation classes */

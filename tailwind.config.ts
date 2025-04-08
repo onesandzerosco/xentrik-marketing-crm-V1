@@ -63,7 +63,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-                brand: "#FFEB3B", // Yellow brand color for accents
+                brand: {
+                    yellow: "#FFEB3B", // Banana yellow color
+                    dark: "#121212",   // Dark shade for backgrounds
+                    light: "#FFFFFF",  // Light shade for text on dark backgrounds
+                    highlight: "#FFD54F", // Lighter yellow for highlights
+                    muted: "#FFFDE7"   // Very light yellow for subtle backgrounds
+                }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -124,6 +130,19 @@ export default {
                         opacity: '1',
                         transform: 'scale(1)'
                     }
+                },
+                'bounce-in': {
+                    '0%': {
+                        transform: 'scale(0.8)',
+                        opacity: '0'
+                    },
+                    '50%': {
+                        transform: 'scale(1.05)'
+                    },
+                    '100%': {
+                        transform: 'scale(1)',
+                        opacity: '1'
+                    }
                 }
 			},
 			animation: {
@@ -132,7 +151,8 @@ export default {
                 'fade-in': 'fade-in 0.6s ease-out',
                 'slide-up': 'slide-up 0.6s ease-out',
                 'slide-in': 'slide-in 0.6s ease-out',
-                'scale-in': 'scale-in 0.4s ease-out'
+                'scale-in': 'scale-in 0.4s ease-out',
+                'bounce-in': 'bounce-in 0.5s ease-out'
 			},
             transitionDuration: {
                 '400': '400ms',
