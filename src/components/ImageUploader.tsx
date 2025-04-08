@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -291,6 +292,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
   }, [src, position, scale, zoomLevel, canvasRef, imageSize]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default behavior
     setIsDragging(true);
     setLastPosition({
       x: e.clientX,
@@ -300,6 +302,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
   
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return;
+    e.preventDefault(); // Prevent default behavior
     
     const deltaX = e.clientX - lastPosition.x;
     const deltaY = e.clientY - lastPosition.y;
@@ -318,6 +321,38 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    
+    setIsDragging(true);
+    setLastPosition({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault(); // Prevent scrolling while dragging
+    
+    const deltaX = e.touches[0].clientX - lastPosition.x;
+    const deltaY = e.touches[0].clientY - lastPosition.y;
+    
+    setPosition(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setLastPosition({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  };
+  
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
   
   return (
     <>
@@ -333,6 +368,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="w-full h-full cursor-move"
       />
     </>
