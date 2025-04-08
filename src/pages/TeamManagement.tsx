@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import EmployeeCard from "../components/employees/EmployeeCard";
 import { Button } from "@/components/ui/button";
-import { Filter, Plus, X, Search, SortAsc } from "lucide-react";
+import { Filter, Plus, X, Search, SortAsc, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AddEmployeeModal from "../components/employees/AddEmployeeModal";
 import {
@@ -282,7 +283,7 @@ const TeamManagement = () => {
           {isAdmin && (
             <Button 
               onClick={() => setAddEmployeeOpen(true)}
-              className="bg-brand text-black hover:bg-brand/80"
+              className="bg-brand-yellow text-black hover:bg-brand-highlight"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Team Member
@@ -352,7 +353,7 @@ const TeamManagement = () => {
           {isAdmin && (
             <Button 
               onClick={() => setAddEmployeeOpen(true)}
-              className="bg-brand text-black hover:bg-brand/80"
+              className="bg-brand-yellow text-black hover:bg-brand-highlight"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Team Member
@@ -360,6 +361,12 @@ const TeamManagement = () => {
           )}
         </div>
       )}
+      
+      <AddEmployeeModal 
+        open={addEmployeeOpen} 
+        onOpenChange={setAddEmployeeOpen} 
+        onAdd={handleAddEmployee}
+      />
     </div>
   );
 };
