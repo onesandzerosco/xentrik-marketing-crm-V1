@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [yPosition, setYPosition] = useState<number[]>([0]);
   const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
-  const [imageLoaded, setImageLoaded] = useState<boolean>(Boolean(currentImage && currentImage.trim() !== ""));
+  const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -89,54 +88,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleCropSave = () => {
-    const canvas = document.createElement('canvas');
-    const img = new Image();
+    // Instead of creating a cropped version, we save the original image with 
+    // position/zoom parameters that will be used for display
+    setIsEditing(false);
+    setCropImage(null);
     
-    img.onload = () => {
-      const size = canvasRef.current?.width || 300;
-      canvas.width = size;
-      canvas.height = size;
-      
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      // Calculate the center of the image
-      const centerX = size / 2;
-      const centerY = size / 2;
-      
-      // Create a circle clipping path
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, size / 2 - 2, 0, Math.PI * 2, true);
-      ctx.closePath();
-      ctx.clip();
-      
-      // Calculate image drawing parameters
-      const imgWidth = imageSize.width * scale * zoomLevel[0];
-      const imgHeight = imageSize.height * scale * zoomLevel[0];
-      const offsetX = xPosition[0] * 3;
-      const offsetY = yPosition[0] * 3;
-      const posX = centerX - (imgWidth / 2) + offsetX;
-      const posY = centerY - (imgHeight / 2) + offsetY;
-      
-      // Draw only the image without grid and other overlays
-      ctx.drawImage(
-        img,
-        posX, 
-        posY, 
-        imgWidth,
-        imgHeight
-      );
-      
-      // Convert to data URL and update
-      const croppedImageUrl = canvas.toDataURL('image/png');
-      setPreviewImage(croppedImageUrl);
-      setImageLoaded(true);
-      onImageChange(croppedImageUrl);
-      setIsEditing(false);
-      setCropImage(null);
-    };
-    
-    img.src = cropImage || '';
+    // We're passing the full image through to allow re-editing later
+    // No actual cropping happens here
+    onImageChange(previewImage);
   };
 
   const handleCropCancel = () => {
@@ -147,7 +106,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   // Initialize the component with the current image if available
   React.useEffect(() => {
     if (currentImage && currentImage.trim() !== "") {
-      setImageLoaded(true);
+      // Create a temporary Image to check if it loads properly
+      const img = new Image();
+      img.onload = () => {
+        setImageLoaded(true);
+      };
+      img.src = currentImage;
     }
   }, [currentImage]);
 
@@ -177,7 +141,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onClick={handleClick}
       >
         <Avatar className={`${sizeClasses[size]} border-2 border-border`}>
-          <AvatarImage src={previewImage} alt={name} onLoad={() => setImageLoaded(true)} />
+          <AvatarImage 
+            src={previewImage} 
+            alt={name} 
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(false)}
+          />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         
@@ -236,7 +205,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Crop Image</DialogTitle>
+            <DialogTitle>Adjust Image</DialogTitle>
           </DialogHeader>
           
           <div className="flex flex-col gap-4">
@@ -314,7 +283,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               Cancel
             </Button>
             <Button onClick={handleCropSave}>
-              Save Crop
+              Save Adjustments
             </Button>
           </DialogFooter>
         </DialogContent>

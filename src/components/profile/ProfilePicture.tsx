@@ -33,7 +33,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
         />
       </div>
       <p className="text-xs text-center text-muted-foreground mt-4">
-        Upload a square image for best results. The image will be cropped to a circle.
+        Upload a square image for best results. The circular mask is for display only and preserves your original image.
       </p>
     </div>
   );
