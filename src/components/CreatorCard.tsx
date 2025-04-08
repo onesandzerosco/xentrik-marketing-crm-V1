@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { BarChart2, Pencil, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CreatorCardProps {
   creator: Creator;
 }
 
 const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
+  const isMobile = useIsMobile();
+  
   // Map gender to tag class
   const getGenderTagClass = (gender: string) => {
     switch (gender.toLowerCase()) {
@@ -94,46 +97,67 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
     );
   };
 
-  // Check if we need to move the review tag to a new line
-  const showReviewOnNewLine = creator.creatorType === "AI" && creator.needsReview;
+  // Check if we should use a responsive layout based on screen size and content
+  const useResponsiveLayout = isMobile || creator.team.length > 8;
 
   return (
     <div className={cn(
       "creator-card", 
+      "min-h-[200px]", // Ensure minimum height
       creator.needsReview ? "border-2 border-red-500" : ""
     )}>
-      <div className="flex items-center mb-3">
-        <Avatar className="w-12 h-12 mr-3 border border-border">
+      <div className="flex items-start mb-3">
+        <Avatar className="w-12 h-12 mr-3 border border-border shrink-0">
           <AvatarImage src={creator.profileImage} alt={creator.name} />
           <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
         </Avatar>
-        <div className="flex-grow">
-          <h3 className="font-medium text-lg">{creator.name}</h3>
-          <div className="flex flex-wrap gap-1">
-            <span className={cn("tag", getGenderTagClass(creator.gender))}>
-              {creator.gender}
-            </span>
-            {creator.creatorType === "AI" && (
-              <span className="tag bg-gray-100/30 text-gray-100">
-                AI
+        <div className="flex-grow min-w-0"> {/* min-width prevents overflow issues */}
+          <h3 className="font-medium text-lg truncate">{creator.name}</h3>
+          
+          {!useResponsiveLayout ? (
+            // Standard layout - all tags in one line
+            <div className="flex flex-wrap gap-1 mt-1">
+              <span className={cn("tag", getGenderTagClass(creator.gender))}>
+                {creator.gender}
               </span>
-            )}
-            {creator.needsReview && !showReviewOnNewLine && (
-              <span className="tag bg-red-900/40 text-red-200">
-                Review
-              </span>
-            )}
-          </div>
-          {showReviewOnNewLine && (
-            <div className="mt-1">
-              <span className="tag bg-red-900/40 text-red-200">
-                Review
-              </span>
+              {creator.creatorType === "AI" && (
+                <span className="tag bg-gray-100/30 text-gray-100">
+                  AI
+                </span>
+              )}
+              {creator.needsReview && (
+                <span className="tag bg-red-900/40 text-red-200">
+                  Review
+                </span>
+              )}
             </div>
+          ) : (
+            // Responsive layout - gender on first line, other tags on second line
+            <>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className={cn("tag", getGenderTagClass(creator.gender))}>
+                  {creator.gender}
+                </span>
+              </div>
+              {(creator.creatorType === "AI" || creator.needsReview) && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {creator.creatorType === "AI" && (
+                    <span className="tag bg-gray-100/30 text-gray-100">
+                      AI
+                    </span>
+                  )}
+                  {creator.needsReview && (
+                    <span className="tag bg-red-900/40 text-red-200">
+                      Review
+                    </span>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
-        <div className="text-right shrink-0">
-          <span className="tag bg-secondary/40 text-foreground">
+        <div className="text-right shrink-0 ml-1">
+          <span className="tag bg-secondary/40 text-foreground whitespace-nowrap">
             {creator.team}
           </span>
         </div>
