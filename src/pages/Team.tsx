@@ -113,54 +113,6 @@ const Team = () => {
     setEditModalOpen(true);
   };
   
-  const getRoleBadgeStyle = (role: EmployeeRole) => {
-    switch (role) {
-      case "Admin":
-        return "bg-red-500 text-white";
-      case "Manager":
-        return "bg-blue-500 text-white";
-      case "Employee":
-        return "bg-gray-600 text-white";
-      default:
-        return "";
-    }
-  };
-
-  const getStatusBadgeStyle = (status: EmployeeStatus) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-500 text-white";
-      case "Inactive":
-        return "bg-red-500 text-white";
-      case "Paused":
-        return "bg-yellow-500 text-white";
-      default:
-        return "";
-    }
-  };
-
-  const getTeamBadgeStyle = (team: string) => {
-    switch (team) {
-      case "A":
-        return "bg-purple-500 text-white";
-      case "B":
-        return "bg-blue-500 text-white";
-      case "C":
-        return "bg-teal-500 text-white";
-      default:
-        return "";
-    }
-  };
-  
-  const formatLoginTime = (lastLogin: string) => {
-    if (lastLogin.includes("Today")) return lastLogin;
-    if (lastLogin.includes("Yesterday")) return lastLogin;
-    if (lastLogin.includes("week")) return "Last week";
-    if (lastLogin.includes("month")) return `1 month ago`;
-    if (lastLogin.includes("days")) return `2 days ago`;
-    return lastLogin;
-  };
-  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -212,7 +164,7 @@ const Team = () => {
           {isAdmin && (
             <Button 
               onClick={() => setAddEmployeeOpen(true)}
-              className="bg-brand-yellow text-black hover:bg-brand-highlight"
+              className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full font-medium"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Team Member

@@ -218,7 +218,7 @@
   }
   
   .employee-btn {
-    @apply flex-1 flex items-center justify-center;
+    @apply flex-1 flex items-center justify-center rounded-none h-12 text-sm hover:bg-[#222];
   }
   
   /* Role badges */
@@ -261,7 +261,6 @@
   }
 }
 
-/* Custom animations */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
