@@ -14,9 +14,12 @@ import {
   User, 
   Clock, 
   UserX,
-  Cog,
+  PauseCircle,
+  PlayCircle,
+  MessageCircle,
+  Mail
 } from "lucide-react";
-import { Employee } from "../../types/employee";
+import { Employee, EmployeeStatus } from "../../types/employee";
 import EditEmployeeModal from "./EditEmployeeModal";
 
 interface EmployeeCardProps {
@@ -55,14 +58,36 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
     }
   };
   
-  const getStatusBadgeColor = (status: boolean) => {
-    return status 
-      ? "bg-green-500 text-white" 
-      : "bg-red-500 text-white";
+  const getStatusBadgeColor = (status: EmployeeStatus) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-500 text-white";
+      case "Inactive":
+        return "bg-red-500 text-white";
+      case "Paused":
+        return "bg-amber-500 text-white";
+      default:
+        return "bg-secondary";
+    }
   };
   
   const handleToggleStatus = () => {
-    onUpdate(employee.id, { active: !employee.active });
+    let newStatus: EmployeeStatus = "Active";
+    
+    if (employee.status === "Active") {
+      newStatus = "Inactive";
+    } else if (employee.status === "Inactive") {
+      newStatus = "Active";
+    } else if (employee.status === "Paused") {
+      newStatus = "Active";
+    }
+    
+    onUpdate(employee.id, { status: newStatus });
+  };
+  
+  const handleTogglePause = () => {
+    const newStatus: EmployeeStatus = employee.status === "Paused" ? "Active" : "Paused";
+    onUpdate(employee.id, { status: newStatus });
   };
   
   // Determine if this card represents the current user
@@ -70,18 +95,18 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   
   // Disable certain actions if this is the current user and they're an admin
   const canEditRole = isAdmin && !isCurrentUser;
-  const canDeactivate = isAdmin && !isCurrentUser;
+  const canChangeStatus = isAdmin && !isCurrentUser;
   
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-2">
+    <Card className="overflow-hidden border-none shadow-md">
+      <CardHeader className="pb-2 bg-gray-50 dark:bg-gray-900">
         <div className="flex justify-between items-start">
           <div className="flex items-center">
-            <Avatar className="h-12 w-12 mr-3">
+            <Avatar className="h-12 w-12 mr-3 border-2 border-white shadow-sm">
               {employee.profileImage ? (
                 <AvatarImage src={employee.profileImage} alt={employee.name} />
               ) : (
-                <AvatarFallback>
+                <AvatarFallback className="bg-brand-yellow text-black">
                   {getInitials(employee.name)}
                 </AvatarFallback>
               )}
@@ -95,13 +120,16 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                   {employee.role}
                 </Badge>
               </h3>
-              <p className="text-sm text-muted-foreground">{employee.email}</p>
+              <div className="flex items-center text-sm text-muted-foreground">
+                <Mail className="h-3 w-3 mr-1" />
+                {employee.email}
+              </div>
             </div>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pb-2">
-        <div className="flex flex-col gap-2">
+      <CardContent className="py-4">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Clock className="h-4 w-4" />
@@ -114,13 +142,31 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
               <User className="h-4 w-4" />
               <span>Status:</span>
             </div>
-            <Badge className={getStatusBadgeColor(employee.active)}>
-              {employee.active ? "Active" : "Inactive"}
+            <Badge className={getStatusBadgeColor(employee.status)}>
+              {employee.status}
             </Badge>
           </div>
+          {employee.telegram && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <MessageCircle className="h-4 w-4" />
+                <span>Telegram:</span>
+              </div>
+              <span>@{employee.telegram}</span>
+            </div>
+          )}
+          {employee.department && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>Department:</span>
+              </div>
+              <span>{employee.department}</span>
+            </div>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2 pt-4">
+      <CardFooter className="flex gap-2 pt-2 bg-gray-50 dark:bg-gray-900">
         {isAdmin && (
           <Button 
             variant="outline" 
@@ -133,15 +179,36 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           </Button>
         )}
         
-        {canDeactivate && (
+        {canChangeStatus && (
           <Button 
-            variant={employee.active ? "destructive" : "outline"} 
+            variant={employee.status === "Inactive" ? "outline" : "destructive"} 
             size="sm" 
             className="flex-1"
             onClick={handleToggleStatus}
           >
             <UserX className="h-4 w-4 mr-2" />
-            {employee.active ? "Deactivate" : "Activate"}
+            {employee.status === "Inactive" ? "Activate" : "Deactivate"}
+          </Button>
+        )}
+        
+        {canChangeStatus && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1"
+            onClick={handleTogglePause}
+          >
+            {employee.status === "Paused" ? (
+              <>
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Resume
+              </>
+            ) : (
+              <>
+                <PauseCircle className="h-4 w-4 mr-2" />
+                Pause
+              </>
+            )}
           </Button>
         )}
       </CardFooter>

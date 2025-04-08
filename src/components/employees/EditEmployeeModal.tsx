@@ -17,7 +17,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,7 +29,7 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
-import { Employee, EmployeeRole } from "../../types/employee";
+import { Employee, EmployeeRole, EmployeeStatus } from "../../types/employee";
 import ProfilePicture from "../profile/ProfilePicture";
 
 interface EditEmployeeModalProps {
@@ -45,7 +44,10 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   role: z.enum(["Admin", "Manager", "Employee"]),
-  active: z.boolean(),
+  status: z.enum(["Active", "Inactive", "Paused"]),
+  telegram: z.string().optional(),
+  department: z.string().optional(),
+  permissions: z.array(z.string()).optional(),
   profileImage: z.string().optional()
 });
 
@@ -64,7 +66,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       name: employee.name,
       email: employee.email,
       role: employee.role as "Admin" | "Manager" | "Employee",
-      active: employee.active,
+      status: employee.status || "Active",
+      telegram: employee.telegram || "",
+      department: employee.department || "",
+      permissions: employee.permissions || [],
       profileImage: employee.profileImage || ""
     }
   });
@@ -76,7 +81,10 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         name: employee.name,
         email: employee.email,
         role: employee.role as "Admin" | "Manager" | "Employee",
-        active: employee.active,
+        status: employee.status || "Active",
+        telegram: employee.telegram || "",
+        department: employee.department || "",
+        permissions: employee.permissions || [],
         profileImage: employee.profileImage || ""
       });
     }
@@ -89,6 +97,11 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       values.role = employee.role as "Admin" | "Manager" | "Employee";
     }
     
+    // Prevent current users from deactivating themselves
+    if (isCurrentUser && values.status !== "Active") {
+      values.status = "Active";
+    }
+    
     onUpdateEmployee(employee.id, values);
     onOpenChange(false);
   };
@@ -99,7 +112,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Edit Team Member</DialogTitle>
           <DialogDescription>
@@ -108,7 +121,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             <div className="flex gap-6">
               <div className="flex-shrink-0">
                 <ProfilePicture 
@@ -147,59 +160,101 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      {isCurrentUser && (
-                        <FormDescription>
-                          You cannot change your own role.
-                        </FormDescription>
-                      )}
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        disabled={isCurrentUser}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Employee">Employee</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="active"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel>Active Status</FormLabel>
-                        <FormDescription>
-                          {field.value ? "User can currently log in" : "User cannot log in"}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        {isCurrentUser && (
+                          <FormDescription>
+                            You cannot change your own role.
+                          </FormDescription>
+                        )}
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
                           disabled={isCurrentUser}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Manager">Manager</SelectItem>
+                            <SelectItem value="Employee">Employee</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        {isCurrentUser && (
+                          <FormDescription>
+                            You cannot change your own status.
+                          </FormDescription>
+                        )}
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isCurrentUser}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Paused">Paused</SelectItem>
+                            <SelectItem value="Inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="telegram"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telegram Username</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="username (without @)" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Department" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
             
@@ -211,7 +266,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               >
                 Cancel
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" className="bg-brand-yellow text-black hover:bg-brand-highlight">Save Changes</Button>
             </DialogFooter>
           </form>
         </Form>
