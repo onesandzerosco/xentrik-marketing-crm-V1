@@ -83,7 +83,7 @@
   }
   
   .creator-card {
-    @apply bg-card rounded-xl p-4 hover:bg-secondary/60 transition-all duration-200;
+    @apply bg-[#222226] rounded-xl p-4 border border-[#333333] hover:bg-[#2a2a30] transition-all duration-200 shadow-sm;
   }
   
   .social-icon {

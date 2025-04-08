@@ -105,6 +105,8 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       "creator-card", 
       "min-h-[220px]", // Increased minimum height
       "flex flex-col", // Use flexbox for better control
+      "bg-[#222226]", // Slightly lighter background
+      "border border-[#333333]", // Subtle border for definition
       creator.needsReview ? "border-2 border-red-500" : ""
     )}>
       <div className="flex items-start mb-3">
