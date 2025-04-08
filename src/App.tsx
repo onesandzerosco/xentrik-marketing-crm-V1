@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster"
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/CreatorContext';
 import { ActivityProvider } from './context/ActivityContext';
-import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
@@ -35,7 +34,7 @@ function App() {
             <BrowserRouter>
               <Toaster />
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Navigate to="/login" />} />
                 <Route path="/login" element={<Login />} />
                 <Route 
                   path="/dashboard" 
