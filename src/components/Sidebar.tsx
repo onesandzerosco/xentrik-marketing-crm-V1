@@ -51,7 +51,7 @@ const Sidebar = () => {
 
   return (
     <div className="fixed h-screen w-60 border-r bg-background">
-      <div className="flex h-20 items-center justify-center py-2">
+      <div className="flex h-20 items-center justify-center pt-5 pb-2">
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
