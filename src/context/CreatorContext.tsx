@@ -138,11 +138,12 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return stats[id];
   };
 
-  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[] }) => {
+  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[]; reviewStatus?: string[] }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
       let teamMatch = true;
       let creatorTypeMatch = true;
+      let reviewStatusMatch = true;
 
       if (filters.gender && filters.gender.length > 0) {
         genderMatch = filters.gender.includes(creator.gender);
@@ -156,7 +157,15 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
       }
 
-      return genderMatch && teamMatch && creatorTypeMatch;
+      if (filters.reviewStatus && filters.reviewStatus.length > 0) {
+        if (filters.reviewStatus.includes("Needs Review")) {
+          reviewStatusMatch = creator.needsReview === true;
+        } else if (filters.reviewStatus.includes("Reviewed")) {
+          reviewStatusMatch = creator.needsReview === false || creator.needsReview === undefined;
+        }
+      }
+
+      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch;
     });
   };
 
