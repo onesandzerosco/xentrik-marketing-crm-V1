@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import { mockEmployees } from "../data/mockEmployees";
 
-// Mock data for creators that could be assigned to team members (same as in EditEmployeeModal)
+// Mock data for creators, but with proper names
 const mockCreators = [
   { id: "c1", name: "Creator One" },
   { id: "c2", name: "Creator Two" },
@@ -56,11 +56,16 @@ const formSchema = z.object({
 const TeamMemberProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
   const [selectedTeams, setSelectedTeams] = useState<EmployeeTeam[]>([]);
   const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Track if we should return to team page or stay on this page
+  const returnToTeam = location.state?.returnToTeam || false;
   
   // Get employee data from mockEmployees using the ID from the URL
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -157,13 +162,21 @@ const TeamMemberProfile = () => {
     // In a real application, you would update your data source here
     console.log("Updated employee:", { ...employee, ...values });
     
+    // Update the employee in our state
+    setEmployee({ ...employee, ...values });
+    
     toast({
       title: "Profile Updated",
       description: `${employee.name}'s profile has been successfully updated`
     });
     
-    // Navigate back to the team page
-    navigate("/team");
+    // Set success message
+    setSuccessMessage(`${employee.name}'s profile has been successfully updated`);
+    
+    // Only navigate back to team page if returnToTeam is true
+    if (returnToTeam) {
+      navigate("/team");
+    }
   };
 
   const handleProfileImageChange = (url: string) => {
@@ -188,6 +201,12 @@ const TeamMemberProfile = () => {
         return [...prev, creatorId];
       }
     });
+  };
+
+  // Get creator name by ID
+  const getCreatorName = (creatorId: string) => {
+    const creator = mockCreators.find(c => c.id === creatorId);
+    return creator ? creator.name : 'Unknown Creator';
   };
 
   return (
@@ -216,6 +235,12 @@ const TeamMemberProfile = () => {
           Save Changes
         </Button>
       </div>
+
+      {successMessage && (
+        <div className="bg-green-900/20 border border-green-800 rounded-md p-4 mb-6">
+          <p className="text-green-400">{successMessage}</p>
+        </div>
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -385,6 +410,19 @@ const TeamMemberProfile = () => {
                     </div>
                   ))}
                 </div>
+                
+                {selectedCreators.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-sm font-medium mb-2">Selected Creators:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCreators.map(creatorId => (
+                        <Badge key={creatorId} variant="secondary" className="flex items-center gap-1">
+                          {getCreatorName(creatorId)}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -412,6 +450,16 @@ const TeamMemberProfile = () => {
                     <p>{employee.lastLogin}</p>
                   </div>
                 </div>
+              </div>
+              
+              <div className="mt-6">
+                <Button 
+                  onClick={form.handleSubmit(handleSubmit)}
+                  className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-md w-full"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </Button>
               </div>
             </div>
           </div>

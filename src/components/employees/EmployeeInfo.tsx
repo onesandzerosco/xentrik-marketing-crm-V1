@@ -3,12 +3,30 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Clock, User, Users } from "lucide-react";
 import { Employee } from "@/types/employee";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Mock creators data array for mapping IDs to names
+const mockCreators = [
+  { id: "c1", name: "Creator One" },
+  { id: "c2", name: "Creator Two" },
+  { id: "c3", name: "Creator Three" },
+  { id: "c4", name: "Creator Four" },
+  { id: "c5", name: "Creator Five" },
+];
 
 interface EmployeeInfoProps {
   employee: Employee;
 }
 
 const EmployeeInfo: React.FC<EmployeeInfoProps> = ({ employee }) => {
+  // Function to get creator names from IDs
+  const getCreatorNames = (creatorIds: string[]) => {
+    return creatorIds.map(id => {
+      const creator = mockCreators.find(c => c.id === id);
+      return creator ? creator.name : 'Unknown Creator';
+    });
+  };
+
   return (
     <div className="space-y-3 mb-4">
       {/* Last Login */}
@@ -80,9 +98,22 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({ employee }) => {
             <Users className="h-4 w-4" />
             <span className="text-sm">Assigned Creators:</span>
           </div>
-          <Badge variant="outline">
-            {employee.assignedCreators.length}
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="cursor-help">
+                  {employee.assignedCreators.length} {employee.assignedCreators.length === 1 ? 'Creator' : 'Creators'}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <ul className="list-disc pl-4 text-sm">
+                  {getCreatorNames(employee.assignedCreators).map((name, idx) => (
+                    <li key={idx}>{name}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       )}
     </div>

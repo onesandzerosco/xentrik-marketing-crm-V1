@@ -54,7 +54,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
       
       <CardFooter className="mt-auto border-t border-[#333333] p-0">
         <div className="grid grid-cols-1 w-full">
-          <Link to={`/team/${employee.id}`} className="w-full">
+          <Link to={`/team/${employee.id}`} state={{ returnToTeam: true }} className="w-full">
             <Button 
               variant="ghost" 
               className="rounded-none h-12 flex items-center justify-center text-sm hover:bg-[#222] w-full"
