@@ -8,15 +8,11 @@ import { MessageSquare, Tag } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface ActionsPanelProps {
-  isInactive: boolean;
-  setIsInactive: (value: boolean) => void;
   needsReview: boolean;
   setNeedsReview: (value: boolean) => void;
 }
 
 const ActionsPanel: React.FC<ActionsPanelProps> = ({
-  isInactive,
-  setIsInactive,
   needsReview,
   setNeedsReview,
 }) => {
@@ -36,14 +32,6 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
         </Button>
         
         <Separator />
-        
-        <div className="flex items-center justify-between py-2">
-          <div className="space-y-1">
-            <Label htmlFor="inactive" className="font-medium">Tag as Inactive</Label>
-            <p className="text-xs text-muted-foreground">Temporarily pause</p>
-          </div>
-          <Switch id="inactive" checked={isInactive} onCheckedChange={setIsInactive} />
-        </div>
         
         <div className="flex items-center justify-between py-2">
           <div className="space-y-1">

@@ -34,7 +34,6 @@ const CreatorProfile = () => {
   const [twitter, setTwitter] = useState(creator?.socialLinks.twitter || "");
   const [reddit, setReddit] = useState(creator?.socialLinks.reddit || "");
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
-  const [isInactive, setIsInactive] = useState(false);
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
   const [storageDialogOpen, setStorageDialogOpen] = useState(false);
 
@@ -173,8 +172,6 @@ const CreatorProfile = () => {
             />
             
             <ActionsPanel 
-              isInactive={isInactive}
-              setIsInactive={setIsInactive}
               needsReview={needsReview}
               setNeedsReview={setNeedsReview}
             />
