@@ -181,7 +181,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           className="w-full"
         >
           <Upload className="h-4 w-4 mr-1" />
-          Upload Photo
+          {previewImage ? "Change Photo" : "Upload Photo"}
         </Button>
 
         {previewImage && (
