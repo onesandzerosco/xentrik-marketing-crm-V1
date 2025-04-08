@@ -39,11 +39,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [yPosition, setYPosition] = useState<number[]>([0]);
   const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
+  const [imageLoaded, setImageLoaded] = useState<boolean>(Boolean(currentImage && currentImage.trim() !== ""));
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if there's a valid image to display
-  const hasImage = Boolean(previewImage && previewImage.trim() !== "");
+  const hasImage = imageLoaded && Boolean(previewImage && previewImage.trim() !== "");
 
   const sizeClasses = {
     sm: "h-16 w-16",
@@ -62,6 +63,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     if (file) {
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
+      setImageLoaded(true);
       onImageChange(objectUrl);
     }
   };
@@ -76,6 +78,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleRemove = () => {
     setPreviewImage("");
+    setImageLoaded(false);
     onImageChange("");
   };
 
@@ -127,6 +130,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Convert to data URL and update
       const croppedImageUrl = canvas.toDataURL('image/png');
       setPreviewImage(croppedImageUrl);
+      setImageLoaded(true);
       onImageChange(croppedImageUrl);
       setIsEditing(false);
       setCropImage(null);
@@ -139,6 +143,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setIsEditing(false);
     setCropImage(null);
   };
+
+  // Initialize the component with the current image if available
+  React.useEffect(() => {
+    if (currentImage && currentImage.trim() !== "") {
+      setImageLoaded(true);
+    }
+  }, [currentImage]);
 
   const handleZoomChange = (value: number[]) => {
     setZoomLevel(value);
@@ -166,7 +177,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onClick={handleClick}
       >
         <Avatar className={`${sizeClasses[size]} border-2 border-border`}>
-          <AvatarImage src={previewImage} alt={name} />
+          <AvatarImage src={previewImage} alt={name} onLoad={() => setImageLoaded(true)} />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         
