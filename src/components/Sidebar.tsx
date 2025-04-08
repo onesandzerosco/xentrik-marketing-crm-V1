@@ -17,7 +17,6 @@ import {
   LogOut,
   UserCog,
   ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +31,6 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
   const { logout, user } = useAuth();
   const isAdmin = user?.role === "Admin";
-  const [dropdownOpen, setDropdownOpen] = React.useState(false);
 
   const handleLogout = () => {
     logout();
@@ -138,7 +136,7 @@ const Sidebar = () => {
           {/* User profile dropdown section */}
           {user && (
             <div className="border-t pt-4 mb-2">
-              <DropdownMenu onOpenChange={setDropdownOpen}>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="w-full justify-start p-2 hover:bg-accent">
                     <div className="flex items-center gap-3 w-full">
@@ -150,11 +148,7 @@ const Sidebar = () => {
                         <span className="font-medium text-sm">{user.username}</span>
                         <span className="text-xs text-muted-foreground">{user.role}</span>
                       </div>
-                      {dropdownOpen ? (
-                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
