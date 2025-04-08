@@ -1,13 +1,14 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
-import { ArrowLeft, Download, TrendingDown, TrendingUp, Bot } from "lucide-react";
+import { ArrowLeft, Download, TrendingDown, TrendingUp, Bot, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 
 type TimeFilter = "yesterday" | "today" | "week" | "month" | "custom";
 
@@ -40,6 +41,7 @@ const CreatorAnalytics = () => {
   const { id } = useParams();
   const { getCreator, getCreatorStats } = useCreators();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
+  const [zoomLevel, setZoomLevel] = useState<number[]>([50]);
   
   const creator = getCreator(id || "");
   const stats = getCreatorStats(id || "");
@@ -51,6 +53,11 @@ const CreatorAnalytics = () => {
       </div>
     );
   }
+
+  // Get chart height based on zoom level (between 200px and 500px)
+  const getChartHeight = () => {
+    return 200 + ((zoomLevel[0] / 100) * 300);
+  };
 
   // Get the list of platforms that the creator has filled in
   const availablePlatforms = Object.entries({
@@ -278,6 +285,35 @@ const CreatorAnalytics = () => {
           </CardContent>
         </Card>
 
+        {/* Zoom Control */}
+        <Card className="mb-8">
+          <CardHeader className="px-6 flex flex-row items-center space-y-0 pb-3">
+            <div>
+              <CardTitle className="flex items-center">
+                <ZoomIn className="h-5 w-5 mr-2 text-blue-500" />
+                Chart Zoom
+              </CardTitle>
+              <CardDescription>Adjust the visualization size</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <div className="flex flex-col space-y-4">
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="zoom-slider">Zoom Level: {zoomLevel[0]}%</Label>
+              </div>
+              <Slider
+                id="zoom-slider"
+                min={0}
+                max={100}
+                step={1}
+                value={zoomLevel}
+                onValueChange={setZoomLevel}
+                className="w-full"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Main Chart */}
         <Card className="mb-8">
           <CardHeader className="px-6">
@@ -285,7 +321,7 @@ const CreatorAnalytics = () => {
             <CardDescription>{getChartDescription()}</CardDescription>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="h-80">
+            <div style={{ height: `${getChartHeight()}px` }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={getChartData()}
@@ -318,7 +354,7 @@ const CreatorAnalytics = () => {
             <CardDescription>Performance breakdown by platform</CardDescription>
           </CardHeader>
           <CardContent className="p-2">
-            <div className="h-80">
+            <div style={{ height: `${getChartHeight()}px` }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={getChartData()}
