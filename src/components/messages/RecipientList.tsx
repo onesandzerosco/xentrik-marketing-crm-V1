@@ -7,14 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import TagFilter from '@/components/TagFilter';
-
-interface Recipient {
-  id: string;
-  name: string;
-  profileImage?: string;
-  role?: string;
-  type: 'creator' | 'employee';
-}
+import { Recipient } from '@/types/message';
 
 interface RecipientListProps {
   recipients: Recipient[];
@@ -76,7 +69,7 @@ const RecipientList: React.FC<RecipientListProps> = ({
           <div className="space-y-1 px-1 py-2">
             {recipients.map((recipient) => (
               <button
-                key={recipient.id}
+                key={`recipient-${recipient.id}`}
                 className={`w-full text-left px-3 py-3 rounded-lg transition-colors flex items-center gap-3 ${
                   selectedRecipientId === recipient.id 
                     ? 'bg-accent text-accent-foreground' 

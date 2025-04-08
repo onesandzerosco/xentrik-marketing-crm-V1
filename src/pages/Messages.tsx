@@ -26,24 +26,23 @@ const Messages: React.FC = () => {
 
   useEffect(() => {
     // Combine creators and employees into a single recipients list
-    const allRecipients: Recipient[] = [
-      ...creators.map(creator => ({
-        id: creator.id,
-        name: creator.name,
-        profileImage: creator.profileImage,
-        role: 'Creator',
-        type: 'creator' as const
-      })),
-      ...mockEmployees.map(employee => ({
-        id: employee.id,
-        name: employee.name,
-        profileImage: employee.profileImage,
-        role: employee.role,
-        type: 'employee' as const
-      }))
-    ];
+    const creatorsWithIds = creators.map(creator => ({
+      id: `creator-${creator.id}`,
+      name: creator.name,
+      profileImage: creator.profileImage,
+      role: 'Creator',
+      type: 'creator' as const
+    }));
     
-    setRecipients(allRecipients);
+    const employeesWithIds = mockEmployees.map(employee => ({
+      id: `employee-${employee.id}`,
+      name: employee.name,
+      profileImage: employee.profileImage,
+      role: employee.role,
+      type: 'employee' as const
+    }));
+    
+    setRecipients([...creatorsWithIds, ...employeesWithIds]);
     
     // Load saved webhook URL from localStorage
     const savedWebhook = localStorage.getItem("n8nWebhookUrl");
