@@ -200,8 +200,8 @@ const Messages: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="flex-1 flex flex-col p-6 pl-72 max-w-[1400px] mx-auto w-full">
+    <div className="flex min-h-screen w-full bg-background">
+      <div className="flex-grow flex flex-col p-6 pl-72 w-full">
         <div className="flex items-center gap-3 mb-6 animate-fade-in">
           <Button 
             variant="ghost" 
@@ -222,7 +222,7 @@ const Messages: React.FC = () => {
           defaultValue="team" 
           value={activeTab} 
           onValueChange={setActiveTab}
-          className="w-full"
+          className="w-full h-[calc(100vh-120px)]"
         >
           <TabsList className="mb-6">
             <TabsTrigger value="team" className="flex items-center gap-2">
@@ -235,9 +235,9 @@ const Messages: React.FC = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="team" className="w-full animate-slide-up">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-220px)]">
-              <Card className="md:col-span-1 flex flex-col">
+          <TabsContent value="team" className="w-full h-full animate-slide-up">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+              <Card className="md:col-span-1 flex flex-col h-full">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xl">Conversations</CardTitle>
                   <div className="relative mt-2">
@@ -251,7 +251,7 @@ const Messages: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow overflow-hidden px-2 pb-0">
-                  <ScrollArea className="h-[calc(100vh-330px)]">
+                  <ScrollArea className="h-[calc(100vh-250px)]">
                     <div className="space-y-1 px-1 py-2">
                       {filteredConversations.map((conversation) => (
                         <button
@@ -283,7 +283,7 @@ const Messages: React.FC = () => {
                                 {format(conversation.lastMessageTime, 'h:mm a')}
                               </p>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate max-w-[180px]">
+                            <p className="text-sm text-muted-foreground message-preview max-w-[180px]">
                               {conversation.lastMessage}
                             </p>
                           </div>
@@ -294,7 +294,7 @@ const Messages: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="md:col-span-2 flex flex-col">
+              <Card className="md:col-span-2 flex flex-col h-full">
                 {selectedConversation ? (
                   <>
                     <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -321,7 +321,7 @@ const Messages: React.FC = () => {
                     </CardHeader>
                     <Separator className="mb-4" />
                     <CardContent className="flex-grow overflow-hidden p-0">
-                      <ScrollArea className="h-[calc(100vh-380px)] px-6">
+                      <ScrollArea className="h-[calc(100vh-300px)] px-6">
                         <div className="space-y-4 py-4">
                           {messages.map((message) => {
                             const isOutgoing = message.senderId === "current-user";
@@ -333,8 +333,8 @@ const Messages: React.FC = () => {
                                 <div 
                                   className={`max-w-[75%] rounded-lg px-4 py-2 ${
                                     isOutgoing 
-                                      ? 'bg-brand-yellow text-black' 
-                                      : 'bg-accent text-accent-foreground'
+                                      ? 'message-outgoing' 
+                                      : 'message-incoming'
                                   }`}
                                 >
                                   <p>{message.content}</p>
@@ -385,8 +385,8 @@ const Messages: React.FC = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="telegram" className="w-full animate-slide-up">
-            <Card className="w-full max-w-3xl mx-auto">
+          <TabsContent value="telegram" className="w-full h-full animate-slide-up">
+            <Card className="w-full h-full">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <Banana className="h-6 w-6 text-brand-yellow" />
@@ -396,9 +396,9 @@ const Messages: React.FC = () => {
                   Send messages to your entire team through the Telegram group
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="h-[calc(100vh-300px)]">
                 {!isConfigured ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-w-3xl mx-auto">
                     <div className="banana-banner flex items-start gap-4 p-4 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                       <Banana className="h-5 w-5 mt-0.5 text-brand-yellow" />
                       <div>
@@ -430,7 +430,7 @@ const Messages: React.FC = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-w-3xl mx-auto">
                     <div className="banana-banner flex items-start gap-4 p-4 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                       <Banana className="h-5 w-5 mt-0.5 text-brand-yellow" />
                       <div>
