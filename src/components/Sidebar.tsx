@@ -40,15 +40,15 @@ const Sidebar = () => {
 
   return (
     <div className="fixed h-screen w-60 border-r bg-background">
-      <div className="flex h-14 items-center border-b px-4">
+      <div className="flex h-20 items-center justify-center border-b">
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
-          className="h-[30px] w-auto object-contain"
+          className="h-[42px] w-auto object-contain"
         />
       </div>
 
-      <div className="flex flex-col h-[calc(100vh-3.5rem)] justify-between p-2">
+      <div className="flex flex-col h-[calc(100vh-5rem)] justify-between p-2">
         <nav className="grid gap-1 px-2">
           <NavLink
             to="/dashboard"
