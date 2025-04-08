@@ -126,9 +126,9 @@ const Team = () => {
         {isAdmin && (
           <Button 
             onClick={() => setAddEmployeeOpen(true)} 
-            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full font-medium"
+            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2 font-medium"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2" />
             Add Team Member
           </Button>
         )}
@@ -164,9 +164,9 @@ const Team = () => {
           {isAdmin && (
             <Button 
               onClick={() => setAddEmployeeOpen(true)}
-              className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full font-medium"
+              className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2 font-medium"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               Add Team Member
             </Button>
           )}
