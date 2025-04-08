@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Send, Users, Banana, User, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
@@ -13,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { mockEmployees } from '@/data/mockEmployees';
 
-// Type for message
 interface Message {
   id: string;
   senderId: string;
@@ -23,7 +21,6 @@ interface Message {
   isRead: boolean;
 }
 
-// Type for conversation
 interface Conversation {
   id: string;
   userId: string;
@@ -47,28 +44,24 @@ const Messages: React.FC = () => {
   const [isConfigured, setIsConfigured] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Initialize with mock conversations
   useEffect(() => {
-    // Create conversations from mock employees
     const mockConversations = mockEmployees.map(employee => ({
       id: employee.id,
       userId: employee.id,
       userName: employee.name,
       userAvatar: employee.profileImage || "",
       lastMessage: "Hey there! Let's collaborate on the next campaign.",
-      lastMessageTime: new Date(Date.now() - Math.random() * 86400000 * 7), // Random time in the last week
+      lastMessageTime: new Date(Date.now() - Math.random() * 86400000 * 7),
       unreadCount: Math.floor(Math.random() * 3)
     }));
 
     setConversations(mockConversations);
 
-    // Select first conversation by default if available
     if (mockConversations.length > 0) {
       setSelectedConversation(mockConversations[0].id);
       loadMessages(mockConversations[0].id);
     }
 
-    // Check if telegram config is in localStorage
     const savedWebhook = localStorage.getItem("telegramWebhookUrl");
     if (savedWebhook) {
       setTelegramWebhookUrl(savedWebhook);
@@ -77,15 +70,13 @@ const Messages: React.FC = () => {
   }, []);
 
   const loadMessages = (conversationId: string) => {
-    // Generate mock messages for the selected conversation
     const mockMessages: Message[] = [];
     const conversation = conversations.find(c => c.id === conversationId);
     
     if (!conversation) return;
     
-    // Create a few mock messages
     const timeBase = new Date();
-    const messagesCount = 5 + Math.floor(Math.random() * 10); // Between 5-15 messages
+    const messagesCount = 5 + Math.floor(Math.random() * 10);
     
     for (let i = 0; i < messagesCount; i++) {
       const isFromUser = Math.random() > 0.5;
@@ -103,7 +94,6 @@ const Messages: React.FC = () => {
       });
     }
     
-    // Sort by timestamp
     mockMessages.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     setMessages(mockMessages);
   };
@@ -112,7 +102,6 @@ const Messages: React.FC = () => {
     setSelectedConversation(conversationId);
     loadMessages(conversationId);
     
-    // Mark conversation as read
     setConversations(prev => 
       prev.map(conv => 
         conv.id === conversationId 
@@ -128,7 +117,6 @@ const Messages: React.FC = () => {
     const conversation = conversations.find(c => c.id === selectedConversation);
     if (!conversation) return;
     
-    // Create new message
     const newMessageObj: Message = {
       id: `msg-${Date.now()}`,
       senderId: "current-user",
@@ -138,10 +126,8 @@ const Messages: React.FC = () => {
       isRead: false
     };
     
-    // Add to messages
     setMessages(prev => [...prev, newMessageObj]);
     
-    // Update conversation
     setConversations(prev => 
       prev.map(conv => 
         conv.id === selectedConversation 
@@ -154,10 +140,8 @@ const Messages: React.FC = () => {
       )
     );
     
-    // Clear input
     setNewMessage("");
     
-    // Show toast
     toast({
       title: "Message sent",
       description: "Your message has been sent successfully"
@@ -167,17 +151,13 @@ const Messages: React.FC = () => {
   const handleSendTelegramMessage = () => {
     if (!telegramMessage.trim() || !telegramWebhookUrl) return;
     
-    // In a real app, this would make an API call to your backend which would then send to Telegram
-    // For now, we'll simulate with a timeout
     toast({
       title: "Sending message to Telegram...",
     });
     
     setTimeout(() => {
-      // Clear input
       setTelegramMessage("");
       
-      // Show success toast
       toast({
         title: "Message sent to Telegram",
         description: "Your message has been broadcast to the Telegram group"
@@ -195,7 +175,6 @@ const Messages: React.FC = () => {
       return;
     }
     
-    // Save to localStorage
     localStorage.setItem("telegramWebhookUrl", telegramWebhookUrl);
     setIsConfigured(true);
     
@@ -221,7 +200,7 @@ const Messages: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <div className="flex-1 flex flex-col p-6 pl-60 max-w-[1400px] mx-auto w-full">
+      <div className="flex-1 flex flex-col p-6 pl-72 max-w-[1400px] mx-auto w-full">
         <div className="flex items-center gap-3 mb-6 animate-fade-in">
           <Button 
             variant="ghost" 
@@ -491,7 +470,6 @@ const Messages: React.FC = () => {
   );
 };
 
-// Message icon component
 const MessageIcon = ({ className }: { className?: string }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
