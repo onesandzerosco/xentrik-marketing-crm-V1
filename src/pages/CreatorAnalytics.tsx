@@ -52,7 +52,7 @@ const CreatorAnalytics = () => {
   return (
     <div className="flex">
       <Sidebar />
-      <div className="ml-60 p-8 w-full">
+      <div className="ml-60 p-8 w-full max-w-[calc(100vw-240px)]">
         <div className="flex items-center mb-8">
           <Link to={`/creators/${id}`} className="mr-4">
             <Button variant="outline" size="icon">
@@ -78,18 +78,18 @@ const CreatorAnalytics = () => {
         ) : null}
 
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">Instagram</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stats.instagram.followers.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Followers</p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center min-w-[60px] justify-end">
                   {renderTrendIcon(stats.instagram.trend)}
                   <span className={`ml-1 text-sm ${stats.instagram.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(stats.instagram.trend)}%
@@ -100,16 +100,16 @@ const CreatorAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">TikTok</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stats.tiktok.views.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Views</p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center min-w-[60px] justify-end">
                   {renderTrendIcon(stats.tiktok.trend)}
                   <span className={`ml-1 text-sm ${stats.tiktok.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(stats.tiktok.trend)}%
@@ -120,16 +120,16 @@ const CreatorAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">Twitter</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stats.twitter.impressions.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Impressions</p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center min-w-[60px] justify-end">
                   {renderTrendIcon(stats.twitter.trend)}
                   <span className={`ml-1 text-sm ${stats.twitter.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(stats.twitter.trend)}%
@@ -140,16 +140,16 @@ const CreatorAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">Reddit</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stats.reddit.upvotes.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Upvotes</p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center min-w-[60px] justify-end">
                   {renderTrendIcon(stats.reddit.trend)}
                   <span className={`ml-1 text-sm ${stats.reddit.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(stats.reddit.trend)}%
@@ -160,16 +160,16 @@ const CreatorAnalytics = () => {
           </Card>
 
           <Card>
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">Chaturbate</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 pb-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-2xl font-bold">{stats.chaturbate.viewers.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground">Viewers</p>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center min-w-[60px] justify-end">
                   {renderTrendIcon(stats.chaturbate.trend)}
                   <span className={`ml-1 text-sm ${stats.chaturbate.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(stats.chaturbate.trend)}%
@@ -182,11 +182,11 @@ const CreatorAnalytics = () => {
 
         {/* Weekly Chart */}
         <Card className="mb-8">
-          <CardHeader>
+          <CardHeader className="px-6">
             <CardTitle>7-Day Performance</CardTitle>
             <CardDescription>Engagement across platforms for the past week</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
@@ -210,11 +210,11 @@ const CreatorAnalytics = () => {
 
         {/* Monthly Chart */}
         <Card>
-          <CardHeader>
+          <CardHeader className="px-6">
             <CardTitle>30-Day Growth</CardTitle>
             <CardDescription>Monthly performance breakdown</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
