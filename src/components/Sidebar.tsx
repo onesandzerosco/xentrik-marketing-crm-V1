@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { BarChart2, LogOut, Users, UserCog } from "lucide-react";
@@ -9,19 +9,6 @@ import { cn } from "@/lib/utils";
 const Sidebar = () => {
   const { logout } = useAuth();
   const location = useLocation();
-  const [animateLogo, setAnimateLogo] = useState(true);
-
-  // Reset animation when route changes
-  useEffect(() => {
-    setAnimateLogo(false);
-    
-    // Small delay to reset animation class
-    const timer = setTimeout(() => {
-      setAnimateLogo(true);
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -34,11 +21,7 @@ const Sidebar = () => {
           <img 
             src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
-            className={cn(
-              "h-32 w-auto mb-0.5",
-              animateLogo && "slide-up"
-            )}
-            style={{ animationDelay: "100ms" }}
+            className="h-32 w-auto mb-0.5"
           />
         </div>
 
