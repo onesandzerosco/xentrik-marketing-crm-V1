@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Creator, EngagementStats, CreatorType } from "../types/";
 import { useActivities } from "./ActivityContext";
 import { ChangeDetail } from "../types/activity";
+
+// Local storage key
+const CREATORS_STORAGE_KEY = "creators_data";
 
 // Mock data for initial creators
 const initialCreators: Creator[] = [
@@ -158,9 +161,29 @@ const CreatorContext = createContext<CreatorContextType>({
 export const useCreators = () => useContext(CreatorContext);
 
 export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [creators, setCreators] = useState<Creator[]>(initialCreators);
-  const [stats] = useState<Record<string, EngagementStats>>(mockEngagementStats);
+  // Initialize with data from localStorage or use mock data if no saved data
+  const [creators, setCreators] = useState<Creator[]>(() => {
+    const savedCreators = localStorage.getItem(CREATORS_STORAGE_KEY);
+    return savedCreators ? JSON.parse(savedCreators) : initialCreators;
+  });
+  
+  // Save stats to localStorage with creators or use mock data
+  const [stats, setStats] = useState<Record<string, EngagementStats>>(() => {
+    const savedStats = localStorage.getItem(CREATORS_STORAGE_KEY + "_stats");
+    return savedStats ? JSON.parse(savedStats) : mockEngagementStats;
+  });
+  
   const { addActivity } = useActivities();
+
+  // Save creators to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(CREATORS_STORAGE_KEY, JSON.stringify(creators));
+  }, [creators]);
+  
+  // Save stats to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(CREATORS_STORAGE_KEY + "_stats", JSON.stringify(stats));
+  }, [stats]);
 
   const addCreator = (creator: Omit<Creator, "id">) => {
     const newCreator = {
@@ -168,7 +191,19 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: Date.now().toString(),
       needsReview: true,
     };
+    
+    // Update stats for the new creator
+    const newStats = { ...stats };
+    newStats[newCreator.id] = {
+      instagram: { followers: 0, engagement: 0, trend: 0 },
+      tiktok: { views: 0, followers: 0, trend: 0 },
+      twitter: { impressions: 0, followers: 0, trend: 0 },
+      reddit: { upvotes: 0, subscribers: 0, trend: 0 },
+      chaturbate: { viewers: 0, followers: 0, trend: 0 },
+    };
+    
     setCreators([...creators, newCreator]);
+    setStats(newStats);
     
     addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
   };
@@ -252,7 +287,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         } 
         else {
-          addActivity("update", `Profile updated for: ${existingCreator.name}`, id, changeDetails);
+          addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
         }
       }
       else if (Object.keys(updates).length > 0) {
