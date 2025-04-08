@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -16,9 +17,19 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Initial page loading effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1200); // 1.2 second delay to ensure all elements load
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Check if user is already authenticated, redirect to dashboard if they are
   useEffect(() => {
@@ -72,6 +83,45 @@ const Login = () => {
   // If already authenticated, don't render the login form
   if (isAuthenticated) {
     return null;
+  }
+
+  // Show loading skeleton while page is loading
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background">
+        <div className="w-full max-w-md">
+          <Card>
+            <div className="text-center pt-6">
+              <Skeleton className="h-44 w-full mx-auto" />
+            </div>
+            <CardHeader>
+              <Skeleton className="h-8 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-full" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-1/4 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-1/4" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Skeleton className="h-4 w-full" />
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
