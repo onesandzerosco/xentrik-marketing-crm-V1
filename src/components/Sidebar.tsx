@@ -89,19 +89,6 @@ const Sidebar = () => {
             <Users className="h-5 w-5" />
             <span>Creators</span>
           </NavLink>
-
-          <NavLink
-            to="/team"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
-                isActive && "bg-accent text-accent-foreground"
-              )
-            }
-          >
-            <UserCog className="h-5 w-5" />
-            <span>Team</span>
-          </NavLink>
           
           {isAdmin && (
             <NavLink
