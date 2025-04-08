@@ -1,8 +1,7 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Upload, Edit, Trash2, ZoomIn } from "lucide-react";
+import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
@@ -27,6 +26,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
   const [zoomLevel, setZoomLevel] = useState<number[]>([1]);
+  const [xPosition, setXPosition] = useState<number[]>([0]);
+  const [yPosition, setYPosition] = useState<number[]>([0]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -55,6 +56,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setCropImage(previewImage);
     setIsEditing(true);
     setZoomLevel([1]); // Reset zoom level when opening editor
+    setXPosition([0]); // Reset x position
+    setYPosition([0]); // Reset y position
   };
 
   const handleRemove = () => {
@@ -83,6 +86,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleZoomChange = (value: number[]) => {
     setZoomLevel(value);
+  };
+
+  const handleXPositionChange = (value: number[]) => {
+    setXPosition(value);
+  };
+
+  const handleYPositionChange = (value: number[]) => {
+    setYPosition(value);
   };
 
   const initials = name
@@ -169,6 +180,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     src={cropImage} 
                     canvasRef={canvasRef} 
                     zoomLevel={zoomLevel[0]}
+                    xPosition={xPosition[0]}
+                    yPosition={yPosition[0]}
                   />
                 )}
               </AspectRatio>
@@ -177,24 +190,55 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               Drag the image to adjust the crop. The image will be cropped to a 1:1 ratio.
             </p>
 
-            {showZoomSlider && (
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="zoom-slider" className="flex items-center text-sm">
-                    <ZoomIn className="h-4 w-4 mr-1" />
-                    Zoom: {Math.round(zoomLevel[0] * 100)}%
-                  </Label>
-                </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="zoom-slider" className="flex items-center text-sm">
+                  <ZoomIn className="h-4 w-4 mr-1" />
+                  Zoom: {Math.round(zoomLevel[0] * 100)}%
+                </Label>
                 <Slider
                   id="zoom-slider"
                   min={0.5}
                   max={3}
-                  step={0.1}
+                  step={0.01}
                   value={zoomLevel}
                   onValueChange={handleZoomChange}
+                  className="transition-all"
                 />
               </div>
-            )}
+
+              <div className="space-y-2">
+                <Label htmlFor="x-position-slider" className="flex items-center text-sm">
+                  <MoveHorizontal className="h-4 w-4 mr-1" />
+                  Horizontal Position
+                </Label>
+                <Slider
+                  id="x-position-slider"
+                  min={-200}
+                  max={200}
+                  step={1}
+                  value={xPosition}
+                  onValueChange={handleXPositionChange}
+                  className="transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="y-position-slider" className="flex items-center text-sm">
+                  <MoveVertical className="h-4 w-4 mr-1" />
+                  Vertical Position
+                </Label>
+                <Slider
+                  id="y-position-slider"
+                  min={-200}
+                  max={200}
+                  step={1}
+                  value={yPosition}
+                  onValueChange={handleYPositionChange}
+                  className="transition-all"
+                />
+              </div>
+            </div>
           </div>
           
           <DialogFooter className="flex justify-between sm:justify-between">
@@ -215,13 +259,18 @@ interface ImageCropperProps {
   src: string;
   canvasRef: React.RefObject<HTMLCanvasElement>;
   zoomLevel: number;
+  xPosition: number;
+  yPosition: number;
 }
 
-const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel = 1 }) => {
+const ImageCropper: React.FC<ImageCropperProps> = ({ 
+  src, 
+  canvasRef, 
+  zoomLevel = 1,
+  xPosition = 0,
+  yPosition = 0 
+}) => {
   const imgRef = useRef<HTMLImageElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [canvasSize, setCanvasSize] = useState(0);
@@ -249,14 +298,15 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
       const centerY = size / 2;
       
       // Calculate the position offsets to keep center fixed during zoom
-      const offsetX = centerX - (imgWidth / 2);
-      const offsetY = centerY - (imgHeight / 2);
+      // and add the slider positions for x and y
+      const offsetX = centerX - (imgWidth / 2) + xPosition;
+      const offsetY = centerY - (imgHeight / 2) + yPosition;
       
       // Draw the image with position adjusted to keep the center point fixed
       ctx.drawImage(
         img,
-        position.x + offsetX, 
-        position.y + offsetY, 
+        offsetX, 
+        offsetY, 
         imgWidth,
         imgHeight
       );
@@ -279,9 +329,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
         setScale(canvas.width / img.naturalWidth);
       }
       
-      // Reset position to center the image
-      setPosition({ x: 0, y: 0 });
-      
       drawImageOnCanvas();
     };
     
@@ -289,70 +336,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
     
     const intervalId = setInterval(drawImageOnCanvas, 10);
     return () => clearInterval(intervalId);
-  }, [src, position, scale, zoomLevel, canvasRef, imageSize]);
-  
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent default behavior
-    setIsDragging(true);
-    setLastPosition({
-      x: e.clientX,
-      y: e.clientY
-    });
-  };
-  
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault(); // Prevent default behavior
-    
-    const deltaX = e.clientX - lastPosition.x;
-    const deltaY = e.clientY - lastPosition.y;
-    
-    setPosition(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setLastPosition({
-      x: e.clientX,
-      y: e.clientY
-    });
-  };
-  
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    
-    setIsDragging(true);
-    setLastPosition({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    });
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    e.preventDefault(); // Prevent scrolling while dragging
-    
-    const deltaX = e.touches[0].clientX - lastPosition.x;
-    const deltaY = e.touches[0].clientY - lastPosition.y;
-    
-    setPosition(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setLastPosition({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    });
-  };
-  
-  const handleTouchEnd = () => {
-    setIsDragging(false);
-  };
+  }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize]);
   
   return (
     <>
@@ -364,14 +348,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
       />
       <canvas
         ref={canvasRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        className="w-full h-full cursor-move"
+        className="w-full h-full"
       />
     </>
   );
