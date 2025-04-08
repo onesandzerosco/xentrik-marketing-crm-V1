@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Home, 
@@ -9,8 +8,7 @@ import {
   LogOut,
   User,
   Users,
-  Video,
-  Star
+  Banana
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
@@ -27,8 +25,8 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { icon: <Home />, label: "Dashboard", path: "/dashboard" },
-    { icon: <Star />, label: "Creators", path: "/creators" },
-    { icon: <Users />, label: "Team", path: "/team" },
+    { icon: <Users />, label: "Creators", path: "/creators" },
+    { icon: <Banana />, label: "Team", path: "/team" },
     { icon: <AlertOctagon />, label: "Content Moderation", path: "#" },
     { icon: <FileText />, label: "Reports", path: "#" },
     { icon: <MessageSquare />, label: "Messages", path: "#" },
