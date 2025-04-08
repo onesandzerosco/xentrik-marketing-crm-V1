@@ -58,7 +58,7 @@ const Sidebar = () => {
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
-          className="h-[70px] w-auto object-contain py-1"
+          className="h-[70px] w-auto object-contain py-10"
         />
       </div>
 
