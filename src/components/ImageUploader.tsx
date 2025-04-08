@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+
+// Add TypeScript interface for FaceDetector if it doesn't exist in the environment
+interface FaceDetectorInterface {
+  detect: (image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement | ImageBitmap) => Promise<FaceDetectorResult[]>;
+}
+
+interface FaceDetectorResult {
+  boundingBox: DOMRectReadOnly;
+  landmarks?: { locations: DOMPointReadOnly[] };
+}
+
+// Add a check for FaceDetector API
+const isFaceDetectionSupported = (): boolean => {
+  return 'FaceDetector' in window;
+};
 
 interface ImageUploaderProps {
   currentImage: string;
@@ -112,9 +128,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         img.onload = resolve;
       });
       
-      if ('FaceDetector' in window) {
+      if (isFaceDetectionSupported()) {
         try {
-          const faceDetector = new FaceDetector();
+          // @ts-ignore - FaceDetector is an experimental API and may not be in TS definitions
+          const faceDetector = new window.FaceDetector();
           const faces = await faceDetector.detect(img);
           
           if (faces && faces.length > 0) {
