@@ -103,7 +103,8 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
   return (
     <div className={cn(
       "creator-card", 
-      "min-h-[200px]", // Ensure minimum height
+      "min-h-[220px]", // Increased minimum height
+      "flex flex-col", // Use flexbox for better control
       creator.needsReview ? "border-2 border-red-500" : ""
     )}>
       <div className="flex items-start mb-3">
@@ -173,19 +174,23 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
         )}
       </div>
 
-      <div className="flex gap-2 mt-4">
-        <Link to={`/creators/${creator.id}/analytics`} className="flex-1">
-          <Button variant="secondary" className="w-full">
-            <BarChart2 className="w-4 h-4 mr-2" />
-            Analytics
-          </Button>
-        </Link>
-        <Link to={`/creators/${creator.id}`} className="flex-1">
-          <Button variant="secondary" className="w-full">
-            <Pencil className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
-        </Link>
+      {/* Auto-margin pushes buttons to bottom of card */}
+      <div className="mt-auto">
+        {/* Reduced gap and padding for tighter layout */}
+        <div className="flex gap-1 mt-2">
+          <Link to={`/creators/${creator.id}/analytics`} className="flex-1">
+            <Button variant="secondary" className="w-full text-xs h-9 px-2">
+              <BarChart2 className="w-4 h-4 mr-1" />
+              Analytics
+            </Button>
+          </Link>
+          <Link to={`/creators/${creator.id}`} className="flex-1">
+            <Button variant="secondary" className="w-full text-xs h-9 px-2">
+              <Pencil className="w-4 h-4 mr-1" />
+              Edit
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
