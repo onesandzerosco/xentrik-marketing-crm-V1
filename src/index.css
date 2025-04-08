@@ -110,7 +110,15 @@
   }
   
   .employee-card {
-    @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm;
+    @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm flex flex-col h-full;
+  }
+  
+  .employee-card-content {
+    @apply flex-grow;
+  }
+  
+  .employee-card-footer {
+    @apply mt-auto pt-4 border-t border-[#333333];
   }
   
   .social-icon {

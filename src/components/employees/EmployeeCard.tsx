@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -105,15 +104,13 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
     onUpdate(employee.id, { status: newStatus });
   };
   
-  // Determine if this card represents the current user
   const isCurrentUser = currentUserId === employee.id;
   
-  // Disable certain actions if this is the current user and they're an admin
   const canEditRole = isAdmin && !isCurrentUser;
   const canChangeStatus = isAdmin && !isCurrentUser;
   
   return (
-    <Card className="overflow-hidden border-none shadow-md">
+    <Card className="overflow-hidden border-none shadow-md flex flex-col h-full">
       <CardHeader className="pb-2 bg-gray-50 dark:bg-gray-900">
         <div className="flex justify-between items-start">
           <div className="flex items-center">
@@ -139,7 +136,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="py-4">
+      <CardContent className="py-4 flex-grow">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -207,18 +204,16 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex gap-2 pt-2 bg-gray-50 dark:bg-gray-900">
-        {isAdmin && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex-1"
-            onClick={() => setEditModalOpen(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
+      <CardFooter className="flex gap-2 pt-2 bg-gray-50 dark:bg-gray-900 mt-auto">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex-1"
+          onClick={() => setEditModalOpen(true)}
+        >
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </Button>
         
         {canChangeStatus && onDeactivateClick && (
           <Button 
