@@ -16,26 +16,16 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isPageLoaded, setIsPageLoaded] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Load page with a slight delay to ensure all elements are rendered
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPageLoaded(true);
-    }, 500); // 500ms delay to ensure complete loading
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   // Check if user is already authenticated, redirect to dashboard if they are
   useEffect(() => {
-    if (isAuthenticated && isPageLoaded) {
+    if (isAuthenticated) {
       navigate("/dashboard");
     }
-  }, [isAuthenticated, navigate, isPageLoaded]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const savedCredentials = localStorage.getItem("savedCredentials");
@@ -66,11 +56,7 @@ const Login = () => {
           description: "Welcome to the bananaverse 🍌",
           duration: 6000, // 6 seconds
         });
-        
-        // Add a slight delay before navigation to ensure all elements are loaded
-        setTimeout(() => {
-          navigate("/dashboard");
-        }, 400);
+        navigate("/dashboard");
       } else {
         toast({
           variant: "destructive",
@@ -80,26 +66,12 @@ const Login = () => {
       }
       
       setIsLoading(false);
-    }, 1500); // Increased from 1000ms to 1500ms to give more time for elements to load
+    }, 1000);
   };
 
-  // If already authenticated and page is loaded, don't render the login form
-  if (isAuthenticated && isPageLoaded) {
+  // If already authenticated, don't render the login form
+  if (isAuthenticated) {
     return null;
-  }
-
-  // If page is not yet loaded, show a minimal loading state
-  if (!isPageLoaded) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-pulse">
-            <div className="h-44 w-44 mx-auto mb-4 bg-muted rounded"></div>
-            <div className="h-8 w-32 mx-auto bg-muted rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
   }
 
   return (
