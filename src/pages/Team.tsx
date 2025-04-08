@@ -13,6 +13,9 @@ import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
 
+// Storage key for employees data
+const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
+
 const Team = () => {
   const {
     toast
@@ -23,7 +26,20 @@ const Team = () => {
   const isAdmin = user?.role === "Admin";
 
   // State for employees and filters
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    // Try to load from localStorage first
+    const savedEmployees = localStorage.getItem(EMPLOYEES_STORAGE_KEY);
+    if (savedEmployees) {
+      try {
+        return JSON.parse(savedEmployees);
+      } catch (error) {
+        console.error("Error parsing saved employees:", error);
+        return mockEmployees;
+      }
+    }
+    return mockEmployees;
+  });
+  
   const [selectedRoles, setSelectedRoles] = useState<EmployeeRole[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("nameAsc");
@@ -32,6 +48,11 @@ const Team = () => {
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+
+  // Save employees to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(EMPLOYEES_STORAGE_KEY, JSON.stringify(employees));
+  }, [employees]);
 
   // Load saved filters from localStorage
   useEffect(() => {
