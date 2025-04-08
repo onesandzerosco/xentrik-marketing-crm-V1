@@ -44,10 +44,12 @@ const AppRoutes = () => {
     }
     
     return (
-      <>
+      <div className="flex w-full">
         <Sidebar />
-        {children}
-      </>
+        <div className="ml-60 flex-1 w-full">
+          {children}
+        </div>
+      </div>
     );
   };
   

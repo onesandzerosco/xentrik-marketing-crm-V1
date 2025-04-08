@@ -15,13 +15,11 @@ import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { StorageUsage } from "./storage/StorageUsage";
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   const menuItems = [
     { icon: <Home />, label: "Dashboard", path: "/dashboard" },
@@ -91,9 +89,6 @@ const Sidebar: React.FC = () => {
             <DropdownMenuItem onClick={() => navigate('/account')}>
               <Settings className="h-4 w-4 mr-2" />
               <span>Account Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
-              <StorageUsage />
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
