@@ -9,7 +9,8 @@ import {
   LogOut,
   User,
   Users,
-  Video
+  Video,
+  Star
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
@@ -26,7 +27,7 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { icon: <Home />, label: "Dashboard", path: "/dashboard" },
-    { icon: <Video />, label: "Creators", path: "/creators" },
+    { icon: <Star />, label: "Creators", path: "/creators" },
     { icon: <Users />, label: "Team", path: "/team" },
     { icon: <AlertOctagon />, label: "Content Moderation", path: "#" },
     { icon: <FileText />, label: "Reports", path: "#" },
