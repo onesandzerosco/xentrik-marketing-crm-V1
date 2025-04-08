@@ -3,12 +3,20 @@ import React from "react";
 import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   LayoutDashboard,
   Users,
   MessageSquare,
   Settings,
   LogOut,
   UserCog,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -125,43 +133,42 @@ const Sidebar = () => {
         </nav>
 
         <div className="mt-auto grid gap-1 px-2">
-          {/* User profile section */}
+          {/* User profile dropdown section */}
           {user && (
             <div className="border-t pt-4 mb-2">
-              <div className="flex items-center gap-3 mb-2 p-2">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={user.profileImage} alt={user.username} />
-                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-medium text-sm">{user.username}</span>
-                  <span className="text-xs text-muted-foreground">{user.role}</span>
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start p-2 hover:bg-accent">
+                    <div className="flex items-center gap-3 w-full">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.profileImage} alt={user.username} />
+                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 flex flex-col text-left">
+                        <span className="font-medium text-sm">{user.username}</span>
+                        <span className="text-xs text-muted-foreground">{user.role}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Account Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout} 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
-
-          <NavLink
-            to="/account"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
-                isActive && "bg-accent text-accent-foreground"
-              )
-            }
-          >
-            <Settings className="h-5 w-5" />
-            <span>Account</span>
-          </NavLink>
-
-          <Button
-            variant="ghost"
-            className="flex justify-start gap-3 px-3 text-muted-foreground transition-all hover:text-foreground"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </Button>
         </div>
       </div>
     </div>
