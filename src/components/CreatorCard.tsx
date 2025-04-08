@@ -94,6 +94,9 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
     );
   };
 
+  // Check if we need to move the review tag to a new line
+  const showReviewOnNewLine = creator.creatorType === "AI" && creator.needsReview;
+
   return (
     <div className={cn(
       "creator-card", 
@@ -106,7 +109,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
         </Avatar>
         <div className="flex-grow">
           <h3 className="font-medium text-lg">{creator.name}</h3>
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1">
             <span className={cn("tag", getGenderTagClass(creator.gender))}>
               {creator.gender}
             </span>
@@ -115,12 +118,19 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
                 AI
               </span>
             )}
-            {creator.needsReview && (
+            {creator.needsReview && !showReviewOnNewLine && (
               <span className="tag bg-red-900/40 text-red-200">
                 Review
               </span>
             )}
           </div>
+          {showReviewOnNewLine && (
+            <div className="mt-1">
+              <span className="tag bg-red-900/40 text-red-200">
+                Review
+              </span>
+            </div>
+          )}
         </div>
         <div className="text-right shrink-0">
           <span className="tag bg-secondary/40 text-foreground">
