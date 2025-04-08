@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { v4 as uuidv4 } from 'uuid';
-import { Edit, Clock, Mail, Users, Pause, Play } from "lucide-react";
+import { Edit, Clock, Mail, Users, Pause, Play, Plus } from "lucide-react";
 
 import { Employee, EmployeeRole, EmployeeStatus } from '../types/employee';
 import { mockEmployees } from '../data/mockEmployees';
@@ -10,6 +11,7 @@ import { filterAndSortEmployees, FILTER_KEYS } from '../utils/employeeUtils';
 
 import EmployeeSearchAndSort from '../components/employees/EmployeeSearchAndSort';
 import EmployeeCard from '../components/employees/EmployeeCard';
+import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -36,6 +38,7 @@ const Team = () => {
   
   // State for modals
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   
@@ -170,9 +173,10 @@ const Team = () => {
         
         {isAdmin && (
           <Button 
-            onClick={() => {}} 
-            className="bg-yellow-400 text-black hover:bg-yellow-500 rounded-full font-medium"
+            onClick={() => setAddEmployeeOpen(true)} 
+            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full font-medium"
           >
+            <Plus className="h-4 w-4 mr-2" />
             Add Team Member
           </Button>
         )}
@@ -201,6 +205,22 @@ const Team = () => {
         ))}
       </div>
       
+      {filteredEmployees.length === 0 && (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium mb-2">No team members found</h3>
+          <p className="text-muted-foreground mb-4">Try changing your filters or add a new team member</p>
+          {isAdmin && (
+            <Button 
+              onClick={() => setAddEmployeeOpen(true)}
+              className="bg-brand-yellow text-black hover:bg-brand-highlight"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Team Member
+            </Button>
+          )}
+        </div>
+      )}
+      
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -220,6 +240,12 @@ const Team = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      <AddEmployeeModal 
+        open={addEmployeeOpen}
+        onOpenChange={setAddEmployeeOpen}
+        onAddEmployee={handleAddEmployee}
+      />
     </div>
   );
 };
