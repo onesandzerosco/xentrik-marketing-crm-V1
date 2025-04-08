@@ -42,6 +42,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Check if there's a valid image to display
+  const hasImage = Boolean(previewImage && previewImage.trim() !== "");
+
   const sizeClasses = {
     sm: "h-16 w-16",
     md: "h-24 w-24",
@@ -181,10 +184,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           className="w-full"
         >
           <Upload className="h-4 w-4 mr-1" />
-          {previewImage ? "Change Photo" : "Upload Photo"}
+          {hasImage ? "Change Photo" : "Upload Photo"}
         </Button>
 
-        {previewImage && (
+        {hasImage && (
           <div className="flex gap-2 w-full">
             <Button
               type="button"
