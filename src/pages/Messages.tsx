@@ -1,34 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Send, MessageSquare, ArrowLeft, User, Filter } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import TagFilter from '@/components/TagFilter';
+import RecipientList from '@/components/messages/RecipientList';
+import MessageComposer from '@/components/messages/MessageComposer';
+import WebhookConfig from '@/components/messages/WebhookConfig';
 import { useCreators } from '../context/CreatorContext';
 import { mockEmployees } from '@/data/mockEmployees';
-
-interface Recipient {
-  id: string;
-  name: string;
-  profileImage?: string;
-  role?: string;
-  type: 'creator' | 'employee';
-}
+import { Recipient } from '@/types/message';
 
 const Messages: React.FC = () => {
   const navigate = useNavigate();
@@ -160,9 +141,6 @@ const Messages: React.FC = () => {
     });
   };
 
-  // Filter tags for recipient types
-  const recipientTypeTags = ["Team", "Creator"];
-
   // Filter and sort recipients
   const filteredRecipients = recipients.filter(recipient => {
     // Apply search filter
@@ -175,6 +153,9 @@ const Messages: React.FC = () => {
     
     return matchesSearch && matchesType;
   });
+
+  // Get the selected recipient object
+  const selectedRecipient = recipients.find(r => r.id === selectedRecipientId);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -197,182 +178,32 @@ const Messages: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
           {/* Recipients List */}
-          <Card className="md:col-span-1 flex flex-col h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Recipients</CardTitle>
-              <CardDescription>
-                Select a team member or creator to send a WhatsApp message
-              </CardDescription>
-              
-              {/* Filter by type */}
-              <div className="mt-2 mb-4">
-                <div className="flex items-center mb-2">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="text-sm font-medium">Filter by type</span>
-                </div>
-                <TagFilter 
-                  tags={recipientTypeTags}
-                  selectedTags={selectedTags}
-                  onChange={setSelectedTags}
-                  type="team"
-                />
-              </div>
-              
-              {/* Search input */}
-              <div className="relative mt-2">
-                <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search recipients..."
-                  className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="flex-grow overflow-hidden px-2 pb-0">
-              <ScrollArea className="h-[calc(100vh-350px)]">
-                <div className="space-y-1 px-1 py-2">
-                  {filteredRecipients.map((recipient) => (
-                    <button
-                      key={recipient.id}
-                      className={`w-full text-left px-3 py-3 rounded-lg transition-colors flex items-center gap-3 ${
-                        selectedRecipientId === recipient.id 
-                          ? 'bg-accent text-accent-foreground' 
-                          : 'hover:bg-muted'
-                      }`}
-                      onClick={() => setSelectedRecipientId(recipient.id)}
-                    >
-                      <div className="relative">
-                        <Avatar>
-                          <AvatarImage src={recipient.profileImage || ""} alt={recipient.name} />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium truncate">{recipient.name}</p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <p className="text-sm text-muted-foreground truncate">
-                            {recipient.role || "Team Member"}
-                          </p>
-                          <Badge variant="outline" className="ml-1 text-xs">
-                            {recipient.type === 'creator' ? 'Creator' : 'Team'}
-                          </Badge>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <RecipientList 
+            recipients={filteredRecipients}
+            selectedRecipientId={selectedRecipientId}
+            onSelectRecipient={setSelectedRecipientId}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
 
           {/* Message Composer */}
-          <Card className="md:col-span-2 flex flex-col h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">Send WhatsApp Message</CardTitle>
-              <CardDescription>
-                Compose and send WhatsApp messages via n8n automation
-              </CardDescription>
-            </CardHeader>
-            <Separator className="mb-4" />
-            <CardContent className="flex-grow flex flex-col p-6">
-              {selectedRecipientId ? (
-                <>
-                  <div className="mb-4">
-                    <label className="text-sm font-medium mb-1 block">Recipient</label>
-                    <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                      {(() => {
-                        const recipient = recipients.find(r => r.id === selectedRecipientId);
-                        if (!recipient) return null;
-                        return (
-                          <>
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={recipient.profileImage || ""} alt={recipient.name} />
-                              <AvatarFallback>
-                                <User className="h-4 w-4" />
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{recipient.name}</p>
-                              <div className="flex items-center gap-1">
-                                <p className="text-xs text-muted-foreground">{recipient.role || "Team Member"}</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {recipient.type === 'creator' ? 'Creator' : 'Team'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  <div className="mb-4 flex-grow">
-                    <label htmlFor="message" className="text-sm font-medium mb-1 block">
-                      Message
-                    </label>
-                    <Textarea 
-                      id="message"
-                      placeholder="Type your WhatsApp message here..."
-                      className="resize-none h-[calc(100vh-400px)]"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                    />
-                  </div>
-
-                  <Button 
-                    onClick={handleSendMessage}
-                    className="w-full bg-brand-yellow hover:bg-brand-highlight text-black"
-                    disabled={isLoading}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Send WhatsApp Message
-                  </Button>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                  <MessageSquare className="h-12 w-12 mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium">Select a recipient</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Choose a team member or creator from the list to start composing a message
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <MessageComposer 
+            selectedRecipient={selectedRecipient}
+            message={message}
+            onMessageChange={setMessage}
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+          />
         </div>
 
         {/* Webhook Configuration */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg">n8n Webhook Configuration</CardTitle>
-            <CardDescription>
-              Configure the n8n webhook URL to enable WhatsApp messaging
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-4">
-              <div className="flex-grow">
-                <label htmlFor="webhook" className="text-sm font-medium block mb-1">
-                  n8n Webhook URL
-                </label>
-                <Input
-                  id="webhook"
-                  placeholder="https://your-n8n-instance.com/webhook/..."
-                  value={webhookUrl}
-                  onChange={(e) => setWebhookUrl(e.target.value)}
-                />
-              </div>
-              <Button onClick={handleSaveWebhook} className="bg-brand-yellow hover:bg-brand-highlight text-black">
-                Save Webhook
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <WebhookConfig 
+          webhookUrl={webhookUrl}
+          onWebhookUrlChange={setWebhookUrl}
+          onSaveWebhook={handleSaveWebhook}
+        />
       </div>
     </div>
   );
