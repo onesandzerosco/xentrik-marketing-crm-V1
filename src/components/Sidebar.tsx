@@ -16,7 +16,6 @@ import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ModeToggle";
 import { StorageUsage } from "./storage/StorageUsage";
 
 const Sidebar: React.FC = () => {
@@ -53,9 +52,6 @@ const Sidebar: React.FC = () => {
             className="h-14" 
           />
         </Link>
-        <div className="absolute right-4">
-          <ModeToggle />
-        </div>
       </div>
 
       <nav className="p-4 flex-grow">
