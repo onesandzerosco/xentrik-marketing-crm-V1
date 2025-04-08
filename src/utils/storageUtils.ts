@@ -1,77 +1,59 @@
 
 /**
- * Utility functions for checking localStorage usage and limits
+ * Calculate the approximate size of localStorage in bytes
  */
-
-/**
- * Get the approximate size of localStorage data in bytes
- */
-export const getLocalStorageSize = (): number => {
+export function getLocalStorageSize(): number {
   let totalSize = 0;
   
-  for (let key in localStorage) {
-    // Skip built-in properties
-    if (!localStorage.hasOwnProperty(key)) continue;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i) || '';
+    const value = localStorage.getItem(key) || '';
     
-    // Get the size of the key and its value
-    const value = localStorage[key];
-    totalSize += (key.length + value.length) * 2; // UTF-16 uses 2 bytes per character
+    // Calculate size: key length + value length in bytes
+    totalSize += key.length * 2 + value.length * 2; // UTF-16 uses 2 bytes per character
   }
   
   return totalSize;
-};
+}
 
 /**
- * Format bytes to a human-readable format (KB, MB)
+ * Format bytes into a human-readable string
  */
-export const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) return bytes + " bytes";
-  else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
-  else return (bytes / 1048576).toFixed(2) + " MB";
-};
-
-/**
- * Get the total localStorage limit for the current browser
- * Note: This is an estimation as browsers don't expose this directly
- */
-export const getLocalStorageLimit = (): string => {
-  // Common localStorage limits by browser
-  // Chrome, Firefox, Safari: ~5-10MB
-  // Edge: ~10MB
-  // IE: ~10MB
-  return "~5-10 MB (varies by browser)";
-};
-
-/**
- * Calculate the percentage of localStorage used
- * Uses a conservative 5MB estimate for the limit
- */
-export const getLocalStorageUsagePercentage = (): number => {
-  const bytesUsed = getLocalStorageSize();
-  const estimatedLimit = 5 * 1048576; // 5MB in bytes
-  return Math.round((bytesUsed / estimatedLimit) * 100);
-};
-
-/**
- * Get a detailed breakdown of localStorage usage by key
- */
-export const getLocalStorageBreakdown = (): Array<{key: string, size: number, formattedSize: string}> => {
-  const breakdown = [];
+export function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return '0 Bytes';
   
-  for (let key in localStorage) {
-    // Skip built-in properties
-    if (!localStorage.hasOwnProperty(key)) continue;
-    
-    const value = localStorage[key];
-    const size = (key.length + value.length) * 2; // UTF-16 uses 2 bytes per character
-    
-    breakdown.push({
-      key,
-      size,
-      formattedSize: formatBytes(size)
-    });
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+}
+
+/**
+ * Calculate the percentage of localStorage usage based on typical browser limits
+ * Most browsers have a limit of 5-10MB
+ */
+export function getLocalStorageUsagePercentage(): number {
+  const size = getLocalStorageSize();
+  // Using 5MB as a conservative estimate
+  const estimatedLimit = 5 * 1024 * 1024; 
+  
+  return Math.min(Math.round((size / estimatedLimit) * 100), 100);
+}
+
+/**
+ * Clear all localStorage data except for essential items
+ * @param keysToKeep Array of localStorage keys that should not be deleted
+ */
+export function cleanLocalStorage(keysToKeep: string[] = []): void {
+  const keysToDelete: string[] = [];
+  
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && !keysToKeep.includes(key)) {
+      keysToDelete.push(key);
+    }
   }
   
-  // Sort by size (largest first)
-  return breakdown.sort((a, b) => b.size - a.size);
-};
+  keysToDelete.forEach(key => localStorage.removeItem(key));
+}

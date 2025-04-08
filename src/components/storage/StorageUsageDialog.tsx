@@ -1,21 +1,22 @@
-
 import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Database, Trash2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { 
   getLocalStorageSize, 
   formatBytes, 
-  getLocalStorageLimit,
   getLocalStorageUsagePercentage,
-  getLocalStorageBreakdown
+  cleanLocalStorage
 } from "@/utils/storageUtils";
+import { useToast } from "@/hooks/use-toast";
 
 interface StorageUsageDialogProps {
   open: boolean;
@@ -26,46 +27,82 @@ const StorageUsageDialog: React.FC<StorageUsageDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { toast } = useToast();
   const storageSize = getLocalStorageSize();
   const formattedSize = formatBytes(storageSize);
-  const storageLimit = getLocalStorageLimit();
   const usagePercentage = getLocalStorageUsagePercentage();
-  const breakdown = getLocalStorageBreakdown();
-
+  
+  // Items to keep when cleaning storage
+  const essentialItems = ['auth_token', 'user_preferences'];
+  
+  const handleClearStorage = () => {
+    cleanLocalStorage(essentialItems);
+    
+    toast({
+      title: "Storage cleared",
+      description: "Non-essential storage data has been cleared.",
+    });
+    
+    onOpenChange(false);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Local Storage Usage</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            <span>Storage Usage</span>
+          </DialogTitle>
           <DialogDescription>
-            Information about your browser's localStorage usage for this application.
+            View and manage your application's local storage usage.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Used: {formattedSize}</span>
-              <span>Limit: {storageLimit}</span>
-            </div>
-            <Progress value={usagePercentage} className="h-2" />
+        
+        <div className="py-4 space-y-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium">Current Usage</span>
+            <span className="text-sm text-muted-foreground">{formattedSize}</span>
           </div>
-
-          <div>
-            <h3 className="text-sm font-medium mb-2">Storage Breakdown</h3>
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {breakdown.map((item) => (
-                <div key={item.key} className="space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-mono truncate flex-1">{item.key}</span>
-                    <span className="text-muted-foreground">{item.formattedSize}</span>
-                  </div>
-                  <Separator />
-                </div>
-              ))}
+          
+          <Progress value={usagePercentage} className="h-2" />
+          
+          <div className="text-sm text-muted-foreground mt-1">
+            {usagePercentage}% of estimated browser storage limit used
+          </div>
+          
+          <div className="rounded-md bg-muted p-4 mt-4">
+            <div className="flex gap-2 items-start">
+              <div className="mt-0.5">
+                <Database className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <h4 className="text-sm font-medium">Storage Information</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your browser allows around 5MB of local storage per domain. 
+                  Clearing storage may log you out of the application and reset some preferences.
+                </p>
+              </div>
             </div>
           </div>
         </div>
+        
+        <DialogFooter className="flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleClearStorage}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear Storage
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

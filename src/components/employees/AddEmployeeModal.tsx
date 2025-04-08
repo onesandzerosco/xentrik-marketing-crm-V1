@@ -1,37 +1,25 @@
 
-import React from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormDescription
-} from "@/components/ui/form";
-import { Employee, EmployeeRole } from "../../types/employee";
-import ProfilePicture from "../profile/ProfilePicture";
+import { Employee, EmployeeRole } from "@/types/employee";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -39,155 +27,123 @@ interface AddEmployeeModalProps {
   onAddEmployee: (employee: Omit<Employee, "id">) => void;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(["Admin", "Manager", "Employee"]),
-  active: z.boolean().default(true),
-  profileImage: z.string().optional()
-});
-
-const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({ 
-  open, 
+const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
+  open,
   onOpenChange,
-  onAddEmployee
+  onAddEmployee,
 }) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      role: "Employee",
-      active: true,
-      profileImage: ""
-    }
-  });
-  
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onAddEmployee({
-      ...values,
-      lastLogin: "Never"
-    });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<EmployeeRole>("Employee");
+  const [active, setActive] = useState(true);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    form.reset();
+    // Basic validation
+    if (!name.trim() || !email.trim() || !role) {
+      return;
+    }
+    
+    // Create employee object with required fields
+    const newEmployee: Omit<Employee, "id"> = {
+      name: name.trim(),
+      email: email.trim(),
+      role,
+      active,
+      lastLogin: "Never",
+    };
+    
+    onAddEmployee(newEmployee);
+    resetForm();
     onOpenChange(false);
   };
   
-  const handleProfileImageChange = (url: string) => {
-    form.setValue("profileImage", url);
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setRole("Employee");
+    setActive(true);
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
-          <DialogDescription>
-            Add a new team member to your organization. They will receive an email invitation to join.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <div className="flex gap-6">
-              <div className="flex-shrink-0">
-                <ProfilePicture 
-                  profileImage={form.watch("profileImage") || ""}
-                  name={form.watch("name") || "New User"}
-                  setProfileImage={handleProfileImageChange}
-                />
-              </div>
-              
-              <div className="flex-1 space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input placeholder="john.doe@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="Employee">Employee</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="active"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel>Active Status</FormLabel>
-                        <FormDescription>
-                          Determine if this user can log in immediately
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogDescription>
+              Add a new team member to your organization.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                required
+                className="w-full"
+              />
             </div>
             
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="john.doe@example.com"
+                type="email"
+                required
+                className="w-full"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role</Label>
+              <Select 
+                value={role} 
+                onValueChange={(value: EmployeeRole) => setRole(value)}
               >
-                Cancel
-              </Button>
-              <Button type="submit">Add Team Member</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="Manager">Manager</SelectItem>
+                  <SelectItem value="Employee">Employee</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="status">Active Status</Label>
+              <Switch 
+                id="status"
+                checked={active}
+                onCheckedChange={setActive}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                onOpenChange(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit">Add Team Member</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Home, 
@@ -47,8 +48,8 @@ const Sidebar: React.FC = () => {
     <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
       <div className="p-4 flex items-center justify-between border-b">
         <Link to="/dashboard" className="flex items-center text-lg font-semibold">
-          <LayoutDashboard className="mr-2 h-5 w-5" />
-          <span>Dashboard</span>
+          <LayoutDashboard className="mr-2 h-6 w-6 text-brand" />
+          <span className="text-xl font-bold">CreatorOS</span>
         </Link>
         <ModeToggle />
       </div>
