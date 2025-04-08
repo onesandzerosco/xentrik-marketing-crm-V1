@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -41,13 +40,11 @@ const Sidebar = () => {
     navigate("/login");
   };
 
-  // Helper function to get user initials for avatar fallback
   const getUserInitials = () => {
     if (!user || !user.username) return "U";
     return user.username.charAt(0).toUpperCase();
   };
 
-  // Don't render the sidebar in mobile view
   if (isMobile) {
     return null;
   }
@@ -58,7 +55,7 @@ const Sidebar = () => {
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
-          className="h-[70px] w-auto object-contain py-10"
+          className="h-[70px] w-auto object-contain py-1"
         />
       </div>
 
@@ -133,7 +130,6 @@ const Sidebar = () => {
         </nav>
 
         <div className="mt-auto grid gap-1 px-2">
-          {/* User profile dropdown section */}
           {user && (
             <div className="border-t pt-4 mb-2">
               <DropdownMenu>
