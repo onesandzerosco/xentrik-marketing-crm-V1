@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
@@ -31,22 +32,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Check if user is authenticated on mount
     const userData = localStorage.getItem("user");
+    const signedOut = localStorage.getItem("explicitly_signed_out") === "true";
     
-    if (userData) {
-      // If we have a user in localStorage, they're authenticated
+    if (userData && !signedOut) {
+      // If we have a user in localStorage and they didn't explicitly sign out, they're authenticated
       setUser(JSON.parse(userData));
       setIsAuthenticated(true);
     } else {
-      // Check for saved credentials if no active user session
-      const savedCredentials = localStorage.getItem("savedCredentials");
-      if (savedCredentials) {
-        const { username, password } = JSON.parse(savedCredentials);
-        // Auto login with saved credentials
-        if (username === "admin" && password === "password") {
-          const newUser = { username, emailVerified: false };
-          localStorage.setItem("user", JSON.stringify(newUser));
-          setUser(newUser);
-          setIsAuthenticated(true);
+      // Check for saved credentials if no active user session and not explicitly signed out
+      if (!signedOut) {
+        const savedCredentials = localStorage.getItem("savedCredentials");
+        if (savedCredentials) {
+          const { username, password } = JSON.parse(savedCredentials);
+          // Auto login with saved credentials
+          if (username === "admin" && password === "password") {
+            const newUser = { username, emailVerified: false };
+            localStorage.setItem("user", JSON.stringify(newUser));
+            setUser(newUser);
+            setIsAuthenticated(true);
+          }
         }
       }
     }
@@ -57,6 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (username === "admin" && password === "password") {
       const newUser = { username, emailVerified: false };
       localStorage.setItem("user", JSON.stringify(newUser));
+      // Clear the explicitly signed out flag when user logs in
+      localStorage.removeItem("explicitly_signed_out");
       setUser(newUser);
       setIsAuthenticated(true);
       return true;
@@ -66,6 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     localStorage.removeItem("user");
+    // Set a flag to indicate user explicitly signed out
+    localStorage.setItem("explicitly_signed_out", "true");
     setUser(null);
     // Keep saved credentials in localStorage when logging out
     setIsAuthenticated(false);
