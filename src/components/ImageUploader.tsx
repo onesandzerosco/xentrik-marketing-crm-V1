@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -223,7 +222,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
   const [isDragging, setIsDragging] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(1);
-
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [canvasSize, setCanvasSize] = useState(0);
+  
   React.useEffect(() => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
@@ -235,16 +236,26 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
       if (!ctx) return;
       
       const size = canvas.width;
+      setCanvasSize(size);
       ctx.clearRect(0, 0, size, size);
       
-      // Apply the zoom level to the image scale
-      const imgWidth = img.naturalWidth * scale * zoomLevel;
-      const imgHeight = img.naturalHeight * scale * zoomLevel;
+      // Calculate image dimensions with zoom
+      const imgWidth = imageSize.width * scale * zoomLevel;
+      const imgHeight = imageSize.height * scale * zoomLevel;
       
+      // Calculate center position adjustments when zooming
+      const centerX = size / 2;
+      const centerY = size / 2;
+      
+      // Calculate the position offsets to keep center fixed during zoom
+      const offsetX = centerX - (imgWidth / 2);
+      const offsetY = centerY - (imgHeight / 2);
+      
+      // Draw the image with position adjusted to keep the center point fixed
       ctx.drawImage(
         img,
-        -position.x, 
-        -position.y, 
+        position.x + offsetX, 
+        position.y + offsetY, 
         imgWidth,
         imgHeight
       );
@@ -254,12 +265,21 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetWidth; // Square aspect ratio
       
+      // Save the natural dimensions of the image
+      setImageSize({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+      
       const imgRatio = img.naturalWidth / img.naturalHeight;
       if (imgRatio > 1) {
         setScale(canvas.height / img.naturalHeight);
       } else {
         setScale(canvas.width / img.naturalWidth);
       }
+      
+      // Reset position to center the image
+      setPosition({ x: 0, y: 0 });
       
       drawImageOnCanvas();
     };
@@ -268,7 +288,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
     
     const intervalId = setInterval(drawImageOnCanvas, 10);
     return () => clearInterval(intervalId);
-  }, [src, position, scale, zoomLevel, canvasRef]);
+  }, [src, position, scale, zoomLevel, canvasRef, imageSize]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -285,8 +305,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel =
     const deltaY = e.clientY - lastPosition.y;
     
     setPosition(prev => ({
-      x: prev.x - deltaX,
-      y: prev.y - deltaY
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
     }));
     
     setLastPosition({
