@@ -1,48 +1,43 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { CreatorProvider } from "./context/CreatorContext";
-import { ActivityProvider } from "./context/ActivityContext";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from "@/components/ui/toaster"
+import { useAuth, AuthProvider } from './context/AuthContext';
+import { CreatorProvider } from './context/CreatorContext';
+import { ActivityProvider } from './context/ActivityContext';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Creators from './pages/Creators';
+import CreatorProfile from './pages/CreatorProfile';
+import CreatorAnalytics from './pages/CreatorAnalytics';
+import AccountSettings from './pages/AccountSettings';
+import NotFound from './pages/NotFound';
 
-// Pages
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Creators from "./pages/Creators";
-import CreatorProfile from "./pages/CreatorProfile";
-import CreatorAnalytics from "./pages/CreatorAnalytics";
-import AccountSettings from "./pages/AccountSettings";
-import NotFound from "./pages/NotFound";
+// Add the TeamManagement import
+import TeamManagement from "./pages/TeamManagement";
 
-const queryClient = new QueryClient();
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+function App() {
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated } = useAuth();
+    
+    if (!isAuthenticated) {
+      // Redirect to login page if not authenticated
+      return <Navigate to="/login" />;
+    }
+    
+    return <>{children}</>;
+  };
   
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-  
-  return <>{children}</>;
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ActivityProvider>
+  return (
+    <div className="app">
+      <Toaster />
+      <AuthProvider>
         <CreatorProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+          <ActivityProvider>
             <BrowserRouter>
               <Routes>
+                <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
-                
-                <Route path="/" element={<Navigate to="/dashboard" />} />
-                
                 <Route 
                   path="/dashboard" 
                   element={
@@ -51,7 +46,6 @@ const App = () => (
                     </ProtectedRoute>
                   } 
                 />
-                
                 <Route 
                   path="/creators" 
                   element={
@@ -60,25 +54,30 @@ const App = () => (
                     </ProtectedRoute>
                   } 
                 />
-                
                 <Route 
-                  path="/creators/:id" 
+                  path="/team" 
+                  element={
+                    <ProtectedRoute>
+                      <TeamManagement />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/creator/:id" 
                   element={
                     <ProtectedRoute>
                       <CreatorProfile />
                     </ProtectedRoute>
                   } 
                 />
-                
                 <Route 
-                  path="/creators/:id/analytics" 
+                  path="/creator/:id/analytics" 
                   element={
                     <ProtectedRoute>
                       <CreatorAnalytics />
                     </ProtectedRoute>
                   } 
                 />
-                
                 <Route 
                   path="/account" 
                   element={
@@ -87,15 +86,14 @@ const App = () => (
                     </ProtectedRoute>
                   } 
                 />
-                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+          </ActivityProvider>
         </CreatorProvider>
-      </ActivityProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+      </AuthProvider>
+    </div>
+  );
+}
 
 export default App;

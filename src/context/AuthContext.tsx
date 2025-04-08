@@ -46,7 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { username, password } = JSON.parse(savedCredentials);
           // Auto login with saved credentials
           if (username === "admin" && password === "password") {
-            const newUser = { username, emailVerified: false };
+            const newUser = { 
+              id: "1", // Add an ID for the current user
+              username, 
+              emailVerified: false,
+              role: "Admin" // Default the demo user to Admin role
+            };
             localStorage.setItem("user", JSON.stringify(newUser));
             setUser(newUser);
             setIsAuthenticated(true);
@@ -59,7 +64,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (username: string, password: string) => {
     // Dummy auth - in a real app, this would call an API
     if (username === "admin" && password === "password") {
-      const newUser = { username, emailVerified: false };
+      const newUser = { 
+        id: "1", // Add an ID for the current user
+        username, 
+        emailVerified: false,
+        role: "Admin" // Default the demo user to Admin role
+      };
       localStorage.setItem("user", JSON.stringify(newUser));
       // Clear the explicitly signed out flag when user logs in
       localStorage.removeItem("explicitly_signed_out");
