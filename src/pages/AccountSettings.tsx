@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ProfilePicture from "@/components/profile/ProfilePicture";
 
 const AccountSettings = () => {
   const { updateCredentials, user } = useAuth();
@@ -16,17 +17,21 @@ const AccountSettings = () => {
   const navigate = useNavigate();
   
   const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
+  const [profileImage, setProfileImage] = useState("");
   
   // Initialize form with user data
   useEffect(() => {
     if (user) {
       setUsername(user.username || "");
       setEmail(user.email || "");
+      setDisplayName(user.displayName || "");
+      setProfileImage(user.profileImage || "");
     }
   }, [user]);
 
@@ -91,8 +96,16 @@ const AccountSettings = () => {
       return;
     }
 
-    // Call the updateCredentials function from AuthContext
-    const success = updateCredentials(username, currentPassword, newPassword, email, userData.emailVerified);
+    // Call the updateCredentials function from AuthContext with additional profile data
+    const success = updateCredentials(
+      username, 
+      currentPassword, 
+      newPassword, 
+      email, 
+      userData.emailVerified,
+      displayName,
+      profileImage
+    );
     
     if (success) {
       toast({
@@ -146,6 +159,44 @@ const AccountSettings = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Profile Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Settings</CardTitle>
+            <CardDescription>
+              Update your profile picture and display name
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex justify-center">
+                <ProfilePicture 
+                  profileImage={profileImage}
+                  name={displayName || username}
+                  setProfileImage={setProfileImage}
+                />
+              </div>
+              <div className="md:col-span-2 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                  <Label htmlFor="displayName" className="md:text-right">
+                    Display Name
+                  </Label>
+                  <Input
+                    id="displayName"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="md:col-span-3"
+                    placeholder="How you want to be known to others"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground md:col-start-2 md:col-span-3">
+                  This is the name that will be displayed to other users on the platform.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Profile Information</CardTitle>

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -30,6 +31,12 @@ const Sidebar = () => {
       description: "You have been successfully logged out",
     });
     navigate("/login");
+  };
+
+  // Helper function to get user initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user || !user.username) return "U";
+    return user.username.charAt(0).toUpperCase();
   };
 
   // Don't render the sidebar in mobile view
@@ -118,6 +125,22 @@ const Sidebar = () => {
         </nav>
 
         <div className="mt-auto grid gap-1 px-2">
+          {/* User profile section */}
+          {user && (
+            <div className="border-t pt-4 mb-2">
+              <div className="flex items-center gap-3 mb-2 p-2">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={user.profileImage} alt={user.username} />
+                  <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">{user.username}</span>
+                  <span className="text-xs text-muted-foreground">{user.role}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <NavLink
             to="/account"
             className={({ isActive }) =>

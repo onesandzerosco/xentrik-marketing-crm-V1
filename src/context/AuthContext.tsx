@@ -12,6 +12,9 @@ interface User {
   role: EmployeeRole;
   approved: boolean;
   createdAt: string;
+  displayName?: string;
+  profileImage?: string;
+  lastLogin?: string;
 }
 
 interface PendingUser {
@@ -34,7 +37,9 @@ interface AuthContextType {
     currentPassword: string, 
     newPassword?: string, 
     email?: string, 
-    emailVerified?: boolean
+    emailVerified?: boolean,
+    displayName?: string,
+    profileImage?: string
   ) => boolean;
   approvePendingUser: (userId: string, approved: boolean) => void;
   createTeamMember: (username: string, email: string, role: EmployeeRole) => boolean;
@@ -64,7 +69,9 @@ const initialAdmins = [
     emailVerified: true,
     role: "Admin" as EmployeeRole,
     approved: true,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    displayName: "Admin User",
+    profileImage: ""
   },
   {
     id: "2",
@@ -74,7 +81,9 @@ const initialAdmins = [
     emailVerified: true,
     role: "Admin" as EmployeeRole,
     approved: true,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    displayName: "Second Admin",
+    profileImage: ""
   }
 ];
 
@@ -127,7 +136,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               emailVerified: foundUser.emailVerified,
               role: foundUser.role,
               approved: foundUser.approved,
-              createdAt: foundUser.createdAt
+              createdAt: foundUser.createdAt,
+              displayName: foundUser.displayName,
+              profileImage: foundUser.profileImage,
+              lastLogin: new Date().toISOString()
             };
             localStorage.setItem("user", JSON.stringify(userWithoutPassword));
             setUser(userWithoutPassword);
@@ -150,7 +162,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         emailVerified: foundUser.emailVerified,
         role: foundUser.role,
         approved: foundUser.approved,
-        createdAt: foundUser.createdAt
+        createdAt: foundUser.createdAt,
+        displayName: foundUser.displayName,
+        profileImage: foundUser.profileImage,
+        lastLogin: new Date().toISOString()
       };
       
       localStorage.setItem("user", JSON.stringify(userWithoutPassword));
@@ -206,7 +221,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...newPendingUser,
       password,
       emailVerified: false,
-      approved: false
+      approved: false,
+      displayName: username,
+      profileImage: ""
     };
     setUsers([...users, newUser]);
 
@@ -265,7 +282,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       emailVerified: false,
       role,
       approved: true, // Auto-approved since created by admin
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      displayName: username,
+      profileImage: ""
     };
 
     setUsers([...users, newUser]);
@@ -283,7 +302,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentPassword: string, 
     newPassword?: string, 
     email?: string, 
-    emailVerified?: boolean
+    emailVerified?: boolean,
+    displayName?: string,
+    profileImage?: string
   ) => {
     // Find the current user
     const currentUser = users.find(u => u.id === user?.id);
@@ -300,7 +321,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username,
           password: newPassword || u.password,
           email: email || u.email,
-          emailVerified: emailVerified !== undefined ? emailVerified : u.emailVerified
+          emailVerified: emailVerified !== undefined ? emailVerified : u.emailVerified,
+          displayName: displayName || u.displayName,
+          profileImage: profileImage !== undefined ? profileImage : u.profileImage
         };
       }
       return u;
@@ -314,7 +337,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...user,
         username,
         email: email || user.email,
-        emailVerified: emailVerified !== undefined ? emailVerified : user.emailVerified
+        emailVerified: emailVerified !== undefined ? emailVerified : user.emailVerified,
+        displayName: displayName || user.displayName,
+        profileImage: profileImage !== undefined ? profileImage : user.profileImage
       };
       
       setUser(updatedUser);
