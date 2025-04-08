@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search, SortAsc, Filter } from "lucide-react";
+import { Search, ArrowDownUp } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,7 +16,6 @@ interface EmployeeSearchAndSortProps {
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   sortOption: string;
   setSortOption: React.Dispatch<React.SetStateAction<string>>;
-  onFilterClick?: () => void;
 }
 
 const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
@@ -24,7 +23,6 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
   setSearchQuery,
   sortOption,
   setSortOption,
-  onFilterClick,
 }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -41,7 +39,7 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
         <Input
           type="search"
           placeholder="Search team members..."
-          className="pl-9 w-full sm:w-[260px]"
+          className="pl-9 w-full sm:w-[350px] bg-background border-[#333] text-foreground"
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -49,9 +47,9 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
       
       <div className="flex gap-2 w-full sm:w-auto">
         <Select value={sortOption} onValueChange={handleSortChange}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px] border-[#333]">
             <div className="flex items-center">
-              <SortAsc className="h-4 w-4 mr-2" />
+              <ArrowDownUp className="h-4 w-4 mr-2" />
               <span>Sort by</span>
             </div>
           </SelectTrigger>
@@ -62,13 +60,6 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
             <SelectItem value="role">Role</SelectItem>
           </SelectContent>
         </Select>
-        
-        {onFilterClick && (
-          <Button variant="outline" onClick={onFilterClick} className="flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-        )}
       </div>
     </div>
   );
