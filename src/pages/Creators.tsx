@@ -15,7 +15,6 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 
-// Keys for localStorage
 const FILTER_KEYS = {
   GENDER: 'creator_filter_gender',
   TEAM: 'creator_filter_team',
@@ -26,7 +25,6 @@ const Creators = () => {
   const { creators, filterCreators } = useCreators();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   
-  // Initialize state with values from localStorage or empty arrays
   const [selectedGenders, setSelectedGenders] = useState<string[]>(() => {
     const saved = localStorage.getItem(FILTER_KEYS.GENDER);
     return saved ? JSON.parse(saved) : [];
@@ -48,7 +46,6 @@ const Creators = () => {
   const teamTags = ["A Team", "B Team", "C Team"];
   const classTags = ["Real", "AI"];
 
-  // Save to localStorage whenever filters change
   useEffect(() => {
     localStorage.setItem(FILTER_KEYS.GENDER, JSON.stringify(selectedGenders));
   }, [selectedGenders]);
@@ -140,7 +137,7 @@ const Creators = () => {
           </Sheet>
           <Button 
             onClick={() => setOnboardingOpen(true)}
-            className="bg-brand text-black hover:bg-brand/80"
+            className="bg-brand-yellow text-black hover:bg-brand-highlight"
           >
             <Plus className="h-4 w-4 mr-2" />
             Onboard Creator
@@ -217,7 +214,7 @@ const Creators = () => {
           <p className="text-muted-foreground mb-4">Try changing your filters or add a new creator</p>
           <Button 
             onClick={() => setOnboardingOpen(true)}
-            className="bg-brand text-black hover:bg-brand/80"
+            className="bg-brand-yellow text-black hover:bg-brand-highlight"
           >
             <Plus className="h-4 w-4 mr-2" />
             Onboard Creator
