@@ -38,7 +38,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
+    <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col z-10">
       <div className="p-6 border-b flex items-center justify-center">
         <Link to="/dashboard" className="flex justify-center">
           <img 

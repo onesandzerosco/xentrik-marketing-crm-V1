@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import EmployeeCard from "../components/employees/EmployeeCard";
 import { Button } from "@/components/ui/button";
@@ -174,203 +172,194 @@ const TeamManagement = () => {
   };
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="ml-60 p-8 w-full">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Team Management</h1>
-            <p className="text-muted-foreground">
-              {sortedEmployees.length} team members in your organization
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Filter Team Members</SheetTitle>
-                  <SheetDescription>
-                    Filter team members by role and other attributes
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="py-6 space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">Role</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {(["Admin", "Manager", "Employee"] as EmployeeRole[]).map((role) => (
-                        <Badge
-                          key={role}
-                          className={`cursor-pointer ${
-                            selectedRoles.includes(role)
-                              ? getRoleBadgeColor(role)
-                              : "bg-secondary text-secondary-foreground"
-                          }`}
-                          onClick={() => handleRoleFilter(role)}
-                        >
-                          {role}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">Status</h3>
-                    <div className="flex flex-wrap gap-2">
+    <div className="p-8 w-full">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Team Management</h1>
+          <p className="text-muted-foreground">
+            {sortedEmployees.length} team members in your organization
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Filter Team Members</SheetTitle>
+                <SheetDescription>
+                  Filter team members by role and other attributes
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Role</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {(["Admin", "Manager", "Employee"] as EmployeeRole[]).map((role) => (
                       <Badge
+                        key={role}
                         className={`cursor-pointer ${
-                          selectedRoles.includes("Active")
-                            ? "bg-green-500 hover:bg-green-600 text-white"
+                          selectedRoles.includes(role)
+                            ? getRoleBadgeColor(role)
                             : "bg-secondary text-secondary-foreground"
                         }`}
-                        onClick={() => handleRoleFilter("Active")}
+                        onClick={() => handleRoleFilter(role)}
                       >
-                        Active
+                        {role}
                       </Badge>
-                      <Badge
-                        className={`cursor-pointer ${
-                          selectedRoles.includes("Inactive")
-                            ? "bg-red-500 hover:bg-red-600 text-white"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                        onClick={() => handleRoleFilter("Inactive")}
-                      >
-                        Inactive
-                      </Badge>
-                    </div>
+                    ))}
                   </div>
-                  {(selectedRoles.length > 0 || searchQuery) && (
-                    <Button
-                      variant="ghost"
-                      className="mt-4"
-                      onClick={handleClearFilters}
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium mb-3">Status</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge
+                      className={`cursor-pointer ${
+                        selectedRoles.includes("Active")
+                          ? "bg-green-500 hover:bg-green-600 text-white"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                      onClick={() => handleRoleFilter("Active")}
                     >
-                      <X className="h-4 w-4 mr-2" />
-                      Clear all filters
-                    </Button>
-                  )}
+                      Active
+                    </Badge>
+                    <Badge
+                      className={`cursor-pointer ${
+                        selectedRoles.includes("Inactive")
+                          ? "bg-red-500 hover:bg-red-600 text-white"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                      onClick={() => handleRoleFilter("Inactive")}
+                    >
+                      Inactive
+                    </Badge>
+                  </div>
                 </div>
-              </SheetContent>
-            </Sheet>
-            
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search team members..."
-                className="pl-9 w-[200px] md:w-[260px]"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            
-            <Select value={sortOption} onValueChange={handleSortChange}>
-              <SelectTrigger className="w-[180px]">
-                <div className="flex items-center">
-                  <SortAsc className="h-4 w-4 mr-2" />
-                  <span>Sort by</span>
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nameAsc">Name A–Z</SelectItem>
-                <SelectItem value="nameDesc">Name Z–A</SelectItem>
-                <SelectItem value="recentActivity">Recent Activity</SelectItem>
-                <SelectItem value="role">Role</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {isAdmin && (
-              <Button 
-                onClick={() => setAddEmployeeOpen(true)}
-                className="bg-brand text-black hover:bg-brand/80"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Team Member
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {(selectedRoles.length > 0 || searchQuery) && (
-          <div className="mb-6 flex items-center">
-            <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
-            <div className="flex flex-wrap gap-2">
-              {selectedRoles.map((role) => (
-                <div key={role} className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
-                  {role}
+                {(selectedRoles.length > 0 || searchQuery) && (
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 ml-1 p-0"
-                    onClick={() => setSelectedRoles(selectedRoles.filter(r => r !== role))}
+                    className="mt-4"
+                    onClick={handleClearFilters}
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4 mr-2" />
+                    Clear all filters
                   </Button>
-                </div>
-              ))}
-              {searchQuery && (
-                <div className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
-                  Search: {searchQuery}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 ml-1 p-0"
-                    onClick={() => setSearchQuery("")}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs h-6"
-                onClick={handleClearFilters}
-              >
-                Clear all
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedEmployees.map((employee) => (
-            <EmployeeCard 
-              key={employee.id} 
-              employee={employee} 
-              onUpdate={handleUpdateEmployee}
-              isAdmin={isAdmin}
-              currentUserId={user?.id}
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search team members..."
+              className="pl-9 w-[200px] md:w-[260px]"
+              value={searchQuery}
+              onChange={handleSearchChange}
             />
-          ))}
-        </div>
-
-        {sortedEmployees.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium mb-2">No team members found</h3>
-            <p className="text-muted-foreground mb-4">Try changing your filters or add a new team member</p>
-            {isAdmin && (
-              <Button 
-                onClick={() => setAddEmployeeOpen(true)}
-                className="bg-brand text-black hover:bg-brand/80"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Team Member
-              </Button>
-            )}
           </div>
-        )}
+          
+          <Select value={sortOption} onValueChange={handleSortChange}>
+            <SelectTrigger className="w-[180px]">
+              <div className="flex items-center">
+                <SortAsc className="h-4 w-4 mr-2" />
+                <span>Sort by</span>
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nameAsc">Name A–Z</SelectItem>
+              <SelectItem value="nameDesc">Name Z–A</SelectItem>
+              <SelectItem value="recentActivity">Recent Activity</SelectItem>
+              <SelectItem value="role">Role</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {isAdmin && (
+            <Button 
+              onClick={() => setAddEmployeeOpen(true)}
+              className="bg-brand text-black hover:bg-brand/80"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Team Member
+            </Button>
+          )}
+        </div>
       </div>
-      
-      <AddEmployeeModal 
-        open={addEmployeeOpen} 
-        onOpenChange={setAddEmployeeOpen}
-        onAddEmployee={handleAddEmployee}
-      />
+
+      {(selectedRoles.length > 0 || searchQuery) && (
+        <div className="mb-6 flex items-center">
+          <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
+          <div className="flex flex-wrap gap-2">
+            {selectedRoles.map((role) => (
+              <div key={role} className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
+                {role}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 ml-1 p-0"
+                  onClick={() => setSelectedRoles(selectedRoles.filter(r => r !== role))}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+            {searchQuery && (
+              <div className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
+                Search: {searchQuery}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 ml-1 p-0"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-6"
+              onClick={handleClearFilters}
+            >
+              Clear all
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {sortedEmployees.map((employee) => (
+          <EmployeeCard 
+            key={employee.id} 
+            employee={employee} 
+            onUpdate={handleUpdateEmployee}
+            isAdmin={isAdmin}
+            currentUserId={user?.id}
+          />
+        ))}
+      </div>
+
+      {sortedEmployees.length === 0 && (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium mb-2">No team members found</h3>
+          <p className="text-muted-foreground mb-4">Try changing your filters or add a new team member</p>
+          {isAdmin && (
+            <Button 
+              onClick={() => setAddEmployeeOpen(true)}
+              className="bg-brand text-black hover:bg-brand/80"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Team Member
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

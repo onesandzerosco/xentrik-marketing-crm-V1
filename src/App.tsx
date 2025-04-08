@@ -22,7 +22,7 @@ function App() {
       <CreatorProvider>
         <ActivityProvider>
           <BrowserRouter>
-            <div className="app flex">
+            <div className="app flex h-screen w-full">
               <Toaster />
               <AppRoutes />
             </div>
@@ -46,7 +46,7 @@ const AppRoutes = () => {
     return (
       <div className="flex w-full">
         <Sidebar />
-        <div className="ml-60 flex-1 w-full">
+        <div className="w-full pl-60">
           {children}
         </div>
       </div>
