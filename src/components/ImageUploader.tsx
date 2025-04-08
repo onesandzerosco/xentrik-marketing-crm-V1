@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,12 @@ interface ImageUploaderProps {
   showAutoDetect?: boolean;
 }
 
+// Add interfaces for image size and position tracking
+interface ImageSize {
+  width: number;
+  height: number;
+}
+
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
   currentImage, 
   name, 
@@ -30,6 +37,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number[]>([1]);
   const [xPosition, setXPosition] = useState<number[]>([0]);
   const [yPosition, setYPosition] = useState<number[]>([0]);
+  const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
+  const [scale, setScale] = useState<number>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -65,6 +74,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleRemove = () => {
     setPreviewImage("");
     onImageChange("");
+  };
+
+  // Update image size from the ImageCropper
+  const handleUpdateImageSize = (size: ImageSize, newScale: number) => {
+    setImageSize(size);
+    setScale(newScale);
   };
 
   const handleCropSave = () => {
@@ -219,7 +234,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                     canvasRef={canvasRef} 
                     zoomLevel={zoomLevel[0]}
                     xPosition={xPosition[0]}
-                    yPosition={yPosition[0]}
+                    yPosition={yPosition[0]} 
+                    onUpdateImageSize={handleUpdateImageSize}
                   />
                 )}
               </AspectRatio>
@@ -299,6 +315,7 @@ interface ImageCropperProps {
   zoomLevel: number;
   xPosition: number;
   yPosition: number;
+  onUpdateImageSize: (size: ImageSize, scale: number) => void;
 }
 
 const ImageCropper: React.FC<ImageCropperProps> = ({ 
@@ -306,11 +323,12 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   canvasRef, 
   zoomLevel = 1,
   xPosition = 0,
-  yPosition = 0 
+  yPosition = 0,
+  onUpdateImageSize
 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(1);
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
   const [canvasSize, setCanvasSize] = useState(0);
   
   React.useEffect(() => {
@@ -414,17 +432,26 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetWidth;
       
-      setImageSize({
+      const newImageSize = {
         width: img.naturalWidth,
         height: img.naturalHeight
-      });
+      };
+      
+      setImageSize(newImageSize);
       
       const imgRatio = img.naturalWidth / img.naturalHeight;
+      let newScale = 1;
+      
       if (imgRatio > 1) {
-        setScale(canvas.height / img.naturalHeight);
+        newScale = canvas.height / img.naturalHeight;
       } else {
-        setScale(canvas.width / img.naturalWidth);
+        newScale = canvas.width / img.naturalWidth;
       }
+      
+      setScale(newScale);
+      
+      // Pass image size and scale to parent component
+      onUpdateImageSize(newImageSize, newScale);
       
       drawImageOnCanvas();
     };
@@ -433,7 +460,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     const intervalId = setInterval(drawImageOnCanvas, 30);
     return () => clearInterval(intervalId);
-  }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize]);
+  }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize, onUpdateImageSize]);
   
   return (
     <>
