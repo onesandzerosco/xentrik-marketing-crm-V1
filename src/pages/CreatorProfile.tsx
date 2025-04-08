@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -6,11 +5,11 @@ import Sidebar from "../components/Sidebar";
 import { Team, Gender, CreatorType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { BarChart2, Save, ArrowLeft } from "lucide-react";
+import { BarChart2, Save, ArrowLeft, Database } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import StorageUsageDialog from "@/components/storage/StorageUsageDialog";
 
-// Import new component files
 import BasicInformation from "../components/profile/BasicInformation";
 import SocialLinks from "../components/profile/SocialLinks";
 import EngagementStats from "../components/profile/EngagementStats";
@@ -24,7 +23,6 @@ const CreatorProfile = () => {
   const creator = getCreator(id!);
   const stats = getCreatorStats(id!);
   
-  // Initialize state from creator data
   const [name, setName] = useState(creator?.name || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender>(creator?.gender || "Male");
@@ -38,6 +36,7 @@ const CreatorProfile = () => {
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
   const [isInactive, setIsInactive] = useState(false);
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
+  const [storageDialogOpen, setStorageDialogOpen] = useState(false);
 
   const handleSave = () => {
     setNameError(null);
@@ -50,13 +49,12 @@ const CreatorProfile = () => {
 
     if (!creator) return;
     
-    // Save all creator information including profile image
     updateCreator(creator.id, {
       name,
       gender,
       team,
       creatorType,
-      profileImage, // Make sure profile image is included in the update
+      profileImage,
       socialLinks: {
         instagram: instagram || undefined,
         tiktok: tiktok || undefined,
@@ -112,6 +110,15 @@ const CreatorProfile = () => {
             </div>
           </div>
           <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-10 w-10"
+              onClick={() => setStorageDialogOpen(true)}
+              title="Check Storage Usage"
+            >
+              <Database className="h-4 w-4" />
+            </Button>
             <Link to={`/creators/${creator.id}/analytics`}>
               <Button variant="outline">
                 <BarChart2 className="h-4 w-4 mr-2" />
@@ -124,6 +131,8 @@ const CreatorProfile = () => {
             </Button>
           </div>
         </div>
+
+        <StorageUsageDialog open={storageDialogOpen} onOpenChange={setStorageDialogOpen} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-6">
