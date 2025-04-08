@@ -17,7 +17,7 @@ const Sidebar = () => {
   return (
     <div className="h-screen w-60 bg-sidebar fixed left-0 top-0 border-r border-border flex flex-col">
       <div className="p-1.5">
-        <div className="mb-1 flex justify-center">
+        <div className="mb-1 flex justify-center slide-up" style={{ animationDelay: "100ms" }}>
           <img 
             src="/lovable-uploads/983659fc-5fdc-41ec-b019-cd6578bbbb3e.png" 
             alt="XENTRIK MARKETING" 
@@ -30,9 +30,10 @@ const Sidebar = () => {
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start transition-all duration-300",
                 isActive("/dashboard") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
+              style={{ animationDelay: "200ms" }}
             >
               <BarChart2 className="mr-2 h-4 w-4" />
               Dashboard
@@ -43,9 +44,10 @@ const Sidebar = () => {
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start transition-all duration-300",
                 isActive("/creators") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
+              style={{ animationDelay: "300ms" }}
             >
               <Users className="mr-2 h-4 w-4" />
               Creators
@@ -59,7 +61,7 @@ const Sidebar = () => {
           <Button 
             variant="outline" 
             className={cn(
-              "w-full justify-start",
+              "w-full justify-start transition-all duration-300",
               isActive("/account") && "bg-sidebar-accent text-sidebar-accent-foreground"
             )}
           >
@@ -70,7 +72,7 @@ const Sidebar = () => {
         
         <Button 
           variant="outline" 
-          className="w-full justify-start"
+          className="w-full justify-start transition-all duration-300 hover:bg-destructive/20"
           onClick={logout}
         >
           <LogOut className="mr-2 h-4 w-4" />
