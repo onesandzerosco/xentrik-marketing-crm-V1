@@ -99,25 +99,30 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       "creator-card", 
       creator.needsReview ? "border-2 border-red-500" : ""
     )}>
-      <div className="flex items-center mb-4">
+      <div className="flex items-center mb-3">
         <Avatar className="w-12 h-12 mr-3 border border-border">
           <AvatarImage src={creator.profileImage} alt={creator.name} />
           <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
         </Avatar>
-        <div>
+        <div className="flex-grow">
           <h3 className="font-medium text-lg">{creator.name}</h3>
-          <div className="mt-1">
+          <div className="mt-1 flex flex-wrap gap-1">
             <span className={cn("tag", getGenderTagClass(creator.gender))}>
               {creator.gender}
             </span>
+            {creator.creatorType === "AI" && (
+              <span className="tag bg-gray-100/30 text-gray-100">
+                AI
+              </span>
+            )}
             {creator.needsReview && (
-              <span className="tag bg-red-900/40 text-red-200 ml-2">
+              <span className="tag bg-red-900/40 text-red-200">
                 Review
               </span>
             )}
           </div>
         </div>
-        <div className="ml-auto text-right">
+        <div className="text-right shrink-0">
           <span className="tag bg-secondary/40 text-foreground">
             {creator.team}
           </span>

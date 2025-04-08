@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -96,10 +97,12 @@ const CreatorProfile = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">{creator.name}'s Profile</h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Badge variant="outline">{creator.gender}</Badge>
+              {creator.creatorType === "AI" && (
+                <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>
+              )}
               <Badge variant="outline">{creator.team}</Badge>
-              <Badge variant="outline">{creator.creatorType}</Badge>
               {needsReview && <Badge variant="outline" className="bg-red-900/40 text-red-200">Needs Review</Badge>}
             </div>
           </div>
