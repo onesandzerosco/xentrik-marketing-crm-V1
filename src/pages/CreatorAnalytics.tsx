@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
@@ -7,10 +7,14 @@ import { ArrowLeft, Download, TrendingDown, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
+type TimeFilter = "yesterday" | "today" | "week" | "month" | "custom";
 
 const CreatorAnalytics = () => {
   const { id } = useParams();
   const { getCreator, getCreatorStats } = useCreators();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
   
   const creator = getCreator(id || "");
   const stats = getCreatorStats(id || "");
@@ -23,8 +27,28 @@ const CreatorAnalytics = () => {
     );
   }
 
-  // Generate mock data for the charts
-  const mockWeeklyData = [
+  // Get the list of platforms that the creator has filled in
+  const availablePlatforms = Object.entries({
+    instagram: creator.socialLinks.instagram,
+    tiktok: creator.socialLinks.tiktok,
+    twitter: creator.socialLinks.twitter,
+    reddit: creator.socialLinks.reddit,
+    chaturbate: creator.socialLinks.chaturbate
+  }).filter(([_, value]) => !!value).map(([key]) => key);
+
+  // Generate mock data for the charts - filter to only include platforms the creator has profiles for
+  const generateFilteredData = (data: any[]) => {
+    return data.map(day => {
+      const filteredDay: any = { name: day.name };
+      availablePlatforms.forEach(platform => {
+        filteredDay[platform] = day[platform];
+      });
+      return filteredDay;
+    });
+  };
+
+  // Weekly data
+  const mockWeeklyBaseData = [
     { name: "Mon", instagram: 4000, tiktok: 2400, twitter: 2400, reddit: 1200, chaturbate: 3200 },
     { name: "Tue", instagram: 3000, tiktok: 1398, twitter: 2210, reddit: 980, chaturbate: 2900 },
     { name: "Wed", instagram: 2000, tiktok: 9800, twitter: 2290, reddit: 1308, chaturbate: 2600 },
@@ -34,12 +58,76 @@ const CreatorAnalytics = () => {
     { name: "Sun", instagram: 3490, tiktok: 4300, twitter: 2100, reddit: 1200, chaturbate: 3700 }
   ];
 
-  const mockMonthlyData = [
+  // Monthly data
+  const mockMonthlyBaseData = [
     { name: "Week 1", instagram: 4000, tiktok: 2400, twitter: 2400, reddit: 1200, chaturbate: 3200 },
     { name: "Week 2", instagram: 3000, tiktok: 1398, twitter: 2210, reddit: 980, chaturbate: 2900 },
     { name: "Week 3", instagram: 2000, tiktok: 9800, twitter: 2290, reddit: 1308, chaturbate: 2600 },
     { name: "Week 4", instagram: 2780, tiktok: 3908, twitter: 2000, reddit: 1400, chaturbate: 2200 }
   ];
+
+  // Daily data
+  const mockDailyBaseData = [
+    { name: "12am", instagram: 400, tiktok: 240, twitter: 240, reddit: 120, chaturbate: 320 },
+    { name: "4am", instagram: 300, tiktok: 139, twitter: 221, reddit: 98, chaturbate: 290 },
+    { name: "8am", instagram: 200, tiktok: 980, twitter: 229, reddit: 130, chaturbate: 260 },
+    { name: "12pm", instagram: 278, tiktok: 390, twitter: 200, reddit: 140, chaturbate: 220 },
+    { name: "4pm", instagram: 189, tiktok: 480, twitter: 218, reddit: 150, chaturbate: 290 },
+    { name: "8pm", instagram: 239, tiktok: 380, twitter: 250, reddit: 170, chaturbate: 340 },
+    { name: "11pm", instagram: 349, tiktok: 430, twitter: 210, reddit: 120, chaturbate: 370 }
+  ];
+
+  const mockWeeklyData = generateFilteredData(mockWeeklyBaseData);
+  const mockMonthlyData = generateFilteredData(mockMonthlyBaseData);
+  const mockDailyData = generateFilteredData(mockDailyBaseData);
+
+  // Get chart data based on time filter
+  const getChartData = () => {
+    switch (timeFilter) {
+      case "yesterday":
+      case "today":
+        return mockDailyData;
+      case "week":
+        return mockWeeklyData;
+      case "month":
+      default:
+        return mockMonthlyData;
+    }
+  };
+
+  const getChartTitle = () => {
+    switch (timeFilter) {
+      case "yesterday":
+        return "Yesterday's Performance";
+      case "today":
+        return "Today's Performance";
+      case "week":
+        return "7-Day Performance";
+      case "month":
+        return "30-Day Performance";
+      case "custom":
+        return "Custom Time Period";
+      default:
+        return "Performance Metrics";
+    }
+  };
+
+  const getChartDescription = () => {
+    switch (timeFilter) {
+      case "yesterday":
+        return "Engagement across platforms for yesterday";
+      case "today":
+        return "Engagement across platforms for today";
+      case "week":
+        return "Engagement across platforms for the past week";
+      case "month":
+        return "Engagement across platforms for the past month";
+      case "custom":
+        return "Engagement across platforms for custom time period";
+      default:
+        return "Engagement across platforms";
+    }
+  };
 
   const renderTrendIcon = (trend: number) => {
     if (trend > 0) {
@@ -49,11 +137,52 @@ const CreatorAnalytics = () => {
     }
   };
 
+  // Only render KPI cards for platforms the creator has profiles for
+  const renderKpiCards = () => {
+    const platformInfo = [
+      { key: 'instagram', title: 'Instagram', value: stats.instagram.followers.toLocaleString(), label: 'Followers', trend: stats.instagram.trend },
+      { key: 'tiktok', title: 'TikTok', value: stats.tiktok.views.toLocaleString(), label: 'Views', trend: stats.tiktok.trend },
+      { key: 'twitter', title: 'Twitter', value: stats.twitter.impressions.toLocaleString(), label: 'Impressions', trend: stats.twitter.trend },
+      { key: 'reddit', title: 'Reddit', value: stats.reddit.upvotes.toLocaleString(), label: 'Upvotes', trend: stats.reddit.trend },
+      { key: 'chaturbate', title: 'Chaturbate', value: stats.chaturbate.viewers.toLocaleString(), label: 'Viewers', trend: stats.chaturbate.trend }
+    ];
+
+    const filteredPlatforms = platformInfo.filter(platform => 
+      creator.socialLinks[platform.key as keyof typeof creator.socialLinks]
+    );
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        {filteredPlatforms.map(platform => (
+          <Card key={platform.key}>
+            <CardHeader className="pb-2 px-4">
+              <CardTitle className="text-sm font-medium">{platform.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold">{platform.value}</p>
+                  <p className="text-xs text-muted-foreground">{platform.label}</p>
+                </div>
+                <div className="flex items-center min-w-[60px] justify-end">
+                  {renderTrendIcon(platform.trend)}
+                  <span className={`ml-1 text-sm ${platform.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                    {Math.abs(platform.trend)}%
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="flex">
       <Sidebar />
       <div className="ml-60 p-8 w-full max-w-[calc(100vw-240px)]">
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-6">
           <Link to={`/creators/${id}`} className="mr-4">
             <Button variant="outline" size="icon">
               <ArrowLeft className="h-4 w-4" />
@@ -69,6 +198,31 @@ const CreatorAnalytics = () => {
           </Button>
         </div>
 
+        {/* Time filter toggle group */}
+        <div className="mb-6">
+          <ToggleGroup 
+            type="single" 
+            value={timeFilter}
+            onValueChange={(value) => {
+              if (value) setTimeFilter(value as TimeFilter);
+            }}
+            className="w-full max-w-md mx-auto border border-border rounded-md overflow-hidden"
+          >
+            <ToggleGroupItem value="yesterday" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+              Yesterday
+            </ToggleGroupItem>
+            <ToggleGroupItem value="today" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+              Today
+            </ToggleGroupItem>
+            <ToggleGroupItem value="week" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+              This week
+            </ToggleGroupItem>
+            <ToggleGroupItem value="month" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+              This month
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+
         {/* Engagement drop warning */}
         {stats.instagram.trend < -5 || stats.tiktok.trend < -5 || stats.twitter.trend < -5 || stats.reddit.trend < -5 || stats.chaturbate.trend < -5 ? (
           <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg mb-8">
@@ -78,130 +232,35 @@ const CreatorAnalytics = () => {
         ) : null}
 
         {/* KPI cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardHeader className="pb-2 px-4">
-              <CardTitle className="text-sm font-medium">Instagram</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.instagram.followers.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Followers</p>
-                </div>
-                <div className="flex items-center min-w-[60px] justify-end">
-                  {renderTrendIcon(stats.instagram.trend)}
-                  <span className={`ml-1 text-sm ${stats.instagram.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {Math.abs(stats.instagram.trend)}%
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {renderKpiCards()}
 
-          <Card>
-            <CardHeader className="pb-2 px-4">
-              <CardTitle className="text-sm font-medium">TikTok</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.tiktok.views.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Views</p>
-                </div>
-                <div className="flex items-center min-w-[60px] justify-end">
-                  {renderTrendIcon(stats.tiktok.trend)}
-                  <span className={`ml-1 text-sm ${stats.tiktok.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {Math.abs(stats.tiktok.trend)}%
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2 px-4">
-              <CardTitle className="text-sm font-medium">Twitter</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.twitter.impressions.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Impressions</p>
-                </div>
-                <div className="flex items-center min-w-[60px] justify-end">
-                  {renderTrendIcon(stats.twitter.trend)}
-                  <span className={`ml-1 text-sm ${stats.twitter.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {Math.abs(stats.twitter.trend)}%
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2 px-4">
-              <CardTitle className="text-sm font-medium">Reddit</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.reddit.upvotes.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Upvotes</p>
-                </div>
-                <div className="flex items-center min-w-[60px] justify-end">
-                  {renderTrendIcon(stats.reddit.trend)}
-                  <span className={`ml-1 text-sm ${stats.reddit.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {Math.abs(stats.reddit.trend)}%
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2 px-4">
-              <CardTitle className="text-sm font-medium">Chaturbate</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-2xl font-bold">{stats.chaturbate.viewers.toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground">Viewers</p>
-                </div>
-                <div className="flex items-center min-w-[60px] justify-end">
-                  {renderTrendIcon(stats.chaturbate.trend)}
-                  <span className={`ml-1 text-sm ${stats.chaturbate.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                    {Math.abs(stats.chaturbate.trend)}%
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Weekly Chart */}
+        {/* Main Chart */}
         <Card className="mb-8">
           <CardHeader className="px-6">
-            <CardTitle>7-Day Performance</CardTitle>
-            <CardDescription>Engagement across platforms for the past week</CardDescription>
+            <CardTitle>{getChartTitle()}</CardTitle>
+            <CardDescription>{getChartDescription()}</CardDescription>
           </CardHeader>
           <CardContent className="p-2">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={mockWeeklyData}
+                  data={getChartData()}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                  <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />
-                  <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />
-                  <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />
-                  <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />
+                  {availablePlatforms.includes('instagram') && 
+                    <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />}
+                  {availablePlatforms.includes('tiktok') && 
+                    <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />}
+                  {availablePlatforms.includes('twitter') && 
+                    <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />}
+                  {availablePlatforms.includes('reddit') && 
+                    <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />}
+                  {availablePlatforms.includes('chaturbate') && 
+                    <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -211,25 +270,30 @@ const CreatorAnalytics = () => {
         {/* Monthly Chart */}
         <Card>
           <CardHeader className="px-6">
-            <CardTitle>30-Day Growth</CardTitle>
-            <CardDescription>Monthly performance breakdown</CardDescription>
+            <CardTitle>Platform Comparison</CardTitle>
+            <CardDescription>Performance breakdown by platform</CardDescription>
           </CardHeader>
           <CardContent className="p-2">
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={mockMonthlyData}
+                  data={getChartData()}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="instagram" fill="#8884d8" />
-                  <Bar dataKey="tiktok" fill="#82ca9d" />
-                  <Bar dataKey="twitter" fill="#ffc658" />
-                  <Bar dataKey="reddit" fill="#ff8042" />
-                  <Bar dataKey="chaturbate" fill="#0088fe" />
+                  {availablePlatforms.includes('instagram') && 
+                    <Bar dataKey="instagram" fill="#8884d8" />}
+                  {availablePlatforms.includes('tiktok') && 
+                    <Bar dataKey="tiktok" fill="#82ca9d" />}
+                  {availablePlatforms.includes('twitter') && 
+                    <Bar dataKey="twitter" fill="#ffc658" />}
+                  {availablePlatforms.includes('reddit') && 
+                    <Bar dataKey="reddit" fill="#ff8042" />}
+                  {availablePlatforms.includes('chaturbate') && 
+                    <Bar dataKey="chaturbate" fill="#0088fe" />}
                 </BarChart>
               </ResponsiveContainer>
             </div>
