@@ -1,6 +1,7 @@
 
 export type EmployeeRole = "Admin" | "Manager" | "Employee";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
+export type EmployeeTeam = "A" | "B" | "C";
 
 export interface Employee {
   id: string;
@@ -14,6 +15,8 @@ export interface Employee {
   lastLogin: string;
   createdAt: string;
   department?: string;
+  teams?: EmployeeTeam[];
+  assignedCreators?: string[]; // IDs of creators assigned to this team member
 }
 
 export type EmployeeFilters = {

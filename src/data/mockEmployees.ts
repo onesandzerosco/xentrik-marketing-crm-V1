@@ -13,7 +13,9 @@ export const mockEmployees: Employee[] = [
     permissions: ["all"],
     profileImage: "/avatar1.png",
     lastLogin: "Today at 9:30 AM",
-    createdAt: "2023-01-15T12:00:00Z"
+    createdAt: "2023-01-15T12:00:00Z",
+    teams: ["A"],
+    assignedCreators: ["c1", "c2", "c3"]
   },
   {
     id: "2",
@@ -26,7 +28,9 @@ export const mockEmployees: Employee[] = [
     permissions: ["view_reports", "edit_team"],
     profileImage: "/avatar2.png",
     lastLogin: "Yesterday at 5:15 PM",
-    createdAt: "2023-02-10T14:30:00Z"
+    createdAt: "2023-02-10T14:30:00Z",
+    teams: ["B", "C"],
+    assignedCreators: ["c4", "c5"]
   },
   {
     id: "3",
@@ -39,7 +43,8 @@ export const mockEmployees: Employee[] = [
     permissions: ["view_reports"],
     profileImage: "/avatar3.png",
     lastLogin: "2 days ago",
-    createdAt: "2023-03-05T09:15:00Z"
+    createdAt: "2023-03-05T09:15:00Z",
+    teams: ["A"]
   },
   {
     id: "4",
@@ -52,7 +57,8 @@ export const mockEmployees: Employee[] = [
     permissions: ["view_reports"],
     profileImage: "/avatar4.png", 
     lastLogin: "Last week",
-    createdAt: "2023-04-20T11:45:00Z"
+    createdAt: "2023-04-20T11:45:00Z",
+    teams: ["C"]
   },
   {
     id: "5",
@@ -77,6 +83,8 @@ export const mockEmployees: Employee[] = [
     permissions: ["view_reports", "edit_team"],
     profileImage: "/avatar6.png",
     lastLogin: "Today at 11:45 AM",
-    createdAt: "2023-06-08T10:10:00Z"
+    createdAt: "2023-06-08T10:10:00Z",
+    teams: ["A", "B"],
+    assignedCreators: ["c1"]
   }
 ];

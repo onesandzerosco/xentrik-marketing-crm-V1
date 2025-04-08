@@ -15,6 +15,7 @@ import AccountSettings from './pages/AccountSettings';
 import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import UserManagement from './pages/UserManagement';
+import Team from './pages/Team';
 import Sidebar from './components/Sidebar';
 
 function App() {
@@ -79,7 +80,7 @@ const AppRoutes = () => {
         path="/team" 
         element={
           <ProtectedRoute>
-            <Creators />
+            <Team />
           </ProtectedRoute>
         } 
       />

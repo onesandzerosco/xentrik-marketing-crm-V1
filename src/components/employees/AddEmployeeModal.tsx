@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Employee, EmployeeRole, EmployeeStatus } from "@/types/employee";
+import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "@/types/employee";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -36,6 +36,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<EmployeeRole>("Employee");
   const [isActive, setIsActive] = useState(true);
+  const [telegram, setTelegram] = useState("");
+  const [department, setDepartment] = useState("");
+  const [selectedTeams, setSelectedTeams] = useState<EmployeeTeam[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +54,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       email: email.trim(),
       role,
       status: isActive ? "Active" : "Inactive",
+      telegram: telegram.trim() || undefined,
+      department: department.trim() || undefined,
+      teams: selectedTeams.length > 0 ? selectedTeams : undefined,
       lastLogin: "Never",
       createdAt: new Date().toISOString()
     };
@@ -65,6 +71,19 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     setEmail("");
     setRole("Employee");
     setIsActive(true);
+    setTelegram("");
+    setDepartment("");
+    setSelectedTeams([]);
+  };
+  
+  const toggleTeam = (team: EmployeeTeam) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(team)) {
+        return prev.filter(t => t !== team);
+      } else {
+        return [...prev, team];
+      }
+    });
   };
 
   return (
@@ -119,6 +138,45 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   <SelectItem value="Employee">Employee</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="telegram">Telegram Username</Label>
+              <Input
+                id="telegram"
+                value={telegram}
+                onChange={(e) => setTelegram(e.target.value)}
+                placeholder="username (without @)"
+                className="w-full"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="e.g. Marketing, Sales, etc."
+                className="w-full"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label className="mb-2">Team Assignment</Label>
+              <div className="flex gap-2">
+                {["A", "B", "C"].map((team) => (
+                  <Button
+                    key={team}
+                    type="button"
+                    variant={selectedTeams.includes(team as EmployeeTeam) ? "default" : "outline"}
+                    onClick={() => toggleTeam(team as EmployeeTeam)}
+                    className="flex-1"
+                  >
+                    Team {team}
+                  </Button>
+                ))}
+              </div>
             </div>
             
             <div className="flex items-center justify-between">

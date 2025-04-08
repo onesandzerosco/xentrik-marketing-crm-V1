@@ -17,7 +17,8 @@ import {
   PauseCircle,
   PlayCircle,
   MessageCircle,
-  Mail
+  Mail,
+  Users
 } from "lucide-react";
 import { Employee, EmployeeStatus } from "../../types/employee";
 import EditEmployeeModal from "./EditEmployeeModal";
@@ -27,13 +28,15 @@ interface EmployeeCardProps {
   onUpdate: (id: string, updates: Partial<Employee>) => void;
   isAdmin: boolean;
   currentUserId?: string;
+  onDeactivateClick?: (employee: Employee) => void;
 }
 
 const EmployeeCard: React.FC<EmployeeCardProps> = ({ 
   employee, 
   onUpdate,
   isAdmin,
-  currentUserId
+  currentUserId,
+  onDeactivateClick
 }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   
@@ -68,6 +71,19 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         return "bg-amber-500 text-white";
       default:
         return "bg-secondary";
+    }
+  };
+  
+  const getTeamBadgeColor = (team: string) => {
+    switch (team) {
+      case "A":
+        return "bg-purple-500 text-white";
+      case "B":
+        return "bg-indigo-500 text-white";
+      case "C":
+        return "bg-teal-500 text-white";
+      default:
+        return "bg-gray-500 text-white";
     }
   };
   
@@ -137,6 +153,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
             </div>
             <span>{employee.lastLogin || "Never"}</span>
           </div>
+          
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <User className="h-4 w-4" />
@@ -146,6 +163,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
               {employee.status}
             </Badge>
           </div>
+          
           {employee.telegram && (
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -155,6 +173,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
               <span>@{employee.telegram}</span>
             </div>
           )}
+          
           {employee.department && (
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -162,6 +181,34 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                 <span>Department:</span>
               </div>
               <span>{employee.department}</span>
+            </div>
+          )}
+          
+          {employee.teams && employee.teams.length > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Teams:</span>
+              </div>
+              <div className="flex gap-1">
+                {employee.teams.map(team => (
+                  <Badge key={team} className={getTeamBadgeColor(team)}>
+                    Team {team}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {employee.assignedCreators && employee.assignedCreators.length > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span>Assigned Creators:</span>
+              </div>
+              <Badge variant="outline">
+                {employee.assignedCreators.length}
+              </Badge>
             </div>
           )}
         </div>
@@ -179,15 +226,15 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           </Button>
         )}
         
-        {canChangeStatus && (
+        {canChangeStatus && onDeactivateClick && (
           <Button 
-            variant={employee.status === "Inactive" ? "outline" : "destructive"} 
+            variant="destructive" 
             size="sm" 
             className="flex-1"
-            onClick={handleToggleStatus}
+            onClick={() => onDeactivateClick(employee)}
           >
             <UserX className="h-4 w-4 mr-2" />
-            {employee.status === "Inactive" ? "Activate" : "Deactivate"}
+            Deactivate
           </Button>
         )}
         

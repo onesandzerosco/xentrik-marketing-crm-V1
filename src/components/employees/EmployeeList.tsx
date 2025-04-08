@@ -11,6 +11,7 @@ interface EmployeeListProps {
   isAdmin: boolean;
   currentUserId?: string;
   onAddEmployeeClick: () => void;
+  onDeactivateClick?: (employee: Employee) => void;
 }
 
 const EmployeeList: React.FC<EmployeeListProps> = ({
@@ -19,6 +20,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   isAdmin,
   currentUserId,
   onAddEmployeeClick,
+  onDeactivateClick,
 }) => {
   if (employees.length === 0) {
     return (
@@ -47,6 +49,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
           onUpdate={onUpdate}
           isAdmin={isAdmin}
           currentUserId={currentUserId}
+          onDeactivateClick={onDeactivateClick}
         />
       ))}
     </div>

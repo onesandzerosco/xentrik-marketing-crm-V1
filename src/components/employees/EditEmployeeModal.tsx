@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -17,8 +17,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { 
   Form, 
@@ -29,7 +30,7 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
-import { Employee, EmployeeRole, EmployeeStatus } from "../../types/employee";
+import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "../../types/employee";
 import ProfilePicture from "../profile/ProfilePicture";
 
 interface EditEmployeeModalProps {
@@ -40,6 +41,15 @@ interface EditEmployeeModalProps {
   currentUserId?: string;
 }
 
+// Mock data for creators that could be assigned to team members
+const mockCreators = [
+  { id: "c1", name: "Creator One" },
+  { id: "c2", name: "Creator Two" },
+  { id: "c3", name: "Creator Three" },
+  { id: "c4", name: "Creator Four" },
+  { id: "c5", name: "Creator Five" },
+];
+
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -48,7 +58,9 @@ const formSchema = z.object({
   telegram: z.string().optional(),
   department: z.string().optional(),
   permissions: z.array(z.string()).optional(),
-  profileImage: z.string().optional()
+  profileImage: z.string().optional(),
+  teams: z.array(z.enum(["A", "B", "C"])).optional(),
+  assignedCreators: z.array(z.string()).optional()
 });
 
 const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({ 
@@ -59,6 +71,8 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   currentUserId
 }) => {
   const isCurrentUser = currentUserId === employee.id;
+  const [selectedTeams, setSelectedTeams] = useState<EmployeeTeam[]>(employee.teams || []);
+  const [selectedCreators, setSelectedCreators] = useState<string[]>(employee.assignedCreators || []);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,7 +84,9 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       telegram: employee.telegram || "",
       department: employee.department || "",
       permissions: employee.permissions || [],
-      profileImage: employee.profileImage || ""
+      profileImage: employee.profileImage || "",
+      teams: employee.teams || [],
+      assignedCreators: employee.assignedCreators || []
     }
   });
   
@@ -85,8 +101,12 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         telegram: employee.telegram || "",
         department: employee.department || "",
         permissions: employee.permissions || [],
-        profileImage: employee.profileImage || ""
+        profileImage: employee.profileImage || "",
+        teams: employee.teams || [],
+        assignedCreators: employee.assignedCreators || []
       });
+      setSelectedTeams(employee.teams || []);
+      setSelectedCreators(employee.assignedCreators || []);
     }
   }, [employee, open, form]);
   
@@ -102,12 +122,36 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       values.status = "Active";
     }
     
+    // Add selected teams and creators to the form values
+    values.teams = selectedTeams;
+    values.assignedCreators = selectedCreators;
+    
     onUpdateEmployee(employee.id, values);
     onOpenChange(false);
   };
   
   const handleProfileImageChange = (url: string) => {
     form.setValue("profileImage", url);
+  };
+  
+  const toggleTeam = (team: EmployeeTeam) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(team)) {
+        return prev.filter(t => t !== team);
+      } else {
+        return [...prev, team];
+      }
+    });
+  };
+  
+  const toggleCreator = (creatorId: string) => {
+    setSelectedCreators(prev => {
+      if (prev.includes(creatorId)) {
+        return prev.filter(id => id !== creatorId);
+      } else {
+        return [...prev, creatorId];
+      }
+    });
   };
   
   return (
@@ -254,6 +298,44 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div>
+                  <FormLabel className="block mb-2">Team Assignment</FormLabel>
+                  <div className="flex gap-2 mb-4">
+                    {["A", "B", "C"].map((team) => (
+                      <Button
+                        key={team}
+                        type="button"
+                        variant={selectedTeams.includes(team as EmployeeTeam) ? "default" : "outline"}
+                        onClick={() => toggleTeam(team as EmployeeTeam)}
+                        className="flex-1"
+                      >
+                        Team {team}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <FormLabel className="block mb-2">Assigned Creators</FormLabel>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border rounded-md">
+                    {mockCreators.map((creator) => (
+                      <div key={creator.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`creator-${creator.id}`}
+                          checked={selectedCreators.includes(creator.id)}
+                          onCheckedChange={() => toggleCreator(creator.id)}
+                        />
+                        <label
+                          htmlFor={`creator-${creator.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {creator.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
