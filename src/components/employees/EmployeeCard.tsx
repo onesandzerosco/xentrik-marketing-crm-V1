@@ -16,7 +16,6 @@ import {
   UserX,
   PauseCircle,
   PlayCircle,
-  MessageCircle,
   Mail,
   Users
 } from "lucide-react";
@@ -128,24 +127,20 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
               )}
             </Avatar>
             <div>
-              <h3 className="font-medium text-lg flex items-center">
-                {employee.name}
-                <Badge 
-                  className={`ml-2 text-xs ${getRoleBadgeColor(employee.role)}`}
-                >
-                  {employee.role}
-                </Badge>
-              </h3>
+              <h3 className="font-medium text-lg">{employee.name}</h3>
               <div className="flex items-center text-sm text-muted-foreground">
                 <Mail className="h-3 w-3 mr-1" />
                 {employee.email}
               </div>
             </div>
           </div>
+          <Badge className={`${getRoleBadgeColor(employee.role)}`}>
+            {employee.role}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="py-4">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Clock className="h-4 w-4" />
@@ -154,20 +149,35 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
             <span>{employee.lastLogin || "Never"}</span>
           </div>
           
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <User className="h-4 w-4" />
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <div className="flex items-center mr-1 text-muted-foreground">
+              <User className="h-4 w-4 mr-1" />
               <span>Status:</span>
             </div>
-            <Badge className={getStatusBadgeColor(employee.status)}>
-              {employee.status}
-            </Badge>
+            <div className="flex flex-wrap gap-1">
+              <Badge className={getStatusBadgeColor(employee.status)}>
+                {employee.status}
+              </Badge>
+              
+              {employee.teams && employee.teams.length > 0 && (
+                employee.teams.map(team => (
+                  <Badge key={team} className={getTeamBadgeColor(team)}>
+                    Team {team}
+                  </Badge>
+                ))
+              )}
+            </div>
           </div>
           
           {employee.telegram && (
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-1.5 text-muted-foreground">
-                <MessageCircle className="h-4 w-4" />
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M21.73 2.27a2 2 0 0 0-2.83 0L4.06 17.1a2 2 0 0 0 0 2.83a2 2 0 0 0 2.83 0L21.73 5.1a2 2 0 0 0 0-2.83Z" />
+                  <path d="m4.1 17.1 15.8-15.8" />
+                  <path d="M8 15H2v5a2 2 0 0 0 2 2h5v-6" />
+                  <path d="M17 9h6V4a2 2 0 0 0-2-2h-5v6" />
+                </svg>
                 <span>Telegram:</span>
               </div>
               <span>@{employee.telegram}</span>
@@ -181,22 +191,6 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
                 <span>Department:</span>
               </div>
               <span>{employee.department}</span>
-            </div>
-          )}
-          
-          {employee.teams && employee.teams.length > 0 && (
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Users className="h-4 w-4" />
-                <span>Teams:</span>
-              </div>
-              <div className="flex gap-1">
-                {employee.teams.map(team => (
-                  <Badge key={team} className={getTeamBadgeColor(team)}>
-                    Team {team}
-                  </Badge>
-                ))}
-              </div>
             </div>
           )}
           

@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 
 interface EmployeeSearchAndSortProps {
   searchQuery: string;
@@ -33,13 +32,13 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-6">
       <div className="relative w-full sm:w-auto">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search team members..."
-          className="pl-9 w-full sm:w-[350px] bg-background border-[#333] text-foreground"
+          className="pl-9 w-full sm:w-[350px] bg-background border-border text-foreground"
           value={searchQuery}
           onChange={handleSearchChange}
         />
@@ -47,7 +46,7 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
       
       <div className="flex gap-2 w-full sm:w-auto">
         <Select value={sortOption} onValueChange={handleSortChange}>
-          <SelectTrigger className="w-[180px] border-[#333]">
+          <SelectTrigger className="w-[180px] border-border">
             <div className="flex items-center">
               <ArrowDownUp className="h-4 w-4 mr-2" />
               <span>Sort by</span>
