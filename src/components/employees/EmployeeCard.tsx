@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { 
   Card,
   CardContent,
@@ -18,7 +19,6 @@ import {
   Users
 } from "lucide-react";
 import { Employee, EmployeeStatus } from "../../types/employee";
-import EditEmployeeModal from "./EditEmployeeModal";
 import EmployeeHeader from "./EmployeeHeader";
 import EmployeeInfo from "./EmployeeInfo";
 
@@ -37,8 +37,6 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   currentUserId,
   onDeactivateClick
 }) => {
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  
   const handleTogglePause = () => {
     const newStatus: EmployeeStatus = employee.status === "Paused" ? "Active" : "Paused";
     onUpdate(employee.id, { status: newStatus });
@@ -56,14 +54,15 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
       
       <CardFooter className="mt-auto border-t border-[#333333] p-0">
         <div className="grid grid-cols-1 w-full">
-          <Button 
-            variant="ghost" 
-            className="rounded-none h-12 flex items-center justify-center text-sm hover:bg-[#222]"
-            onClick={() => setEditModalOpen(true)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+          <Link to={`/team/${employee.id}`} className="w-full">
+            <Button 
+              variant="ghost" 
+              className="rounded-none h-12 flex items-center justify-center text-sm hover:bg-[#222] w-full"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </Link>
           
           {canChangeStatus && (
             <div className="grid grid-cols-2 w-full">
@@ -99,14 +98,6 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
           )}
         </div>
       </CardFooter>
-      
-      <EditEmployeeModal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        employee={employee}
-        onUpdateEmployee={onUpdate}
-        currentUserId={currentUserId}
-      />
     </Card>
   );
 };

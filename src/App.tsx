@@ -16,6 +16,7 @@ import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import UserManagement from './pages/UserManagement';
 import Team from './pages/Team';
+import TeamMemberProfile from './pages/TeamMemberProfile';
 import Sidebar from './components/Sidebar';
 
 function App() {
@@ -81,6 +82,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Team />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/team/:id" 
+        element={
+          <ProtectedRoute>
+            <TeamMemberProfile />
           </ProtectedRoute>
         } 
       />
