@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -187,7 +188,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </AspectRatio>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Drag the image to adjust the crop. The image will be cropped to a 1:1 ratio.
+              Use the sliders below to adjust zoom and position
             </p>
 
             <div className="space-y-4">
@@ -310,6 +311,48 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         imgWidth,
         imgHeight
       );
+      
+      // Draw the 3x3 grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 1;
+      
+      // Draw horizontal grid lines
+      for (let i = 1; i < 3; i++) {
+        const y = (size / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(size, y);
+        ctx.stroke();
+      }
+      
+      // Draw vertical grid lines
+      for (let i = 1; i < 3; i++) {
+        const x = (size / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, size);
+        ctx.stroke();
+      }
+      
+      // Draw center point circle
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size / 4, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Draw smaller inner circle
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size / 8, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Draw tiny point at exact center
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
+      ctx.fill();
     };
     
     img.onload = () => {
