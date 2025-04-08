@@ -76,6 +76,14 @@ const AppRoutes = () => {
         } 
       />
       <Route 
+        path="/team" 
+        element={
+          <ProtectedRoute>
+            <Creators />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/users" 
         element={
           <ProtectedRoute>
