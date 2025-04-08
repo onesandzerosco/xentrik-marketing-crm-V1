@@ -44,11 +44,11 @@ const Sidebar = () => {
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
-          className="h-[70px] w-auto object-contain"
+          className="h-[50px] w-auto object-contain"
         />
       </div>
 
-      <div className="flex flex-col h-[calc(100vh-5rem)] justify-between p-3">
+      <div className="flex flex-col h-[calc(100vh-5rem)] justify-between p-2">
         <nav className="grid gap-1 px-2">
           <NavLink
             to="/dashboard"
