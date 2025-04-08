@@ -44,12 +44,12 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
-      <div className="p-4 flex items-center justify-center border-b">
-        <Link to="/dashboard" className="flex items-center justify-center py-2">
+      <div className="p-4 border-b flex items-start">
+        <Link to="/dashboard" className="py-2">
           <img 
             src="/lovable-uploads/c79203dc-0401-40c1-bf4a-821b26aa6031.png" 
             alt="Xentrik Marketing" 
-            className="h-14" 
+            className="h-42" 
           />
         </Link>
       </div>
