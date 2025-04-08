@@ -3,13 +3,38 @@ import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import Sidebar from "../components/Sidebar";
-import { ArrowLeft, Download, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, TrendingDown, TrendingUp, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type TimeFilter = "yesterday" | "today" | "week" | "month" | "custom";
+
+// Generate AI performance summary based on analytics data
+const generateAISummary = (stats: any, timeFilter: TimeFilter) => {
+  const positivePerformers = Object.entries(stats)
+    .filter(([platform, data]: [string, any]) => data.trend > 0)
+    .map(([platform]) => platform);
+
+  const negativePerformers = Object.entries(stats)
+    .filter(([platform, data]: [string, any]) => data.trend < 0)
+    .map(([platform]) => platform);
+
+  let summary = "";
+  
+  if (positivePerformers.length > 0 && negativePerformers.length > 0) {
+    summary = `Performance shows growth on ${positivePerformers.join(', ')} with a decline on ${negativePerformers.join(', ')}. Consider focusing more content on ${negativePerformers.join(', ')} to improve engagement.`;
+  } else if (positivePerformers.length > 0) {
+    summary = `Strong performance across ${positivePerformers.join(', ')} indicates your content strategy is working well. Continue with similar content to maintain momentum.`;
+  } else if (negativePerformers.length > 0) {
+    summary = `Declining metrics on ${negativePerformers.join(', ')} suggest a need for content refresh. Review recent posts and adjust strategy to better engage your audience.`;
+  } else {
+    summary = "Performance is stable across platforms with minimal changes. Consider testing new content formats to drive more engagement.";
+  }
+
+  return summary;
+};
 
 const CreatorAnalytics = () => {
   const { id } = useParams();
@@ -178,6 +203,9 @@ const CreatorAnalytics = () => {
     );
   };
 
+  // Get AI-generated summary based on current stats and time filter
+  const aiSummary = generateAISummary(stats, timeFilter);
+
   return (
     <div className="flex">
       <Sidebar />
@@ -233,6 +261,22 @@ const CreatorAnalytics = () => {
 
         {/* KPI cards */}
         {renderKpiCards()}
+
+        {/* AI Performance Summary */}
+        <Card className="mb-8">
+          <CardHeader className="px-6 flex flex-row items-center space-y-0 pb-3">
+            <div>
+              <CardTitle className="flex items-center">
+                <Bot className="h-5 w-5 mr-2 text-blue-500" />
+                AI Performance Summary
+              </CardTitle>
+              <CardDescription>Smart analysis of current metrics</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <p className="text-sm">{aiSummary}</p>
+          </CardContent>
+        </Card>
 
         {/* Main Chart */}
         <Card className="mb-8">
