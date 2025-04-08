@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Send, Users, Banana, User } from 'lucide-react';
@@ -54,7 +53,7 @@ const Messages: React.FC = () => {
       id: employee.id,
       userId: employee.id,
       userName: employee.name,
-      userAvatar: employee.avatar || "",
+      userAvatar: employee.profileImage || "", // Fixed: Use profileImage instead of avatar
       lastMessage: "Hey there! Let's collaborate on the next campaign.",
       lastMessageTime: new Date(Date.now() - Math.random() * 86400000 * 7), // Random time in the last week
       unreadCount: Math.floor(Math.random() * 3)

@@ -15,10 +15,29 @@ import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import TeamManagement from "./pages/TeamManagement";
 
+// Move this inside the App component instead of using it at the top level
 function App() {
+  return (
+    <div className="app">
+      <AuthProvider>
+        <CreatorProvider>
+          <ActivityProvider>
+            <BrowserRouter>
+              <Toaster />
+              <AppRoutes />
+            </BrowserRouter>
+          </ActivityProvider>
+        </CreatorProvider>
+      </AuthProvider>
+    </div>
+  );
+}
+
+// Create a separate component for routes to avoid using hooks at the top level
+const AppRoutes = () => {
+  const { isAuthenticated } = useAuth();
+  
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated } = useAuth();
-    
     if (!isAuthenticated) {
       // Redirect to login page if not authenticated
       return <Navigate to="/login" />;
@@ -28,79 +47,68 @@ function App() {
   };
   
   return (
-    <div className="app">
-      <AuthProvider>
-        <CreatorProvider>
-          <ActivityProvider>
-            <BrowserRouter>
-              <Toaster />
-              <Routes>
-                <Route path="/" element={<Navigate to="/login" />} />
-                <Route path="/login" element={<Login />} />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/creators" 
-                  element={
-                    <ProtectedRoute>
-                      <Creators />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/team" 
-                  element={
-                    <ProtectedRoute>
-                      <TeamManagement />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/messages" 
-                  element={
-                    <ProtectedRoute>
-                      <Messages />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/creator/:id" 
-                  element={
-                    <ProtectedRoute>
-                      <CreatorProfile />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/creator/:id/analytics" 
-                  element={
-                    <ProtectedRoute>
-                      <CreatorAnalytics />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/account" 
-                  element={
-                    <ProtectedRoute>
-                      <AccountSettings />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </ActivityProvider>
-        </CreatorProvider>
-      </AuthProvider>
-    </div>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/login" element={<Login />} />
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/creators" 
+        element={
+          <ProtectedRoute>
+            <Creators />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/team" 
+        element={
+          <ProtectedRoute>
+            <TeamManagement />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/messages" 
+        element={
+          <ProtectedRoute>
+            <Messages />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/creator/:id" 
+        element={
+          <ProtectedRoute>
+            <CreatorProfile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/creator/:id/analytics" 
+        element={
+          <ProtectedRoute>
+            <CreatorAnalytics />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/account" 
+        element={
+          <ProtectedRoute>
+            <AccountSettings />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
-}
+};
 
 export default App;
