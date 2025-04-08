@@ -1,13 +1,13 @@
 
 import React, { createContext, useContext, useState } from "react";
-import { Activity, ActivityType } from "../types/activity";
+import { Activity, ActivityType, ChangeDetail } from "../types/activity";
 
 // Initial mock activities
 const initialActivities: Activity[] = [];
 
 interface ActivityContextType {
   activities: Activity[];
-  addActivity: (type: ActivityType, message: string, creatorId?: string) => void;
+  addActivity: (type: ActivityType, message: string, creatorId?: string, changeDetails?: ChangeDetail[]) => void;
   getRecentActivities: (limit?: number) => Activity[];
 }
 
@@ -22,13 +22,14 @@ export const useActivities = () => useContext(ActivityContext);
 export const ActivityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
 
-  const addActivity = (type: ActivityType, message: string, creatorId?: string) => {
+  const addActivity = (type: ActivityType, message: string, creatorId?: string, changeDetails?: ChangeDetail[]) => {
     const newActivity: Activity = {
       id: Date.now().toString(),
       type,
       message,
       timestamp: Date.now(),
       creatorId,
+      changeDetails,
     };
     
     setActivities(prevActivities => [newActivity, ...prevActivities]);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
-import { Creator, EngagementStats, CreatorType } from "../types";
+import { Creator, EngagementStats, CreatorType } from "../types/";
 import { useActivities } from "./ActivityContext";
+import { ChangeDetail } from "../types/activity";
 
 // Mock data for initial creators
 const initialCreators: Creator[] = [
@@ -182,19 +183,79 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
     
     if (existingCreator) {
+      const changeDetails: ChangeDetail[] = [];
+      let hasMultipleChanges = false;
+      
       if (updates.name && updates.name !== existingCreator.name) {
-        addActivity("update", `Profile name updated for: ${existingCreator.name} → ${updates.name}`, id);
-      } else if (updates.team && updates.team !== existingCreator.team) {
-        addActivity("update", `Team updated for: ${existingCreator.name} (${existingCreator.team} → ${updates.team})`, id);
-      } else if (updates.gender && updates.gender !== existingCreator.gender) {
-        addActivity("update", `Gender updated for: ${existingCreator.name}`, id);
-      } else if (updates.needsReview !== undefined && updates.needsReview !== existingCreator.needsReview) {
-        if (updates.needsReview) {
-          addActivity("alert", `Review flag added for: ${existingCreator.name}`, id);
-        } else {
-          addActivity("update", `Review completed for: ${existingCreator.name}`, id);
+        changeDetails.push({
+          field: "name",
+          oldValue: existingCreator.name,
+          newValue: updates.name
+        });
+      }
+      
+      if (updates.team && updates.team !== existingCreator.team) {
+        changeDetails.push({
+          field: "team",
+          oldValue: existingCreator.team,
+          newValue: updates.team
+        });
+      }
+      
+      if (updates.gender && updates.gender !== existingCreator.gender) {
+        changeDetails.push({
+          field: "gender",
+          oldValue: existingCreator.gender,
+          newValue: updates.gender
+        });
+      }
+      
+      if (updates.creatorType && updates.creatorType !== existingCreator.creatorType) {
+        changeDetails.push({
+          field: "creatorType",
+          oldValue: existingCreator.creatorType,
+          newValue: updates.creatorType
+        });
+      }
+      
+      if (updates.needsReview !== undefined && updates.needsReview !== existingCreator.needsReview) {
+        changeDetails.push({
+          field: "reviewStatus",
+          oldValue: existingCreator.needsReview ? "Needs Review" : "Approved",
+          newValue: updates.needsReview ? "Needs Review" : "Approved"
+        });
+      }
+      
+      hasMultipleChanges = changeDetails.length > 1;
+      
+      if (hasMultipleChanges) {
+        const fieldsList = changeDetails.map(detail => detail.field).join(", ");
+        addActivity("bulk-update", `Multiple updates for ${existingCreator.name} (${changeDetails.length} changes)`, id, changeDetails);
+      } 
+      else if (changeDetails.length === 1) {
+        const change = changeDetails[0];
+        
+        if (change.field === "name") {
+          addActivity("update", `Profile name updated for: ${existingCreator.name} → ${updates.name}`, id, changeDetails);
+        } 
+        else if (change.field === "team") {
+          addActivity("update", `Team updated for: ${existingCreator.name} (${existingCreator.team} → ${updates.team})`, id, changeDetails);
+        } 
+        else if (change.field === "gender") {
+          addActivity("update", `Gender updated for: ${existingCreator.name}`, id, changeDetails);
+        } 
+        else if (change.field === "reviewStatus") {
+          if (updates.needsReview) {
+            addActivity("alert", `Review flag added for: ${existingCreator.name}`, id, changeDetails);
+          } else {
+            addActivity("update", `Review completed for: ${existingCreator.name}`, id, changeDetails);
+          }
+        } 
+        else {
+          addActivity("update", `Profile updated for: ${existingCreator.name}`, id, changeDetails);
         }
-      } else {
+      }
+      else if (Object.keys(updates).length > 0) {
         addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
       }
     }
