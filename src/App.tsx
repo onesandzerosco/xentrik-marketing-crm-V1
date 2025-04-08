@@ -46,7 +46,7 @@ const AppRoutes = () => {
     return (
       <div className="flex w-full">
         <Sidebar />
-        <div className="w-full pl-60">
+        <div className="w-full">
           {children}
         </div>
       </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Send, Users, Banana, User, ArrowLeft } from 'lucide-react';
@@ -201,7 +200,7 @@ const Messages: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <div className="flex-grow flex flex-col p-6 pl-72 w-full">
+      <div className="flex-grow flex flex-col p-6 w-full">
         <div className="flex items-center gap-3 mb-6 animate-fade-in">
           <Button 
             variant="ghost" 
