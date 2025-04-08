@@ -15,8 +15,11 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 }) => {
   // Handle image change from ImageUploader
   const handleImageChange = (url: string) => {
-    // Pass the new image URL up to the parent component
-    setProfileImage(url);
+    // Only update if the URL is not empty
+    if (url && url.trim() !== "") {
+      // Pass the new image URL up to the parent component
+      setProfileImage(url);
+    }
   };
 
   return (

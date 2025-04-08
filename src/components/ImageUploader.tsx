@@ -1,9 +1,9 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -44,7 +44,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if there's a valid image to display
-  const hasImage = imageLoaded && Boolean(previewImage && previewImage.trim() !== "");
+  const hasImage = Boolean(previewImage && previewImage.trim() !== "");
 
   const sizeClasses = {
     sm: "h-16 w-16",
@@ -52,6 +52,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     lg: "h-32 w-32",
     xl: "h-40 w-40"
   };
+
+  // Use effect to update previewImage when currentImage changes
+  useEffect(() => {
+    if (currentImage && currentImage !== previewImage) {
+      setPreviewImage(currentImage);
+      
+      // Check if image is valid
+      const img = new Image();
+      img.onload = () => {
+        setImageLoaded(true);
+      };
+      img.onerror = () => {
+        setImageLoaded(false);
+      };
+      img.src = currentImage;
+    }
+  }, [currentImage]);
 
   const handleClick = () => {
     fileInputRef.current?.click();
@@ -89,16 +106,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleCropSave = () => {
-    // Pass the adjusted image back to the parent component
+    // Close the dialog first
     setIsEditing(false);
-    onImageChange(previewImage);
     
-    // Generate a timestamp to force the image to reload with the new parameters
-    const timestamp = new Date().getTime();
-    if (previewImage.includes('?')) {
-      setPreviewImage(`${previewImage.split('?')[0]}?t=${timestamp}`);
-    } else {
-      setPreviewImage(`${previewImage}?t=${timestamp}`);
+    // Make sure we're not losing the image
+    if (previewImage && previewImage.trim() !== "") {
+      // Generate a timestamp to force the image to reload with the new parameters
+      const timestamp = new Date().getTime();
+      let updatedImage = previewImage;
+      
+      if (previewImage.includes('?')) {
+        updatedImage = `${previewImage.split('?')[0]}?t=${timestamp}`;
+      } else {
+        updatedImage = `${previewImage}?t=${timestamp}`;
+      }
+      
+      // Update the preview image with the timestamp
+      setPreviewImage(updatedImage);
+      
+      // Pass the image back to the parent component
+      onImageChange(updatedImage);
     }
   };
 
@@ -114,6 +141,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const img = new Image();
       img.onload = () => {
         setImageLoaded(true);
+      };
+      img.onerror = () => {
+        setImageLoaded(false);
       };
       img.src = currentImage;
     }
@@ -210,6 +240,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Adjust Image</DialogTitle>
+            <DialogDescription>
+              Position and zoom your image to fit nicely in the circular frame.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-col gap-4">
