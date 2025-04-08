@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Send, Users, Banana, User, ArrowLeft } from 'lucide-react';
@@ -282,7 +283,7 @@ const Messages: React.FC = () => {
                                 {format(conversation.lastMessageTime, 'h:mm a')}
                               </p>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">
+                            <p className="text-sm text-muted-foreground truncate max-w-[180px]">
                               {conversation.lastMessage}
                             </p>
                           </div>

@@ -47,6 +47,8 @@
   border-radius: 0.75rem;
   position: relative;
   margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .message-incoming {
@@ -98,4 +100,12 @@ html, div, main, section, article, aside, nav {
   *, html, div, main, section, article, aside, nav {
     scroll-behavior: auto !important;
   }
+}
+
+/* Message text truncation */
+.message-preview {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
