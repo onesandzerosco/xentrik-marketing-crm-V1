@@ -1,26 +1,32 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Upload, Edit, Trash2 } from "lucide-react";
+import { Upload, Edit, Trash2, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 
 interface ImageUploaderProps {
   currentImage: string;
   name: string;
   onImageChange: (imagePath: string) => void;
   size?: "sm" | "md" | "lg" | "xl";
+  showZoomSlider?: boolean;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
   currentImage, 
   name, 
   onImageChange,
-  size = "lg" 
+  size = "lg",
+  showZoomSlider = false
 }) => {
   const [previewImage, setPreviewImage] = useState<string>(currentImage);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number[]>([1]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -48,6 +54,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleEdit = () => {
     setCropImage(previewImage);
     setIsEditing(true);
+    setZoomLevel([1]); // Reset zoom level when opening editor
   };
 
   const handleRemove = () => {
@@ -72,6 +79,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const handleCropCancel = () => {
     setIsEditing(false);
     setCropImage(null);
+  };
+
+  const handleZoomChange = (value: number[]) => {
+    setZoomLevel(value);
   };
 
   const initials = name
@@ -157,6 +168,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <ImageCropper 
                     src={cropImage} 
                     canvasRef={canvasRef} 
+                    zoomLevel={zoomLevel[0]}
                   />
                 )}
               </AspectRatio>
@@ -164,6 +176,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <p className="text-xs text-muted-foreground text-center">
               Drag the image to adjust the crop. The image will be cropped to a 1:1 ratio.
             </p>
+
+            {showZoomSlider && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="zoom-slider" className="flex items-center text-sm">
+                    <ZoomIn className="h-4 w-4 mr-1" />
+                    Zoom: {Math.round(zoomLevel[0] * 100)}%
+                  </Label>
+                </div>
+                <Slider
+                  id="zoom-slider"
+                  min={0.5}
+                  max={3}
+                  step={0.1}
+                  value={zoomLevel}
+                  onValueChange={handleZoomChange}
+                />
+              </div>
+            )}
           </div>
           
           <DialogFooter className="flex justify-between sm:justify-between">
@@ -183,9 +214,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 interface ImageCropperProps {
   src: string;
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  zoomLevel: number;
 }
 
-const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
+const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef, zoomLevel = 1 }) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -205,8 +237,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
       const size = canvas.width;
       ctx.clearRect(0, 0, size, size);
       
-      const imgWidth = img.naturalWidth * scale;
-      const imgHeight = img.naturalHeight * scale;
+      // Apply the zoom level to the image scale
+      const imgWidth = img.naturalWidth * scale * zoomLevel;
+      const imgHeight = img.naturalHeight * scale * zoomLevel;
       
       ctx.drawImage(
         img,
@@ -235,7 +268,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ src, canvasRef }) => {
     
     const intervalId = setInterval(drawImageOnCanvas, 10);
     return () => clearInterval(intervalId);
-  }, [src, position, scale, canvasRef]);
+  }, [src, position, scale, zoomLevel, canvasRef]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);

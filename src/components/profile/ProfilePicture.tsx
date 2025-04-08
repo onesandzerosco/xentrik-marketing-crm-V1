@@ -17,7 +17,13 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <h2 className="text-xl font-bold mb-4">Profile Picture</h2>
       <div className="flex items-center justify-center">
-        <ImageUploader currentImage={profileImage} name={name} onImageChange={setProfileImage} size="xl" />
+        <ImageUploader 
+          currentImage={profileImage} 
+          name={name} 
+          onImageChange={setProfileImage} 
+          size="xl"
+          showZoomSlider={true}
+        />
       </div>
     </div>
   );
