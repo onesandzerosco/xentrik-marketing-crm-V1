@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -196,6 +197,67 @@ const CreatorAnalytics = () => {
     );
   };
 
+  // Generate an AI summary of the creator's performance
+  const generateAiSummary = () => {
+    // Calculate overall trend average across all platforms
+    let totalTrend = 0;
+    let platformCount = 0;
+    
+    availablePlatforms.forEach(platform => {
+      const platformKey = platform as keyof typeof stats;
+      const trend = stats[platformKey].trend;
+      totalTrend += trend;
+      platformCount++;
+    });
+    
+    const averageTrend = platformCount > 0 ? totalTrend / platformCount : 0;
+    
+    // Generate a contextual summary based on the average trend
+    if (averageTrend > 5) {
+      return `${creator.name} is showing strong growth across their platforms with an average increase of ${averageTrend.toFixed(1)}%. Their content strategy appears to be working well, particularly on ${getTopPerformingPlatform()}.`;
+    } else if (averageTrend > 0) {
+      return `${creator.name} is maintaining steady growth with a modest average increase of ${averageTrend.toFixed(1)}% across platforms. Their ${getTopPerformingPlatform()} content is performing best while ${getLowestPerformingPlatform()} could use more attention.`;
+    } else if (averageTrend > -5) {
+      return `${creator.name} is experiencing slight declines with an average change of ${averageTrend.toFixed(1)}% across platforms. Consider reviewing their content strategy, particularly for ${getLowestPerformingPlatform()}.`;
+    } else {
+      return `${creator.name} is showing concerning performance drops averaging ${averageTrend.toFixed(1)}% across platforms. Immediate attention is needed, especially for their ${getLowestPerformingPlatform()} content strategy.`;
+    }
+  };
+  
+  // Helper function to get the top performing platform
+  const getTopPerformingPlatform = () => {
+    let topPlatform = '';
+    let topTrend = -Infinity;
+    
+    availablePlatforms.forEach(platform => {
+      const platformKey = platform as keyof typeof stats;
+      const trend = stats[platformKey].trend;
+      if (trend > topTrend) {
+        topTrend = trend;
+        topPlatform = platform;
+      }
+    });
+    
+    return topPlatform;
+  };
+  
+  // Helper function to get the lowest performing platform
+  const getLowestPerformingPlatform = () => {
+    let lowestPlatform = '';
+    let lowestTrend = Infinity;
+    
+    availablePlatforms.forEach(platform => {
+      const platformKey = platform as keyof typeof stats;
+      const trend = stats[platformKey].trend;
+      if (trend < lowestTrend) {
+        lowestTrend = trend;
+        lowestPlatform = platform;
+      }
+    });
+    
+    return lowestPlatform;
+  };
+
   // Render figures box for platforms in a clean, styled format
   const renderFiguresBox = () => {
     if (!availablePlatforms.length) return null;
@@ -294,6 +356,19 @@ const CreatorAnalytics = () => {
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
+
+        {/* AI Summary */}
+        <Card className="mb-8 border-0 shadow-lg overflow-hidden bg-gradient-to-r from-purple-900/20 to-blue-900/20">
+          <CardHeader className="px-6 py-4">
+            <CardTitle className="flex items-center">
+              <span className="mr-2">AI Performance Insight</span>
+              <span className="text-xs px-2 py-1 bg-primary/20 rounded-full text-primary">AI Generated</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-6 pb-6">
+            <p className="text-lg">{generateAiSummary()}</p>
+          </CardContent>
+        </Card>
 
         {/* Engagement drop warning */}
         {stats.instagram.trend < -5 || stats.tiktok.trend < -5 || stats.twitter.trend < -5 || stats.reddit.trend < -5 || stats.chaturbate.trend < -5 ? (
