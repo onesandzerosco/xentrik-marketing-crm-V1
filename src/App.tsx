@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster"
@@ -12,8 +13,6 @@ import CreatorProfile from './pages/CreatorProfile';
 import CreatorAnalytics from './pages/CreatorAnalytics';
 import AccountSettings from './pages/AccountSettings';
 import NotFound from './pages/NotFound';
-
-// Add the TeamManagement import
 import TeamManagement from "./pages/TeamManagement";
 
 function App() {
@@ -30,11 +29,11 @@ function App() {
   
   return (
     <div className="app">
-      <Toaster />
       <AuthProvider>
         <CreatorProvider>
           <ActivityProvider>
             <BrowserRouter>
+              <Toaster />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
