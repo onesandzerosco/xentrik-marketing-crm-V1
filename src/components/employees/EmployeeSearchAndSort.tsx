@@ -12,17 +12,25 @@ import {
 
 interface EmployeeSearchAndSortProps {
   searchQuery: string;
-  handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   sortOption: string;
-  handleSortChange: (value: string) => void;
+  setSortOption: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
   searchQuery,
-  handleSearchChange,
+  setSearchQuery,
   sortOption,
-  handleSortChange,
+  setSortOption,
 }) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortOption(value);
+  };
+
   return (
     <div className="flex gap-3">
       <div className="relative">
