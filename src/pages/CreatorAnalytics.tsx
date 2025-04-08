@@ -8,8 +8,18 @@ import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 type TimeFilter = "yesterday" | "today" | "week" | "month" | "custom";
+
+// Define platform colors to match your design
+const PLATFORM_COLORS = {
+  instagram: "#8884d8", // Purple for Instagram
+  tiktok: "#82ca9d", // Green for TikTok
+  twitter: "#ffc658", // Yellow/Gold for Twitter
+  reddit: "#ff8042", // Orange for Reddit
+  chaturbate: "#0088fe", // Blue for Chaturbate
+};
 
 const CreatorAnalytics = () => {
   const { id } = useParams();
@@ -137,6 +147,15 @@ const CreatorAnalytics = () => {
     }
   };
 
+  // Config for chart themes
+  const chartConfig = availablePlatforms.reduce((config, platform) => {
+    config[platform] = { 
+      color: PLATFORM_COLORS[platform as keyof typeof PLATFORM_COLORS],
+      label: platform.charAt(0).toUpperCase() + platform.slice(1)
+    };
+    return config;
+  }, {} as Record<string, { color: string, label: string }>);
+
   // Only render KPI cards for platforms the creator has profiles for
   const renderKpiCards = () => {
     const platformInfo = [
@@ -154,7 +173,7 @@ const CreatorAnalytics = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {filteredPlatforms.map(platform => (
-          <Card key={platform.key}>
+          <Card key={platform.key} className="overflow-hidden border-0 shadow-md bg-card">
             <CardHeader className="pb-2 px-4">
               <CardTitle className="text-sm font-medium">{platform.title}</CardTitle>
             </CardHeader>
@@ -164,9 +183,9 @@ const CreatorAnalytics = () => {
                   <p className="text-2xl font-bold">{platform.value}</p>
                   <p className="text-xs text-muted-foreground">{platform.label}</p>
                 </div>
-                <div className="flex items-center min-w-[60px] justify-end">
+                <div className="flex items-center gap-1 justify-end">
                   {renderTrendIcon(platform.trend)}
-                  <span className={`ml-1 text-sm ${platform.trend > 0 ? "text-green-500" : "text-red-500"}`}>
+                  <span className={`text-sm ${platform.trend > 0 ? "text-green-500" : "text-red-500"}`}>
                     {Math.abs(platform.trend)}%
                   </span>
                 </div>
@@ -175,6 +194,55 @@ const CreatorAnalytics = () => {
           </Card>
         ))}
       </div>
+    );
+  };
+
+  // Render figures box for platforms in a clean, styled format
+  const renderFiguresBox = () => {
+    if (!availablePlatforms.length) return null;
+    
+    return (
+      <Card className="mb-8 border-0 shadow-lg overflow-hidden bg-card relative">
+        <CardHeader className="bg-card/80 backdrop-blur-sm px-6 py-4 border-b border-border/30">
+          <CardTitle className="text-lg">Platform Figures</CardTitle>
+          <CardDescription>Current engagement metrics</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid gap-4">
+            {availablePlatforms.map(platform => {
+              const platformKey = platform as keyof typeof stats;
+              const platformData = stats[platformKey];
+              const displayValue = platform === 'instagram' 
+                ? platformData.followers 
+                : platform === 'tiktok' 
+                  ? platformData.views 
+                  : platform === 'twitter' 
+                    ? platformData.impressions 
+                    : platform === 'reddit' 
+                      ? platformData.upvotes 
+                      : platformData.viewers;
+              
+              return (
+                <div 
+                  key={platform} 
+                  className="flex items-center justify-between p-3 rounded-lg"
+                  style={{ 
+                    background: `linear-gradient(90deg, ${PLATFORM_COLORS[platform as keyof typeof PLATFORM_COLORS]}20 0%, transparent 100%)`,
+                    borderLeft: `4px solid ${PLATFORM_COLORS[platform as keyof typeof PLATFORM_COLORS]}`
+                  }}
+                >
+                  <span className="text-lg font-medium" style={{ color: PLATFORM_COLORS[platform as keyof typeof PLATFORM_COLORS] }}>
+                    {platform}
+                  </span>
+                  <span className="text-xl font-bold">
+                    {displayValue.toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -208,16 +276,16 @@ const CreatorAnalytics = () => {
             }}
             className="w-full max-w-md mx-auto border border-border rounded-md overflow-hidden"
           >
-            <ToggleGroupItem value="yesterday" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            <ToggleGroupItem value="yesterday" className="flex-1 rounded-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
               Yesterday
             </ToggleGroupItem>
-            <ToggleGroupItem value="today" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            <ToggleGroupItem value="today" className="flex-1 rounded-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
               Today
             </ToggleGroupItem>
-            <ToggleGroupItem value="week" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            <ToggleGroupItem value="week" className="flex-1 rounded-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
               This week
             </ToggleGroupItem>
-            <ToggleGroupItem value="month" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            <ToggleGroupItem value="month" className="flex-1 rounded-none data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
               This month
             </ToggleGroupItem>
           </ToggleGroup>
@@ -234,68 +302,152 @@ const CreatorAnalytics = () => {
         {/* KPI cards */}
         {renderKpiCards()}
 
+        {/* Figures Box */}
+        {renderFiguresBox()}
+
         {/* Main Chart */}
-        <Card className="mb-8">
-          <CardHeader className="px-6">
+        <Card className="mb-8 border-0 shadow-lg overflow-hidden">
+          <CardHeader className="px-6 bg-card/80 backdrop-blur-sm border-b border-border/30">
             <CardTitle>{getChartTitle()}</CardTitle>
             <CardDescription>{getChartDescription()}</CardDescription>
           </CardHeader>
-          <CardContent className="p-2">
+          <CardContent className="p-6">
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer 
+                config={chartConfig} 
+                className="[&_.recharts-cartesian-grid-horizontal_line]:stroke-muted/20 [&_.recharts-cartesian-grid-vertical_line]:stroke-muted/20 [&_.recharts-cartesian-axis-line]:stroke-muted [&_.recharts-cartesian-axis-tick-line]:stroke-muted [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground"
+              >
                 <AreaChart
                   data={getChartData()}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="currentColor" 
+                    fontSize={12} 
+                    tickLine={true} 
+                    axisLine={true} 
+                  />
+                  <YAxis 
+                    stroke="currentColor" 
+                    fontSize={12} 
+                    tickLine={true} 
+                    axisLine={true} 
+                  />
+                  <ChartTooltip 
+                    content={({active, payload}) => 
+                      active && payload?.length ? (
+                        <ChartTooltipContent 
+                          className="border-0 shadow-lg" 
+                          payload={payload} 
+                        />
+                      ) : null
+                    } 
+                  />
                   {availablePlatforms.includes('instagram') && 
-                    <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />}
+                    <Area 
+                      type="monotone" 
+                      dataKey="instagram" 
+                      stroke={PLATFORM_COLORS.instagram} 
+                      fill={`${PLATFORM_COLORS.instagram}80`} 
+                      fillOpacity={0.6}
+                    />
+                  }
                   {availablePlatforms.includes('tiktok') && 
-                    <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />}
+                    <Area 
+                      type="monotone" 
+                      dataKey="tiktok" 
+                      stroke={PLATFORM_COLORS.tiktok} 
+                      fill={`${PLATFORM_COLORS.tiktok}80`} 
+                      fillOpacity={0.6}
+                    />
+                  }
                   {availablePlatforms.includes('twitter') && 
-                    <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />}
+                    <Area 
+                      type="monotone" 
+                      dataKey="twitter" 
+                      stroke={PLATFORM_COLORS.twitter} 
+                      fill={`${PLATFORM_COLORS.twitter}80`} 
+                      fillOpacity={0.6}
+                    />
+                  }
                   {availablePlatforms.includes('reddit') && 
-                    <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />}
+                    <Area 
+                      type="monotone" 
+                      dataKey="reddit" 
+                      stroke={PLATFORM_COLORS.reddit} 
+                      fill={`${PLATFORM_COLORS.reddit}80`} 
+                      fillOpacity={0.6}
+                    />
+                  }
                   {availablePlatforms.includes('chaturbate') && 
-                    <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />}
+                    <Area 
+                      type="monotone" 
+                      dataKey="chaturbate" 
+                      stroke={PLATFORM_COLORS.chaturbate} 
+                      fill={`${PLATFORM_COLORS.chaturbate}80`} 
+                      fillOpacity={0.6}
+                    />
+                  }
                 </AreaChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Monthly Chart */}
-        <Card>
-          <CardHeader className="px-6">
+        {/* Platform Comparison Chart */}
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <CardHeader className="px-6 bg-card/80 backdrop-blur-sm border-b border-border/30">
             <CardTitle>Platform Comparison</CardTitle>
             <CardDescription>Performance breakdown by platform</CardDescription>
           </CardHeader>
-          <CardContent className="p-2">
+          <CardContent className="p-6">
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer 
+                config={chartConfig}
+                className="[&_.recharts-cartesian-grid-horizontal_line]:stroke-muted/20 [&_.recharts-cartesian-grid-vertical_line]:stroke-muted/20 [&_.recharts-cartesian-axis-line]:stroke-muted [&_.recharts-cartesian-axis-tick-line]:stroke-muted [&_.recharts-cartesian-axis-tick-value]:fill-muted-foreground"
+              >
                 <BarChart
                   data={getChartData()}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="currentColor" 
+                    fontSize={12} 
+                    tickLine={true} 
+                    axisLine={true}
+                  />
+                  <YAxis 
+                    stroke="currentColor" 
+                    fontSize={12} 
+                    tickLine={true} 
+                    axisLine={true}
+                  />
+                  <ChartTooltip 
+                    content={({active, payload}) => 
+                      active && payload?.length ? (
+                        <ChartTooltipContent 
+                          className="border-0 shadow-lg" 
+                          payload={payload} 
+                        />
+                      ) : null
+                    } 
+                  />
                   {availablePlatforms.includes('instagram') && 
-                    <Bar dataKey="instagram" fill="#8884d8" />}
+                    <Bar dataKey="instagram" fill={PLATFORM_COLORS.instagram} radius={[4, 4, 0, 0]} />}
                   {availablePlatforms.includes('tiktok') && 
-                    <Bar dataKey="tiktok" fill="#82ca9d" />}
+                    <Bar dataKey="tiktok" fill={PLATFORM_COLORS.tiktok} radius={[4, 4, 0, 0]} />}
                   {availablePlatforms.includes('twitter') && 
-                    <Bar dataKey="twitter" fill="#ffc658" />}
+                    <Bar dataKey="twitter" fill={PLATFORM_COLORS.twitter} radius={[4, 4, 0, 0]} />}
                   {availablePlatforms.includes('reddit') && 
-                    <Bar dataKey="reddit" fill="#ff8042" />}
+                    <Bar dataKey="reddit" fill={PLATFORM_COLORS.reddit} radius={[4, 4, 0, 0]} />}
                   {availablePlatforms.includes('chaturbate') && 
-                    <Bar dataKey="chaturbate" fill="#0088fe" />}
+                    <Bar dataKey="chaturbate" fill={PLATFORM_COLORS.chaturbate} radius={[4, 4, 0, 0]} />}
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
         </Card>
