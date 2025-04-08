@@ -47,7 +47,7 @@ const Sidebar: React.FC = () => {
       <div className="p-0 border-b flex items-center justify-center py-0.1">
         <Link to="/dashboard" className="py-0.1 flex justify-center">
           <img 
-            src="/lovable-uploads/c79203dc-0401-40c1-bf4a-821b26aa6031.png" 
+            src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png" 
             alt="Xentrik Marketing" 
             className="h-[165.89px]" 
           />
