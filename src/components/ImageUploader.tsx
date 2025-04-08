@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -69,17 +68,53 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleCropSave = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const croppedImageUrl = canvas.toDataURL('image/png');
-    setPreviewImage(croppedImageUrl);
-    onImageChange(croppedImageUrl);
-    setIsEditing(false);
-    setCropImage(null);
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    
+    img.onload = () => {
+      const size = canvasRef.current?.width || 300;
+      canvas.width = size;
+      canvas.height = size;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // Calculate the center of the image
+      const centerX = size / 2;
+      const centerY = size / 2;
+      
+      // Create a circle clipping path
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size / 2 - 2, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.clip();
+      
+      // Calculate image drawing parameters
+      const imgWidth = imageSize.width * scale * zoomLevel[0];
+      const imgHeight = imageSize.height * scale * zoomLevel[0];
+      const offsetX = xPosition[0] * 3;
+      const offsetY = yPosition[0] * 3;
+      const posX = centerX - (imgWidth / 2) + offsetX;
+      const posY = centerY - (imgHeight / 2) + offsetY;
+      
+      // Draw only the image without grid and other overlays
+      ctx.drawImage(
+        img,
+        posX, 
+        posY, 
+        imgWidth,
+        imgHeight
+      );
+      
+      // Convert to data URL and update
+      const croppedImageUrl = canvas.toDataURL('image/png');
+      setPreviewImage(croppedImageUrl);
+      onImageChange(croppedImageUrl);
+      setIsEditing(false);
+      setCropImage(null);
+    };
+    
+    img.src = cropImage || '';
   };
 
   const handleCropCancel = () => {
@@ -305,17 +340,22 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       ctx.clearRect(0, 0, size, size);
       
+      // Draw dark background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, size, size);
       
       const circleRadius = size / 2 - 2;
       
+      // Save context state
       ctx.save();
+      
+      // Create clipping circle
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
       ctx.closePath();
-      
       ctx.clip();
+      
+      // Draw image within clipping path
       ctx.drawImage(
         img,
         posX, 
@@ -324,14 +364,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         imgHeight
       );
       
+      // Restore context to remove clipping path
       ctx.restore();
       
+      // Draw the circle outline (visual guide only)
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
       ctx.stroke();
       
+      // Draw grid lines (visual guides only)
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
@@ -340,6 +383,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
       
+      // Horizontal grid lines
       for (let i = 1; i < 3; i++) {
         const y = (size / 3) * i;
         ctx.beginPath();
@@ -348,6 +392,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         ctx.stroke();
       }
       
+      // Vertical grid lines
       for (let i = 1; i < 3; i++) {
         const x = (size / 3) * i;
         ctx.beginPath();
@@ -358,6 +403,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       ctx.restore();
       
+      // Draw center dot (visual guide only)
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.beginPath();
       ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
