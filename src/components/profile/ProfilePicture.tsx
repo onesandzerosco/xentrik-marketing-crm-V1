@@ -29,7 +29,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           onImageChange={handleImageChange} 
           size="xl"
           showZoomSlider={true}
-          showAutoDetect={true}
+          showAutoDetect={false}
         />
       </div>
       <p className="text-xs text-center text-muted-foreground mt-4">

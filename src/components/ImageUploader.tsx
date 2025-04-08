@@ -2,26 +2,11 @@
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical, Scan } from "lucide-react";
+import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-
-// Add TypeScript interface for FaceDetector if it doesn't exist in the environment
-interface FaceDetectorInterface {
-  detect: (image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement | ImageBitmap) => Promise<FaceDetectorResult[]>;
-}
-
-interface FaceDetectorResult {
-  boundingBox: DOMRectReadOnly;
-  landmarks?: { locations: DOMPointReadOnly[] };
-}
-
-// Add a check for FaceDetector API
-const isFaceDetectionSupported = (): boolean => {
-  return 'FaceDetector' in window;
-};
 
 interface ImageUploaderProps {
   currentImage: string;
@@ -46,7 +31,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number[]>([1]);
   const [xPosition, setXPosition] = useState<number[]>([0]);
   const [yPosition, setYPosition] = useState<number[]>([0]);
-  const [isDetectingFace, setIsDetectingFace] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -113,66 +97,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleYPositionChange = (value: number[]) => {
     setYPosition(value);
-  };
-
-  const handleAutoDetectFace = async () => {
-    if (!cropImage) return;
-    
-    setIsDetectingFace(true);
-    
-    try {
-      const img = new Image();
-      img.src = cropImage;
-      
-      await new Promise((resolve) => {
-        img.onload = resolve;
-      });
-      
-      if (isFaceDetectionSupported()) {
-        try {
-          // @ts-ignore - FaceDetector is an experimental API and may not be in TS definitions
-          const faceDetector = new window.FaceDetector();
-          const faces = await faceDetector.detect(img);
-          
-          if (faces && faces.length > 0) {
-            const face = faces[0];
-            const { boundingBox } = face;
-            
-            const faceX = boundingBox.left + boundingBox.width / 2;
-            const faceY = boundingBox.top + boundingBox.height / 2;
-            
-            const imgCenterX = img.width / 2;
-            const imgCenterY = img.height / 2;
-            
-            const offsetX = faceX - imgCenterX;
-            const offsetY = faceY - imgCenterY;
-            
-            setXPosition([offsetX / 4]);
-            
-            setYPosition([offsetY / 4]);
-            
-            const faceSize = Math.max(boundingBox.width, boundingBox.height);
-            const imgSize = Math.min(img.width, img.height);
-            
-            const newZoom = Math.max(1, Math.min(3, (imgSize / faceSize) * 0.5));
-            setZoomLevel([newZoom]);
-            
-            console.log('Face detected and positioned!');
-          } else {
-            console.log('No faces detected.');
-          }
-        } catch (error) {
-          console.error('FaceDetector error:', error);
-          alert('Face detection failed or is not supported in this browser.');
-        }
-      } else {
-        alert('Face detection is not supported in this browser.');
-      }
-    } catch (error) {
-      console.error('Face detection error:', error);
-    } finally {
-      setIsDetectingFace(false);
-    }
   };
 
   const initials = name
@@ -317,20 +241,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   className="transition-all"
                 />
               </div>
-              
-              {showAutoDetect && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoDetectFace}
-                  className="w-full"
-                  disabled={isDetectingFace}
-                >
-                  <Scan className="h-4 w-4 mr-1" />
-                  {isDetectingFace ? 'Detecting...' : 'Auto-detect Face'}
-                </Button>
-              )}
             </div>
           </div>
           
