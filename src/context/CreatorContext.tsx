@@ -68,12 +68,29 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateCreator = (id: string, updates: Partial<Creator>) => {
     const existingCreator = creators.find(c => c.id === id);
     
+    // Update the creators array with the new data
     setCreators(
       creators.map((creator) =>
         creator.id === id ? { ...creator, ...updates } : creator
       )
     );
     
+    // Check if the profile image was updated
+    if (existingCreator && updates.profileImage && updates.profileImage !== existingCreator.profileImage) {
+      // Add a specific log for profile image updates
+      addActivity(
+        "update", 
+        `Profile picture updated for: ${existingCreator.name}`, 
+        id, 
+        [{
+          field: "profileImage",
+          oldValue: "previous image",
+          newValue: "new image" 
+        }]
+      );
+    }
+    
+    // Process other changes as before
     if (existingCreator) {
       const changeDetails = getCreatorChangeDetails(existingCreator, updates);
       let hasMultipleChanges = false;

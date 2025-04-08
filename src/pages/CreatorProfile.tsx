@@ -23,6 +23,8 @@ const CreatorProfile = () => {
   const { toast } = useToast();
   const creator = getCreator(id!);
   const stats = getCreatorStats(id!);
+  
+  // Initialize state from creator data
   const [name, setName] = useState(creator?.name || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [gender, setGender] = useState<Gender>(creator?.gender || "Male");
@@ -47,12 +49,14 @@ const CreatorProfile = () => {
     }
 
     if (!creator) return;
+    
+    // Save all creator information including profile image
     updateCreator(creator.id, {
       name,
       gender,
       team,
       creatorType,
-      profileImage,
+      profileImage, // Make sure profile image is included in the update
       socialLinks: {
         instagram: instagram || undefined,
         tiktok: tiktok || undefined,
@@ -63,6 +67,7 @@ const CreatorProfile = () => {
       tags: [gender, team, creatorType],
       needsReview: needsReview
     });
+    
     toast({
       title: "Profile Updated",
       description: "Creator profile has been successfully updated"
