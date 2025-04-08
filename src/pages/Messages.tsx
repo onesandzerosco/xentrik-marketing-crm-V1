@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Send, MessageSquare, ArrowLeft, User } from 'lucide-react';
+import { Search, Send, MessageSquare, ArrowLeft, User, Filter } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import TagFilter from '@/components/TagFilter';
 import { useCreators } from '../context/CreatorContext';
 import { mockEmployees } from '@/data/mockEmployees';
 
@@ -25,6 +27,7 @@ interface Recipient {
   name: string;
   profileImage?: string;
   role?: string;
+  type: 'creator' | 'employee';
 }
 
 const Messages: React.FC = () => {
@@ -38,6 +41,7 @@ const Messages: React.FC = () => {
   const [webhookUrl, setWebhookUrl] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
     // Combine creators and employees into a single recipients list
@@ -46,13 +50,15 @@ const Messages: React.FC = () => {
         id: creator.id,
         name: creator.name,
         profileImage: creator.profileImage,
-        role: 'Creator'
+        role: 'Creator',
+        type: 'creator' as const
       })),
       ...mockEmployees.map(employee => ({
         id: employee.id,
         name: employee.name,
         profileImage: employee.profileImage,
-        role: employee.role
+        role: employee.role,
+        type: 'employee' as const
       }))
     ];
     
@@ -154,9 +160,21 @@ const Messages: React.FC = () => {
     });
   };
 
-  const filteredRecipients = recipients.filter(recipient => 
-    recipient.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter tags for recipient types
+  const recipientTypeTags = ["Team", "Creator"];
+
+  // Filter and sort recipients
+  const filteredRecipients = recipients.filter(recipient => {
+    // Apply search filter
+    const matchesSearch = recipient.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Apply type filter (Team/Creator)
+    const matchesType = selectedTags.length === 0 || 
+      (selectedTags.includes("Team") && recipient.type === 'employee') ||
+      (selectedTags.includes("Creator") && recipient.type === 'creator');
+    
+    return matchesSearch && matchesType;
+  });
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -185,6 +203,22 @@ const Messages: React.FC = () => {
               <CardDescription>
                 Select a team member or creator to send a WhatsApp message
               </CardDescription>
+              
+              {/* Filter by type */}
+              <div className="mt-2 mb-4">
+                <div className="flex items-center mb-2">
+                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-sm font-medium">Filter by type</span>
+                </div>
+                <TagFilter 
+                  tags={recipientTypeTags}
+                  selectedTags={selectedTags}
+                  onChange={setSelectedTags}
+                  type="team"
+                />
+              </div>
+              
+              {/* Search input */}
               <div className="relative mt-2">
                 <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -196,7 +230,7 @@ const Messages: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent className="flex-grow overflow-hidden px-2 pb-0">
-              <ScrollArea className="h-[calc(100vh-250px)]">
+              <ScrollArea className="h-[calc(100vh-350px)]">
                 <div className="space-y-1 px-1 py-2">
                   {filteredRecipients.map((recipient) => (
                     <button
@@ -220,9 +254,14 @@ const Messages: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <p className="font-medium truncate">{recipient.name}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {recipient.role || "Team Member"}
-                        </p>
+                        <div className="flex items-center gap-1">
+                          <p className="text-sm text-muted-foreground truncate">
+                            {recipient.role || "Team Member"}
+                          </p>
+                          <Badge variant="outline" className="ml-1 text-xs">
+                            {recipient.type === 'creator' ? 'Creator' : 'Team'}
+                          </Badge>
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -259,7 +298,12 @@ const Messages: React.FC = () => {
                             </Avatar>
                             <div>
                               <p className="font-medium">{recipient.name}</p>
-                              <p className="text-xs text-muted-foreground">{recipient.role || "Team Member"}</p>
+                              <div className="flex items-center gap-1">
+                                <p className="text-xs text-muted-foreground">{recipient.role || "Team Member"}</p>
+                                <Badge variant="outline" className="text-xs">
+                                  {recipient.type === 'creator' ? 'Creator' : 'Team'}
+                                </Badge>
+                              </div>
                             </div>
                           </>
                         );
