@@ -8,7 +8,6 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-  LayoutDashboard,
   User,
   Users
 } from "lucide-react";
@@ -17,7 +16,7 @@ import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "./ModeToggle";
+import { ModeToggle } from "@/components/ModeToggle";
 import { StorageUsage } from "./storage/StorageUsage";
 
 const Sidebar: React.FC = () => {
@@ -47,9 +46,12 @@ const Sidebar: React.FC = () => {
   return (
     <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
       <div className="p-4 flex items-center justify-between border-b">
-        <Link to="/dashboard" className="flex items-center text-lg font-semibold">
-          <LayoutDashboard className="mr-2 h-6 w-6 text-brand" />
-          <span className="text-xl font-bold">CreatorOS</span>
+        <Link to="/dashboard" className="flex items-center">
+          <img 
+            src="/lovable-uploads/c79203dc-0401-40c1-bf4a-821b26aa6031.png" 
+            alt="Xentrik Marketing" 
+            className="h-8" 
+          />
         </Link>
         <ModeToggle />
       </div>
