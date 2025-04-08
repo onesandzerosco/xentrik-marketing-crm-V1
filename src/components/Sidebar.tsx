@@ -1,15 +1,15 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { 
   Home, 
-  Video, 
-  AlertOctagon, 
   FileText, 
-  MessageSquare,
-  Settings,
+  AlertOctagon, 
+  MessageSquare, 
+  Settings, 
   LogOut,
   User,
-  Users
+  Users,
+  Video
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
@@ -22,7 +22,7 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   const menuItems = [
     { icon: <Home />, label: "Dashboard", path: "/dashboard" },
@@ -44,12 +44,12 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="fixed left-0 top-0 h-full w-60 bg-card border-r flex flex-col">
-      <div className="p-0 border-b flex items-center justify-start pl-4">
-        <Link to="/dashboard" className="py-0.5">
+      <div className="p-0 border-b flex items-center justify-center">
+        <Link to="/dashboard" className="py-2 flex justify-center">
           <img 
             src="/lovable-uploads/c79203dc-0401-40c1-bf4a-821b26aa6031.png" 
             alt="Xentrik Marketing" 
-            className="h-16" 
+            className="h-20" 
           />
         </Link>
       </div>
@@ -77,7 +77,7 @@ const Sidebar: React.FC = () => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="w-full justify-start pl-2 space-x-2">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder-avatar.jpg" alt="Placeholder Avatar" />
+                <AvatarImage src="/placeholder-avatar.jpg" alt="User Avatar" />
                 <AvatarFallback>
                   <User className="h-4 w-4" />
                 </AvatarFallback>
