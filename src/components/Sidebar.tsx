@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,17 +51,17 @@ const Sidebar = () => {
 
   return (
     <div className="fixed h-screen w-60 border-r bg-background">
-      <div className="flex h-20 items-center justify-center">
+      <div className="flex h-20 items-center justify-center py-2">
         <img
           src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
           alt="Xentrik Marketing"
-          className="h-[90px] w-auto object-contain"
+          className="h-[75px] w-auto object-contain"
         />
       </div>
       
-      <div className="border-t mt-2 mb-4"></div>
+      <div className="border-t mt-3 mb-5"></div>
 
-      <div className="flex flex-col h-[calc(100vh-5rem-1.5rem)] justify-between p-3">
+      <div className="flex flex-col h-[calc(100vh-5rem-2rem)] justify-between p-3">
         <nav className="grid gap-1 px-2">
           <NavLink
             to="/dashboard"
