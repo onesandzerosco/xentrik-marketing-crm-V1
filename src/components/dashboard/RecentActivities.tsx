@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Activity, ChangeDetail } from "@/types";
+import { Activity, ChangeDetail } from "@/types/activity";
 import { formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -61,7 +61,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities }) => {
                 <div className={`h-2 w-2 rounded-full ${getActivityColor(activity.type)} mr-3`}></div>
                 <p className="text-sm flex-grow">{activity.message}</p>
                 
-                {activity.type === "bulk-update" && activity.changeDetails && (
+                {activity.changeDetails && activity.changeDetails.length > 0 && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
