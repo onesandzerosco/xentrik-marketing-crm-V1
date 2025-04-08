@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -82,7 +81,35 @@
     @apply bg-red-900/40 text-red-200;
   }
   
+  .tag-admin {
+    @apply bg-red-900/40 text-red-200;
+  }
+  
+  .tag-manager {
+    @apply bg-blue-900/40 text-blue-200;
+  }
+  
+  .tag-employee {
+    @apply bg-gray-900/40 text-gray-200;
+  }
+  
+  .tag-active {
+    @apply bg-green-900/40 text-green-200;
+  }
+  
+  .tag-inactive {
+    @apply bg-red-900/40 text-red-200;
+  }
+  
+  .tag-paused {
+    @apply bg-amber-900/40 text-amber-200;
+  }
+
   .creator-card {
+    @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm;
+  }
+  
+  .employee-card {
     @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm;
   }
   

@@ -12,7 +12,18 @@ import EmployeeList from '../components/employees/EmployeeList';
 import EmployeeSearchAndSort from '../components/employees/EmployeeSearchAndSort';
 import EmployeeFiltersBar from '../components/employees/EmployeeFiltersBar';
 import AddEmployeeModal from '../components/employees/AddEmployeeModal';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 const Team = () => {
   const { toast } = useToast();
@@ -108,7 +119,7 @@ const Team = () => {
   };
   
   return (
-    <div className="container py-6">
+    <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Team Management</h1>
@@ -118,12 +129,13 @@ const Team = () => {
         </div>
         
         {isAdmin && (
-          <button
+          <Button 
             onClick={() => setAddModalOpen(true)}
-            className="bg-brand-yellow text-black hover:bg-brand-highlight px-4 py-2 rounded-md"
+            className="bg-brand-yellow text-black hover:bg-brand-highlight"
           >
+            <PlusCircle className="h-4 w-4 mr-2" />
             Add Team Member
-          </button>
+          </Button>
         )}
       </div>
       

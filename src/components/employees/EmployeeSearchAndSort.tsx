@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search, SortAsc } from "lucide-react";
+import { Search, SortAsc, Filter } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,12 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface EmployeeSearchAndSortProps {
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
   sortOption: string;
   setSortOption: React.Dispatch<React.SetStateAction<string>>;
+  onFilterClick?: () => void;
 }
 
 const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
@@ -22,6 +24,7 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
   setSearchQuery,
   sortOption,
   setSortOption,
+  onFilterClick,
 }) => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -32,32 +35,41 @@ const EmployeeSearchAndSort: React.FC<EmployeeSearchAndSortProps> = ({
   };
 
   return (
-    <div className="flex gap-3">
-      <div className="relative">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+      <div className="relative w-full sm:w-auto">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
           placeholder="Search team members..."
-          className="pl-9 w-[200px] md:w-[260px]"
+          className="pl-9 w-full sm:w-[260px]"
           value={searchQuery}
           onChange={handleSearchChange}
         />
       </div>
       
-      <Select value={sortOption} onValueChange={handleSortChange}>
-        <SelectTrigger className="w-[180px]">
-          <div className="flex items-center">
-            <SortAsc className="h-4 w-4 mr-2" />
-            <span>Sort by</span>
-          </div>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="nameAsc">Name A–Z</SelectItem>
-          <SelectItem value="nameDesc">Name Z–A</SelectItem>
-          <SelectItem value="recentActivity">Recent Activity</SelectItem>
-          <SelectItem value="role">Role</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Select value={sortOption} onValueChange={handleSortChange}>
+          <SelectTrigger className="w-[180px]">
+            <div className="flex items-center">
+              <SortAsc className="h-4 w-4 mr-2" />
+              <span>Sort by</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="nameAsc">Name A–Z</SelectItem>
+            <SelectItem value="nameDesc">Name Z–A</SelectItem>
+            <SelectItem value="recentActivity">Recent Activity</SelectItem>
+            <SelectItem value="role">Role</SelectItem>
+          </SelectContent>
+        </Select>
+        
+        {onFilterClick && (
+          <Button variant="outline" onClick={onFilterClick} className="flex items-center">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
