@@ -30,7 +30,7 @@ import {
   FormMessage,
   FormDescription 
 } from "@/components/ui/form";
-import { Employee } from "../../types/employee";
+import { Employee, EmployeeRole } from "../../types/employee";
 import ProfilePicture from "../profile/ProfilePicture";
 
 interface EditEmployeeModalProps {
@@ -63,7 +63,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     defaultValues: {
       name: employee.name,
       email: employee.email,
-      role: employee.role,
+      role: employee.role as "Admin" | "Manager" | "Employee",
       active: employee.active,
       profileImage: employee.profileImage || ""
     }
@@ -75,7 +75,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       form.reset({
         name: employee.name,
         email: employee.email,
-        role: employee.role,
+        role: employee.role as "Admin" | "Manager" | "Employee",
         active: employee.active,
         profileImage: employee.profileImage || ""
       });
@@ -86,7 +86,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     // For current users who are admins, prevent changing their own role
     if (isCurrentUser && values.role !== employee.role) {
       // Reset role to original value
-      values.role = employee.role;
+      values.role = employee.role as "Admin" | "Manager" | "Employee";
     }
     
     onUpdateEmployee(employee.id, values);

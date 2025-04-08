@@ -1,5 +1,6 @@
 
-export type EmployeeRole = "Admin" | "Manager" | "Employee" | "Active" | "Inactive";
+export type EmployeeRole = "Admin" | "Manager" | "Employee";
+export type EmployeeStatus = "Active" | "Inactive";
 
 export interface Employee {
   id: string;

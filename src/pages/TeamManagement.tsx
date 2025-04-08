@@ -34,6 +34,8 @@ const FILTER_KEYS = {
   SORT: 'employee_filter_sort'
 };
 
+type FilterRole = EmployeeRole | "Active" | "Inactive";
+
 const TeamManagement = () => {
   const { user } = useAuth();
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
@@ -43,7 +45,7 @@ const TeamManagement = () => {
   });
   
   // Initialize filters with values from localStorage or defaults
-  const [selectedRoles, setSelectedRoles] = useState<EmployeeRole[]>(() => {
+  const [selectedRoles, setSelectedRoles] = useState<FilterRole[]>(() => {
     const saved = localStorage.getItem(FILTER_KEYS.ROLE);
     return saved ? JSON.parse(saved) : [];
   });
@@ -86,7 +88,6 @@ const TeamManagement = () => {
     const employeeWithId = {
       ...newEmployee,
       id: Date.now().toString(),
-      lastLogin: "Never" 
     };
     
     setEmployees([...employees, employeeWithId]);
@@ -115,7 +116,15 @@ const TeamManagement = () => {
 
   // Filter and sort employees
   const filteredEmployees = employees.filter((employee) => {
-    const roleMatch = selectedRoles.length === 0 || selectedRoles.includes(employee.role);
+    // Role filter (Admin, Manager, Employee)
+    const roleMatch = selectedRoles.length === 0 || 
+      selectedRoles.some(role => {
+        if (role === "Active") return employee.active;
+        if (role === "Inactive") return !employee.active;
+        return employee.role === role;
+      });
+    
+    // Search filter (name or email)
     const searchMatch = 
       searchQuery.trim() === "" || 
       employee.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -143,7 +152,7 @@ const TeamManagement = () => {
     }
   });
 
-  const handleRoleFilter = (role: EmployeeRole) => {
+  const handleRoleFilter = (role: FilterRole) => {
     setSelectedRoles(
       selectedRoles.includes(role)
         ? selectedRoles.filter(r => r !== role)
@@ -214,21 +223,21 @@ const TeamManagement = () => {
                     <div className="flex flex-wrap gap-2">
                       <Badge
                         className={`cursor-pointer ${
-                          selectedRoles.includes("Active" as EmployeeRole)
+                          selectedRoles.includes("Active")
                             ? "bg-green-500 hover:bg-green-600 text-white"
                             : "bg-secondary text-secondary-foreground"
                         }`}
-                        onClick={() => handleRoleFilter("Active" as EmployeeRole)}
+                        onClick={() => handleRoleFilter("Active")}
                       >
                         Active
                       </Badge>
                       <Badge
                         className={`cursor-pointer ${
-                          selectedRoles.includes("Inactive" as EmployeeRole)
+                          selectedRoles.includes("Inactive")
                             ? "bg-red-500 hover:bg-red-600 text-white"
                             : "bg-secondary text-secondary-foreground"
                         }`}
-                        onClick={() => handleRoleFilter("Inactive" as EmployeeRole)}
+                        onClick={() => handleRoleFilter("Inactive")}
                       >
                         Inactive
                       </Badge>
@@ -367,7 +376,7 @@ const TeamManagement = () => {
 };
 
 // Helper function to get the right color for role badges
-function getRoleBadgeColor(role: EmployeeRole): string {
+function getRoleBadgeColor(role: FilterRole): string {
   switch (role) {
     case "Admin":
       return "bg-red-500 hover:bg-red-600 text-white";
