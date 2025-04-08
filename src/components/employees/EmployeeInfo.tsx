@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, Users } from "lucide-react";
+import { Clock, User, Users, MessageSquare } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -64,21 +64,14 @@ const EmployeeInfo: React.FC<EmployeeInfoProps> = ({ employee }) => {
         </div>
       </div>
       
-      {/* Telegram (if available) */}
-      {employee.telegram && (
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M21.73 2.27a2 2 0 0 0-2.83 0L4.06 17.1a2 2 0 0 0 0 2.83a2 2 0 0 0 2.83 0L21.73 5.1a2 2 0 0 0 0-2.83Z" />
-              <path d="m4.1 17.1 15.8-15.8" />
-              <path d="M8 15H2v5a2 2 0 0 0 2 2h5v-6" />
-              <path d="M17 9h6V4a2 2 0 0 0-2-2h-5v6" />
-            </svg>
-            <span className="text-sm">Telegram:</span>
-          </div>
-          <span className="text-sm">@{employee.telegram}</span>
+      {/* Telegram (always display) */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <MessageSquare className="h-4 w-4" />
+          <span className="text-sm">Telegram:</span>
         </div>
-      )}
+        <span className="text-sm">{employee.telegram ? `@${employee.telegram}` : "Not set"}</span>
+      </div>
       
       {/* Department (if available) */}
       {employee.department && (

@@ -13,7 +13,8 @@ import {
   User,
   UserX,
   PauseCircle,
-  PlayCircle
+  PlayCircle,
+  MessageSquare
 } from "lucide-react";
 import { Employee, EmployeeStatus } from "../../types/employee";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -107,6 +108,15 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
             >
               {employee.status}
             </Badge>
+          </div>
+          
+          {/* Telegram (always display) */}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MessageSquare className="h-5 w-5" />
+              <span className="text-sm">Telegram:</span>
+            </div>
+            <span className="text-sm">{employee.telegram ? `@${employee.telegram}` : "Not set"}</span>
           </div>
           
           {/* Department (if available) */}
