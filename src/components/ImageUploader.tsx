@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical } from "lucide-react";
+import { Upload, Edit, Trash2, ZoomIn, MoveHorizontal, MoveVertical, Scan } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
@@ -13,6 +13,7 @@ interface ImageUploaderProps {
   onImageChange: (imagePath: string) => void;
   size?: "sm" | "md" | "lg" | "xl";
   showZoomSlider?: boolean;
+  showAutoDetect?: boolean;
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
@@ -20,7 +21,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   name, 
   onImageChange,
   size = "lg",
-  showZoomSlider = false
+  showZoomSlider = false,
+  showAutoDetect = false
 }) => {
   const [previewImage, setPreviewImage] = useState<string>(currentImage);
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -28,6 +30,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number[]>([1]);
   const [xPosition, setXPosition] = useState<number[]>([0]);
   const [yPosition, setYPosition] = useState<number[]>([0]);
+  const [isDetectingFace, setIsDetectingFace] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -94,6 +97,65 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleYPositionChange = (value: number[]) => {
     setYPosition(value);
+  };
+
+  const handleAutoDetectFace = async () => {
+    if (!cropImage) return;
+    
+    setIsDetectingFace(true);
+    
+    try {
+      const img = new Image();
+      img.src = cropImage;
+      
+      await new Promise((resolve) => {
+        img.onload = resolve;
+      });
+      
+      if ('FaceDetector' in window) {
+        try {
+          const faceDetector = new FaceDetector();
+          const faces = await faceDetector.detect(img);
+          
+          if (faces && faces.length > 0) {
+            const face = faces[0];
+            const { boundingBox } = face;
+            
+            const faceX = boundingBox.left + boundingBox.width / 2;
+            const faceY = boundingBox.top + boundingBox.height / 2;
+            
+            const imgCenterX = img.width / 2;
+            const imgCenterY = img.height / 2;
+            
+            const offsetX = faceX - imgCenterX;
+            const offsetY = faceY - imgCenterY;
+            
+            setXPosition([offsetX / 4]);
+            
+            setYPosition([offsetY / 4]);
+            
+            const faceSize = Math.max(boundingBox.width, boundingBox.height);
+            const imgSize = Math.min(img.width, img.height);
+            
+            const newZoom = Math.max(1, Math.min(3, (imgSize / faceSize) * 0.5));
+            setZoomLevel([newZoom]);
+            
+            console.log('Face detected and positioned!');
+          } else {
+            console.log('No faces detected.');
+          }
+        } catch (error) {
+          console.error('FaceDetector error:', error);
+          alert('Face detection failed or is not supported in this browser.');
+        }
+      } else {
+        alert('Face detection is not supported in this browser.');
+      }
+    } catch (error) {
+      console.error('Face detection error:', error);
+    } finally {
+      setIsDetectingFace(false);
+    }
   };
 
   const initials = name
@@ -214,8 +276,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Label>
                 <Slider
                   id="x-position-slider"
-                  min={-100}
-                  max={100}
+                  min={-200}
+                  max={200}
                   step={1}
                   value={xPosition}
                   onValueChange={handleXPositionChange}
@@ -230,14 +292,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Label>
                 <Slider
                   id="y-position-slider"
-                  min={-100}
-                  max={100}
+                  min={-200}
+                  max={200}
                   step={1}
                   value={yPosition}
                   onValueChange={handleYPositionChange}
                   className="transition-all"
                 />
               </div>
+              
+              {showAutoDetect && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAutoDetectFace}
+                  className="w-full"
+                  disabled={isDetectingFace}
+                >
+                  <Scan className="h-4 w-4 mr-1" />
+                  {isDetectingFace ? 'Detecting...' : 'Auto-detect Face'}
+                </Button>
+              )}
             </div>
           </div>
           
@@ -288,40 +364,30 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       const size = canvas.width;
       setCanvasSize(size);
       
-      // Calculate image dimensions with zoom
       const imgWidth = imageSize.width * scale * zoomLevel;
       const imgHeight = imageSize.height * scale * zoomLevel;
       
-      // Calculate center position
       const centerX = size / 2;
       const centerY = size / 2;
       
-      // Calculate position offset from sliders
-      // Simplify the position calculation - more direct and predictable
-      const offsetX = xPosition * 2; // Scale for better movement range
-      const offsetY = yPosition * 2; // Scale for better movement range
+      const offsetX = xPosition * 3;
+      const offsetY = yPosition * 3;
       
-      // Calculate final position with offset
       const posX = centerX - (imgWidth / 2) + offsetX;
       const posY = centerY - (imgHeight / 2) + offsetY;
       
-      // Clear the canvas
       ctx.clearRect(0, 0, size, size);
       
-      // Draw a dark background to show the area outside the crop
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, size, size);
       
-      // Calculate the circle radius - this will be the visible area in the profile photo
-      const circleRadius = size / 2 - 2; // Slight padding
+      const circleRadius = size / 2 - 2;
       
-      // Create a clipping path for the circle
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
       ctx.closePath();
       
-      // Draw the image only inside the circle
       ctx.clip();
       ctx.drawImage(
         img,
@@ -331,17 +397,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         imgHeight
       );
       
-      // Restore context to remove clipping
       ctx.restore();
       
-      // Draw circle outline
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
       ctx.stroke();
       
-      // Draw 3x3 grid inside the circle
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
@@ -350,7 +413,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
       
-      // Draw horizontal grid lines
       for (let i = 1; i < 3; i++) {
         const y = (size / 3) * i;
         ctx.beginPath();
@@ -359,7 +421,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         ctx.stroke();
       }
       
-      // Draw vertical grid lines
       for (let i = 1; i < 3; i++) {
         const x = (size / 3) * i;
         ctx.beginPath();
@@ -370,7 +431,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       ctx.restore();
       
-      // Draw center point
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.beginPath();
       ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
@@ -379,9 +439,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     img.onload = () => {
       canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetWidth; // Square aspect ratio
+      canvas.height = canvas.offsetWidth;
       
-      // Save the natural dimensions of the image
       setImageSize({
         width: img.naturalWidth,
         height: img.naturalHeight
@@ -389,10 +448,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       const imgRatio = img.naturalWidth / img.naturalHeight;
       if (imgRatio > 1) {
-        // Landscape image
         setScale(canvas.height / img.naturalHeight);
       } else {
-        // Portrait or square image
         setScale(canvas.width / img.naturalWidth);
       }
       
@@ -401,8 +458,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     img.src = src;
     
-    // Redraw when values change
-    const intervalId = setInterval(drawImageOnCanvas, 30); // ~30fps for smooth rendering
+    const intervalId = setInterval(drawImageOnCanvas, 30);
     return () => clearInterval(intervalId);
   }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize]);
   
