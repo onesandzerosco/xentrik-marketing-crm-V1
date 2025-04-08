@@ -23,6 +23,13 @@ interface ImageSize {
   height: number;
 }
 
+// Add interface for storing image adjustments
+interface ImageAdjustments {
+  zoom: number;
+  xPosition: number;
+  yPosition: number;
+}
+
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
   currentImage, 
   name, 
@@ -40,6 +47,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [adjustments, setAdjustments] = useState<ImageAdjustments>({
+    zoom: 1,
+    xPosition: 0,
+    yPosition: 0
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -82,21 +94,37 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       setPreviewImage(objectUrl);
       setImageLoaded(true);
       onImageChange(objectUrl);
+      
+      // Reset adjustments when uploading a new image
+      setAdjustments({
+        zoom: 1,
+        xPosition: 0,
+        yPosition: 0
+      });
     }
   };
 
   const handleEdit = () => {
     setCropImage(previewImage);
     setIsEditing(true);
-    setZoomLevel([1]); // Reset zoom level when opening editor
-    setXPosition([0]); // Reset x position
-    setYPosition([0]); // Reset y position
+    
+    // Set initial slider values based on saved adjustments
+    setZoomLevel([adjustments.zoom]);
+    setXPosition([adjustments.xPosition]);
+    setYPosition([adjustments.yPosition]);
   };
 
   const handleRemove = () => {
     setPreviewImage("");
     setImageLoaded(false);
     onImageChange("");
+    
+    // Reset adjustments when removing an image
+    setAdjustments({
+      zoom: 1,
+      xPosition: 0,
+      yPosition: 0
+    });
   };
 
   // Update image size from the ImageCropper
@@ -106,26 +134,50 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleCropSave = () => {
+    // Save the adjustments
+    setAdjustments({
+      zoom: zoomLevel[0],
+      xPosition: xPosition[0],
+      yPosition: yPosition[0]
+    });
+    
     // Close the dialog first
     setIsEditing(false);
     
     // Make sure we're not losing the image
     if (previewImage && previewImage.trim() !== "") {
-      // Generate a timestamp to force the image to reload with the new parameters
-      const timestamp = new Date().getTime();
-      let updatedImage = previewImage;
-      
-      if (previewImage.includes('?')) {
-        updatedImage = `${previewImage.split('?')[0]}?t=${timestamp}`;
-      } else {
-        updatedImage = `${previewImage}?t=${timestamp}`;
+      // Create a data URL from the canvas
+      const canvas = canvasRef.current;
+      if (canvas) {
+        // Get the data URL from the canvas
+        try {
+          const dataUrl = canvas.toDataURL('image/png');
+          
+          // Update the preview image with the adjusted image
+          setPreviewImage(dataUrl);
+          
+          // Pass the image back to the parent component
+          onImageChange(dataUrl);
+        } catch (error) {
+          console.error("Error creating image data URL:", error);
+          
+          // Fallback: just add a timestamp to force refresh
+          const timestamp = new Date().getTime();
+          let updatedImage = previewImage;
+          
+          if (previewImage.includes('?')) {
+            updatedImage = `${previewImage.split('?')[0]}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
+          } else {
+            updatedImage = `${previewImage}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
+          }
+          
+          // Update the preview image with parameters
+          setPreviewImage(updatedImage);
+          
+          // Pass the image back to the parent component
+          onImageChange(updatedImage);
+        }
       }
-      
-      // Update the preview image with the timestamp
-      setPreviewImage(updatedImage);
-      
-      // Pass the image back to the parent component
-      onImageChange(updatedImage);
     }
   };
 
@@ -370,8 +422,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       const centerX = size / 2;
       const centerY = size / 2;
       
-      const offsetX = xPosition * 3;
-      const offsetY = yPosition * 3;
+      const offsetX = xPosition;
+      const offsetY = yPosition;
       
       const posX = centerX - (imgWidth / 2) + offsetX;
       const posY = centerY - (imgHeight / 2) + offsetY;
