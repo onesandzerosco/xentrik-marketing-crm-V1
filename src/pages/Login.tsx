@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -22,16 +21,14 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Initial page loading effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-    }, 1200); // 1.2 second delay to ensure all elements load
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Check if user is already authenticated, redirect to dashboard if they are
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/dashboard");
@@ -65,7 +62,7 @@ const Login = () => {
         toast({
           title: "Login successful",
           description: "Welcome to the bananaverse 🍌",
-          duration: 6000, // 6 seconds
+          duration: 6000,
         });
         navigate("/dashboard");
       } else {
@@ -80,12 +77,10 @@ const Login = () => {
     }, 1000);
   };
 
-  // If already authenticated, don't render the login form
   if (isAuthenticated) {
     return null;
   }
 
-  // Show loading skeleton while page is loading
   if (pageLoading) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-background">
@@ -216,7 +211,7 @@ const Login = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-brand text-black hover:bg-brand/80"
+                className="w-full bg-brand-yellow text-black hover:bg-brand-highlight"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
