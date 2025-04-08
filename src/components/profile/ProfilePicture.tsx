@@ -25,6 +25,9 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           showZoomSlider={true}
         />
       </div>
+      <p className="text-xs text-center text-muted-foreground mt-4">
+        Upload a square image for best results. The image will be cropped to a circle.
+      </p>
     </div>
   );
 };

@@ -288,40 +288,83 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       const size = canvas.width;
       setCanvasSize(size);
-      ctx.clearRect(0, 0, size, size);
       
       // Calculate image dimensions with zoom
       const imgWidth = imageSize.width * scale * zoomLevel;
       const imgHeight = imageSize.height * scale * zoomLevel;
       
-      // Calculate center position adjustments when zooming
+      // Calculate center position
       const centerX = size / 2;
       const centerY = size / 2;
       
-      // Calculate the position offsets to keep center fixed during zoom
-      // and add the slider positions for x and y
-      const offsetX = centerX - (imgWidth / 2) + xPosition;
-      const offsetY = centerY - (imgHeight / 2) + yPosition;
+      // Calculate the circle radius - this will be the visible area in the profile photo
+      const circleRadius = size / 2;
       
-      // Draw the image with position adjusted to keep the center point fixed
+      // Calculate boundaries to prevent out-of-bounds movement
+      // We need to ensure that the image extends at least to the edges of the circle
+      const minX = centerX - (imgWidth / 2);
+      const maxX = centerX - (imgWidth / 2);
+      const minY = centerY - (imgHeight / 2);
+      const maxY = centerY - (imgHeight / 2);
+      
+      // Clamp position values to ensure the image covers the circle
+      const boundedX = Math.min(Math.max(xPosition, minX + circleRadius), maxX - circleRadius);
+      const boundedY = Math.min(Math.max(yPosition, minY + circleRadius), maxY - circleRadius);
+      
+      // Calculate final position with bounded values
+      // The multiplier determines how much movement is allowed
+      const multiplier = 0.5; // Reduce this to restrict movement more
+      const adjustedX = centerX - (imgWidth / 2) + (boundedX * multiplier);
+      const adjustedY = centerY - (imgHeight / 2) + (boundedY * multiplier);
+      
+      // Clear the canvas
+      ctx.clearRect(0, 0, size, size);
+      
+      // First, draw a dark background to show the area outside the crop
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(0, 0, size, size);
+      
+      // Create a clipping path for the circle
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
+      ctx.closePath();
+      
+      // Draw the image only inside the circle
+      ctx.clip();
       ctx.drawImage(
         img,
-        offsetX, 
-        offsetY, 
+        adjustedX, 
+        adjustedY, 
         imgWidth,
         imgHeight
       );
       
-      // Draw the 3x3 grid
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      // Restore context to remove clipping
+      ctx.restore();
+      
+      // Draw circle outline
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Draw 3x3 grid inside the circle
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
+      ctx.clip();
+      
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
       
       // Draw horizontal grid lines
       for (let i = 1; i < 3; i++) {
         const y = (size / 3) * i;
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(size, y);
+        ctx.moveTo(centerX - circleRadius, y);
+        ctx.lineTo(centerX + circleRadius, y);
         ctx.stroke();
       }
       
@@ -329,29 +372,17 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       for (let i = 1; i < 3; i++) {
         const x = (size / 3) * i;
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, size);
+        ctx.moveTo(x, centerY - circleRadius);
+        ctx.lineTo(x, centerY + circleRadius);
         ctx.stroke();
       }
       
-      // Draw center point circle
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, size / 4, 0, 2 * Math.PI);
-      ctx.stroke();
+      ctx.restore();
       
-      // Draw smaller inner circle
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 1.5;
+      // Draw center point
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.beginPath();
-      ctx.arc(centerX, centerY, size / 8, 0, 2 * Math.PI);
-      ctx.stroke();
-      
-      // Draw tiny point at exact center
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 2, 0, 2 * Math.PI);
+      ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
       ctx.fill();
     };
     
@@ -377,7 +408,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     img.src = src;
     
-    const intervalId = setInterval(drawImageOnCanvas, 10);
+    // Update the canvas more frequently for smoother rendering
+    const intervalId = setInterval(drawImageOnCanvas, 16); // ~60fps
     return () => clearInterval(intervalId);
   }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize]);
   
