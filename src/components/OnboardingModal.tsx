@@ -1,332 +1,146 @@
-
 import React, { useState } from "react";
-import { useCreators } from "../context/CreatorContext";
-import { useToast } from "@/components/ui/use-toast";
-import { Team, Gender, CreatorType } from "../types";
-import ImageUploader from "./ImageUploader";
-
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Gender, Team, CreatorType } from "../types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCreators } from "../context/CreatorContext";
+import { useToast } from "@/components/ui/use-toast";
 
 interface OnboardingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-// Define validation schema
-const formSchema = z.object({
-  name: z.string().min(1, { message: "Creator name is required" }),
-});
-
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange }) => {
+  const [name, setName] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [gender, setGender] = useState<Gender>("Male");
+  const [team, setTeam] = useState<Team>("A Team");
+  const [creatorType, setCreatorType] = useState<CreatorType>("Real");
   const { addCreator } = useCreators();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Create form with validation
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-    },
-  });
-
-  const [gender, setGender] = useState<Gender>("Male");
-  const [creatorType, setCreatorType] = useState<CreatorType>("Real");
-  const [team, setTeam] = useState<Team>("A Team");
-  const [profileImage, setProfileImage] = useState("/avatar1.png"); // Default avatar
-  const [instagram, setInstagram] = useState("");
-  const [tiktok, setTiktok] = useState("");
-  const [twitter, setTwitter] = useState("");
-  const [reddit, setReddit] = useState("");
-  const [chaturbate, setChaturbate] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-
-  // Available tags
-  const availableTags = ["OnlyFans", "New", "Fitness", "Gaming", "Cosplay"];
-
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-
-    // Create tags array from gender, team, creatorType and selected tags
-    const tags = [gender, team, creatorType, ...selectedTags];
-
-    // Simulate API call
-    setTimeout(() => {
-      addCreator({
-        name: values.name,
-        gender,
-        team,
-        creatorType,
-        profileImage,
-        socialLinks: {
-          instagram: instagram || undefined,
-          tiktok: tiktok || undefined,
-          twitter: twitter || undefined,
-          reddit: reddit || undefined,
-          chaturbate: chaturbate || undefined,
-        },
-        tags,
-      });
-
+  const handleSubmit = () => {
+    if (name.trim() === "") {
       toast({
-        title: "Creator Added Successfully",
-        description: "Creator has been added and is awaiting chat setup",
+        title: "Error",
+        description: "Creator name is required.",
+        variant: "destructive",
       });
+      return;
+    }
 
-      // Reset form
-      form.reset({ name: "" });
-      setGender("Male");
-      setCreatorType("Real");
-      setTeam("A Team");
-      setProfileImage("/avatar1.png");
-      setInstagram("");
-      setTiktok("");
-      setTwitter("");
-      setReddit("");
-      setChaturbate("");
-      setSelectedTags([]);
-      
-      setIsSubmitting(false);
-      onOpenChange(false);
-    }, 1500);
+    const newCreator = {
+      name,
+      profileImage,
+      gender,
+      team,
+      creatorType,
+      socialLinks: {},
+      tags: [gender, team, creatorType],
+      needsReview: true,
+    };
+
+    addCreator(newCreator);
+    toast({
+      title: "Success",
+      description: `${name} onboarded successfully!`,
+    });
+    onOpenChange(false);
+    clearForm();
   };
 
-  const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
-    } else {
-      setSelectedTags([...selectedTags, tag]);
-    }
+  const clearForm = () => {
+    setName("");
+    setProfileImage("");
+    setGender("Male");
+    setTeam("A Team");
+    setCreatorType("Real");
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Onboard New Creator</DialogTitle>
-          <DialogDescription>
-            Fill out the details to add a new creator to your CRM
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Creator Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter creator name"
-                          {...field}
-                          autoFocus
-                        />
-                      </FormControl>
-                      <FormMessage className="text-destructive text-xs font-medium" />
-                    </FormItem>
-                  )}
-                />
-                
-                <div>
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select 
-                    value={gender} 
-                    onValueChange={(value: Gender) => setGender(value)}
-                  >
-                    <SelectTrigger id="gender">
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Trans">Trans</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="creatorType">Creator Type</Label>
-                  <Select 
-                    value={creatorType} 
-                    onValueChange={(value: CreatorType) => setCreatorType(value)}
-                  >
-                    <SelectTrigger id="creatorType">
-                      <SelectValue placeholder="Select creator type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Real">Real</SelectItem>
-                      <SelectItem value="AI">AI</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="team">Team</Label>
-                  <Select 
-                    value={team} 
-                    onValueChange={(value: Team) => setTeam(value)}
-                  >
-                    <SelectTrigger id="team">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A Team">A Team</SelectItem>
-                      <SelectItem value="B Team">B Team</SelectItem>
-                      <SelectItem value="C Team">C Team</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center">
-                <Label className="w-full mb-2">Profile Picture</Label>
-                <div className="mt-2">
-                  <ImageUploader
-                    currentImage={profileImage}
-                    name={form.watch("name") || "Creator"}
-                    onImageChange={setProfileImage}
-                    size="lg"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <Accordion type="single" collapsible defaultValue="social-links">
-              <AccordionItem value="social-links">
-                <AccordionTrigger>Social Media Links</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="instagram">Instagram URL</Label>
-                      <Input
-                        id="instagram"
-                        placeholder="https://instagram.com/username"
-                        value={instagram}
-                        onChange={(e) => setInstagram(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="tiktok">TikTok URL</Label>
-                      <Input
-                        id="tiktok"
-                        placeholder="https://tiktok.com/@username"
-                        value={tiktok}
-                        onChange={(e) => setTiktok(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="twitter">Twitter URL</Label>
-                      <Input
-                        id="twitter"
-                        placeholder="https://twitter.com/username"
-                        value={twitter}
-                        onChange={(e) => setTwitter(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="reddit">Reddit URL</Label>
-                      <Input
-                        id="reddit"
-                        placeholder="https://reddit.com/user/username"
-                        value={reddit}
-                        onChange={(e) => setReddit(e.target.value)}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="chaturbate">Chaturbate URL</Label>
-                      <Input
-                        id="chaturbate"
-                        placeholder="https://chaturbate.com/username"
-                        value={chaturbate}
-                        onChange={(e) => setChaturbate(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              
-              <AccordionItem value="tags">
-                <AccordionTrigger>Additional Tags</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label>Select Tags</Label>
-                    <div className="flex flex-wrap gap-3">
-                      {availableTags.map((tag) => (
-                        <div
-                          key={tag}
-                          className="flex items-center space-x-2"
-                        >
-                          <Checkbox
-                            id={`tag-${tag}`}
-                            checked={selectedTags.includes(tag)}
-                            onCheckedChange={() => toggleTag(tag)}
-                          />
-                          <Label htmlFor={`tag-${tag}`} className="cursor-pointer">{tag}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                className="bg-brand text-black hover:bg-brand/80"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "Submit & Onboard"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Onboard New Creator</SheetTitle>
+          <SheetDescription>
+            Fill in the details to add a new creator to the platform.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="image" className="text-right">
+              Profile Image URL
+            </Label>
+            <Input
+              id="image"
+              value={profileImage}
+              onChange={(e) => setProfileImage(e.target.value)}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="gender" className="text-right">
+              Gender
+            </Label>
+            <Select onValueChange={(value) => setGender(value as Gender)}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Trans">Trans</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="team" className="text-right">
+              Team
+            </Label>
+            <Select onValueChange={(value) => setTeam(value as Team)}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select team" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="A Team">A Team</SelectItem>
+                <SelectItem value="B Team">B Team</SelectItem>
+                <SelectItem value="C Team">C Team</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="creatorType" className="text-right">
+              Creator Type
+            </Label>
+            <Select onValueChange={(value) => setCreatorType(value as CreatorType)}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select creator type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Real">Real</SelectItem>
+                <SelectItem value="AI">AI</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Button onClick={handleSubmit}>Submit</Button>
+      </SheetContent>
+    </Sheet>
   );
 };
 

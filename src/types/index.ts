@@ -1,4 +1,3 @@
-
 export type Team = "A Team" | "B Team" | "C Team";
 export type Gender = "Male" | "Female" | "Trans";
 export type CreatorType = "Real" | "AI";
@@ -53,3 +52,6 @@ export interface User {
   username: string;
   password: string;
 }
+
+// Re-export activity types
+export * from './activity';

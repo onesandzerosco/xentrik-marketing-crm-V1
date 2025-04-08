@@ -1,10 +1,13 @@
 
 import React from "react";
 import { useCreators } from "../context/CreatorContext";
+import { useActivities } from "../context/ActivityContext";
 import Sidebar from "../components/Sidebar";
+import RecentActivities from "../components/dashboard/RecentActivities";
 
 const Dashboard = () => {
   const { creators } = useCreators();
+  const { getRecentActivities } = useActivities();
 
   // Calculate totals for the dashboard
   const totalCreators = creators.length;
@@ -16,6 +19,9 @@ const Dashboard = () => {
   const femaleCreators = creators.filter(c => c.gender === "Female").length;
   const transCreators = creators.filter(c => c.gender === "Trans").length;
   const aiCreators = creators.filter(c => c.creatorType === "AI").length;
+
+  // Get recent activities
+  const recentActivities = getRecentActivities(3); // Show 3 most recent activities
 
   return (
     <div className="flex">
@@ -70,26 +76,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="bg-card rounded-xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            <div className="flex items-center p-3 border border-border rounded-lg">
-              <div className="h-2 w-2 rounded-full bg-green-500 mr-3"></div>
-              <p className="text-sm">New creator onboarded: <span className="font-medium">Oliver</span></p>
-              <span className="ml-auto text-xs text-muted-foreground">1 hour ago</span>
-            </div>
-            <div className="flex items-center p-3 border border-border rounded-lg">
-              <div className="h-2 w-2 rounded-full bg-yellow-500 mr-3"></div>
-              <p className="text-sm">Profile updated for: <span className="font-medium">Janas</span></p>
-              <span className="ml-auto text-xs text-muted-foreground">3 hours ago</span>
-            </div>
-            <div className="flex items-center p-3 border border-border rounded-lg">
-              <div className="h-2 w-2 rounded-full bg-red-500 mr-3"></div>
-              <p className="text-sm">Engagement drop alert for: <span className="font-medium">Frans</span></p>
-              <span className="ml-auto text-xs text-muted-foreground">1 day ago</span>
-            </div>
-          </div>
-        </div>
+        <RecentActivities activities={recentActivities} />
       </div>
     </div>
   );

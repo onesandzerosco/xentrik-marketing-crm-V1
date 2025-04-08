@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { Creator, EngagementStats, CreatorType } from "../types";
+import { useActivities } from "./ActivityContext";
 
 // Mock data for initial creators
 const initialCreators: Creator[] = [
@@ -158,6 +159,7 @@ export const useCreators = () => useContext(CreatorContext);
 export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [creators, setCreators] = useState<Creator[]>(initialCreators);
   const [stats] = useState<Record<string, EngagementStats>>(mockEngagementStats);
+  const { addActivity } = useActivities();
 
   const addCreator = (creator: Omit<Creator, "id">) => {
     const newCreator = {
@@ -166,14 +168,36 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       needsReview: true,
     };
     setCreators([...creators, newCreator]);
+    
+    addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
   };
 
   const updateCreator = (id: string, updates: Partial<Creator>) => {
+    const existingCreator = creators.find(c => c.id === id);
+    
     setCreators(
       creators.map((creator) =>
         creator.id === id ? { ...creator, ...updates } : creator
       )
     );
+    
+    if (existingCreator) {
+      if (updates.name && updates.name !== existingCreator.name) {
+        addActivity("update", `Profile name updated for: ${existingCreator.name} → ${updates.name}`, id);
+      } else if (updates.team && updates.team !== existingCreator.team) {
+        addActivity("update", `Team updated for: ${existingCreator.name} (${existingCreator.team} → ${updates.team})`, id);
+      } else if (updates.gender && updates.gender !== existingCreator.gender) {
+        addActivity("update", `Gender updated for: ${existingCreator.name}`, id);
+      } else if (updates.needsReview !== undefined && updates.needsReview !== existingCreator.needsReview) {
+        if (updates.needsReview) {
+          addActivity("alert", `Review flag added for: ${existingCreator.name}`, id);
+        } else {
+          addActivity("update", `Review completed for: ${existingCreator.name}`, id);
+        }
+      } else {
+        addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
+      }
+    }
   };
 
   const getCreator = (id: string) => {
