@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import EmployeeCard from "../components/employees/EmployeeCard";
@@ -365,7 +364,7 @@ const TeamManagement = () => {
       <AddEmployeeModal 
         open={addEmployeeOpen} 
         onOpenChange={setAddEmployeeOpen} 
-        onAdd={handleAddEmployee}
+        onAddEmployee={handleAddEmployee}
       />
     </div>
   );
