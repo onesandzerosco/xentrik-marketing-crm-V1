@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -215,8 +214,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Label>
                 <Slider
                   id="x-position-slider"
-                  min={-200}
-                  max={200}
+                  min={-100}
+                  max={100}
                   step={1}
                   value={xPosition}
                   onValueChange={handleXPositionChange}
@@ -231,8 +230,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 </Label>
                 <Slider
                   id="y-position-slider"
-                  min={-200}
-                  max={200}
+                  min={-100}
+                  max={100}
                   step={1}
                   value={yPosition}
                   onValueChange={handleYPositionChange}
@@ -297,32 +296,24 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       const centerX = size / 2;
       const centerY = size / 2;
       
-      // Calculate the circle radius - this will be the visible area in the profile photo
-      const circleRadius = size / 2;
+      // Calculate position offset from sliders
+      // Simplify the position calculation - more direct and predictable
+      const offsetX = xPosition * 2; // Scale for better movement range
+      const offsetY = yPosition * 2; // Scale for better movement range
       
-      // Calculate boundaries to prevent out-of-bounds movement
-      // We need to ensure that the image extends at least to the edges of the circle
-      const minX = centerX - (imgWidth / 2);
-      const maxX = centerX - (imgWidth / 2);
-      const minY = centerY - (imgHeight / 2);
-      const maxY = centerY - (imgHeight / 2);
-      
-      // Clamp position values to ensure the image covers the circle
-      const boundedX = Math.min(Math.max(xPosition, minX + circleRadius), maxX - circleRadius);
-      const boundedY = Math.min(Math.max(yPosition, minY + circleRadius), maxY - circleRadius);
-      
-      // Calculate final position with bounded values
-      // The multiplier determines how much movement is allowed
-      const multiplier = 0.5; // Reduce this to restrict movement more
-      const adjustedX = centerX - (imgWidth / 2) + (boundedX * multiplier);
-      const adjustedY = centerY - (imgHeight / 2) + (boundedY * multiplier);
+      // Calculate final position with offset
+      const posX = centerX - (imgWidth / 2) + offsetX;
+      const posY = centerY - (imgHeight / 2) + offsetY;
       
       // Clear the canvas
       ctx.clearRect(0, 0, size, size);
       
-      // First, draw a dark background to show the area outside the crop
+      // Draw a dark background to show the area outside the crop
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, size, size);
+      
+      // Calculate the circle radius - this will be the visible area in the profile photo
+      const circleRadius = size / 2 - 2; // Slight padding
       
       // Create a clipping path for the circle
       ctx.save();
@@ -334,8 +325,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.clip();
       ctx.drawImage(
         img,
-        adjustedX, 
-        adjustedY, 
+        posX, 
+        posY, 
         imgWidth,
         imgHeight
       );
@@ -398,8 +389,10 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       const imgRatio = img.naturalWidth / img.naturalHeight;
       if (imgRatio > 1) {
+        // Landscape image
         setScale(canvas.height / img.naturalHeight);
       } else {
+        // Portrait or square image
         setScale(canvas.width / img.naturalWidth);
       }
       
@@ -408,8 +401,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     img.src = src;
     
-    // Update the canvas more frequently for smoother rendering
-    const intervalId = setInterval(drawImageOnCanvas, 16); // ~60fps
+    // Redraw when values change
+    const intervalId = setInterval(drawImageOnCanvas, 30); // ~30fps for smooth rendering
     return () => clearInterval(intervalId);
   }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize]);
   
