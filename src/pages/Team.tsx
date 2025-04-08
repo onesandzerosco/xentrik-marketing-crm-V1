@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -98,7 +99,7 @@ const Team = () => {
           </p>
         </div>
         
-        {isAdmin && <Button onClick={() => setAddEmployeeOpen(true)} className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2">
+        {isAdmin && <Button onClick={() => setAddEmployeeOpen(true)} className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-md px-6 py-2">
             <Plus className="h-4 w-4 mr-2" />
             Add Team Member
           </Button>}

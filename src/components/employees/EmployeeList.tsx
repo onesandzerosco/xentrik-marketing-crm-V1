@@ -30,7 +30,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
         {isAdmin && (
           <Button 
             onClick={onAddEmployeeClick}
-            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2"
+            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-md px-6 py-2"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Team Member
