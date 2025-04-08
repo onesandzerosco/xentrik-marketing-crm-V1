@@ -7,7 +7,7 @@ interface TagFilterProps {
   tags: string[];
   selectedTags: string[];
   onChange: (tags: string[]) => void;
-  type: "gender" | "team" | "class" | "review";
+  type: "gender" | "team" | "class";
 }
 
 const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, type }) => {
@@ -52,15 +52,6 @@ const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, typ
           return "!bg-indigo-600 hover:!bg-indigo-700";
         case "AI":
           return "!bg-gray-600 hover:!bg-gray-700";
-        default:
-          return "";
-      }
-    } else if (type === "review") {
-      switch (tag) {
-        case "Needs Review":
-          return "!bg-orange-500 hover:!bg-orange-600";
-        case "Reviewed":
-          return "!bg-green-600 hover:!bg-green-700";
         default:
           return "";
       }

@@ -21,8 +21,7 @@ import {
 const FILTER_KEYS = {
   GENDER: 'creator_filter_gender',
   TEAM: 'creator_filter_team',
-  CLASS: 'creator_filter_class',
-  REVIEW: 'creator_filter_review'
+  CLASS: 'creator_filter_class'
 };
 
 const Creators = () => {
@@ -45,17 +44,11 @@ const Creators = () => {
     return saved ? JSON.parse(saved) : [];
   });
   
-  const [selectedReviewStatuses, setSelectedReviewStatuses] = useState<string[]>(() => {
-    const saved = localStorage.getItem(FILTER_KEYS.REVIEW);
-    return saved ? JSON.parse(saved) : [];
-  });
-  
   const { toast } = useToast();
 
   const genderTags = ["Male", "Female", "Trans", "AI"];
   const teamTags = ["A Team", "B Team", "C Team"];
   const classTags = ["Real", "AI"];
-  const reviewTags = ["Needs Review", "Reviewed"];
 
   // Save to localStorage whenever filters change
   useEffect(() => {
@@ -69,23 +62,17 @@ const Creators = () => {
   useEffect(() => {
     localStorage.setItem(FILTER_KEYS.CLASS, JSON.stringify(selectedClasses));
   }, [selectedClasses]);
-  
-  useEffect(() => {
-    localStorage.setItem(FILTER_KEYS.REVIEW, JSON.stringify(selectedReviewStatuses));
-  }, [selectedReviewStatuses]);
 
   const filteredCreators = filterCreators({
     gender: selectedGenders,
     team: selectedTeams,
     creatorType: selectedClasses,
-    reviewStatus: selectedReviewStatuses,
   });
 
   const handleClearFilters = () => {
     setSelectedGenders([]);
     setSelectedTeams([]);
     setSelectedClasses([]);
-    setSelectedReviewStatuses([]);
   };
 
   return (
@@ -111,7 +98,7 @@ const Creators = () => {
                 <SheetHeader>
                   <SheetTitle>Filter Creators</SheetTitle>
                   <SheetDescription>
-                    Filter creators by gender, team, class and review status
+                    Filter creators by gender, team and class
                   </SheetDescription>
                 </SheetHeader>
                 <div className="py-6 space-y-6">
@@ -142,16 +129,7 @@ const Creators = () => {
                       type="class"
                     />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-medium mb-3">Review Status</h3>
-                    <TagFilter
-                      tags={reviewTags}
-                      selectedTags={selectedReviewStatuses}
-                      onChange={setSelectedReviewStatuses}
-                      type="review"
-                    />
-                  </div>
-                  {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || selectedReviewStatuses.length > 0) && (
+                  {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
                     <Button
                       variant="ghost"
                       className="mt-4"
@@ -174,7 +152,7 @@ const Creators = () => {
           </div>
         </div>
 
-        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || selectedReviewStatuses.length > 0) && (
+        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
           <div className="mb-6 flex items-center">
             <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
             <div className="flex flex-wrap gap-2">
@@ -217,20 +195,7 @@ const Creators = () => {
                   </Button>
                 </div>
               ))}
-              {selectedReviewStatuses.map((status) => (
-                <div key={status} className="bg-secondary text-foreground text-xs px-3 py-1 rounded-full flex items-center">
-                  {status}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 ml-1 p-0"
-                    onClick={() => setSelectedReviewStatuses(selectedReviewStatuses.filter(s => s !== status))}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ))}
-              {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || selectedReviewStatuses.length > 0) && (
+              {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
                 <Button
                   variant="ghost"
                   size="sm"
