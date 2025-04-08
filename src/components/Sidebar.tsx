@@ -49,7 +49,7 @@ const Sidebar: React.FC = () => {
           <img 
             src="/lovable-uploads/c79203dc-0401-40c1-bf4a-821b26aa6031.png" 
             alt="Xentrik Marketing" 
-            className="h-[38.4px]" 
+            className="h-[46.08px]" 
           />
         </Link>
       </div>
