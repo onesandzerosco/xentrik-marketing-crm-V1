@@ -11,6 +11,7 @@ import EmployeeList from '../components/employees/EmployeeList';
 import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
+
 const Team = () => {
   const {
     toast
@@ -87,6 +88,7 @@ const Team = () => {
       });
     }
   };
+
   return <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <div>
@@ -96,8 +98,8 @@ const Team = () => {
           </p>
         </div>
         
-        {isAdmin && <Button onClick={() => setAddEmployeeOpen(true)} className="banana-button px-6 py-2 rounded">
-            <Plus className="h-5 w-5 mr-2" />
+        {isAdmin && <Button onClick={() => setAddEmployeeOpen(true)} className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2">
+            <Plus className="h-4 w-4 mr-2" />
             Add Team Member
           </Button>}
       </div>
@@ -114,4 +116,5 @@ const Team = () => {
       <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} onAddEmployee={handleAddEmployee} />
     </div>;
 };
+
 export default Team;
