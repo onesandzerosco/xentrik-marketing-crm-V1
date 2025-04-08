@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Employee, EmployeeRole } from "@/types/employee";
+import { Employee, EmployeeRole, EmployeeStatus } from "@/types/employee";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -35,7 +35,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<EmployeeRole>("Employee");
-  const [active, setActive] = useState(true);
+  const [isActive, setIsActive] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +50,9 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       name: name.trim(),
       email: email.trim(),
       role,
-      active,
+      status: isActive ? "Active" : "Inactive",
       lastLogin: "Never",
+      createdAt: new Date().toISOString()
     };
     
     onAddEmployee(newEmployee);
@@ -63,7 +64,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     setName("");
     setEmail("");
     setRole("Employee");
-    setActive(true);
+    setIsActive(true);
   };
 
   return (
@@ -124,8 +125,8 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <Label htmlFor="status">Active Status</Label>
               <Switch 
                 id="status"
-                checked={active}
-                onCheckedChange={setActive}
+                checked={isActive}
+                onCheckedChange={setIsActive}
               />
             </div>
           </div>

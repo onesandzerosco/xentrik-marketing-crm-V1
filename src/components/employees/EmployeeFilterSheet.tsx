@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Filter, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { FilterRole } from "../../types/employee";
+import { FilterRole, EmployeeRole } from "../../types/employee";
 
 interface EmployeeFilterSheetProps {
   selectedRoles: FilterRole[];
@@ -45,7 +45,7 @@ const EmployeeFilterSheet: React.FC<EmployeeFilterSheetProps> = ({
           <div>
             <h3 className="text-lg font-medium mb-3">Role</h3>
             <div className="flex flex-wrap gap-2">
-              {(["Admin", "Manager", "Employee"] as ("Admin" | "Manager" | "Employee")[]).map((role) => (
+              {(["Admin", "Manager", "Employee"] as EmployeeRole[]).map((role) => (
                 <Badge
                   key={role}
                   className={`cursor-pointer ${

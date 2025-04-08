@@ -1,5 +1,5 @@
 
-import { Employee, EmployeeRole } from "../types/employee";
+import { Employee, EmployeeRole, EmployeeStatus } from "../types/employee";
 
 type FilterRole = EmployeeRole | "Active" | "Inactive";
 
@@ -14,8 +14,8 @@ export const filterAndSortEmployees = (
     // Role filter (Admin, Manager, Employee)
     const roleMatch = selectedRoles.length === 0 || 
       selectedRoles.some(role => {
-        if (role === "Active") return employee.active;
-        if (role === "Inactive") return !employee.active;
+        if (role === "Active") return employee.status === "Active";
+        if (role === "Inactive") return employee.status === "Inactive";
         return employee.role === role;
       });
     

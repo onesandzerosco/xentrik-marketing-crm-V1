@@ -22,3 +22,6 @@ export type EmployeeFilters = {
   searchQuery: string;
   sortOption: string;
 };
+
+// This is the type needed for the filter components
+export type FilterRole = EmployeeRole | "Active" | "Inactive";
