@@ -6,6 +6,7 @@ import { useAuth, AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/CreatorContext';
 import { ActivityProvider } from './context/ActivityContext';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
 import CreatorProfile from './pages/CreatorProfile';
@@ -14,6 +15,7 @@ import AccountSettings from './pages/AccountSettings';
 import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import TeamManagement from "./pages/TeamManagement";
+import UserManagement from './pages/UserManagement';
 import Sidebar from './components/Sidebar';
 
 function App() {
@@ -57,6 +59,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route 
         path="/dashboard" 
         element={
@@ -78,6 +81,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <TeamManagement />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/users" 
+        element={
+          <ProtectedRoute>
+            <UserManagement />
           </ProtectedRoute>
         } 
       />

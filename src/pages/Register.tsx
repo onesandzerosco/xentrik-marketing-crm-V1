@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -5,29 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 
-const Login = () => {
+const Register = () => {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
-  const { login, isAuthenticated } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -35,41 +26,45 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    const savedCredentials = localStorage.getItem("savedCredentials");
-    if (savedCredentials) {
-      const credentials = JSON.parse(savedCredentials);
-      setUsername(credentials.username);
-      setPassword(credentials.password);
-      setRememberMe(true);
-    }
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (password !== confirmPassword) {
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match",
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     setTimeout(() => {
-      const success = login(username, password);
+      const success = register(username, email, password);
       
       if (success) {
-        if (rememberMe) {
-          localStorage.setItem("savedCredentials", JSON.stringify({ username, password }));
-        } else {
-          localStorage.removeItem("savedCredentials");
-        }
-        
         toast({
-          title: "Login successful",
-          description: "Welcome to the bananaverse 🍌",
+          title: "Registration successful",
+          description: "Your account is pending approval by an admin",
           duration: 6000,
         });
-        navigate("/dashboard");
+        navigate("/login");
       } else {
         toast({
           variant: "destructive",
-          title: "Login failed",
-          description: "Invalid username or password, or your account is pending approval",
+          title: "Registration failed",
+          description: "Username or email already exists",
         });
       }
       
@@ -79,44 +74,6 @@ const Login = () => {
 
   if (isAuthenticated) {
     return null;
-  }
-
-  if (pageLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-background">
-        <div className="w-full max-w-md">
-          <Card>
-            <div className="text-center pt-6">
-              <Skeleton className="h-44 w-full mx-auto" />
-            </div>
-            <CardHeader>
-              <Skeleton className="h-8 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-1/4 mb-2" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-4 w-1/4" />
-                    <Skeleton className="h-4 w-1/4" />
-                  </div>
-                  <Skeleton className="h-10 w-full" />
-                </div>
-                <Skeleton className="h-5 w-1/3" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-4 w-full" />
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -131,13 +88,13 @@ const Login = () => {
             />
           </div>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Create an Account</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Register for a new account. Your account will be pending admin approval.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <div className="relative">
@@ -156,16 +113,25 @@ const Login = () => {
               </div>
               
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Button 
-                    variant="link" 
-                    className="p-0 h-auto text-xs"
-                    type="button"
-                  >
-                    Forgot Password?
-                  </Button>
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Lock className="h-4 w-4 text-muted-foreground" />
@@ -194,19 +160,23 @@ const Login = () => {
                   </Button>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="rememberMe" 
-                  checked={rememberMe} 
-                  onCheckedChange={(checked) => setRememberMe(checked === true)}
-                />
-                <Label
-                  htmlFor="rememberMe"
-                  className="text-sm font-normal cursor-pointer"
-                >
-                  Remember me
-                </Label>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <Input
+                    id="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                </div>
               </div>
               
               <Button 
@@ -214,19 +184,16 @@ const Login = () => {
                 className="w-full bg-brand-yellow text-black hover:bg-brand-highlight"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? "Registering..." : "Register"}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center flex-col space-y-2">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
               </Link>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              For demo purposes, use: admin / password or admin2 / password2
             </p>
           </CardFooter>
         </Card>
@@ -235,4 +202,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
