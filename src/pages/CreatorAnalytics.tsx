@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -212,15 +211,20 @@ const CreatorAnalytics = () => {
             {availablePlatforms.map(platform => {
               const platformKey = platform as keyof typeof stats;
               const platformData = stats[platformKey];
-              const displayValue = platform === 'instagram' 
-                ? platformData.followers 
-                : platform === 'tiktok' 
-                  ? platformData.views 
-                  : platform === 'twitter' 
-                    ? platformData.impressions 
-                    : platform === 'reddit' 
-                      ? platformData.upvotes 
-                      : platformData.viewers;
+              
+              let displayValue = 0;
+              
+              if (platform === 'instagram') {
+                displayValue = platformData.followers;
+              } else if (platform === 'tiktok') {
+                displayValue = 'views' in platformData ? platformData.views : 0;
+              } else if (platform === 'twitter') {
+                displayValue = 'impressions' in platformData ? platformData.impressions : 0;
+              } else if (platform === 'reddit') {
+                displayValue = 'upvotes' in platformData ? platformData.upvotes : 0;
+              } else if (platform === 'chaturbate') {
+                displayValue = 'viewers' in platformData ? platformData.viewers : 0;
+              }
               
               return (
                 <div 
