@@ -14,22 +14,22 @@ import AccountSettings from './pages/AccountSettings';
 import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import TeamManagement from "./pages/TeamManagement";
+import Sidebar from './components/Sidebar';
 
-// Move this inside the App component instead of using it at the top level
 function App() {
   return (
-    <div className="app">
-      <AuthProvider>
-        <CreatorProvider>
-          <ActivityProvider>
-            <BrowserRouter>
+    <AuthProvider>
+      <CreatorProvider>
+        <ActivityProvider>
+          <BrowserRouter>
+            <div className="app flex">
               <Toaster />
               <AppRoutes />
-            </BrowserRouter>
-          </ActivityProvider>
-        </CreatorProvider>
-      </AuthProvider>
-    </div>
+            </div>
+          </BrowserRouter>
+        </ActivityProvider>
+      </CreatorProvider>
+    </AuthProvider>
   );
 }
 
@@ -43,7 +43,12 @@ const AppRoutes = () => {
       return <Navigate to="/login" />;
     }
     
-    return <>{children}</>;
+    return (
+      <>
+        <Sidebar />
+        {children}
+      </>
+    );
   };
   
   return (

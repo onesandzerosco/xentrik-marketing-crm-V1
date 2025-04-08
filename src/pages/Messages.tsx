@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Send, Users, Banana, User } from 'lucide-react';
+import { Search, Send, Users, Banana, User, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ const Messages: React.FC = () => {
       id: employee.id,
       userId: employee.id,
       userName: employee.name,
-      userAvatar: employee.profileImage || "", // Fixed: Use profileImage instead of avatar
+      userAvatar: employee.profileImage || "",
       lastMessage: "Hey there! Let's collaborate on the next campaign.",
       lastMessageTime: new Date(Date.now() - Math.random() * 86400000 * 7), // Random time in the last week
       unreadCount: Math.floor(Math.random() * 3)
@@ -219,12 +220,23 @@ const Messages: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="flex min-h-screen bg-background pt-16 pl-60">
-      <div className="flex-1 flex flex-col p-6 max-w-[1400px] mx-auto w-full">
-        <h1 className="text-3xl font-bold mb-6 flex items-center animate-fade-in">
-          <MessageIcon className="mr-3 text-brand-yellow" />
-          Messages
-        </h1>
+    <div className="flex min-h-screen bg-background">
+      <div className="flex-1 flex flex-col p-6 pl-60 max-w-[1400px] mx-auto w-full">
+        <div className="flex items-center gap-3 mb-6 animate-fade-in">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full hover:bg-brand-yellow/20"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Go back</span>
+          </Button>
+          <h1 className="text-3xl font-bold flex items-center">
+            <MessageIcon className="mr-3 text-brand-yellow" />
+            Messages
+          </h1>
+        </div>
 
         <Tabs 
           defaultValue="team" 
@@ -339,7 +351,11 @@ const Messages: React.FC = () => {
                                 className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}
                               >
                                 <div 
-                                  className={isOutgoing ? 'message-outgoing' : 'message-incoming'}
+                                  className={`max-w-[75%] rounded-lg px-4 py-2 ${
+                                    isOutgoing 
+                                      ? 'bg-brand-yellow text-black' 
+                                      : 'bg-accent text-accent-foreground'
+                                  }`}
                                 >
                                   <p>{message.content}</p>
                                   <p className="text-[10px] mt-1 opacity-70 text-right">
@@ -403,7 +419,7 @@ const Messages: React.FC = () => {
               <CardContent>
                 {!isConfigured ? (
                   <div className="space-y-4">
-                    <div className="banana-banner flex items-start gap-4">
+                    <div className="banana-banner flex items-start gap-4 p-4 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                       <Banana className="h-5 w-5 mt-0.5 text-brand-yellow" />
                       <div>
                         <h4 className="font-medium text-brand-yellow">Configure Telegram Integration</h4>
@@ -435,7 +451,7 @@ const Messages: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="banana-banner flex items-start gap-4">
+                    <div className="banana-banner flex items-start gap-4 p-4 bg-brand-yellow/10 rounded-lg border border-brand-yellow/30">
                       <Banana className="h-5 w-5 mt-0.5 text-brand-yellow" />
                       <div>
                         <h4 className="font-medium text-brand-yellow">Telegram Connected</h4>
@@ -445,12 +461,12 @@ const Messages: React.FC = () => {
                       </div>
                     </div>
                     <div className="grid gap-4">
-                      <div className="banana-card p-4">
+                      <div className="p-4 bg-muted rounded-lg">
                         <label className="text-sm font-medium block mb-2">
                           Broadcast Message
                         </label>
                         <textarea
-                          className="w-full h-32 bg-background border rounded-md p-3 text-foreground"
+                          className="w-full h-32 bg-background border rounded-md p-3 text-foreground resize-none"
                           placeholder="Write your announcement here..."
                           value={telegramMessage}
                           onChange={(e) => setTelegramMessage(e.target.value)}

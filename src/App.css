@@ -1,8 +1,6 @@
 
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -40,6 +38,54 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Message styling */
+.message-incoming, .message-outgoing {
+  max-width: 75%;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+
+.message-incoming {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-top-left-radius: 0.25rem;
+}
+
+.message-outgoing {
+  background-color: hsl(var(--brand-yellow));
+  color: #000;
+  border-top-right-radius: 0.25rem;
+}
+
+/* App Layout */
+.app {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-in-out;
 }
 
 /* Add scroll-behavior to all scrollable elements */
