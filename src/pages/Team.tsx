@@ -3,27 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { v4 as uuidv4 } from 'uuid';
-import { Edit, Clock, Mail, Users, Pause, Play, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
-import { Employee, EmployeeRole, EmployeeStatus } from '../types/employee';
+import { Employee, EmployeeRole } from '../types/employee';
 import { mockEmployees } from '../data/mockEmployees';
 import { filterAndSortEmployees, FILTER_KEYS } from '../utils/employeeUtils';
 
 import EmployeeSearchAndSort from '../components/employees/EmployeeSearchAndSort';
-import EmployeeCard from '../components/employees/EmployeeCard';
+import EmployeeList from '../components/employees/EmployeeList';
 import AddEmployeeModal from '../components/employees/AddEmployeeModal';
+import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
 
 const Team = () => {
   const { toast } = useToast();
@@ -37,7 +27,6 @@ const Team = () => {
   const [sortOption, setSortOption] = useState("nameAsc");
   
   // State for modals
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
@@ -108,11 +97,6 @@ const Team = () => {
     }
   };
   
-  const handleEdit = (employee: Employee) => {
-    setSelectedEmployee(employee);
-    setEditModalOpen(true);
-  };
-  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -126,7 +110,7 @@ const Team = () => {
         {isAdmin && (
           <Button 
             onClick={() => setAddEmployeeOpen(true)} 
-            className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2 font-medium"
+            className="banana-button rounded-full px-6 py-2"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Team Member
@@ -141,57 +125,24 @@ const Team = () => {
         setSortOption={setSortOption}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredEmployees.map((employee) => (
-          <EmployeeCard
-            key={employee.id}
-            employee={employee}
-            onUpdate={handleUpdateEmployee}
-            isAdmin={isAdmin}
-            currentUserId={user?.id}
-            onDeactivateClick={(emp) => {
-              setSelectedEmployee(emp);
-              setDeactivateDialogOpen(true);
-            }}
-          />
-        ))}
-      </div>
+      <EmployeeList
+        employees={filteredEmployees}
+        onUpdate={handleUpdateEmployee}
+        isAdmin={isAdmin}
+        currentUserId={user?.id}
+        onAddEmployeeClick={() => setAddEmployeeOpen(true)}
+        onDeactivateClick={(emp) => {
+          setSelectedEmployee(emp);
+          setDeactivateDialogOpen(true);
+        }}
+      />
       
-      {filteredEmployees.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium mb-2">No team members found</h3>
-          <p className="text-muted-foreground mb-4">Try changing your filters or add a new team member</p>
-          {isAdmin && (
-            <Button 
-              onClick={() => setAddEmployeeOpen(true)}
-              className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-full px-6 py-2 font-medium"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add Team Member
-            </Button>
-          )}
-        </div>
-      )}
-      
-      <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Team Member</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to deactivate {selectedEmployee?.name}? They will no longer have access to the system.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeactivate}
-              className="bg-destructive text-destructive-foreground"
-            >
-              Deactivate
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeactivateDialog
+        open={deactivateDialogOpen}
+        onOpenChange={setDeactivateDialogOpen}
+        onDeactivate={handleDeactivate}
+        employeeName={selectedEmployee?.name}
+      />
       
       <AddEmployeeModal 
         open={addEmployeeOpen}

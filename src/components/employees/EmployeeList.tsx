@@ -30,9 +30,9 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
         {isAdmin && (
           <Button 
             onClick={onAddEmployeeClick}
-            className="bg-brand-yellow text-black hover:bg-brand-highlight"
+            className="banana-button rounded-full px-6 py-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2" />
             Add Team Member
           </Button>
         )}
@@ -41,7 +41,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {employees.map((employee) => (
         <EmployeeCard 
           key={employee.id} 

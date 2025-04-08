@@ -142,7 +142,6 @@
     @apply bg-brand-yellow text-black font-medium hover:bg-brand-highlight transition-colors duration-300;
   }
   
-  /* Message elements */
   .message-bubble {
     @apply rounded-2xl p-3 max-w-[85%] shadow-sm;
   }
@@ -155,7 +154,6 @@
     @apply message-bubble bg-secondary text-white mr-auto;
   }
   
-  /* Team cards and badges */
   .team-card {
     @apply bg-[#111] rounded-lg overflow-hidden border border-[#333] hover:border-[#444] transition-colors;
   }
@@ -176,7 +174,6 @@
     @apply flex-1 rounded-none h-12 text-sm text-red-400 hover:text-red-300 hover:bg-[#222];
   }
   
-  /* Apple-like animation classes */
   .fade-in {
     @apply opacity-0 animate-[fadeIn_0.8s_ease-out_forwards];
   }
@@ -221,7 +218,6 @@
     @apply flex-1 flex items-center justify-center rounded-none h-12 text-sm hover:bg-[#222];
   }
   
-  /* Role badges */
   .badge-admin {
     @apply bg-red-900/40 text-red-200;
   }
@@ -234,7 +230,6 @@
     @apply bg-gray-900/40 text-gray-200;
   }
   
-  /* Status badges */
   .badge-active {
     @apply bg-green-900/40 text-green-200;
   }
@@ -247,7 +242,6 @@
     @apply bg-amber-900/40 text-amber-200;
   }
   
-  /* Team badges */
   .badge-team-a {
     @apply bg-purple-900/40 text-purple-200;
   }
