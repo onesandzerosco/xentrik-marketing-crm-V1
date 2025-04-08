@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -88,14 +89,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleCropSave = () => {
-    // Instead of creating a cropped version, we save the original image with 
-    // position/zoom parameters that will be used for display
+    // Pass the adjusted image back to the parent component
     setIsEditing(false);
-    setCropImage(null);
-    
-    // We're passing the full image through to allow re-editing later
-    // No actual cropping happens here
     onImageChange(previewImage);
+    
+    // Generate a timestamp to force the image to reload with the new parameters
+    const timestamp = new Date().getTime();
+    if (previewImage.includes('?')) {
+      setPreviewImage(`${previewImage.split('?')[0]}?t=${timestamp}`);
+    } else {
+      setPreviewImage(`${previewImage}?t=${timestamp}`);
+    }
   };
 
   const handleCropCancel = () => {
@@ -345,7 +349,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, size, size);
       
-      const circleRadius = size / 2 - 2;
+      // Make sure the radius is positive to avoid the error
+      const circleRadius = Math.max(2, size / 2 - 2);
       
       // Save context state
       ctx.save();
