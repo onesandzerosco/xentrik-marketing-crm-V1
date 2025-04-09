@@ -3,6 +3,23 @@ import { Employee, EmployeeRole, EmployeeStatus } from "../types/employee";
 
 type FilterRole = EmployeeRole | "Active" | "Inactive";
 
+// Mock creators data array for mapping IDs to names
+const mockCreators = [
+  { id: "c1", name: "Creator One" },
+  { id: "c2", name: "Creator Two" },
+  { id: "c3", name: "Creator Three" },
+  { id: "c4", name: "Creator Four" },
+  { id: "c5", name: "Creator Five" },
+];
+
+// Function to get creator names from IDs
+export const getCreatorNames = (creatorIds: string[]) => {
+  return creatorIds.map(id => {
+    const creator = mockCreators.find(c => c.id === id);
+    return creator ? creator.name : 'Unknown Creator';
+  });
+};
+
 export const filterAndSortEmployees = (
   employees: Employee[],
   selectedRoles: FilterRole[],

@@ -1,18 +1,11 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { User, MessageSquare } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Mock creators data array for mapping IDs to names
-const mockCreators = [
-  { id: "c1", name: "Creator One" },
-  { id: "c2", name: "Creator Two" },
-  { id: "c3", name: "Creator Three" },
-  { id: "c4", name: "Creator Four" },
-  { id: "c5", name: "Creator Five" },
-];
+// Use existing utility function to get creator names
+import { getCreatorNames } from "@/utils/employeeUtils";
 
 interface EmployeeCardInfoProps {
   employee: Employee;
@@ -36,7 +29,10 @@ const EmployeeCardInfo: React.FC<EmployeeCardInfoProps> = ({ employee }) => {
       {/* Status */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <User className="h-5 w-5" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
           <span className="text-sm">Status:</span>
         </div>
         <Badge 
@@ -50,7 +46,9 @@ const EmployeeCardInfo: React.FC<EmployeeCardInfoProps> = ({ employee }) => {
       {/* Telegram (always display) */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <MessageSquare className="h-5 w-5" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+          </svg>
           <span className="text-sm">Telegram:</span>
         </div>
         <span className="text-sm">{employee.telegram ? `@${employee.telegram}` : "Not set"}</span>
@@ -60,7 +58,10 @@ const EmployeeCardInfo: React.FC<EmployeeCardInfoProps> = ({ employee }) => {
       {employee.department && (
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="h-5 w-5" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
             <span className="text-sm">Department:</span>
           </div>
           <span className="text-sm">{employee.department}</span>
@@ -114,10 +115,9 @@ const EmployeeCardInfo: React.FC<EmployeeCardInfoProps> = ({ employee }) => {
               </TooltipTrigger>
               <TooltipContent>
                 <ul className="list-disc pl-4 text-sm">
-                  {employee.assignedCreators.map((creatorId, idx) => {
-                    const creator = mockCreators.find(c => c.id === creatorId);
-                    return <li key={idx}>{creator ? creator.name : 'Unknown Creator'}</li>;
-                  })}
+                  {getCreatorNames(employee.assignedCreators).map((name, idx) => (
+                    <li key={idx}>{name}</li>
+                  ))}
                 </ul>
               </TooltipContent>
             </Tooltip>

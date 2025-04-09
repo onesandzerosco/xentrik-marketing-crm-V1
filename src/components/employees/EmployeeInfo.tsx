@@ -4,29 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, User, Users, MessageSquare } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Mock creators data array for mapping IDs to names
-const mockCreators = [
-  { id: "c1", name: "Creator One" },
-  { id: "c2", name: "Creator Two" },
-  { id: "c3", name: "Creator Three" },
-  { id: "c4", name: "Creator Four" },
-  { id: "c5", name: "Creator Five" },
-];
+import { getCreatorNames } from "@/utils/employeeUtils";
 
 interface EmployeeInfoProps {
   employee: Employee;
 }
 
 const EmployeeInfo: React.FC<EmployeeInfoProps> = ({ employee }) => {
-  // Function to get creator names from IDs
-  const getCreatorNames = (creatorIds: string[]) => {
-    return creatorIds.map(id => {
-      const creator = mockCreators.find(c => c.id === id);
-      return creator ? creator.name : 'Unknown Creator';
-    });
-  };
-
   return (
     <div className="space-y-3 mb-4">
       {/* Last Login */}
