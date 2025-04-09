@@ -69,6 +69,16 @@ export default {
                     light: "#FFFFFF",  // Light shade for text on dark backgrounds
                     highlight: "#FFD54F", // Lighter yellow for highlights
                     muted: "#FFFDE7"   // Very light yellow for subtle backgrounds
+                },
+                premium: {
+                    dark: "#141428",      // Dark purple-blue for backgrounds
+                    darker: "#0E0E1C",    // Even darker shade for contrast
+                    card: "#1A1A2E",      // Slightly lighter shade for cards
+                    highlight: "#2D2D44", // Highlight color for hover states
+                    border: "#252538",    // Border color
+                    accent1: "#614FE0",   // Purple accent
+                    accent2: "#7166F9",   // Lighter purple accent
+                    accent3: "#30A8C5",   // Teal accent
                 }
 			},
 			borderRadius: {
@@ -158,6 +168,21 @@ export default {
                 '400': '400ms',
                 '600': '600ms',
                 '800': '800ms',
+            },
+            backgroundImage: {
+                'gradient-premium': 'linear-gradient(to bottom, rgba(26, 26, 46, 0.7), rgba(14, 14, 28, 0.9))',
+                'gradient-card': 'linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(38, 38, 66, 0.8) 100%)',
+                'gradient-highlight': 'linear-gradient(135deg, #614FE0 0%, #7166F9 100%)',
+                'gradient-sidebar': 'linear-gradient(180deg, rgba(20, 20, 40, 1) 0%, rgba(14, 14, 28, 1) 100%)',
+                'gradient-accent': 'linear-gradient(135deg, #30A8C5 0%, #614FE0 100%)',
+            },
+            boxShadow: {
+                'premium-sm': '0 2px 8px rgba(0, 0, 0, 0.25)',
+                'premium-md': '0 4px 12px rgba(0, 0, 0, 0.3)',
+                'premium-lg': '0 8px 20px rgba(0, 0, 0, 0.35)',
+                'premium-highlight': '0 0 15px rgba(97, 79, 224, 0.4)',
+                'premium-glow': '0 0 25px rgba(113, 102, 249, 0.25)',
+                'premium-inner': 'inset 0 2px 4px rgba(0, 0, 0, 0.25)',
             }
 		}
 	},

@@ -1,36 +1,37 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
  
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 240 20% 6%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+    --card: 240 17% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+    --popover: 240 17% 12%;
     --popover-foreground: 0 0% 98%;
     --primary: 54 100% 60%;    /* Banana yellow */
     --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 12% 18%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 12% 18%;
+    --muted-foreground: 240 8% 65%;
     --accent: 54 100% 65%;     /* Slightly lighter banana yellow */
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 240 12% 20%;
+    --input: 240 12% 20%;
     --ring: 54 100% 60%;      /* Banana yellow for focus ring */
     --radius: 0.75rem;
-    --sidebar-background: 240 10% 3.9%;
+    --sidebar-background: 240 24% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 54 100% 60%;   /* Banana yellow */
     --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent: 240 12% 18%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-border: 240 12% 18%;
     --sidebar-ring: 54 100% 60%;      /* Banana yellow ring */
   }
 
@@ -106,11 +107,11 @@
   }
 
   .creator-card {
-    @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm;
+    @apply bg-premium-card rounded-xl p-4 border border-premium-border hover:bg-premium-highlight transition-all duration-300 hover:translate-y-[-2px] shadow-premium-sm hover:shadow-premium-md;
   }
   
   .employee-card {
-    @apply bg-[#161618] rounded-xl p-4 border border-[#333333] hover:bg-[#1e1e20] transition-all duration-300 hover:translate-y-[-2px] shadow-sm flex flex-col h-full;
+    @apply bg-premium-card rounded-xl p-4 border border-premium-border hover:bg-premium-highlight transition-all duration-300 hover:translate-y-[-2px] shadow-premium-sm hover:shadow-premium-md flex flex-col h-full;
   }
   
   .employee-card-content {
@@ -118,7 +119,7 @@
   }
   
   .employee-card-footer {
-    @apply mt-auto pt-4 border-t border-[#333333];
+    @apply mt-auto pt-4 border-t border-premium-border;
   }
   
   .social-icon {
@@ -131,19 +132,19 @@
   
   /* Banner-like UI elements with banana theme */
   .banana-banner {
-    @apply bg-brand-dark border border-brand-yellow/30 rounded-lg p-4 shadow-md;
+    @apply bg-premium-card border border-premium-border rounded-lg p-4 shadow-premium-sm;
   }
   
   .banana-card {
-    @apply bg-card rounded-xl border border-brand-yellow/20 shadow-lg hover:border-brand-yellow/40 transition-all duration-300;
+    @apply bg-premium-card rounded-xl border border-premium-border shadow-premium-sm hover:shadow-premium-md hover:border-premium-accent1/40 transition-all duration-300;
   }
   
   .banana-button {
-    @apply bg-brand-yellow text-black font-medium hover:bg-brand-highlight transition-colors duration-300;
+    @apply bg-brand-yellow text-black font-medium hover:bg-brand-highlight transition-colors duration-300 shadow-premium-sm;
   }
   
   .message-bubble {
-    @apply rounded-2xl p-3 max-w-[85%] shadow-sm;
+    @apply rounded-2xl p-3 max-w-[85%] shadow-premium-sm;
   }
   
   .message-outgoing {
@@ -155,7 +156,7 @@
   }
   
   .team-card {
-    @apply bg-[#111] rounded-lg overflow-hidden border border-[#333] hover:border-[#444] transition-colors;
+    @apply bg-premium-card rounded-lg overflow-hidden border border-premium-border hover:border-premium-accent1/40 transition-colors duration-300 shadow-premium-sm hover:shadow-premium-md;
   }
   
   .team-card-header {
@@ -163,17 +164,42 @@
   }
   
   .team-card-footer {
-    @apply bg-[#1a1a1a] flex border-t border-[#333] divide-x divide-[#333];
+    @apply bg-premium-darker flex border-t border-premium-border divide-x divide-premium-border;
   }
   
   .team-button {
-    @apply flex-1 rounded-none h-12 text-sm text-muted-foreground hover:text-white hover:bg-[#222];
+    @apply flex-1 rounded-none h-12 text-sm text-muted-foreground hover:text-white hover:bg-premium-highlight/50;
   }
   
   .team-button-danger {
-    @apply flex-1 rounded-none h-12 text-sm text-red-400 hover:text-red-300 hover:bg-[#222];
+    @apply flex-1 rounded-none h-12 text-sm text-red-400 hover:text-red-300 hover:bg-premium-highlight/50;
   }
   
+  .premium-card {
+    @apply bg-gradient-card rounded-xl border border-premium-border p-5 shadow-premium-md transition-all duration-300 hover:shadow-premium-highlight;
+  }
+
+  .premium-stat-card {
+    @apply bg-gradient-card rounded-xl border border-premium-border p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300;
+  }
+  
+  .premium-banner {
+    @apply bg-gradient-premium border border-premium-border rounded-lg p-4 shadow-premium-md;
+  }
+  
+  .premium-sidebar {
+    @apply bg-gradient-sidebar border-r border-premium-border;
+  }
+  
+  .premium-button {
+    @apply bg-gradient-highlight text-white font-medium shadow-premium-sm hover:shadow-premium-highlight transition-all duration-300;
+  }
+  
+  .premium-input {
+    @apply bg-premium-darker border border-premium-border focus:border-premium-accent1 focus:ring-1 focus:ring-premium-accent1/50 shadow-premium-inner;
+  }
+  
+  /* Original animations */
   .fade-in {
     @apply opacity-0 animate-[fadeIn_0.8s_ease-out_forwards];
   }
@@ -191,7 +217,7 @@
   }
   
   .hover-lift {
-    @apply transition-all duration-300 hover:translate-y-[-3px] hover:shadow-md;
+    @apply transition-all duration-300 hover:translate-y-[-3px] hover:shadow-premium-md;
   }
   
   .employee-header {
@@ -211,11 +237,11 @@
   }
   
   .employee-footer {
-    @apply flex gap-2 mt-4 pt-4 border-t border-[#333333];
+    @apply flex gap-2 mt-4 pt-4 border-t border-premium-border;
   }
   
   .employee-btn {
-    @apply flex-1 flex items-center justify-center rounded-none h-12 text-sm hover:bg-[#222];
+    @apply flex-1 flex items-center justify-center rounded-none h-12 text-sm hover:bg-premium-highlight/50;
   }
   
   .badge-admin {
