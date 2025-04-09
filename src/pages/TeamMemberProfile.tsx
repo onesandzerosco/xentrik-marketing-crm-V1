@@ -1,22 +1,17 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "../types/employee";
-import { Form } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { teamMemberFormSchema, TeamMemberFormValues } from "@/schemas/teamMemberSchema";
 
 // Import the refactored components
-import ProfileImageSection from "@/components/team/ProfileImageSection";
-import BasicInfoSection from "@/components/team/BasicInfoSection";
-import TeamAssignmentSection from "@/components/team/TeamAssignmentSection";
-import CreatorsAssignmentSection from "@/components/team/CreatorsAssignmentSection";
-import FormActions from "@/components/team/FormActions";
+import ProfileHeader from "@/components/team/ProfileHeader";
+import ProfileFormContainer from "@/components/team/ProfileFormContainer";
+import LoadingState from "@/components/team/LoadingState";
 
 // Storage key for employees data
 const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
@@ -200,65 +195,29 @@ const TeamMemberProfile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[300px]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading team member information...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center mb-8">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-          className="mr-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">{employee?.name || "Team Member Profile"}</h1>
-          <p className="text-muted-foreground">Edit team member information</p>
-        </div>
-      </div>
+      <ProfileHeader 
+        name={employee?.name || "Team Member Profile"} 
+        handleBack={handleBack} 
+      />
 
       {employee && (
-        <div className="bg-[#161618] border border-[#333333] rounded-lg p-6 max-w-4xl mx-auto">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-              <div className="flex gap-6 flex-col sm:flex-row">
-                <ProfileImageSection 
-                  profileImage={form.watch("profileImage") || ""}
-                  name={form.watch("name") || employee.name}
-                  handleProfileImageChange={handleProfileImageChange}
-                />
-                
-                <BasicInfoSection 
-                  control={form.control}
-                  isCurrentUser={isCurrentUser}
-                />
-              </div>
-              
-              <TeamAssignmentSection 
-                selectedTeams={selectedTeams}
-                toggleTeam={toggleTeam}
-              />
-
-              <CreatorsAssignmentSection 
-                selectedCreators={selectedCreators}
-                toggleCreator={toggleCreator}
-              />
-              
-              <FormActions 
-                handleBack={handleBack}
-              />
-            </form>
-          </Form>
-        </div>
+        <ProfileFormContainer
+          form={form}
+          handleSubmit={handleSubmit}
+          handleBack={handleBack}
+          isCurrentUser={isCurrentUser}
+          selectedTeams={selectedTeams}
+          toggleTeam={toggleTeam}
+          selectedCreators={selectedCreators}
+          toggleCreator={toggleCreator}
+          handleProfileImageChange={handleProfileImageChange}
+          employeeName={employee.name}
+        />
       )}
     </div>
   );
