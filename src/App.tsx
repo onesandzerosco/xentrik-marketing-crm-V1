@@ -111,7 +111,7 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/creator/:id" 
+        path="/creators/:id" 
         element={
           <ProtectedRoute>
             <CreatorProfile />
@@ -119,7 +119,7 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/creator/:id/analytics" 
+        path="/creators/:id/analytics" 
         element={
           <ProtectedRoute>
             <CreatorAnalytics />
