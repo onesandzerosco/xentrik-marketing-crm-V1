@@ -1,7 +1,7 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
-import Sidebar from "../components/Sidebar";
 import { Team, Gender, CreatorType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -72,9 +72,7 @@ const CreatorProfile = () => {
   };
 
   if (!creator) {
-    return <div className="flex">
-        <Sidebar />
-        <div className="ml-60 p-8 w-full">
+    return <div className="p-8 w-full">
           <div className="text-center py-12">
             <h3 className="text-lg font-medium mb-2">Creator not found</h3>
             <p className="text-muted-foreground mb-4">The creator you're looking for doesn't exist</p>
@@ -82,13 +80,10 @@ const CreatorProfile = () => {
               <Button>Return to creators</Button>
             </Link>
           </div>
-        </div>
-      </div>;
+        </div>;
   }
 
-  return <div className="flex">
-      <Sidebar />
-      <div className="ml-60 p-8 w-full">
+  return <div className="p-8 w-full">
         <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <Button variant="ghost" className="h-8 px-2 gap-1">
             <ArrowLeft className="h-4 w-4" />
@@ -177,8 +172,7 @@ const CreatorProfile = () => {
             />
           </div>
         </div>
-      </div>
-    </div>;
+      </div>;
 };
 
 export default CreatorProfile;

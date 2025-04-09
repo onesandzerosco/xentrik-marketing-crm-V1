@@ -1,7 +1,7 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
-import Sidebar from "../components/Sidebar";
 import { ArrowLeft, Download, TrendingDown, TrendingUp, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
@@ -209,143 +209,140 @@ const CreatorAnalytics = () => {
   const aiSummary = generateAISummary(stats, timeFilter);
 
   return (
-    <div className="flex">
-      <Sidebar />
-      <div className="ml-60 p-8 w-full max-w-[calc(100vw-240px)]">
-        <div className="flex items-center mb-6">
-          <Link to={`/creators/${id}`} className="mr-4">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{creator.name}'s Analytics</h1>
-            <p className="text-muted-foreground">Performance metrics across platforms</p>
-          </div>
-          <Button className="ml-auto" variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Download Report
+    <div className="p-8 w-full max-w-[calc(100vw-240px)]">
+      <div className="flex items-center mb-6">
+        <Link to={`/creators/${id}`} className="mr-4">
+          <Button variant="outline" size="icon">
+            <ArrowLeft className="h-4 w-4" />
           </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold">{creator.name}'s Analytics</h1>
+          <p className="text-muted-foreground">Performance metrics across platforms</p>
         </div>
-
-        {/* Time filter toggle group */}
-        <div className="mb-6">
-          <ToggleGroup 
-            type="single" 
-            value={timeFilter}
-            onValueChange={(value) => {
-              if (value) setTimeFilter(value as TimeFilter);
-            }}
-            className="w-full max-w-md mx-auto border border-border rounded-md overflow-hidden"
-          >
-            <ToggleGroupItem value="yesterday" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
-              Yesterday
-            </ToggleGroupItem>
-            <ToggleGroupItem value="today" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
-              Today
-            </ToggleGroupItem>
-            <ToggleGroupItem value="week" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
-              This week
-            </ToggleGroupItem>
-            <ToggleGroupItem value="month" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
-              This month
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        {/* Engagement drop warning */}
-        {stats.instagram.trend < -5 || stats.tiktok.trend < -5 || stats.twitter.trend < -5 || stats.reddit.trend < -5 || stats.chaturbate.trend < -5 ? (
-          <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg mb-8">
-            <h3 className="font-bold mb-1">Engagement Drop Warning</h3>
-            <p>Significant engagement drop detected on some platforms. Consider reaching out to this creator.</p>
-          </div>
-        ) : null}
-
-        {/* KPI cards */}
-        {renderKpiCards()}
-
-        {/* AI Performance Summary */}
-        <Card className="mb-8">
-          <CardHeader className="px-6 flex flex-row items-center space-y-0 pb-3">
-            <div>
-              <CardTitle className="flex items-center">
-                <Bot className="h-5 w-5 mr-2 text-blue-500" />
-                AI Performance Summary
-              </CardTitle>
-              <CardDescription>Smart analysis of current metrics</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            <p className="text-sm">{aiSummary}</p>
-          </CardContent>
-        </Card>
-
-        {/* Main Chart */}
-        <Card className="mb-8">
-          <CardHeader className="px-6">
-            <CardTitle>{getChartTitle()}</CardTitle>
-            <CardDescription>{getChartDescription()}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-2">
-            <div style={{ height: `${chartHeight}px` }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={getChartData()}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  {availablePlatforms.includes('instagram') && 
-                    <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />}
-                  {availablePlatforms.includes('tiktok') && 
-                    <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />}
-                  {availablePlatforms.includes('twitter') && 
-                    <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />}
-                  {availablePlatforms.includes('reddit') && 
-                    <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />}
-                  {availablePlatforms.includes('chaturbate') && 
-                    <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />}
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Monthly Chart */}
-        <Card>
-          <CardHeader className="px-6">
-            <CardTitle>Platform Comparison</CardTitle>
-            <CardDescription>Performance breakdown by platform</CardDescription>
-          </CardHeader>
-          <CardContent className="p-2">
-            <div style={{ height: `${chartHeight}px` }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={getChartData()}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  {availablePlatforms.includes('instagram') && 
-                    <Bar dataKey="instagram" fill="#8884d8" />}
-                  {availablePlatforms.includes('tiktok') && 
-                    <Bar dataKey="tiktok" fill="#82ca9d" />}
-                  {availablePlatforms.includes('twitter') && 
-                    <Bar dataKey="twitter" fill="#ffc658" />}
-                  {availablePlatforms.includes('reddit') && 
-                    <Bar dataKey="reddit" fill="#ff8042" />}
-                  {availablePlatforms.includes('chaturbate') && 
-                    <Bar dataKey="chaturbate" fill="#0088fe" />}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <Button className="ml-auto" variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Download Report
+        </Button>
       </div>
+
+      {/* Time filter toggle group */}
+      <div className="mb-6">
+        <ToggleGroup 
+          type="single" 
+          value={timeFilter}
+          onValueChange={(value) => {
+            if (value) setTimeFilter(value as TimeFilter);
+          }}
+          className="w-full max-w-md mx-auto border border-border rounded-md overflow-hidden"
+        >
+          <ToggleGroupItem value="yesterday" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            Yesterday
+          </ToggleGroupItem>
+          <ToggleGroupItem value="today" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            Today
+          </ToggleGroupItem>
+          <ToggleGroupItem value="week" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            This week
+          </ToggleGroupItem>
+          <ToggleGroupItem value="month" className="flex-1 rounded-none data-[state=on]:bg-blue-600">
+            This month
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {/* Engagement drop warning */}
+      {stats.instagram.trend < -5 || stats.tiktok.trend < -5 || stats.twitter.trend < -5 || stats.reddit.trend < -5 || stats.chaturbate.trend < -5 ? (
+        <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg mb-8">
+          <h3 className="font-bold mb-1">Engagement Drop Warning</h3>
+          <p>Significant engagement drop detected on some platforms. Consider reaching out to this creator.</p>
+        </div>
+      ) : null}
+
+      {/* KPI cards */}
+      {renderKpiCards()}
+
+      {/* AI Performance Summary */}
+      <Card className="mb-8">
+        <CardHeader className="px-6 flex flex-row items-center space-y-0 pb-3">
+          <div>
+            <CardTitle className="flex items-center">
+              <Bot className="h-5 w-5 mr-2 text-blue-500" />
+              AI Performance Summary
+            </CardTitle>
+            <CardDescription>Smart analysis of current metrics</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="px-6 pb-6">
+          <p className="text-sm">{aiSummary}</p>
+        </CardContent>
+      </Card>
+
+      {/* Main Chart */}
+      <Card className="mb-8">
+        <CardHeader className="px-6">
+          <CardTitle>{getChartTitle()}</CardTitle>
+          <CardDescription>{getChartDescription()}</CardDescription>
+        </CardHeader>
+        <CardContent className="p-2">
+          <div style={{ height: `${chartHeight}px` }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={getChartData()}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                {availablePlatforms.includes('instagram') && 
+                  <Area type="monotone" dataKey="instagram" stackId="1" stroke="#8884d8" fill="#8884d8" />}
+                {availablePlatforms.includes('tiktok') && 
+                  <Area type="monotone" dataKey="tiktok" stackId="2" stroke="#82ca9d" fill="#82ca9d" />}
+                {availablePlatforms.includes('twitter') && 
+                  <Area type="monotone" dataKey="twitter" stackId="3" stroke="#ffc658" fill="#ffc658" />}
+                {availablePlatforms.includes('reddit') && 
+                  <Area type="monotone" dataKey="reddit" stackId="4" stroke="#ff8042" fill="#ff8042" />}
+                {availablePlatforms.includes('chaturbate') && 
+                  <Area type="monotone" dataKey="chaturbate" stackId="5" stroke="#0088fe" fill="#0088fe" />}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Monthly Chart */}
+      <Card>
+        <CardHeader className="px-6">
+          <CardTitle>Platform Comparison</CardTitle>
+          <CardDescription>Performance breakdown by platform</CardDescription>
+        </CardHeader>
+        <CardContent className="p-2">
+          <div style={{ height: `${chartHeight}px` }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={getChartData()}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                {availablePlatforms.includes('instagram') && 
+                  <Bar dataKey="instagram" fill="#8884d8" />}
+                {availablePlatforms.includes('tiktok') && 
+                  <Bar dataKey="tiktok" fill="#82ca9d" />}
+                {availablePlatforms.includes('twitter') && 
+                  <Bar dataKey="twitter" fill="#ffc658" />}
+                {availablePlatforms.includes('reddit') && 
+                  <Bar dataKey="reddit" fill="#ff8042" />}
+                {availablePlatforms.includes('chaturbate') && 
+                  <Bar dataKey="chaturbate" fill="#0088fe" />}
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
