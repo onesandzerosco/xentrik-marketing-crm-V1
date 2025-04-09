@@ -69,7 +69,7 @@ const Sidebar = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-brand-yellow hover:text-black"
+                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
               )
             }
           >
@@ -82,7 +82,7 @@ const Sidebar = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-brand-yellow hover:text-black"
+                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
               )
             }
           >
@@ -95,7 +95,7 @@ const Sidebar = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-brand-yellow hover:text-black"
+                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
               )
             }
           >
@@ -109,7 +109,7 @@ const Sidebar = () => {
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                  isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-brand-yellow hover:text-black"
+                  isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
                 )
               }
             >
@@ -123,7 +123,7 @@ const Sidebar = () => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-brand-yellow hover:text-black"
+                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
               )
             }
           >
