@@ -18,6 +18,7 @@ import UserManagement from './pages/UserManagement';
 import Team from './pages/Team';
 import TeamMemberProfile from './pages/TeamMemberProfile';
 import Sidebar from './components/Sidebar';
+import Index from './pages/Index';
 
 function App() {
   return (
@@ -58,7 +59,7 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route 

@@ -71,3 +71,9 @@ export const FILTER_KEYS = {
   SEARCH: 'employee_filter_search',
   SORT: 'employee_filter_sort'
 };
+
+// Helper function to get the mock creators data for component testing
+export const getMockCreators = () => {
+  return [...mockCreators];
+};
+
