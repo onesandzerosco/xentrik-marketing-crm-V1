@@ -68,7 +68,7 @@ const Sidebar = () => {
             to="/dashboard"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-brand-yellow",
                 isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-premium-highlight/30"
               )
             }
@@ -81,7 +81,7 @@ const Sidebar = () => {
             to="/creators"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-brand-yellow",
                 isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-premium-highlight/30"
               )
             }
@@ -94,7 +94,7 @@ const Sidebar = () => {
             to="/team"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-brand-yellow",
                 isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-premium-highlight/30"
               )
             }
@@ -108,7 +108,7 @@ const Sidebar = () => {
               to="/users"
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-brand-yellow",
                   isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-premium-highlight/30"
                 )
               }
@@ -122,7 +122,7 @@ const Sidebar = () => {
             to="/messages"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-foreground",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-brand-yellow",
                 isActive ? "bg-gradient-highlight text-white shadow-premium-highlight" : "hover:bg-premium-highlight/30"
               )
             }
@@ -137,7 +137,7 @@ const Sidebar = () => {
             <div className="border-t border-premium-border pt-4 mb-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-start p-2 hover:bg-premium-highlight/30">
+                  <Button variant="ghost" className="w-full justify-start p-2 hover:bg-premium-highlight/30 hover:text-brand-yellow">
                     <div className="flex items-center gap-3 w-full">
                       <Avatar className="h-9 w-9 border border-premium-accent1/50">
                         <AvatarImage src={user.profileImage} alt={user.username} />
@@ -152,7 +152,7 @@ const Sidebar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-premium-card border border-premium-border shadow-premium-md">
-                  <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer hover:bg-premium-highlight/30">
+                  <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer hover:bg-premium-highlight/30 hover:text-brand-yellow">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Account Settings</span>
                   </DropdownMenuItem>
