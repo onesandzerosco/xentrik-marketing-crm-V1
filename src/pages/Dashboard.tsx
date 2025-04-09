@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useCreators } from "../context/CreatorContext";
 import { useActivities } from "../context/ActivityContext";
 import RecentActivities from "../components/dashboard/RecentActivities";
-import { BarChart, LineChart, PieChart, Activity, TrendingUp } from "lucide-react";
+import { BarChart, LineChart, PieChart, Activity, TrendingUp, Users } from "lucide-react";
 
 const Dashboard = () => {
   const { creators } = useCreators();
