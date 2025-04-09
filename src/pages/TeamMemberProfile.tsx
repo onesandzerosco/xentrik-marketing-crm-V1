@@ -2,57 +2,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "../types/employee";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage,
-  FormDescription 
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import ProfilePicture from "../components/profile/ProfilePicture";
+import { teamMemberFormSchema, TeamMemberFormValues } from "@/schemas/teamMemberSchema";
+
+// Import the refactored components
+import ProfileImageSection from "@/components/team/ProfileImageSection";
+import BasicInfoSection from "@/components/team/BasicInfoSection";
+import TeamAssignmentSection from "@/components/team/TeamAssignmentSection";
+import CreatorsAssignmentSection from "@/components/team/CreatorsAssignmentSection";
+import FormActions from "@/components/team/FormActions";
 
 // Storage key for employees data
 const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
-
-// Mock data for creators that could be assigned to team members
-const mockCreators = [
-  { id: "c1", name: "Creator One" },
-  { id: "c2", name: "Creator Two" },
-  { id: "c3", name: "Creator Three" },
-  { id: "c4", name: "Creator Four" },
-  { id: "c5", name: "Creator Five" },
-];
-
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(["Admin", "Manager", "Employee"]),
-  status: z.enum(["Active", "Inactive", "Paused"]),
-  telegram: z.string().optional(),
-  department: z.string().optional(),
-  permissions: z.array(z.string()).optional(),
-  profileImage: z.string().optional(),
-  teams: z.array(z.enum(["A", "B", "C"])).optional(),
-  assignedCreators: z.array(z.string()).optional()
-});
 
 const TeamMemberProfile = () => {
   const navigate = useNavigate();
@@ -68,8 +35,8 @@ const TeamMemberProfile = () => {
   const isCurrentUser = user?.id === id;
 
   // Form setup
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TeamMemberFormValues>({
+    resolver: zodResolver(teamMemberFormSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -149,7 +116,7 @@ const TeamMemberProfile = () => {
   }, [id, navigate, toast, form]);
 
   // Handle form submission
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = (values: TeamMemberFormValues) => {
     if (!employee) return;
     
     // For current users who are admins, prevent changing their own role
@@ -264,192 +231,31 @@ const TeamMemberProfile = () => {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               <div className="flex gap-6 flex-col sm:flex-row">
-                <div className="flex-shrink-0 flex flex-col items-center">
-                  <ProfilePicture 
-                    profileImage={form.watch("profileImage") || ""}
-                    name={form.watch("name") || employee.name}
-                    setProfileImage={handleProfileImageChange}
-                  />
-                </div>
+                <ProfileImageSection 
+                  profileImage={form.watch("profileImage") || ""}
+                  name={form.watch("name") || employee.name}
+                  handleProfileImageChange={handleProfileImageChange}
+                />
                 
-                <div className="flex-1 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          {isCurrentUser && (
-                            <FormDescription>
-                              You cannot change your own role.
-                            </FormDescription>
-                          )}
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            disabled={isCurrentUser}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Admin">Admin</SelectItem>
-                              <SelectItem value="Manager">Manager</SelectItem>
-                              <SelectItem value="Employee">Employee</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          {isCurrentUser && (
-                            <FormDescription>
-                              You cannot change your own status.
-                            </FormDescription>
-                          )}
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                            disabled={isCurrentUser}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Active">Active</SelectItem>
-                              <SelectItem value="Paused">Paused</SelectItem>
-                              <SelectItem value="Inactive">Inactive</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="telegram"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telegram Username</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="username (without @)" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="department"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Department</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Department" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div>
-                    <FormLabel className="block mb-2">Team Assignment</FormLabel>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {["A", "B", "C"].map((team) => (
-                        <Button
-                          key={team}
-                          type="button"
-                          variant={selectedTeams.includes(team as EmployeeTeam) ? "default" : "outline"}
-                          onClick={() => toggleTeam(team as EmployeeTeam)}
-                          className="flex-1"
-                        >
-                          Team {team}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <FormLabel className="block mb-2">Assigned Creators</FormLabel>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border rounded-md">
-                      {mockCreators.map((creator) => (
-                        <div key={creator.id} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`creator-${creator.id}`}
-                            checked={selectedCreators.includes(creator.id)}
-                            onCheckedChange={() => toggleCreator(creator.id)}
-                          />
-                          <label
-                            htmlFor={`creator-${creator.id}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {creator.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <BasicInfoSection 
+                  control={form.control}
+                  isCurrentUser={isCurrentUser}
+                />
               </div>
               
-              <div className="flex justify-end space-x-4 mt-6">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleBack}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-brand-yellow text-black hover:bg-brand-highlight">
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </Button>
-              </div>
+              <TeamAssignmentSection 
+                selectedTeams={selectedTeams}
+                toggleTeam={toggleTeam}
+              />
+
+              <CreatorsAssignmentSection 
+                selectedCreators={selectedCreators}
+                toggleCreator={toggleCreator}
+              />
+              
+              <FormActions 
+                handleBack={handleBack}
+              />
             </form>
           </Form>
         </div>

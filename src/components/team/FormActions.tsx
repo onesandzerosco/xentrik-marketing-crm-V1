@@ -1,0 +1,30 @@
+
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
+
+interface FormActionsProps {
+  handleBack: () => void;
+}
+
+const FormActions: React.FC<FormActionsProps> = ({
+  handleBack,
+}) => {
+  return (
+    <div className="flex justify-end space-x-4 mt-6">
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={handleBack}
+      >
+        Cancel
+      </Button>
+      <Button type="submit" className="bg-brand-yellow text-black hover:bg-brand-highlight">
+        <Save className="h-4 w-4 mr-2" />
+        Save Changes
+      </Button>
+    </div>
+  );
+};
+
+export default FormActions;
