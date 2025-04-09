@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -13,6 +14,7 @@ import { Gender, Team, CreatorType } from "../types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreators } from "../context/CreatorContext";
 import { useToast } from "@/components/ui/use-toast";
+import ProfilePicture from "../components/profile/ProfilePicture";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -76,28 +78,27 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
           </SheetDescription>
         </SheetHeader>
         <div className="grid gap-4 py-4">
+          {/* Profile Picture Upload Component */}
+          <div className="flex justify-center mb-2">
+            <ProfilePicture 
+              profileImage={profileImage}
+              name={name || "New Creator"}
+              setProfileImage={setProfileImage}
+            />
+          </div>
+
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
             </Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="image" className="text-right">
-              Profile Image URL
-            </Label>
-            <Input
-              id="image"
-              value={profileImage}
-              onChange={(e) => setProfileImage(e.target.value)}
-              className="col-span-3"
-            />
-          </div>
+          
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="gender" className="text-right">
               Gender
             </Label>
-            <Select onValueChange={(value) => setGender(value as Gender)}>
+            <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
@@ -112,7 +113,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             <Label htmlFor="team" className="text-right">
               Team
             </Label>
-            <Select onValueChange={(value) => setTeam(value as Team)}>
+            <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select team" />
               </SelectTrigger>
@@ -127,7 +128,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             <Label htmlFor="creatorType" className="text-right">
               Creator Type
             </Label>
-            <Select onValueChange={(value) => setCreatorType(value as CreatorType)}>
+            <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select creator type" />
               </SelectTrigger>
