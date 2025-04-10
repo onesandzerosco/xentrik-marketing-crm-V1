@@ -54,6 +54,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Check if there's a valid image to display
   const hasImage = Boolean(previewImage && previewImage.trim() !== "");
@@ -146,36 +147,68 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     
     // Make sure we're not losing the image
     if (previewImage && previewImage.trim() !== "") {
-      // Create a data URL from the canvas
-      const canvas = canvasRef.current;
+      // Create a data URL from the canvas without the grid and circular mask
+      const canvas = previewCanvasRef.current;
       if (canvas) {
-        // Get the data URL from the canvas
-        try {
-          const dataUrl = canvas.toDataURL('image/png');
-          
-          // Update the preview image with the adjusted image
-          setPreviewImage(dataUrl);
-          
-          // Pass the image back to the parent component
-          onImageChange(dataUrl);
-        } catch (error) {
-          console.error("Error creating image data URL:", error);
-          
-          // Fallback: just add a timestamp to force refresh
-          const timestamp = new Date().getTime();
-          let updatedImage = previewImage;
-          
-          if (previewImage.includes('?')) {
-            updatedImage = `${previewImage.split('?')[0]}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
-          } else {
-            updatedImage = `${previewImage}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
-          }
-          
-          // Update the preview image with parameters
-          setPreviewImage(updatedImage);
-          
-          // Pass the image back to the parent component
-          onImageChange(updatedImage);
+        const ctx = canvas.getContext('2d');
+        if (ctx && cropImage) {
+          const img = new Image();
+          img.onload = () => {
+            // Calculate dimensions
+            const imgWidth = imageSize.width * scale * zoomLevel[0];
+            const imgHeight = imageSize.height * scale * zoomLevel[0];
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const offsetX = xPosition[0];
+            const offsetY = yPosition[0];
+            
+            const posX = centerX - (imgWidth / 2) + offsetX;
+            const posY = centerY - (imgHeight / 2) + offsetY;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw only the image without any overlays
+            ctx.drawImage(
+              img,
+              posX, 
+              posY, 
+              imgWidth,
+              imgHeight
+            );
+            
+            try {
+              // Get the data URL from the canvas
+              const dataUrl = canvas.toDataURL('image/png');
+              
+              // Update the preview image with the adjusted image
+              setPreviewImage(dataUrl);
+              
+              // Pass the image back to the parent component
+              onImageChange(dataUrl);
+            } catch (error) {
+              console.error("Error creating image data URL:", error);
+              
+              // Fallback: just store the adjustment parameters
+              const timestamp = new Date().getTime();
+              let updatedImage = previewImage;
+              
+              if (previewImage.includes('?')) {
+                updatedImage = `${previewImage.split('?')[0]}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
+              } else {
+                updatedImage = `${previewImage}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
+              }
+              
+              // Update the preview image with parameters
+              setPreviewImage(updatedImage);
+              
+              // Pass the image back to the parent component
+              onImageChange(updatedImage);
+            }
+          };
+          img.src = cropImage;
         }
       }
     }
@@ -288,6 +321,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleFileChange}
       />
 
+      {/* Hidden canvas for saving image without grid */}
+      <canvas ref={previewCanvasRef} className="hidden" />
+
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -304,6 +340,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                   <ImageCropper 
                     src={cropImage} 
                     canvasRef={canvasRef} 
+                    previewCanvasRef={previewCanvasRef}
                     zoomLevel={zoomLevel[0]}
                     xPosition={xPosition[0]}
                     yPosition={yPosition[0]} 
@@ -384,6 +421,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 interface ImageCropperProps {
   src: string;
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  previewCanvasRef: React.RefObject<HTMLCanvasElement>;
   zoomLevel: number;
   xPosition: number;
   yPosition: number;
@@ -393,6 +431,7 @@ interface ImageCropperProps {
 const ImageCropper: React.FC<ImageCropperProps> = ({ 
   src, 
   canvasRef, 
+  previewCanvasRef,
   zoomLevel = 1,
   xPosition = 0,
   yPosition = 0,
@@ -406,8 +445,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   React.useEffect(() => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
+    const previewCanvas = previewCanvasRef.current;
     
-    if (!img || !canvas || !src) return;
+    if (!img || !canvas || !previewCanvas || !src) return;
     
     const drawImageOnCanvas = () => {
       const ctx = canvas.getContext('2d');
@@ -440,7 +480,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       // Save context state
       ctx.save();
       
-      // Create clipping circle
+      // Create clipping circle for preview (visual guide only)
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
       ctx.closePath();
@@ -499,6 +539,22 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.beginPath();
       ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Setup the hidden preview canvas (without grid and guides)
+      previewCanvas.width = size;
+      previewCanvas.height = size;
+      const previewCtx = previewCanvas.getContext('2d');
+      if (previewCtx) {
+        // Draw only the image (no grid, no circular mask)
+        previewCtx.clearRect(0, 0, size, size);
+        previewCtx.drawImage(
+          img,
+          posX, 
+          posY, 
+          imgWidth,
+          imgHeight
+        );
+      }
     };
     
     img.onload = () => {
@@ -533,7 +589,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     
     const intervalId = setInterval(drawImageOnCanvas, 30);
     return () => clearInterval(intervalId);
-  }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, imageSize, onUpdateImageSize]);
+  }, [src, scale, zoomLevel, xPosition, yPosition, canvasRef, previewCanvasRef, imageSize, onUpdateImageSize]);
   
   return (
     <>
