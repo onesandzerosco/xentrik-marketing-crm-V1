@@ -28,7 +28,7 @@ const LockButton: React.FC<LockButtonProps> = ({ onLock }) => {
   };
   
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="absolute bottom-4 right-4">
       <Button 
         variant="destructive" 
         size="sm"
