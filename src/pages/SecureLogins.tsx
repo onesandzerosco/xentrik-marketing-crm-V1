@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreators } from '../context/CreatorContext';
@@ -8,6 +7,7 @@ import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
 import NoCreatorSelected from '../components/secure-logins/NoCreatorSelected';
+import LockButton from '../components/secure-logins/LockButton';
 import { Creator } from '../types';
 
 const SECURE_PASSWORD = "bananas";
@@ -106,6 +106,13 @@ const SecureLogins: React.FC = () => {
     }
   };
   
+  const handleManualLock = () => {
+    // Lock the secure area
+    setAuthorized(false);
+    localStorage.setItem("secure_area_authorized", "false");
+    console.log("Manually locked secure area");
+  };
+  
   if (!authorized) {
     return <AuthForm onAuthenticate={handleAuthentication} securePassword={SECURE_PASSWORD} />;
   }
@@ -136,6 +143,9 @@ const SecureLogins: React.FC = () => {
           <NoCreatorSelected />
         )}
       </div>
+      
+      {/* Add the Lock button */}
+      <LockButton onLock={handleManualLock} />
     </div>
   );
 };
