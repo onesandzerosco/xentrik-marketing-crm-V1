@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -13,20 +14,11 @@ import SocialLinks from "../components/profile/SocialLinks";
 import EngagementStats from "../components/profile/EngagementStats";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import ActionsPanel from "../components/profile/ActionsPanel";
+
 const CreatorProfile = () => {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
-  const {
-    getCreator,
-    updateCreator,
-    getCreatorStats
-  } = useCreators();
-  const {
-    toast
-  } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const { getCreator, updateCreator, getCreatorStats } = useCreators();
+  const { toast } = useToast();
   const creator = getCreator(id!);
   const stats = getCreatorStats(id!);
   const [name, setName] = useState(creator?.name || "");
@@ -42,6 +34,7 @@ const CreatorProfile = () => {
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
   const [storageDialogOpen, setStorageDialogOpen] = useState(false);
+
   const handleSave = () => {
     setNameError(null);
     if (!name.trim()) {
@@ -71,6 +64,7 @@ const CreatorProfile = () => {
       description: "Creator profile has been successfully updated"
     });
   };
+
   if (!creator) {
     return <div className="p-8 w-full">
           <div className="text-center py-12">
@@ -82,6 +76,7 @@ const CreatorProfile = () => {
           </div>
         </div>;
   }
+
   return <div className="p-8 w-full">
         <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <Button variant="ghost" className="h-8 px-2 gap-1">
@@ -121,9 +116,32 @@ const CreatorProfile = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-6">
-            <BasicInformation name={name} setName={setName} nameError={nameError} setNameError={setNameError} gender={gender} setGender={setGender} team={team} setTeam={setTeam} creatorType={creatorType} setCreatorType={setCreatorType} />
+            <BasicInformation 
+              name={name} 
+              setName={setName} 
+              nameError={nameError} 
+              setNameError={setNameError} 
+              gender={gender} 
+              setGender={setGender} 
+              team={team} 
+              setTeam={setTeam} 
+              creatorType={creatorType} 
+              setCreatorType={setCreatorType} 
+            />
             
-            <SocialLinks instagram={instagram} setInstagram={setInstagram} tiktok={tiktok} setTiktok={setTiktok} twitter={twitter} setTwitter={setTwitter} reddit={reddit} setReddit={setReddit} chaturbate={chaturbate} setChaturbate={setChaturbate} />
+            <SocialLinks 
+              instagram={instagram} 
+              setInstagram={setInstagram} 
+              tiktok={tiktok} 
+              setTiktok={setTiktok} 
+              twitter={twitter} 
+              setTwitter={setTwitter} 
+              reddit={reddit} 
+              setReddit={setReddit} 
+              chaturbate={chaturbate} 
+              setChaturbate={setChaturbate}
+              creatorId={creator.id}
+            />
             
             <EngagementStats creatorId={creator.id} stats={stats} />
           </div>
@@ -136,4 +154,5 @@ const CreatorProfile = () => {
         </div>
       </div>;
 };
+
 export default CreatorProfile;

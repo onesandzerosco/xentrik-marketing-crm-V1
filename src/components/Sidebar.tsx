@@ -17,6 +17,7 @@ import {
   LogOut,
   UserCog,
   ChevronDown,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,19 @@ const Sidebar = () => {
           >
             <UserCog className="h-5 w-5" />
             <span>Team</span>
+          </NavLink>
+          
+          <NavLink
+            to="/secure-logins"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
+                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
+              )
+            }
+          >
+            <Lock className="h-5 w-5" />
+            <span>Secure Logins</span>
           </NavLink>
           
           {isAdmin && (

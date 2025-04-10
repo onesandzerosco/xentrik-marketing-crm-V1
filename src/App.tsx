@@ -17,6 +17,7 @@ import NotFound from './pages/NotFound';
 import UserManagement from './pages/UserManagement';
 import Team from './pages/Team';
 import TeamMemberProfile from './pages/TeamMemberProfile';
+import SecureLogins from './pages/SecureLogins';
 import Sidebar from './components/Sidebar';
 import Index from './pages/Index';
 
@@ -123,6 +124,22 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <CreatorAnalytics />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/secure-logins" 
+        element={
+          <ProtectedRoute>
+            <SecureLogins />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/secure-logins/:id" 
+        element={
+          <ProtectedRoute>
+            <SecureLogins />
           </ProtectedRoute>
         } 
       />
