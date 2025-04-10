@@ -19,6 +19,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Authentication attempt with password:", password);
+    console.log("Secure password:", securePassword);
+    
     if (password === securePassword) {
       onAuthenticate(true);
       setPasswordError("");
@@ -26,6 +29,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
         title: "Access Granted",
         description: "You now have access to secure login details",
       });
+      console.log("Authentication successful");
     } else {
       setPasswordError("Incorrect password");
       toast({
@@ -33,6 +37,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
         description: "The password is incorrect",
         variant: "destructive",
       });
+      console.log("Authentication failed: incorrect password");
     }
   };
 

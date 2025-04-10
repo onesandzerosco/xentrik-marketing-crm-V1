@@ -18,7 +18,12 @@ const SecureLogins: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [authorized, setAuthorized] = useState(false);
+  const [authorized, setAuthorized] = useState(() => {
+    // Check if the user is already authorized from localStorage
+    const savedAuth = localStorage.getItem("secure_area_authorized");
+    return savedAuth === "true";
+  });
+  
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   
   const { 
@@ -27,26 +32,43 @@ const SecureLogins: React.FC = () => {
     saveLoginDetails 
   } = useSecureLogins();
   
+  console.log("Auth state:", authorized);
+  console.log("Current creator ID from params:", id);
+  console.log("Available creators:", creators);
+  
   // Update selected creator when id param changes or after authorization
   useEffect(() => {
-    if (authorized && id) {
-      const creator = creators.find(c => c.id === id);
-      if (creator) {
-        setSelectedCreator(creator);
+    if (authorized) {
+      if (id) {
+        const creator = creators.find(c => c.id === id);
+        if (creator) {
+          console.log("Setting selected creator from URL param:", creator.name);
+          setSelectedCreator(creator);
+        } else if (creators.length > 0) {
+          // If no creator is found but creators exist, select the first one
+          console.log("Creator ID not found, selecting first creator");
+          setSelectedCreator(creators[0]);
+          navigate(`/secure-logins/${creators[0].id}`);
+        }
       } else if (creators.length > 0) {
-        // If no creator is selected but creators exist, select the first one
+        // If we're authorized but no ID in URL, select the first creator
+        console.log("No ID in URL, selecting first creator");
         setSelectedCreator(creators[0]);
         navigate(`/secure-logins/${creators[0].id}`);
       }
-    } else if (authorized && creators.length > 0 && !id) {
-      // If we're authorized but no ID in URL, select the first creator
-      setSelectedCreator(creators[0]);
-      navigate(`/secure-logins/${creators[0].id}`);
     }
   }, [id, authorized, creators, navigate]);
 
   const handleAuthentication = (isAuthenticated: boolean) => {
+    console.log("Authentication result:", isAuthenticated);
     setAuthorized(isAuthenticated);
+    // Save auth state to localStorage
+    localStorage.setItem("secure_area_authorized", isAuthenticated.toString());
+    
+    // If authentication was successful and we have creators, navigate to the first one
+    if (isAuthenticated && creators.length > 0 && !id) {
+      navigate(`/secure-logins/${creators[0].id}`);
+    }
   };
   
   const handleCreatorSelect = (creatorId: string) => {
