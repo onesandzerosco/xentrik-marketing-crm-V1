@@ -111,7 +111,7 @@ const SecureLogins: React.FC = () => {
   
   if (!authorized) {
     return (
-      <div className="container mx-auto p-8">
+      <div className="container mx-auto flex items-center justify-center h-[calc(100vh-4rem)]">
         <Card className="w-full max-w-md mx-auto bg-card shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center gap-2">
@@ -192,24 +192,24 @@ const SecureLogins: React.FC = () => {
               <CardContent>
                 <Tabs defaultValue="instagram">
                   <TabsList className="mb-4">
-                    {Object.keys(selectedCreator.socialLinks)
-                      .filter(platform => selectedCreator.socialLinks[platform])
-                      .map(platform => (
+                    {Object.entries(selectedCreator.socialLinks)
+                      .filter(([_, url]) => url)
+                      .map(([platform, _]) => (
                         <TabsTrigger key={platform} value={platform} className="capitalize">
                           {platform}
                         </TabsTrigger>
                       ))}
                   </TabsList>
                   
-                  {Object.keys(selectedCreator.socialLinks)
-                    .filter(platform => selectedCreator.socialLinks[platform])
-                    .map(platform => (
+                  {Object.entries(selectedCreator.socialLinks)
+                    .filter(([_, url]) => url)
+                    .map(([platform, url]) => (
                       <TabsContent key={platform} value={platform}>
                         <div className="space-y-4">
                           <div>
                             <Label>Account URL</Label>
                             <div className="p-2 border rounded mt-1 bg-muted/30">
-                              {selectedCreator.socialLinks[platform]}
+                              {url}
                             </div>
                           </div>
                           
