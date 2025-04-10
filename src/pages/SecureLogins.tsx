@@ -19,7 +19,7 @@ const SecureLogins: React.FC = () => {
   const { toast } = useToast();
   
   const [authorized, setAuthorized] = useState(() => {
-    // Check if the user is already authorized from localStorage
+    // Initial authorization check now using localStorage directly
     const savedAuth = localStorage.getItem("secure_area_authorized");
     return savedAuth === "true";
   });
@@ -29,9 +29,24 @@ const SecureLogins: React.FC = () => {
   const { 
     getLoginDetailsForCreator, 
     updateLoginDetail, 
-    saveLoginDetails 
+    saveLoginDetails,
+    checkAutoLock 
   } = useSecureLogins();
   
+  // Check for auto-lock on initial load and on return to this page
+  useEffect(() => {
+    const isStillAuthorized = checkAutoLock();
+    if (authorized && !isStillAuthorized) {
+      setAuthorized(false);
+      toast({
+        title: "Session Expired",
+        description: "Your secure session has timed out due to inactivity",
+        variant: "destructive",
+      });
+    }
+  }, [authorized, checkAutoLock, toast]);
+  
+  // Log authentication state for debugging
   console.log("Auth state:", authorized);
   console.log("Current creator ID from params:", id);
   console.log("Available creators:", creators);
