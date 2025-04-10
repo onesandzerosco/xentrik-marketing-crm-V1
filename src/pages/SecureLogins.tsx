@@ -53,9 +53,17 @@ const SecureLogins: React.FC = () => {
       const creator = creators.find(c => c.id === id);
       if (creator) {
         setSelectedCreator(creator);
+      } else if (creators.length > 0) {
+        // If no creator is selected but creators exist, select the first one
+        setSelectedCreator(creators[0]);
+        navigate(`/secure-logins/${creators[0].id}`);
       }
+    } else if (authorized && creators.length > 0 && !id) {
+      // If we're authorized but no ID in URL, select the first creator
+      setSelectedCreator(creators[0]);
+      navigate(`/secure-logins/${creators[0].id}`);
     }
-  }, [id, authorized, creators]);
+  }, [id, authorized, creators, navigate]);
 
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
