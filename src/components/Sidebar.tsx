@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +25,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Preload the logo image
+const logoUrl = "/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png";
+const preloadImage = (src: string) => {
+  const img = new Image();
+  img.src = src;
+  return img;
+};
+
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,6 +40,18 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
   const { logout, user } = useAuth();
   const isAdmin = user?.role === "Admin";
+  const [logoLoaded, setLogoLoaded] = useState(false);
+
+  // Preload the logo image when component mounts
+  useEffect(() => {
+    const img = preloadImage(logoUrl);
+    img.onload = () => setLogoLoaded(true);
+    
+    // If the image is already cached, it might be loaded immediately
+    if (img.complete) {
+      setLogoLoaded(true);
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -54,10 +74,18 @@ const Sidebar = () => {
   return (
     <div className="fixed h-screen w-60 premium-sidebar">
       <div className="flex h-20 items-center justify-center pt-5 pb-2">
+        {/* Use inline SVG as a placeholder while image loads */}
+        {!logoLoaded && (
+          <div className="h-[67.5px] w-auto bg-premium-dark/20 animate-pulse rounded"></div>
+        )}
         <img
-          src="/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png"
+          src={logoUrl}
           alt="Xentrik Marketing"
-          className="h-[67.5px] w-auto object-contain"
+          className={cn(
+            "h-[67.5px] w-auto object-contain transition-opacity duration-300",
+            logoLoaded ? "opacity-100" : "opacity-0"
+          )}
+          style={{ willChange: "transform" }} // Add will-change to optimize rendering
         />
       </div>
       
