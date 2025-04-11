@@ -40,7 +40,7 @@ const CreatorProfile = () => {
 
   // Load assigned team members when the creator loads
   useEffect(() => {
-    if (creator?.assignedTeamMembers) {
+    if (creator?.assignedTeamMembers && creator.assignedTeamMembers.length > 0) {
       try {
         const savedEmployees = localStorage.getItem('team_employees_data');
         if (savedEmployees) {
@@ -92,6 +92,24 @@ const CreatorProfile = () => {
       title: "Profile Updated",
       description: "Creator profile has been successfully updated"
     });
+  };
+
+  // Function to handle team member assignments from ActionsPanel
+  const handleAssignTeamMembers = (members: Employee[]) => {
+    setAssignedMembers(members);
+    
+    // Immediately save the changes to ensure persistence
+    if (creator) {
+      const memberIds = members.map(member => member.id);
+      updateCreator(creator.id, {
+        assignedTeamMembers: memberIds
+      });
+      
+      toast({
+        title: "Team Members Assigned",
+        description: `${members.length} team members assigned to ${creator.name}`
+      });
+    }
   };
 
   if (!creator) {
@@ -195,7 +213,7 @@ const CreatorProfile = () => {
             setNeedsReview={setNeedsReview} 
             creatorId={creator.id}
             assignedMembers={assignedMembers}
-            onAssignMembers={setAssignedMembers}
+            onAssignMembers={handleAssignTeamMembers}
           />
         </div>
       </div>

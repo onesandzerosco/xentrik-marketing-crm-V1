@@ -50,25 +50,25 @@ const TeamMemberAssignmentDialog: React.FC<TeamMemberAssignmentDialogProps> = ({
     selectedMembers.map(member => member.id)
   );
 
+  // Update team members and selected IDs when dialog opens or selected members change
   useEffect(() => {
     if (open) {
-      setTeamMembers(getTeamMembers());
+      const members = getTeamMembers();
+      setTeamMembers(members);
       setSelectedIds(selectedMembers.map(member => member.id));
     }
   }, [open, selectedMembers]);
 
   const handleSave = () => {
+    // Get the full employee objects for the selected IDs
     const selectedTeamMembers = teamMembers.filter(member => 
       selectedIds.includes(member.id)
     );
     
+    // Call the onAssign callback with the selected team members
     onAssign(selectedTeamMembers);
     
-    toast({
-      title: "Team members assigned",
-      description: `${selectedTeamMembers.length} team member(s) assigned to creator`
-    });
-    
+    // Close the dialog
     onOpenChange(false);
   };
 
@@ -130,9 +130,9 @@ const TeamMemberAssignmentDialog: React.FC<TeamMemberAssignmentDialogProps> = ({
             Cancel
           </Button>
           <Button 
-            variant="premium" 
+            className="text-black rounded-[15px] px-3 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+            variant="default"
             onClick={handleSave}
-            className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
           >
             Save Assignments
           </Button>
