@@ -22,7 +22,18 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
   onAddEmployeeClick,
   onDeactivateClick,
 }) => {
-  if (employees.length === 0) {
+  // Sort employees to place current user first
+  const sortedEmployees = React.useMemo(() => {
+    if (!currentUserId) return employees;
+    
+    return [...employees].sort((a, b) => {
+      if (a.id === currentUserId) return -1;
+      if (b.id === currentUserId) return 1;
+      return 0;
+    });
+  }, [employees, currentUserId]);
+
+  if (sortedEmployees.length === 0) {
     return (
       <div className="text-center py-12 bg-background">
         <h3 className="text-lg font-medium mb-2">No team members found</h3>
@@ -43,7 +54,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {employees.map((employee) => (
+      {sortedEmployees.map((employee) => (
         <EmployeeCard 
           key={employee.id} 
           employee={employee} 
