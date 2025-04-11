@@ -1,0 +1,35 @@
+
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+interface PasswordInputProps {
+  password: string;
+  setPassword: (password: string) => void;
+  error?: string;
+}
+
+const PasswordInput: React.FC<PasswordInputProps> = ({ 
+  password, 
+  setPassword, 
+  error 
+}) => {
+  return (
+    <div className="flex flex-col space-y-1.5">
+      <Label htmlFor="password">Password</Label>
+      <Input 
+        id="password"
+        type="password"
+        placeholder="Enter password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className={error ? 'border-red-500 focus:border-red-500' : ''}
+      />
+      {error && (
+        <p className="text-sm text-red-500 mt-1">{error}</p>
+      )}
+    </div>
+  );
+};
+
+export default PasswordInput;

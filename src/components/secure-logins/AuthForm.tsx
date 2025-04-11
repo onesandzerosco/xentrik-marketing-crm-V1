@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { LockKeyhole } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import AuthFormHeader from './auth/AuthFormHeader';
+import PasswordInput from './auth/PasswordInput';
 
 interface AuthFormProps {
   onAuthenticate: (isAuthenticated: boolean) => void;
@@ -43,36 +45,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
 
   return (
     <div className="container mx-auto flex items-center justify-center h-[calc(100vh-4rem)]">
-      <Card className="w-full max-w-md mx-auto bg-card shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl flex items-center gap-2">
-            <LockKeyhole className="w-6 h-6" />
-            Secure Area
-          </CardTitle>
-          <CardDescription>
-            Enter the password to access creator login details
-          </CardDescription>
-        </CardHeader>
+      <Card className="w-full max-w-md mx-auto bg-card shadow-premium-md">
+        <AuthFormHeader />
         <form onSubmit={handlePasswordSubmit}>
           <CardContent>
             <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {passwordError && (
-                  <p className="text-sm text-red-500 mt-1">{passwordError}</p>
-                )}
-              </div>
+              <PasswordInput 
+                password={password}
+                setPassword={setPassword}
+                error={passwordError}
+              />
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full">
+            <Button type="submit" variant="premium" className="w-full rounded-sm shadow-premium-yellow">
               Authenticate
             </Button>
           </CardFooter>

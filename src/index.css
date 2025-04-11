@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -282,7 +283,7 @@
   /* Premium button styles */
   .premium-button {
     @apply bg-gradient-premium-yellow text-black font-medium rounded-sm shadow-premium-yellow 
-    hover:shadow-premium-md transition-all duration-300;
+    hover:shadow-premium-md transition-all duration-300 transform hover:-translate-y-1;
   }
   
   .premium-button-outline {
