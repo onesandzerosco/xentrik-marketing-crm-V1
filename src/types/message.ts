@@ -6,3 +6,9 @@ export interface Recipient {
   role?: string;
   type: 'creator' | 'employee';
 }
+
+export interface MessagePayload {
+  message: string;
+  recipients: Recipient[];
+  timestamp: string;
+}

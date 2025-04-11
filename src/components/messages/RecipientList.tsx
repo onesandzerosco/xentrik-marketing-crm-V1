@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Filter, User } from 'lucide-react';
+import { Search, Filter, User, Check } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Recipient } from '@/types/message';
 
 interface RecipientListProps {
   recipients: Recipient[];
-  selectedRecipientId: string;
+  selectedRecipientIds: string[];
   onSelectRecipient: (id: string) => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -21,7 +21,7 @@ interface RecipientListProps {
 
 const RecipientList: React.FC<RecipientListProps> = ({
   recipients,
-  selectedRecipientId,
+  selectedRecipientIds,
   onSelectRecipient,
   searchTerm,
   onSearchChange,
@@ -32,15 +32,18 @@ const RecipientList: React.FC<RecipientListProps> = ({
   const recipientTypeTags = ["Team", "Creator"];
 
   return (
-    <Card className="md:col-span-1 flex flex-col h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl">Recipients</CardTitle>
+    <Card className="md:col-span-1 flex flex-col h-full bg-background border border-border/40 shadow-md">
+      <CardHeader className="pb-2 space-y-2">
+        <CardTitle className="text-xl flex items-center gap-2">
+          <User className="h-5 w-5 text-primary" />
+          Recipients
+        </CardTitle>
         <CardDescription>
-          Select a team member or creator to send a WhatsApp message
+          Select one or more recipients to send a WhatsApp message
         </CardDescription>
         
         {/* Filter by type */}
-        <div className="mt-2 mb-4">
+        <div className="mt-2">
           <div className="flex items-center mb-2">
             <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
             <span className="text-sm font-medium">Filter by type</span>
@@ -58,48 +61,64 @@ const RecipientList: React.FC<RecipientListProps> = ({
           <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search recipients..."
-            className="pl-9"
+            className="pl-9 bg-background border border-input/60 focus:border-primary/30 transition-all"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
+
+        {selectedRecipientIds.length > 0 && (
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-sm text-muted-foreground">
+              {selectedRecipientIds.length} recipient{selectedRecipientIds.length > 1 ? 's' : ''} selected
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden px-2 pb-0">
         <ScrollArea className="h-[calc(100vh-350px)]">
           <div className="space-y-1 px-1 py-2">
-            {recipients.map((recipient) => (
-              <button
-                key={`recipient-${recipient.id}`}
-                className={`w-full text-left px-3 py-3 rounded-lg transition-colors flex items-center gap-3 ${
-                  selectedRecipientId === recipient.id 
-                    ? 'bg-accent text-accent-foreground' 
-                    : 'hover:bg-muted'
-                }`}
-                onClick={() => onSelectRecipient(recipient.id)}
-              >
-                <div className="relative">
-                  <Avatar>
-                    <AvatarImage src={recipient.profileImage || ""} alt={recipient.name} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium truncate">{recipient.name}</p>
+            {recipients.map((recipient) => {
+              const isSelected = selectedRecipientIds.includes(recipient.id);
+              return (
+                <button
+                  key={`recipient-${recipient.id}`}
+                  className={`w-full text-left px-3 py-3 rounded-lg transition-all flex items-center gap-3 ${
+                    isSelected 
+                      ? 'bg-[#222] text-white' 
+                      : 'hover:bg-muted'
+                  }`}
+                  onClick={() => onSelectRecipient(recipient.id)}
+                >
+                  <div className="relative">
+                    <Avatar className="border border-border/40">
+                      <AvatarImage src={recipient.profileImage || ""} alt={recipient.name} />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    {isSelected && (
+                      <div className="absolute -top-1 -right-1 bg-primary rounded-full p-0.5">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <p className="text-sm text-muted-foreground truncate">
-                      {recipient.role || "Team Member"}
-                    </p>
-                    <Badge variant="outline" className="ml-1 text-xs">
-                      {recipient.type === 'creator' ? 'Creator' : 'Team'}
-                    </Badge>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium truncate">{recipient.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground truncate">
+                        {recipient.role || "Team Member"}
+                      </p>
+                      <Badge variant={recipient.type === 'creator' ? 'default' : 'secondary'} className="ml-1 text-xs">
+                        {recipient.type === 'creator' ? 'Creator' : 'Team'}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </ScrollArea>
       </CardContent>

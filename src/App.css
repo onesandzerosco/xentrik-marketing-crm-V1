@@ -117,13 +117,14 @@ html, div, main, section, article, aside, nav {
 }
 
 .recipient-item:hover {
-  background-color: hsl(var(--secondary)/0.2);
+  background-color: hsl(var(--muted));
   transform: translateY(-2px);
 }
 
 .recipient-item.selected {
-  background-color: hsl(var(--secondary)/0.3);
-  border-color: hsl(var(--secondary)/0.5);
+  background-color: #222;
+  color: white;
+  border-color: hsl(var(--border));
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -200,9 +201,9 @@ html, div, main, section, article, aside, nav {
 
 /* Premium search field */
 .search-field {
-  background-color: hsl(var(--secondary)/0.1);
+  background-color: hsl(var(--background));
   border: 1px solid hsl(var(--border));
-  border-radius: 15px;
+  border-radius: 8px;
   padding: 0.5rem 1rem;
   transition: all 0.3s ease;
 }
@@ -210,4 +211,48 @@ html, div, main, section, article, aside, nav {
 .search-field:focus {
   border-color: hsl(var(--primary));
   box-shadow: 0 0 0 2px hsl(var(--primary)/0.2);
+}
+
+/* Multiple recipient chip styles */
+.recipient-chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: hsl(var(--secondary)/0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s ease;
+}
+
+.recipient-chip:hover {
+  background-color: hsl(var(--secondary)/0.2);
+}
+
+.recipient-chip .remove-btn {
+  margin-left: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.recipient-chip .remove-btn:hover {
+  opacity: 1;
+}
+
+/* Recipient selection indicator */
+.selection-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: hsl(var(--primary));
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
@@ -9,7 +8,7 @@ import MessageComposer from '@/components/messages/MessageComposer';
 import WebhookConfig from '@/components/messages/WebhookConfig';
 import { useCreators } from '../context/CreatorContext';
 import { mockEmployees } from '@/data/mockEmployees';
-import { Recipient } from '@/types/message';
+import { Recipient, MessagePayload } from '@/types/message';
 
 const Messages: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ const Messages: React.FC = () => {
   const { creators } = useCreators();
   
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [selectedRecipientId, setSelectedRecipientId] = useState<string>("");
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,11 +50,26 @@ const Messages: React.FC = () => {
     }
   }, [creators]);
 
+  const handleSelectRecipient = (id: string) => {
+    setSelectedRecipientIds(prev => {
+      // If already selected, remove it
+      if (prev.includes(id)) {
+        return prev.filter(recipientId => recipientId !== id);
+      }
+      // Otherwise add it
+      return [...prev, id];
+    });
+  };
+
+  const handleRemoveRecipient = (id: string) => {
+    setSelectedRecipientIds(prev => prev.filter(recipientId => recipientId !== id));
+  };
+
   const handleSendMessage = async () => {
-    if (!selectedRecipientId) {
+    if (selectedRecipientIds.length === 0) {
       toast({
-        title: "No recipient selected",
-        description: "Please select a recipient for your message",
+        title: "No recipients selected",
+        description: "Please select at least one recipient for your message",
         variant: "destructive"
       });
       return;
@@ -79,37 +93,37 @@ const Messages: React.FC = () => {
       return;
     }
 
-    const recipient = recipients.find(r => r.id === selectedRecipientId);
-    if (!recipient) return;
+    const selectedRecipients = recipients.filter(r => selectedRecipientIds.includes(r.id));
+    if (selectedRecipients.length === 0) return;
 
     setIsLoading(true);
 
     try {
-      // Call the n8n webhook with the message and recipient details
+      // Prepare message payload
+      const payload: MessagePayload = {
+        message: message,
+        recipients: selectedRecipients,
+        timestamp: new Date().toISOString()
+      };
+
+      // Call the n8n webhook with the message and recipients details
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         mode: "no-cors", // Handle CORS issues
-        body: JSON.stringify({
-          message: message,
-          recipient: {
-            id: recipient.id,
-            name: recipient.name,
-            role: recipient.role || "Team Member"
-          },
-          timestamp: new Date().toISOString()
-        }),
+        body: JSON.stringify(payload),
       });
 
       toast({
         title: "Message sent",
-        description: `Your message has been sent to ${recipient.name} via WhatsApp`
+        description: `Your message has been sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? 's' : ''} via WhatsApp`
       });
       
       // Clear the message input after successful send
       setMessage("");
+      // Keep the recipients selected for possible follow-up messages
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -153,11 +167,11 @@ const Messages: React.FC = () => {
     return matchesSearch && matchesType;
   });
 
-  // Get the selected recipient object
-  const selectedRecipient = recipients.find(r => r.id === selectedRecipientId);
+  // Get the selected recipients as objects
+  const selectedRecipients = recipients.filter(r => selectedRecipientIds.includes(r.id));
 
   return (
-    <div className="flex min-h-screen w-full bg-premium-darker">
+    <div className="flex min-h-screen w-full bg-background">
       <div className="flex-grow flex flex-col p-6 w-full max-w-[1400px] mx-auto">
         <div className="flex items-center gap-3 mb-8 animate-fade-in">
           <Button 
@@ -179,8 +193,8 @@ const Messages: React.FC = () => {
           {/* Recipients List */}
           <RecipientList 
             recipients={filteredRecipients}
-            selectedRecipientId={selectedRecipientId}
-            onSelectRecipient={setSelectedRecipientId}
+            selectedRecipientIds={selectedRecipientIds}
+            onSelectRecipient={handleSelectRecipient}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             selectedTags={selectedTags}
@@ -189,10 +203,11 @@ const Messages: React.FC = () => {
 
           {/* Message Composer */}
           <MessageComposer 
-            selectedRecipient={selectedRecipient}
+            selectedRecipients={selectedRecipients}
             message={message}
             onMessageChange={setMessage}
             onSendMessage={handleSendMessage}
+            onRemoveRecipient={handleRemoveRecipient}
             isLoading={isLoading}
           />
         </div>
