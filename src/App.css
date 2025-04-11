@@ -109,3 +109,105 @@ html, div, main, section, article, aside, nav {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Premium messaging styles */
+.recipient-item {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.recipient-item:hover {
+  background-color: hsl(var(--secondary)/0.2);
+  transform: translateY(-2px);
+}
+
+.recipient-item.selected {
+  background-color: hsl(var(--secondary)/0.3);
+  border-color: hsl(var(--secondary)/0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced messaging UI */
+.message-container {
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.message-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.message-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 1rem;
+}
+
+.message-footer {
+  border-top: 1px solid hsl(var(--border));
+  padding: 0.75rem 1rem;
+}
+
+/* Recipients list styling */
+.recipients-list {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+/* WhatsApp bubble styling */
+.whatsapp-bubble {
+  position: relative;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.whatsapp-bubble.outgoing {
+  background-color: #dcf8c6;
+  color: #000;
+  margin-left: auto;
+}
+
+.whatsapp-bubble.incoming {
+  background-color: #fff;
+  color: #000;
+  margin-right: auto;
+}
+
+.whatsapp-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.whatsapp-bubble.outgoing::after {
+  border-left-color: #dcf8c6;
+  border-right: 0;
+  right: -8px;
+  top: 10px;
+}
+
+.whatsapp-bubble.incoming::after {
+  border-right-color: #fff;
+  border-left: 0;
+  left: -8px;
+  top: 10px;
+}
+
+/* Premium search field */
+.search-field {
+  background-color: hsl(var(--secondary)/0.1);
+  border: 1px solid hsl(var(--border));
+  border-radius: 15px;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-field:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary)/0.2);
+}

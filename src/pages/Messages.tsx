@@ -157,20 +157,20 @@ const Messages: React.FC = () => {
   const selectedRecipient = recipients.find(r => r.id === selectedRecipientId);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-premium-darker">
       <div className="flex-grow flex flex-col p-6 w-full max-w-[1400px] mx-auto">
         <div className="flex items-center gap-3 mb-8 animate-fade-in">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="rounded-full hover:bg-premium-highlight/20"
+            className="rounded-full hover:bg-secondary/20"
             onClick={() => navigate(-1)}
           >
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Go back</span>
           </Button>
-          <h1 className="text-3xl font-bold flex items-center">
-            <MessageSquare className="mr-3 text-muted-foreground" />
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <MessageSquare className="h-7 w-7 text-primary" />
             WhatsApp Messages
           </h1>
         </div>
