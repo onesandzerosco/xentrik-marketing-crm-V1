@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -13,7 +12,6 @@ import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
 
-// Storage key for employees data
 const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
 
 const Team = () => {
@@ -25,9 +23,7 @@ const Team = () => {
   } = useAuth();
   const isAdmin = user?.role === "Admin";
 
-  // State for employees and filters
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    // Try to load from localStorage first
     const savedEmployees = localStorage.getItem(EMPLOYEES_STORAGE_KEY);
     if (savedEmployees) {
       try {
@@ -44,17 +40,14 @@ const Team = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("nameAsc");
 
-  // State for modals
   const [addEmployeeOpen, setAddEmployeeOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
 
-  // Save employees to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(EMPLOYEES_STORAGE_KEY, JSON.stringify(employees));
   }, [employees]);
 
-  // Load saved filters from localStorage
   useEffect(() => {
     const savedSearch = localStorage.getItem(FILTER_KEYS.SEARCH);
     const savedSort = localStorage.getItem(FILTER_KEYS.SORT);
@@ -62,16 +55,13 @@ const Team = () => {
     if (savedSort) setSortOption(savedSort);
   }, []);
 
-  // Save filters to localStorage when they change
   useEffect(() => {
     localStorage.setItem(FILTER_KEYS.SEARCH, searchQuery);
     localStorage.setItem(FILTER_KEYS.SORT, sortOption);
   }, [searchQuery, sortOption]);
 
-  // Filter and sort employees
   const filteredEmployees = filterAndSortEmployees(employees, selectedRoles, searchQuery, sortOption);
 
-  // Handle adding a new employee
   const handleAddEmployee = (newEmployee: Omit<Employee, "id">) => {
     const employeeWithId = {
       ...newEmployee,
@@ -84,7 +74,6 @@ const Team = () => {
     });
   };
 
-  // Handle updating an employee
   const handleUpdateEmployee = (id: string, updates: Partial<Employee>) => {
     setEmployees(employees.map(employee => employee.id === id ? {
       ...employee,
@@ -96,7 +85,6 @@ const Team = () => {
     });
   };
 
-  // Handle deactivating an employee
   const handleDeactivate = () => {
     if (selectedEmployee) {
       handleUpdateEmployee(selectedEmployee.id, {
@@ -123,7 +111,7 @@ const Team = () => {
         {isAdmin && <Button 
           onClick={() => setAddEmployeeOpen(true)} 
           variant="premium" 
-          className="rounded-sm shadow-premium-yellow">
+          className="shadow-premium-yellow">
             <Plus className="h-4 w-4 mr-2" />
             Add Team Member
           </Button>}

@@ -200,7 +200,13 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             >
               Cancel
             </Button>
-            <Button type="submit">Add Team Member</Button>
+            <Button 
+              type="submit"
+              variant="premium"
+              className="shadow-premium-yellow"
+            >
+              Add Team Member
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

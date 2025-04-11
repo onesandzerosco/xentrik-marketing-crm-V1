@@ -137,7 +137,8 @@ const Creators = () => {
           </Sheet>
           <Button 
             onClick={() => setOnboardingOpen(true)}
-            className="bg-brand-yellow text-black hover:bg-brand-highlight"
+            variant="premium"
+            className="shadow-premium-yellow"
           >
             <Plus className="h-4 w-4 mr-2" />
             Onboard Creator
@@ -214,7 +215,8 @@ const Creators = () => {
           <p className="text-muted-foreground mb-4">Try changing your filters or add a new creator</p>
           <Button 
             onClick={() => setOnboardingOpen(true)}
-            className="bg-brand-yellow text-black hover:bg-brand-highlight"
+            variant="premium"
+            className="shadow-premium-yellow"
           >
             <Plus className="h-4 w-4 mr-2" />
             Onboard Creator

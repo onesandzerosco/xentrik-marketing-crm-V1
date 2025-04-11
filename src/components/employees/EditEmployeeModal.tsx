@@ -163,7 +163,13 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-brand-yellow text-black hover:bg-brand-highlight">Save Changes</Button>
+              <Button 
+                type="submit" 
+                variant="premium"
+                className="shadow-premium-yellow"
+              >
+                Save Changes
+              </Button>
             </DialogFooter>
           </form>
         </Form>

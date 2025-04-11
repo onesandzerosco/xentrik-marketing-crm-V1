@@ -139,7 +139,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             </Select>
           </div>
         </div>
-        <Button onClick={handleSubmit}>Submit</Button>
+        <Button 
+          onClick={handleSubmit} 
+          variant="premium"
+          className="shadow-premium-yellow"
+        >
+          Submit
+        </Button>
       </SheetContent>
     </Sheet>
   );
