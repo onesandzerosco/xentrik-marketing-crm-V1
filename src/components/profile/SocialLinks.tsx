@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Lock, Instagram, Twitter, FileText, Music } from "lucide-react";
+import { ExternalLink, Lock, Instagram, Twitter, Music, Reddit } from "lucide-react";
 
 interface SocialLinksProps {
   instagram: string;
@@ -124,7 +124,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
         
         <div>
           <Label htmlFor="reddit" className="flex items-center gap-1.5">
-            <FileText className="h-4 w-4 text-orange-600" /> Reddit
+            <Reddit className="h-4 w-4 text-orange-600" /> Reddit
           </Label>
           <div className="flex gap-2">
             <Input 
