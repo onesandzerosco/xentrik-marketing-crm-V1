@@ -58,8 +58,8 @@
 }
 
 .message-outgoing {
-  background-color: hsl(var(--brand-yellow));
-  color: #000;
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
   border-top-right-radius: 0.25rem;
 }
 

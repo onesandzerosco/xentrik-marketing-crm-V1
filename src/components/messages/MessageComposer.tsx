@@ -32,7 +32,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
   isLoading
 }) => {
   return (
-    <Card className="md:col-span-2 flex flex-col h-full">
+    <Card className="md:col-span-2 flex flex-col h-full shadow-premium-md border-premium-border">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl">Send WhatsApp Message</CardTitle>
         <CardDescription>
@@ -45,8 +45,8 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
           <>
             <div className="mb-4">
               <label className="text-sm font-medium mb-1 block">Recipient</label>
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                <Avatar className="h-8 w-8">
+              <div className="flex items-center gap-2 p-3 bg-premium-card rounded-[15px] border border-premium-border shadow-premium-sm">
+                <Avatar className="h-10 w-10">
                   <AvatarImage src={selectedRecipient.profileImage || ""} alt={selectedRecipient.name} />
                   <AvatarFallback>
                     <User className="h-4 w-4" />
@@ -64,14 +64,14 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
               </div>
             </div>
 
-            <div className="mb-4 flex-grow">
-              <label htmlFor="message" className="text-sm font-medium mb-1 block">
+            <div className="mb-6 flex-grow">
+              <label htmlFor="message" className="text-sm font-medium mb-2 block">
                 Message
               </label>
               <Textarea 
                 id="message"
                 placeholder="Type your WhatsApp message here..."
-                className="resize-none h-[calc(100vh-400px)]"
+                className="resize-none h-[calc(100vh-450px)] bg-premium-darker border-premium-border focus:border-premium-accent1 focus:ring-1 focus:ring-premium-accent1/50 rounded-[15px] shadow-premium-inner"
                 value={message}
                 onChange={(e) => onMessageChange(e.target.value)}
               />
@@ -79,7 +79,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
             <Button 
               onClick={onSendMessage}
-              className="w-full bg-brand-yellow hover:bg-brand-highlight text-black"
+              className="w-full bg-secondary hover:bg-premium-highlight text-white rounded-[15px] transform hover:-translate-y-1 transition-all duration-300 shadow-premium-sm hover:shadow-premium-md"
               disabled={isLoading}
             >
               <Send className="h-4 w-4 mr-2" />
