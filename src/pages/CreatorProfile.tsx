@@ -66,7 +66,7 @@ const CreatorProfile = () => {
   };
 
   if (!creator) {
-    return <div className="p-8 w-full">
+    return <div className="p-8 w-full min-h-screen bg-background">
           <div className="text-center py-12">
             <h3 className="text-lg font-medium mb-2">Creator not found</h3>
             <p className="text-muted-foreground mb-4">The creator you're looking for doesn't exist</p>
@@ -77,7 +77,7 @@ const CreatorProfile = () => {
         </div>;
   }
 
-  return <div className="p-8 w-full">
+  return <div className="p-8 w-full min-h-screen bg-background">
         <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <Button variant="ghost" className="h-8 px-2 gap-1">
             <ArrowLeft className="h-4 w-4" />

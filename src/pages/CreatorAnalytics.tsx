@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -45,7 +44,7 @@ const CreatorAnalytics = () => {
   
   if (!creator || !stats) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-background">
         <p>Creator not found or no stats available.</p>
       </div>
     );
@@ -209,7 +208,7 @@ const CreatorAnalytics = () => {
   const aiSummary = generateAISummary(stats, timeFilter);
 
   return (
-    <div className="p-8 w-full max-w-[calc(100vw-240px)]">
+    <div className="p-8 w-full max-w-[calc(100vw-240px)] min-h-screen bg-background">
       <div className="flex items-center mb-6">
         <Link to={`/creators/${id}`} className="mr-4">
           <Button variant="outline" size="icon">
