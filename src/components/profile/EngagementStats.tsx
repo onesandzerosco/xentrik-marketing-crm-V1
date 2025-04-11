@@ -104,7 +104,10 @@ const EngagementStats: React.FC<EngagementStatsProps> = ({ creatorId, stats }) =
           
           <div className="md:col-span-2">
             <Link to={`/creators/${creatorId}/analytics`}>
-              <Button className="w-full">
+              <Button 
+                className="w-full flex items-center gap-2 font-medium transition-all duration-300 hover:bg-accent/50 hover:translate-y-[-2px] bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
+                variant="premium"
+              >
                 <BarChart2 className="h-4 w-4 mr-2" />
                 Open Full Analytics
               </Button>

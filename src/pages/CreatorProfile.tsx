@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import { Team, Gender, CreatorType } from "../types";
@@ -14,6 +14,7 @@ import SocialLinks from "../components/profile/SocialLinks";
 import EngagementStats from "../components/profile/EngagementStats";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import ActionsPanel from "../components/profile/ActionsPanel";
+import { Employee } from "@/types/employee";
 
 const CreatorProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,27 @@ const CreatorProfile = () => {
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
   const [storageDialogOpen, setStorageDialogOpen] = useState(false);
+  const [assignedMembers, setAssignedMembers] = useState<Employee[]>([]);
+
+  // Load assigned team members when the creator loads
+  useEffect(() => {
+    if (creator?.assignedTeamMembers) {
+      try {
+        const savedEmployees = localStorage.getItem('team_employees_data');
+        if (savedEmployees) {
+          const employeesData = JSON.parse(savedEmployees) as Employee[];
+          const members = employeesData.filter(emp => 
+            creator.assignedTeamMembers?.includes(emp.id)
+          );
+          setAssignedMembers(members);
+        }
+      } catch (error) {
+        console.error("Error loading team members:", error);
+      }
+    } else {
+      setAssignedMembers([]);
+    }
+  }, [creator]);
 
   const handleSave = () => {
     setNameError(null);
@@ -43,6 +65,10 @@ const CreatorProfile = () => {
       return;
     }
     if (!creator) return;
+    
+    // Get the IDs of assigned team members
+    const assignedTeamMembers = assignedMembers.map(member => member.id);
+    
     updateCreator(creator.id, {
       name,
       gender,
@@ -57,8 +83,10 @@ const CreatorProfile = () => {
         chaturbate: chaturbate || undefined
       },
       tags: [gender, team, creatorType],
-      needsReview: needsReview
+      needsReview: needsReview,
+      assignedTeamMembers: assignedTeamMembers
     });
+    
     toast({
       title: "Profile Updated",
       description: "Creator profile has been successfully updated"
@@ -66,100 +94,110 @@ const CreatorProfile = () => {
   };
 
   if (!creator) {
-    return <div className="p-8 w-full min-h-screen bg-background">
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium mb-2">Creator not found</h3>
-            <p className="text-muted-foreground mb-4">The creator you're looking for doesn't exist</p>
-            <Link to="/creators">
-              <Button>Return to creators</Button>
-            </Link>
-          </div>
-        </div>;
+    return (
+      <div className="p-8 w-full min-h-screen bg-background">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium mb-2">Creator not found</h3>
+          <p className="text-muted-foreground mb-4">The creator you're looking for doesn't exist</p>
+          <Link to="/creators">
+            <Button>Return to creators</Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  return <div className="p-8 w-full min-h-screen bg-background">
-        <div className="flex items-center gap-3 mb-8">
-          <Link to="/creators">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full hover:bg-secondary/20"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="sr-only">Back to Creators</span>
+  return (
+    <div className="p-8 w-full min-h-screen bg-background">
+      <div className="flex items-center gap-3 mb-8">
+        <Link to="/creators">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full hover:bg-secondary/20"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Back to Creators</span>
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl font-bold">{creator?.name}'s Profile</h1>
+          <div className="flex flex-wrap gap-2 mt-1">
+            <Badge variant="outline">{creator?.gender}</Badge>
+            {creator?.creatorType === "AI" && <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>}
+            <Badge variant="outline">{creator?.team}</Badge>
+            {needsReview && <Badge variant="outline" className="bg-red-900/40 text-red-200">Needs Review</Badge>}
+          </div>
+        </div>
+        <div className="flex gap-3 ml-auto">
+          <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setStorageDialogOpen(true)} title="Check Storage Usage">
+            <Database className="h-4 w-4" />
+          </Button>
+          <Link to={`/creators/${creator?.id}/analytics`}>
+            <Button variant="outline">
+              <BarChart2 className="h-4 w-4 mr-2" />
+              Analytics
             </Button>
           </Link>
-          <div>
-            <h1 className="text-3xl font-bold">{creator?.name}'s Profile</h1>
-            <div className="flex flex-wrap gap-2 mt-1">
-              <Badge variant="outline">{creator?.gender}</Badge>
-              {creator?.creatorType === "AI" && <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>}
-              <Badge variant="outline">{creator?.team}</Badge>
-              {needsReview && <Badge variant="outline" className="bg-red-900/40 text-red-200">Needs Review</Badge>}
-            </div>
-          </div>
-          <div className="flex gap-3 ml-auto">
-            <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setStorageDialogOpen(true)} title="Check Storage Usage">
-              <Database className="h-4 w-4" />
-            </Button>
-            <Link to={`/creators/${creator?.id}/analytics`}>
-              <Button variant="outline">
-                <BarChart2 className="h-4 w-4 mr-2" />
-                Analytics
-              </Button>
-            </Link>
-            <Button 
-              onClick={handleSave} 
-              className="text-black transition-all duration-300 hover:translate-y-[-2px]"
-              variant="premium"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </Button>
-          </div>
+          <Button 
+            onClick={handleSave} 
+            className="text-black transition-all duration-300 hover:translate-y-[-2px]"
+            variant="premium"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
         </div>
+      </div>
 
-        <StorageUsageDialog open={storageDialogOpen} onOpenChange={setStorageDialogOpen} />
+      <StorageUsageDialog open={storageDialogOpen} onOpenChange={setStorageDialogOpen} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-6">
-            <BasicInformation 
-              name={name} 
-              setName={setName} 
-              nameError={nameError} 
-              setNameError={setNameError} 
-              gender={gender} 
-              setGender={setGender} 
-              team={team} 
-              setTeam={setTeam} 
-              creatorType={creatorType} 
-              setCreatorType={setCreatorType} 
-            />
-            
-            <SocialLinks 
-              instagram={instagram} 
-              setInstagram={setInstagram} 
-              tiktok={tiktok} 
-              setTiktok={setTiktok} 
-              twitter={twitter} 
-              setTwitter={setTwitter} 
-              reddit={reddit} 
-              setReddit={setReddit} 
-              chaturbate={chaturbate} 
-              setChaturbate={setChaturbate}
-              creatorId={creator?.id}
-            />
-            
-            <EngagementStats creatorId={creator?.id} stats={stats} />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-2 space-y-6">
+          <BasicInformation 
+            name={name} 
+            setName={setName} 
+            nameError={nameError} 
+            setNameError={setNameError} 
+            gender={gender} 
+            setGender={setGender} 
+            team={team} 
+            setTeam={setTeam} 
+            creatorType={creatorType} 
+            setCreatorType={setCreatorType} 
+          />
           
-          <div className="space-y-6">
-            <ProfilePicture profileImage={profileImage} name={name} setProfileImage={setProfileImage} />
-            
-            <ActionsPanel needsReview={needsReview} setNeedsReview={setNeedsReview} />
-          </div>
+          <SocialLinks 
+            instagram={instagram} 
+            setInstagram={setInstagram} 
+            tiktok={tiktok} 
+            setTiktok={setTiktok} 
+            twitter={twitter} 
+            setTwitter={setTwitter} 
+            reddit={reddit} 
+            setReddit={setReddit} 
+            chaturbate={chaturbate} 
+            setChaturbate={setChaturbate}
+            creatorId={creator?.id}
+          />
+          
+          <EngagementStats creatorId={creator?.id} stats={stats} />
         </div>
-      </div>;
+        
+        <div className="space-y-6">
+          <ProfilePicture profileImage={profileImage} name={name} setProfileImage={setProfileImage} />
+          
+          <ActionsPanel 
+            needsReview={needsReview} 
+            setNeedsReview={setNeedsReview} 
+            creatorId={creator.id}
+            assignedMembers={assignedMembers}
+            onAssignMembers={setAssignedMembers}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default CreatorProfile;

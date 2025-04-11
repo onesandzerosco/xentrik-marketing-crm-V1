@@ -18,6 +18,7 @@ export interface Creator {
   };
   tags: string[];
   needsReview?: boolean;
+  assignedTeamMembers?: string[]; // IDs of team members assigned to this creator
 }
 
 export interface EngagementStats {
