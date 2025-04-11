@@ -111,7 +111,7 @@ const Team = () => {
     }
   };
 
-  return <div className="container mx-auto px-4 py-8">
+  return <div className="container mx-auto px-4 py-8 min-h-screen bg-background">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Team Management</h1>

@@ -37,7 +37,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
   const canChangeStatus = isAdmin && !isCurrentUser;
   
   return (
-    <Card className="overflow-hidden flex flex-col h-full rounded-lg border border-[#333333] bg-[#161618] hover:bg-[#1e1e20] shadow-md">
+    <Card className="overflow-hidden flex flex-col h-full rounded-lg border border-[#333333] bg-premium-card hover:bg-premium-highlight shadow-md">
       <div className="p-6 flex-grow space-y-6">
         {/* Header with email and role */}
         <EmployeeCardHeader employee={employee} />

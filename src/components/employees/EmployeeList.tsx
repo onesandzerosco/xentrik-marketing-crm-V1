@@ -24,7 +24,7 @@ const EmployeeList: React.FC<EmployeeListProps> = ({
 }) => {
   if (employees.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 bg-background">
         <h3 className="text-lg font-medium mb-2">No team members found</h3>
         <p className="text-muted-foreground mb-4">Try changing your filters or add a new team member</p>
         {isAdmin && (
