@@ -1,0 +1,29 @@
+
+/* Premium button styles with improved transitions and corners */
+.premium-button {
+  background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary-foreground)));
+  color: white;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.premium-button:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.premium-button-outline {
+  border: 1px solid hsl(var(--primary)/50%);
+  color: hsl(var(--primary));
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+.premium-button-outline:hover {
+  background-color: hsl(var(--primary)/10%);
+  opacity: 0.9;
+}

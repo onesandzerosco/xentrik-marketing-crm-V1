@@ -1,0 +1,143 @@
+
+/* Message styling */
+.message-incoming, .message-outgoing {
+  max-width: 75%;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.message-incoming {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-top-left-radius: 0.25rem;
+}
+
+.message-outgoing {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  border-top-right-radius: 0.25rem;
+}
+
+/* Message text truncation */
+.message-preview {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* WhatsApp bubble styling */
+.whatsapp-bubble {
+  position: relative;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.whatsapp-bubble.outgoing {
+  background-color: #dcf8c6;
+  color: #000;
+  margin-left: auto;
+}
+
+.whatsapp-bubble.incoming {
+  background-color: #fff;
+  color: #000;
+  margin-right: auto;
+}
+
+.whatsapp-bubble::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.whatsapp-bubble.outgoing::after {
+  border-left-color: #dcf8c6;
+  border-right: 0;
+  right: -8px;
+  top: 10px;
+}
+
+.whatsapp-bubble.incoming::after {
+  border-right-color: #fff;
+  border-left: 0;
+  left: -8px;
+  top: 10px;
+}
+
+/* Enhanced messaging UI */
+.message-container {
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.message-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.message-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 1rem;
+}
+
+.message-footer {
+  border-top: 1px solid hsl(var(--border));
+  padding: 0.75rem 1rem;
+}
+
+/* Recipients list styling */
+.recipients-list {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+/* Multiple recipient chip styles */
+.recipient-chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: hsl(var(--secondary)/0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s ease;
+}
+
+.recipient-chip:hover {
+  background-color: hsl(var(--secondary)/0.2);
+}
+
+.recipient-chip .remove-btn {
+  margin-left: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.recipient-chip .remove-btn:hover {
+  opacity: 1;
+}
+
+/* Premium search field */
+.search-field {
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-field:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary)/0.2);
+}

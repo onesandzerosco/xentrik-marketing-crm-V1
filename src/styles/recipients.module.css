@@ -1,0 +1,35 @@
+
+/* Recipient selection indicator */
+.selection-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: hsl(var(--primary));
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Recipients list styling */
+.recipient-item {
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.recipient-item:hover {
+  background-color: hsl(var(--muted));
+  transform: translateY(-2px);
+}
+
+.recipient-item.selected {
+  background-color: #222;
+  color: white;
+  border-color: hsl(var(--border));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
