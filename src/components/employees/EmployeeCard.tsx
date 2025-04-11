@@ -43,7 +43,7 @@ const EmployeeCard: React.FC<EmployeeCardProps> = ({
         <EmployeeCardHeader employee={employee} />
 
         {/* Profile Image and Name */}
-        <EmployeeCardProfile employee={employee} />
+        <EmployeeCardProfile employee={employee} isCurrentUser={isCurrentUser} />
         
         {/* Info sections */}
         <EmployeeCardInfo employee={employee} />

@@ -5,9 +5,13 @@ import { Employee } from "@/types/employee";
 
 interface EmployeeCardProfileProps {
   employee: Employee;
+  isCurrentUser?: boolean;
 }
 
-const EmployeeCardProfile: React.FC<EmployeeCardProfileProps> = ({ employee }) => {
+const EmployeeCardProfile: React.FC<EmployeeCardProfileProps> = ({ 
+  employee, 
+  isCurrentUser = false 
+}) => {
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
@@ -23,7 +27,10 @@ const EmployeeCardProfile: React.FC<EmployeeCardProfileProps> = ({ employee }) =
         <AvatarImage src={employee.profileImage} alt={employee.name} />
         <AvatarFallback className="text-lg">{getInitials(employee.name)}</AvatarFallback>
       </Avatar>
-      <h3 className="font-medium text-xl">{employee.name}</h3>
+      <h3 className="font-medium text-xl">
+        {employee.name}
+        {isCurrentUser && <span className="ml-2 text-muted-foreground text-sm font-normal">(You)</span>}
+      </h3>
     </div>
   );
 };
