@@ -3,7 +3,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Creator } from "../types";
 import { Button } from "@/components/ui/button";
-import { BarChart2, Pencil, AlertCircle } from "lucide-react";
+import { 
+  BarChart2, 
+  Pencil, 
+  AlertCircle, 
+  Instagram, 
+  Twitter, 
+  FileText, 
+  Music 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -48,9 +56,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             href={creator.socialLinks.instagram}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
+            className="social-icon text-pink-500 hover:text-pink-400 transition-colors"
+            title="Instagram"
           >
-            <span className="text-lg">📷</span>
+            <Instagram size={18} />
           </a>
         )}
         {creator.socialLinks.tiktok && (
@@ -58,9 +67,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             href={creator.socialLinks.tiktok}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
+            className="social-icon text-black dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            title="TikTok"
           >
-            <span className="text-lg">🎵</span>
+            <Music size={18} />
           </a>
         )}
         {creator.socialLinks.twitter && (
@@ -68,9 +78,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             href={creator.socialLinks.twitter}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
+            className="social-icon text-blue-500 hover:text-blue-400 transition-colors"
+            title="Twitter"
           >
-            <span className="text-lg">🐦</span>
+            <Twitter size={18} />
           </a>
         )}
         {creator.socialLinks.reddit && (
@@ -78,9 +89,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             href={creator.socialLinks.reddit}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
+            className="social-icon text-orange-600 hover:text-orange-500 transition-colors"
+            title="Reddit"
           >
-            <span className="text-lg">👽</span>
+            <FileText size={18} />
           </a>
         )}
         {creator.socialLinks.chaturbate && (
@@ -88,9 +100,10 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             href={creator.socialLinks.chaturbate}
             target="_blank"
             rel="noopener noreferrer"
-            className="social-icon"
+            className="social-icon text-red-500 hover:text-red-400 transition-colors"
+            title="Chaturbate"
           >
-            <span className="text-lg">🔞</span>
+            <span className="text-lg font-bold">CB</span>
           </a>
         )}
       </div>

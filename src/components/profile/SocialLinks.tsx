@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Lock } from "lucide-react";
+import { ExternalLink, Lock, Instagram, Twitter, FileText, Music } from "lucide-react";
 
 interface SocialLinksProps {
   instagram: string;
@@ -48,7 +48,9 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
       </div>
       <div className="space-y-4">
         <div>
-          <Label htmlFor="instagram">Instagram</Label>
+          <Label htmlFor="instagram" className="flex items-center gap-1.5">
+            <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+          </Label>
           <div className="flex gap-2">
             <Input 
               id="instagram" 
@@ -71,7 +73,9 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="tiktok">TikTok</Label>
+          <Label htmlFor="tiktok" className="flex items-center gap-1.5">
+            <Music className="h-4 w-4" /> TikTok
+          </Label>
           <div className="flex gap-2">
             <Input 
               id="tiktok" 
@@ -94,7 +98,9 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="twitter">Twitter</Label>
+          <Label htmlFor="twitter" className="flex items-center gap-1.5">
+            <Twitter className="h-4 w-4 text-blue-500" /> Twitter
+          </Label>
           <div className="flex gap-2">
             <Input 
               id="twitter" 
@@ -117,7 +123,9 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="reddit">Reddit</Label>
+          <Label htmlFor="reddit" className="flex items-center gap-1.5">
+            <FileText className="h-4 w-4 text-orange-600" /> Reddit
+          </Label>
           <div className="flex gap-2">
             <Input 
               id="reddit" 
@@ -140,7 +148,9 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="chaturbate">Chaturbate</Label>
+          <Label htmlFor="chaturbate" className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-red-500">CB</span> Chaturbate
+          </Label>
           <div className="flex gap-2">
             <Input 
               id="chaturbate" 
