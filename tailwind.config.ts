@@ -175,6 +175,7 @@ export default {
                 'gradient-highlight': 'linear-gradient(135deg, #614FE0 0%, #7166F9 100%)',
                 'gradient-sidebar': 'linear-gradient(180deg, rgba(20, 20, 40, 1) 0%, rgba(14, 14, 28, 1) 100%)',
                 'gradient-accent': 'linear-gradient(135deg, #30A8C5 0%, #614FE0 100%)',
+                'gradient-premium-yellow': 'linear-gradient(135deg, #FFEB3B 0%, #FFD54F 100%)',
             },
             boxShadow: {
                 'premium-sm': '0 2px 8px rgba(0, 0, 0, 0.25)',
@@ -183,6 +184,7 @@ export default {
                 'premium-highlight': '0 0 15px rgba(97, 79, 224, 0.4)',
                 'premium-glow': '0 0 25px rgba(113, 102, 249, 0.25)',
                 'premium-inner': 'inset 0 2px 4px rgba(0, 0, 0, 0.25)',
+                'premium-yellow': '0 2px 8px rgba(255, 235, 59, 0.3)',
             }
 		}
 	},

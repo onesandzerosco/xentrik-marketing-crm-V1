@@ -120,7 +120,10 @@ const Team = () => {
           </p>
         </div>
         
-        {isAdmin && <Button onClick={() => setAddEmployeeOpen(true)} className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-md px-6 py-2">
+        {isAdmin && <Button 
+          onClick={() => setAddEmployeeOpen(true)} 
+          variant="premium" 
+          className="rounded-sm shadow-premium-yellow">
             <Plus className="h-4 w-4 mr-2" />
             Add Team Member
           </Button>}
@@ -128,10 +131,17 @@ const Team = () => {
       
       <EmployeeSearchAndSort searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOption={sortOption} setSortOption={setSortOption} />
       
-      <EmployeeList employees={filteredEmployees} onUpdate={handleUpdateEmployee} isAdmin={isAdmin} currentUserId={user?.id} onAddEmployeeClick={() => setAddEmployeeOpen(true)} onDeactivateClick={emp => {
-      setSelectedEmployee(emp);
-      setDeactivateDialogOpen(true);
-    }} />
+      <EmployeeList 
+        employees={filteredEmployees} 
+        onUpdate={handleUpdateEmployee} 
+        isAdmin={isAdmin} 
+        currentUserId={user?.id} 
+        onAddEmployeeClick={() => setAddEmployeeOpen(true)} 
+        onDeactivateClick={emp => {
+          setSelectedEmployee(emp);
+          setDeactivateDialogOpen(true);
+        }} 
+      />
       
       <DeactivateDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen} onDeactivate={handleDeactivate} employeeName={selectedEmployee?.name} />
       

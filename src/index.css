@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,7 +23,7 @@
     --border: 240 12% 20%;
     --input: 240 12% 20%;
     --ring: 54 100% 60%;      /* Banana yellow for focus ring */
-    --radius: 0.75rem;
+    --radius: 0.5rem;         /* Reduced radius from 0.75rem to 0.5rem for all rounded corners */
     --sidebar-background: 240 24% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 54 100% 60%;   /* Banana yellow */
@@ -278,6 +277,17 @@
   
   .badge-team-c {
     @apply bg-teal-900/40 text-teal-200;
+  }
+  
+  /* Premium button styles */
+  .premium-button {
+    @apply bg-gradient-premium-yellow text-black font-medium rounded-sm shadow-premium-yellow 
+    hover:shadow-premium-md transition-all duration-300;
+  }
+  
+  .premium-button-outline {
+    @apply border border-brand-yellow/50 text-brand-yellow rounded-sm 
+    hover:bg-brand-yellow/10 transition-all duration-300;
   }
 }
 
