@@ -4,23 +4,34 @@ import { cn } from '@/lib/utils';
 
 const logoUrl = "/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png";
 
-const preloadImage = (src: string) => {
-  const img = new Image();
-  img.src = src;
-  return img;
-};
+// Preload the logo image once at the module level
+const preloadedImage = new Image();
+preloadedImage.src = logoUrl;
 
 const SidebarLogo: React.FC = () => {
-  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(() => preloadedImage.complete);
 
   useEffect(() => {
-    const img = preloadImage(logoUrl);
-    img.onload = () => setLogoLoaded(true);
-    
-    if (img.complete) {
-      setLogoLoaded(true);
+    // If the image wasn't already loaded when component mounted, set up a one-time handler
+    if (!logoLoaded) {
+      const handleLoad = () => {
+        setLogoLoaded(true);
+        // Remove the event listener after it fires once
+        preloadedImage.removeEventListener('load', handleLoad);
+      };
+      
+      preloadedImage.addEventListener('load', handleLoad);
+      
+      // If the image completes loading while we're setting up the listener
+      if (preloadedImage.complete) {
+        setLogoLoaded(true);
+      }
+      
+      return () => {
+        preloadedImage.removeEventListener('load', handleLoad);
+      };
     }
-  }, []);
+  }, [logoLoaded]);
 
   return (
     <div className="flex h-20 items-center justify-center pt-5 pb-2">
