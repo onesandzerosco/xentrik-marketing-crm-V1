@@ -92,13 +92,13 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
 
             <Button 
               onClick={onSendMessage}
-              className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg p-6 h-auto transition-all duration-200 shadow-sm hover:shadow-md"
+              className="flex items-center justify-center gap-2 bg-gradient-premium-yellow text-black font-medium rounded-[15px] px-5 py-2 h-auto transition-all duration-300 shadow-sm hover:shadow-premium-highlight hover:-translate-y-0.5 hover:opacity-90"
               disabled={isLoading}
             >
-              <Send className="h-5 w-5 mr-2" />
+              <Send className="h-4 w-4" />
               {isLoading 
                 ? "Sending..." 
-                : `Send WhatsApp Message to ${selectedRecipients.length} Recipient${selectedRecipients.length > 1 ? 's' : ''}`
+                : `Send Message (${selectedRecipients.length})`
               }
             </Button>
           </>
