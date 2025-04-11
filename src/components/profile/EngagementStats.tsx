@@ -105,8 +105,8 @@ const EngagementStats: React.FC<EngagementStatsProps> = ({ creatorId, stats }) =
           <div className="md:col-span-2">
             <Link to={`/creators/${creatorId}/analytics`}>
               <Button 
-                className="w-full flex items-center gap-2 font-medium transition-all duration-300 hover:bg-accent/50 hover:translate-y-[-2px] bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
-                variant="premium"
+                className="w-full flex items-center gap-2 rounded-[15px] px-3 py-3 text-black font-medium transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+                variant="default"
               >
                 <BarChart2 className="h-4 w-4 mr-2" />
                 Open Full Analytics

@@ -12,6 +12,7 @@ import StorageUsageDialog from "@/components/storage/StorageUsageDialog";
 import BasicInformation from "../components/profile/BasicInformation";
 import SocialLinks from "../components/profile/SocialLinks";
 import EngagementStats from "../components/profile/EngagementStats";
+import AssignedTeamMembers from "../components/profile/AssignedTeamMembers";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import ActionsPanel from "../components/profile/ActionsPanel";
 import { Employee } from "@/types/employee";
@@ -141,8 +142,8 @@ const CreatorProfile = () => {
           </Link>
           <Button 
             onClick={handleSave} 
-            className="text-black transition-all duration-300 hover:translate-y-[-2px]"
-            variant="premium"
+            className="text-black rounded-[15px] px-3 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+            variant="default"
           >
             <Save className="h-4 w-4 mr-2" />
             Save Changes
@@ -180,6 +181,8 @@ const CreatorProfile = () => {
             setChaturbate={setChaturbate}
             creatorId={creator?.id}
           />
+          
+          <AssignedTeamMembers members={assignedMembers} />
           
           <EngagementStats creatorId={creator?.id} stats={stats} />
         </div>

@@ -32,16 +32,16 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
       <h2 className="text-xl font-bold mb-4">Actions</h2>
       <div className="space-y-4">
         <Button 
-          className="w-full flex items-center gap-2 font-medium transition-all duration-300 hover:bg-accent/50 hover:translate-y-[-2px] bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
-          variant="premium"
+          className="w-full flex items-center gap-2 rounded-[15px] px-3 py-3 text-black font-medium transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+          variant="default"
         >
           <MessageSquare className="h-4 w-4" />
           Create Telegram Chat
         </Button>
         
         <Button 
-          className="w-full flex items-center gap-2 font-medium transition-all duration-300 hover:bg-accent/50 hover:translate-y-[-2px] bg-gradient-to-r from-primary to-primary/80 text-primary-foreground"
-          variant="premium"
+          className="w-full flex items-center gap-2 rounded-[15px] px-3 py-3 text-black font-medium transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+          variant="default"
           onClick={() => setAssignDialogOpen(true)}
         >
           <Users className="h-4 w-4" />
