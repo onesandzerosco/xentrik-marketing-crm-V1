@@ -78,34 +78,41 @@ const CreatorProfile = () => {
   }
 
   return <div className="p-8 w-full min-h-screen bg-background">
-        <Link to="/creators" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
-          <Button variant="ghost" className="h-8 px-2 gap-1">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Creators
-          </Button>
-        </Link>
-
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3 mb-8">
+          <Link to="/creators">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full hover:bg-secondary/20"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Back to Creators</span>
+            </Button>
+          </Link>
           <div>
-            <h1 className="text-3xl font-bold mb-2">{creator.name}'s Profile</h1>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline">{creator.gender}</Badge>
-              {creator.creatorType === "AI" && <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>}
-              <Badge variant="outline">{creator.team}</Badge>
+            <h1 className="text-3xl font-bold">{creator?.name}'s Profile</h1>
+            <div className="flex flex-wrap gap-2 mt-1">
+              <Badge variant="outline">{creator?.gender}</Badge>
+              {creator?.creatorType === "AI" && <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>}
+              <Badge variant="outline">{creator?.team}</Badge>
               {needsReview && <Badge variant="outline" className="bg-red-900/40 text-red-200">Needs Review</Badge>}
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 ml-auto">
             <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setStorageDialogOpen(true)} title="Check Storage Usage">
               <Database className="h-4 w-4" />
             </Button>
-            <Link to={`/creators/${creator.id}/analytics`}>
+            <Link to={`/creators/${creator?.id}/analytics`}>
               <Button variant="outline">
                 <BarChart2 className="h-4 w-4 mr-2" />
                 Analytics
               </Button>
             </Link>
-            <Button onClick={handleSave} className="text-black bg-brand-yellow">
+            <Button 
+              onClick={handleSave} 
+              className="text-black transition-all duration-300 hover:translate-y-[-2px]"
+              variant="premium"
+            >
               <Save className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
@@ -140,10 +147,10 @@ const CreatorProfile = () => {
               setReddit={setReddit} 
               chaturbate={chaturbate} 
               setChaturbate={setChaturbate}
-              creatorId={creator.id}
+              creatorId={creator?.id}
             />
             
-            <EngagementStats creatorId={creator.id} stats={stats} />
+            <EngagementStats creatorId={creator?.id} stats={stats} />
           </div>
           
           <div className="space-y-6">

@@ -23,7 +23,7 @@ const FormActions: React.FC<FormActionsProps> = ({
       <Button 
         type="submit" 
         variant="premium"
-        className="shadow-premium-yellow"
+        className="transition-all duration-300 hover:translate-y-[-2px]"
       >
         <Save className="h-4 w-4 mr-2" />
         Save Changes
