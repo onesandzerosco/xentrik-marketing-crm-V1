@@ -67,7 +67,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-3xl px-3 py-3 text-muted-foreground transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90",
+                "flex items-center gap-3 rounded-[15px] px-3 py-3 text-muted-foreground transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90",
                 isActive ? "bg-gradient-premium-yellow text-black shadow-premium-yellow" : ""
               )
             }
