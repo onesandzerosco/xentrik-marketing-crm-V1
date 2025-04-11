@@ -9,6 +9,14 @@ import { Eye, EyeOff, Lock, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
+const preloadImage = (src: string) => {
+  const img = new Image();
+  img.src = src;
+  return img;
+};
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -17,9 +25,19 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const img = preloadImage(logoUrl);
+    img.onload = () => setLogoLoaded(true);
+    
+    if (img.complete) {
+      setLogoLoaded(true);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -124,10 +142,17 @@ const Login = () => {
       <div className="w-full max-w-md">
         <Card>
           <div className="text-center pt-6">
+            {!logoLoaded && (
+              <div className="h-44 w-auto mx-auto bg-muted/20 animate-pulse rounded"></div>
+            )}
             <img 
-              src="/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png" 
+              src={logoUrl}
               alt="XENTRIK MARKETING" 
-              className="h-44 mx-auto"
+              className={cn(
+                "h-44 mx-auto transition-opacity duration-300",
+                logoLoaded ? "opacity-100" : "opacity-0"
+              )}
+              style={{ willChange: "transform" }}
             />
           </div>
           <CardHeader>
