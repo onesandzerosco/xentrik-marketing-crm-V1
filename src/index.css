@@ -175,11 +175,11 @@
   }
   
   .premium-card {
-    @apply bg-gradient-card rounded-xl border border-premium-border p-5 shadow-premium-md transition-all duration-300 hover:shadow-premium-highlight;
+    @apply bg-gradient-card rounded-xl border border-premium-border p-5 shadow-premium-md transition-all duration-300 hover:shadow-premium-highlight hover:opacity-95;
   }
-
+  
   .premium-stat-card {
-    @apply bg-gradient-card rounded-xl border border-premium-border p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300;
+    @apply bg-gradient-card rounded-xl border border-premium-border p-4 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 hover:opacity-95;
   }
   
   .premium-banner {
@@ -279,24 +279,41 @@
     @apply bg-teal-900/40 text-teal-200;
   }
   
-  /* Premium button styles */
+  /* Premium button styles with improved transitions and corners */
   .premium-button {
-    @apply bg-gradient-premium-yellow text-black font-medium rounded-sm shadow-premium-yellow 
-    hover:shadow-premium-highlight hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1;
+    @apply bg-gradient-premium-yellow text-black font-medium rounded-xl shadow-premium-yellow 
+    hover:shadow-premium-highlight hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:opacity-90;
   }
   
   .premium-button-outline {
-    @apply border border-brand-yellow/50 text-brand-yellow rounded-sm 
-    hover:bg-brand-yellow/10 transition-all duration-300;
+    @apply border border-brand-yellow/50 text-brand-yellow rounded-xl 
+    hover:bg-brand-yellow/10 transition-all duration-300 hover:opacity-90;
   }
   
-  /* New premium navigation styles */
+  /* New premium navigation styles with improved hover effects */
   .premium-nav-item {
-    @apply flex items-center gap-3 rounded-sm px-3 py-3 text-muted-foreground transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5;
+    @apply flex items-center gap-3 rounded-xl px-3 py-3 text-muted-foreground transition-all duration-300 hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:opacity-90;
   }
   
   .premium-nav-item-active {
     @apply bg-gradient-premium-yellow text-black shadow-premium-yellow;
+  }
+  
+  /* New hover animation utilities */
+  .hover-fade {
+    @apply transition-opacity duration-300 hover:opacity-90;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-300 hover:scale-105;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-300 hover:-translate-y-1;
+  }
+  
+  .hover-glow {
+    @apply transition-shadow duration-300 hover:shadow-premium-glow;
   }
 }
 

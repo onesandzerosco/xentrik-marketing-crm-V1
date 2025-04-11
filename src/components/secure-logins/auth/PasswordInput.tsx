@@ -2,6 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface PasswordInputProps {
   password: string;
@@ -24,7 +25,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className={cn(
-          "rounded-sm bg-premium-darker border-premium-border focus:border-brand-yellow",
+          "rounded-xl bg-premium-darker border-premium-border focus:border-brand-yellow transition-all duration-300 hover:opacity-90",
           error ? 'border-red-500 focus:border-red-500' : ''
         )}
       />
@@ -36,5 +37,3 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 };
 
 export default PasswordInput;
-
-import { cn } from '@/lib/utils';

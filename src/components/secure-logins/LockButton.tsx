@@ -32,7 +32,7 @@ const LockButton: React.FC<LockButtonProps> = ({ onLock }) => {
       <Button 
         variant="destructive" 
         size="sm"
-        className="flex items-center gap-2 rounded-sm shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300"
+        className="flex items-center gap-2 rounded-xl shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90"
         onClick={handleLock}
       >
         <Lock className="h-4 w-4" />

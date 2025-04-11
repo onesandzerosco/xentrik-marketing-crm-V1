@@ -6,11 +6,11 @@ import { LockKeyhole } from 'lucide-react';
 const AuthFormHeader: React.FC = () => {
   return (
     <CardHeader className="pb-6">
-      <CardTitle className="text-2xl flex items-center gap-2">
-        <LockKeyhole className="w-6 h-6 text-brand-yellow" />
+      <CardTitle className="text-2xl flex items-center gap-2 transition-all duration-300 hover:opacity-90">
+        <LockKeyhole className="w-6 h-6 text-brand-yellow transition-all duration-300" />
         Secure Area
       </CardTitle>
-      <CardDescription>
+      <CardDescription className="transition-all duration-300 hover:opacity-90">
         Enter the password to access creator login details
       </CardDescription>
     </CardHeader>

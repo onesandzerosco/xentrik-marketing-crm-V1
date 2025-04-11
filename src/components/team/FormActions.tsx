@@ -16,10 +16,14 @@ const FormActions: React.FC<FormActionsProps> = ({
         type="button" 
         variant="outline" 
         onClick={handleBack}
+        className="rounded-xl transition-all duration-300 hover:opacity-90"
       >
         Cancel
       </Button>
-      <Button type="submit" className="bg-brand-yellow text-black hover:bg-brand-highlight">
+      <Button 
+        type="submit" 
+        className="bg-brand-yellow text-black hover:bg-brand-highlight rounded-xl transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
+      >
         <Save className="h-4 w-4 mr-2" />
         Save Changes
       </Button>
