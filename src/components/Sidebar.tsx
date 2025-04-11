@@ -18,10 +18,10 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="fixed h-screen w-60 premium-sidebar">
+    <div className="fixed h-screen w-60 bg-premium-darker border-r border-premium-border/50">
       <SidebarLogo />
       
-      <div className="border-t border-premium-border mt-3 mb-5"></div>
+      <div className="border-t border-premium-border/30 mt-3 mb-5"></div>
 
       <div className="flex flex-col h-[calc(100vh-5rem-2rem)] justify-between p-3">
         <SidebarNav isAdmin={isAdmin} />

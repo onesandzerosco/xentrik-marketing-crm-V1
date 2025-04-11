@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
-    <nav className="grid gap-1 px-2">
+    <nav className="grid gap-2 px-2">
       {navItems.map((item) => {
         if (item.adminOnly && !isAdmin) return null;
         
@@ -67,13 +67,13 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
             to={item.path}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-brand-yellow hover:text-black",
-                isActive ? "bg-brand-yellow text-black" : "hover:bg-brand-yellow hover:text-black"
+                "flex items-center gap-3 rounded-sm px-3 py-3 text-muted-foreground transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow",
+                isActive ? "bg-gradient-premium-yellow text-black shadow-premium-yellow" : ""
               )
             }
           >
             {item.icon}
-            <span>{item.label}</span>
+            <span className="font-medium">{item.label}</span>
           </NavLink>
         );
       })}

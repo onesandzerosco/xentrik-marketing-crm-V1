@@ -15,15 +15,18 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   error 
 }) => {
   return (
-    <div className="flex flex-col space-y-1.5">
-      <Label htmlFor="password">Password</Label>
+    <div className="flex flex-col space-y-2">
+      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
       <Input 
         id="password"
         type="password"
         placeholder="Enter password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className={error ? 'border-red-500 focus:border-red-500' : ''}
+        className={cn(
+          "rounded-sm bg-premium-darker border-premium-border focus:border-brand-yellow",
+          error ? 'border-red-500 focus:border-red-500' : ''
+        )}
       />
       {error && (
         <p className="text-sm text-red-500 mt-1">{error}</p>
@@ -33,3 +36,5 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 };
 
 export default PasswordInput;
+
+import { cn } from '@/lib/utils';
