@@ -45,7 +45,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
 
   return (
     <div className="container mx-auto flex items-center justify-center h-[calc(100vh-4rem)]">
-      <Card className="w-full max-w-md mx-auto bg-card shadow-premium-md">
+      <Card className="w-full max-w-md mx-auto bg-card shadow-premium-md rounded-2xl">
         <AuthFormHeader />
         <form onSubmit={handlePasswordSubmit}>
           <CardContent>
@@ -58,7 +58,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit" variant="premium" className="w-full rounded-sm shadow-premium-yellow">
+            <Button 
+              type="submit" 
+              variant="premium" 
+              className="w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
+            >
               Authenticate
             </Button>
           </CardFooter>
