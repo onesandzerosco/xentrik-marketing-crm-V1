@@ -90,6 +90,25 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
     }
     
+    // Check if team members were updated
+    if (existingCreator && updates.assignedTeamMembers) {
+      const oldTeamMembers = existingCreator.assignedTeamMembers || [];
+      const newTeamMembers = updates.assignedTeamMembers;
+      
+      if (JSON.stringify(oldTeamMembers) !== JSON.stringify(newTeamMembers)) {
+        addActivity(
+          "update",
+          `Team members updated for: ${existingCreator.name}`,
+          id,
+          [{
+            field: "assignedTeamMembers",
+            oldValue: `${oldTeamMembers.length} members`,
+            newValue: `${newTeamMembers.length} members`
+          }]
+        );
+      }
+    }
+    
     // Process other changes as before
     if (existingCreator) {
       const changeDetails = getCreatorChangeDetails(existingCreator, updates);
