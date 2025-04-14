@@ -25,10 +25,11 @@ export const useSecureLogins = () => {
       if (!userProfile) return;
       
       try {
+        // Using raw SQL query instead of the typed client since secure_logins isn't in types
         const { data, error } = await supabase
-          .from('secure_logins')
-          .select('creator_id, login_details')
-          .eq('user_id', userProfile.id);
+          .rpc('get_secure_logins_for_user', { 
+            user_id_param: userProfile.id 
+          });
         
         if (error) {
           console.error("Failed to fetch login details:", error);
@@ -36,9 +37,11 @@ export const useSecureLogins = () => {
         }
         
         const formattedData: CreatorLoginDetails = {};
-        data?.forEach(item => {
-          formattedData[item.creator_id] = item.login_details || {};
-        });
+        if (data && Array.isArray(data)) {
+          data.forEach(item => {
+            formattedData[item.creator_id] = item.login_details || {};
+          });
+        }
         
         console.log("Loaded login details from Supabase:", formattedData);
         setAllLoginDetails(formattedData);
@@ -88,39 +91,16 @@ export const useSecureLogins = () => {
     
     setAllLoginDetails(updatedDetails);
     
-    // Update in Supabase
+    // Update in Supabase using RPC
     try {
-      const existingEntry = await supabase
-        .from('secure_logins')
-        .select('*')
-        .eq('user_id', userProfile.id)
-        .eq('creator_id', creatorId)
-        .maybeSingle();
+      const { error } = await supabase
+        .rpc('upsert_secure_login', {
+          user_id_param: userProfile.id,
+          creator_id_param: creatorId,
+          login_details_param: updatedDetails[creatorId] || {}
+        });
       
-      if (existingEntry.data) {
-        // Update existing entry
-        const { error } = await supabase
-          .from('secure_logins')
-          .update({
-            login_details: updatedDetails[creatorId],
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userProfile.id)
-          .eq('creator_id', creatorId);
-        
-        if (error) throw error;
-      } else {
-        // Create new entry
-        const { error } = await supabase
-          .from('secure_logins')
-          .insert({
-            user_id: userProfile.id,
-            creator_id: creatorId,
-            login_details: updatedDetails[creatorId]
-          });
-        
-        if (error) throw error;
-      }
+      if (error) throw error;
       
       console.log("Saved updated login details to Supabase");
     } catch (error) {
@@ -139,12 +119,10 @@ export const useSecureLogins = () => {
     
     try {
       const { error } = await supabase
-        .from('secure_logins')
-        .upsert({
-          user_id: userProfile.id,
-          creator_id: creatorId,
-          login_details: allLoginDetails[creatorId] || {},
-          updated_at: new Date().toISOString()
+        .rpc('upsert_secure_login', {
+          user_id_param: userProfile.id,
+          creator_id_param: creatorId,
+          login_details_param: allLoginDetails[creatorId] || {}
         });
       
       if (error) throw error;

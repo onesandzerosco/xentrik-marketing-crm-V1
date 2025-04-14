@@ -1,10 +1,10 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Employee, EmployeeRole } from '@/types/employee';
+import { Employee, EmployeeRole, EmployeeStatus } from '@/types/employee';
 
 interface SupabaseAuthContextType {
   isAuthenticated: boolean;
@@ -94,7 +94,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           name: data.name,
           email: data.email,
           role: data.role as EmployeeRole,
-          status: data.status,
+          status: data.status as EmployeeStatus, // Fixed: Ensure status is cast to EmployeeStatus
           telegram: data.telegram,
           pendingTelegram: data.pending_telegram,
           profileImage: data.profile_image,
