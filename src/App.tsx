@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/CreatorContext';
 import { ActivityProvider } from './context/ActivityContext';
 import Login from './pages/Login';
@@ -26,10 +27,12 @@ function App() {
     <CreatorProvider>
       <ActivityProvider>
         <SupabaseAuthProvider>
-          <div className="app flex h-screen w-full bg-premium-dark">
-            <Toaster />
-            <AppRoutes />
-          </div>
+          <AuthProvider>
+            <div className="app flex h-screen w-full bg-premium-dark">
+              <Toaster />
+              <AppRoutes />
+            </div>
+          </AuthProvider>
         </SupabaseAuthProvider>
       </ActivityProvider>
     </CreatorProvider>
@@ -40,7 +43,7 @@ function App() {
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

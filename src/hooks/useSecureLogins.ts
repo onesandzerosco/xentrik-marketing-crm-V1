@@ -1,8 +1,7 @@
 
 import { useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
-interface LoginDetail {
+export interface LoginDetail {
   platform: string;
   username: string;
   password: string;
