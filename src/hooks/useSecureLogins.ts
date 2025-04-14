@@ -1,148 +1,117 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 
-// Constants for auth and timeout
+const STORAGE_KEY = "creator_secure_logins";
 const AUTH_KEY = "secure_area_authorized";
 const LAST_ACTIVE_KEY = "secure_area_last_active";
-const TIMEOUT_DURATION = 2 * 60 * 1000; // 2 minutes
+const TIMEOUT_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
 
-// Type definitions
-export interface LoginDetail {
-  platform: string;
-  username: string;
-  password: string;
-  notes?: string;
+interface LoginDetails {
+  [platform: string]: string;
 }
 
-export interface CreatorLoginDetails {
-  [creatorId: string]: LoginDetail[];
-}
-
-// Type for Supabase RPC response data
-interface SecureLoginData {
-  creator_id: string;
-  login_details: LoginDetail[];
+interface CreatorLoginDetails {
+  [creatorId: string]: LoginDetails;
 }
 
 export const useSecureLogins = () => {
-  const [loginDetails, setLoginDetails] = useState<CreatorLoginDetails>({});
-  const { userProfile } = useSupabaseAuth();
-
-  // Load login details from Supabase
+  const [allLoginDetails, setAllLoginDetails] = useState<CreatorLoginDetails>({});
+  
+  // Load saved login details from localStorage
   useEffect(() => {
-    const fetchLoginDetails = async () => {
-      if (!userProfile) return;
-
-      // Using RPC to avoid TypeScript errors with table that isn't in the generated types
-      const { data, error } = await supabase.rpc<SecureLoginData[]>('get_secure_logins_for_user', {
-        user_id_param: userProfile.id
-      });
-
-      if (error) {
-        console.error("Failed to fetch login details:", error);
-        return;
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        console.log("Loaded login details from localStorage:", parsedData);
+        setAllLoginDetails(parsedData);
+      } catch (e) {
+        console.error("Failed to parse stored login details", e);
       }
+    } else {
+      console.log("No saved login details found in localStorage");
+    }
+  }, []);
 
-      const formattedData: CreatorLoginDetails = {};
-      
-      if (data) {
-        data.forEach(item => {
-          if (item.creator_id && Array.isArray(item.login_details)) {
-            formattedData[item.creator_id] = item.login_details;
-          }
-        });
-      }
-
-      setLoginDetails(formattedData);
-    };
-
-    fetchLoginDetails();
-  }, [userProfile]);
-
-  // Update last active timestamp
+  // Update the last active timestamp whenever this hook is used
   useEffect(() => {
     const updateLastActive = () => {
       const timestamp = new Date().getTime();
       localStorage.setItem(LAST_ACTIVE_KEY, timestamp.toString());
+      console.log("Updated last active timestamp:", new Date(timestamp).toLocaleTimeString());
     };
 
+    // Update on mount
     updateLastActive();
-    const interval = setInterval(updateLastActive, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
-  const updateLoginDetail = async (
-    creatorId: string, 
-    platform: string, 
-    detail: Partial<LoginDetail>
-  ) => {
-    if (!userProfile) return;
+    // Set up interval to regularly update the timestamp while on the page
+    const interval = setInterval(updateLastActive, 10000); // Update every 10 seconds
 
-    const currentDetails = loginDetails[creatorId] || [];
-    const detailIndex = currentDetails.findIndex(d => d.platform === platform);
-    
-    let updatedDetails: LoginDetail[];
-    if (detailIndex >= 0) {
-      updatedDetails = [
-        ...currentDetails.slice(0, detailIndex),
-        { ...currentDetails[detailIndex], ...detail },
-        ...currentDetails.slice(detailIndex + 1)
-      ];
-    } else {
-      updatedDetails = [
-        ...currentDetails,
-        { platform, username: '', password: '', ...detail }
-      ];
-    }
-
-    const newLoginDetails = {
-      ...loginDetails,
-      [creatorId]: updatedDetails
+    return () => {
+      clearInterval(interval);
+      // One final update when leaving the page
+      updateLastActive();
     };
-
-    setLoginDetails(newLoginDetails);
-
-    try {
-      // Using RPC to avoid TypeScript errors with table that isn't in the generated types
-      const { error } = await supabase.rpc('upsert_secure_login', {
-        user_id_param: userProfile.id,
-        creator_id_param: creatorId,
-        login_details_param: updatedDetails
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error("Error saving login details:", error);
-    }
+  }, []);
+  
+  const updateLoginDetail = (creatorId: string, platform: string, field: string, value: string) => {
+    console.log(`Updating login detail for ${creatorId}, ${platform}, ${field}:`, value);
+    const key = `${platform}_${field}`;
+    const updatedDetails = { 
+      ...allLoginDetails,
+      [creatorId]: {
+        ...(allLoginDetails[creatorId] || {}),
+        [key]: value
+      }
+    };
+    
+    setAllLoginDetails(updatedDetails);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDetails));
+    console.log("Saved updated login details to localStorage");
   };
-
-  const getLoginDetailsForCreator = (creatorId: string): LoginDetail[] => {
-    return loginDetails[creatorId] || [];
+  
+  const getLoginDetailsForCreator = (creatorId: string): LoginDetails => {
+    const details = allLoginDetails[creatorId] || {};
+    console.log(`Retrieved login details for creator ${creatorId}:`, details);
+    return details;
+  };
+  
+  const saveLoginDetails = (creatorId: string, platform: string) => {
+    // This function doesn't need to do anything special as updateLoginDetail already saves to localStorage
+    // But we keep it as a separate function to maintain the component API
+    console.log(`Saving login details for ${creatorId}, platform ${platform}`);
+    return true;
   };
 
   const checkAutoLock = (): boolean => {
     const isAuthorized = localStorage.getItem(AUTH_KEY) === "true";
     const lastActiveStr = localStorage.getItem(LAST_ACTIVE_KEY);
-
-    if (!isAuthorized || !lastActiveStr) return false;
-
+    
+    if (!isAuthorized || !lastActiveStr) {
+      return false;
+    }
+    
     const lastActive = parseInt(lastActiveStr, 10);
-    const timeSinceActive = new Date().getTime() - lastActive;
-
+    const now = new Date().getTime();
+    const timeSinceActive = now - lastActive;
+    
+    console.log(`Time since last active: ${timeSinceActive / 1000} seconds`);
+    
+    // If more than TIMEOUT_DURATION has passed, lock the secure area
     if (timeSinceActive > TIMEOUT_DURATION) {
+      console.log("Auto-locking secure area due to inactivity");
       localStorage.setItem(AUTH_KEY, "false");
       return false;
     }
-
+    
     return true;
   };
-
+  
   return {
-    loginDetails,
+    allLoginDetails,
     updateLoginDetail,
     getLoginDetailsForCreator,
+    saveLoginDetails,
     checkAutoLock
   };
 };

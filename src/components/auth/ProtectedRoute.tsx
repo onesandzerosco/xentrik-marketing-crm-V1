@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
+import { useAuth0 } from '@auth0/auth0-react';
 import Sidebar from '../Sidebar';
 
 interface ProtectedRouteProps {
@@ -9,9 +9,9 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useSupabaseAuth();
+  const { isAuthenticated, isLoading } = useAuth0();
   
-  // Show loading state while determining authentication status
+  // Show loading state while Auth0 is determining authentication status
   if (isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }

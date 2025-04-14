@@ -10,7 +10,6 @@ export interface Employee {
   role: EmployeeRole;
   status: EmployeeStatus;
   telegram?: string;
-  pendingTelegram?: boolean;
   permissions?: string[];
   profileImage?: string;
   lastLogin: string;
@@ -18,9 +17,6 @@ export interface Employee {
   department?: string;
   teams?: EmployeeTeam[];
   assignedCreators?: string[]; // IDs of creators assigned to this team member
-  // Additional fields for compatibility with existing code
-  username?: string;
-  displayName?: string;
 }
 
 export type EmployeeFilters = {
