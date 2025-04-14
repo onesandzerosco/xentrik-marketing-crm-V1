@@ -9,7 +9,7 @@ import {
   AlertCircle, 
   Instagram, 
   Twitter, 
-  Reddit, 
+  FileText, 
   Music 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -92,7 +92,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             className="social-icon text-orange-600 hover:text-orange-500 transition-colors"
             title="Reddit"
           >
-            <Reddit size={18} />
+            <FileText size={18} />
           </a>
         )}
         {creator.socialLinks.chaturbate && (
