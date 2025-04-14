@@ -10,6 +10,7 @@ export interface Employee {
   role: EmployeeRole;
   status: EmployeeStatus;
   telegram?: string;
+  pendingTelegram?: boolean;
   permissions?: string[];
   profileImage?: string;
   lastLogin: string;
