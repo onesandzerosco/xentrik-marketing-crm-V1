@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -243,13 +243,7 @@ const Login = () => {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center flex-col space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
+          <CardFooter className="flex justify-center flex-col">
             <p className="text-sm text-muted-foreground">
               For demo purposes, use: admin / password or admin2 / password2
             </p>
