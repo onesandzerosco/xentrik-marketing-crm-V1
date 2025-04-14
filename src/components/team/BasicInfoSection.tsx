@@ -1,9 +1,10 @@
+
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Control } from "react-hook-form";
+import { Control, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 // Define the form schema fields we need for this component
@@ -26,6 +27,13 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   control,
   isCurrentUser,
 }) => {
+  // Use useWatch to observe form values without re-rendering
+  const pendingTelegram = useWatch({
+    control,
+    name: "pendingTelegram",
+    defaultValue: false
+  });
+
   return (
     <div className="flex-1 space-y-4">
       <FormField
@@ -136,7 +144,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                     {...field} 
                     placeholder="username" 
                     value={field.value || ''}
-                    disabled={control.getValues('pendingTelegram')}
+                    disabled={pendingTelegram}
                   />
                 </FormControl>
               </div>
@@ -152,7 +160,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                           checkboxField.onChange(checked);
                           // Clear telegram field when checking pending
                           if (checked) {
-                            control.setValue('telegram', '');
+                            field.onChange(''); // Update the telegram field directly
                           }
                         }}
                       />
@@ -163,7 +171,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
               />
             </div>
             <FormDescription>
-              {control.getValues('pendingTelegram') 
+              {pendingTelegram 
                 ? "Telegram handle will be added later" 
                 : "Enter Telegram username without @"}
             </FormDescription>
