@@ -20,6 +20,12 @@ export interface CreatorLoginDetails {
   [creatorId: string]: LoginDetail[];
 }
 
+// Type for Supabase RPC response data
+interface SecureLoginData {
+  creator_id: string;
+  login_details: LoginDetail[];
+}
+
 export const useSecureLogins = () => {
   const [loginDetails, setLoginDetails] = useState<CreatorLoginDetails>({});
   const { userProfile } = useSupabaseAuth();
@@ -30,7 +36,7 @@ export const useSecureLogins = () => {
       if (!userProfile) return;
 
       // Using RPC to avoid TypeScript errors with table that isn't in the generated types
-      const { data, error } = await supabase.rpc('get_secure_logins_for_user', {
+      const { data, error } = await supabase.rpc<SecureLoginData[]>('get_secure_logins_for_user', {
         user_id_param: userProfile.id
       });
 
@@ -41,7 +47,7 @@ export const useSecureLogins = () => {
 
       const formattedData: CreatorLoginDetails = {};
       
-      if (Array.isArray(data)) {
+      if (data) {
         data.forEach(item => {
           if (item.creator_id && Array.isArray(item.login_details)) {
             formattedData[item.creator_id] = item.login_details;
