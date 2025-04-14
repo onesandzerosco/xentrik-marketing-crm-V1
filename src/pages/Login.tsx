@@ -1,11 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { Eye, EyeOff } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
 const preloadImage = (src: string) => {
@@ -15,10 +18,13 @@ const preloadImage = (src: string) => {
 };
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [logoLoaded, setLogoLoaded] = useState(false);
-  const { loginWithRedirect, isAuthenticated } = useAuth0();
+  const { signIn, isAuthenticated, isLoading } = useSupabaseAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,9 +50,17 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleLogin = () => {
-    setIsLoading(true);
-    loginWithRedirect();
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error("Login error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isAuthenticated) {
@@ -100,21 +114,63 @@ const Login = () => {
           <CardHeader>
             <CardTitle>Secure Sign In</CardTitle>
             <CardDescription>
-              Securely access your account with Auth0 authentication
+              Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button 
-              onClick={handleLogin}
-              className="w-full bg-brand-yellow text-black hover:bg-brand-highlight"
-              disabled={isLoading}
-            >
-              {isLoading ? "Redirecting to Auth0..." : "Sign In Securely"}
-            </Button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="pr-10"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-brand-yellow text-black hover:bg-brand-highlight"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex justify-center flex-col">
             <p className="text-sm text-muted-foreground">
-              This system uses enterprise-grade authentication with Auth0
+              Powered by Ones & Zero AI
             </p>
           </CardFooter>
         </Card>

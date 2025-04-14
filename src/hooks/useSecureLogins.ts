@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 
-const STORAGE_KEY = "creator_secure_logins";
 const AUTH_KEY = "secure_area_authorized";
 const LAST_ACTIVE_KEY = "secure_area_last_active";
 const TIMEOUT_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
@@ -16,22 +17,38 @@ interface CreatorLoginDetails {
 
 export const useSecureLogins = () => {
   const [allLoginDetails, setAllLoginDetails] = useState<CreatorLoginDetails>({});
+  const { userProfile } = useSupabaseAuth();
   
-  // Load saved login details from localStorage
+  // Load login details from Supabase
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
+    const fetchLoginDetails = async () => {
+      if (!userProfile) return;
+      
       try {
-        const parsedData = JSON.parse(savedData);
-        console.log("Loaded login details from localStorage:", parsedData);
-        setAllLoginDetails(parsedData);
+        const { data, error } = await supabase
+          .from('secure_logins')
+          .select('creator_id, login_details')
+          .eq('user_id', userProfile.id);
+        
+        if (error) {
+          console.error("Failed to fetch login details:", error);
+          return;
+        }
+        
+        const formattedData: CreatorLoginDetails = {};
+        data?.forEach(item => {
+          formattedData[item.creator_id] = item.login_details || {};
+        });
+        
+        console.log("Loaded login details from Supabase:", formattedData);
+        setAllLoginDetails(formattedData);
       } catch (e) {
-        console.error("Failed to parse stored login details", e);
+        console.error("Error fetching stored login details", e);
       }
-    } else {
-      console.log("No saved login details found in localStorage");
-    }
-  }, []);
+    };
+    
+    fetchLoginDetails();
+  }, [userProfile]);
 
   // Update the last active timestamp whenever this hook is used
   useEffect(() => {
@@ -54,9 +71,13 @@ export const useSecureLogins = () => {
     };
   }, []);
   
-  const updateLoginDetail = (creatorId: string, platform: string, field: string, value: string) => {
+  const updateLoginDetail = async (creatorId: string, platform: string, field: string, value: string) => {
+    if (!userProfile) return;
+    
     console.log(`Updating login detail for ${creatorId}, ${platform}, ${field}:`, value);
     const key = `${platform}_${field}`;
+    
+    // Update local state
     const updatedDetails = { 
       ...allLoginDetails,
       [creatorId]: {
@@ -66,8 +87,45 @@ export const useSecureLogins = () => {
     };
     
     setAllLoginDetails(updatedDetails);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedDetails));
-    console.log("Saved updated login details to localStorage");
+    
+    // Update in Supabase
+    try {
+      const existingEntry = await supabase
+        .from('secure_logins')
+        .select('*')
+        .eq('user_id', userProfile.id)
+        .eq('creator_id', creatorId)
+        .maybeSingle();
+      
+      if (existingEntry.data) {
+        // Update existing entry
+        const { error } = await supabase
+          .from('secure_logins')
+          .update({
+            login_details: updatedDetails[creatorId],
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userProfile.id)
+          .eq('creator_id', creatorId);
+        
+        if (error) throw error;
+      } else {
+        // Create new entry
+        const { error } = await supabase
+          .from('secure_logins')
+          .insert({
+            user_id: userProfile.id,
+            creator_id: creatorId,
+            login_details: updatedDetails[creatorId]
+          });
+        
+        if (error) throw error;
+      }
+      
+      console.log("Saved updated login details to Supabase");
+    } catch (error) {
+      console.error("Error saving login details:", error);
+    }
   };
   
   const getLoginDetailsForCreator = (creatorId: string): LoginDetails => {
@@ -76,11 +134,27 @@ export const useSecureLogins = () => {
     return details;
   };
   
-  const saveLoginDetails = (creatorId: string, platform: string) => {
-    // This function doesn't need to do anything special as updateLoginDetail already saves to localStorage
-    // But we keep it as a separate function to maintain the component API
-    console.log(`Saving login details for ${creatorId}, platform ${platform}`);
-    return true;
+  const saveLoginDetails = async (creatorId: string, platform: string) => {
+    if (!userProfile) return false;
+    
+    try {
+      const { error } = await supabase
+        .from('secure_logins')
+        .upsert({
+          user_id: userProfile.id,
+          creator_id: creatorId,
+          login_details: allLoginDetails[creatorId] || {},
+          updated_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      console.log(`Saving login details for ${creatorId}, platform ${platform} completed`);
+      return true;
+    } catch (error) {
+      console.error("Error explicitly saving login details:", error);
+      return false;
+    }
   };
 
   const checkAutoLock = (): boolean => {
