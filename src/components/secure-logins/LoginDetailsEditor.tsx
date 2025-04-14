@@ -8,10 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Save } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
+import { LoginDetail } from '@/hooks/useSecureLogins';
 
 interface LoginDetailsEditorProps {
   creator: Creator;
-  loginDetails: Record<string, string>;
+  loginDetails: LoginDetail[];
   onUpdateLogin: (platform: string, field: string, value: string) => void;
   onSaveLoginDetails: (platform: string) => void;
 }
@@ -32,9 +33,11 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
     }));
   };
 
-  const getLoginDetail = (platform: string, field: string) => {
-    const key = `${platform}_${field}`;
-    return loginDetails[key] || "";
+  const getLoginDetail = (platform: string, field: string): string => {
+    const platformDetail = loginDetails.find(detail => detail.platform === platform);
+    if (!platformDetail) return "";
+    
+    return (platformDetail as any)[field] || "";
   };
 
   const handleInputChange = (platform: string, field: string, value: string) => {

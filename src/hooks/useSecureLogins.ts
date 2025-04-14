@@ -9,14 +9,14 @@ const LAST_ACTIVE_KEY = "secure_area_last_active";
 const TIMEOUT_DURATION = 2 * 60 * 1000; // 2 minutes
 
 // Type definitions
-interface LoginDetail {
+export interface LoginDetail {
   platform: string;
   username: string;
   password: string;
   notes?: string;
 }
 
-interface CreatorLoginDetails {
+export interface CreatorLoginDetails {
   [creatorId: string]: LoginDetail[];
 }
 
@@ -29,10 +29,10 @@ export const useSecureLogins = () => {
     const fetchLoginDetails = async () => {
       if (!userProfile) return;
 
-      const { data, error } = await supabase
-        .from('secure_logins')
-        .select('creator_id, login_details')
-        .eq('user_id', userProfile.id);
+      // Using RPC to avoid TypeScript errors with table that isn't in the generated types
+      const { data, error } = await supabase.rpc('get_secure_logins_for_user', {
+        user_id_param: userProfile.id
+      });
 
       if (error) {
         console.error("Failed to fetch login details:", error);
@@ -40,11 +40,14 @@ export const useSecureLogins = () => {
       }
 
       const formattedData: CreatorLoginDetails = {};
-      data?.forEach(item => {
-        if (item.creator_id && Array.isArray(item.login_details)) {
-          formattedData[item.creator_id] = item.login_details;
-        }
-      });
+      
+      if (Array.isArray(data)) {
+        data.forEach(item => {
+          if (item.creator_id && Array.isArray(item.login_details)) {
+            formattedData[item.creator_id] = item.login_details;
+          }
+        });
+      }
 
       setLoginDetails(formattedData);
     };
@@ -96,13 +99,12 @@ export const useSecureLogins = () => {
     setLoginDetails(newLoginDetails);
 
     try {
-      const { error } = await supabase
-        .from('secure_logins')
-        .upsert({
-          user_id: userProfile.id,
-          creator_id: creatorId,
-          login_details: updatedDetails
-        });
+      // Using RPC to avoid TypeScript errors with table that isn't in the generated types
+      const { error } = await supabase.rpc('upsert_secure_login', {
+        user_id_param: userProfile.id,
+        creator_id_param: creatorId,
+        login_details_param: updatedDetails
+      });
 
       if (error) throw error;
     } catch (error) {

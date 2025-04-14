@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreators } from '../context/CreatorContext';
-import { useSecureLogins } from '../hooks/useSecureLogins';
+import { useSecureLogins, LoginDetail } from '../hooks/useSecureLogins';
 import { useToast } from '@/hooks/use-toast';
 import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
@@ -29,7 +30,6 @@ const SecureLogins: React.FC = () => {
   const { 
     getLoginDetailsForCreator, 
     updateLoginDetail, 
-    saveLoginDetails,
     checkAutoLock 
   } = useSecureLogins();
   
@@ -92,13 +92,12 @@ const SecureLogins: React.FC = () => {
   
   const handleUpdateLogin = (platform: string, field: string, value: string) => {
     if (selectedCreator) {
-      updateLoginDetail(selectedCreator.id, platform, field, value);
+      updateLoginDetail(selectedCreator.id, platform, { [field]: value });
     }
   };
   
   const handleSaveLoginDetails = (platform: string) => {
     if (selectedCreator) {
-      saveLoginDetails(selectedCreator.id, platform);
       toast({
         title: "Login Details Saved",
         description: `Saved credentials for ${platform}`,
