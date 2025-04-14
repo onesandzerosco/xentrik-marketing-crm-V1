@@ -8,9 +8,9 @@ import HttpsEnforcer from './components/auth/HttpsEnforcer';
 import './index.css';
 import './App.css';
 
-// Auth0 configuration - you'll need to replace these with your own values from Auth0 dashboard
-const domain = "YOUR_AUTH0_DOMAIN"; // Replace with your Auth0 domain
-const clientId = "YOUR_AUTH0_CLIENT_ID"; // Replace with your Auth0 client ID
+// Get these values from your Auth0 dashboard
+const domain = import.meta.env.VITE_AUTH0_DOMAIN || "YOUR_AUTH0_DOMAIN";
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || "YOUR_AUTH0_CLIENT_ID";
 const redirectUri = window.location.origin;
 
 const rootElement = document.getElementById('root');
