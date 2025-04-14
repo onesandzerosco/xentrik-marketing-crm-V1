@@ -1,10 +1,10 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-interface Auth0ContextType {
+interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: any;
@@ -13,7 +13,7 @@ interface Auth0ContextType {
   getAccessTokenSilently: () => Promise<string>;
 }
 
-const Auth0Context = createContext<Auth0ContextType | null>(null);
+const Auth0Context = createContext<AuthContextType | null>(null);
 
 export const useAuth0Context = () => {
   const context = useContext(Auth0Context);
@@ -24,43 +24,66 @@ export const useAuth0Context = () => {
 };
 
 export const Auth0ContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const {
-    isAuthenticated,
-    isLoading,
-    user,
-    loginWithRedirect,
-    logout: auth0Logout,
-    getAccessTokenSilently
-  } = useAuth0();
-  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Handle auth state changes
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log('User authenticated:', user);
-      // Set last login timestamp
-      localStorage.setItem('last_login', new Date().toISOString());
-      
-      // You could store non-sensitive user preferences here
-      // But NO sensitive information
-    }
-  }, [isAuthenticated, user]);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-  // Custom logout function that redirects to login page
-  const logout = () => {
-    auth0Logout({ 
-      logoutParams: {
-        returnTo: window.location.origin + '/login'
-      }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
     });
-    // Clear any non-sensitive app state
-    localStorage.removeItem('last_login');
-    toast({
-      title: "Logged out successfully",
-      description: "You have been securely logged out",
-    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loginWithRedirect = async () => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google'
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message,
+      });
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+      toast({
+        title: "Logged out successfully",
+        description: "You have been securely logged out",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error.message,
+      });
+    }
+  };
+
+  const getAccessTokenSilently = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || '';
   };
 
   return (

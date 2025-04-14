@@ -1,120 +1,81 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
-const preloadImage = (src: string) => {
-  const img = new Image();
-  img.src = src;
-  return img;
-};
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
-  const [logoLoaded, setLogoLoaded] = useState(false);
-  const { loginWithRedirect, isAuthenticated } = useAuth0();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const img = preloadImage(logoUrl);
-    img.onload = () => setLogoLoaded(true);
-    
-    if (img.complete) {
-      setLogoLoaded(true);
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate('/dashboard');
+      }
+    });
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        navigate('/dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleEmailLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: 'your-email@example.com',    // Replace with form input
+        password: 'your-password',          // Replace with form input
+      });
+
+      if (error) throw error;
+
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message,
+      });
     }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleLogin = () => {
-    setIsLoading(true);
-    loginWithRedirect();
   };
-
-  if (isAuthenticated) {
-    return null;
-  }
-
-  if (pageLoading) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-background">
-        <div className="w-full max-w-md">
-          <Card>
-            <div className="text-center pt-6">
-              <Skeleton className="h-44 w-full mx-auto" />
-            </div>
-            <CardHeader>
-              <Skeleton className="h-8 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-full" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Skeleton className="h-4 w-full" />
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
       <div className="w-full max-w-md">
         <Card>
           <div className="text-center pt-6">
-            {!logoLoaded && (
-              <div className="h-44 w-auto mx-auto bg-muted/20 animate-pulse rounded"></div>
-            )}
             <img 
-              src={logoUrl}
+              src={logoUrl} 
               alt="XENTRIK MARKETING" 
-              className={cn(
-                "h-44 mx-auto transition-opacity duration-300",
-                logoLoaded ? "opacity-100" : "opacity-0"
-              )}
-              style={{ willChange: "transform" }}
+              className="h-44 mx-auto"
             />
           </div>
           <CardHeader>
-            <CardTitle>Secure Sign In</CardTitle>
+            <CardTitle>Sign In</CardTitle>
             <CardDescription>
-              Securely access your account with Auth0 authentication
+              Sign in to your account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button 
-              onClick={handleLogin}
+              onClick={handleEmailLogin} 
               className="w-full bg-brand-yellow text-black hover:bg-brand-highlight"
-              disabled={isLoading}
             >
-              {isLoading ? "Redirecting to Auth0..." : "Sign In Securely"}
+              Sign In with Email
             </Button>
           </CardContent>
-          <CardFooter className="flex justify-center flex-col">
+          <CardFooter className="flex justify-center">
             <p className="text-sm text-muted-foreground">
-              This system uses enterprise-grade authentication with Auth0
+              Secure authentication powered by Supabase
             </p>
           </CardFooter>
         </Card>

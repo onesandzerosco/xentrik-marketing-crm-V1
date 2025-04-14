@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import Sidebar from '../Sidebar';
 
 interface ProtectedRouteProps {
@@ -9,19 +9,38 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth0();
-  
-  // Show loading state while Auth0 is determining authentication status
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    });
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+      
+      if (event === 'SIGNED_OUT') {
+        navigate('/login');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   if (isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
-  
-  // Redirect to login if not authenticated
+
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
-  
-  // If authenticated, render the children with the sidebar
+
   return (
     <div className="flex w-full">
       <Sidebar />
