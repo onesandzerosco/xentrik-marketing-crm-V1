@@ -94,7 +94,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           name: data.name,
           email: data.email,
           role: data.role as EmployeeRole,
-          status: data.status as EmployeeStatus, // Fixed: Ensure status is cast to EmployeeStatus
+          // Explicitly cast status to EmployeeStatus type
+          status: data.status as EmployeeStatus, 
           telegram: data.telegram,
           pendingTelegram: data.pending_telegram,
           profileImage: data.profile_image,
