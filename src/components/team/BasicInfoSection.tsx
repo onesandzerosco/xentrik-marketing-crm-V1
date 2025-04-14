@@ -1,8 +1,8 @@
-
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Control } from "react-hook-form";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ const formSchema = z.object({
   role: z.enum(["Admin", "Manager", "Employee"]),
   status: z.enum(["Active", "Inactive", "Paused"]),
   telegram: z.string().optional(),
+  pendingTelegram: z.boolean().optional(),
   department: z.string().optional(),
 });
 
@@ -121,35 +122,69 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
         />
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FormField
-          control={control}
-          name="telegram"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telegram Username</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="username (without @)" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={control}
-          name="department"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Department" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="telegram"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Telegram Username</FormLabel>
+            <div className="flex items-center space-x-2">
+              <div className="flex-1 flex items-center">
+                <span className="mr-2 text-muted-foreground">@</span>
+                <FormControl>
+                  <Input 
+                    {...field} 
+                    placeholder="username" 
+                    value={field.value || ''}
+                    disabled={control.getValues('pendingTelegram')}
+                  />
+                </FormControl>
+              </div>
+              <FormField
+                control={control}
+                name="pendingTelegram"
+                render={({ field: checkboxField }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={checkboxField.value}
+                        onCheckedChange={(checked) => {
+                          checkboxField.onChange(checked);
+                          // Clear telegram field when checking pending
+                          if (checked) {
+                            control.setValue('telegram', '');
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormLabel>Pending</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormDescription>
+              {control.getValues('pendingTelegram') 
+                ? "Telegram handle will be added later" 
+                : "Enter Telegram username without @"}
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="department"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Department</FormLabel>
+            <FormControl>
+              <Input {...field} placeholder="Department" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
