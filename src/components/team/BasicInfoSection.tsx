@@ -1,4 +1,3 @@
-
 import React from "react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -7,7 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Control, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-// Define the form schema fields we need for this component
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -27,7 +25,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   control,
   isCurrentUser,
 }) => {
-  // Use useWatch to observe form values without re-rendering
   const pendingTelegram = useWatch({
     control,
     name: "pendingTelegram",
@@ -158,9 +155,8 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
                         checked={checkboxField.value}
                         onCheckedChange={(checked) => {
                           checkboxField.onChange(checked);
-                          // Clear telegram field when checking pending
                           if (checked) {
-                            field.onChange(''); // Update the telegram field directly
+                            field.onChange('');
                           }
                         }}
                       />
