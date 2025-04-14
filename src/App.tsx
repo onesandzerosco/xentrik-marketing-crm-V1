@@ -7,7 +7,6 @@ import { AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/CreatorContext';
 import { ActivityProvider } from './context/ActivityContext';
 import Login from './pages/Login';
-import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
 import CreatorProfile from './pages/CreatorProfile';
@@ -39,13 +38,11 @@ function App() {
   );
 }
 
-// Create a separate component for routes
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />

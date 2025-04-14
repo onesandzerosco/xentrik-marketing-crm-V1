@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,19 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+
 const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const {
-    signInWithEmail,
-    signInWithOAuth
-  } = useSupabaseAuth();
-  const {
-    toast
-  } = useToast();
+  const { signInWithEmail } = useSupabaseAuth();
+  const { toast } = useToast();
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -30,6 +28,7 @@ const Login = () => {
       });
       return;
     }
+    
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
@@ -39,14 +38,9 @@ const Login = () => {
       setIsLoading(false);
     }
   };
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithOAuth('google');
-    } catch (error) {
-      // Error is already handled in the context
-    }
-  };
-  return <div className="min-h-screen w-full flex items-center justify-center bg-background">
+
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-background">
       <div className="w-full max-w-md">
         <Card>
           <div className="text-center pt-6">
@@ -66,7 +60,15 @@ const Login = () => {
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Mail className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <Input id="email" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="pl-10" required />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Email" 
+                    value={email} 
+                    onChange={e => setEmail(e.target.value)} 
+                    className="pl-10" 
+                    required 
+                  />
                 </div>
               </div>
               
@@ -76,44 +78,43 @@ const Login = () => {
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Lock className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="pl-10 pr-10" required />
-                  <Button type="button" variant="ghost" size="icon" className="absolute inset-y-0 right-0 flex items-center justify-center" onClick={() => setShowPassword(!showPassword)}>
+                  <Input 
+                    id="password" 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="Password" 
+                    value={password} 
+                    onChange={e => setPassword(e.target.value)} 
+                    className="pl-10 pr-10" 
+                    required 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute inset-y-0 right-0 flex items-center justify-center" 
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
               
-              <Button type="submit" className="w-full bg-brand-yellow text-black hover:bg-brand-highlight" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In with Email"}
+              <Button 
+                type="submit" 
+                className="w-full bg-brand-yellow text-black hover:bg-brand-highlight" 
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
-            
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
-            <Button onClick={handleGoogleLogin} variant="outline" className="w-full">
-              Sign In with Google
-            </Button>
           </CardContent>
-          <CardFooter className="flex justify-center flex-col space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
+          <CardFooter className="flex justify-center">
             <p className="text-xs text-muted-foreground">Powered by Ones &amp; Zeros AI</p>
           </CardFooter>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Login;
