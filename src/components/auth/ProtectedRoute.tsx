@@ -1,7 +1,7 @@
 
-import React, { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import Sidebar from '../Sidebar';
 
 interface ProtectedRouteProps {
@@ -9,29 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-
-  useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
-    });
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
-      
-      if (event === 'SIGNED_OUT') {
-        navigate('/login');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { isAuthenticated, isLoading } = useSupabaseAuth();
 
   if (isLoading) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;

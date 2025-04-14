@@ -1,35 +1,28 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, User, Mail } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
 
 const Register = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -49,32 +42,32 @@ const Register = () => {
     }
     
     setIsLoading(true);
-
-    setTimeout(() => {
-      const success = register(username, email, password);
+    
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
       
-      if (success) {
-        toast({
-          title: "Registration successful",
-          description: "Your account is pending approval by an admin",
-          duration: 6000,
-        });
-        navigate("/login");
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Registration failed",
-          description: "Username or email already exists",
-        });
-      }
+      if (error) throw error;
       
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account",
+        duration: 6000,
+      });
+      
+      navigate('/login');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.message,
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
@@ -82,7 +75,7 @@ const Register = () => {
         <Card>
           <div className="text-center pt-6">
             <img 
-              src="/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png" 
+              src={logoUrl} 
               alt="XENTRIK MARKETING" 
               className="h-44 mx-auto"
             />
@@ -90,28 +83,11 @@ const Register = () => {
           <CardHeader>
             <CardTitle>Create an Account</CardTitle>
             <CardDescription>
-              Register for a new account. Your account will be pending admin approval.
+              Register for a new account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <Input
-                    id="username"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
