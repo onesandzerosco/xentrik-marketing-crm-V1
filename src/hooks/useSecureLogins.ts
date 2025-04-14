@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
@@ -37,7 +36,7 @@ export const useSecureLogins = () => {
         
         const formattedData: CreatorLoginDetails = {};
         if (data && Array.isArray(data)) {
-          data.forEach(item => {
+          data.forEach((item: { creator_id: string; login_details: LoginDetails }) => {
             if (item && item.creator_id && item.login_details) {
               formattedData[item.creator_id] = item.login_details || {};
             }
