@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
@@ -7,11 +8,17 @@ const LAST_ACTIVE_KEY = "secure_area_last_active";
 const TIMEOUT_DURATION = 2 * 60 * 1000; // 2 minutes in milliseconds
 
 interface LoginDetails {
-  [platform: string]: string;
+  [key: string]: string;
 }
 
 interface CreatorLoginDetails {
   [creatorId: string]: LoginDetails;
+}
+
+// Define the structure of the data returned from Supabase
+interface SecureLoginData {
+  creator_id: string;
+  login_details: LoginDetails;
 }
 
 export const useSecureLogins = () => {
@@ -25,7 +32,7 @@ export const useSecureLogins = () => {
       
       try {
         // Using RPC call to get secure logins
-        const { data, error } = await supabase.rpc('get_secure_logins_for_user', { 
+        const { data, error } = await supabase.rpc<SecureLoginData[]>('get_secure_logins_for_user', { 
           user_id_param: userProfile.id 
         });
         
@@ -36,7 +43,7 @@ export const useSecureLogins = () => {
         
         const formattedData: CreatorLoginDetails = {};
         if (data && Array.isArray(data)) {
-          data.forEach((item: { creator_id: string; login_details: LoginDetails }) => {
+          data.forEach((item: SecureLoginData) => {
             if (item && item.creator_id && item.login_details) {
               formattedData[item.creator_id] = item.login_details || {};
             }
