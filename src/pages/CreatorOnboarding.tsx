@@ -89,7 +89,7 @@ const CreatorOnboarding = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <div className="sticky top-8">
-              <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6">
+              <div className="bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm rounded-2xl border border-[#252538]/50 shadow-lg p-6">
                 <ProfilePicture
                   profileImage={profileImage}
                   name="New Creator"

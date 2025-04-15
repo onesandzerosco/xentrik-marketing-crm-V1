@@ -12,15 +12,15 @@ interface OnboardingBasicInfoProps {
 
 const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) => {
   return (
-    <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6 space-y-6">
-      <h2 className="text-lg font-semibold">Basic Information</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="space-y-6 rounded-2xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-8 border border-[#252538]/50 shadow-lg">
+      <h2 className="text-xl font-semibold mb-6">Basic Information</h2>
+      <div className="grid gap-6 sm:grid-cols-2">
         <FormField
           control={control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Creator Name</FormLabel>
               <FormControl>
                 <Input placeholder="Enter creator name" {...field} />
               </FormControl>
@@ -33,24 +33,21 @@ const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) =>
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="Enter creator email" {...field} />
+                <Input type="email" placeholder="Enter email address" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-3">
         <FormField
           control={control}
           name="gender"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Gender</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select gender" />
@@ -60,6 +57,26 @@ const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) =>
                   <SelectItem value="Male">Male</SelectItem>
                   <SelectItem value="Female">Female</SelectItem>
                   <SelectItem value="Trans">Trans</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="creatorType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Creator Type</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select creator type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Real">Real</SelectItem>
                   <SelectItem value="AI">AI</SelectItem>
                 </SelectContent>
               </Select>
@@ -72,8 +89,8 @@ const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) =>
           name="team"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Team <span className="text-red-500">*</span></FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Team</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select team" />
@@ -83,27 +100,6 @@ const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) =>
                   <SelectItem value="A Team">A Team</SelectItem>
                   <SelectItem value="B Team">B Team</SelectItem>
                   <SelectItem value="C Team">C Team</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="creatorType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Creator Type <span className="text-red-500">*</span></FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select creator type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Real">Real</SelectItem>
-                  <SelectItem value="AI">AI</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
