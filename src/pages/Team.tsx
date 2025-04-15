@@ -13,6 +13,9 @@ import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
 
+// Define the missing storage key constant
+const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
+
 const Team = () => {
   const { toast } = useToast();
   const { user } = useAuth();
