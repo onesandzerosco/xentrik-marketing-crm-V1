@@ -19,10 +19,10 @@ const Sidebar = () => {
 
   return (
     <aside className="fixed h-screen w-60 bg-premium-darker border-r border-premium-border/30 flex flex-col shadow-premium-md z-10">
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden pt-8">
         <SidebarLogo />
         
-        <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent">
+        <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent -mt-8">
           <SidebarNav isAdmin={isAdmin} />
         </div>
 
