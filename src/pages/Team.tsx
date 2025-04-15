@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -15,12 +16,8 @@ import { Button } from "@/components/ui/button";
 const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
 
 const Team = () => {
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
 
   const [employees, setEmployees] = useState<Employee[]>(() => {
@@ -99,7 +96,8 @@ const Team = () => {
     }
   };
 
-  return <div className="container mx-auto px-4 py-8 min-h-screen bg-background">
+  return (
+    <div className="container mx-auto px-4 py-8 min-h-screen bg-sky-900/10">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Team Management</h1>
@@ -117,7 +115,12 @@ const Team = () => {
           </Button>}
       </div>
       
-      <EmployeeSearchAndSort searchQuery={searchQuery} setSearchQuery={setSearchQuery} sortOption={sortOption} setSortOption={setSortOption} />
+      <EmployeeSearchAndSort 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+        sortOption={sortOption} 
+        setSortOption={setSortOption} 
+      />
       
       <EmployeeList 
         employees={filteredEmployees} 
@@ -131,10 +134,20 @@ const Team = () => {
         }} 
       />
       
-      <DeactivateDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen} onDeactivate={handleDeactivate} employeeName={selectedEmployee?.name} />
+      <DeactivateDialog 
+        open={deactivateDialogOpen} 
+        onOpenChange={setDeactivateDialogOpen} 
+        onDeactivate={handleDeactivate} 
+        employeeName={selectedEmployee?.name} 
+      />
       
-      <AddEmployeeModal open={addEmployeeOpen} onOpenChange={setAddEmployeeOpen} onAddEmployee={handleAddEmployee} />
-    </div>;
+      <AddEmployeeModal 
+        open={addEmployeeOpen} 
+        onOpenChange={setAddEmployeeOpen} 
+        onAddEmployee={handleAddEmployee} 
+      />
+    </div>
+  );
 };
 
 export default Team;
