@@ -48,8 +48,11 @@ const Creators = () => {
         <div className="flex gap-3">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
+              <Button 
+                variant="premium" 
+                className="flex items-center gap-2 shadow-premium-yellow hover:shadow-premium-highlight"
+              >
+                <Filter className="h-4 w-4" />
                 Filter
               </Button>
             </SheetTrigger>
