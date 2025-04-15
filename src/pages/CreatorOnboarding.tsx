@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -126,7 +127,7 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 mb-8">
           <Link to="/creators">
@@ -146,16 +147,18 @@ const CreatorOnboarding = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
                 <div className="sticky top-8">
-                  <ProfilePicture
-                    profileImage={profileImage}
-                    name={form.watch("name") || "New Creator"}
-                    setProfileImage={setProfileImage}
-                  />
+                  <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+                    <ProfilePicture
+                      profileImage={profileImage}
+                      name={form.watch("name") || "New Creator"}
+                      setProfileImage={setProfileImage}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="lg:col-span-2 space-y-8">
-                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Basic Information</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -256,7 +259,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Contact Information</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -288,7 +291,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Social Media Links</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -359,7 +362,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Additional Notes</h2>
                   <FormField
                     control={form.control}
@@ -394,7 +397,6 @@ const CreatorOnboarding = () => {
                 type="submit"
                 onClick={() => form.handleSubmit(handleSubmit)()}
                 variant="outline"
-                className="bg-gradient-to-r from-card to-card/80 hover:from-card/90 hover:to-card/70"
               >
                 <Save className="h-4 w-4 mr-2" />
                 Create Profile Only
@@ -403,8 +405,8 @@ const CreatorOnboarding = () => {
               <Button 
                 type="button"
                 onClick={() => setShowTeamMemberDialog(true)}
-                variant="premium"
-                className="shadow-premium-yellow hover:shadow-premium-highlight"
+                variant="default"
+                className="bg-brand-yellow text-black hover:bg-brand-highlight"
                 disabled={!form.watch("telegramUsername")}
               >
                 <Send className="h-4 w-4 mr-2" />
