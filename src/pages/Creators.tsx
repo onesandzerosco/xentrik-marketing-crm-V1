@@ -74,8 +74,8 @@ const Creators = () => {
     <div className="p-8 w-full max-w-[1400px] mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Creators</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold mb-2 pl-0">Creators</h1>
+          <p className="text-muted-foreground pl-0">
             {filteredCreators.length} creators in your database
           </p>
         </div>
