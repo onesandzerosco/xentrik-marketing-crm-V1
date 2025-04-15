@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Creator, EngagementStats } from "../types";
 import { useActivities } from "./ActivityContext";
@@ -39,6 +40,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const formattedCreators: Creator[] = creatorsData.map(creator => ({
         id: creator.id,
         name: creator.name,
+        email: creator.email,
         profileImage: creator.profile_image || "",
         gender: creator.gender,
         team: creator.team,
@@ -211,16 +213,14 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <CreatorContext.Provider
-      value={{
-        creators,
-        addCreator,
-        updateCreator,
-        getCreator,
-        getCreatorStats,
-        filterCreators,
-      }}
-    >
+    <CreatorContext.Provider value={{
+      creators,
+      addCreator,
+      updateCreator,
+      getCreator,
+      getCreatorStats,
+      filterCreators,
+    }}>
       {children}
     </CreatorContext.Provider>
   );

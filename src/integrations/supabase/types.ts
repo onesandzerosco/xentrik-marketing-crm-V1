@@ -97,10 +97,47 @@ export type Database = {
           },
         ]
       }
+      creator_telegram_groups: {
+        Row: {
+          created_at: string | null
+          creator_id: string | null
+          id: string
+          team_member_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          team_member_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string | null
+          id?: string
+          team_member_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_telegram_groups_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_telegram_groups_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creators: {
         Row: {
           created_at: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
+          email: string | null
           gender: Database["public"]["Enums"]["gender"]
           id: string
           name: string
@@ -115,6 +152,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
+          email?: string | null
           gender: Database["public"]["Enums"]["gender"]
           id?: string
           name: string
@@ -129,6 +167,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           creator_type?: Database["public"]["Enums"]["creator_type"]
+          email?: string | null
           gender?: Database["public"]["Enums"]["gender"]
           id?: string
           name?: string

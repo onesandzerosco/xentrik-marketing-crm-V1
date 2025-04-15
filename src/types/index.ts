@@ -1,4 +1,3 @@
-
 export type Team = "A Team" | "B Team" | "C Team";
 export type Gender = "Male" | "Female" | "Trans" | "AI";
 export type CreatorType = "Real" | "AI";
@@ -6,6 +5,7 @@ export type CreatorType = "Real" | "AI";
 export interface Creator {
   id: string;
   name: string;
+  email?: string;
   profileImage: string;
   gender: Gender;
   team: Team;
@@ -19,10 +19,10 @@ export interface Creator {
   };
   tags: string[];
   needsReview?: boolean;
-  assignedTeamMembers?: string[]; // IDs of team members assigned to this creator
-  telegramUsername?: string; // Added for telegram integration
-  whatsappNumber?: string; // Added for whatsapp integration
-  notes?: string; // Additional notes about the creator
+  assignedTeamMembers?: string[];
+  telegramUsername?: string;
+  whatsappNumber?: string;
+  notes?: string;
 }
 
 export interface EngagementStats {
