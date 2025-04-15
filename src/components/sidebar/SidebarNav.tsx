@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
-    <nav className="grid gap-1 -mt-4"> {/* Adjusted margin to move buttons closer to the logo */}
+    <nav className="grid gap-1 -mt-4 relative z-20"> {/* Added relative z-20 to ensure buttons appear in front */}
       {navItems.map((item) => {
         if (item.adminOnly && !isAdmin) return null;
         
