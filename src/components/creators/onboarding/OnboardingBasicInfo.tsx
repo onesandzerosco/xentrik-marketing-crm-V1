@@ -12,9 +12,9 @@ interface OnboardingBasicInfoProps {
 
 const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) => {
   return (
-    <div className="space-y-6 rounded-2xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-8 border border-[#252538]/50 shadow-lg">
-      <h2 className="text-xl font-semibold mb-6">Basic Information</h2>
-      <div className="grid gap-6 sm:grid-cols-2">
+    <div className="rounded-xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-6 border border-[#252538]/50 shadow-lg">
+      <h2 className="text-lg font-semibold mb-4 text-white">Basic Information</h2>
+      <div className="grid gap-4">
         <FormField
           control={control}
           name="name"

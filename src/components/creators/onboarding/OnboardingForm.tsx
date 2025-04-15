@@ -55,13 +55,15 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, isSubmitting 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
             <OnboardingBasicInfo control={form.control} />
+            <OnboardingNotes control={form.control} />
+          </div>
+          <div className="space-y-6">
             <OnboardingContactInfo control={form.control} />
             <OnboardingSocialLinks control={form.control} />
-            <OnboardingNotes control={form.control} />
           </div>
         </div>
       </form>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -71,9 +70,9 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#141428] text-foreground">
-      <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3 mb-8">
+    <div className="min-h-screen bg-[#141428]">
+      <div className="container max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 mb-6">
           <Link to="/creators">
             <Button variant="ghost" size="icon" className="rounded-full">
               <ArrowLeft className="h-5 w-5" />
@@ -81,15 +80,15 @@ const CreatorOnboarding = () => {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">Onboard New Creator</h1>
+            <h1 className="text-2xl font-bold text-white">Onboard New Creator</h1>
             <p className="text-muted-foreground">Fill in the details to add a new creator to the platform</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <div className="bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm rounded-2xl border border-[#252538]/50 shadow-lg p-6">
+            <div className="sticky top-4">
+              <div className="rounded-2xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-6 border border-[#252538]/50 shadow-lg">
                 <ProfilePicture
                   profileImage={profileImage}
                   name="New Creator"
@@ -99,10 +98,10 @@ const CreatorOnboarding = () => {
             </div>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <OnboardingForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
             
-            <div className="flex justify-end gap-3 pt-6">
+            <div className="flex justify-end gap-3 mt-6">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -123,7 +122,6 @@ const CreatorOnboarding = () => {
               <Button 
                 type="button"
                 onClick={() => setShowTeamMemberDialog(true)}
-                variant="default"
                 className="bg-brand-yellow text-black hover:bg-brand-highlight"
               >
                 <Send className="h-4 w-4 mr-2" />
