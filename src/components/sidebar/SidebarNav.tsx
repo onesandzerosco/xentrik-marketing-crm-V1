@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -56,7 +57,7 @@ const navItems: NavItem[] = [
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
-    <nav className="grid gap-1 pt-8 z-30 relative">
+    <nav className="grid gap-1 pt-[88px] z-30 relative">
       {navItems.map((item) => {
         if (item.adminOnly && !isAdmin) return null;
         
