@@ -8,6 +8,8 @@ import BasicInfoCard from "../shared/BasicInfoCard";
 import OnboardingContactInfo from "./OnboardingContactInfo";
 import OnboardingSocialLinks from "./OnboardingSocialLinks";
 import OnboardingNotes from "./OnboardingNotes";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 const onboardingSchema = z.object({
   name: z.string().min(1, "Creator name is required"),
@@ -61,6 +63,16 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, isSubmitting 
           <OnboardingSocialLinks control={form.control} />
         </div>
         <OnboardingNotes control={form.control} />
+        <div className="flex justify-end mt-6">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="hidden text-black rounded-[15px] px-3 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
       </form>
     </Form>
   );

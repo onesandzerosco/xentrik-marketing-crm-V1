@@ -13,9 +13,11 @@ const CreatorOnboarding = () => {
   const { toast } = useToast();
   const [profileImage, setProfileImage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formValues, setFormValues] = useState<OnboardingFormValues | null>(null);
 
   const handleSubmit = async (values: OnboardingFormValues) => {
     setIsSubmitting(true);
+    setFormValues(values);
     
     try {
       const newCreator = {
@@ -58,13 +60,26 @@ const CreatorOnboarding = () => {
       setIsSubmitting(false);
     }
   };
+  
+  const handleSaveClick = () => {
+    // Trigger form submission through the form ref
+    if (formValues) {
+      handleSubmit(formValues);
+    } else {
+      toast({
+        title: "No form data",
+        description: "Please fill out the form before saving.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#141428] p-6">
       <div className="max-w-7xl mx-auto">
         <CreatorHeader 
           title="Onboard New Creator"
-          onSave={handleSubmit}
+          onSave={handleSaveClick}
           isSubmitting={isSubmitting}
         />
 
