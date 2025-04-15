@@ -3,10 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, Send } from "lucide-react";
-import { Gender, Team, CreatorType } from "../types";
+import { ArrowLeft } from "lucide-react";
 import ProfilePicture from "../components/profile/ProfilePicture";
-import TeamMemberSelectionDialog from "../components/creators/TeamMemberSelectionDialog";
 import OnboardingForm, { OnboardingFormValues } from "../components/creators/onboarding/OnboardingForm";
 
 const CreatorOnboarding = () => {
@@ -15,8 +13,6 @@ const CreatorOnboarding = () => {
   const { toast } = useToast();
   const [profileImage, setProfileImage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showTeamMemberDialog, setShowTeamMemberDialog] = useState(false);
-  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
 
   const handleSubmit = async (values: OnboardingFormValues) => {
     setIsSubmitting(true);
@@ -26,9 +22,9 @@ const CreatorOnboarding = () => {
         name: values.name,
         email: values.email,
         profileImage,
-        gender: values.gender as Gender,
-        team: values.team as Team,
-        creatorType: values.creatorType as CreatorType,
+        gender: values.gender,
+        team: values.team,
+        creatorType: values.creatorType,
         socialLinks: {
           instagram: values.instagram || undefined,
           tiktok: values.tiktok || undefined,
@@ -43,13 +39,11 @@ const CreatorOnboarding = () => {
         notes: values.notes,
       };
       
-      const creatorId = await addCreator(newCreator);
+      await addCreator(newCreator);
       
       toast({
         title: "Creator Onboarded Successfully",
-        description: selectedTeamMembers.length > 0 
-          ? "The creator has been added and the Telegram group is being set up."
-          : "The creator profile has been created successfully.",
+        description: "The creator profile has been created successfully.",
         variant: "default",
       });
       
@@ -70,13 +64,12 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#141428]">
-      <div className="container max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#141428] p-6">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Link to="/creators">
             <Button variant="ghost" size="icon" className="rounded-full">
               <ArrowLeft className="h-5 w-5" />
-              <span className="sr-only">Back to Creators</span>
             </Button>
           </Link>
           <div>
@@ -88,7 +81,7 @@ const CreatorOnboarding = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
             <div className="sticky top-4">
-              <div className="rounded-2xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-6 border border-[#252538]/50 shadow-lg">
+              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
                 <ProfilePicture
                   profileImage={profileImage}
                   name="New Creator"
@@ -100,46 +93,8 @@ const CreatorOnboarding = () => {
 
           <div className="lg:col-span-3">
             <OnboardingForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
-            
-            <div className="flex justify-end gap-3 mt-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => navigate("/creators")}
-              >
-                Cancel
-              </Button>
-              
-              <Button 
-                type="submit"
-                onClick={() => handleSubmit}
-                variant="outline"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Create Profile Only
-              </Button>
-              
-              <Button 
-                type="button"
-                onClick={() => setShowTeamMemberDialog(true)}
-                className="bg-brand-yellow text-black hover:bg-brand-highlight"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Create & Setup Telegram
-              </Button>
-            </div>
           </div>
         </div>
-
-        <TeamMemberSelectionDialog
-          open={showTeamMemberDialog}
-          onOpenChange={setShowTeamMemberDialog}
-          onConfirm={(members) => {
-            setSelectedTeamMembers(members);
-            handleSubmit;
-          }}
-          teamMembers={[]}
-        />
       </div>
     </div>
   );

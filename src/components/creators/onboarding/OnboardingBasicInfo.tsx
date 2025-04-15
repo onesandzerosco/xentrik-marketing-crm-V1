@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -12,9 +11,9 @@ interface OnboardingBasicInfoProps {
 
 const OnboardingBasicInfo: React.FC<OnboardingBasicInfoProps> = ({ control }) => {
   return (
-    <div className="rounded-xl bg-gradient-to-br from-[#1a1a33]/50 to-[#1a1a33]/30 backdrop-blur-sm p-6 border border-[#252538]/50 shadow-lg">
-      <h2 className="text-lg font-semibold mb-4 text-white">Basic Information</h2>
-      <div className="grid gap-4">
+    <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+      <h2 className="text-xl font-semibold mb-4 text-white">Basic Information</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="name"
