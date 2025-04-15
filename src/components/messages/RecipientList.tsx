@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import TagFilter from '@/components/TagFilter';
+import { Toggle } from "@/components/ui/toggle";
+import { cn } from "@/lib/utils";
 import { Recipient } from '@/types/message';
 
 interface RecipientListProps {
@@ -30,6 +31,14 @@ const RecipientList: React.FC<RecipientListProps> = ({
 }) => {
   // Filter tags for recipient types
   const recipientTypeTags = ["Team", "Creator"];
+  
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      onTagsChange(selectedTags.filter(t => t !== tag));
+    } else {
+      onTagsChange([...selectedTags, tag]);
+    }
+  };
 
   return (
     <Card className="md:col-span-1 flex flex-col h-full bg-secondary/5 border-0 shadow-none">
@@ -48,12 +57,22 @@ const RecipientList: React.FC<RecipientListProps> = ({
             <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
             <span className="text-sm font-medium">Filter by type</span>
           </div>
-          <TagFilter 
-            tags={recipientTypeTags}
-            selectedTags={selectedTags}
-            onChange={onTagsChange}
-            type="team"
-          />
+          <div className="flex flex-wrap gap-2">
+            {recipientTypeTags.map((tag) => (
+              <Toggle
+                key={tag}
+                variant="premium"
+                pressed={selectedTags.includes(tag)}
+                onPressedChange={() => toggleTag(tag)}
+                className={cn(
+                  "rounded-full text-sm",
+                  selectedTags.includes(tag) ? "bg-gradient-premium-yellow text-black" : ""
+                )}
+              >
+                {tag}
+              </Toggle>
+            ))}
+          </div>
         </div>
         
         {/* Search input */}
