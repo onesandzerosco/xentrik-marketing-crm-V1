@@ -42,6 +42,21 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea {
+    @apply bg-background border-border focus:border-primary focus:ring-primary/20;
+  }
+
+  button {
+    @apply bg-transparent;
+  }
 }
 
 @layer components {
@@ -110,7 +125,7 @@
   }
   
   .employee-card {
-    @apply bg-premium-card rounded-xl p-4 border border-premium-border hover:bg-premium-highlight transition-all duration-300 hover:translate-y-[-2px] shadow-premium-sm hover:shadow-premium-md flex flex-col h-full;
+    @apply bg-card rounded-xl p-4 border border-border hover:bg-card/90 transition-all duration-300 hover:translate-y-[-2px] shadow-premium-sm hover:shadow-premium-md flex flex-col h-full;
   }
   
   .employee-card-content {

@@ -36,27 +36,31 @@ const MessageContent: React.FC<MessageContentProps> = ({
   setSelectedTags
 }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full mb-8">
-      {/* Recipients List */}
-      <RecipientList 
-        recipients={recipients}
-        selectedRecipientIds={selectedRecipientIds}
-        onSelectRecipient={handleSelectRecipient}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        selectedTags={selectedTags}
-        onTagsChange={setSelectedTags}
-      />
+    <div className="flex flex-col lg:flex-row gap-6 h-full mb-8">
+      {/* Recipients Section */}
+      <div className="w-full lg:w-1/3 bg-background rounded-lg border border-border p-4">
+        <RecipientList 
+          recipients={recipients}
+          selectedRecipientIds={selectedRecipientIds}
+          onSelectRecipient={handleSelectRecipient}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+        />
+      </div>
 
-      {/* Message Composer */}
-      <MessageComposer 
-        selectedRecipients={selectedRecipients}
-        message={message}
-        onMessageChange={setMessage}
-        onSendMessage={handleSendMessage}
-        onRemoveRecipient={handleRemoveRecipient}
-        isLoading={isLoading}
-      />
+      {/* Message Composer Section */}
+      <div className="w-full lg:w-2/3 bg-background rounded-lg border border-border p-4">
+        <MessageComposer 
+          selectedRecipients={selectedRecipients}
+          message={message}
+          onMessageChange={setMessage}
+          onSendMessage={handleSendMessage}
+          onRemoveRecipient={handleRemoveRecipient}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };

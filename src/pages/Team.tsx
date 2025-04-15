@@ -13,8 +13,6 @@ import AddEmployeeModal from '../components/employees/AddEmployeeModal';
 import DeactivateDialog from '../components/employees/DeactivateDialog';
 import { Button } from "@/components/ui/button";
 
-const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
-
 const Team = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -97,7 +95,7 @@ const Team = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen bg-sky-900/10">
+    <div className="container mx-auto px-4 py-8 min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Team Management</h1>
@@ -106,13 +104,16 @@ const Team = () => {
           </p>
         </div>
         
-        {isAdmin && <Button 
-          onClick={() => setAddEmployeeOpen(true)} 
-          variant="premium" 
-          className="shadow-premium-yellow">
+        {isAdmin && (
+          <Button 
+            onClick={() => setAddEmployeeOpen(true)} 
+            variant="premium"
+            className="shadow-premium-yellow"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Team Member
-          </Button>}
+          </Button>
+        )}
       </div>
       
       <EmployeeSearchAndSort 
