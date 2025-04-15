@@ -1,14 +1,13 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
-import OnboardingBasicInfo from "./OnboardingBasicInfo";
+import BasicInfoCard from "../shared/BasicInfoCard";
 import OnboardingContactInfo from "./OnboardingContactInfo";
 import OnboardingSocialLinks from "./OnboardingSocialLinks";
 import OnboardingNotes from "./OnboardingNotes";
-import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
 
 const onboardingSchema = z.object({
   name: z.string().min(1, "Creator name is required"),
@@ -56,18 +55,12 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onSubmit, isSubmitting 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <OnboardingBasicInfo control={form.control} />
+        <BasicInfoCard control={form.control} />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <OnboardingContactInfo control={form.control} />
           <OnboardingSocialLinks control={form.control} />
         </div>
         <OnboardingNotes control={form.control} />
-        <div className="flex justify-end gap-3">
-          <Button type="submit" disabled={isSubmitting}>
-            <Send className="h-4 w-4 mr-2" />
-            Submit
-          </Button>
-        </div>
       </form>
     </Form>
   );

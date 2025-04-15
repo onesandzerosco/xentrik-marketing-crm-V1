@@ -1,11 +1,11 @@
+
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import OnboardingForm, { OnboardingFormValues } from "../components/creators/onboarding/OnboardingForm";
+import CreatorHeader from "@/components/creators/shared/CreatorHeader";
 
 const CreatorOnboarding = () => {
   const navigate = useNavigate();
@@ -44,13 +44,9 @@ const CreatorOnboarding = () => {
       toast({
         title: "Creator Onboarded Successfully",
         description: "The creator profile has been created successfully.",
-        variant: "default",
       });
       
-      setTimeout(() => {
-        navigate("/creators");
-      }, 2000);
-      
+      navigate("/creators");
     } catch (error) {
       console.error("Error during onboarding:", error);
       toast({
@@ -66,17 +62,11 @@ const CreatorOnboarding = () => {
   return (
     <div className="min-h-screen bg-[#141428] p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link to="/creators">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Onboard New Creator</h1>
-            <p className="text-muted-foreground">Fill in the details to add a new creator to the platform</p>
-          </div>
-        </div>
+        <CreatorHeader 
+          title="Onboard New Creator"
+          onSave={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">

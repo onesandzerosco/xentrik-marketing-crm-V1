@@ -1,0 +1,70 @@
+
+import React from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Save, BarChart2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+interface CreatorHeaderProps {
+  title: string;
+  onSave: () => void;
+  isSubmitting?: boolean;
+  badges?: {
+    gender?: string;
+    team?: string;
+    creatorType?: string;
+    needsReview?: boolean;
+  };
+  showAnalytics?: boolean;
+}
+
+const CreatorHeader: React.FC<CreatorHeaderProps> = ({
+  title,
+  onSave,
+  isSubmitting,
+  badges,
+  showAnalytics
+}) => {
+  return (
+    <div className="flex items-center gap-3 mb-8">
+      <Link to="/creators">
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+      </Link>
+      <div>
+        <h1 className="text-3xl font-bold">{title}</h1>
+        {badges && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {badges.gender && <Badge variant="outline">{badges.gender}</Badge>}
+            {badges.team && <Badge variant="outline">{badges.team}</Badge>}
+            {badges.creatorType === "AI" && (
+              <Badge variant="outline" className="bg-gray-100/10 text-gray-100">AI</Badge>
+            )}
+            {badges.needsReview && (
+              <Badge variant="outline" className="bg-red-900/40 text-red-200">Needs Review</Badge>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="flex gap-3 ml-auto">
+        {showAnalytics && (
+          <Button variant="outline">
+            <BarChart2 className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+        )}
+        <Button 
+          onClick={onSave}
+          disabled={isSubmitting}
+          className="text-black rounded-[15px] px-3 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default CreatorHeader;
