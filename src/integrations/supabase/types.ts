@@ -9,6 +9,130 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      creator_social_links: {
+        Row: {
+          chaturbate: string | null
+          creator_id: string
+          instagram: string | null
+          reddit: string | null
+          tiktok: string | null
+          twitter: string | null
+        }
+        Insert: {
+          chaturbate?: string | null
+          creator_id: string
+          instagram?: string | null
+          reddit?: string | null
+          tiktok?: string | null
+          twitter?: string | null
+        }
+        Update: {
+          chaturbate?: string | null
+          creator_id?: string
+          instagram?: string | null
+          reddit?: string | null
+          tiktok?: string | null
+          twitter?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_social_links_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: true
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_tags: {
+        Row: {
+          creator_id: string
+          tag: string
+        }
+        Insert: {
+          creator_id: string
+          tag: string
+        }
+        Update: {
+          creator_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_tags_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_team_members: {
+        Row: {
+          creator_id: string
+          team_member_id: string
+        }
+        Insert: {
+          creator_id: string
+          team_member_id: string
+        }
+        Update: {
+          creator_id?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_team_members_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_team_members_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creators: {
+        Row: {
+          created_at: string | null
+          creator_type: Database["public"]["Enums"]["creator_type"]
+          gender: Database["public"]["Enums"]["gender"]
+          id: string
+          name: string
+          needs_review: boolean | null
+          profile_image: string | null
+          team: Database["public"]["Enums"]["team"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_type: Database["public"]["Enums"]["creator_type"]
+          gender: Database["public"]["Enums"]["gender"]
+          id?: string
+          name: string
+          needs_review?: boolean | null
+          profile_image?: string | null
+          team: Database["public"]["Enums"]["team"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_type?: Database["public"]["Enums"]["creator_type"]
+          gender?: Database["public"]["Enums"]["gender"]
+          id?: string
+          name?: string
+          needs_review?: boolean | null
+          profile_image?: string | null
+          team?: Database["public"]["Enums"]["team"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -113,7 +237,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      creator_type: "Real" | "AI"
+      gender: "Male" | "Female" | "Trans" | "AI"
+      team: "A Team" | "B Team" | "C Team"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -228,6 +354,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      creator_type: ["Real", "AI"],
+      gender: ["Male", "Female", "Trans", "AI"],
+      team: ["A Team", "B Team", "C Team"],
+    },
   },
 } as const

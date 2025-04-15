@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { 
   BarChart2, 
   Pencil,
-  AlertCircle
+  AlertCircle,
+  Instagram,
+  Twitter,
+  TwitchIcon,
+  Globe,
+  MessageCircle
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +21,6 @@ interface CreatorCardProps {
 }
 
 const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
-  // Get initials from name
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -24,6 +28,32 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       .join("")
       .toUpperCase()
       .substring(0, 2);
+  };
+
+  const getSocialIcons = () => {
+    const icons = [];
+    if (creator.socialLinks?.instagram) icons.push(
+      <a href={creator.socialLinks.instagram} target="_blank" rel="noopener noreferrer" key="instagram">
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Instagram className="h-4 w-4 text-pink-500" />
+        </Button>
+      </a>
+    );
+    if (creator.socialLinks?.twitter) icons.push(
+      <a href={creator.socialLinks.twitter} target="_blank" rel="noopener noreferrer" key="twitter">
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Twitter className="h-4 w-4 text-blue-400" />
+        </Button>
+      </a>
+    );
+    if (creator.socialLinks?.chaturbate) icons.push(
+      <a href={creator.socialLinks.chaturbate} target="_blank" rel="noopener noreferrer" key="chaturbate">
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <TwitchIcon className="h-4 w-4 text-purple-500" />
+        </Button>
+      </a>
+    );
+    return icons;
   };
 
   return (
@@ -34,7 +64,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
         </Avatar>
         
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2">
             <h3 className="font-medium truncate">{creator.name}</h3>
             {creator.needsReview && (
@@ -45,7 +75,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
             )}
           </div>
           
-          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="truncate">ID: {creator.id}</span>
             <span className="text-xs">•</span>
             <Badge variant="outline" className="capitalize">
@@ -55,10 +85,22 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
               {creator.team}
             </Badge>
           </div>
+
+          {(creator.tags && creator.tags.length > 0) && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {creator.tags.map(tag => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2">
+        {getSocialIcons()}
+        <div className="h-6 w-px bg-border mx-2" />
         <Link to={`/creators/${creator.id}/analytics`}>
           <Button variant="outline" size="sm" className="h-8">
             <BarChart2 className="h-4 w-4" />

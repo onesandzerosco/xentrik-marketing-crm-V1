@@ -1,18 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Creator, EngagementStats } from "../types/";
+import { Creator, EngagementStats } from "../types";
 import { useActivities } from "./ActivityContext";
-import { ChangeDetail } from "../types/activity";
 import { CreatorContextType } from "./creator/types";
-import { 
-  CREATORS_STORAGE_KEY, 
-  CREATORS_STATS_STORAGE_KEY,
-  getInitialCreators, 
-  getInitialStats, 
-  createEmptyStats, 
-  getCreatorChangeDetails 
-} from "./creator/utils";
-import { initialCreators, mockEngagementStats } from "./creator/mockData";
+import { supabase } from "@/integrations/supabase/client";
 
 const CreatorContext = createContext<CreatorContextType>({
   creators: [],
@@ -26,126 +17,118 @@ const CreatorContext = createContext<CreatorContextType>({
 export const useCreators = () => useContext(CreatorContext);
 
 export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize with data from localStorage or use mock data if no saved data
-  const [creators, setCreators] = useState<Creator[]>(() => 
-    getInitialCreators(initialCreators)
-  );
-  
-  // Save stats to localStorage with creators or use mock data
-  const [stats, setStats] = useState<Record<string, EngagementStats>>(() => 
-    getInitialStats(mockEngagementStats)
-  );
-  
+  const [creators, setCreators] = useState<Creator[]>([]);
   const { addActivity } = useActivities();
 
-  // Save creators to localStorage whenever they change
+  // Load creators from Supabase
   useEffect(() => {
-    localStorage.setItem(CREATORS_STORAGE_KEY, JSON.stringify(creators));
-  }, [creators]);
-  
-  // Save stats to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem(CREATORS_STATS_STORAGE_KEY, JSON.stringify(stats));
-  }, [stats]);
+    const loadCreators = async () => {
+      const { data: creatorsData, error: creatorsError } = await supabase
+        .from('creators')
+        .select(`
+          *,
+          creator_social_links (*),
+          creator_tags (tag),
+          creator_team_members (team_member_id)
+        `);
 
-  const addCreator = (creator: Omit<Creator, "id">) => {
-    const newCreator = {
-      ...creator,
-      id: Date.now().toString(),
-      needsReview: true,
+      if (creatorsError) {
+        console.error('Error loading creators:', creatorsError);
+        return;
+      }
+
+      const formattedCreators = creatorsData.map(creator => ({
+        ...creator,
+        socialLinks: creator.creator_social_links || {},
+        tags: creator.creator_tags?.map(t => t.tag) || [],
+        assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || []
+      }));
+
+      setCreators(formattedCreators);
     };
-    
-    // Update stats for the new creator
-    const newStats = { ...stats };
-    newStats[newCreator.id] = createEmptyStats();
-    
-    setCreators([...creators, newCreator]);
-    setStats(newStats);
-    
+
+    loadCreators();
+  }, []);
+
+  const addCreator = async (creator: Omit<Creator, "id">) => {
+    const { data: newCreator, error: creatorError } = await supabase
+      .from('creators')
+      .insert({
+        name: creator.name,
+        profile_image: creator.profileImage,
+        gender: creator.gender,
+        team: creator.team,
+        creator_type: creator.creatorType,
+        needs_review: true,
+      })
+      .select()
+      .single();
+
+    if (creatorError || !newCreator) {
+      console.error('Error creating creator:', creatorError);
+      return;
+    }
+
+    if (creator.socialLinks) {
+      const { error: socialError } = await supabase
+        .from('creator_social_links')
+        .insert({
+          creator_id: newCreator.id,
+          ...creator.socialLinks
+        });
+
+      if (socialError) console.error('Error adding social links:', socialError);
+    }
+
+    if (creator.tags?.length) {
+      const { error: tagsError } = await supabase
+        .from('creator_tags')
+        .insert(
+          creator.tags.map(tag => ({
+            creator_id: newCreator.id,
+            tag
+          }))
+        );
+
+      if (tagsError) console.error('Error adding tags:', tagsError);
+    }
+
     addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
   };
 
-  const updateCreator = (id: string, updates: Partial<Creator>) => {
+  const updateCreator = async (id: string, updates: Partial<Creator>) => {
+    const { error: creatorError } = await supabase
+      .from('creators')
+      .update({
+        name: updates.name,
+        profile_image: updates.profileImage,
+        gender: updates.gender,
+        team: updates.team,
+        creator_type: updates.creatorType,
+        needs_review: updates.needsReview,
+      })
+      .eq('id', id);
+
+    if (creatorError) {
+      console.error('Error updating creator:', creatorError);
+      return;
+    }
+
+    if (updates.socialLinks) {
+      const { error: socialError } = await supabase
+        .from('creator_social_links')
+        .upsert({
+          creator_id: id,
+          ...updates.socialLinks
+        });
+
+      if (socialError) console.error('Error updating social links:', socialError);
+    }
+
+    // Update activity log
     const existingCreator = creators.find(c => c.id === id);
-    
-    // Update the creators array with the new data
-    setCreators(
-      creators.map((creator) =>
-        creator.id === id ? { ...creator, ...updates } : creator
-      )
-    );
-    
-    // Check if the profile image was updated
-    if (existingCreator && updates.profileImage && updates.profileImage !== existingCreator.profileImage) {
-      // Add a specific log for profile image updates
-      addActivity(
-        "update", 
-        `Profile picture updated for: ${existingCreator.name}`, 
-        id, 
-        [{
-          field: "profileImage",
-          oldValue: "previous image",
-          newValue: "new image" 
-        }]
-      );
-    }
-    
-    // Check if team members were updated
-    if (existingCreator && updates.assignedTeamMembers) {
-      const oldTeamMembers = existingCreator.assignedTeamMembers || [];
-      const newTeamMembers = updates.assignedTeamMembers;
-      
-      if (JSON.stringify(oldTeamMembers) !== JSON.stringify(newTeamMembers)) {
-        addActivity(
-          "update",
-          `Team members updated for: ${existingCreator.name}`,
-          id,
-          [{
-            field: "assignedTeamMembers",
-            oldValue: `${oldTeamMembers.length} members`,
-            newValue: `${newTeamMembers.length} members`
-          }]
-        );
-      }
-    }
-    
-    // Process other changes as before
-    if (existingCreator) {
-      const changeDetails = getCreatorChangeDetails(existingCreator, updates);
-      let hasMultipleChanges = false;
-      
-      hasMultipleChanges = changeDetails.length > 1;
-      
-      if (hasMultipleChanges) {
-        const fieldsList = changeDetails.map(detail => detail.field).join(", ");
-        addActivity("bulk-update", `Multiple updates for ${existingCreator.name} (${changeDetails.length} changes)`, id, changeDetails);
-      } 
-      else if (changeDetails.length === 1) {
-        const change = changeDetails[0];
-        
-        if (change.field === "name") {
-          addActivity("update", `Profile name updated for: ${existingCreator.name} → ${updates.name}`, id, changeDetails);
-        } 
-        else if (change.field === "team") {
-          addActivity("update", `Team updated for: ${existingCreator.name} (${existingCreator.team} → ${updates.team})`, id, changeDetails);
-        } 
-        else if (change.field === "gender") {
-          addActivity("update", `Gender updated for: ${existingCreator.name}`, id, changeDetails);
-        } 
-        else if (change.field === "reviewStatus") {
-          if (updates.needsReview) {
-            addActivity("alert", `Review flag added for: ${existingCreator.name}`, id, changeDetails);
-          } else {
-            addActivity("update", `Review completed for: ${existingCreator.name}`, id, changeDetails);
-          }
-        } 
-        else {
-          addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
-        }
-      }
-      else if (Object.keys(updates).length > 0) {
-        addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
-      }
+    if (existingCreator && updates.name) {
+      addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
     }
   };
 
@@ -154,7 +137,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const getCreatorStats = (id: string) => {
-    return stats[id];
+    // Note: Implement stats fetching from Supabase if needed
+    return undefined;
   };
 
   const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[] }) => {
