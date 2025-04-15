@@ -105,9 +105,12 @@ export type Database = {
           id: string
           name: string
           needs_review: boolean | null
+          notes: string | null
           profile_image: string | null
           team: Database["public"]["Enums"]["team"]
+          telegram_username: string | null
           updated_at: string | null
+          whatsapp_number: string | null
         }
         Insert: {
           created_at?: string | null
@@ -116,9 +119,12 @@ export type Database = {
           id?: string
           name: string
           needs_review?: boolean | null
+          notes?: string | null
           profile_image?: string | null
           team: Database["public"]["Enums"]["team"]
+          telegram_username?: string | null
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Update: {
           created_at?: string | null
@@ -127,9 +133,12 @@ export type Database = {
           id?: string
           name?: string
           needs_review?: boolean | null
+          notes?: string | null
           profile_image?: string | null
           team?: Database["public"]["Enums"]["team"]
+          telegram_username?: string | null
           updated_at?: string | null
+          whatsapp_number?: string | null
         }
         Relationships: []
       }

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Creator, EngagementStats } from "../types";
 import { useActivities } from "./ActivityContext";
@@ -7,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CreatorContext = createContext<CreatorContextType>({
   creators: [],
-  addCreator: () => {},
+  addCreator: async () => undefined,
   updateCreator: () => {},
   getCreator: () => undefined,
   getCreatorStats: () => undefined,
