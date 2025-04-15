@@ -9,7 +9,7 @@ const Messages: React.FC = () => {
   const messageController = useMessageController();
   
   return (
-    <div className="flex min-h-screen w-full bg-background">
+    <div className="flex min-h-screen w-full bg-secondary/5">
       <div className="flex-grow flex flex-col p-6 w-full max-w-[1400px] mx-auto">
         <MessageHeader />
         

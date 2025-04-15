@@ -38,7 +38,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full mb-8">
       {/* Recipients Section */}
-      <div className="w-full lg:w-1/3 bg-background rounded-lg border border-border p-4">
+      <div className="w-full lg:w-1/3 bg-secondary/5 rounded-lg border border-border/40 shadow-sm">
         <RecipientList 
           recipients={recipients}
           selectedRecipientIds={selectedRecipientIds}
@@ -51,7 +51,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
       </div>
 
       {/* Message Composer Section */}
-      <div className="w-full lg:w-2/3 bg-background rounded-lg border border-border p-4">
+      <div className="w-full lg:w-2/3 bg-secondary/5 rounded-lg border border-border/40 shadow-sm">
         <MessageComposer 
           selectedRecipients={selectedRecipients}
           message={message}

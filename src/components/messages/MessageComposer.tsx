@@ -28,7 +28,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
   isLoading
 }) => {
   return (
-    <Card className="md:col-span-2 flex flex-col h-full shadow-md border border-border/40 bg-background">
+    <Card className="md:col-span-2 flex flex-col h-full shadow-none border-0 bg-secondary/5">
       <CardHeader className="pb-2 border-b border-border/30">
         <CardTitle className="text-xl flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-primary" />
@@ -43,13 +43,13 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
           <>
             <div className="mb-4">
               <label className="text-sm font-medium mb-1 block">Recipients ({selectedRecipients.length})</label>
-              <div className="p-4 bg-background rounded-lg border border-border/60 shadow-sm">
+              <div className="p-4 bg-secondary/10 rounded-lg border border-border/40 shadow-sm">
                 <ScrollArea className="max-h-32">
                   <div className="flex flex-wrap gap-2">
                     {selectedRecipients.map(recipient => (
                       <div 
                         key={recipient.id} 
-                        className="flex items-center gap-2 p-2 bg-secondary/10 rounded-md border border-border/40"
+                        className="flex items-center gap-2 p-2 bg-secondary/20 rounded-md border border-border/40"
                       >
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={recipient.profileImage || ""} alt={recipient.name} />
@@ -84,7 +84,7 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
               <Textarea 
                 id="message"
                 placeholder="Type your WhatsApp message here..."
-                className="resize-none h-[calc(100vh-500px)] min-h-[200px] bg-background border border-border/60 focus:border-primary/30 focus:ring-1 focus:ring-primary/20 rounded-lg"
+                className="resize-none h-[calc(100vh-500px)] min-h-[200px] bg-secondary/10 border border-border/40 focus:border-primary/30 focus:ring-1 focus:ring-primary/20 rounded-lg"
                 value={message}
                 onChange={(e) => onMessageChange(e.target.value)}
               />

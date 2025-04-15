@@ -32,7 +32,7 @@ const RecipientList: React.FC<RecipientListProps> = ({
   const recipientTypeTags = ["Team", "Creator"];
 
   return (
-    <Card className="md:col-span-1 flex flex-col h-full bg-background border border-border/40 shadow-md">
+    <Card className="md:col-span-1 flex flex-col h-full bg-secondary/5 border-0 shadow-none">
       <CardHeader className="pb-2 space-y-2">
         <CardTitle className="text-xl flex items-center gap-2">
           <User className="h-5 w-5 text-primary" />
@@ -61,7 +61,7 @@ const RecipientList: React.FC<RecipientListProps> = ({
           <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search recipients..."
-            className="pl-9 bg-background border border-input/60 focus:border-primary/30 transition-all"
+            className="pl-9 bg-secondary/5 border border-border/40 focus:border-primary/30 transition-all"
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -85,8 +85,8 @@ const RecipientList: React.FC<RecipientListProps> = ({
                   key={`recipient-${recipient.id}`}
                   className={`w-full text-left px-3 py-3 rounded-lg transition-all flex items-center gap-3 ${
                     isSelected 
-                      ? 'bg-[#222] text-white' 
-                      : 'hover:bg-muted'
+                      ? 'bg-secondary text-white' 
+                      : 'hover:bg-secondary/10'
                   }`}
                   onClick={() => onSelectRecipient(recipient.id)}
                 >
@@ -99,7 +99,7 @@ const RecipientList: React.FC<RecipientListProps> = ({
                     </Avatar>
                     {isSelected && (
                       <div className="absolute -top-1 -right-1 bg-primary rounded-full p-0.5">
-                        <Check className="h-3 w-3 text-white" />
+                        <Check className="h-3 w-3 text-black" />
                       </div>
                     )}
                   </div>
