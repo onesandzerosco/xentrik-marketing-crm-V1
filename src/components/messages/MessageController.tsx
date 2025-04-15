@@ -15,7 +15,6 @@ export const useMessageController = () => {
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
-  const [webhookUrl, setWebhookUrl] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -39,12 +38,6 @@ export const useMessageController = () => {
     }));
     
     setRecipients([...creatorsWithIds, ...employeesWithIds]);
-    
-    // Load saved webhook URL from localStorage
-    const savedWebhook = localStorage.getItem("n8nWebhookUrl");
-    if (savedWebhook) {
-      setWebhookUrl(savedWebhook);
-    }
   }, [creators]);
 
   const handleSelectRecipient = (id: string) => {
@@ -81,15 +74,6 @@ export const useMessageController = () => {
       return;
     }
 
-    if (!webhookUrl) {
-      toast({
-        title: "Webhook URL not configured",
-        description: "Please configure your n8n webhook URL in the settings",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const selectedRecipients = recipients.filter(r => selectedRecipientIds.includes(r.id));
     if (selectedRecipients.length === 0) return;
 
@@ -103,52 +87,22 @@ export const useMessageController = () => {
         timestamp: new Date().toISOString()
       };
 
-      // Call the n8n webhook with the message and recipients details
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        mode: "no-cors", // Handle CORS issues
-        body: JSON.stringify(payload),
-      });
-
       toast({
         title: "Message sent",
-        description: `Your message has been sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? 's' : ''} via WhatsApp`
+        description: `Your message has been sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? 's' : ''}`
       });
       
-      // Clear the message input after successful send
       setMessage("");
-      // Keep the recipients selected for possible follow-up messages
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
         title: "Error",
-        description: "Failed to send WhatsApp message. Please check your webhook configuration.",
+        description: "Failed to send message. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSaveWebhook = () => {
-    if (!webhookUrl.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid webhook URL",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    localStorage.setItem("n8nWebhookUrl", webhookUrl);
-    
-    toast({
-      title: "Webhook Saved",
-      description: "Your n8n webhook URL has been saved"
-    });
   };
 
   // Filter and sort recipients
@@ -172,16 +126,13 @@ export const useMessageController = () => {
     selectedRecipientIds,
     selectedRecipients,
     message,
-    webhookUrl,
     searchTerm,
     isLoading,
     selectedTags,
     handleSelectRecipient,
     handleRemoveRecipient,
     handleSendMessage,
-    handleSaveWebhook,
     setMessage,
-    setWebhookUrl,
     setSearchTerm,
     setSelectedTags
   };
