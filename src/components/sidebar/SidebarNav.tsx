@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
-    <nav className="grid gap-1">
+    <nav className="grid gap-1 pt-16"> {/* Added pt-16 to move buttons higher */}
       {navItems.map((item) => {
         if (item.adminOnly && !isAdmin) return null;
         
