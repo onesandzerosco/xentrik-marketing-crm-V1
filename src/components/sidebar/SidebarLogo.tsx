@@ -14,7 +14,6 @@ const SidebarLogo: React.FC = () => {
   useEffect(() => {
     const loadLogo = async () => {
       try {
-        // Try to get the public URL for the logo
         const { data: { publicUrl } } = supabase.storage
           .from(BUCKET_NAME)
           .getPublicUrl(LOGO_PATH);
@@ -35,16 +34,16 @@ const SidebarLogo: React.FC = () => {
   };
 
   return (
-    <Link to="/dashboard" className="flex h-20 items-center justify-center pt-5 pb-2 hover:opacity-90 transition-opacity">
+    <Link to="/dashboard" className="flex h-20 items-center justify-center py-4 hover:opacity-90 transition-opacity">
       {!logoLoaded && (
-        <div className="h-[60px] w-[140px] bg-premium-dark/20 animate-pulse rounded"></div>
+        <div className="h-[80px] w-[180px] bg-premium-dark/20 animate-pulse rounded"></div>
       )}
       {logoUrl && (
         <img
           src={logoUrl}
           alt="Xentrik Marketing"
           className={cn(
-            "h-[60px] w-auto object-contain transition-opacity duration-300",
+            "h-[80px] w-auto object-contain transition-opacity duration-300",
             logoLoaded ? "opacity-100" : "opacity-0"
           )}
           style={{ willChange: "transform" }}
