@@ -4,7 +4,6 @@ import { Navigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import Sidebar from '../Sidebar';
 import PageTransition from '../PageTransition';
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,16 +21,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex w-full h-screen">
+    <div className="flex w-full">
       <Sidebar />
-      <div className="w-full pl-60 bg-premium-dark flex flex-col">
-        <ScrollArea className="h-full w-full">
-          <PageTransition>
-            <div className="p-4">
-              {children}
-            </div>
-          </PageTransition>
-        </ScrollArea>
+      <div className="w-full pl-60 bg-premium-dark overflow-y-auto">
+        <PageTransition>
+          {children}
+        </PageTransition>
       </div>
     </div>
   );
