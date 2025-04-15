@@ -126,33 +126,26 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="p-8 w-full max-w-[1400px] mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <Link to="/creators">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="rounded-full hover:bg-secondary/20"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Back to Creators</span>
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Onboard New Creator</h1>
-          <p className="text-muted-foreground">
-            Fill in the details to add a new creator to the platform
-          </p>
+    <div className="min-h-screen bg-background">
+      <div className="container py-8 px-4">
+        <div className="flex items-center gap-3 mb-8">
+          <Link to="/creators">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Back to Creators</span>
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Onboard New Creator</h1>
+            <p className="text-muted-foreground">Fill in the details to add a new creator to the platform</p>
+          </div>
         </div>
-      </div>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-6">
-              <div className="bg-gradient-to-b from-card/50 to-card rounded-xl p-6 shadow-lg border border-border/50">
-                <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">Profile Picture</h2>
-                <div className="flex justify-center">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg border bg-card/50">
                   <ProfilePicture
                     profileImage={profileImage}
                     name={form.watch("name") || "New Creator"}
@@ -160,123 +153,231 @@ const CreatorOnboarding = () => {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="md:col-span-2 space-y-6">
-              <div className="bg-gradient-to-b from-card/50 to-card rounded-xl p-6 shadow-lg border border-border/50">
-                <h2 className="text-xl font-bold mb-4">Basic Information</h2>
+              <div className="md:col-span-2 space-y-6">
                 <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter creator name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter creator email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <h2 className="text-xl font-semibold">Basic Information</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
+                            <Input placeholder="Enter creator name" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Trans">Trans</SelectItem>
-                            <SelectItem value="AI">AI</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="team"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Team <span className="text-red-500">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select team" />
-                            </SelectTrigger>
+                            <Input placeholder="Enter creator email" {...field} />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="A Team">A Team</SelectItem>
-                            <SelectItem value="B Team">B Team</SelectItem>
-                            <SelectItem value="C Team">C Team</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="creatorType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Creator Type <span className="text-red-500">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select creator type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Real">Real</SelectItem>
-                            <SelectItem value="AI">AI</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gender <span className="text-red-500">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Trans">Trans</SelectItem>
+                              <SelectItem value="AI">AI</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="team"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Team <span className="text-red-500">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select team" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="A Team">A Team</SelectItem>
+                              <SelectItem value="B Team">B Team</SelectItem>
+                              <SelectItem value="C Team">C Team</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="creatorType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Creator Type <span className="text-red-500">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select creator type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Real">Real</SelectItem>
+                              <SelectItem value="AI">AI</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
-              
-              <div className="bg-gradient-to-b from-card/50 to-card rounded-xl p-6 shadow-lg border border-border/50">
-                <h2 className="text-xl font-bold mb-4">Contact Information</h2>
+
                 <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Contact Information</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="telegramUsername"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telegram Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="@username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="whatsappNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>WhatsApp Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+1234567890" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Social Media Links</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="instagram"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Instagram</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Instagram username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="tiktok"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>TikTok</FormLabel>
+                          <FormControl>
+                            <Input placeholder="TikTok username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="twitter"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Twitter</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Twitter username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="reddit"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Reddit</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Reddit username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="chaturbate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Chaturbate</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Chaturbate username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold">Additional Notes</h2>
                   <FormField
                     control={form.control}
-                    name="telegramUsername"
+                    name="notes"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Telegram Username</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="@username" 
+                          <Textarea 
+                            placeholder="Add any additional notes about this creator" 
+                            className="min-h-[120px]" 
                             {...field} 
                           />
                         </FormControl>
@@ -284,165 +385,53 @@ const CreatorOnboarding = () => {
                       </FormItem>
                     )}
                   />
-                  
-                  <FormField
-                    control={form.control}
-                    name="whatsappNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>WhatsApp Number</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="+1234567890" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
-              </div>
-              
-              <div className="bg-gradient-to-b from-card/50 to-card rounded-xl p-6 shadow-lg border border-border/50">
-                <h2 className="text-xl font-bold mb-4">Social Media Links</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="instagram"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Instagram</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Instagram username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="tiktok"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>TikTok</FormLabel>
-                        <FormControl>
-                          <Input placeholder="TikTok username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="twitter"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Twitter</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Twitter username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="reddit"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Reddit</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Reddit username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="chaturbate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Chaturbate</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Chaturbate username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-b from-card/50 to-card rounded-xl p-6 shadow-lg border border-border/50">
-                <h2 className="text-xl font-bold mb-4">Additional Notes</h2>
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Add any additional notes about this creator" 
-                          className="min-h-[120px]" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => navigate("/creators")}
-            >
-              Cancel
-            </Button>
-            
-            <Button 
-              type="submit"
-              onClick={() => form.handleSubmit(handleSubmit)()}
-              variant="outline"
-              className="bg-gradient-to-r from-card to-card/80 hover:from-card/90 hover:to-card/70"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Create Profile Only
-            </Button>
-            
-            <Button 
-              type="button"
-              onClick={() => setShowTeamMemberDialog(true)}
-              variant="premium"
-              className="shadow-premium-yellow hover:shadow-premium-highlight"
-              disabled={!form.watch("telegramUsername")}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Create & Setup Telegram
-            </Button>
-          </div>
-        </form>
-      </Form>
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => navigate("/creators")}
+              >
+                Cancel
+              </Button>
+              
+              <Button 
+                type="submit"
+                onClick={() => form.handleSubmit(handleSubmit)()}
+                variant="outline"
+                className="bg-gradient-to-r from-card to-card/80 hover:from-card/90 hover:to-card/70"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Create Profile Only
+              </Button>
+              
+              <Button 
+                type="button"
+                onClick={() => setShowTeamMemberDialog(true)}
+                variant="premium"
+                className="shadow-premium-yellow hover:shadow-premium-highlight"
+                disabled={!form.watch("telegramUsername")}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Create & Setup Telegram
+              </Button>
+            </div>
+          </form>
+        </Form>
 
-      <TeamMemberSelectionDialog
-        open={showTeamMemberDialog}
-        onOpenChange={setShowTeamMemberDialog}
-        onConfirm={(members) => {
-          setSelectedTeamMembers(members);
-          form.handleSubmit(handleSubmit)();
-        }}
-        teamMembers={[]} // We'll fetch this from Supabase
-      />
+        <TeamMemberSelectionDialog
+          open={showTeamMemberDialog}
+          onOpenChange={setShowTeamMemberDialog}
+          onConfirm={(members) => {
+            setSelectedTeamMembers(members);
+            form.handleSubmit(handleSubmit)();
+          }}
+          teamMembers={[]} // We'll fetch this from Supabase
+        />
+      </div>
     </div>
   );
 };
