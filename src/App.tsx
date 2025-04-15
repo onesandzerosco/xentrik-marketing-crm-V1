@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { AuthProvider } from './context/AuthContext';
@@ -41,8 +42,10 @@ function App() {
 }
 
 const AppRoutes = () => {
+  const location = useLocation();
+  
   return (
-    <Routes>
+    <Routes location={location} key={location.pathname}>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
