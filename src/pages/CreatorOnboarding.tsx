@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Send, Check } from "lucide-react";
+import { ArrowLeft, Save, Send } from "lucide-react";
 import { Gender, Team, CreatorType } from "../types";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import TeamMemberSelectionDialog from "../components/creators/TeamMemberSelectionDialog";
@@ -126,8 +126,8 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
+      <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 mb-8">
           <Link to="/creators">
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -142,10 +142,10 @@ const CreatorOnboarding = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg border bg-card/50">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-1">
+                <div className="sticky top-8">
                   <ProfilePicture
                     profileImage={profileImage}
                     name={form.watch("name") || "New Creator"}
@@ -154,10 +154,10 @@ const CreatorOnboarding = () => {
                 </div>
               </div>
 
-              <div className="md:col-span-2 space-y-6">
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Basic Information</h2>
-                  <div className="grid gap-4 md:grid-cols-2">
+              <div className="lg:col-span-2 space-y-8">
+                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                  <h2 className="text-lg font-semibold">Basic Information</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="name"
@@ -171,7 +171,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="email"
@@ -187,7 +186,7 @@ const CreatorOnboarding = () => {
                     />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <FormField
                       control={form.control}
                       name="gender"
@@ -211,7 +210,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="team"
@@ -234,7 +232,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="creatorType"
@@ -259,9 +256,9 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Contact Information</h2>
-                  <div className="grid gap-4 md:grid-cols-2">
+                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                  <h2 className="text-lg font-semibold">Contact Information</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="telegramUsername"
@@ -275,7 +272,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="whatsappNumber"
@@ -292,9 +288,9 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Social Media Links</h2>
-                  <div className="grid gap-4 md:grid-cols-2">
+                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                  <h2 className="text-lg font-semibold">Social Media Links</h2>
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="instagram"
@@ -308,7 +304,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="tiktok"
@@ -322,7 +317,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="twitter"
@@ -336,7 +330,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-                    
                     <FormField
                       control={form.control}
                       name="reddit"
@@ -350,7 +343,6 @@ const CreatorOnboarding = () => {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="chaturbate"
@@ -367,8 +359,8 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold">Additional Notes</h2>
+                <div className="bg-card/5 backdrop-blur-sm border rounded-lg p-6 space-y-6">
+                  <h2 className="text-lg font-semibold">Additional Notes</h2>
                   <FormField
                     control={form.control}
                     name="notes"
@@ -389,7 +381,7 @@ const CreatorOnboarding = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-3 pt-6">
               <Button 
                 type="button" 
                 variant="outline" 
@@ -429,7 +421,7 @@ const CreatorOnboarding = () => {
             setSelectedTeamMembers(members);
             form.handleSubmit(handleSubmit)();
           }}
-          teamMembers={[]} // We'll fetch this from Supabase
+          teamMembers={[]}
         />
       </div>
     </div>
