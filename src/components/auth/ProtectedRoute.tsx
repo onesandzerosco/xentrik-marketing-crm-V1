@@ -23,9 +23,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return (
     <div className="flex w-full">
       <Sidebar />
-      <div className="w-full pl-60 bg-premium-dark overflow-y-auto">
+      <div className="w-full pl-60 bg-premium-dark overflow-y-auto h-screen">
         <PageTransition>
-          {children}
+          <div className="max-w-full overflow-x-hidden">
+            {children}
+          </div>
         </PageTransition>
       </div>
     </div>
