@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -57,7 +58,8 @@ const MessageComposer: React.FC<MessageComposerProps> = ({
         <Button 
           onClick={onSendMessage}
           disabled={isLoading || !message.trim()}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto bg-gradient-premium-yellow text-black font-medium hover:shadow-premium-highlight transition-all duration-300 transform hover:-translate-y-1 hover:opacity-90"
+          variant="premium"
         >
           {isLoading ? 'Sending...' : 'Send Message'}
         </Button>
