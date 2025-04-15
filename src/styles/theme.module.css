@@ -1,0 +1,26 @@
+
+/* Fix for white text fill boxes */
+input, 
+textarea, 
+select {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Fix for popover menus that might have white backgrounds */
+[role="menu"],
+[role="listbox"],
+[data-radix-popper-content-wrapper] {
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Card styling */
+.card {
+  padding: 2em;
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+}
+
