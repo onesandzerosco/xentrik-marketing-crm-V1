@@ -1,36 +1,37 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
  
 @layer base {
   :root {
-    --background: 210 50% 95%; /* Slightly more saturated, slightly more blue */
+    --background: 240 20% 12%; /* #141428 - the requested background color */
     --foreground: 0 0% 98%;
-    --card: 240 17% 12%;
+    --card: 240 24% 15%; /* Slightly lighter than background for cards */
     --card-foreground: 0 0% 98%;
-    --popover: 240 17% 12%;
+    --popover: 240 24% 15%;
     --popover-foreground: 0 0% 98%;
     --primary: 54 100% 60%;    /* Banana yellow */
     --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 12% 18%;
+    --secondary: 240 20% 20%; /* Adjusted for better contrast */
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 12% 18%;
+    --muted: 240 20% 25%;
     --muted-foreground: 240 8% 65%;
     --accent: 54 100% 65%;     /* Slightly lighter banana yellow */
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 12% 20%;
-    --input: 240 12% 20%;
+    --border: 240 20% 25%;
+    --input: 240 20% 25%;
     --ring: 54 100% 60%;      /* Banana yellow for focus ring */
     --radius: 0.25rem;        /* Reduced radius for a more premium look */
     --sidebar-background: 240 24% 8%;
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 54 100% 60%;   /* Banana yellow */
     --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 12% 18%;
+    --sidebar-accent: 240 20% 18%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 12% 18%;
+    --sidebar-border: 240 20% 18%;
     --sidebar-ring: 54 100% 60%;      /* Banana yellow ring */
   }
 
@@ -51,7 +52,7 @@
   input[type="tel"],
   input[type="url"],
   textarea {
-    @apply bg-background border-border focus:border-primary focus:ring-primary/20;
+    @apply bg-secondary border-border focus:border-primary focus:ring-primary/20;
   }
 
   button {

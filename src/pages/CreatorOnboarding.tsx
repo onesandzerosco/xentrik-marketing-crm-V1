@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCreators } from "../context/CreatorContext";
@@ -127,7 +126,7 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#141428] text-foreground">
       <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3 mb-8">
           <Link to="/creators">
@@ -147,7 +146,7 @@ const CreatorOnboarding = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1">
                 <div className="sticky top-8">
-                  <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
+                  <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6">
                     <ProfilePicture
                       profileImage={profileImage}
                       name={form.watch("name") || "New Creator"}
@@ -158,7 +157,7 @@ const CreatorOnboarding = () => {
               </div>
 
               <div className="lg:col-span-2 space-y-8">
-                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
+                <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Basic Information</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -259,7 +258,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
+                <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Contact Information</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -291,7 +290,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
+                <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Social Media Links</h2>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FormField
@@ -362,7 +361,7 @@ const CreatorOnboarding = () => {
                   </div>
                 </div>
 
-                <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 space-y-6">
+                <div className="bg-[#1a1a33] text-card-foreground rounded-lg border border-[#252538] shadow-sm p-6 space-y-6">
                   <h2 className="text-lg font-semibold">Additional Notes</h2>
                   <FormField
                     control={form.control}
