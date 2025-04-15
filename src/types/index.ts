@@ -20,6 +20,9 @@ export interface Creator {
   tags: string[];
   needsReview?: boolean;
   assignedTeamMembers?: string[]; // IDs of team members assigned to this creator
+  telegramUsername?: string; // Added for telegram integration
+  whatsappNumber?: string; // Added for whatsapp integration
+  notes?: string; // Additional notes about the creator
 }
 
 export interface EngagementStats {

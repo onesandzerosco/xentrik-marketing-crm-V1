@@ -47,7 +47,10 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         socialLinks: creator.creator_social_links || {},
         tags: creator.creator_tags?.map(t => t.tag) || [],
         assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
-        needsReview: creator.needs_review || false
+        needsReview: creator.needs_review || false,
+        telegramUsername: creator.telegram_username,
+        whatsappNumber: creator.whatsapp_number,
+        notes: creator.notes
       }));
 
       setCreators(formattedCreators);
@@ -66,6 +69,9 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         team: creator.team,
         creator_type: creator.creatorType,
         needs_review: true,
+        telegram_username: creator.telegramUsername,
+        whatsapp_number: creator.whatsappNumber,
+        notes: creator.notes
       })
       .select()
       .single();
@@ -100,6 +106,25 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
+    
+    // Add the new creator to the local state
+    const newCreatorObject: Creator = {
+      id: newCreator.id,
+      name: creator.name,
+      profileImage: creator.profileImage,
+      gender: creator.gender,
+      team: creator.team,
+      creatorType: creator.creatorType,
+      socialLinks: creator.socialLinks || {},
+      tags: creator.tags || [],
+      needsReview: true,
+      telegramUsername: creator.telegramUsername,
+      whatsappNumber: creator.whatsappNumber,
+      notes: creator.notes
+    };
+    
+    setCreators(prevCreators => [...prevCreators, newCreatorObject]);
+    return newCreator.id;
   };
 
   const updateCreator = async (id: string, updates: Partial<Creator>) => {
@@ -113,6 +138,9 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         team: updates.team,
         creator_type: updates.creatorType,
         needs_review: updates.needsReview,
+        telegram_username: updates.telegramUsername,
+        whatsapp_number: updates.whatsappNumber,
+        notes: updates.notes
       })
       .eq('id', id);
 
@@ -137,6 +165,13 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (existingCreator && updates.name) {
       addActivity("update", `Profile updated for: ${existingCreator.name}`, id);
     }
+    
+    // Update the creator in the local state
+    setCreators(prevCreators => 
+      prevCreators.map(c => 
+        c.id === id ? { ...c, ...updates } : c
+      )
+    );
   };
 
   const getCreator = (id: string) => {

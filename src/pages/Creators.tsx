@@ -6,7 +6,7 @@ import TagFilter from "../components/TagFilter";
 import { Button } from "@/components/ui/button";
 import { Filter, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import OnboardingModal from "../components/OnboardingModal";
+import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const Creators = () => {
@@ -14,7 +14,6 @@ const Creators = () => {
     creators,
     filterCreators
   } = useCreators();
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
   // State for filters - not persisted to localStorage
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -83,10 +82,12 @@ const Creators = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Button onClick={() => setOnboardingOpen(true)} variant="premium" className="shadow-premium-yellow">
-            <Plus className="h-4 w-4 mr-2" />
-            Onboard Creator
-          </Button>
+          <Link to="/creators/onboard">
+            <Button variant="premium" className="shadow-premium-yellow hover:shadow-premium-highlight">
+              <Plus className="h-4 w-4 mr-2" />
+              Onboard Creator
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -124,13 +125,13 @@ const Creators = () => {
       {filteredCreators.length === 0 && <div className="text-center py-12 bg-card/50 rounded-lg border border-border">
           <h3 className="text-lg font-medium mb-2">No creators found</h3>
           <p className="text-muted-foreground mb-4">Try changing your filters or add a new creator</p>
-          <Button onClick={() => setOnboardingOpen(true)} variant="premium" className="shadow-premium-yellow">
-            <Plus className="h-4 w-4 mr-2" />
-            Onboard Creator
-          </Button>
+          <Link to="/creators/onboard">
+            <Button variant="premium" className="shadow-premium-yellow hover:shadow-premium-highlight">
+              <Plus className="h-4 w-4 mr-2" />
+              Onboard Creator
+            </Button>
+          </Link>
         </div>}
-      
-      <OnboardingModal open={onboardingOpen} onOpenChange={setOnboardingOpen} />
     </div>;
 };
 

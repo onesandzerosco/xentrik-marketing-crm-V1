@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -11,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
 import CreatorProfile from './pages/CreatorProfile';
 import CreatorAnalytics from './pages/CreatorAnalytics';
+import CreatorOnboarding from './pages/CreatorOnboarding';
 import AccountSettings from './pages/AccountSettings';
 import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
@@ -47,6 +49,7 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
+      <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
       <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
