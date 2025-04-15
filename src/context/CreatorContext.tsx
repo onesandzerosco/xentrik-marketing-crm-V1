@@ -37,11 +37,17 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return;
       }
 
-      const formattedCreators = creatorsData.map(creator => ({
-        ...creator,
+      const formattedCreators: Creator[] = creatorsData.map(creator => ({
+        id: creator.id,
+        name: creator.name,
+        profileImage: creator.profile_image || "",
+        gender: creator.gender,
+        team: creator.team,
+        creatorType: creator.creator_type,
         socialLinks: creator.creator_social_links || {},
         tags: creator.creator_tags?.map(t => t.tag) || [],
-        assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || []
+        assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
+        needsReview: creator.needs_review || false
       }));
 
       setCreators(formattedCreators);
@@ -97,6 +103,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const updateCreator = async (id: string, updates: Partial<Creator>) => {
+    // Only send fields that exist in the creators table
     const { error: creatorError } = await supabase
       .from('creators')
       .update({
@@ -141,11 +148,12 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return undefined;
   };
 
-  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[] }) => {
+  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[]; reviewStatus?: string[] }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
       let teamMatch = true;
       let creatorTypeMatch = true;
+      let reviewStatusMatch = true;
 
       if (filters.gender && filters.gender.length > 0) {
         genderMatch = filters.gender.includes(creator.gender);
@@ -159,7 +167,12 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
       }
 
-      return genderMatch && teamMatch && creatorTypeMatch;
+      if (filters.reviewStatus && filters.reviewStatus.length > 0) {
+        const isInReview = creator.needsReview === true;
+        reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
+      }
+
+      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch;
     });
   };
 
