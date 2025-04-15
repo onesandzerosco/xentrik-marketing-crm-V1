@@ -18,17 +18,15 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="fixed h-screen w-60 bg-premium-darker border-r border-premium-border/30 flex flex-col shadow-premium-md">
-      <SidebarLogo />
-      
-      <div className="border-t border-premium-border/20 mx-4 mt-2 mb-4"></div>
-
-      <div className="flex flex-col h-[calc(100vh-8rem)] p-3 overflow-hidden">
-        <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent pr-1">
+    <aside className="fixed h-screen w-60 bg-premium-darker border-r border-premium-border/30 flex flex-col shadow-premium-md z-10">
+      <div className="flex flex-col h-full overflow-hidden">
+        <SidebarLogo />
+        
+        <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent">
           <SidebarNav isAdmin={isAdmin} />
         </div>
 
-        <div className="mt-auto pt-3 border-t border-premium-border/20">
+        <div className="mt-auto p-3 border-t border-premium-border/20">
           {user && <SidebarUserSection />}
         </div>
       </div>
