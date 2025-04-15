@@ -3,6 +3,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import Sidebar from '../Sidebar';
+import PageTransition from '../PageTransition';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,8 +23,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return (
     <div className="flex w-full">
       <Sidebar />
-      <div className="w-full pl-60 bg-premium-dark">
-        {children}
+      <div className="w-full pl-60 bg-premium-dark overflow-y-auto">
+        <PageTransition>
+          {children}
+        </PageTransition>
       </div>
     </div>
   );
