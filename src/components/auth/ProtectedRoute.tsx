@@ -13,7 +13,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
 
   if (isLoading) {
-    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#1A1F2C]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-premium-border border-t-brand-yellow"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -23,13 +30,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return (
     <div className="flex w-full">
       <Sidebar />
-      <div className="w-full pl-60 bg-premium-dark overflow-y-auto h-screen">
+      <main className="w-full pl-60 bg-premium-dark h-screen overflow-y-auto">
         <PageTransition>
           <div className="max-w-full overflow-x-hidden">
             {children}
           </div>
         </PageTransition>
-      </div>
+      </main>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const logoUrl = "/lovable-uploads/318000f3-5bdf-47aa-8bdc-32a1ddb70c6b.png";
 
@@ -34,20 +35,20 @@ const SidebarLogo: React.FC = () => {
   }, [logoLoaded]);
 
   return (
-    <div className="flex h-20 items-center justify-center pt-5 pb-2">
+    <Link to="/dashboard" className="flex h-20 items-center justify-center pt-5 pb-2 hover:opacity-90 transition-opacity">
       {!logoLoaded && (
-        <div className="h-[67.5px] w-auto bg-premium-dark/20 animate-pulse rounded"></div>
+        <div className="h-[60px] w-[140px] bg-premium-dark/20 animate-pulse rounded"></div>
       )}
       <img
         src={logoUrl}
         alt="Xentrik Marketing"
         className={cn(
-          "h-[67.5px] w-auto object-contain transition-opacity duration-300",
+          "h-[60px] w-auto object-contain transition-opacity duration-300",
           logoLoaded ? "opacity-100" : "opacity-0"
         )}
         style={{ willChange: "transform" }}
       />
-    </div>
+    </Link>
   );
 };
 

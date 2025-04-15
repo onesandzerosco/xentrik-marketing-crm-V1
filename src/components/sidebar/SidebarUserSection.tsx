@@ -31,17 +31,20 @@ const SidebarUserSection: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="border-t border-premium-border pt-4 mb-2">
+    <div className="px-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="w-full justify-start p-2 hover:bg-brand-yellow hover:text-black">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start p-2 rounded-xl hover:bg-brand-yellow/90 hover:text-black transition-all duration-200"
+          >
             <div className="flex items-center gap-3 w-full overflow-hidden">
               <Avatar className="h-9 w-9 flex-shrink-0 border border-premium-accent1/50">
-                <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || "User"} />
                 <AvatarFallback className="bg-premium-accent1/20">{getUserInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex flex-col text-left min-w-0">
-                <span className="font-medium text-sm truncate max-w-full">{user.email}</span>
+                <span className="font-medium text-sm truncate max-w-[120px]">{user.email}</span>
                 <span className="text-xs text-muted-foreground">User</span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
