@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#1A1F2C]">
+      <div className="flex h-screen w-full items-center justify-center bg-premium-darker">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-premium-border border-t-brand-yellow"></div>
           <p className="text-muted-foreground">Loading...</p>
@@ -30,9 +30,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return (
     <div className="flex w-full">
       <Sidebar />
-      <main className="w-full pl-60 bg-premium-dark h-screen overflow-y-auto">
+      <main className="w-full pl-60 bg-premium-dark min-h-screen overflow-y-auto">
         <PageTransition>
-          <div className="max-w-full overflow-x-hidden">
+          <div className="max-w-full overflow-x-hidden p-6">
             {children}
           </div>
         </PageTransition>
