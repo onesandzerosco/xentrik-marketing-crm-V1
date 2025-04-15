@@ -71,7 +71,7 @@ const Creators = () => {
   };
 
   return (
-    <div className="p-8 w-full">
+    <div className="p-8 w-full max-w-[1400px] mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Creators</h1>
@@ -147,7 +147,7 @@ const Creators = () => {
       </div>
 
       {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
-        <div className="mb-6 flex items-center">
+        <div className="mb-6 flex items-center bg-card/50 p-4 rounded-lg border border-border">
           <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
           <div className="flex flex-wrap gap-2">
             {selectedGenders.map((gender) => (
@@ -203,14 +203,14 @@ const Creators = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-2">
         {filteredCreators.map((creator) => (
           <CreatorCard key={creator.id} creator={creator} />
         ))}
       </div>
 
       {filteredCreators.length === 0 && (
-        <div className="text-center py-12">
+        <div className="text-center py-12 bg-card/50 rounded-lg border border-border">
           <h3 className="text-lg font-medium mb-2">No creators found</h3>
           <p className="text-muted-foreground mb-4">Try changing your filters or add a new creator</p>
           <Button 

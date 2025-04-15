@@ -5,38 +5,17 @@ import { Creator } from "../types";
 import { Button } from "@/components/ui/button";
 import { 
   BarChart2, 
-  Pencil, 
-  AlertCircle, 
-  Instagram, 
-  Twitter, 
-  FileText, 
-  Music 
+  Pencil,
+  AlertCircle
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
 
 interface CreatorCardProps {
   creator: Creator;
 }
 
 const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
-  const isMobile = useIsMobile();
-  
-  // Map gender to tag class
-  const getGenderTagClass = (gender: string) => {
-    switch (gender.toLowerCase()) {
-      case "male":
-        return "tag-male";
-      case "female":
-        return "tag-female";
-      case "trans":
-        return "tag-trans";
-      default:
-        return "bg-gray-700/70 text-gray-300";
-    }
-  };
-
   // Get initials from name
   const getInitials = (name: string) => {
     return name
@@ -47,165 +26,49 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       .substring(0, 2);
   };
 
-  // Get social media icons based on available links
-  const renderSocialIcons = () => {
-    return (
-      <div className="flex space-x-2">
-        {creator.socialLinks.instagram && (
-          <a
-            href={creator.socialLinks.instagram}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon text-pink-500 hover:text-pink-400 transition-colors"
-            title="Instagram"
-          >
-            <Instagram size={18} />
-          </a>
-        )}
-        {creator.socialLinks.tiktok && (
-          <a
-            href={creator.socialLinks.tiktok}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon text-black dark:text-white hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-            title="TikTok"
-          >
-            <Music size={18} />
-          </a>
-        )}
-        {creator.socialLinks.twitter && (
-          <a
-            href={creator.socialLinks.twitter}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon text-blue-500 hover:text-blue-400 transition-colors"
-            title="Twitter"
-          >
-            <Twitter size={18} />
-          </a>
-        )}
-        {creator.socialLinks.reddit && (
-          <a
-            href={creator.socialLinks.reddit}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon text-orange-600 hover:text-orange-500 transition-colors"
-            title="Reddit"
-          >
-            <FileText size={18} />
-          </a>
-        )}
-        {creator.socialLinks.chaturbate && (
-          <a
-            href={creator.socialLinks.chaturbate}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-icon text-red-500 hover:text-red-400 transition-colors"
-            title="Chaturbate"
-          >
-            <span className="text-lg font-bold">CB</span>
-          </a>
-        )}
-      </div>
-    );
-  };
-
-  // Check if we should use a responsive layout based on screen size and content
-  const useResponsiveLayout = isMobile || creator.team.length > 8;
-
   return (
-    <div className={cn(
-      "creator-card", 
-      "min-h-[220px]", // Increased minimum height
-      "flex flex-col", // Use flexbox for better control
-      "bg-[#161618]", // Darker background color
-      "border border-[#333333]", // Subtle border for definition
-      creator.needsReview ? "border-2 border-red-500" : ""
-    )}>
-      <div className="flex items-start mb-3">
-        <Avatar className="w-12 h-12 mr-3 border border-border shrink-0">
+    <div className={`flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:bg-accent/5 transition-colors ${creator.needsReview ? "border-red-500" : ""}`}>
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <Avatar className="h-12 w-12 border border-border shrink-0">
           <AvatarImage src={creator.profileImage} alt={creator.name} />
           <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
         </Avatar>
-        <div className="flex-grow min-w-0"> {/* min-width prevents overflow issues */}
-          <h3 className="font-medium text-lg truncate">{creator.name}</h3>
-          
-          {!useResponsiveLayout ? (
-            // Standard layout - all tags in one line
-            <div className="flex flex-wrap gap-1 mt-1">
-              <span className={cn("tag", getGenderTagClass(creator.gender))}>
-                {creator.gender}
-              </span>
-              {creator.creatorType === "AI" && (
-                <span className="tag bg-gray-100/30 text-gray-100">
-                  AI
-                </span>
-              )}
-              {creator.needsReview && (
-                <span className="tag bg-red-900/40 text-red-200">
-                  Review
-                </span>
-              )}
-            </div>
-          ) : (
-            // Responsive layout - gender on first line, other tags on second line
-            <>
-              <div className="flex flex-wrap gap-1 mt-1">
-                <span className={cn("tag", getGenderTagClass(creator.gender))}>
-                  {creator.gender}
-                </span>
-              </div>
-              {(creator.creatorType === "AI" || creator.needsReview) && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {creator.creatorType === "AI" && (
-                    <span className="tag bg-gray-100/30 text-gray-100">
-                      AI
-                    </span>
-                  )}
-                  {creator.needsReview && (
-                    <span className="tag bg-red-900/40 text-red-200">
-                      Review
-                    </span>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-        <div className="text-right shrink-0 ml-1">
-          <span className="tag bg-secondary/40 text-foreground whitespace-nowrap">
-            {creator.team}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between my-4">
-        {renderSocialIcons()}
-        {creator.needsReview && (
-          <div className="text-red-500 flex items-center">
-            <AlertCircle className="h-4 w-4 mr-1" />
-            <span className="text-xs">Needs Review</span>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium truncate">{creator.name}</h3>
+            {creator.needsReview && (
+              <Badge variant="destructive" className="shrink-0">
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Review
+              </Badge>
+            )}
           </div>
-        )}
+          
+          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+            <span className="truncate">ID: {creator.id}</span>
+            <span className="text-xs">•</span>
+            <Badge variant="outline" className="capitalize">
+              {creator.gender}
+            </Badge>
+            <Badge variant="outline" className="capitalize">
+              {creator.team}
+            </Badge>
+          </div>
+        </div>
       </div>
 
-      {/* Auto-margin pushes buttons to bottom of card */}
-      <div className="mt-auto">
-        {/* Reduced gap and padding for tighter layout */}
-        <div className="flex gap-1 mt-2">
-          <Link to={`/creators/${creator.id}/analytics`} className="flex-1">
-            <Button variant="secondary" className="w-full text-xs h-9 px-2">
-              <BarChart2 className="w-4 h-4 mr-1" />
-              Analytics
-            </Button>
-          </Link>
-          <Link to={`/creators/${creator.id}`} className="flex-1">
-            <Button variant="secondary" className="w-full text-xs h-9 px-2">
-              <Pencil className="w-4 h-4 mr-1" />
-              Edit
-            </Button>
-          </Link>
-        </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Link to={`/creators/${creator.id}/analytics`}>
+          <Button variant="outline" size="sm" className="h-8">
+            <BarChart2 className="h-4 w-4" />
+          </Button>
+        </Link>
+        <Link to={`/creators/${creator.id}`}>
+          <Button variant="outline" size="sm" className="h-8">
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </Link>
       </div>
     </div>
   );
