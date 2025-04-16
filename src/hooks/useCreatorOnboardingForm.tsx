@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreators } from "@/context/creator";
@@ -142,19 +141,24 @@ export function useCreatorOnboardingForm() {
         notes: notes || undefined,
       };
       
-      await addCreator(newCreator);
+      console.log("Submitting new creator:", newCreator);
+      const creatorId = await addCreator(newCreator);
+      console.log("Creator created with ID:", creatorId);
       
       toast({
         title: "Creator Onboarded Successfully",
         description: "The creator profile has been created successfully.",
       });
       
-      navigate("/creators");
-    } catch (error) {
+      // Reset form state
+      setTimeout(() => {
+        navigate("/creators");
+      }, 500);
+    } catch (error: any) {
       console.error("Error during onboarding:", error);
       toast({
         title: "Onboarding Failed",
-        description: "There was an error during the onboarding process. Please try again.",
+        description: error.message || "There was an error during the onboarding process. Please try again.",
         variant: "destructive",
       });
     } finally {

@@ -6,6 +6,7 @@ import { CreatorContextType } from "./types";
 import { useCreatorActions } from "./useCreatorActions";
 import { useCreatorFilters } from "./useCreatorFilters";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const CreatorContext = createContext<CreatorContextType>({
   creators: [],
@@ -20,7 +21,9 @@ export const useCreators = () => useContext(CreatorContext);
 
 export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { addActivity } = useActivities();
+  const { toast } = useToast();
   
   const { addCreator, updateCreator } = useCreatorActions(creators, setCreators, addActivity);
   const { filterCreators } = useCreatorFilters(creators);
@@ -28,64 +31,84 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Load creators from Supabase
   useEffect(() => {
     const loadCreators = async () => {
+      setIsLoading(true);
       console.log("Loading creators from Supabase...");
       
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from('creators')
-        .select(`
-          *,
-          creator_social_links (*),
-          creator_tags (tag),
-          creator_team_members (team_member_id)
-        `);
+      try {
+        const { data: creatorsData, error: creatorsError } = await supabase
+          .from('creators')
+          .select(`
+            *,
+            creator_social_links (*),
+            creator_tags (tag),
+            creator_team_members (team_member_id)
+          `);
 
-      if (creatorsError) {
-        console.error('Error loading creators:', creatorsError);
-        return;
+        if (creatorsError) {
+          console.error('Error loading creators:', creatorsError);
+          toast({
+            title: "Failed to load creators",
+            description: `Error: ${creatorsError.message}`,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("Creators data from Supabase:", creatorsData);
+
+        const formattedCreators: Creator[] = creatorsData.map(creator => ({
+          id: creator.id,
+          name: creator.name,
+          email: creator.email,
+          profileImage: creator.profile_image || "",
+          gender: creator.gender,
+          team: creator.team,
+          creatorType: creator.creator_type,
+          socialLinks: creator.creator_social_links || {},
+          tags: creator.creator_tags?.map(t => t.tag) || [],
+          assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
+          needsReview: creator.needs_review || false,
+          telegramUsername: creator.telegram_username,
+          whatsappNumber: creator.whatsapp_number,
+          notes: creator.notes
+        }));
+
+        console.log("Formatted creators:", formattedCreators);
+        setCreators(formattedCreators);
+      } catch (error) {
+        console.error("Error in loadCreators:", error);
+        toast({
+          title: "Failed to load creators",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-
-      console.log("Creators data from Supabase:", creatorsData);
-
-      const formattedCreators: Creator[] = creatorsData.map(creator => ({
-        id: creator.id,
-        name: creator.name,
-        email: creator.email,
-        profileImage: creator.profile_image || "",
-        gender: creator.gender,
-        team: creator.team,
-        creatorType: creator.creator_type,
-        socialLinks: creator.creator_social_links || {},
-        tags: creator.creator_tags?.map(t => t.tag) || [],
-        assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
-        needsReview: creator.needs_review || false,
-        telegramUsername: creator.telegram_username,
-        whatsappNumber: creator.whatsapp_number,
-        notes: creator.notes
-      }));
-
-      console.log("Formatted creators:", formattedCreators);
-      setCreators(formattedCreators);
     };
 
     loadCreators();
     
     // Subscribe to changes in the creators table
     const creatorsSubscription = supabase
-      .channel('public:creators')
+      .channel('creators-channel')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'creators' 
       }, (payload) => {
-        console.log('Realtime update received:', payload);
+        console.log('Realtime update received for creators:', payload);
         loadCreators(); // Reload creators when changes occur
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Creators subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(creatorsSubscription);
     };
-  }, []);
+  }, [toast]);
 
   const getCreator = (id: string) => {
     return creators.find((creator) => creator.id === id);
