@@ -41,7 +41,7 @@ export function useSubmission() {
         creatorType: formState.creatorType,
         socialLinks,
         tags: [formState.gender, formState.team, formState.creatorType], // Default tags
-        needsReview: true,
+        needsReview: false, // Changed from true to false
         telegramUsername: formState.telegramUsername,
         whatsappNumber: formState.whatsappNumber,
         notes: formState.notes
@@ -58,10 +58,8 @@ export function useSubmission() {
           description: `${formState.name} was added to your creators`,
         });
         
-        // Navigate back to creators list after a short delay
-        setTimeout(() => {
-          navigate("/creators");
-        }, 500);
+        // Navigate to creators list immediately
+        navigate("/creators");
       }
     } catch (error: any) {
       console.error("Error during creator onboarding:", error);

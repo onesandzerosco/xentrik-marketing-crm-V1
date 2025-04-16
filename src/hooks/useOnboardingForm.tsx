@@ -130,7 +130,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
       creatorType,
       socialLinks: socialLinksObj,
       tags: [gender, team, creatorType],
-      needsReview: true,
+      needsReview: false, // Changed from true to false
       telegramUsername: telegramUsername || undefined,
       whatsappNumber: whatsappNumber || undefined,
       notes: notes || undefined,

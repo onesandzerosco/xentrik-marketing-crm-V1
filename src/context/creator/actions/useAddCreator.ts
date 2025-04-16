@@ -20,7 +20,7 @@ export const useAddCreator = (
           gender: creator.gender,
           team: creator.team,
           creator_type: creator.creatorType,
-          needs_review: true,
+          needs_review: false, // Changed from true to false
           telegram_username: creator.telegramUsername,
           whatsapp_number: creator.whatsappNumber,
           notes: creator.notes
@@ -78,6 +78,27 @@ export const useAddCreator = (
           console.log("Tags added successfully");
         }
       }
+
+      // Step 4: Add the new creator to the local state immediately
+      const formattedCreator: Creator = {
+        id: newCreator.id,
+        name: creator.name,
+        email: '',
+        profileImage: creator.profileImage || '',
+        gender: creator.gender,
+        team: creator.team,
+        creatorType: creator.creatorType,
+        socialLinks: creator.socialLinks || {},
+        tags: creator.tags || [],
+        assignedTeamMembers: [],
+        needsReview: false, // Changed from true to false
+        telegramUsername: creator.telegramUsername || '',
+        whatsappNumber: creator.whatsappNumber || '',
+        notes: creator.notes || ''
+      };
+      
+      // Add to local state immediately
+      setCreators(prevCreators => [...prevCreators, formattedCreator]);
 
       // Add to activity log
       addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
