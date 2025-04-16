@@ -58,7 +58,7 @@ export function useSubmission() {
           description: `${formState.name} was added to your creators`,
         });
         
-        // Navigate back to creators list
+        // Navigate back to creators list after a short delay
         setTimeout(() => {
           navigate("/creators");
         }, 500);

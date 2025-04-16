@@ -33,6 +33,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const loadCreators = async () => {
       setIsLoading(true);
       try {
+        console.log("Fetching creators from Supabase...");
+        
         // Fetch creators with all related data in one request
         const { data, error } = await supabase
           .from('creators')

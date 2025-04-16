@@ -23,12 +23,14 @@ const Creators = () => {
     console.log("Creators data:", creators);
     console.log("Filtered creators:", filteredCreators);
     
+    // Set loading state based on creators data
     if (creators.length > 0) {
       setIsLoading(false);
     } else if (creators.length === 0 && isLoading) {
+      // Add a delay to show loading state for a better UX
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 3000);
+      }, 1500);
       
       return () => clearTimeout(timer);
     }
