@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Sheet,
@@ -15,6 +14,7 @@ import BasicInfoSection from "./onboarding/BasicInfoSection";
 import ContactInfoSection from "./onboarding/ContactInfoSection";
 import SocialLinksSection from "./onboarding/SocialLinksSection";
 import NotesSection from "./onboarding/NotesSection";
+import { v4 as uuidv4 } from "uuid";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -32,6 +32,14 @@ interface ValidationErrors {
   tiktok?: string;
   twitter?: string;
   reddit?: string;
+  chaturbate?: string;
+  customSocialLinks?: string[];
+}
+
+interface CustomSocialLink {
+  id: string;
+  name: string;
+  url: string;
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange }) => {
@@ -46,6 +54,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
   const [tiktok, setTiktok] = useState("");
   const [twitter, setTwitter] = useState("");
   const [reddit, setReddit] = useState("");
+  const [chaturbate, setChaturbate] = useState("");
+  const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
   
@@ -56,7 +66,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
     const newErrors: ValidationErrors = {};
     let isValid = true;
 
-    // Validate required fields
     if (!name.trim()) {
       newErrors.name = "Creator name is required";
       isValid = false;
@@ -77,7 +86,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
       isValid = false;
     }
 
-    // Validate format for optional fields
     if (telegramUsername && !telegramUsername.startsWith('@') && telegramUsername.trim() !== '') {
       newErrors.telegramUsername = "Telegram username should start with @";
       isValid = false;
@@ -102,18 +110,27 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
       return;
     }
 
+    const socialLinksObj: Record<string, string | undefined> = {
+      instagram: instagram || undefined,
+      tiktok: tiktok || undefined,
+      twitter: twitter || undefined,
+      reddit: reddit || undefined,
+      chaturbate: chaturbate || undefined,
+    };
+    
+    customSocialLinks.forEach(link => {
+      if (link.url) {
+        socialLinksObj[link.name.toLowerCase()] = link.url;
+      }
+    });
+
     const newCreator = {
       name,
       profileImage,
       gender,
       team,
       creatorType,
-      socialLinks: {
-        instagram: instagram || undefined,
-        tiktok: tiktok || undefined,
-        twitter: twitter || undefined,
-        reddit: reddit || undefined,
-      },
+      socialLinks: socialLinksObj,
       tags: [gender, team, creatorType],
       needsReview: true,
       telegramUsername: telegramUsername || undefined,
@@ -142,6 +159,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
     setTiktok("");
     setTwitter("");
     setReddit("");
+    setChaturbate("");
+    setCustomSocialLinks([]);
     setNotes("");
     setErrors({});
   };
@@ -153,9 +172,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
           <SheetTitle>Onboard New Creator</SheetTitle>
         </SheetHeader>
         
-        {/* Basic Information + Profile Picture Row */}
         <div className="flex flex-col md:flex-row gap-6 mb-6">
-          {/* Basic Information - Left */}
           <BasicInfoSection
             name={name}
             setName={setName}
@@ -168,7 +185,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             errors={errors}
           />
           
-          {/* Profile Picture - Right */}
           <div className="flex items-center justify-center">
             <ProfilePicture 
               profileImage={profileImage}
@@ -178,12 +194,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
           </div>
         </div>
         
-        {/* Additional Notes Section */}
-        <NotesSection notes={notes} setNotes={setNotes} />
-        
-        {/* Contact Information and Social Media Links Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Contact Information */}
           <ContactInfoSection
             telegramUsername={telegramUsername}
             setTelegramUsername={setTelegramUsername}
@@ -192,7 +203,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             errors={errors}
           />
           
-          {/* Social Media Links */}
           <SocialLinksSection
             instagram={instagram}
             setInstagram={setInstagram}
@@ -202,9 +212,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             setTwitter={setTwitter}
             reddit={reddit}
             setReddit={setReddit}
+            chaturbate={chaturbate}
+            setChaturbate={setChaturbate}
+            customSocialLinks={customSocialLinks}
+            setCustomSocialLinks={setCustomSocialLinks}
             errors={errors}
           />
         </div>
+        
+        <NotesSection notes={notes} setNotes={setNotes} />
         
         <div className="mt-4 mb-2 text-sm text-gray-400">
           <span className="text-red-500">*</span> Required fields
