@@ -23,6 +23,14 @@ interface ValidationErrors {
   tiktok?: string;
   twitter?: string;
   reddit?: string;
+  chaturbate?: string;
+  customSocialLinks?: string[];
+}
+
+interface CustomSocialLink {
+  id: string;
+  name: string;
+  url: string;
 }
 
 const CreatorOnboarding = () => {
@@ -42,6 +50,8 @@ const CreatorOnboarding = () => {
   const [tiktok, setTiktok] = useState("");
   const [twitter, setTwitter] = useState("");
   const [reddit, setReddit] = useState("");
+  const [chaturbate, setChaturbate] = useState("");
+  const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
   
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -100,18 +110,29 @@ const CreatorOnboarding = () => {
     setIsSubmitting(true);
     
     try {
+      // Prepare custom social links
+      const socialLinksObj: Record<string, string> = {
+        instagram: instagram || undefined,
+        tiktok: tiktok || undefined,
+        twitter: twitter || undefined,
+        reddit: reddit || undefined,
+        chaturbate: chaturbate || undefined,
+      };
+      
+      // Add custom social links
+      customSocialLinks.forEach(link => {
+        if (link.url) {
+          socialLinksObj[link.name.toLowerCase()] = link.url;
+        }
+      });
+      
       const newCreator = {
         name,
         profileImage,
         gender,
         team,
         creatorType,
-        socialLinks: {
-          instagram: instagram || undefined,
-          tiktok: tiktok || undefined,
-          twitter: twitter || undefined,
-          reddit: reddit || undefined,
-        },
+        socialLinks: socialLinksObj,
         tags: [gender, team, creatorType],
         needsReview: true,
         telegramUsername: telegramUsername || undefined,
@@ -155,24 +176,11 @@ const CreatorOnboarding = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column: Profile Picture */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-4">
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <ProfilePicture
-                  profileImage={profileImage}
-                  name={name || "New Creator"}
-                  setProfileImage={setProfileImage}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Creator Information Form */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Basic Information */}
-            <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+        <div className="space-y-6">
+          {/* Basic Information and Profile Picture (side by side) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Basic Information (left) */}
+            <div className="lg:col-span-2 bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
               <BasicInfoSection 
                 name={name}
                 setName={setName}
@@ -185,47 +193,58 @@ const CreatorOnboarding = () => {
                 errors={errors}
               />
             </div>
-
-            {/* Notes Section */}
-            <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-              <NotesSection 
-                notes={notes}
-                setNotes={setNotes}
+            
+            {/* Profile Picture (right) */}
+            <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50 flex flex-col items-center justify-center">
+              <ProfilePicture
+                profileImage={profileImage}
+                name={name || "New Creator"}
+                setProfileImage={setProfileImage}
+                hideUploadButton={true}
               />
             </div>
+          </div>
+          
+          {/* Notes Section (below profile picture) */}
+          <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+            <NotesSection 
+              notes={notes}
+              setNotes={setNotes}
+            />
+          </div>
 
-            {/* Contact Info and Social Links Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Contact Information */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <ContactInfoSection
-                  telegramUsername={telegramUsername}
-                  setTelegramUsername={setTelegramUsername}
-                  whatsappNumber={whatsappNumber}
-                  setWhatsappNumber={setWhatsappNumber}
-                  errors={errors}
-                />
-              </div>
-              
-              {/* Social Media Links */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <SocialLinksSection
-                  instagram={instagram}
-                  setInstagram={setInstagram}
-                  tiktok={tiktok}
-                  setTiktok={setTiktok}
-                  twitter={twitter}
-                  setTwitter={setTwitter}
-                  reddit={reddit}
-                  setReddit={setReddit}
-                  errors={errors}
-                />
-              </div>
-            </div>
-            
-            <div className="mt-4 mb-8 text-sm text-gray-400">
-              <span className="text-red-500">*</span> Required fields
-            </div>
+          {/* Contact Information (full row) */}
+          <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+            <ContactInfoSection
+              telegramUsername={telegramUsername}
+              setTelegramUsername={setTelegramUsername}
+              whatsappNumber={whatsappNumber}
+              setWhatsappNumber={setWhatsappNumber}
+              errors={errors}
+            />
+          </div>
+          
+          {/* Social Media Links (full row) */}
+          <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+            <SocialLinksSection
+              instagram={instagram}
+              setInstagram={setInstagram}
+              tiktok={tiktok}
+              setTiktok={setTiktok}
+              twitter={twitter}
+              setTwitter={setTwitter}
+              reddit={reddit}
+              setReddit={setReddit}
+              chaturbate={chaturbate}
+              setChaturbate={setChaturbate}
+              customSocialLinks={customSocialLinks}
+              setCustomSocialLinks={setCustomSocialLinks}
+              errors={errors}
+            />
+          </div>
+          
+          <div className="mt-4 mb-8 text-sm text-gray-400">
+            <span className="text-red-500">*</span> Required fields
           </div>
         </div>
       </div>

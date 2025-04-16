@@ -1,3 +1,4 @@
+
 export type Team = "A Team" | "B Team" | "C Team";
 export type Gender = "Male" | "Female" | "Trans" | "AI";
 export type CreatorType = "Real" | "AI";
@@ -16,6 +17,7 @@ export interface Creator {
     twitter?: string;
     reddit?: string;
     chaturbate?: string;
+    [key: string]: string | undefined;
   };
   tags: string[];
   needsReview?: boolean;
