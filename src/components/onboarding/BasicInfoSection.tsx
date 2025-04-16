@@ -34,38 +34,35 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   errors = {}
 }) => {
   return (
-    <div className="space-y-4 flex-1">
+    <div className="space-y-4">
       <h2 className="text-xl font-bold">Basic Information</h2>
       <div className="grid grid-cols-1 gap-4">
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="name" className="text-right flex items-center">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="flex items-center">
             Name <span className="text-red-500 ml-1">*</span>
           </Label>
           <Input 
             id="name" 
             value={name} 
             onChange={(e) => setName(e.target.value)} 
-            className={`col-span-3 ${errors.name ? "border-red-500" : ""}`} 
+            className={errors.name ? "border-red-500" : ""} 
             placeholder="Enter creator name"
             required
           />
           {errors.name && (
-            <div className="col-span-3 col-start-2">
-              <p className="text-red-500 text-sm">{errors.name}</p>
-            </div>
+            <p className="text-red-500 text-sm">{errors.name}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="gender" className="text-right flex items-center">
+        <div className="space-y-2">
+          <Label htmlFor="gender" className="flex items-center">
             Gender <span className="text-red-500 ml-1">*</span>
           </Label>
           <Select 
             onValueChange={(value) => setGender(value as Gender)} 
             value={gender}
-            required
           >
-            <SelectTrigger className={`col-span-3 ${errors.gender ? "border-red-500" : ""}`}>
+            <SelectTrigger id="gender" className={errors.gender ? "border-red-500" : ""}>
               <SelectValue placeholder="Select gender" />
             </SelectTrigger>
             <SelectContent>
@@ -76,22 +73,19 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.gender && (
-            <div className="col-span-3 col-start-2">
-              <p className="text-red-500 text-sm">{errors.gender}</p>
-            </div>
+            <p className="text-red-500 text-sm">{errors.gender}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="team" className="text-right flex items-center">
+        <div className="space-y-2">
+          <Label htmlFor="team" className="flex items-center">
             Team <span className="text-red-500 ml-1">*</span>
           </Label>
           <Select 
             onValueChange={(value) => setTeam(value as Team)} 
             value={team}
-            required
           >
-            <SelectTrigger className={`col-span-3 ${errors.team ? "border-red-500" : ""}`}>
+            <SelectTrigger id="team" className={errors.team ? "border-red-500" : ""}>
               <SelectValue placeholder="Select team" />
             </SelectTrigger>
             <SelectContent>
@@ -101,22 +95,19 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.team && (
-            <div className="col-span-3 col-start-2">
-              <p className="text-red-500 text-sm">{errors.team}</p>
-            </div>
+            <p className="text-red-500 text-sm">{errors.team}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-4 items-center gap-4">
-          <Label htmlFor="creatorType" className="text-right flex items-center">
+        <div className="space-y-2">
+          <Label htmlFor="creatorType" className="flex items-center">
             Creator Type <span className="text-red-500 ml-1">*</span>
           </Label>
           <Select 
             onValueChange={(value) => setCreatorType(value as CreatorType)} 
             value={creatorType}
-            required
           >
-            <SelectTrigger className={`col-span-3 ${errors.creatorType ? "border-red-500" : ""}`}>
+            <SelectTrigger id="creatorType" className={errors.creatorType ? "border-red-500" : ""}>
               <SelectValue placeholder="Select creator type" />
             </SelectTrigger>
             <SelectContent>
@@ -125,9 +116,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             </SelectContent>
           </Select>
           {errors.creatorType && (
-            <div className="col-span-3 col-start-2">
-              <p className="text-red-500 text-sm">{errors.creatorType}</p>
-            </div>
+            <p className="text-red-500 text-sm">{errors.creatorType}</p>
           )}
         </div>
       </div>

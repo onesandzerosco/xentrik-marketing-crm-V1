@@ -2,7 +2,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormField } from "@/components/ui/form";
 
 interface ContactInfoSectionProps {
   telegramUsername: string;
@@ -26,7 +25,7 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Contact Information</h2>
       <div className="space-y-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="telegramUsername" className="flex items-center">
             Telegram Username
           </Label>
@@ -38,10 +37,10 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
             className={errors.telegramUsername ? "border-red-500" : ""}
           />
           {errors.telegramUsername && (
-            <p className="text-red-500 text-sm mt-1">{errors.telegramUsername}</p>
+            <p className="text-red-500 text-sm">{errors.telegramUsername}</p>
           )}
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="whatsappNumber">
             WhatsApp Number
           </Label>
@@ -53,7 +52,7 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
             className={errors.whatsappNumber ? "border-red-500" : ""}
           />
           {errors.whatsappNumber && (
-            <p className="text-red-500 text-sm mt-1">{errors.whatsappNumber}</p>
+            <p className="text-red-500 text-sm">{errors.whatsappNumber}</p>
           )}
         </div>
       </div>

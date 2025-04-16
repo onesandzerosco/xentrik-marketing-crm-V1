@@ -35,7 +35,7 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Social Media Links</h2>
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="instagram">
             Instagram
           </Label>
@@ -47,10 +47,10 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             className={errors.instagram ? "border-red-500" : ""}
           />
           {errors.instagram && (
-            <p className="text-red-500 text-sm mt-1">{errors.instagram}</p>
+            <p className="text-red-500 text-sm">{errors.instagram}</p>
           )}
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="tiktok">
             TikTok
           </Label>
@@ -62,10 +62,10 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             className={errors.tiktok ? "border-red-500" : ""}
           />
           {errors.tiktok && (
-            <p className="text-red-500 text-sm mt-1">{errors.tiktok}</p>
+            <p className="text-red-500 text-sm">{errors.tiktok}</p>
           )}
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="twitter">
             Twitter
           </Label>
@@ -77,10 +77,10 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             className={errors.twitter ? "border-red-500" : ""}
           />
           {errors.twitter && (
-            <p className="text-red-500 text-sm mt-1">{errors.twitter}</p>
+            <p className="text-red-500 text-sm">{errors.twitter}</p>
           )}
         </div>
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="reddit">
             Reddit
           </Label>
@@ -92,7 +92,7 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             className={errors.reddit ? "border-red-500" : ""}
           />
           {errors.reddit && (
-            <p className="text-red-500 text-sm mt-1">{errors.reddit}</p>
+            <p className="text-red-500 text-sm">{errors.reddit}</p>
           )}
         </div>
       </div>
