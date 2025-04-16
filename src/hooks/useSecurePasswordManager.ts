@@ -53,17 +53,20 @@ export const useSecurePasswordManager = () => {
         .from('secure_area_passwords')
         .select('password_hash')
         .eq('active', true)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1);
       
       if (error) {
-        if (error.code === 'PGRST116') {
-          // No active password found
-          return null;
-        }
-        throw error;
+        console.error('Error fetching password:', error);
+        return null;
       }
       
-      return data?.password_hash || null;
+      if (!data || data.length === 0) {
+        console.log('No active password found');
+        return null;
+      }
+      
+      return data[0]?.password_hash || null;
     } catch (error: any) {
       console.error('Error getting active password:', error);
       return null;
