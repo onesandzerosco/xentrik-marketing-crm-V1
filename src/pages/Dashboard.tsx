@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useCreators } from "../context/CreatorContext";
 import { useActivities } from "../context/ActivityContext";
@@ -31,26 +30,21 @@ const Dashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch dashboard data from Supabase
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
         
-        // Get current date details for month-over-month comparisons
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
         
-        // Calculate first day of current and previous month
         const firstDayCurrentMonth = new Date(currentYear, currentMonth, 1);
         const firstDayPreviousMonth = new Date(currentYear, currentMonth - 1, 1);
         
-        // Format dates for Supabase query
         const currentMonthStart = firstDayCurrentMonth.toISOString();
         const previousMonthStart = firstDayPreviousMonth.toISOString();
         
-        // Query total creators, team counts, and demographic data
         const { data: creatorsData, error: creatorsError } = await supabase
           .from('creators')
           .select('id, team, gender, creator_type, created_at');
@@ -66,7 +60,6 @@ const Dashboard = () => {
           return;
         }
         
-        // Calculate basic stats
         const totalCreators = creatorsData.length;
         const teamA = creatorsData.filter(c => c.team === "A Team").length;
         const teamB = creatorsData.filter(c => c.team === "B Team").length;
@@ -76,7 +69,6 @@ const Dashboard = () => {
         const transCreators = creatorsData.filter(c => c.gender === "Trans").length;
         const aiCreators = creatorsData.filter(c => c.creator_type === "AI").length;
         
-        // Month-over-month growth calculations
         const thisMonthCreators = creatorsData.filter(c => 
           new Date(c.created_at) >= firstDayCurrentMonth
         ).length;
@@ -86,18 +78,15 @@ const Dashboard = () => {
           new Date(c.created_at) < firstDayCurrentMonth
         ).length;
         
-        // Only calculate growth if we have valid data
         let totalGrowth = null;
         if (previousMonthCreators > 0) {
           totalGrowth = Math.round(((thisMonthCreators / previousMonthCreators) - 1) * 100);
         }
         
-        // Team status calculations
         const teamAStatus = teamA > 0 ? "Active team" : null;
         const teamBStatus = teamB > 0 ? "Growing steadily" : null;
         const teamCStatus = teamC > 0 ? "New additions" : null;
         
-        // Determine top performing team based on size
         let topTeam = null;
         if (teamA > teamB && teamA > teamC) {
           topTeam = "A Team";
@@ -107,7 +96,6 @@ const Dashboard = () => {
           topTeam = "C Team";
         }
         
-        // Update dashboard state
         setDashboardStats({
           totalCreators,
           teamA,
@@ -140,7 +128,6 @@ const Dashboard = () => {
     
     fetchDashboardData();
     
-    // Set up a refresh interval (every 5 minutes)
     const intervalId = setInterval(() => {
       fetchDashboardData();
     }, 5 * 60 * 1000);
@@ -148,8 +135,7 @@ const Dashboard = () => {
     return () => clearInterval(intervalId);
   }, [toast]);
   
-  // Get recent activities
-  const recentActivities = getRecentActivities(3); // Show 3 most recent activities
+  const recentActivities = getRecentActivities(3);
 
   const { 
     totalCreators, 
@@ -284,7 +270,6 @@ const Dashboard = () => {
           <Activity className="h-5 w-5 mr-2 text-brand-yellow" />
           Recent Activities
           <span className="ml-2 inline-flex items-center relative">
-            <span className={`${styles['radar-dot']} mr-1`}></span>
             <span className={`${styles['radar-ping']} absolute`}></span>
           </span>
         </h2>
@@ -295,4 +280,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
