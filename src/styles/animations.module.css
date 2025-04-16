@@ -10,6 +10,21 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes radar-ping {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.3s ease-in-out;
 }
@@ -18,3 +33,6 @@
   animation: slide-up 0.3s ease-in-out;
 }
 
+.radar-ping {
+  animation: radar-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}

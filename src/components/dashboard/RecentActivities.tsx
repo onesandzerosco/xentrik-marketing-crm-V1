@@ -1,17 +1,74 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Activity, ChangeDetail } from "@/types/activity";
 import { formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { InfoIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import "@/styles/animations.module.css"; // Import for animations
 
 interface RecentActivitiesProps {
   activities: Activity[];
 }
 
-const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities }) => {
+const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities: initialActivities }) => {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  // Set up a real-time subscription to activities
+  useEffect(() => {
+    // Initial load from props
+    setActivities(initialActivities);
+
+    // Set up live updates with Supabase realtime
+    const channel = supabase
+      .channel('activities-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'activities'
+      }, (payload) => {
+        // When a new activity is added, refresh the list
+        fetchLatestActivities();
+      })
+      .subscribe();
+
+    // Fetch latest activities function
+    const fetchLatestActivities = async () => {
+      try {
+        setIsLoading(true);
+        
+        // In a production app, you would fetch from Supabase here
+        // Since we're still using the context, we'll just use the provided activities
+        setActivities(initialActivities);
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch recent activities",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
+    };
+
+    // Set up polling as backup for real-time (every 30 seconds)
+    const pollingInterval = setInterval(() => {
+      fetchLatestActivities();
+    }, 30000);
+
+    return () => {
+      // Clean up subscriptions and intervals
+      supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
+    };
+  }, [initialActivities, toast]);
 
   // Map activity type to color
   const getActivityColor = (type: string) => {
@@ -49,15 +106,18 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities }) => {
   return (
     <>
       <div className="bg-card rounded-xl p-6 shadow-sm">
-        <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-        {activities.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-4 text-muted-foreground">
+            Loading activities...
+          </div>
+        ) : activities.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
             No recent activities found
           </div>
         ) : (
           <div className="space-y-4">
             {activities.map((activity) => (
-              <div key={activity.id} className="flex items-center p-3 border border-border rounded-lg">
+              <div key={activity.id} className="flex items-center p-3 border border-border rounded-lg animate-fade-in">
                 <div className={`h-2 w-2 rounded-full ${getActivityColor(activity.type)} mr-3`}></div>
                 <p className="text-sm flex-grow">{activity.message}</p>
                 
