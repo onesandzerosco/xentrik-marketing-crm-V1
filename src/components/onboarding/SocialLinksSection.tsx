@@ -12,6 +12,12 @@ interface SocialLinksSectionProps {
   setTwitter: (username: string) => void;
   reddit: string;
   setReddit: (username: string) => void;
+  errors: {
+    instagram?: string;
+    tiktok?: string;
+    twitter?: string;
+    reddit?: string;
+  };
 }
 
 const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
@@ -22,7 +28,8 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
   twitter,
   setTwitter,
   reddit,
-  setReddit
+  setReddit,
+  errors = {}
 }) => {
   return (
     <div className="space-y-4">
@@ -37,7 +44,11 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             placeholder="Username"
             value={instagram}
             onChange={(e) => setInstagram(e.target.value)}
+            className={errors.instagram ? "border-red-500" : ""}
           />
+          {errors.instagram && (
+            <p className="text-red-500 text-sm mt-1">{errors.instagram}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="tiktok">
@@ -48,7 +59,11 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             placeholder="Username"
             value={tiktok}
             onChange={(e) => setTiktok(e.target.value)}
+            className={errors.tiktok ? "border-red-500" : ""}
           />
+          {errors.tiktok && (
+            <p className="text-red-500 text-sm mt-1">{errors.tiktok}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="twitter">
@@ -59,7 +74,11 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             placeholder="Username"
             value={twitter}
             onChange={(e) => setTwitter(e.target.value)}
+            className={errors.twitter ? "border-red-500" : ""}
           />
+          {errors.twitter && (
+            <p className="text-red-500 text-sm mt-1">{errors.twitter}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="reddit">
@@ -70,7 +89,11 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
             placeholder="Username"
             value={reddit}
             onChange={(e) => setReddit(e.target.value)}
+            className={errors.reddit ? "border-red-500" : ""}
           />
+          {errors.reddit && (
+            <p className="text-red-500 text-sm mt-1">{errors.reddit}</p>
+          )}
         </div>
       </div>
     </div>
