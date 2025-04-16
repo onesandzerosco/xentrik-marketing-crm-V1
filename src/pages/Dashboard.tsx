@@ -269,9 +269,6 @@ const Dashboard = () => {
         <h2 className="text-xl font-bold mb-4 text-white flex items-center">
           <Activity className="h-5 w-5 mr-2 text-brand-yellow" />
           Recent Activities
-          <span className="ml-2 inline-flex items-center relative">
-            <span className={`${styles['radar-ping']} absolute`}></span>
-          </span>
         </h2>
         <RecentActivities activities={recentActivities} />
       </div>
