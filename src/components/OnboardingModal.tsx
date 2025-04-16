@@ -70,15 +70,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader className="mb-4">
           <SheetTitle>Onboard New Creator</SheetTitle>
           <SheetDescription>
             Fill in the details to add a new creator to the platform.
           </SheetDescription>
         </SheetHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Form Fields - Left Side */}
           <div className="md:col-span-2 space-y-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -131,7 +131,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               </Label>
               <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
                 <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select creator type" />
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Real">Real</SelectItem>
@@ -142,19 +142,21 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
           </div>
           
           {/* Profile Picture - Right Side */}
-          <div className="flex flex-col items-center justify-start">
-            <ProfilePicture 
-              profileImage={profileImage}
-              name={name || "New Creator"}
-              setProfileImage={setProfileImage}
-            />
+          <div className="flex items-center justify-center">
+            <div className="w-full">
+              <ProfilePicture 
+                profileImage={profileImage}
+                name={name || "New Creator"}
+                setProfileImage={setProfileImage}
+              />
+            </div>
           </div>
         </div>
         
         <Button 
           onClick={handleSubmit} 
           variant="premium"
-          className="w-full mt-4 shadow-premium-yellow"
+          className="w-full mt-8 shadow-premium-yellow"
         >
           Submit
         </Button>

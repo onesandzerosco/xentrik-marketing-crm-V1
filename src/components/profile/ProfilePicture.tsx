@@ -23,8 +23,8 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   };
 
   return (
-    <div className="bg-card rounded-xl p-6 shadow-sm">
-      <h2 className="text-xl font-bold mb-4">Profile Picture</h2>
+    <div>
+      <h2 className="text-xl font-bold mb-4 text-center">Profile Picture</h2>
       <div className="flex items-center justify-center">
         <ImageUploader 
           currentImage={profileImage} 
@@ -35,9 +35,6 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           showAutoDetect={false}
         />
       </div>
-      <p className="text-xs text-center text-muted-foreground mt-4">
-        Upload a square image for best results. The circular mask is for display only and preserves your original image.
-      </p>
     </div>
   );
 };
