@@ -34,24 +34,8 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
     setIsVerifying(true);
     
     try {
-      // Default password check - this serves as a fallback if verification fails
-      // This makes sure users can always access with the default password for testing
-      let isValid = false;
-      
-      if (password === 'bananas') {
-        console.log("Using default password");
-        isValid = true;
-      } else {
-        // Only try to verify if not using the default password
-        try {
-          console.log("Attempting to verify password:", password);
-          isValid = await verifySecurePassword(password);
-        } catch (error) {
-          console.error("Error during password verification:", error);
-          // Default to accepting 'bananas' if verification fails
-          isValid = password === 'bananas';
-        }
-      }
+      // No more default password check - only use database verification
+      const isValid = await verifySecurePassword(password);
       
       if (isValid) {
         await setSecureAreaAuthorization(true);
