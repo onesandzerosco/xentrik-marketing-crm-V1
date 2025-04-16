@@ -9,6 +9,8 @@ export const useCreatorActions = (
   addActivity: (action: string, description: string, creatorId: string) => void
 ) => {
   const addCreator = async (creator: Omit<Creator, "id">) => {
+    console.log("Starting creator creation process:", creator);
+    
     const { data: newCreator, error: creatorError } = await supabase
       .from('creators')
       .insert({
@@ -30,19 +32,28 @@ export const useCreatorActions = (
       return;
     }
 
+    console.log("Creator created successfully:", newCreator);
+
+    let socialLinksError = null;
     if (creator.socialLinks) {
-      const { error: socialError } = await supabase
+      const { error: error } = await supabase
         .from('creator_social_links')
         .insert({
           creator_id: newCreator.id,
           ...creator.socialLinks
         });
 
-      if (socialError) console.error('Error adding social links:', socialError);
+      if (error) {
+        console.error('Error adding social links:', error);
+        socialLinksError = error;
+      } else {
+        console.log("Social links added successfully");
+      }
     }
 
+    let tagsError = null;
     if (creator.tags?.length) {
-      const { error: tagsError } = await supabase
+      const { error: error } = await supabase
         .from('creator_tags')
         .insert(
           creator.tags.map(tag => ({
@@ -51,7 +62,12 @@ export const useCreatorActions = (
           }))
         );
 
-      if (tagsError) console.error('Error adding tags:', tagsError);
+      if (error) {
+        console.error('Error adding tags:', error);
+        tagsError = error;
+      } else {
+        console.log("Tags added successfully:", creator.tags);
+      }
     }
 
     addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
@@ -72,7 +88,13 @@ export const useCreatorActions = (
       notes: creator.notes
     };
     
-    setCreators(prevCreators => [...prevCreators, newCreatorObject]);
+    console.log("Adding creator to local state:", newCreatorObject);
+    setCreators(prevCreators => {
+      const updatedCreators = [...prevCreators, newCreatorObject];
+      console.log("Updated creators list:", updatedCreators);
+      return updatedCreators;
+    });
+    
     return newCreator.id;
   };
 

@@ -28,6 +28,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Load creators from Supabase
   useEffect(() => {
     const loadCreators = async () => {
+      console.log("Loading creators from Supabase...");
+      
       const { data: creatorsData, error: creatorsError } = await supabase
         .from('creators')
         .select(`
@@ -41,6 +43,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.error('Error loading creators:', creatorsError);
         return;
       }
+
+      console.log("Creators data from Supabase:", creatorsData);
 
       const formattedCreators: Creator[] = creatorsData.map(creator => ({
         id: creator.id,
@@ -59,10 +63,28 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         notes: creator.notes
       }));
 
+      console.log("Formatted creators:", formattedCreators);
       setCreators(formattedCreators);
     };
 
     loadCreators();
+    
+    // Subscribe to changes in the creators table
+    const creatorsSubscription = supabase
+      .channel('public:creators')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'creators' 
+      }, (payload) => {
+        console.log('Realtime update received:', payload);
+        loadCreators(); // Reload creators when changes occur
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(creatorsSubscription);
+    };
   }, []);
 
   const getCreator = (id: string) => {

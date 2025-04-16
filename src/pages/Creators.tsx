@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { useCreators } from "../context/creator";
 import CreatorCard from "../components/CreatorCard";
 import TagFilter from "../components/TagFilter";
@@ -13,6 +14,12 @@ const Creators = () => {
     creators,
     filterCreators
   } = useCreators();
+  
+  // Log creators when component mounts and whenever creators change
+  useEffect(() => {
+    console.log("Creators component - current creators:", creators);
+  }, [creators]);
+  
   // State for filters - not persisted to localStorage
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -28,6 +35,10 @@ const Creators = () => {
     team: selectedTeams,
     creatorType: selectedClasses
   });
+
+  useEffect(() => {
+    console.log("Filtered creators:", filteredCreators);
+  }, [filteredCreators]);
   
   const handleClearFilters = () => {
     setSelectedGenders([]);
