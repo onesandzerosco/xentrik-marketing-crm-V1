@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreators } from "@/context/creator";
@@ -98,6 +99,7 @@ export function useCreatorOnboardingForm() {
   };
 
   const handleSubmit = async () => {
+    console.log("[useCreatorOnboardingForm] Starting form submission");
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -127,6 +129,7 @@ export function useCreatorOnboardingForm() {
         }
       });
       
+      // Create the new creator object
       const newCreator = {
         name,
         profileImage,
@@ -136,26 +139,30 @@ export function useCreatorOnboardingForm() {
         socialLinks: socialLinksObj,
         tags: [gender, team, creatorType],
         needsReview: true,
-        telegramUsername: telegramUsername || undefined,
-        whatsappNumber: whatsappNumber || undefined,
-        notes: notes || undefined,
+        telegramUsername,
+        whatsappNumber,
+        notes
       };
       
-      console.log("Submitting new creator:", newCreator);
-      const creatorId = await addCreator(newCreator);
-      console.log("Creator created with ID:", creatorId);
+      console.log("[useCreatorOnboardingForm] Submitting new creator:", newCreator);
       
+      // Call addCreator from the context
+      const creatorId = await addCreator(newCreator);
+      
+      console.log("[useCreatorOnboardingForm] Creator created with ID:", creatorId);
+      
+      // Show success toast
       toast({
         title: "Creator Onboarded Successfully",
         description: "The creator profile has been created successfully.",
       });
       
-      // Reset form state
+      // Navigate back to creators page
       setTimeout(() => {
         navigate("/creators");
       }, 500);
     } catch (error: any) {
-      console.error("Error during onboarding:", error);
+      console.error("[useCreatorOnboardingForm] Error during onboarding:", error);
       toast({
         title: "Onboarding Failed",
         description: error.message || "There was an error during the onboarding process. Please try again.",

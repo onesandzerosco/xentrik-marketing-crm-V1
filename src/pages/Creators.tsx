@@ -4,7 +4,7 @@ import { useCreators } from "../context/creator";
 import CreatorCard from "../components/CreatorCard";
 import TagFilter from "../components/TagFilter";
 import { Button } from "@/components/ui/button";
-import { Filter, Plus, X } from "lucide-react";
+import { Filter, Plus, X, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -17,13 +17,14 @@ const Creators = () => {
   
   // Log creators when component mounts and whenever creators change
   useEffect(() => {
-    console.log("Creators component - current creators:", creators);
+    console.log("[Creators] Current creators:", creators);
   }, [creators]);
   
-  // State for filters - not persisted to localStorage
+  // State for filters
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   const genderTags = ["Male", "Female", "Trans", "AI"];
@@ -37,7 +38,9 @@ const Creators = () => {
   });
 
   useEffect(() => {
-    console.log("Filtered creators:", filteredCreators);
+    console.log("[Creators] Filtered creators:", filteredCreators);
+    // Set loading to false after initial render
+    setTimeout(() => setIsLoading(false), 1000);
   }, [filteredCreators]);
   
   const handleClearFilters = () => {
@@ -51,7 +54,7 @@ const Creators = () => {
         <div>
           <h1 className="text-3xl font-bold mb-2 pl-0 text-left">Creators</h1>
           <p className="text-muted-foreground pl-0">
-            {filteredCreators.length} creators in your database
+            {isLoading ? "Loading creators..." : `${filteredCreators.length} creators in your database`}
           </p>
         </div>
         <div className="flex gap-3">
@@ -128,11 +131,18 @@ const Creators = () => {
           </div>
         </div>}
 
-      <div className="space-y-2">
-        {filteredCreators.map(creator => <CreatorCard key={creator.id} creator={creator} />)}
-      </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading creators...</span>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredCreators.map(creator => <CreatorCard key={creator.id} creator={creator} />)}
+        </div>
+      )}
 
-      {filteredCreators.length === 0 && <div className="text-center py-12 bg-card/50 rounded-lg border border-border">
+      {!isLoading && filteredCreators.length === 0 && <div className="text-center py-12 bg-card/50 rounded-lg border border-border">
           <h3 className="text-lg font-medium mb-2">No creators found</h3>
           <p className="text-muted-foreground mb-4">Try changing your filters or add a new creator</p>
           <Link to="/creators/onboard">

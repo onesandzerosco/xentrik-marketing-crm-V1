@@ -32,7 +32,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const loadCreators = async () => {
       setIsLoading(true);
-      console.log("Loading creators from Supabase...");
+      console.log("[CreatorContext] Loading creators from Supabase...");
       
       try {
         const { data: creatorsData, error: creatorsError } = await supabase
@@ -45,7 +45,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           `);
 
         if (creatorsError) {
-          console.error('Error loading creators:', creatorsError);
+          console.error('[CreatorContext] Error loading creators:', creatorsError);
           toast({
             title: "Failed to load creators",
             description: `Error: ${creatorsError.message}`,
@@ -55,7 +55,14 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return;
         }
 
-        console.log("Creators data from Supabase:", creatorsData);
+        console.log("[CreatorContext] Raw creators data from Supabase:", creatorsData);
+
+        if (!creatorsData || creatorsData.length === 0) {
+          console.log("[CreatorContext] No creators found in database");
+          setCreators([]);
+          setIsLoading(false);
+          return;
+        }
 
         const formattedCreators: Creator[] = creatorsData.map(creator => ({
           id: creator.id,
@@ -65,7 +72,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           gender: creator.gender,
           team: creator.team,
           creatorType: creator.creator_type,
-          socialLinks: creator.creator_social_links || {},
+          socialLinks: creator.creator_social_links?.[0] || {},
           tags: creator.creator_tags?.map(t => t.tag) || [],
           assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
           needsReview: creator.needs_review || false,
@@ -74,10 +81,10 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           notes: creator.notes
         }));
 
-        console.log("Formatted creators:", formattedCreators);
+        console.log("[CreatorContext] Formatted creators:", formattedCreators);
         setCreators(formattedCreators);
       } catch (error) {
-        console.error("Error in loadCreators:", error);
+        console.error("[CreatorContext] Error in loadCreators:", error);
         toast({
           title: "Failed to load creators",
           description: "An unexpected error occurred",
@@ -98,11 +105,11 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         schema: 'public', 
         table: 'creators' 
       }, (payload) => {
-        console.log('Realtime update received for creators:', payload);
+        console.log('[CreatorContext] Realtime update received for creators:', payload);
         loadCreators(); // Reload creators when changes occur
       })
       .subscribe((status) => {
-        console.log('Creators subscription status:', status);
+        console.log('[CreatorContext] Creators subscription status:', status);
       });
 
     return () => {
