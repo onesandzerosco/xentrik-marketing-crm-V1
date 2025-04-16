@@ -1,4 +1,4 @@
 
 export * from './CreatorContext';
-export * from './useCreatorActions';
+export * from './actions';
 export * from './useCreatorFilters';
