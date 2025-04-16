@@ -3,10 +3,12 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword } from '@/utils/passwordUtils';
 import { useToast } from '@/hooks/use-toast';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 
 export const useSecurePasswordManager = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
 
   const savePassword = useCallback(async (password: string): Promise<boolean> => {
     setIsLoading(true);
@@ -75,7 +77,7 @@ export const useSecurePasswordManager = () => {
       
       if (!storedHash) {
         // If no password is set, use the default password
-        return password === 'bananas'; // Keeping the existing default password
+        return password === 'bananas';
       }
       
       return verifyPassword(password, storedHash);
@@ -87,9 +89,48 @@ export const useSecurePasswordManager = () => {
     }
   }, [getActivePassword]);
 
+  const setSecureAreaAuthorization = async (authorized: boolean) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('secure_area_authorizations')
+        .insert([{
+          user_id: user.id,
+          authorized,
+        }]);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error setting secure area authorization:', error);
+      throw error;
+    }
+  };
+
+  const checkSecureAreaAuthorization = async (): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data, error } = await supabase
+        .from('secure_area_authorizations')
+        .select('authorized')
+        .eq('user_id', user.id)
+        .gt('expires_at', new Date().toISOString())
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data?.authorized;
+    } catch (error) {
+      console.error('Error checking secure area authorization:', error);
+      return false;
+    }
+  };
+
   return {
     savePassword,
     verifySecurePassword,
+    setSecureAreaAuthorization,
+    checkSecureAreaAuthorization,
     isLoading
   };
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreators } from '../context/CreatorContext';
@@ -13,6 +12,7 @@ import PasswordManagementDialog from '../components/secure-logins/PasswordManage
 import { Button } from '@/components/ui/button';
 import { Lock, Settings } from 'lucide-react';
 import { Creator } from '../types';
+import { useSecurePasswordManager } from '@/hooks/useSecurePasswordManager';
 
 const SecureLogins: React.FC = () => {
   const { creators } = useCreators();
@@ -20,21 +20,27 @@ const SecureLogins: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [authorized, setAuthorized] = useState(() => {
-    // Initial authorization check now using localStorage directly
-    const savedAuth = localStorage.getItem("secure_area_authorized");
-    return savedAuth === "true";
-  });
-  
-  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  
   const { 
     getLoginDetailsForCreator, 
     updateLoginDetail, 
     saveLoginDetails,
     checkAutoLock 
   } = useSecureLogins();
+  
+  const { checkSecureAreaAuthorization, setSecureAreaAuthorization } = useSecurePasswordManager();
+  
+  // Update authorization check to use Supabase
+  const [authorized, setAuthorized] = useState(false);
+  
+  // Check authorization on initial load
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthorized = await checkSecureAreaAuthorization();
+      setAuthorized(isAuthorized);
+    };
+    
+    checkAuth();
+  }, [checkSecureAreaAuthorization]);
   
   // Check for auto-lock on initial load and on return to this page
   useEffect(() => {
@@ -77,11 +83,9 @@ const SecureLogins: React.FC = () => {
     }
   }, [id, authorized, creators, navigate]);
 
-  const handleAuthentication = (isAuthenticated: boolean) => {
+  const handleAuthentication = async (isAuthenticated: boolean) => {
     console.log("Authentication result:", isAuthenticated);
     setAuthorized(isAuthenticated);
-    // Save auth state to localStorage
-    localStorage.setItem("secure_area_authorized", isAuthenticated.toString());
     
     // If authentication was successful and we have creators, navigate to the first one
     if (isAuthenticated && creators.length > 0 && !id) {
@@ -109,10 +113,10 @@ const SecureLogins: React.FC = () => {
     }
   };
   
-  const handleManualLock = () => {
-    // Lock the secure area
+  const handleManualLock = async () => {
+    // Lock the secure area using Supabase
+    await setSecureAreaAuthorization(false);
     setAuthorized(false);
-    localStorage.setItem("secure_area_authorized", "false");
     console.log("Manually locked secure area");
   };
   

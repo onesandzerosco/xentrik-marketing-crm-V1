@@ -1,9 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LockKeyhole } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AuthFormHeader from './auth/AuthFormHeader';
 import PasswordInput from './auth/PasswordInput';
@@ -18,7 +16,18 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
-  const { verifySecurePassword } = useSecurePasswordManager();
+  const { verifySecurePassword, setSecureAreaAuthorization, checkSecureAreaAuthorization } = useSecurePasswordManager();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthorized = await checkSecureAreaAuthorization();
+      if (isAuthorized) {
+        onAuthenticate(true);
+      }
+    };
+    
+    checkAuth();
+  }, [checkSecureAreaAuthorization, onAuthenticate]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +38,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
       const isValid = await verifySecurePassword(password);
       
       if (isValid) {
+        await setSecureAreaAuthorization(true);
         onAuthenticate(true);
         setPasswordError("");
         toast({
@@ -36,9 +46,6 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
           description: "You now have access to secure login details",
         });
         console.log("Authentication successful");
-        
-        // Store auth state in localStorage
-        localStorage.setItem("secure_area_authorized", "true");
       } else {
         setPasswordError("Incorrect password");
         toast({
