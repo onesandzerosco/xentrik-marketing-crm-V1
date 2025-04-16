@@ -41,7 +41,7 @@ export function useSubmission() {
         creatorType: formState.creatorType,
         socialLinks,
         tags: [formState.gender, formState.team, formState.creatorType], // Default tags
-        needsReview: false, // Changed from true to false
+        needsReview: false, // Explicitly set to false
         telegramUsername: formState.telegramUsername,
         whatsappNumber: formState.whatsappNumber,
         notes: formState.notes

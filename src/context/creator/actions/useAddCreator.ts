@@ -20,7 +20,7 @@ export const useAddCreator = (
           gender: creator.gender,
           team: creator.team,
           creator_type: creator.creatorType,
-          needs_review: false, // Changed from true to false
+          needs_review: false, // Explicitly set to false
           telegram_username: creator.telegramUsername,
           whatsapp_number: creator.whatsappNumber,
           notes: creator.notes
@@ -91,7 +91,7 @@ export const useAddCreator = (
         socialLinks: creator.socialLinks || {},
         tags: creator.tags || [],
         assignedTeamMembers: [],
-        needsReview: false, // Changed from true to false
+        needsReview: false, // Explicitly set to false
         telegramUsername: creator.telegramUsername || '',
         whatsappNumber: creator.whatsappNumber || '',
         notes: creator.notes || ''
