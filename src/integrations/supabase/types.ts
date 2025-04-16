@@ -226,6 +226,27 @@ export type Database = {
         }
         Relationships: []
       }
+      secure_area_passwords: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          password_hash: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          password_hash: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          password_hash?: string
+        }
+        Relationships: []
+      }
       team_assignments: {
         Row: {
           created_at: string | null

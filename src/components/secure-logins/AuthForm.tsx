@@ -1,45 +1,63 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { LockKeyhole } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AuthFormHeader from './auth/AuthFormHeader';
 import PasswordInput from './auth/PasswordInput';
+import { useSecurePasswordManager } from '@/hooks/useSecurePasswordManager';
 
 interface AuthFormProps {
   onAuthenticate: (isAuthenticated: boolean) => void;
-  securePassword: string;
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
+  const { verifySecurePassword } = useSecurePasswordManager();
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Authentication attempt with password:", password);
-    console.log("Secure password:", securePassword);
+    setIsVerifying(true);
     
-    if (password === securePassword) {
-      onAuthenticate(true);
-      setPasswordError("");
+    try {
+      console.log("Verifying password:", password);
+      const isValid = await verifySecurePassword(password);
+      
+      if (isValid) {
+        onAuthenticate(true);
+        setPasswordError("");
+        toast({
+          title: "Access Granted",
+          description: "You now have access to secure login details",
+        });
+        console.log("Authentication successful");
+        
+        // Store auth state in localStorage
+        localStorage.setItem("secure_area_authorized", "true");
+      } else {
+        setPasswordError("Incorrect password");
+        toast({
+          title: "Access Denied",
+          description: "The password is incorrect",
+          variant: "destructive",
+        });
+        console.log("Authentication failed: incorrect password");
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+      setPasswordError("Authentication error");
       toast({
-        title: "Access Granted",
-        description: "You now have access to secure login details",
-      });
-      console.log("Authentication successful");
-    } else {
-      setPasswordError("Incorrect password");
-      toast({
-        title: "Access Denied",
-        description: "The password is incorrect",
+        title: "Authentication Error",
+        description: "An error occurred during authentication",
         variant: "destructive",
       });
-      console.log("Authentication failed: incorrect password");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -62,8 +80,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate, securePassword }) =
               type="submit" 
               variant="premium" 
               className="w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
+              disabled={isVerifying}
             >
-              Authenticate
+              {isVerifying ? "Authenticating..." : "Authenticate"}
             </Button>
           </CardFooter>
         </form>
