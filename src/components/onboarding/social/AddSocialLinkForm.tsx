@@ -80,7 +80,7 @@ const AddSocialLinkForm: React.FC<AddSocialLinkFormProps> = ({ onAdd, onCancel }
           <Input 
             id="profileUrl" 
             value={url}
-            placeholder="https://..."
+            placeholder="https://www.example.com/profile"
             onChange={(e) => setUrl(e.target.value)}
             className={errors.url ? "border-red-500" : ""}
           />

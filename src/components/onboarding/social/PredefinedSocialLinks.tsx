@@ -49,7 +49,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="instagram" 
-          placeholder="Full profile URL"
+          placeholder="https://www.instagram.com/username"
           value={instagram}
           onChange={(e) => setInstagram(e.target.value)}
           className={errors.instagram ? "border-red-500" : ""}
@@ -65,7 +65,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="tiktok" 
-          placeholder="Full profile URL"
+          placeholder="https://www.tiktok.com/@username"
           value={tiktok}
           onChange={(e) => setTiktok(e.target.value)}
           className={errors.tiktok ? "border-red-500" : ""}
@@ -81,7 +81,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="twitter" 
-          placeholder="Full profile URL"
+          placeholder="https://twitter.com/username"
           value={twitter}
           onChange={(e) => setTwitter(e.target.value)}
           className={errors.twitter ? "border-red-500" : ""}
@@ -97,7 +97,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="youtube" 
-          placeholder="Full profile URL"
+          placeholder="https://www.youtube.com/channel/ID"
           value={youtube}
           onChange={(e) => setYoutube(e.target.value)}
           className={errors.youtube ? "border-red-500" : ""}
@@ -113,7 +113,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="reddit" 
-          placeholder="Full profile URL"
+          placeholder="https://www.reddit.com/user/username"
           value={reddit}
           onChange={(e) => setReddit(e.target.value)}
           className={errors.reddit ? "border-red-500" : ""}
@@ -129,7 +129,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="chaturbate" 
-          placeholder="Full profile URL"
+          placeholder="https://chaturbate.com/username"
           value={chaturbate}
           onChange={(e) => setChaturbate(e.target.value)}
           className={errors.chaturbate ? "border-red-500" : ""}
