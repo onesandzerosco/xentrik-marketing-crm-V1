@@ -204,14 +204,6 @@ const CreatorOnboarding = () => {
               />
             </div>
           </div>
-          
-          {/* Notes Section (below profile picture) */}
-          <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-            <NotesSection 
-              notes={notes}
-              setNotes={setNotes}
-            />
-          </div>
 
           {/* Contact Information (full row) */}
           <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
@@ -243,6 +235,14 @@ const CreatorOnboarding = () => {
             />
           </div>
           
+          {/* Notes Section (bottom) */}
+          <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+            <NotesSection 
+              notes={notes}
+              setNotes={setNotes}
+            />
+          </div>
+          
           <div className="mt-4 mb-8 text-sm text-gray-400">
             <span className="text-red-500">*</span> Required fields
           </div>
@@ -253,3 +253,4 @@ const CreatorOnboarding = () => {
 };
 
 export default CreatorOnboarding;
+
