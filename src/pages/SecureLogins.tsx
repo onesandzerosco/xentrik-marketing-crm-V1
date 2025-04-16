@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCreators } from '../context/CreatorContext';
+import { useCreators } from '../context/creator'; // Updated import path
 import { useSecureLogins } from '../hooks/useSecureLogins';
 import { useToast } from '@/hooks/use-toast';
 import AuthForm from '../components/secure-logins/AuthForm';

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useCreators } from '@/context/CreatorContext';
+import { useCreators } from '@/context/creator'; // Updated import path
 import { mockEmployees } from '@/data/mockEmployees';
 import { Recipient, MessagePayload } from '@/types/message';
 

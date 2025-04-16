@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCreators } from "../context/CreatorContext";
+import { useCreators } from "../context/creator"; // Updated import path
 import { ArrowLeft, Download, TrendingDown, TrendingUp, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
