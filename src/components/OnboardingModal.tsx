@@ -5,7 +5,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,13 +73,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
       <SheetContent className="overflow-y-auto">
         <SheetHeader className="mb-4">
           <SheetTitle>Onboard New Creator</SheetTitle>
-          <SheetDescription>
-            Fill in the details to add a new creator to the platform.
-          </SheetDescription>
         </SheetHeader>
         
         {/* Basic Information + Profile Picture Row */}
-        <div className="flex gap-6 mb-6">
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
           {/* Basic Information - Left */}
           <div className="space-y-4 flex-1">
             <h2 className="text-xl font-bold">Basic Information</h2>
@@ -131,26 +127,18 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">
+                <Label htmlFor="creatorType" className="text-right">
                   Creator Type
                 </Label>
-                <div className="col-span-3">
-                  <RadioGroup
-                    defaultValue={creatorType}
-                    value={creatorType}
-                    onValueChange={(value) => setCreatorType(value as CreatorType)}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="Real" id="creatorType-real" />
-                      <Label htmlFor="creatorType-real">Real</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="AI" id="creatorType-ai" />
-                      <Label htmlFor="creatorType-ai">AI</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
+                <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select creator type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Real">Real</SelectItem>
+                    <SelectItem value="AI">AI</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
