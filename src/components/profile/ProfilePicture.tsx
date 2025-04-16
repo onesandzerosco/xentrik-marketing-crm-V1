@@ -23,7 +23,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       <h2 className="text-xl font-bold mb-4 text-center">Profile Picture</h2>
       <div className="flex items-center justify-center">
         <ImageUploader 
@@ -35,6 +35,9 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           showAutoDetect={false}
         />
       </div>
+      <button className="mt-4 px-4 py-2 bg-secondary/20 hover:bg-secondary/30 rounded-md flex items-center justify-center text-sm">
+        Upload Photo
+      </button>
     </div>
   );
 };

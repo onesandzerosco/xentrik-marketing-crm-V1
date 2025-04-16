@@ -78,85 +78,168 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
           </SheetDescription>
         </SheetHeader>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Form Fields - Left Side */}
+        {/* Basic Information + Profile Picture Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          {/* Basic Information - Left */}
           <div className="md:col-span-2 space-y-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input 
-                id="name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
-                className="col-span-3" 
-              />
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="gender" className="text-right">
-                Gender
-              </Label>
-              <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Trans">Trans</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="team" className="text-right">
-                Team
-              </Label>
-              <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select team" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A Team">A Team</SelectItem>
-                  <SelectItem value="B Team">B Team</SelectItem>
-                  <SelectItem value="C Team">C Team</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="creatorType" className="text-right">
-                Creator Type
-              </Label>
-              <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Real">Real</SelectItem>
-                  <SelectItem value="AI">AI</SelectItem>
-                </SelectContent>
-              </Select>
+            <h2 className="text-xl font-bold">Basic Information</h2>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input 
+                  id="name" 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  className="col-span-3" 
+                  placeholder="Enter creator name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="gender" className="text-right">
+                  Gender
+                </Label>
+                <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Trans">Trans</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="team" className="text-right">
+                  Team
+                </Label>
+                <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select team" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A Team">A Team</SelectItem>
+                    <SelectItem value="B Team">B Team</SelectItem>
+                    <SelectItem value="C Team">C Team</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="creatorType" className="text-right">
+                  Creator Type
+                </Label>
+                <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Real">Real</SelectItem>
+                    <SelectItem value="AI">AI</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           
-          {/* Profile Picture - Right Side */}
+          {/* Profile Picture - Right */}
           <div className="flex items-center justify-center">
-            <div className="w-full">
-              <ProfilePicture 
-                profileImage={profileImage}
-                name={name || "New Creator"}
-                setProfileImage={setProfileImage}
-              />
+            <ProfilePicture 
+              profileImage={profileImage}
+              name={name || "New Creator"}
+              setProfileImage={setProfileImage}
+            />
+          </div>
+        </div>
+        
+        {/* Contact Information and Social Media Links Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Contact Information */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Contact Information</h2>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="telegramUsername">
+                  Telegram Username
+                </Label>
+                <Input 
+                  id="telegramUsername" 
+                  placeholder="@username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="whatsappNumber">
+                  WhatsApp Number
+                </Label>
+                <Input 
+                  id="whatsappNumber" 
+                  placeholder="+1234567890"
+                />
+              </div>
             </div>
           </div>
+          
+          {/* Social Media Links */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Social Media Links</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="instagram">
+                  Instagram
+                </Label>
+                <Input 
+                  id="instagram" 
+                  placeholder="Username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tiktok">
+                  TikTok
+                </Label>
+                <Input 
+                  id="tiktok" 
+                  placeholder="Username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="twitter">
+                  Twitter
+                </Label>
+                <Input 
+                  id="twitter" 
+                  placeholder="Username"
+                />
+              </div>
+              <div>
+                <Label htmlFor="reddit">
+                  Reddit
+                </Label>
+                <Input 
+                  id="reddit" 
+                  placeholder="Username"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Notes Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold mb-4">Additional Notes</h2>
+          <textarea 
+            className="w-full min-h-[100px] rounded-md border border-input bg-secondary/5 px-3 py-2 text-base"
+            placeholder="Add any additional notes about this creator"
+          />
         </div>
         
         <Button 
           onClick={handleSubmit} 
           variant="premium"
-          className="w-full mt-8 shadow-premium-yellow"
+          className="w-full mt-4 shadow-premium-yellow"
         >
           Submit
         </Button>
