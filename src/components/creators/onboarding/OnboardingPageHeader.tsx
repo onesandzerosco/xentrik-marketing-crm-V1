@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Save, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Save } from "lucide-react";
+import { BackButton } from "@/components/ui/back-button";
 
 interface OnboardingPageHeaderProps {
   isSubmitting: boolean;
@@ -16,11 +16,7 @@ const OnboardingPageHeader: React.FC<OnboardingPageHeaderProps> = ({
   return (
     <div className="flex justify-between items-center mb-8">
       <div className="flex items-center gap-3">
-        <Link to="/creators">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
+        <BackButton to="/creators" />
         <h1 className="text-2xl font-bold text-white">Onboard New Creator</h1>
       </div>
       <Button 
@@ -37,4 +33,3 @@ const OnboardingPageHeader: React.FC<OnboardingPageHeaderProps> = ({
 };
 
 export default OnboardingPageHeader;
-
