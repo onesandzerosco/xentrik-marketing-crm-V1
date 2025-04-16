@@ -6,15 +6,15 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Gender, Team, CreatorType } from "../types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreators } from "../context/creator";
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import BasicInfoSection from "./onboarding/BasicInfoSection";
+import ContactInfoSection from "./onboarding/ContactInfoSection";
+import SocialLinksSection from "./onboarding/SocialLinksSection";
+import NotesSection from "./onboarding/NotesSection";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -27,6 +27,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
   const [gender, setGender] = useState<Gender>("Male");
   const [team, setTeam] = useState<Team>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorType>("Real");
+  const [telegramUsername, setTelegramUsername] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [tiktok, setTiktok] = useState("");
+  const [twitter, setTwitter] = useState("");
+  const [reddit, setReddit] = useState("");
+  const [notes, setNotes] = useState("");
+  
   const { addCreator } = useCreators();
   const { toast } = useToast();
 
@@ -46,9 +54,17 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
       gender,
       team,
       creatorType,
-      socialLinks: {},
+      socialLinks: {
+        instagram: instagram || undefined,
+        tiktok: tiktok || undefined,
+        twitter: twitter || undefined,
+        reddit: reddit || undefined,
+      },
       tags: [gender, team, creatorType],
       needsReview: true,
+      telegramUsername: telegramUsername || undefined,
+      whatsappNumber: whatsappNumber || undefined,
+      notes: notes || undefined,
     };
 
     addCreator(newCreator);
@@ -66,6 +82,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
     setGender("Male");
     setTeam("A Team");
     setCreatorType("Real");
+    setTelegramUsername("");
+    setWhatsappNumber("");
+    setInstagram("");
+    setTiktok("");
+    setTwitter("");
+    setReddit("");
+    setNotes("");
   };
 
   return (
@@ -78,70 +101,16 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
         {/* Basic Information + Profile Picture Row */}
         <div className="flex flex-col md:flex-row gap-6 mb-6">
           {/* Basic Information - Left */}
-          <div className="space-y-4 flex-1">
-            <h2 className="text-xl font-bold">Basic Information</h2>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  className="col-span-3" 
-                  placeholder="Enter creator name"
-                />
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="gender" className="text-right">
-                  Gender
-                </Label>
-                <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Trans">Trans</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="team" className="text-right">
-                  Team
-                </Label>
-                <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select team" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A Team">A Team</SelectItem>
-                    <SelectItem value="B Team">B Team</SelectItem>
-                    <SelectItem value="C Team">C Team</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="creatorType" className="text-right">
-                  Creator Type
-                </Label>
-                <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select creator type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Real">Real</SelectItem>
-                    <SelectItem value="AI">AI</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+          <BasicInfoSection
+            name={name}
+            setName={setName}
+            gender={gender}
+            setGender={setGender}
+            team={team}
+            setTeam={setTeam}
+            creatorType={creatorType}
+            setCreatorType={setCreatorType}
+          />
           
           {/* Profile Picture - Right */}
           <div className="flex items-center justify-center">
@@ -154,83 +123,29 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
         </div>
         
         {/* Additional Notes Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4">Additional Notes</h2>
-          <textarea 
-            className="w-full min-h-[100px] rounded-md border border-input bg-secondary/5 px-3 py-2 text-base"
-            placeholder="Add any additional notes about this creator"
-          />
-        </div>
+        <NotesSection notes={notes} setNotes={setNotes} />
         
         {/* Contact Information and Social Media Links Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Contact Information */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Contact Information</h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="telegramUsername">
-                  Telegram Username
-                </Label>
-                <Input 
-                  id="telegramUsername" 
-                  placeholder="@username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="whatsappNumber">
-                  WhatsApp Number
-                </Label>
-                <Input 
-                  id="whatsappNumber" 
-                  placeholder="+1234567890"
-                />
-              </div>
-            </div>
-          </div>
+          <ContactInfoSection
+            telegramUsername={telegramUsername}
+            setTelegramUsername={setTelegramUsername}
+            whatsappNumber={whatsappNumber}
+            setWhatsappNumber={setWhatsappNumber}
+          />
           
           {/* Social Media Links */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Social Media Links</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="instagram">
-                  Instagram
-                </Label>
-                <Input 
-                  id="instagram" 
-                  placeholder="Username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="tiktok">
-                  TikTok
-                </Label>
-                <Input 
-                  id="tiktok" 
-                  placeholder="Username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter">
-                  Twitter
-                </Label>
-                <Input 
-                  id="twitter" 
-                  placeholder="Username"
-                />
-              </div>
-              <div>
-                <Label htmlFor="reddit">
-                  Reddit
-                </Label>
-                <Input 
-                  id="reddit" 
-                  placeholder="Username"
-                />
-              </div>
-            </div>
-          </div>
+          <SocialLinksSection
+            instagram={instagram}
+            setInstagram={setInstagram}
+            tiktok={tiktok}
+            setTiktok={setTiktok}
+            twitter={twitter}
+            setTwitter={setTwitter}
+            reddit={reddit}
+            setReddit={setReddit}
+          />
         </div>
         
         <Button 
