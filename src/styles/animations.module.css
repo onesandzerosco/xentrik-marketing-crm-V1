@@ -7,9 +7,10 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #8E9196; /* Neutral gray color */
+  background-color: #F4B800; /* brand-yellow color */
   vertical-align: middle;
   z-index: 10;
+  margin-left: 8px; /* Add a bit more spacing from text */
 }
 
 .radar-ping {
@@ -20,7 +21,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: rgba(142, 145, 150, 0.3); /* Semi-transparent neutral gray */
+  background-color: rgba(244, 184, 0, 0.3); /* semi-transparent brand-yellow */
   animation: radar-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
   z-index: 5;
 }
@@ -39,3 +40,4 @@
     opacity: 0;
   }
 }
+
