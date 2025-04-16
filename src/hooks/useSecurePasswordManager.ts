@@ -79,8 +79,8 @@ export const useSecurePasswordManager = () => {
       const storedHash = await getActivePassword();
       
       if (!storedHash) {
-        // If no password is set, use the default password
-        return password === 'bananas';
+        // Removed default password fallback
+        return false;
       }
       
       return verifyPassword(password, storedHash);

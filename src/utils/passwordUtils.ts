@@ -18,19 +18,13 @@ export const hashPassword = (password: string): string => {
  * Verifies a password against a hash
  */
 export const verifyPassword = (password: string, hashedPassword: string): boolean => {
-  // Handle default password case
-  if (password === 'bananas' && !hashedPassword.includes(':')) {
-    return true;
-  }
-  
   // Check the hash type
   if (hashedPassword.startsWith('simple:')) {
     const hash = hashedPassword.substring(7); // Remove the "simple:" prefix
     return hash === btoa(password);
   }
   
-  // If it's not a simple hash, we assume it's a legacy hash from Node's crypto
-  // In a browser environment, we can't verify it properly
-  console.warn('Unsupported hash format, defaulting to comparison with default password');
-  return password === 'bananas';
+  // If it's not a simple hash, we can't verify it
+  console.warn('Unsupported hash format');
+  return false;
 };
