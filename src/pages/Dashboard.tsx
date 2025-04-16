@@ -282,9 +282,9 @@ const Dashboard = () => {
         <h2 className="text-xl font-bold mb-4 text-white flex items-center">
           <Activity className="h-5 w-5 mr-2 text-brand-yellow" />
           Recent Activities
-          <span className="ml-2 relative">
-            <span className="radar-ping absolute inline-flex h-3 w-3 rounded-full bg-brand-yellow opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-yellow"></span>
+          <span className="ml-2 inline-flex items-center relative">
+            <span className="radar-dot mr-1"></span>
+            <span className="radar-ping absolute inline-flex rounded-full bg-brand-yellow opacity-75"></span>
           </span>
         </h2>
         <RecentActivities activities={recentActivities} />
