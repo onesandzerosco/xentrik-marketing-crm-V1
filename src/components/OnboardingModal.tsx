@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCreators } from "../context/creator";
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -79,9 +80,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
         </SheetHeader>
         
         {/* Basic Information + Profile Picture Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="flex gap-6 mb-6">
           {/* Basic Information - Left */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="space-y-4 flex-1">
             <h2 className="text-xl font-bold">Basic Information</h2>
             <div className="grid grid-cols-1 gap-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -130,18 +131,26 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               </div>
               
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="creatorType" className="text-right">
+                <Label className="text-right">
                   Creator Type
                 </Label>
-                <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Real">Real</SelectItem>
-                    <SelectItem value="AI">AI</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="col-span-3">
+                  <RadioGroup
+                    defaultValue={creatorType}
+                    value={creatorType}
+                    onValueChange={(value) => setCreatorType(value as CreatorType)}
+                    className="flex space-x-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Real" id="creatorType-real" />
+                      <Label htmlFor="creatorType-real">Real</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="AI" id="creatorType-ai" />
+                      <Label htmlFor="creatorType-ai">AI</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
             </div>
           </div>
@@ -154,6 +163,15 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               setProfileImage={setProfileImage}
             />
           </div>
+        </div>
+        
+        {/* Additional Notes Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold mb-4">Additional Notes</h2>
+          <textarea 
+            className="w-full min-h-[100px] rounded-md border border-input bg-secondary/5 px-3 py-2 text-base"
+            placeholder="Add any additional notes about this creator"
+          />
         </div>
         
         {/* Contact Information and Social Media Links Row */}
@@ -225,15 +243,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Additional Notes Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4">Additional Notes</h2>
-          <textarea 
-            className="w-full min-h-[100px] rounded-md border border-input bg-secondary/5 px-3 py-2 text-base"
-            placeholder="Add any additional notes about this creator"
-          />
         </div>
         
         <Button 

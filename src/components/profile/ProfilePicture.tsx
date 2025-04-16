@@ -24,7 +24,6 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-xl font-bold mb-4 text-center">Profile Picture</h2>
       <div className="flex items-center justify-center">
         <ImageUploader 
           currentImage={profileImage} 
