@@ -6,6 +6,7 @@ import RecentActivities from "../components/dashboard/RecentActivities";
 import { BarChart, LineChart, PieChart, Activity, TrendingUp, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import styles from "@/styles/animations.module.css";
 
 const Dashboard = () => {
   const { creators } = useCreators();
@@ -283,8 +284,8 @@ const Dashboard = () => {
           <Activity className="h-5 w-5 mr-2 text-brand-yellow" />
           Recent Activities
           <span className="ml-2 inline-flex items-center relative">
-            <span className="radar-dot mr-1"></span>
-            <span className="radar-ping absolute inline-flex rounded-full bg-brand-yellow opacity-75"></span>
+            <span className={`${styles['radar-dot']} mr-1`}></span>
+            <span className={`${styles['radar-ping']} absolute`}></span>
           </span>
         </h2>
         <RecentActivities activities={recentActivities} />
@@ -294,3 +295,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
