@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useCreators } from "../context/CreatorContext";
 import { useActivities } from "../context/ActivityContext";
 import RecentActivities from "../components/dashboard/RecentActivities";
@@ -20,6 +20,45 @@ const Dashboard = () => {
   const transCreators = creators.filter(c => c.gender === "Trans").length;
   const aiCreators = creators.filter(c => c.creatorType === "AI").length;
 
+  // Create a function to determine relative growth and team performance
+  const statsData = useMemo(() => {
+    // This would ideally be based on historical data from your database
+    // For now, we'll create some sample change calculations
+    
+    // Calculate team growth rates
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Filter creators by creation date (assuming creators have timestamps in real implementation)
+    // This is a placeholder - in a real implementation, you'd compare current month vs previous month
+    const thisMonthCreators = creators.filter(c => c.id.includes(currentMonth.toString()));
+    const previousMonthCreators = creators.filter(c => !c.id.includes(currentMonth.toString()));
+    
+    const totalGrowth = thisMonthCreators.length > 0 && previousMonthCreators.length > 0 
+      ? Math.round((thisMonthCreators.length / previousMonthCreators.length - 1) * 100)
+      : null;
+    
+    // Determine which team is top performing (most members relative to starting size)
+    let topTeam = null;
+    if (teamA > teamB && teamA > teamC) {
+      topTeam = "A Team";
+    } else if (teamB > teamA && teamB > teamC) {
+      topTeam = "B Team";
+    } else if (teamC > teamA && teamC > teamB) {
+      topTeam = "C Team";
+    }
+    
+    // Return the stats data
+    return {
+      totalGrowth,
+      topTeam,
+      teamAStatus: teamA > 0 ? "Active team" : null,
+      teamBStatus: teamB > 0 ? "Growing steadily" : null,
+      teamCStatus: teamC > 0 ? "New additions" : null
+    };
+  }, [creators, teamA, teamB, teamC]);
+
   // Get recent activities
   const recentActivities = getRecentActivities(3); // Show 3 most recent activities
 
@@ -39,10 +78,12 @@ const Dashboard = () => {
             </div>
           </div>
           <p className="text-4xl font-bold text-white">{totalCreators}</p>
-          <div className="text-xs text-muted-foreground mt-2">
-            <TrendingUp className="h-3 w-3 inline mr-1" />
-            <span>+12% from last month</span>
-          </div>
+          {statsData.totalGrowth !== null && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>{statsData.totalGrowth > 0 ? `+${statsData.totalGrowth}%` : `${statsData.totalGrowth}%`} from last month</span>
+            </div>
+          )}
         </div>
         
         <div className="premium-stat-card group">
@@ -53,10 +94,18 @@ const Dashboard = () => {
             </div>
           </div>
           <p className="text-4xl font-bold text-white">{teamA}</p>
-          <div className="text-xs text-muted-foreground mt-2">
-            <TrendingUp className="h-3 w-3 inline mr-1" />
-            <span>Top performing team</span>
-          </div>
+          {statsData.topTeam === "A Team" && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>Top performing team</span>
+            </div>
+          )}
+          {statsData.topTeam !== "A Team" && statsData.teamAStatus && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>{statsData.teamAStatus}</span>
+            </div>
+          )}
         </div>
         
         <div className="premium-stat-card group">
@@ -67,10 +116,18 @@ const Dashboard = () => {
             </div>
           </div>
           <p className="text-4xl font-bold text-white">{teamB}</p>
-          <div className="text-xs text-muted-foreground mt-2">
-            <TrendingUp className="h-3 w-3 inline mr-1" />
-            <span>Growing steadily</span>
-          </div>
+          {statsData.topTeam === "B Team" && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>Top performing team</span>
+            </div>
+          )}
+          {statsData.topTeam !== "B Team" && statsData.teamBStatus && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>{statsData.teamBStatus}</span>
+            </div>
+          )}
         </div>
         
         <div className="premium-stat-card group">
@@ -81,10 +138,18 @@ const Dashboard = () => {
             </div>
           </div>
           <p className="text-4xl font-bold text-white">{teamC}</p>
-          <div className="text-xs text-muted-foreground mt-2">
-            <TrendingUp className="h-3 w-3 inline mr-1" />
-            <span>New additions</span>
-          </div>
+          {statsData.topTeam === "C Team" && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>Top performing team</span>
+            </div>
+          )}
+          {statsData.topTeam !== "C Team" && statsData.teamCStatus && (
+            <div className="text-xs text-muted-foreground mt-2">
+              <TrendingUp className="h-3 w-3 inline mr-1" />
+              <span>{statsData.teamCStatus}</span>
+            </div>
+          )}
         </div>
       </div>
 
