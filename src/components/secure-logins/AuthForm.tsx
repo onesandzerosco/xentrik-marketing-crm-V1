@@ -1,7 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { LockKeyhole } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AuthFormHeader from './auth/AuthFormHeader';
 import PasswordInput from './auth/PasswordInput';
@@ -16,19 +18,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
-  const { verifySecurePassword, isLoading } = useSecurePasswordManager();
+  const { verifySecurePassword } = useSecurePasswordManager();
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    setPasswordError("");
     
     try {
-      console.log("Verifying password");
+      console.log("Verifying password:", password);
       const isValid = await verifySecurePassword(password);
       
       if (isValid) {
         onAuthenticate(true);
+        setPasswordError("");
         toast({
           title: "Access Granted",
           description: "You now have access to secure login details",
@@ -78,9 +80,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
               type="submit" 
               variant="premium" 
               className="w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
-              disabled={isVerifying || isLoading}
+              disabled={isVerifying}
             >
-              {isVerifying || isLoading ? "Authenticating..." : "Authenticate"}
+              {isVerifying ? "Authenticating..." : "Authenticate"}
             </Button>
           </CardFooter>
         </form>

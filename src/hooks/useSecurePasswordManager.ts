@@ -1,12 +1,49 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { verifyPassword, hashPassword } from '@/utils/passwordUtils';
+import { hashPassword, verifyPassword } from '@/utils/passwordUtils';
 import { useToast } from '@/hooks/use-toast';
 
 export const useSecurePasswordManager = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const savePassword = useCallback(async (password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const hashedPassword = hashPassword(password);
+      
+      // First, deactivate all current passwords
+      await supabase
+        .from('secure_area_passwords')
+        .update({ active: false })
+        .eq('active', true);
+      
+      // Then insert the new password
+      const { error } = await supabase
+        .from('secure_area_passwords')
+        .insert([{ password_hash: hashedPassword, active: true }]);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Password Updated",
+        description: "Secure area password has been successfully updated."
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error saving password:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to Save Password",
+        description: error.message || "An unexpected error occurred"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   const getActivePassword = useCallback(async (): Promise<string | null> => {
     try {
@@ -14,11 +51,14 @@ export const useSecurePasswordManager = () => {
         .from('secure_area_passwords')
         .select('password_hash')
         .eq('active', true)
-        .maybeSingle();
+        .single();
       
       if (error) {
-        console.error('Error getting active password:', error);
-        return null;
+        if (error.code === 'PGRST116') {
+          // No active password found
+          return null;
+        }
+        throw error;
       }
       
       return data?.password_hash || null;
@@ -34,13 +74,10 @@ export const useSecurePasswordManager = () => {
       const storedHash = await getActivePassword();
       
       if (!storedHash) {
-        // If no password is set in the database, use the default password
-        console.log('No password found in database, using default password');
-        return password === 'bananas';
+        // If no password is set, use the default password
+        return password === 'bananas'; // Keeping the existing default password
       }
       
-      // If we have a stored hash, verify against it
-      console.log('Verifying against stored password hash');
       return verifyPassword(password, storedHash);
     } catch (error) {
       console.error('Error verifying password:', error);
@@ -50,37 +87,9 @@ export const useSecurePasswordManager = () => {
     }
   }, [getActivePassword]);
 
-  // Adding this utility function to help set up the default password in Supabase
-  const setupDefaultPassword = useCallback(async (): Promise<boolean> => {
-    try {
-      const hashedPassword = hashPassword('bananas');
-      
-      // First deactivate any existing passwords
-      await supabase
-        .from('secure_area_passwords')
-        .update({ active: false })
-        .not('id', 'is', null);
-        
-      // Insert the new default password
-      const { error } = await supabase
-        .from('secure_area_passwords')
-        .insert({ password_hash: hashedPassword, active: true });
-        
-      if (error) {
-        console.error('Error setting up default password:', error);
-        return false;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error setting up default password:', error);
-      return false;
-    }
-  }, []);
-
   return {
+    savePassword,
     verifySecurePassword,
-    setupDefaultPassword,
     isLoading
   };
 };
