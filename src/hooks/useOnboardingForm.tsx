@@ -78,14 +78,19 @@ export function useOnboardingForm(onSuccess?: () => void) {
       isValid = false;
     }
 
-    if (telegramUsername && !telegramUsername.startsWith('@') && telegramUsername.trim() !== '') {
-      newErrors.telegramUsername = "Telegram username should start with @";
+    // Telegram username should start with @ and have content after it
+    if (telegramUsername && (!telegramUsername.startsWith('@') || telegramUsername === '@') && telegramUsername.trim() !== '') {
+      newErrors.telegramUsername = "Telegram username should start with @ followed by your username";
       isValid = false;
     }
 
-    if (whatsappNumber && !/^\+\d+$/.test(whatsappNumber) && whatsappNumber.trim() !== '') {
-      newErrors.whatsappNumber = "WhatsApp number should start with + followed by numbers";
-      isValid = false;
+    // WhatsApp number should have a country code and actual number
+    if (whatsappNumber && whatsappNumber.trim() !== '') {
+      const parts = whatsappNumber.split(' ');
+      if (parts.length !== 2 || !parts[0].startsWith('+') || !/^\d+$/.test(parts[1])) {
+        newErrors.whatsappNumber = "WhatsApp number should include a country code and number";
+        isValid = false;
+      }
     }
 
     setErrors(newErrors);
