@@ -16,19 +16,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
-  const { verifySecurePassword } = useSecurePasswordManager();
+  const { verifySecurePassword, isLoading } = useSecurePasswordManager();
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
+    setPasswordError("");
     
     try {
-      console.log("Verifying password:", password);
+      console.log("Verifying password");
       const isValid = await verifySecurePassword(password);
       
       if (isValid) {
         onAuthenticate(true);
-        setPasswordError("");
         toast({
           title: "Access Granted",
           description: "You now have access to secure login details",
@@ -78,9 +78,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
               type="submit" 
               variant="premium" 
               className="w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
-              disabled={isVerifying}
+              disabled={isVerifying || isLoading}
             >
-              {isVerifying ? "Authenticating..." : "Authenticate"}
+              {isVerifying || isLoading ? "Authenticating..." : "Authenticate"}
             </Button>
           </CardFooter>
         </form>
