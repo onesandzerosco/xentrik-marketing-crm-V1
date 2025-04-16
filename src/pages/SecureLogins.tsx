@@ -9,9 +9,6 @@ import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
 import NoCreatorSelected from '../components/secure-logins/NoCreatorSelected';
 import LockButton from '../components/secure-logins/LockButton';
-import PasswordManagementDialog from '../components/secure-logins/PasswordManagementDialog';
-import { Button } from '@/components/ui/button';
-import { Lock, Settings } from 'lucide-react';
 import { Creator } from '../types';
 import { useSecurePasswordManager } from '@/hooks/useSecurePasswordManager';
 
@@ -33,7 +30,6 @@ const SecureLogins: React.FC = () => {
   // Add missing state variables
   const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [authorized, setAuthorized] = useState(false);
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   
   // Check authorization on initial load
   useEffect(() => {
@@ -131,15 +127,6 @@ const SecureLogins: React.FC = () => {
     <div className="container mx-auto p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Secure Login Details</h1>
-        
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-2"
-          onClick={() => setPasswordDialogOpen(true)}
-        >
-          <Settings className="h-4 w-4" />
-          Manage Access Password
-        </Button>
       </div>
       
       <div className="grid gap-8 md:grid-cols-[300px_1fr]">
@@ -165,12 +152,6 @@ const SecureLogins: React.FC = () => {
         )}
       </div>
       
-      {/* Password Management Dialog */}
-      <PasswordManagementDialog 
-        open={passwordDialogOpen} 
-        onOpenChange={setPasswordDialogOpen} 
-      />
-      
       {/* Add the Lock button */}
       <LockButton onLock={handleManualLock} />
     </div>
@@ -178,3 +159,4 @@ const SecureLogins: React.FC = () => {
 };
 
 export default SecureLogins;
+
