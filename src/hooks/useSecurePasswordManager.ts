@@ -89,18 +89,22 @@ export const useSecurePasswordManager = () => {
     }
   }, [getActivePassword]);
 
+  // Use session storage for tracking authorization since we can't modify the database schema
   const setSecureAreaAuthorization = async (authorized: boolean) => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('secure_area_authorizations')
-        .insert([{
-          user_id: user.id,
-          authorized,
-        }]);
-
-      if (error) throw error;
+      // Store authorization in session storage with expiration
+      const expiration = new Date();
+      expiration.setHours(expiration.getHours() + 2); // 2 hour expiration
+      
+      sessionStorage.setItem('secure_area_auth', JSON.stringify({
+        userId: user.id,
+        authorized,
+        expires: expiration.toISOString()
+      }));
+      
+      console.log(`Secure area authorization set to ${authorized} for user ${user.id}`);
     } catch (error) {
       console.error('Error setting secure area authorization:', error);
       throw error;
@@ -111,15 +115,21 @@ export const useSecurePasswordManager = () => {
     if (!user) return false;
 
     try {
-      const { data, error } = await supabase
-        .from('secure_area_authorizations')
-        .select('authorized')
-        .eq('user_id', user.id)
-        .gt('expires_at', new Date().toISOString())
-        .maybeSingle();
-
-      if (error) throw error;
-      return !!data?.authorized;
+      const authData = sessionStorage.getItem('secure_area_auth');
+      if (!authData) return false;
+      
+      const { userId, authorized, expires } = JSON.parse(authData);
+      
+      // Check if the authorization belongs to the current user
+      if (userId !== user.id) return false;
+      
+      // Check if the authorization is expired
+      if (new Date(expires) < new Date()) {
+        sessionStorage.removeItem('secure_area_auth');
+        return false;
+      }
+      
+      return !!authorized;
     } catch (error) {
       console.error('Error checking secure area authorization:', error);
       return false;

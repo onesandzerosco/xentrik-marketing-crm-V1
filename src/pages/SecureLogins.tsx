@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreators } from '../context/CreatorContext';
@@ -29,8 +30,10 @@ const SecureLogins: React.FC = () => {
   
   const { checkSecureAreaAuthorization, setSecureAreaAuthorization } = useSecurePasswordManager();
   
-  // Update authorization check to use Supabase
+  // Add missing state variables
+  const [selectedCreator, setSelectedCreator] = useState<Creator | null>(null);
   const [authorized, setAuthorized] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   
   // Check authorization on initial load
   useEffect(() => {
