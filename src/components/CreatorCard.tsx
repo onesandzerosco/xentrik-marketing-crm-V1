@@ -107,7 +107,11 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           </Button>
         </Link>
         <Link to={`/creators/${creator.id}`}>
-          <Button variant="outline" size="sm" className="h-8">
+          <Button 
+            variant="premium" 
+            size="sm" 
+            className="h-8 shadow-premium-yellow hover:shadow-premium-highlight"
+          >
             <Pencil className="h-4 w-4" />
           </Button>
         </Link>

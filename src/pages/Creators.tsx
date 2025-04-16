@@ -20,9 +20,6 @@ const Creators = () => {
   });
 
   useEffect(() => {
-    console.log("Creators data:", creators);
-    console.log("Filtered creators:", filteredCreators);
-    
     // Set loading state based on creators data
     if (creators.length > 0) {
       setIsLoading(false);
@@ -34,7 +31,7 @@ const Creators = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [creators, filteredCreators, isLoading]);
+  }, [creators, isLoading]);
   
   const handleClearFilters = () => {
     setSelectedGenders([]);
