@@ -1,49 +1,12 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { hashPassword, verifyPassword } from '@/utils/passwordUtils';
+import { verifyPassword } from '@/utils/passwordUtils';
 import { useToast } from '@/hooks/use-toast';
 
 export const useSecurePasswordManager = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  const savePassword = useCallback(async (password: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      const hashedPassword = hashPassword(password);
-      
-      // First, deactivate all current passwords
-      await supabase
-        .from('secure_area_passwords')
-        .update({ active: false })
-        .eq('active', true);
-      
-      // Then insert the new password
-      const { error } = await supabase
-        .from('secure_area_passwords')
-        .insert([{ password_hash: hashedPassword, active: true }]);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Password Updated",
-        description: "Secure area password has been successfully updated."
-      });
-      
-      return true;
-    } catch (error: any) {
-      console.error('Error saving password:', error);
-      toast({
-        variant: "destructive",
-        title: "Failed to Save Password",
-        description: error.message || "An unexpected error occurred"
-      });
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
 
   const getActivePassword = useCallback(async (): Promise<string | null> => {
     try {
@@ -75,7 +38,7 @@ export const useSecurePasswordManager = () => {
       
       if (!storedHash) {
         // If no password is set, use the default password
-        return password === 'bananas'; // Keeping the existing default password
+        return password === 'bananas';
       }
       
       return verifyPassword(password, storedHash);
@@ -88,7 +51,6 @@ export const useSecurePasswordManager = () => {
   }, [getActivePassword]);
 
   return {
-    savePassword,
     verifySecurePassword,
     isLoading
   };
