@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useCreators } from "../context/CreatorContext";
+import { useCreators } from "../context/creator";
 import CreatorCard from "../components/CreatorCard";
 import TagFilter from "../components/TagFilter";
 import { Button } from "@/components/ui/button";

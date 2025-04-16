@@ -1,65 +1,13 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { Creator, EngagementStats } from "../types";
-import { useActivities } from "./ActivityContext";
-import { CreatorContextType } from "./creator/types";
+import { useState, useCallback } from "react";
+import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
-const CreatorContext = createContext<CreatorContextType>({
-  creators: [],
-  addCreator: async () => undefined,
-  updateCreator: () => {},
-  getCreator: () => undefined,
-  getCreatorStats: () => undefined,
-  filterCreators: () => [],
-});
-
-export const useCreators = () => useContext(CreatorContext);
-
-export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [creators, setCreators] = useState<Creator[]>([]);
-  const { addActivity } = useActivities();
-
-  // Load creators from Supabase
-  useEffect(() => {
-    const loadCreators = async () => {
-      const { data: creatorsData, error: creatorsError } = await supabase
-        .from('creators')
-        .select(`
-          *,
-          creator_social_links (*),
-          creator_tags (tag),
-          creator_team_members (team_member_id)
-        `);
-
-      if (creatorsError) {
-        console.error('Error loading creators:', creatorsError);
-        return;
-      }
-
-      const formattedCreators: Creator[] = creatorsData.map(creator => ({
-        id: creator.id,
-        name: creator.name,
-        email: creator.email,
-        profileImage: creator.profile_image || "",
-        gender: creator.gender,
-        team: creator.team,
-        creatorType: creator.creator_type,
-        socialLinks: creator.creator_social_links || {},
-        tags: creator.creator_tags?.map(t => t.tag) || [],
-        assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
-        needsReview: creator.needs_review || false,
-        telegramUsername: creator.telegram_username,
-        whatsappNumber: creator.whatsapp_number,
-        notes: creator.notes
-      }));
-
-      setCreators(formattedCreators);
-    };
-
-    loadCreators();
-  }, []);
-
+export const useCreatorActions = (
+  creators: Creator[],
+  setCreators: React.Dispatch<React.SetStateAction<Creator[]>>,
+  addActivity: (action: string, description: string, creatorId: string) => void
+) => {
   const addCreator = async (creator: Omit<Creator, "id">) => {
     const { data: newCreator, error: creatorError } = await supabase
       .from('creators')
@@ -175,53 +123,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
   };
 
-  const getCreator = (id: string) => {
-    return creators.find((creator) => creator.id === id);
+  return {
+    addCreator,
+    updateCreator
   };
-
-  const getCreatorStats = (id: string) => {
-    // Note: Implement stats fetching from Supabase if needed
-    return undefined;
-  };
-
-  const filterCreators = (filters: { gender?: string[]; team?: string[]; creatorType?: string[]; reviewStatus?: string[] }) => {
-    return creators.filter((creator) => {
-      let genderMatch = true;
-      let teamMatch = true;
-      let creatorTypeMatch = true;
-      let reviewStatusMatch = true;
-
-      if (filters.gender && filters.gender.length > 0) {
-        genderMatch = filters.gender.includes(creator.gender);
-      }
-
-      if (filters.team && filters.team.length > 0) {
-        teamMatch = filters.team.includes(creator.team);
-      }
-
-      if (filters.creatorType && filters.creatorType.length > 0) {
-        creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
-      }
-
-      if (filters.reviewStatus && filters.reviewStatus.length > 0) {
-        const isInReview = creator.needsReview === true;
-        reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
-      }
-
-      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch;
-    });
-  };
-
-  return (
-    <CreatorContext.Provider value={{
-      creators,
-      addCreator,
-      updateCreator,
-      getCreator,
-      getCreatorStats,
-      filterCreators,
-    }}>
-      {children}
-    </CreatorContext.Provider>
-  );
 };

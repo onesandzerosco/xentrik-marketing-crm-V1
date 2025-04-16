@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreators } from "../context/CreatorContext";
+import { useCreators } from "../context/creator";
 import { useToast } from "@/hooks/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
 import OnboardingForm, { OnboardingFormValues } from "../components/creators/onboarding/OnboardingForm";

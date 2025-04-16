@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { AuthProvider } from './context/AuthContext';
-import { CreatorProvider } from './context/CreatorContext';
+import { CreatorProvider } from './context/creator';
 import { ActivityProvider } from './context/ActivityContext';
 import { AnimatePresence } from 'framer-motion';
 import Login from './pages/Login';

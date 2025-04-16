@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Sheet,
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Gender, Team, CreatorType } from "../types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreators } from "../context/CreatorContext";
+import { useCreators } from "../context/creator";
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
 

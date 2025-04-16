@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCreators } from "../context/CreatorContext";
+import { useCreators } from "../context/creator";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
