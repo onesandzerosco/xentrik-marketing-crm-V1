@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Gender, Team, CreatorType } from "../types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreators } from "../context/creator"; // Updated import path
+import { useCreators } from "../context/creator";
 import { useToast } from "@/components/ui/use-toast";
 import ProfilePicture from "../components/profile/ProfilePicture";
 
@@ -77,72 +77,84 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onOpenChange })
             Fill in the details to add a new creator to the platform.
           </SheetDescription>
         </SheetHeader>
-        <div className="grid gap-4 py-4">
-          {/* Profile Picture Upload Component */}
-          <div className="flex justify-center mb-2">
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
+          {/* Form Fields - Left Side */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input 
+                id="name" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                className="col-span-3" 
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="gender" className="text-right">
+                Gender
+              </Label>
+              <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Trans">Trans</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="team" className="text-right">
+                Team
+              </Label>
+              <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select team" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A Team">A Team</SelectItem>
+                  <SelectItem value="B Team">B Team</SelectItem>
+                  <SelectItem value="C Team">C Team</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="creatorType" className="text-right">
+                Creator Type
+              </Label>
+              <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select creator type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Real">Real</SelectItem>
+                  <SelectItem value="AI">AI</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Profile Picture - Right Side */}
+          <div className="flex flex-col items-center justify-start">
             <ProfilePicture 
               profileImage={profileImage}
               name={name || "New Creator"}
               setProfileImage={setProfileImage}
             />
           </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
-            </Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
-          </div>
-          
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="gender" className="text-right">
-              Gender
-            </Label>
-            <Select onValueChange={(value) => setGender(value as Gender)} value={gender}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Male">Male</SelectItem>
-                <SelectItem value="Female">Female</SelectItem>
-                <SelectItem value="Trans">Trans</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="team" className="text-right">
-              Team
-            </Label>
-            <Select onValueChange={(value) => setTeam(value as Team)} value={team}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select team" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A Team">A Team</SelectItem>
-                <SelectItem value="B Team">B Team</SelectItem>
-                <SelectItem value="C Team">C Team</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="creatorType" className="text-right">
-              Creator Type
-            </Label>
-            <Select onValueChange={(value) => setCreatorType(value as CreatorType)} value={creatorType}>
-              <SelectTrigger className="col-span-3">
-                <SelectValue placeholder="Select creator type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Real">Real</SelectItem>
-                <SelectItem value="AI">AI</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
+        
         <Button 
           onClick={handleSubmit} 
           variant="premium"
-          className="shadow-premium-yellow"
+          className="w-full mt-4 shadow-premium-yellow"
         >
           Submit
         </Button>
