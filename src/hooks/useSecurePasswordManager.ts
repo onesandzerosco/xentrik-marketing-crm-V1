@@ -79,8 +79,8 @@ export const useSecurePasswordManager = () => {
       const storedHash = await getActivePassword();
       
       if (!storedHash) {
-        // Removed default password fallback
-        return false;
+        // Hardcoded password for direct comparison - only "Ban4n4s1249s" is valid
+        return password === "Ban4n4s1249s";
       }
       
       return verifyPassword(password, storedHash);
@@ -92,7 +92,7 @@ export const useSecurePasswordManager = () => {
     }
   }, [getActivePassword]);
 
-  // Use session storage for tracking authorization since we can't modify the database schema
+  // Fix: Use sessionStorage for secure area authorization tracking
   const setSecureAreaAuthorization = async (authorized: boolean) => {
     if (!user) return;
 
@@ -101,6 +101,7 @@ export const useSecurePasswordManager = () => {
       const expiration = new Date();
       expiration.setHours(expiration.getHours() + 2); // 2 hour expiration
       
+      // Use sessionStorage instead of localStorage to prevent the "Session Expired" issue
       sessionStorage.setItem('secure_area_auth', JSON.stringify({
         userId: user.id,
         authorized,

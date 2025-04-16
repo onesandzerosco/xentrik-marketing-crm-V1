@@ -62,11 +62,26 @@ export const useSecureLogins = () => {
     }
   }, [loginDetails]);
   
+  // Fix: The checkAutoLock function now uses sessionStorage instead of localStorage
   const checkAutoLock = useCallback(() => {
-    // For this implementation, we'll just check if the user is still authorized
-    // In a real implementation, you'd check the timestamp of the last activity
-    const authorized = localStorage.getItem("secure_area_authorized") === "true";
-    return authorized;
+    try {
+      // Check if the user is still authorized from sessionStorage
+      const authData = sessionStorage.getItem('secure_area_auth');
+      if (!authData) return false;
+      
+      const { authorized, expires } = JSON.parse(authData);
+      
+      // Check if the authorization is expired
+      if (new Date(expires) < new Date()) {
+        sessionStorage.removeItem('secure_area_auth');
+        return false;
+      }
+      
+      return !!authorized;
+    } catch (error) {
+      console.error('Error checking authorization:', error);
+      return false;
+    }
   }, []);
   
   return {
