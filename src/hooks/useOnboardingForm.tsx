@@ -17,11 +17,13 @@ export interface ValidationErrors {
   creatorType?: string;
   telegramUsername?: string;
   whatsappNumber?: string;
+  contactRequired?: string;
   instagram?: string;
   tiktok?: string;
   twitter?: string;
   reddit?: string;
   chaturbate?: string;
+  youtube?: string;
   customSocialLinks?: string[];
 }
 
@@ -41,6 +43,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
   const [twitter, setTwitter] = useState("");
   const [reddit, setReddit] = useState("");
   const [chaturbate, setChaturbate] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -66,6 +69,12 @@ export function useOnboardingForm(onSuccess?: () => void) {
 
     if (!creatorType) {
       newErrors.creatorType = "Creator type is required";
+      isValid = false;
+    }
+    
+    // Validate contact methods - at least one is required
+    if (!telegramUsername.trim() && !whatsappNumber.trim()) {
+      newErrors.contactRequired = "At least one contact method (Telegram or WhatsApp) is required";
       isValid = false;
     }
 
@@ -99,6 +108,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
       twitter: twitter || undefined,
       reddit: reddit || undefined,
       chaturbate: chaturbate || undefined,
+      youtube: youtube || undefined,
     };
     
     customSocialLinks.forEach(link => {
@@ -147,6 +157,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
     setTwitter("");
     setReddit("");
     setChaturbate("");
+    setYoutube("");
     setCustomSocialLinks([]);
     setNotes("");
     setErrors({});
@@ -166,6 +177,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
       twitter,
       reddit,
       chaturbate,
+      youtube,
       customSocialLinks,
       notes,
       errors
@@ -183,6 +195,7 @@ export function useOnboardingForm(onSuccess?: () => void) {
       setTwitter,
       setReddit,
       setChaturbate,
+      setYoutube,
       setCustomSocialLinks,
       setNotes
     },

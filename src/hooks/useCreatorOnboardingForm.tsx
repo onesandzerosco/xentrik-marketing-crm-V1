@@ -13,11 +13,13 @@ interface ValidationErrors {
   creatorType?: string;
   telegramUsername?: string;
   whatsappNumber?: string;
+  contactRequired?: string;
   instagram?: string;
   tiktok?: string;
   twitter?: string;
   reddit?: string;
   chaturbate?: string;
+  youtube?: string;
   customSocialLinks?: string[];
 }
 
@@ -39,6 +41,7 @@ export function useCreatorOnboardingForm() {
   const [twitter, setTwitter] = useState("");
   const [reddit, setReddit] = useState("");
   const [chaturbate, setChaturbate] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
   
@@ -67,6 +70,12 @@ export function useCreatorOnboardingForm() {
 
     if (!creatorType) {
       newErrors.creatorType = "Creator type is required";
+      isValid = false;
+    }
+
+    // Validate contact methods - at least one is required
+    if (!telegramUsername.trim() && !whatsappNumber.trim()) {
+      newErrors.contactRequired = "At least one contact method (Telegram or WhatsApp) is required";
       isValid = false;
     }
 
@@ -106,6 +115,7 @@ export function useCreatorOnboardingForm() {
       if (twitter) socialLinksObj.twitter = twitter;
       if (reddit) socialLinksObj.reddit = reddit;
       if (chaturbate) socialLinksObj.chaturbate = chaturbate;
+      if (youtube) socialLinksObj.youtube = youtube;
       
       // Add custom social links
       customSocialLinks.forEach(link => {
@@ -162,6 +172,7 @@ export function useCreatorOnboardingForm() {
       twitter,
       reddit,
       chaturbate,
+      youtube,
       customSocialLinks,
       notes,
       errors
@@ -179,6 +190,7 @@ export function useCreatorOnboardingForm() {
       setTwitter,
       setReddit,
       setChaturbate,
+      setYoutube,
       setCustomSocialLinks,
       setNotes
     },

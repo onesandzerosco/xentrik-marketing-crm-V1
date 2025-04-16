@@ -18,6 +18,8 @@ interface SocialLinksSectionProps {
   setReddit: (username: string) => void;
   chaturbate: string;
   setChaturbate: (username: string) => void;
+  youtube: string;
+  setYoutube: (username: string) => void;
   customSocialLinks: CustomSocialLink[];
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   errors: {
@@ -26,6 +28,7 @@ interface SocialLinksSectionProps {
     twitter?: string;
     reddit?: string;
     chaturbate?: string;
+    youtube?: string;
     customSocialLinks?: string[];
   };
 }
@@ -41,6 +44,8 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
   setReddit,
   chaturbate,
   setChaturbate,
+  youtube,
+  setYoutube,
   customSocialLinks,
   setCustomSocialLinks,
   errors = {}
@@ -78,6 +83,8 @@ const SocialLinksSection: React.FC<SocialLinksSectionProps> = ({
         setReddit={setReddit}
         chaturbate={chaturbate}
         setChaturbate={setChaturbate}
+        youtube={youtube}
+        setYoutube={setYoutube}
         errors={errors}
       />
       

@@ -41,6 +41,8 @@ const CreatorOnboarding = () => {
           setReddit={formActions.setReddit}
           chaturbate={formState.chaturbate}
           setChaturbate={formActions.setChaturbate}
+          youtube={formState.youtube}
+          setYoutube={formActions.setYoutube}
           customSocialLinks={formState.customSocialLinks}
           setCustomSocialLinks={formActions.setCustomSocialLinks}
           notes={formState.notes}

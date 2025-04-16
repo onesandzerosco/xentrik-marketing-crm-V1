@@ -11,6 +11,7 @@ interface ContactInfoSectionProps {
   errors: {
     telegramUsername?: string;
     whatsappNumber?: string;
+    contactRequired?: string;
   };
 }
 
@@ -24,6 +25,8 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Contact Information</h2>
+      <p className="text-sm text-gray-500 mb-4">At least one contact method (Telegram or WhatsApp) is required</p>
+      
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="telegramUsername" className="flex items-center">
@@ -40,8 +43,9 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
             <p className="text-red-500 text-sm">{errors.telegramUsername}</p>
           )}
         </div>
+        
         <div className="space-y-2">
-          <Label htmlFor="whatsappNumber">
+          <Label htmlFor="whatsappNumber" className="flex items-center">
             WhatsApp Number
           </Label>
           <Input 
@@ -55,6 +59,10 @@ const ContactInfoSection: React.FC<ContactInfoSectionProps> = ({
             <p className="text-red-500 text-sm">{errors.whatsappNumber}</p>
           )}
         </div>
+        
+        {errors.contactRequired && (
+          <p className="text-red-500 text-sm mt-2">{errors.contactRequired}</p>
+        )}
       </div>
     </div>
   );

@@ -14,12 +14,15 @@ interface PredefinedSocialLinksProps {
   setReddit: (username: string) => void;
   chaturbate: string;
   setChaturbate: (username: string) => void;
+  youtube: string;
+  setYoutube: (username: string) => void;
   errors: {
     instagram?: string;
     tiktok?: string;
     twitter?: string;
     reddit?: string;
     chaturbate?: string;
+    youtube?: string;
   };
 }
 
@@ -34,6 +37,8 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
   setReddit,
   chaturbate,
   setChaturbate,
+  youtube,
+  setYoutube,
   errors = {}
 }) => {
   return (
@@ -44,7 +49,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="instagram" 
-          placeholder="Username"
+          placeholder="Full profile URL"
           value={instagram}
           onChange={(e) => setInstagram(e.target.value)}
           className={errors.instagram ? "border-red-500" : ""}
@@ -60,7 +65,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="tiktok" 
-          placeholder="Username"
+          placeholder="Full profile URL"
           value={tiktok}
           onChange={(e) => setTiktok(e.target.value)}
           className={errors.tiktok ? "border-red-500" : ""}
@@ -76,7 +81,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="twitter" 
-          placeholder="Username"
+          placeholder="Full profile URL"
           value={twitter}
           onChange={(e) => setTwitter(e.target.value)}
           className={errors.twitter ? "border-red-500" : ""}
@@ -87,12 +92,28 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
       </div>
       
       <div className="space-y-2">
+        <Label htmlFor="youtube">
+          YouTube
+        </Label>
+        <Input 
+          id="youtube" 
+          placeholder="Full profile URL"
+          value={youtube}
+          onChange={(e) => setYoutube(e.target.value)}
+          className={errors.youtube ? "border-red-500" : ""}
+        />
+        {errors.youtube && (
+          <p className="text-red-500 text-sm">{errors.youtube}</p>
+        )}
+      </div>
+      
+      <div className="space-y-2">
         <Label htmlFor="reddit">
           Reddit
         </Label>
         <Input 
           id="reddit" 
-          placeholder="Username"
+          placeholder="Full profile URL"
           value={reddit}
           onChange={(e) => setReddit(e.target.value)}
           className={errors.reddit ? "border-red-500" : ""}
@@ -108,7 +129,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         </Label>
         <Input 
           id="chaturbate" 
-          placeholder="Username"
+          placeholder="Full profile URL"
           value={chaturbate}
           onChange={(e) => setChaturbate(e.target.value)}
           className={errors.chaturbate ? "border-red-500" : ""}

@@ -15,11 +15,13 @@ interface ValidationErrors {
   creatorType?: string;
   telegramUsername?: string;
   whatsappNumber?: string;
+  contactRequired?: string;
   instagram?: string;
   tiktok?: string;
   twitter?: string;
   reddit?: string;
   chaturbate?: string;
+  youtube?: string;
   customSocialLinks?: string[];
 }
 
@@ -48,6 +50,8 @@ interface OnboardingFormSectionsProps {
   setReddit: (username: string) => void;
   chaturbate: string;
   setChaturbate: (username: string) => void;
+  youtube: string;
+  setYoutube: (username: string) => void;
   customSocialLinks: CustomSocialLink[];
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   notes: string;
@@ -81,6 +85,8 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
     setReddit,
     chaturbate,
     setChaturbate,
+    youtube,
+    setYoutube,
     customSocialLinks,
     setCustomSocialLinks,
     notes,
@@ -142,6 +148,8 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
           setReddit={setReddit}
           chaturbate={chaturbate}
           setChaturbate={setChaturbate}
+          youtube={youtube}
+          setYoutube={setYoutube}
           customSocialLinks={customSocialLinks}
           setCustomSocialLinks={setCustomSocialLinks}
           errors={errors}

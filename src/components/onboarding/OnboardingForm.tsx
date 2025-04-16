@@ -59,6 +59,8 @@ const OnboardingForm: React.FC<OnboardingFormProps> = ({ onCloseModal }) => {
           setReddit={formActions.setReddit}
           chaturbate={formState.chaturbate}
           setChaturbate={formActions.setChaturbate}
+          youtube={formState.youtube}
+          setYoutube={formActions.setYoutube}
           customSocialLinks={formState.customSocialLinks}
           setCustomSocialLinks={formActions.setCustomSocialLinks}
           errors={formState.errors}
