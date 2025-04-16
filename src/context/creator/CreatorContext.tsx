@@ -32,62 +32,54 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const loadCreators = async () => {
       setIsLoading(true);
-      console.log("[CreatorContext] Loading creators from Supabase...");
-      
       try {
-        const { data: creatorsData, error: creatorsError } = await supabase
+        // Fetch creators with all related data in one request
+        const { data, error } = await supabase
           .from('creators')
           .select(`
             *,
             creator_social_links (*),
-            creator_tags (tag),
-            creator_team_members (team_member_id)
+            creator_tags (tag)
           `);
 
-        if (creatorsError) {
-          console.error('[CreatorContext] Error loading creators:', creatorsError);
-          toast({
-            title: "Failed to load creators",
-            description: `Error: ${creatorsError.message}`,
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
+        if (error) {
+          throw error;
         }
 
-        console.log("[CreatorContext] Raw creators data from Supabase:", creatorsData);
-
-        if (!creatorsData || creatorsData.length === 0) {
-          console.log("[CreatorContext] No creators found in database");
+        console.log("Raw creator data from Supabase:", data);
+        
+        if (!data || data.length === 0) {
+          console.log("No creators found in database");
           setCreators([]);
           setIsLoading(false);
           return;
         }
 
-        const formattedCreators: Creator[] = creatorsData.map(creator => ({
+        // Transform the data to match the Creator type
+        const formattedCreators: Creator[] = data.map(creator => ({
           id: creator.id,
           name: creator.name,
-          email: creator.email,
-          profileImage: creator.profile_image || "",
+          email: creator.email || '',
+          profileImage: creator.profile_image || '',
           gender: creator.gender,
           team: creator.team,
           creatorType: creator.creator_type,
           socialLinks: creator.creator_social_links?.[0] || {},
           tags: creator.creator_tags?.map(t => t.tag) || [],
-          assignedTeamMembers: creator.creator_team_members?.map(tm => tm.team_member_id) || [],
+          assignedTeamMembers: [],
           needsReview: creator.needs_review || false,
-          telegramUsername: creator.telegram_username,
-          whatsappNumber: creator.whatsapp_number,
-          notes: creator.notes
+          telegramUsername: creator.telegram_username || '',
+          whatsappNumber: creator.whatsapp_number || '',
+          notes: creator.notes || ''
         }));
 
-        console.log("[CreatorContext] Formatted creators:", formattedCreators);
+        console.log("Formatted creators data:", formattedCreators);
         setCreators(formattedCreators);
       } catch (error) {
-        console.error("[CreatorContext] Error in loadCreators:", error);
+        console.error("Error loading creators:", error);
         toast({
-          title: "Failed to load creators",
-          description: "An unexpected error occurred",
+          title: "Error loading creators",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
           variant: "destructive",
         });
       } finally {
@@ -98,22 +90,20 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     loadCreators();
     
     // Subscribe to changes in the creators table
-    const creatorsSubscription = supabase
-      .channel('creators-channel')
+    const channel = supabase
+      .channel('creators-changes')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
         table: 'creators' 
       }, (payload) => {
-        console.log('[CreatorContext] Realtime update received for creators:', payload);
-        loadCreators(); // Reload creators when changes occur
+        console.log('Realtime update received:', payload);
+        loadCreators(); // Reload all creators when any change occurs
       })
-      .subscribe((status) => {
-        console.log('[CreatorContext] Creators subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(creatorsSubscription);
+      supabase.removeChannel(channel);
     };
   }, [toast]);
 

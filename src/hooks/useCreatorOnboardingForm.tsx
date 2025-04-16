@@ -28,7 +28,7 @@ export function useCreatorOnboardingForm() {
   const { addCreator } = useCreators();
   const { toast } = useToast();
   
-  // State for form fields
+  // Form state
   const [name, setName] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [gender, setGender] = useState<Gender>("Male");
@@ -52,44 +52,22 @@ export function useCreatorOnboardingForm() {
     const newErrors: ValidationErrors = {};
     let isValid = true;
 
-    // Validate required fields
+    // Basic validation
     if (!name.trim()) {
       newErrors.name = "Creator name is required";
       isValid = false;
     }
 
-    if (!gender) {
-      newErrors.gender = "Gender is required";
-      isValid = false;
-    }
-
-    if (!team) {
-      newErrors.team = "Team is required";
-      isValid = false;
-    }
-
-    if (!creatorType) {
-      newErrors.creatorType = "Creator type is required";
-      isValid = false;
-    }
-
-    // Validate contact methods - at least one is required
+    // At least one contact method is required
     if (!telegramUsername.trim() && !whatsappNumber.trim()) {
-      newErrors.contactRequired = "At least one contact method (Telegram or WhatsApp) is required";
+      newErrors.contactRequired = "At least one contact method is required";
       isValid = false;
     }
 
-    // Telegram username should start with @ and have content after it
-    if (telegramUsername && (!telegramUsername.startsWith('@') || telegramUsername === '@') && telegramUsername.trim() !== '') {
-      newErrors.telegramUsername = "Telegram username should start with @ followed by your username";
-      isValid = false;
-    }
-
-    // WhatsApp number should have a country code and actual number
-    if (whatsappNumber && whatsappNumber.trim() !== '') {
-      const parts = whatsappNumber.split(' ');
-      if (parts.length !== 2 || !parts[0].startsWith('+') || !/^\d+$/.test(parts[1])) {
-        newErrors.whatsappNumber = "WhatsApp number should include a country code and number";
+    // Format validation
+    if (telegramUsername && telegramUsername.trim() !== '') {
+      if (!telegramUsername.startsWith('@') || telegramUsername === '@') {
+        newErrors.telegramUsername = "Telegram username should start with @";
         isValid = false;
       }
     }
@@ -99,11 +77,12 @@ export function useCreatorOnboardingForm() {
   };
 
   const handleSubmit = async () => {
-    console.log("[useCreatorOnboardingForm] Starting form submission");
+    console.log("Starting form submission");
+    
     if (!validateForm()) {
       toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form.",
+        title: "Form Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
       return;
@@ -112,60 +91,58 @@ export function useCreatorOnboardingForm() {
     setIsSubmitting(true);
     
     try {
-      // Prepare custom social links
-      const socialLinksObj: Record<string, string> = {};
-      
-      if (instagram) socialLinksObj.instagram = instagram;
-      if (tiktok) socialLinksObj.tiktok = tiktok;
-      if (twitter) socialLinksObj.twitter = twitter;
-      if (reddit) socialLinksObj.reddit = reddit;
-      if (chaturbate) socialLinksObj.chaturbate = chaturbate;
-      if (youtube) socialLinksObj.youtube = youtube;
+      // Prepare social links
+      const socialLinks: Record<string, string> = {};
+      if (instagram) socialLinks.instagram = instagram;
+      if (tiktok) socialLinks.tiktok = tiktok;
+      if (twitter) socialLinks.twitter = twitter;
+      if (reddit) socialLinks.reddit = reddit;
+      if (chaturbate) socialLinks.chaturbate = chaturbate;
+      if (youtube) socialLinks.youtube = youtube;
       
       // Add custom social links
       customSocialLinks.forEach(link => {
         if (link.url) {
-          socialLinksObj[link.name.toLowerCase()] = link.url;
+          socialLinks[link.name.toLowerCase()] = link.url;
         }
       });
       
-      // Create the new creator object
+      // Create new creator object
       const newCreator = {
         name,
         profileImage,
         gender,
         team,
         creatorType,
-        socialLinks: socialLinksObj,
-        tags: [gender, team, creatorType],
+        socialLinks,
+        tags: [gender, team, creatorType], // Default tags
         needsReview: true,
         telegramUsername,
         whatsappNumber,
         notes
       };
       
-      console.log("[useCreatorOnboardingForm] Submitting new creator:", newCreator);
+      console.log("Submitting new creator:", newCreator);
       
-      // Call addCreator from the context
+      // Submit to context
       const creatorId = await addCreator(newCreator);
       
-      console.log("[useCreatorOnboardingForm] Creator created with ID:", creatorId);
-      
-      // Show success toast
-      toast({
-        title: "Creator Onboarded Successfully",
-        description: "The creator profile has been created successfully.",
-      });
-      
-      // Navigate back to creators page
-      setTimeout(() => {
-        navigate("/creators");
-      }, 500);
+      if (creatorId) {
+        toast({
+          title: "Creator Added Successfully",
+          description: `${name} was added to your creators`,
+        });
+        
+        // Navigate back to creators list
+        setTimeout(() => {
+          navigate("/creators");
+        }, 500);
+      }
     } catch (error: any) {
-      console.error("[useCreatorOnboardingForm] Error during onboarding:", error);
+      console.error("Error during creator onboarding:", error);
       toast({
-        title: "Onboarding Failed",
-        description: error.message || "There was an error during the onboarding process. Please try again.",
+        title: "Creator Onboarding Failed",
+        description: error.message || "An error occurred while adding the creator",
         variant: "destructive",
       });
     } finally {
