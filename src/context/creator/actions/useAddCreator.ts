@@ -2,6 +2,18 @@
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
+// Function to generate a slug from creator name
+const generateCreatorId = (name: string): string => {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^\w\s]/gi, '') // Remove special characters
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .trim();
+  
+  // Add Xentrik suffix
+  return `${slug}-xentrik`;
+};
+
 export const useAddCreator = (
   creators: Creator[],
   setCreators: React.Dispatch<React.SetStateAction<Creator[]>>,
@@ -11,10 +23,16 @@ export const useAddCreator = (
     console.log("Starting creator creation process:", creator);
     
     try {
+      // Generate ID based on creator's name
+      const customId = generateCreatorId(creator.name);
+      
+      console.log("Generated creator ID:", customId);
+      
       // Step 1: Insert the creator basic info
       const { data: newCreator, error: creatorError } = await supabase
         .from('creators')
         .insert({
+          id: customId, // Use the custom ID instead of letting Supabase generate one
           name: creator.name,
           profile_image: creator.profileImage,
           gender: creator.gender,

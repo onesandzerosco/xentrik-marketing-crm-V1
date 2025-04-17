@@ -55,7 +55,7 @@ export function useSubmission() {
       if (creatorId) {
         toast({
           title: "Creator Added Successfully",
-          description: `${formState.name} was added to your creators`,
+          description: `${formState.name} was added to your creators with ID: ${creatorId}`,
         });
         
         // Navigate to creators list immediately
