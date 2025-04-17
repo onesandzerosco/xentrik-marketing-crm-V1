@@ -172,6 +172,17 @@ const CreatorProfile = () => {
       />
 
       <div className="space-y-8 max-w-7xl mx-auto">
+        {/* Actions Section - Now as the first row */}
+        <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+          <ProfileActions
+            needsReview={needsReview}
+            setNeedsReview={setNeedsReview}
+            creatorId={creator.id}
+            assignedMembers={assignedMembers}
+            onAssignMembers={handleAssignTeamMembers}
+          />
+        </div>
+
         {/* Form Sections - Matching Onboarding Layout */}
         <OnboardingFormSections
           name={name}
@@ -206,17 +217,6 @@ const CreatorProfile = () => {
           setNotes={setNotes}
           errors={errors}
         />
-        
-        {/* Actions Section - As a separate row */}
-        <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-          <ProfileActions
-            needsReview={needsReview}
-            setNeedsReview={setNeedsReview}
-            creatorId={creator.id}
-            assignedMembers={assignedMembers}
-            onAssignMembers={handleAssignTeamMembers}
-          />
-        </div>
       </div>
     </div>
   );
