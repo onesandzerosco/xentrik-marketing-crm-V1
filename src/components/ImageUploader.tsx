@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -19,13 +18,11 @@ interface ImageUploaderProps {
   showAutoDetect?: boolean;
 }
 
-// Add interfaces for image size and position tracking
 interface ImageSize {
   width: number;
   height: number;
 }
 
-// Add interface for storing image adjustments
 interface ImageAdjustments {
   zoom: number;
   xPosition: number;
@@ -60,7 +57,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
-  // Check if there's a valid image to display
   const hasImage = Boolean(previewImage && previewImage.trim() !== "");
 
   const sizeClasses = {
@@ -70,12 +66,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     xl: "h-40 w-40"
   };
 
-  // Use effect to update previewImage when currentImage changes
   useEffect(() => {
     if (currentImage && currentImage !== previewImage) {
       setPreviewImage(currentImage);
       
-      // Check if image is valid
       const img = new Image();
       img.onload = () => {
         setImageLoaded(true);
@@ -95,12 +89,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     try {
       setIsUploading(true);
       
-      // Generate a unique file name
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${name.replace(/\s+/g, '-').toLowerCase()}_${fileName}`;
       
-      // Upload to Supabase Storage
+      const { data: buckets } = await supabase.storage.listBuckets();
+      
+      if (!buckets?.find(bucket => bucket.name === 'profile_images')) {
+        console.log('Profile images bucket not found, this will cause upload failures');
+        toast({
+          title: "Storage not configured",
+          description: "The storage bucket for profile images doesn't exist. Please contact an administrator.",
+          variant: "destructive",
+        });
+        return '';
+      }
+      
       const { data, error } = await supabase.storage
         .from('profile_images')
         .upload(filePath, file, {
@@ -109,10 +113,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         });
       
       if (error) {
+        console.error('Error uploading image:', error);
         throw error;
       }
       
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profile_images')
         .getPublicUrl(data.path);
@@ -135,22 +139,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     const file = event.target.files?.[0];
     
     if (file) {
-      // Create an object URL for preview
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
       setImageLoaded(true);
       
-      // Upload to Supabase and get permanent URL
       const supabaseUrl = await uploadToSupabase(file);
       if (supabaseUrl) {
-        // Only update if upload was successful
         onImageChange(supabaseUrl);
       } else {
-        // If upload failed, at least show the local preview
         onImageChange(objectUrl);
       }
       
-      // Reset adjustments when uploading a new image
       setAdjustments({
         zoom: 1,
         xPosition: 0,
@@ -163,14 +162,12 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setCropImage(previewImage);
     setIsEditing(true);
     
-    // Set initial slider values based on saved adjustments
     setZoomLevel([adjustments.zoom]);
     setXPosition([adjustments.xPosition]);
     setYPosition([adjustments.yPosition]);
   };
 
   const handleRemove = async () => {
-    // If the image is from Supabase Storage, try to delete it
     if (previewImage && previewImage.includes('profile_images')) {
       try {
         const path = previewImage.split('profile_images/').pop();
@@ -192,7 +189,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setImageLoaded(false);
     onImageChange("");
     
-    // Reset adjustments when removing an image
     setAdjustments({
       zoom: 1,
       xPosition: 0,
@@ -200,33 +196,27 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     });
   };
 
-  // Update image size from the ImageCropper
   const handleUpdateImageSize = (size: ImageSize, newScale: number) => {
     setImageSize(size);
     setScale(newScale);
   };
 
   const handleCropSave = async () => {
-    // Save the adjustments
     setAdjustments({
       zoom: zoomLevel[0],
       xPosition: xPosition[0],
       yPosition: yPosition[0]
     });
     
-    // Close the dialog first
     setIsEditing(false);
     
-    // Make sure we're not losing the image
     if (previewImage && previewImage.trim() !== "") {
-      // Create a data URL from the canvas without the grid and circular mask
       const canvas = previewCanvasRef.current;
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx && cropImage) {
           const img = new Image();
           img.onload = async () => {
-            // Calculate dimensions
             const imgWidth = imageSize.width * scale * zoomLevel[0];
             const imgHeight = imageSize.height * scale * zoomLevel[0];
             
@@ -239,10 +229,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             const posX = centerX - (imgWidth / 2) + offsetX;
             const posY = centerY - (imgHeight / 2) + offsetY;
             
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw only the image without any overlays
             ctx.drawImage(
               img,
               posX, 
@@ -252,30 +240,22 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             );
             
             try {
-              // Get the data URL from the canvas
               const dataUrl = canvas.toDataURL('image/png');
               
-              // Convert data URL to Blob for Supabase upload
               const blob = await (await fetch(dataUrl)).blob();
               const file = new File([blob], `cropped_${Date.now()}.png`, { type: 'image/png' });
               
-              // Upload to Supabase
               const supabaseUrl = await uploadToSupabase(file);
               if (supabaseUrl) {
-                // Update the preview image with the adjusted image
                 setPreviewImage(supabaseUrl);
-                
-                // Pass the image back to the parent component
                 onImageChange(supabaseUrl);
               } else {
-                // If upload failed, use data URL as fallback
                 setPreviewImage(dataUrl);
                 onImageChange(dataUrl);
               }
             } catch (error) {
               console.error("Error creating image data URL:", error);
               
-              // Fallback: just store the adjustment parameters
               const timestamp = new Date().getTime();
               let updatedImage = previewImage;
               
@@ -285,10 +265,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 updatedImage = `${previewImage}?t=${timestamp}&zoom=${zoomLevel[0]}&x=${xPosition[0]}&y=${yPosition[0]}`;
               }
               
-              // Update the preview image with parameters
               setPreviewImage(updatedImage);
-              
-              // Pass the image back to the parent component
               onImageChange(updatedImage);
             }
           };
@@ -303,10 +280,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setCropImage(null);
   };
 
-  // Initialize the component with the current image if available
   React.useEffect(() => {
     if (currentImage && currentImage.trim() !== "") {
-      // Create a temporary Image to check if it loads properly
       const img = new Image();
       img.onload = () => {
         setImageLoaded(true);
@@ -417,7 +392,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         onChange={handleFileChange}
       />
 
-      {/* Hidden canvas for saving image without grid */}
       <canvas ref={previewCanvasRef} className="hidden" />
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
@@ -566,23 +540,18 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       ctx.clearRect(0, 0, size, size);
       
-      // Draw dark background
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.fillRect(0, 0, size, size);
       
-      // Make sure the radius is positive to avoid the error
       const circleRadius = Math.max(2, size / 2 - 2);
       
-      // Save context state
       ctx.save();
       
-      // Create clipping circle for preview (visual guide only)
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.clip();
       
-      // Draw image within clipping path
       ctx.drawImage(
         img,
         posX, 
@@ -591,17 +560,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         imgHeight
       );
       
-      // Restore context to remove clipping path
       ctx.restore();
       
-      // Draw the circle outline (visual guide only)
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
       ctx.stroke();
       
-      // Draw grid lines (visual guides only)
       ctx.save();
       ctx.beginPath();
       ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2, true);
@@ -610,7 +576,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
       
-      // Horizontal grid lines
       for (let i = 1; i < 3; i++) {
         const y = (size / 3) * i;
         ctx.beginPath();
@@ -619,7 +584,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         ctx.stroke();
       }
       
-      // Vertical grid lines
       for (let i = 1; i < 3; i++) {
         const x = (size / 3) * i;
         ctx.beginPath();
@@ -630,18 +594,15 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       ctx.restore();
       
-      // Draw center dot (visual guide only)
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.beginPath();
       ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
       ctx.fill();
       
-      // Setup the hidden preview canvas (without grid and guides)
       previewCanvas.width = size;
       previewCanvas.height = size;
       const previewCtx = previewCanvas.getContext('2d');
       if (previewCtx) {
-        // Draw only the image (no grid, no circular mask)
         previewCtx.clearRect(0, 0, size, size);
         previewCtx.drawImage(
           img,
@@ -675,7 +636,6 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       
       setScale(newScale);
       
-      // Pass image size and scale to parent component
       onUpdateImageSize(newImageSize, newScale);
       
       drawImageOnCanvas();

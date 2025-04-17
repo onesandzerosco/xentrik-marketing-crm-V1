@@ -1,4 +1,3 @@
-
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +10,42 @@ export const useUpdateCreator = (
     try {
       console.log("Updating creator:", id, updates);
       
+      // Check if profileImage is a data URL (fallback from failed uploads)
+      if (updates.profileImage && updates.profileImage.startsWith('data:image')) {
+        try {
+          // Convert data URL to file and upload to Supabase
+          const res = await fetch(updates.profileImage);
+          const blob = await res.blob();
+          const file = new File([blob], `profile_${id}_${Date.now()}.png`, { type: 'image/png' });
+          
+          // Generate a unique file path
+          const filePath = `${updates.name?.replace(/\s+/g, '-').toLowerCase() || id}_${Date.now()}.png`;
+          
+          // Upload to Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('profile_images')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (!error && data) {
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('profile_images')
+              .getPublicUrl(data.path);
+              
+            // Update the profileImage to use the Supabase URL
+            updates.profileImage = publicUrl;
+          } else {
+            console.error("Error uploading data URL image:", error);
+          }
+        } catch (error) {
+          console.error("Failed to convert and upload data URL:", error);
+          // We'll keep the data URL as fallback
+        }
+      }
+
       // Only send fields that exist in the creators table
       const { error: creatorError } = await supabase
         .from('creators')
