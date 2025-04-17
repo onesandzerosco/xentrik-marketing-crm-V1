@@ -4,20 +4,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Instagram, Twitter, Video, Youtube } from "lucide-react";
 
-// Create custom TikTok icon since it's not available in lucide-react
+// Custom TikTok icon since it's not available in lucide-react
 const TiktokIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-tiktok">
     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
   </svg>
 );
 
-// Create custom Reddit icon since it's not available in lucide-react
+// Create custom Reddit icon
 const RedditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-reddit">
-    <circle cx="12" cy="8" r="2" />
-    <path d="M10.5 12a2.5 2.5 0 0 0 5 0" />
-    <path d="M5 12a7 7 0 0 1 14 0" />
-    <circle cx="12" cy="12" r="9" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="9" cy="9" r="1.5" />
+    <circle cx="15" cy="9" r="1.5" />
+    <path d="M12 16c1.5 0 3-1 3-2.5H9c0 1.5 1.5 2.5 3 2.5z" />
+    <path d="M18 8c0-1.1-.9-2-2-2-.55 0-1.05.22-1.41.59C13.5 5.5 12 5 10.5 5L11 7l2.5.5C13.5 6 15 6 16.5 7 17.36 7.27 18 7.9 18 8z" />
   </svg>
 );
 
@@ -68,13 +69,13 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           Instagram
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://instagram.com/</span>
           <Input 
             id="instagram" 
             placeholder="username" 
-            className={`pl-7 ${errors.instagram ? "border-red-500" : ""}`}
-            value={instagram?.replace('@', '') || ''}
-            onChange={(e) => setInstagram(e.target.value ? `@${e.target.value.replace('@', '')}` : '')}
+            className={`pl-[150px] ${errors.instagram ? "border-red-500" : ""}`}
+            value={instagram?.replace('https://instagram.com/', '') || ''}
+            onChange={(e) => setInstagram(e.target.value ? `https://instagram.com/${e.target.value.replace('https://instagram.com/', '')}` : '')}
           />
         </div>
         {errors.instagram && (
@@ -89,13 +90,13 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <span className="ml-2">TikTok</span>
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://tiktok.com/@</span>
           <Input 
             id="tiktok" 
             placeholder="username" 
-            className={`pl-7 ${errors.tiktok ? "border-red-500" : ""}`}
-            value={tiktok?.replace('@', '') || ''}
-            onChange={(e) => setTiktok(e.target.value ? `@${e.target.value.replace('@', '')}` : '')}
+            className={`pl-[150px] ${errors.tiktok ? "border-red-500" : ""}`}
+            value={tiktok?.replace('https://tiktok.com/@', '') || ''}
+            onChange={(e) => setTiktok(e.target.value ? `https://tiktok.com/@${e.target.value.replace('https://tiktok.com/@', '')}` : '')}
           />
         </div>
         {errors.tiktok && (
@@ -110,13 +111,13 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           Twitter
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://twitter.com/</span>
           <Input 
             id="twitter" 
             placeholder="username" 
-            className={`pl-7 ${errors.twitter ? "border-red-500" : ""}`}
-            value={twitter?.replace('@', '') || ''}
-            onChange={(e) => setTwitter(e.target.value ? `@${e.target.value.replace('@', '')}` : '')}
+            className={`pl-[150px] ${errors.twitter ? "border-red-500" : ""}`}
+            value={twitter?.replace('https://twitter.com/', '') || ''}
+            onChange={(e) => setTwitter(e.target.value ? `https://twitter.com/${e.target.value.replace('https://twitter.com/', '')}` : '')}
           />
         </div>
         {errors.twitter && (
@@ -131,13 +132,13 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <span className="ml-2">Reddit</span>
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">u/</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://reddit.com/user/</span>
           <Input 
             id="reddit" 
             placeholder="username" 
-            className={`pl-7 ${errors.reddit ? "border-red-500" : ""}`}
-            value={reddit?.replace('u/', '') || ''}
-            onChange={(e) => setReddit(e.target.value ? `u/${e.target.value.replace('u/', '')}` : '')}
+            className={`pl-[170px] ${errors.reddit ? "border-red-500" : ""}`}
+            value={reddit?.replace('https://reddit.com/user/', '') || ''}
+            onChange={(e) => setReddit(e.target.value ? `https://reddit.com/user/${e.target.value.replace('https://reddit.com/user/', '')}` : '')}
           />
         </div>
         {errors.reddit && (
@@ -151,13 +152,16 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <Video className="h-4 w-4 mr-2" />
           Chaturbate
         </Label>
-        <Input 
-          id="chaturbate" 
-          placeholder="username" 
-          className={errors.chaturbate ? "border-red-500" : ""}
-          value={chaturbate || ''}
-          onChange={(e) => setChaturbate(e.target.value)}
-        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://chaturbate.com/</span>
+          <Input 
+            id="chaturbate" 
+            placeholder="username" 
+            className={`pl-[170px] ${errors.chaturbate ? "border-red-500" : ""}`}
+            value={chaturbate?.replace('https://chaturbate.com/', '') || ''}
+            onChange={(e) => setChaturbate(e.target.value ? `https://chaturbate.com/${e.target.value.replace('https://chaturbate.com/', '')}` : '')}
+          />
+        </div>
         {errors.chaturbate && (
           <p className="text-red-500 text-sm">{errors.chaturbate}</p>
         )}
@@ -169,13 +173,16 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <Youtube className="h-4 w-4 mr-2" />
           YouTube
         </Label>
-        <Input 
-          id="youtube" 
-          placeholder="channel or username" 
-          className={errors.youtube ? "border-red-500" : ""}
-          value={youtube || ''}
-          onChange={(e) => setYoutube(e.target.value)}
-        />
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://youtube.com/</span>
+          <Input 
+            id="youtube" 
+            placeholder="channel or username" 
+            className={`pl-[150px] ${errors.youtube ? "border-red-500" : ""}`}
+            value={youtube?.replace('https://youtube.com/', '') || ''}
+            onChange={(e) => setYoutube(e.target.value ? `https://youtube.com/${e.target.value.replace('https://youtube.com/', '')}` : '')}
+          />
+        </div>
         {errors.youtube && (
           <p className="text-red-500 text-sm">{errors.youtube}</p>
         )}

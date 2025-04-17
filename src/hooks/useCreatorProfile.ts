@@ -19,12 +19,32 @@ export function useCreatorProfile(creatorId: string) {
   const [profileImage, setProfileImage] = useState(creator?.profileImage || "");
   const [telegramUsername, setTelegramUsername] = useState(creator?.telegramUsername || "");
   const [whatsappNumber, setWhatsappNumber] = useState(creator?.whatsappNumber || "");
-  const [instagram, setInstagram] = useState(creator?.socialLinks.instagram || "");
-  const [tiktok, setTiktok] = useState(creator?.socialLinks.tiktok || "");
-  const [twitter, setTwitter] = useState(creator?.socialLinks.twitter || "");
-  const [reddit, setReddit] = useState(creator?.socialLinks.reddit || "");
-  const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
-  const [youtube, setYoutube] = useState(creator?.socialLinks.youtube || "");
+  
+  // Initialize social media links with proper URL format
+  const [instagram, setInstagram] = useState(creator?.socialLinks.instagram ? 
+    (creator.socialLinks.instagram.startsWith('http') ? creator.socialLinks.instagram : `https://instagram.com/${creator.socialLinks.instagram.replace('@', '')}`) 
+    : "");
+  
+  const [tiktok, setTiktok] = useState(creator?.socialLinks.tiktok ? 
+    (creator.socialLinks.tiktok.startsWith('http') ? creator.socialLinks.tiktok : `https://tiktok.com/@${creator.socialLinks.tiktok.replace('@', '')}`) 
+    : "");
+  
+  const [twitter, setTwitter] = useState(creator?.socialLinks.twitter ? 
+    (creator.socialLinks.twitter.startsWith('http') ? creator.socialLinks.twitter : `https://twitter.com/${creator.socialLinks.twitter.replace('@', '')}`) 
+    : "");
+  
+  const [reddit, setReddit] = useState(creator?.socialLinks.reddit ? 
+    (creator.socialLinks.reddit.startsWith('http') ? creator.socialLinks.reddit : `https://reddit.com/user/${creator.socialLinks.reddit.replace('u/', '')}`) 
+    : "");
+  
+  const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate ? 
+    (creator.socialLinks.chaturbate.startsWith('http') ? creator.socialLinks.chaturbate : `https://chaturbate.com/${creator.socialLinks.chaturbate}`) 
+    : "");
+  
+  const [youtube, setYoutube] = useState(creator?.socialLinks.youtube ? 
+    (creator.socialLinks.youtube.startsWith('http') ? creator.socialLinks.youtube : `https://youtube.com/${creator.socialLinks.youtube}`) 
+    : "");
+  
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState(creator?.notes || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
@@ -85,6 +105,12 @@ export function useCreatorProfile(creatorId: string) {
     }
     
     if (!creator) return;
+    
+    // Strip URLs to just usernames for database storage if needed
+    const extractUsername = (url: string, prefix: string): string => {
+      if (!url) return '';
+      return url.replace(prefix, '');
+    };
     
     const socialLinksObj: Record<string, string | undefined> = {
       instagram: instagram || undefined,

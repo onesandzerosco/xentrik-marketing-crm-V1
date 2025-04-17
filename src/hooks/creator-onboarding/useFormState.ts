@@ -12,12 +12,15 @@ export function useFormState() {
   const [creatorType, setCreatorType] = useState<CreatorType>("Real");
   const [telegramUsername, setTelegramUsername] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  
+  // Using full URL format for social media links
   const [instagram, setInstagram] = useState("");
   const [tiktok, setTiktok] = useState("");
   const [twitter, setTwitter] = useState("");
   const [reddit, setReddit] = useState("");
   const [chaturbate, setChaturbate] = useState("");
   const [youtube, setYoutube] = useState("");
+  
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
