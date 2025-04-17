@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,14 +10,10 @@ const TiktokIcon = () => (
   </svg>
 );
 
-// Create custom Reddit icon
+// Update RedditIcon component
 const RedditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="9" cy="9" r="1.5" />
-    <circle cx="15" cy="9" r="1.5" />
-    <path d="M12 16c1.5 0 3-1 3-2.5H9c0 1.5 1.5 2.5 3 2.5z" />
-    <path d="M18 8c0-1.1-.9-2-2-2-.55 0-1.05.22-1.41.59C13.5 5.5 12 5 10.5 5L11 7l2.5.5C13.5 6 15 6 16.5 7 17.36 7.27 18 7.9 18 8z" />
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1" className="lucide lucide-reddit">
+    <path fill="currentColor" d="M7 9c-1.148 0-2-.851-2-2s.852-2 2-2c1.147 0 2 .851 2 2s-.853 2-2 2zm5.707-3.707c.188.188.293.442.293.707 0 .255-.105.52-.293.707a.999.999 0 0 1-1.414 0 1 1 0 0 1 0-1.414c.188-.188.442-.293.707-.293s.52.105.707.293zM7 0C3.14 0 0 3.14 0 7s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm4.365 7.4c.022.15.035.302.035.457 0 2.43-2.835 4.4-6.325 4.4-3.49 0-6.325-1.97-6.325-4.4 0-.155.013-.307.035-.457A1.501 1.501 0 0 1 0 5.5c0-.829.672-1.5 1.5-1.5.348 0 .668.12.926.32C3.194 3.543 4.965 3 7 3c2.035 0 3.806.543 4.574 1.32.258-.2.578-.32.926-.32.828 0 1.5.671 1.5 1.5 0 .513-.258.97-.635 1.2z"/>
   </svg>
 );
 
