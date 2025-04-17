@@ -22,7 +22,7 @@ const OnboardingSocialLinks: React.FC<OnboardingSocialLinksProps> = ({ control }
               <FormItem>
                 <FormLabel>Instagram</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://www.instagram.com/username" {...field} />
+                  <Input placeholder="https://instagram.com/username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -35,7 +35,7 @@ const OnboardingSocialLinks: React.FC<OnboardingSocialLinksProps> = ({ control }
               <FormItem>
                 <FormLabel>TikTok</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://www.tiktok.com/@username" {...field} />
+                  <Input placeholder="https://tiktok.com/@username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -61,7 +61,7 @@ const OnboardingSocialLinks: React.FC<OnboardingSocialLinksProps> = ({ control }
               <FormItem>
                 <FormLabel>Reddit</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://www.reddit.com/user/username" {...field} />
+                  <Input placeholder="https://reddit.com/user/username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

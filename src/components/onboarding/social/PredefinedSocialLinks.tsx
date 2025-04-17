@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,13 +65,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           Instagram
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://instagram.com/</span>
           <Input 
             id="instagram" 
-            placeholder="username" 
-            className={`pl-[150px] ${errors.instagram ? "border-red-500" : ""}`}
-            value={instagram?.replace('https://instagram.com/', '') || ''}
-            onChange={(e) => setInstagram(e.target.value ? `https://instagram.com/${e.target.value.replace('https://instagram.com/', '')}` : '')}
+            placeholder="https://instagram.com/username" 
+            className={`${errors.instagram ? "border-red-500" : ""}`}
+            value={instagram || ''}
+            onChange={(e) => setInstagram(e.target.value)}
           />
         </div>
         {errors.instagram && (
@@ -85,13 +85,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <span className="ml-2">TikTok</span>
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://tiktok.com/@</span>
           <Input 
             id="tiktok" 
-            placeholder="username" 
-            className={`pl-[150px] ${errors.tiktok ? "border-red-500" : ""}`}
-            value={tiktok?.replace('https://tiktok.com/@', '') || ''}
-            onChange={(e) => setTiktok(e.target.value ? `https://tiktok.com/@${e.target.value.replace('https://tiktok.com/@', '')}` : '')}
+            placeholder="https://tiktok.com/@username" 
+            className={`${errors.tiktok ? "border-red-500" : ""}`}
+            value={tiktok || ''}
+            onChange={(e) => setTiktok(e.target.value)}
           />
         </div>
         {errors.tiktok && (
@@ -106,13 +105,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           Twitter
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://twitter.com/</span>
           <Input 
             id="twitter" 
-            placeholder="username" 
-            className={`pl-[150px] ${errors.twitter ? "border-red-500" : ""}`}
-            value={twitter?.replace('https://twitter.com/', '') || ''}
-            onChange={(e) => setTwitter(e.target.value ? `https://twitter.com/${e.target.value.replace('https://twitter.com/', '')}` : '')}
+            placeholder="https://twitter.com/username" 
+            className={`${errors.twitter ? "border-red-500" : ""}`}
+            value={twitter || ''}
+            onChange={(e) => setTwitter(e.target.value)}
           />
         </div>
         {errors.twitter && (
@@ -127,13 +125,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           <span className="ml-2">Reddit</span>
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://reddit.com/user/</span>
           <Input 
             id="reddit" 
-            placeholder="username" 
-            className={`pl-[170px] ${errors.reddit ? "border-red-500" : ""}`}
-            value={reddit?.replace('https://reddit.com/user/', '') || ''}
-            onChange={(e) => setReddit(e.target.value ? `https://reddit.com/user/${e.target.value.replace('https://reddit.com/user/', '')}` : '')}
+            placeholder="https://reddit.com/user/username" 
+            className={`${errors.reddit ? "border-red-500" : ""}`}
+            value={reddit || ''}
+            onChange={(e) => setReddit(e.target.value)}
           />
         </div>
         {errors.reddit && (
@@ -148,13 +145,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           Chaturbate
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://chaturbate.com/</span>
           <Input 
             id="chaturbate" 
-            placeholder="username" 
-            className={`pl-[170px] ${errors.chaturbate ? "border-red-500" : ""}`}
-            value={chaturbate?.replace('https://chaturbate.com/', '') || ''}
-            onChange={(e) => setChaturbate(e.target.value ? `https://chaturbate.com/${e.target.value.replace('https://chaturbate.com/', '')}` : '')}
+            placeholder="https://chaturbate.com/username" 
+            className={`${errors.chaturbate ? "border-red-500" : ""}`}
+            value={chaturbate || ''}
+            onChange={(e) => setChaturbate(e.target.value)}
           />
         </div>
         {errors.chaturbate && (
@@ -169,13 +165,12 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
           YouTube
         </Label>
         <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://youtube.com/</span>
           <Input 
             id="youtube" 
-            placeholder="channel or username" 
-            className={`pl-[150px] ${errors.youtube ? "border-red-500" : ""}`}
-            value={youtube?.replace('https://youtube.com/', '') || ''}
-            onChange={(e) => setYoutube(e.target.value ? `https://youtube.com/${e.target.value.replace('https://youtube.com/', '')}` : '')}
+            placeholder="https://youtube.com/channel or username" 
+            className={`${errors.youtube ? "border-red-500" : ""}`}
+            value={youtube || ''}
+            onChange={(e) => setYoutube(e.target.value)}
           />
         </div>
         {errors.youtube && (

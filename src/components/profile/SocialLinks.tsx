@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -65,13 +66,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
             <Instagram className="h-4 w-4 text-pink-500" /> Instagram
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://instagram.com/</span>
             <Input 
               id="instagram" 
-              placeholder="username" 
-              value={instagram?.replace('https://instagram.com/', '') || ''} 
-              onChange={e => setInstagram(`https://instagram.com/${e.target.value.replace('https://instagram.com/', '')}`)} 
-              className="pl-[150px]"
+              placeholder="https://instagram.com/username" 
+              value={instagram || ''} 
+              onChange={e => setInstagram(e.target.value)} 
             />
             {instagram && (
               <Button 
@@ -92,13 +91,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
             <TiktokIcon /> <span className="ml-1">TikTok</span>
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://tiktok.com/@</span>
             <Input 
               id="tiktok" 
-              placeholder="username" 
-              value={tiktok?.replace('https://tiktok.com/@', '') || ''} 
-              onChange={e => setTiktok(`https://tiktok.com/@${e.target.value.replace('https://tiktok.com/@', '')}`)} 
-              className="pl-[150px]"
+              placeholder="https://tiktok.com/@username" 
+              value={tiktok || ''} 
+              onChange={e => setTiktok(e.target.value)} 
             />
             {tiktok && (
               <Button 
@@ -119,13 +116,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
             <Twitter className="h-4 w-4 text-blue-500" /> Twitter
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://twitter.com/</span>
             <Input 
               id="twitter" 
-              placeholder="username" 
-              value={twitter?.replace('https://twitter.com/', '') || ''} 
-              onChange={e => setTwitter(`https://twitter.com/${e.target.value.replace('https://twitter.com/', '')}`)} 
-              className="pl-[150px]"
+              placeholder="https://twitter.com/username" 
+              value={twitter || ''} 
+              onChange={e => setTwitter(e.target.value)} 
             />
             {twitter && (
               <Button 
@@ -146,13 +141,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
             <RedditIcon /> <span className="ml-1">Reddit</span>
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://reddit.com/user/</span>
             <Input 
               id="reddit" 
-              placeholder="username" 
-              value={reddit?.replace('https://reddit.com/user/', '') || ''} 
-              onChange={e => setReddit(`https://reddit.com/user/${e.target.value.replace('https://reddit.com/user/', '')}`)} 
-              className="pl-[170px]"
+              placeholder="https://reddit.com/user/username" 
+              value={reddit || ''} 
+              onChange={e => setReddit(e.target.value)} 
             />
             {reddit && (
               <Button 
@@ -173,13 +166,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
             <Video className="h-4 w-4 text-red-500" /> Chaturbate
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">https://chaturbate.com/</span>
             <Input 
               id="chaturbate" 
-              placeholder="username" 
-              value={chaturbate?.replace('https://chaturbate.com/', '') || ''} 
-              onChange={e => setChaturbate(`https://chaturbate.com/${e.target.value.replace('https://chaturbate.com/', '')}`)} 
-              className="pl-[170px]"
+              placeholder="https://chaturbate.com/username" 
+              value={chaturbate || ''} 
+              onChange={e => setChaturbate(e.target.value)} 
             />
             {chaturbate && (
               <Button 
