@@ -119,7 +119,6 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
             profileImage={profileImage}
             name={name || "New Creator"}
             setProfileImage={setProfileImage}
-            hideUploadButton={true}
           />
         </div>
       </div>

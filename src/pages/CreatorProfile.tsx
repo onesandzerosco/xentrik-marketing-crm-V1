@@ -1,36 +1,40 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCreators } from "../context/creator";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import StorageUsageDialog from "@/components/storage/StorageUsageDialog";
-import ProfilePicture from "../components/profile/ProfilePicture";
-import ProfileContent from "../components/profile/ProfileContent";
-import ProfileActions from "../components/profile/ProfileActions";
+import OnboardingFormSections from "@/components/creators/onboarding/OnboardingFormSections";
+import { CustomSocialLink } from "@/components/onboarding/social/CustomSocialLinkItem";
 import CreatorHeader from "@/components/creators/shared/CreatorHeader";
+import ProfileActions from "@/components/profile/ProfileActions";
 import { Employee } from "@/types/employee";
 
 const CreatorProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const { getCreator, updateCreator, getCreatorStats } = useCreators();
+  const { getCreator, updateCreator } = useCreators();
   const { toast } = useToast();
   const creator = getCreator(id!);
-  const stats = getCreatorStats(id!);
+  
   const [name, setName] = useState(creator?.name || "");
   const [nameError, setNameError] = useState<string | null>(null);
   const [gender, setGender] = useState(creator?.gender || "Male");
   const [team, setTeam] = useState(creator?.team || "A Team");
   const [creatorType, setCreatorType] = useState(creator?.creatorType || "Real");
   const [profileImage, setProfileImage] = useState(creator?.profileImage || "");
+  const [telegramUsername, setTelegramUsername] = useState(creator?.telegramUsername || "");
+  const [whatsappNumber, setWhatsappNumber] = useState(creator?.whatsappNumber || "");
   const [instagram, setInstagram] = useState(creator?.socialLinks.instagram || "");
   const [tiktok, setTiktok] = useState(creator?.socialLinks.tiktok || "");
   const [twitter, setTwitter] = useState(creator?.socialLinks.twitter || "");
   const [reddit, setReddit] = useState(creator?.socialLinks.reddit || "");
   const [chaturbate, setChaturbate] = useState(creator?.socialLinks.chaturbate || "");
+  const [youtube, setYoutube] = useState(creator?.socialLinks.youtube || "");
+  const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
+  const [notes, setNotes] = useState(creator?.notes || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
-  const [storageDialogOpen, setStorageDialogOpen] = useState(false);
   const [assignedMembers, setAssignedMembers] = useState<Employee[]>([]);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (creator?.assignedTeamMembers && creator.assignedTeamMembers.length > 0) {
@@ -51,14 +55,56 @@ const CreatorProfile = () => {
     }
   }, [creator]);
 
+  // Extract custom social links from creator's socialLinks object
+  useEffect(() => {
+    if (creator?.socialLinks) {
+      const standardLinks = ['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube'];
+      const custom: CustomSocialLink[] = [];
+      
+      Object.entries(creator.socialLinks).forEach(([key, value]) => {
+        if (!standardLinks.includes(key) && value) {
+          custom.push({
+            id: key,
+            name: key.charAt(0).toUpperCase() + key.slice(1),
+            url: value
+          });
+        }
+      });
+      
+      setCustomSocialLinks(custom);
+    }
+  }, [creator]);
+
   const handleSave = () => {
     setNameError(null);
     if (!name.trim()) {
       setNameError("Creator name is required");
       setTimeout(() => setNameError(null), 3000);
+      toast({
+        title: "Error",
+        description: "Creator name is required",
+        variant: "destructive",
+      });
       return;
     }
+    
     if (!creator) return;
+    
+    const socialLinksObj: Record<string, string | undefined> = {
+      instagram: instagram || undefined,
+      tiktok: tiktok || undefined,
+      twitter: twitter || undefined,
+      reddit: reddit || undefined,
+      chaturbate: chaturbate || undefined,
+      youtube: youtube || undefined,
+    };
+    
+    // Add custom social links
+    customSocialLinks.forEach(link => {
+      if (link.url) {
+        socialLinksObj[link.name.toLowerCase()] = link.url;
+      }
+    });
     
     const assignedTeamMembers = assignedMembers.map(member => member.id);
     
@@ -68,16 +114,13 @@ const CreatorProfile = () => {
       team,
       creatorType,
       profileImage,
-      socialLinks: {
-        instagram: instagram || undefined,
-        tiktok: tiktok || undefined,
-        twitter: twitter || undefined,
-        reddit: reddit || undefined,
-        chaturbate: chaturbate || undefined
-      },
+      telegramUsername: telegramUsername || undefined,
+      whatsappNumber: whatsappNumber || undefined,
+      socialLinks: socialLinksObj,
       tags: [gender, team, creatorType],
       needsReview,
-      assignedTeamMembers
+      assignedTeamMembers,
+      notes
     });
     
     toast({
@@ -125,47 +168,47 @@ const CreatorProfile = () => {
           creatorType: creator?.creatorType,
           needsReview
         }}
-        showAnalytics
+        showAnalytics={false}
       />
 
-      <StorageUsageDialog open={storageDialogOpen} onOpenChange={setStorageDialogOpen} />
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
-          <ProfileContent
-            name={name}
-            setName={setName}
-            nameError={nameError}
-            setNameError={setNameError}
-            gender={gender}
-            setGender={setGender}
-            team={team}
-            setTeam={setTeam}
-            creatorType={creatorType}
-            setCreatorType={setCreatorType}
-            instagram={instagram}
-            setInstagram={setInstagram}
-            tiktok={tiktok}
-            setTiktok={setTiktok}
-            twitter={twitter}
-            setTwitter={setTwitter}
-            reddit={reddit}
-            setReddit={setReddit}
-            chaturbate={chaturbate}
-            setChaturbate={setChaturbate}
-            assignedMembers={assignedMembers}
-            creatorId={creator.id}
-            stats={stats}
-          />
-        </div>
+      <div className="space-y-8 max-w-7xl mx-auto">
+        {/* Form Sections - Matching Onboarding Layout */}
+        <OnboardingFormSections
+          name={name}
+          setName={setName}
+          profileImage={profileImage}
+          setProfileImage={setProfileImage}
+          gender={gender}
+          setGender={setGender}
+          team={team}
+          setTeam={setTeam}
+          creatorType={creatorType}
+          setCreatorType={setCreatorType}
+          telegramUsername={telegramUsername}
+          setTelegramUsername={setTelegramUsername}
+          whatsappNumber={whatsappNumber}
+          setWhatsappNumber={setWhatsappNumber}
+          instagram={instagram}
+          setInstagram={setInstagram}
+          tiktok={tiktok}
+          setTiktok={setTiktok}
+          twitter={twitter}
+          setTwitter={setTwitter}
+          reddit={reddit}
+          setReddit={setReddit}
+          chaturbate={chaturbate}
+          setChaturbate={setChaturbate}
+          youtube={youtube}
+          setYoutube={setYoutube}
+          customSocialLinks={customSocialLinks}
+          setCustomSocialLinks={setCustomSocialLinks}
+          notes={notes}
+          setNotes={setNotes}
+          errors={errors}
+        />
         
-        <div className="space-y-6">
-          <ProfilePicture
-            profileImage={profileImage}
-            name={name}
-            setProfileImage={setProfileImage}
-          />
-          
+        {/* Actions Section - As a separate row */}
+        <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
           <ProfileActions
             needsReview={needsReview}
             setNeedsReview={setNeedsReview}
