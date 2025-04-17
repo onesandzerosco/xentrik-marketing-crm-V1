@@ -6,12 +6,12 @@ import { Instagram, Twitter, Video, Youtube } from "lucide-react";
 
 // Custom TikTok icon since it's not available in lucide-react
 const TiktokIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-tiktok">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-tiktok">
     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
   </svg>
 );
 
-// Update RedditIcon component with smaller, more proportionate SVG
+// Reddit icon component
 const RedditIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="lucide lucide-reddit">
     <path d="M14.5 9a1.5 1.5 0 1 0-1.5 1.5A1.5 1.5 0 0 0 14.5 9zm-5 0A1.5 1.5 0 1 0 8 10.5 1.5 1.5 0 0 0 9.5 9zm5.61 2.36c.4-.4.4-1.04 0-1.44a1.016 1.016 0 0 0-1.44 0c-1.13 1.13-3.09 1.13-4.22 0a1.016 1.016 0 0 0-1.44 0c-.4.4-.4 1.04 0 1.44a3.62 3.62 0 0 0 5.1 0zM12 22c-5.47 0-10-4.53-10-10S6.53 2 12 2s10 4.53 10 10-4.53 10-10 10zm7.35-11.14a5.74 5.74 0 0 0-11.1 0 1 1 0 1 0 1.9.62 3.74 3.74 0 0 1 7.3 0 1 1 0 1 0 1.9-.62z"/>
@@ -67,7 +67,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="instagram" 
-            placeholder="https://instagram.com/username" 
+            placeholder="username" 
             className={`${errors.instagram ? "border-red-500" : ""}`}
             value={instagram || ''}
             onChange={(e) => setInstagram(e.target.value)}
@@ -87,7 +87,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="tiktok" 
-            placeholder="https://tiktok.com/@username" 
+            placeholder="username" 
             className={`${errors.tiktok ? "border-red-500" : ""}`}
             value={tiktok || ''}
             onChange={(e) => setTiktok(e.target.value)}
@@ -107,7 +107,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="twitter" 
-            placeholder="https://twitter.com/username" 
+            placeholder="username" 
             className={`${errors.twitter ? "border-red-500" : ""}`}
             value={twitter || ''}
             onChange={(e) => setTwitter(e.target.value)}
@@ -127,7 +127,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="reddit" 
-            placeholder="https://reddit.com/user/username" 
+            placeholder="username" 
             className={`${errors.reddit ? "border-red-500" : ""}`}
             value={reddit || ''}
             onChange={(e) => setReddit(e.target.value)}
@@ -147,7 +147,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="chaturbate" 
-            placeholder="https://chaturbate.com/username" 
+            placeholder="username" 
             className={`${errors.chaturbate ? "border-red-500" : ""}`}
             value={chaturbate || ''}
             onChange={(e) => setChaturbate(e.target.value)}
@@ -167,7 +167,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="youtube" 
-            placeholder="https://youtube.com/channel or username" 
+            placeholder="channel or username" 
             className={`${errors.youtube ? "border-red-500" : ""}`}
             value={youtube || ''}
             onChange={(e) => setYoutube(e.target.value)}

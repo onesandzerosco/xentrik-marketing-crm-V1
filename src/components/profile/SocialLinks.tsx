@@ -68,7 +68,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="instagram" 
-              placeholder="https://instagram.com/username" 
+              placeholder="username" 
               value={instagram || ''} 
               onChange={e => setInstagram(e.target.value)} 
             />
@@ -76,7 +76,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(instagram, '_blank')}
+                onClick={() => window.open(instagram.startsWith('http') ? instagram : `https://instagram.com/${instagram}`, '_blank')}
                 title="Open Instagram"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -93,7 +93,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="tiktok" 
-              placeholder="https://tiktok.com/@username" 
+              placeholder="username" 
               value={tiktok || ''} 
               onChange={e => setTiktok(e.target.value)} 
             />
@@ -101,7 +101,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(tiktok, '_blank')}
+                onClick={() => window.open(tiktok.startsWith('http') ? tiktok : `https://tiktok.com/@${tiktok.replace('@', '')}`, '_blank')}
                 title="Open TikTok"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -118,7 +118,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="twitter" 
-              placeholder="https://twitter.com/username" 
+              placeholder="username" 
               value={twitter || ''} 
               onChange={e => setTwitter(e.target.value)} 
             />
@@ -126,7 +126,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(twitter, '_blank')}
+                onClick={() => window.open(twitter.startsWith('http') ? twitter : `https://twitter.com/${twitter.replace('@', '')}`, '_blank')}
                 title="Open Twitter"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -143,7 +143,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="reddit" 
-              placeholder="https://reddit.com/user/username" 
+              placeholder="username" 
               value={reddit || ''} 
               onChange={e => setReddit(e.target.value)} 
             />
@@ -151,7 +151,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(reddit, '_blank')}
+                onClick={() => window.open(reddit.startsWith('http') ? reddit : `https://reddit.com/user/${reddit.replace('u/', '')}`, '_blank')}
                 title="Open Reddit"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -168,7 +168,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="chaturbate" 
-              placeholder="https://chaturbate.com/username" 
+              placeholder="username" 
               value={chaturbate || ''} 
               onChange={e => setChaturbate(e.target.value)} 
             />
@@ -176,7 +176,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(chaturbate, '_blank')}
+                onClick={() => window.open(chaturbate.startsWith('http') ? chaturbate : `https://chaturbate.com/${chaturbate}`, '_blank')}
                 title="Open Chaturbate"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
