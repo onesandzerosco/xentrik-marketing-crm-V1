@@ -11,10 +11,15 @@ const TiktokIcon = () => (
   </svg>
 );
 
-// Reddit icon component
+// Reddit icon component with proper SVG path
 const RedditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="lucide lucide-reddit">
-    <path d="M14.5 9a1.5 1.5 0 1 0-1.5 1.5A1.5 1.5 0 0 0 14.5 9zm-5 0A1.5 1.5 0 1 0 8 10.5 1.5 1.5 0 0 0 9.5 9zm5.61 2.36c.4-.4.4-1.04 0-1.44a1.016 1.016 0 0 0-1.44 0c-1.13 1.13-3.09 1.13-4.22 0a1.016 1.016 0 0 0-1.44 0c-.4.4-.4 1.04 0 1.44a3.62 3.62 0 0 0 5.1 0zM12 22c-5.47 0-10-4.53-10-10S6.53 2 12 2s10 4.53 10 10-4.53 10-10 10zm7.35-11.14a5.74 5.74 0 0 0-11.1 0 1 1 0 1 0 1.9.62 3.74 3.74 0 0 1 7.3 0 1 1 0 1 0 1.9-.62z"/>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide">
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="16.5" cy="8.5" r="1.5" />
+    <circle cx="7.5" cy="8.5" r="1.5" />
+    <path d="M12 16c1.2 0 3-1 3-2.5C15 13 12 13 12 13s-3 0-3 .5c0 1.5 1.8 2.5 3 2.5z" />
+    <path d="M18 9.66a5 5 0 0 0-8.66-3.39 12 12 0 0 0-6.47 3" />
+    <line x1="17.73" y1="13" x2="19" y2="14.27" />
   </svg>
 );
 
