@@ -13,9 +13,15 @@ export const RedditIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement
     className={`lucide lucide-reddit ${className}`}
     {...props}
   >
-    <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-    <path d="M8 13.5A1.5 1.5 0 1 0 9.5 12 1.5 1.5 0 0 0 8 13.5Z" />
-    <path d="M16 13.5a1.5 1.5 0 1 0 1.5-1.5 1.5 1.5 0 0 0-1.5 1.5Z" />
-    <path d="M8.5 16a4 4 0 0 1 7 0" />
+    <text 
+      x="50%" 
+      y="50%" 
+      dominantBaseline="middle" 
+      textAnchor="middle" 
+      fontSize="16" 
+      fontWeight="bold"
+    >
+      R
+    </text>
   </svg>
 );
