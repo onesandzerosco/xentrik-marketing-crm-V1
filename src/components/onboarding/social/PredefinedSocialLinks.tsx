@@ -67,7 +67,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="instagram" 
-            placeholder="username" 
+            placeholder="https://instagram.com/profile" 
             className={`${errors.instagram ? "border-red-500" : ""}`}
             value={instagram || ''}
             onChange={(e) => setInstagram(e.target.value)}
@@ -87,7 +87,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="tiktok" 
-            placeholder="username" 
+            placeholder="https://tiktok.com/@username" 
             className={`${errors.tiktok ? "border-red-500" : ""}`}
             value={tiktok || ''}
             onChange={(e) => setTiktok(e.target.value)}
@@ -107,7 +107,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="twitter" 
-            placeholder="username" 
+            placeholder="https://twitter.com/username" 
             className={`${errors.twitter ? "border-red-500" : ""}`}
             value={twitter || ''}
             onChange={(e) => setTwitter(e.target.value)}
@@ -127,7 +127,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="reddit" 
-            placeholder="username" 
+            placeholder="https://reddit.com/user/username" 
             className={`${errors.reddit ? "border-red-500" : ""}`}
             value={reddit || ''}
             onChange={(e) => setReddit(e.target.value)}
@@ -147,7 +147,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="chaturbate" 
-            placeholder="username" 
+            placeholder="https://chaturbate.com/username" 
             className={`${errors.chaturbate ? "border-red-500" : ""}`}
             value={chaturbate || ''}
             onChange={(e) => setChaturbate(e.target.value)}
@@ -167,7 +167,7 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
         <div className="relative">
           <Input 
             id="youtube" 
-            placeholder="channel or username" 
+            placeholder="https://youtube.com/c/channel" 
             className={`${errors.youtube ? "border-red-500" : ""}`}
             value={youtube || ''}
             onChange={(e) => setYoutube(e.target.value)}

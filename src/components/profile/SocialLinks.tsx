@@ -47,6 +47,11 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
   setChaturbate,
   creatorId,
 }) => {
+  const openSocialLink = (url: string) => {
+    if (!url) return;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
       <div className="flex justify-between items-center mb-4">
@@ -68,7 +73,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="instagram" 
-              placeholder="username" 
+              placeholder="https://instagram.com/profile" 
               value={instagram || ''} 
               onChange={e => setInstagram(e.target.value)} 
             />
@@ -76,7 +81,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(instagram.startsWith('http') ? instagram : `https://instagram.com/${instagram}`, '_blank')}
+                onClick={() => openSocialLink(instagram)}
                 title="Open Instagram"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -93,7 +98,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="tiktok" 
-              placeholder="username" 
+              placeholder="https://tiktok.com/@username" 
               value={tiktok || ''} 
               onChange={e => setTiktok(e.target.value)} 
             />
@@ -101,7 +106,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(tiktok.startsWith('http') ? tiktok : `https://tiktok.com/@${tiktok.replace('@', '')}`, '_blank')}
+                onClick={() => openSocialLink(tiktok)}
                 title="Open TikTok"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -118,7 +123,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="twitter" 
-              placeholder="username" 
+              placeholder="https://twitter.com/username" 
               value={twitter || ''} 
               onChange={e => setTwitter(e.target.value)} 
             />
@@ -126,7 +131,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(twitter.startsWith('http') ? twitter : `https://twitter.com/${twitter.replace('@', '')}`, '_blank')}
+                onClick={() => openSocialLink(twitter)}
                 title="Open Twitter"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -143,7 +148,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="reddit" 
-              placeholder="username" 
+              placeholder="https://reddit.com/user/username" 
               value={reddit || ''} 
               onChange={e => setReddit(e.target.value)} 
             />
@@ -151,7 +156,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(reddit.startsWith('http') ? reddit : `https://reddit.com/user/${reddit.replace('u/', '')}`, '_blank')}
+                onClick={() => openSocialLink(reddit)}
                 title="Open Reddit"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
@@ -168,7 +173,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
           <div className="relative">
             <Input 
               id="chaturbate" 
-              placeholder="username" 
+              placeholder="https://chaturbate.com/username" 
               value={chaturbate || ''} 
               onChange={e => setChaturbate(e.target.value)} 
             />
@@ -176,7 +181,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
               <Button 
                 variant="outline" 
                 size="icon"
-                onClick={() => window.open(chaturbate.startsWith('http') ? chaturbate : `https://chaturbate.com/${chaturbate}`, '_blank')}
+                onClick={() => openSocialLink(chaturbate)}
                 title="Open Chaturbate"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
