@@ -2,12 +2,22 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Instagram, TiktokIcon, Twitter, Reddit, Video, Youtube } from "lucide-react";
+import { Instagram, Twitter, Video, Youtube } from "lucide-react";
 
-// Using lucide-react components directly for icons
+// Create custom TikTok icon since it's not available in lucide-react
 const TiktokIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-tiktok">
     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
+
+// Create custom Reddit icon since it's not available in lucide-react
+const RedditIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-brand-reddit">
+    <circle cx="12" cy="8" r="2" />
+    <path d="M10.5 12a2.5 2.5 0 0 0 5 0" />
+    <path d="M5 12a7 7 0 0 1 14 0" />
+    <circle cx="12" cy="12" r="9" />
   </svg>
 );
 
@@ -117,8 +127,8 @@ const PredefinedSocialLinks: React.FC<PredefinedSocialLinksProps> = ({
       {/* Reddit */}
       <div className="space-y-2">
         <Label htmlFor="reddit" className="flex items-center">
-          <Reddit className="h-4 w-4 mr-2" />
-          Reddit
+          <RedditIcon />
+          <span className="ml-2">Reddit</span>
         </Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">u/</span>
