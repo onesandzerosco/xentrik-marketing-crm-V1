@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
@@ -42,6 +41,7 @@ const CreatorProfile = () => {
             needsReview={formState.needsReview}
             setNeedsReview={formActions.setNeedsReview}
             creatorId={creator.id}
+            creatorName={creator.name}
             assignedMembers={formState.assignedMembers}
             onAssignMembers={handleAssignTeamMembers}
           />

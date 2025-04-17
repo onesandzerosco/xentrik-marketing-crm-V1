@@ -5,14 +5,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { MessageSquare, Tag, Users } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import TeamMemberAssignmentDialog from "./TeamMemberAssignmentDialog";
+import DeleteCreatorDialog from "./DeleteCreatorDialog";
 import { Employee } from "@/types/employee";
+import { useCreators } from "@/context/creator";
 
 interface ActionsPanelProps {
   needsReview: boolean;
   setNeedsReview: (value: boolean) => void;
   creatorId: string;
+  creatorName: string;
   assignedMembers: Employee[];
   onAssignMembers: (members: Employee[]) => void;
 }
@@ -21,11 +24,18 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
   needsReview,
   setNeedsReview,
   creatorId,
+  creatorName,
   assignedMembers,
   onAssignMembers,
 }) => {
   const { toast } = useToast();
+  const { deleteCreator, isDeleting } = useCreators();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleDeleteCreator = async () => {
+    return await deleteCreator(creatorId);
+  };
 
   return (
     <div className="bg-card rounded-xl p-6 shadow-sm">
@@ -70,12 +80,7 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
         <Button 
           variant="destructive" 
           className="w-full transition-all duration-300 hover:translate-y-[-2px]" 
-          onClick={() => {
-            toast({
-              title: "Feature not implemented",
-              description: "This feature is not yet available"
-            });
-          }}
+          onClick={() => setDeleteDialogOpen(true)}
         >
           <Tag className="h-4 w-4 mr-2" />
           Remove Creator
@@ -88,6 +93,14 @@ const ActionsPanel: React.FC<ActionsPanelProps> = ({
         creatorId={creatorId}
         selectedMembers={assignedMembers}
         onAssign={onAssignMembers}
+      />
+
+      <DeleteCreatorDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        creatorName={creatorName}
+        onConfirmDelete={handleDeleteCreator}
+        isDeleting={isDeleting}
       />
     </div>
   );

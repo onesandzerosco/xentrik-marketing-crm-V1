@@ -12,6 +12,8 @@ const CreatorContext = createContext<CreatorContextType>({
   creators: [],
   addCreator: async () => undefined,
   updateCreator: () => {},
+  deleteCreator: async () => false,
+  isDeleting: false,
   getCreator: () => undefined,
   getCreatorStats: () => undefined,
   filterCreators: () => [],
@@ -25,7 +27,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { addActivity } = useActivities();
   const { toast } = useToast();
   
-  const { addCreator, updateCreator } = useCreatorActions(creators, setCreators, addActivity);
+  const { addCreator, updateCreator, deleteCreator, isDeleting } = useCreatorActions(creators, setCreators, addActivity);
   const { filterCreators } = useCreatorFilters(creators);
 
   // Load creators from Supabase
@@ -151,6 +153,8 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       creators,
       addCreator,
       updateCreator,
+      deleteCreator,
+      isDeleting,
       getCreator,
       getCreatorStats,
       filterCreators,

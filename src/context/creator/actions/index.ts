@@ -2,6 +2,7 @@
 import { Creator } from "@/types";
 import { useAddCreator } from "./useAddCreator";
 import { useUpdateCreator } from "./useUpdateCreator";
+import { useDeleteCreator } from "./useDeleteCreator";
 
 export const useCreatorActions = (
   creators: Creator[],
@@ -10,12 +11,16 @@ export const useCreatorActions = (
 ) => {
   const { addCreator } = useAddCreator(creators, setCreators, addActivity);
   const { updateCreator } = useUpdateCreator(creators, setCreators, addActivity);
+  const { deleteCreator, isDeleting } = useDeleteCreator(creators, setCreators, addActivity);
 
   return {
     addCreator,
-    updateCreator
+    updateCreator,
+    deleteCreator,
+    isDeleting
   };
 };
 
 export * from "./useAddCreator";
 export * from "./useUpdateCreator";
+export * from "./useDeleteCreator";
