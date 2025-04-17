@@ -154,7 +154,7 @@ export type Database = {
           creator_type: Database["public"]["Enums"]["creator_type"]
           email?: string | null
           gender: Database["public"]["Enums"]["gender"]
-          id?: string
+          id: string
           name: string
           needs_review?: boolean | null
           notes?: string | null
