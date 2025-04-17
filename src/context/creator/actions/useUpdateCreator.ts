@@ -70,6 +70,13 @@ export const useUpdateCreator = (
       // Add activity log entry
       addActivity("update", `Updated creator: ${updates.name || 'Unknown'}`, id);
       
+      // Update local state
+      setCreators(prevCreators => 
+        prevCreators.map(creator => 
+          creator.id === id ? { ...creator, ...updates } : creator
+        )
+      );
+      
       return id;
     } catch (error) {
       console.error("Creator update failed:", error);

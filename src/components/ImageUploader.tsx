@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageUploaderProps {
   currentImage: string;
@@ -47,6 +49,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [imageSize, setImageSize] = useState<ImageSize>({ width: 0, height: 0 });
   const [scale, setScale] = useState<number>(1);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [adjustments, setAdjustments] = useState<ImageAdjustments>({
     zoom: 1,
     xPosition: 0,
@@ -55,6 +58,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+  const { toast } = useToast();
 
   // Check if there's a valid image to display
   const hasImage = Boolean(previewImage && previewImage.trim() !== "");
@@ -87,14 +91,64 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadToSupabase = async (file: File): Promise<string> => {
+    try {
+      setIsUploading(true);
+      
+      // Generate a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+      const filePath = `${name.replace(/\s+/g, '-').toLowerCase()}_${fileName}`;
+      
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('profile_images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile_images')
+        .getPublicUrl(data.path);
+        
+      return publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error uploading image",
+        description: "There was a problem uploading your image. Please try again.",
+        variant: "destructive",
+      });
+      return '';
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     
     if (file) {
+      // Create an object URL for preview
       const objectUrl = URL.createObjectURL(file);
       setPreviewImage(objectUrl);
       setImageLoaded(true);
-      onImageChange(objectUrl);
+      
+      // Upload to Supabase and get permanent URL
+      const supabaseUrl = await uploadToSupabase(file);
+      if (supabaseUrl) {
+        // Only update if upload was successful
+        onImageChange(supabaseUrl);
+      } else {
+        // If upload failed, at least show the local preview
+        onImageChange(objectUrl);
+      }
       
       // Reset adjustments when uploading a new image
       setAdjustments({
@@ -115,7 +169,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setYPosition([adjustments.yPosition]);
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // If the image is from Supabase Storage, try to delete it
+    if (previewImage && previewImage.includes('profile_images')) {
+      try {
+        const path = previewImage.split('profile_images/').pop();
+        if (path) {
+          const { error } = await supabase.storage
+            .from('profile_images')
+            .remove([path]);
+            
+          if (error) {
+            console.error('Error deleting image:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error removing image from storage:', error);
+      }
+    }
+    
     setPreviewImage("");
     setImageLoaded(false);
     onImageChange("");
@@ -134,7 +206,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     setScale(newScale);
   };
 
-  const handleCropSave = () => {
+  const handleCropSave = async () => {
     // Save the adjustments
     setAdjustments({
       zoom: zoomLevel[0],
@@ -153,7 +225,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         const ctx = canvas.getContext('2d');
         if (ctx && cropImage) {
           const img = new Image();
-          img.onload = () => {
+          img.onload = async () => {
             // Calculate dimensions
             const imgWidth = imageSize.width * scale * zoomLevel[0];
             const imgHeight = imageSize.height * scale * zoomLevel[0];
@@ -183,11 +255,23 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               // Get the data URL from the canvas
               const dataUrl = canvas.toDataURL('image/png');
               
-              // Update the preview image with the adjusted image
-              setPreviewImage(dataUrl);
+              // Convert data URL to Blob for Supabase upload
+              const blob = await (await fetch(dataUrl)).blob();
+              const file = new File([blob], `cropped_${Date.now()}.png`, { type: 'image/png' });
               
-              // Pass the image back to the parent component
-              onImageChange(dataUrl);
+              // Upload to Supabase
+              const supabaseUrl = await uploadToSupabase(file);
+              if (supabaseUrl) {
+                // Update the preview image with the adjusted image
+                setPreviewImage(supabaseUrl);
+                
+                // Pass the image back to the parent component
+                onImageChange(supabaseUrl);
+              } else {
+                // If upload failed, use data URL as fallback
+                setPreviewImage(dataUrl);
+                onImageChange(dataUrl);
+              }
             } catch (error) {
               console.error("Error creating image data URL:", error);
               
@@ -281,9 +365,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           size="sm"
           onClick={handleClick}
           className="w-full"
+          disabled={isUploading}
         >
-          <Upload className="h-4 w-4 mr-1" />
-          {hasImage ? "Change Photo" : "Upload Photo"}
+          {isUploading ? (
+            <>
+              <span className="animate-spin mr-2">⊙</span>
+              Uploading...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-1" />
+              {hasImage ? "Change Photo" : "Upload Photo"}
+            </>
+          )}
         </Button>
 
         {hasImage && (
@@ -294,6 +388,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               size="sm"
               onClick={handleEdit}
               className="w-1/2"
+              disabled={isUploading}
             >
               <Edit className="h-4 w-4 mr-1" />
               Edit
@@ -305,6 +400,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               size="sm"
               onClick={handleRemove}
               className="w-1/2"
+              disabled={isUploading}
             >
               <Trash2 className="h-4 w-4 mr-1" />
               Remove
@@ -408,8 +504,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <Button variant="outline" onClick={handleCropCancel}>
               Cancel
             </Button>
-            <Button onClick={handleCropSave}>
-              Save Adjustments
+            <Button onClick={handleCropSave} disabled={isUploading}>
+              {isUploading ? "Uploading..." : "Save Adjustments"}
             </Button>
           </DialogFooter>
         </DialogContent>
