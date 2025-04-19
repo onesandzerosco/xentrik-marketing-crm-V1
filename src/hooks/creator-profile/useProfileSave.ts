@@ -27,6 +27,8 @@ export function useProfileSave(creator: Creator | null | undefined) {
     
     if (!creator) return;
     
+    console.log("Saving creator profile with state:", state);
+    
     // Create socialLinks object from state
     const socialLinksObj: Record<string, string | undefined> = {
       instagram: state.instagram || undefined,
@@ -46,6 +48,7 @@ export function useProfileSave(creator: Creator | null | undefined) {
     
     const assignedTeamMembers = state.assignedMembers.map(member => member.id);
     
+    // Include all fields in the update
     updateCreator(creator.id, {
       name: state.name,
       gender: state.gender,

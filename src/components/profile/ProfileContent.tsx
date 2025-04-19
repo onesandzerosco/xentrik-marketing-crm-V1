@@ -29,6 +29,8 @@ interface ProfileContentProps {
   setReddit: (value: string) => void;
   chaturbate: string;
   setChaturbate: (value: string) => void;
+  youtube: string;
+  setYoutube: (value: string) => void;
   assignedMembers: Employee[];
   creatorId: string;
   stats?: EngagementStats;
@@ -55,6 +57,8 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
   setReddit,
   chaturbate,
   setChaturbate,
+  youtube,
+  setYoutube,
   assignedMembers,
   creatorId,
   stats,
@@ -85,6 +89,8 @@ const ProfileContent: React.FC<ProfileContentProps> = ({
         setReddit={setReddit}
         chaturbate={chaturbate}
         setChaturbate={setChaturbate}
+        youtube={youtube}
+        setYoutube={setYoutube}
         creatorId={creatorId}
       />
 

@@ -1,4 +1,3 @@
-
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -49,6 +48,8 @@ export const useUpdateCreator = (
         }
       }
 
+      console.log("Prepared updates for Supabase:", updates);
+
       // Only send fields that exist in the creators table
       const { error: creatorError } = await supabase
         .from('creators')
@@ -72,9 +73,17 @@ export const useUpdateCreator = (
 
       // Update social links if provided
       if (updates.socialLinks) {
+        console.log("Updating social links:", updates.socialLinks);
+        
         const socialLinksData = {
-          ...updates.socialLinks,
-          creator_id: id
+          creator_id: id,
+          instagram: updates.socialLinks.instagram,
+          tiktok: updates.socialLinks.tiktok,
+          twitter: updates.socialLinks.twitter,
+          reddit: updates.socialLinks.reddit,
+          chaturbate: updates.socialLinks.chaturbate,
+          youtube: updates.socialLinks.youtube,
+          // Add any custom social links here as needed
         };
         
         // First check if links already exist
@@ -87,7 +96,7 @@ export const useUpdateCreator = (
           // Update existing links
           const { error: socialError } = await supabase
             .from('creator_social_links')
-            .update(updates.socialLinks)
+            .update(socialLinksData)
             .eq('creator_id', id);
             
           if (socialError) {

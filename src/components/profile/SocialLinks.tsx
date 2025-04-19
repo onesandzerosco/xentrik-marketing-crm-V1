@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,8 @@ interface SocialLinksProps {
   setReddit: (url: string) => void;
   chaturbate: string;
   setChaturbate: (url: string) => void;
+  youtube: string;
+  setYoutube: (url: string) => void;
   creatorId?: string;
 }
 
@@ -31,6 +34,8 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
   setReddit,
   chaturbate,
   setChaturbate,
+  youtube,
+  setYoutube,
   creatorId,
 }) => {
   const openSocialLink = (url: string) => {
@@ -169,6 +174,31 @@ const SocialLinks: React.FC<SocialLinksProps> = ({
                 size="icon"
                 onClick={() => openSocialLink(chaturbate)}
                 title="Open Chaturbate"
+                className="absolute right-1 top-1/2 -translate-y-1/2"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor="youtube" className="flex items-center gap-1.5">
+            <Youtube className="h-4 w-4 text-red-500" /> YouTube
+          </Label>
+          <div className="relative">
+            <Input 
+              id="youtube" 
+              placeholder="https://youtube.com/@username" 
+              value={youtube || ''} 
+              onChange={e => setYoutube(e.target.value)} 
+            />
+            {youtube && (
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => openSocialLink(youtube)}
+                title="Open YouTube"
                 className="absolute right-1 top-1/2 -translate-y-1/2"
               >
                 <ExternalLink className="h-4 w-4" />
