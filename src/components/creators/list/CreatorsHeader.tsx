@@ -29,7 +29,7 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
   setSelectedClasses,
   handleClearFilters
 }) => {
-  const genderTags = ["Male", "Female", "Trans", "AI"];
+  const genderTags = ["Male", "Female", "Trans"];
   const teamTags = ["A Team", "B Team", "C Team"];
   const classTags = ["Real", "AI"];
   
