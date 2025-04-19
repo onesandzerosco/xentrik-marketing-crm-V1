@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,7 +68,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
               <SelectItem value="Male">Male</SelectItem>
               <SelectItem value="Female">Female</SelectItem>
               <SelectItem value="Trans">Trans</SelectItem>
-              <SelectItem value="AI">AI</SelectItem>
             </SelectContent>
           </Select>
           {errors.gender && (
