@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -329,41 +330,6 @@
   
   .hover-glow {
     @apply transition-shadow duration-300 hover:shadow-premium-glow;
-  }
-
-  /* Enhanced tag colors for gender */
-  .tag-gender-male {
-    @apply bg-[#D3E4FD]/40 text-[#0EA5E9];
-  }
-
-  .tag-gender-female {
-    @apply bg-[#FFDEE2]/40 text-[#D946EF];
-  }
-
-  .tag-gender-trans {
-    @apply bg-[#E5DEFF]/40 text-[#8B5CF6];
-  }
-
-  /* Enhanced team tag colors */
-  .tag-team-a {
-    @apply bg-[#FEC6A1]/40 text-[#F97316];
-  }
-
-  .tag-team-b {
-    @apply bg-[#F2FCE2]/40 text-[#16A34A];
-  }
-
-  .tag-team-c {
-    @apply bg-[#FEF7CD]/40 text-[#CA8A04];
-  }
-
-  /* Enhanced creator type tag colors */
-  .tag-type-real {
-    @apply bg-[#F1F0FB]/40 text-[#6E59A5];
-  }
-
-  .tag-type-ai {
-    @apply bg-[#FFDEE2]/40 text-[#9b87f5];
   }
 }
 

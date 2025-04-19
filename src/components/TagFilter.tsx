@@ -20,47 +20,47 @@ const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, typ
   };
 
   const getTagClass = (tag: string, isSelected: boolean) => {
-    if (!isSelected) {
-      // Subtle background colors when not selected
-      if (type === "gender") {
-        return "bg-violet-500/10 hover:bg-violet-500/20 text-violet-200";
-      } else if (type === "team") {
-        return "bg-amber-500/10 hover:bg-amber-500/20 text-amber-200";
-      } else if (type === "class") {
-        return "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200";
-      }
-      return "";
-    }
+    if (!isSelected) return "";
     
-    // Stronger colors when selected
     if (type === "gender") {
       switch (tag.toLowerCase()) {
         case "male":
-          return "!bg-violet-600 hover:!bg-violet-700 text-white";
+          return "!bg-blue-600 hover:!bg-blue-700";
         case "female":
-          return "!bg-violet-600 hover:!bg-violet-700 text-white";
+          return "!bg-pink-600 hover:!bg-pink-700";
         case "trans":
-          return "!bg-violet-600 hover:!bg-violet-700 text-white";
+          return "!bg-purple-600 hover:!bg-purple-700";
+        case "ai":
+          return "!bg-gray-600 hover:!bg-gray-700";
         default:
           return "";
       }
     } else if (type === "team") {
       switch (tag) {
         case "A Team":
-          return "!bg-amber-600 hover:!bg-amber-700 text-white";
+          return "!bg-green-600 hover:!bg-green-700";
         case "B Team":
-          return "!bg-amber-600 hover:!bg-amber-700 text-white";
+          return "!bg-yellow-600 hover:!bg-yellow-700";
         case "C Team":
-          return "!bg-amber-600 hover:!bg-amber-700 text-white";
+          return "!bg-red-600 hover:!bg-red-700";
         default:
           return "";
       }
     } else if (type === "class") {
       switch (tag) {
         case "Real":
-          return "!bg-emerald-600 hover:!bg-emerald-700 text-white";
+          return "!bg-indigo-600 hover:!bg-indigo-700";
         case "AI":
-          return "!bg-emerald-600 hover:!bg-emerald-700 text-white";
+          return "!bg-gray-600 hover:!bg-gray-700";
+        default:
+          return "";
+      }
+    } else if (type === "review") {
+      switch (tag) {
+        case "Needs Review":
+          return "!bg-amber-600 hover:!bg-amber-700";
+        case "Reviewed":
+          return "!bg-emerald-600 hover:!bg-emerald-700";
         default:
           return "";
       }
@@ -80,7 +80,7 @@ const TagFilter: React.FC<TagFilterProps> = ({ tags, selectedTags, onChange, typ
             size="sm"
             onClick={() => toggleTag(tag)}
             className={cn(
-              "rounded-full border-0",
+              "rounded-full",
               getTagClass(tag, isSelected)
             )}
           >

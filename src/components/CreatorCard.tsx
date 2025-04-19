@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Creator } from "../types";
@@ -55,6 +56,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       </a>
     );
     
+    // Add a generic icon for any other social media
     if (creator.socialLinks && Object.keys(creator.socialLinks).some(key => 
       !['instagram', 'twitter', 'youtube'].includes(key) && creator.socialLinks[key])) {
       icons.push(
@@ -65,35 +67,6 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
     }
     
     return icons;
-  };
-
-  const getTagClasses = (tagType: string, tag: string) => {
-    const baseClasses = 'text-xs rounded-full px-2 py-0.5';
-    
-    switch (tagType) {
-      case 'gender':
-        return {
-          'Male': `${baseClasses} tag-gender-male`,
-          'Female': `${baseClasses} tag-gender-female`,
-          'Trans': `${baseClasses} tag-gender-trans`
-        }[tag] || '';
-      
-      case 'team':
-        return {
-          'A Team': `${baseClasses} tag-team-a`,
-          'B Team': `${baseClasses} tag-team-b`,
-          'C Team': `${baseClasses} tag-team-c`
-        }[tag] || '';
-      
-      case 'type':
-        return {
-          'Real': `${baseClasses} tag-type-real`,
-          'AI': `${baseClasses} tag-type-ai`
-        }[tag] || '';
-      
-      default:
-        return '';
-    }
   };
 
   return (
@@ -117,18 +90,13 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="truncate">ID: {creator.id}</span>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className={`${getTagClasses('gender', creator.gender)}`}>
+            <span className="text-xs">•</span>
+            <Badge variant="outline" className="capitalize">
               {creator.gender}
-            </span>
-            <span className={`${getTagClasses('team', creator.team)}`}>
+            </Badge>
+            <Badge variant="outline" className="capitalize">
               {creator.team}
-            </span>
-            <span className={`${getTagClasses('type', creator.creatorType)}`}>
-              {creator.creatorType}
-            </span>
+            </Badge>
           </div>
 
           {(creator.tags && creator.tags.length > 0) && (
