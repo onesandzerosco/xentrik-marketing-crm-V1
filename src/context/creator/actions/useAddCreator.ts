@@ -31,7 +31,7 @@ export const useAddCreator = (
       console.log("Generated creator ID:", customId);
       
       // Check if profileImage is a data URL
-      let profileImageUrl = creator.profileImage;
+      let profileImageUrl = creator.profileImage || '';
       if (profileImageUrl && (profileImageUrl.startsWith('data:') || profileImageUrl.startsWith('blob:'))) {
         try {
           console.log("Uploading profile image to Supabase storage");
@@ -69,20 +69,20 @@ export const useAddCreator = (
         }
       }
       
-      // Step 1: Insert the creator basic info
+      // Step 1: Insert the creator basic info - use upsert to avoid duplicates
       const { data: newCreator, error: creatorError } = await supabase
         .from('creators')
-        .insert({
+        .upsert({
           id: customId,
           name: creator.name,
           profile_image: profileImageUrl,
           gender: creator.gender,
           team: creator.team,
           creator_type: creator.creatorType,
-          needs_review: false,
-          telegram_username: creator.telegramUsername,
-          whatsapp_number: creator.whatsappNumber,
-          notes: creator.notes
+          needs_review: creator.needsReview !== undefined ? creator.needsReview : false,
+          telegram_username: creator.telegramUsername || null,
+          whatsapp_number: creator.whatsappNumber || null,
+          notes: creator.notes || null
         })
         .select()
         .single();
@@ -93,6 +93,7 @@ export const useAddCreator = (
       }
 
       if (!newCreator) {
+        console.error('Creator was created but no data was returned');
         throw new Error('Creator was created but no data was returned');
       }
 
@@ -100,6 +101,16 @@ export const useAddCreator = (
 
       // Step 2: Add social links if available
       if (creator.socialLinks && Object.keys(creator.socialLinks).length > 0) {
+        // First, delete any existing social links for this creator to avoid duplicates
+        const { error: deleteError } = await supabase
+          .from('creator_social_links')
+          .delete()
+          .eq('creator_id', newCreator.id);
+          
+        if (deleteError) {
+          console.error('Error deleting existing social links:', deleteError);
+        }
+        
         const socialLinksWithCreatorId = {
           creator_id: newCreator.id,
           ...Object.keys(creator.socialLinks).reduce((acc, key) => {
@@ -130,6 +141,16 @@ export const useAddCreator = (
 
       // Step 3: Add tags
       if (creator.tags && creator.tags.length > 0) {
+        // First, delete any existing tags for this creator to avoid duplicates
+        const { error: deleteTagsError } = await supabase
+          .from('creator_tags')
+          .delete()
+          .eq('creator_id', newCreator.id);
+          
+        if (deleteTagsError) {
+          console.error('Error deleting existing tags:', deleteTagsError);
+        }
+        
         const tagsToInsert = creator.tags.map(tag => ({
           creator_id: newCreator.id,
           tag
@@ -160,7 +181,7 @@ export const useAddCreator = (
         socialLinks: creator.socialLinks || {},
         tags: creator.tags || [],
         assignedTeamMembers: [],
-        needsReview: false,
+        needsReview: creator.needsReview !== undefined ? creator.needsReview : false,
         telegramUsername: creator.telegramUsername || '',
         whatsappNumber: creator.whatsappNumber || '',
         notes: creator.notes || ''
@@ -172,6 +193,7 @@ export const useAddCreator = (
       // Add to activity log
       addActivity("create", `New creator onboarded: ${creator.name}`, newCreator.id);
       
+      console.log("Returning creator ID:", newCreator.id);
       return newCreator.id;
     } catch (error) {
       console.error("Creator onboarding failed:", error);

@@ -15,7 +15,13 @@ const CreatorOnboarding = () => {
   const onSubmit = async () => {
     try {
       console.log("Submit button clicked, starting form submission");
-      await handleSubmit();
+      const creatorId = await handleSubmit();
+      
+      if (!creatorId) {
+        console.log("No creator ID returned, form validation may have failed");
+        return;
+      }
+      
       toast({
         title: "Creator saved successfully",
         description: `${formState.name} has been added to your creators.`,

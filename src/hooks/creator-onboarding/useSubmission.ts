@@ -35,7 +35,7 @@ export function useSubmission() {
       // Create new creator object
       const newCreator = {
         name: formState.name,
-        profileImage: formState.profileImage,
+        profileImage: formState.profileImage || '',
         gender: formState.gender,
         team: formState.team,
         creatorType: formState.creatorType,
@@ -52,13 +52,14 @@ export function useSubmission() {
       // Submit to context
       const creatorId = await addCreator(newCreator);
       
+      console.log("Response from addCreator:", creatorId);
+      
       if (creatorId) {
         toast({
           title: "Creator Added Successfully",
           description: `${formState.name} was added to your creators with ID: ${creatorId}`,
         });
         
-        // Navigation will be handled in the parent component
         return creatorId;
       } else {
         throw new Error("Failed to add creator. No ID was returned.");

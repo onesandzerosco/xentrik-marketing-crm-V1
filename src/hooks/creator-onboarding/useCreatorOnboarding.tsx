@@ -9,21 +9,30 @@ export function useCreatorOnboarding() {
   const { isSubmitting, handleSubmit: submitCreator } = useSubmission();
 
   const handleSubmit = async () => {
-    const { isValid, errors } = validateForm(
-      formState.name,
-      formState.telegramUsername,
-      formState.whatsappNumber
-    );
+    try {
+      const { isValid, errors } = validateForm(
+        formState.name,
+        formState.telegramUsername,
+        formState.whatsappNumber
+      );
 
-    setErrors(errors);
-    
-    if (!isValid) {
-      console.log("Form validation failed with errors:", errors);
-      return;
+      setErrors(errors);
+      
+      if (!isValid) {
+        console.log("Form validation failed with errors:", errors);
+        return undefined;
+      }
+
+      console.log("Form validation passed, proceeding with submission");
+      const creatorId = await submitCreator(formState);
+      
+      console.log("Creator submission result:", creatorId);
+      return creatorId;
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      // Re-throw the error so it can be caught by the component
+      throw error;
     }
-
-    console.log("Form validation passed, proceeding with submission");
-    return await submitCreator(formState);
   };
 
   return {

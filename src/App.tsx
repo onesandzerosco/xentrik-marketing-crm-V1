@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -22,6 +21,13 @@ import TeamMemberProfile from './pages/TeamMemberProfile';
 import SecureLogins from './pages/SecureLogins';
 import Index from './pages/Index';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { ensureStorageBucket } from "./utils/setupStorage";
+
+// Call the function to ensure our storage bucket exists
+// We're calling it here in a non-blocking way
+ensureStorageBucket().catch(err => {
+  console.error("Error setting up storage bucket:", err);
+});
 
 function App() {
   return (

@@ -61,23 +61,18 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Transform the data to match the Creator type
       const formattedCreators: Creator[] = data.map(creator => {
         // Extract social links from the first element if it exists
-        const socialLinks = creator.creator_social_links?.[0] || {};
+        const socialLinksObj = creator.creator_social_links?.[0] || {};
         
         // Format social links for the frontend
         const formattedSocialLinks: Record<string, string> = {};
         
-        // Check each social media platform and add it if it exists
-        if (socialLinks.instagram) formattedSocialLinks.instagram = socialLinks.instagram;
-        if (socialLinks.tiktok) formattedSocialLinks.tiktok = socialLinks.tiktok;
-        if (socialLinks.twitter) formattedSocialLinks.twitter = socialLinks.twitter;
-        if (socialLinks.reddit) formattedSocialLinks.reddit = socialLinks.reddit;
-        if (socialLinks.chaturbate) formattedSocialLinks.chaturbate = socialLinks.chaturbate;
-        if (socialLinks.youtube) formattedSocialLinks.youtube = socialLinks.youtube;
+        // Remove creator_id from socialLinksObj before processing
+        const { creator_id, ...socialLinksWithoutCreatorId } = socialLinksObj;
         
-        // Add any other custom social links
-        Object.keys(socialLinks).forEach(key => {
-          if (!['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'creator_id'].includes(key) && socialLinks[key]) {
-            formattedSocialLinks[key] = socialLinks[key];
+        // Process each property in the social links object
+        Object.entries(socialLinksWithoutCreatorId).forEach(([key, value]) => {
+          if (value && typeof value === 'string') {
+            formattedSocialLinks[key] = value;
           }
         });
         
