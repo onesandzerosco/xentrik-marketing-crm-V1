@@ -55,7 +55,6 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
       </a>
     );
     
-    // Add a generic icon for any other social media
     if (creator.socialLinks && Object.keys(creator.socialLinks).some(key => 
       !['instagram', 'twitter', 'youtube'].includes(key) && creator.socialLinks[key])) {
       icons.push(
@@ -66,6 +65,19 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
     }
     
     return icons;
+  };
+
+  const getTagClass = (tag: string) => {
+    if (["Male", "Female", "Trans"].includes(tag)) {
+      return "bg-violet-500/10 text-violet-200";
+    }
+    if (["A Team", "B Team", "C Team"].includes(tag)) {
+      return "bg-amber-500/10 text-amber-200";
+    }
+    if (["Real", "AI"].includes(tag)) {
+      return "bg-emerald-500/10 text-emerald-200";
+    }
+    return "";
   };
 
   return (
@@ -94,7 +106,11 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           {(creator.tags && creator.tags.length > 0) && (
             <div className="flex flex-wrap gap-1 mt-2">
               {creator.tags.map(tag => (
-                <Badge key={tag} variant="secondary" className="text-xs">
+                <Badge 
+                  key={tag} 
+                  variant="secondary" 
+                  className={`text-xs ${getTagClass(tag)}`}
+                >
                   {tag}
                 </Badge>
               ))}
