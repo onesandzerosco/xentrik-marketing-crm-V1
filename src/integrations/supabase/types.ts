@@ -17,6 +17,7 @@ export type Database = {
           reddit: string | null
           tiktok: string | null
           twitter: string | null
+          youtube: string | null
         }
         Insert: {
           chaturbate?: string | null
@@ -25,6 +26,7 @@ export type Database = {
           reddit?: string | null
           tiktok?: string | null
           twitter?: string | null
+          youtube?: string | null
         }
         Update: {
           chaturbate?: string | null
@@ -33,6 +35,7 @@ export type Database = {
           reddit?: string | null
           tiktok?: string | null
           twitter?: string | null
+          youtube?: string | null
         }
         Relationships: [
           {
