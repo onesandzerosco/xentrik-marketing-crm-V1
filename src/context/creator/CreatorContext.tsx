@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { Creator } from "@/types";
 import { useActivities } from "../ActivityContext";
 import { CreatorContextType } from "./types";
-import { useCreatorActions } from "./useCreatorActions";
+import { useCreatorActions } from "./actions";
 import { useCreatorFilters } from "./useCreatorFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -63,6 +63,24 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Extract social links from the first element if it exists
         const socialLinks = creator.creator_social_links?.[0] || {};
         
+        // Format social links for the frontend
+        const formattedSocialLinks: Record<string, string> = {};
+        
+        // Check each social media platform and add it if it exists
+        if (socialLinks.instagram) formattedSocialLinks.instagram = socialLinks.instagram;
+        if (socialLinks.tiktok) formattedSocialLinks.tiktok = socialLinks.tiktok;
+        if (socialLinks.twitter) formattedSocialLinks.twitter = socialLinks.twitter;
+        if (socialLinks.reddit) formattedSocialLinks.reddit = socialLinks.reddit;
+        if (socialLinks.chaturbate) formattedSocialLinks.chaturbate = socialLinks.chaturbate;
+        if (socialLinks.youtube) formattedSocialLinks.youtube = socialLinks.youtube;
+        
+        // Add any other custom social links
+        Object.keys(socialLinks).forEach(key => {
+          if (!['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'creator_id'].includes(key) && socialLinks[key]) {
+            formattedSocialLinks[key] = socialLinks[key];
+          }
+        });
+        
         return {
           id: creator.id,
           name: creator.name,
@@ -71,14 +89,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           gender: creator.gender,
           team: creator.team,
           creatorType: creator.creator_type,
-          socialLinks: {
-            instagram: socialLinks.instagram || '',
-            tiktok: socialLinks.tiktok || '',
-            twitter: socialLinks.twitter || '',
-            reddit: socialLinks.reddit || '',
-            chaturbate: socialLinks.chaturbate || '',
-            youtube: socialLinks.youtube || '',
-          },
+          socialLinks: formattedSocialLinks,
           tags: creator.creator_tags?.map(t => t.tag) || [],
           assignedTeamMembers: [],
           needsReview: creator.needs_review || false,

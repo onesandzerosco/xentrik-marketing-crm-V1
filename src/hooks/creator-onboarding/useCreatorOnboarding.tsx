@@ -18,10 +18,12 @@ export function useCreatorOnboarding() {
     setErrors(errors);
     
     if (!isValid) {
+      console.log("Form validation failed with errors:", errors);
       return;
     }
 
-    await submitCreator(formState);
+    console.log("Form validation passed, proceeding with submission");
+    return await submitCreator(formState);
   };
 
   return {

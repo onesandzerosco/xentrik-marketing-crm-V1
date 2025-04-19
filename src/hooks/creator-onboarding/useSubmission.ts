@@ -58,8 +58,10 @@ export function useSubmission() {
           description: `${formState.name} was added to your creators with ID: ${creatorId}`,
         });
         
-        // Navigate to creators list immediately
-        navigate("/creators");
+        // Navigation will be handled in the parent component
+        return creatorId;
+      } else {
+        throw new Error("Failed to add creator. No ID was returned.");
       }
     } catch (error: any) {
       console.error("Error during creator onboarding:", error);
@@ -68,6 +70,7 @@ export function useSubmission() {
         description: error.message || "An error occurred while adding the creator",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

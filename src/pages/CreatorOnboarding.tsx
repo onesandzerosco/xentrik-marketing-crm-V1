@@ -4,16 +4,39 @@ import { useCreatorOnboardingForm } from "@/hooks/useCreatorOnboardingForm";
 import OnboardingPageHeader from "@/components/creators/onboarding/OnboardingPageHeader";
 import OnboardingFormContainer from "@/components/creators/onboarding/OnboardingFormContainer";
 import OnboardingFormSections from "@/components/creators/onboarding/OnboardingFormSections";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const CreatorOnboarding = () => {
   const { formState, formActions, isSubmitting, handleSubmit } = useCreatorOnboardingForm();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const onSubmit = async () => {
+    try {
+      console.log("Submit button clicked, starting form submission");
+      await handleSubmit();
+      toast({
+        title: "Creator saved successfully",
+        description: `${formState.name} has been added to your creators.`,
+      });
+      navigate("/creators");
+    } catch (error: any) {
+      console.error("Error during creator submission:", error);
+      toast({
+        title: "Error saving creator",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#141428] p-6">
       <OnboardingFormContainer>
         <OnboardingPageHeader 
           isSubmitting={isSubmitting}
-          onSubmit={handleSubmit}
+          onSubmit={onSubmit}
         />
         
         <OnboardingFormSections

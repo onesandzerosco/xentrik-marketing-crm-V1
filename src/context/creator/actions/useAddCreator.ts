@@ -1,6 +1,7 @@
 
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 // Function to generate a slug from creator name
 const generateCreatorId = (name: string): string => {
@@ -10,8 +11,9 @@ const generateCreatorId = (name: string): string => {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .trim();
   
-  // Add Xentrik suffix
-  return `${slug}-xentrik`;
+  // Add random suffix for uniqueness
+  const randomString = uuidv4().substring(0, 8);
+  return `${slug}-${randomString}`;
 };
 
 export const useAddCreator = (
@@ -28,17 +30,56 @@ export const useAddCreator = (
       
       console.log("Generated creator ID:", customId);
       
+      // Check if profileImage is a data URL
+      let profileImageUrl = creator.profileImage;
+      if (profileImageUrl && (profileImageUrl.startsWith('data:') || profileImageUrl.startsWith('blob:'))) {
+        try {
+          console.log("Uploading profile image to Supabase storage");
+          // Convert data URL to file
+          const res = await fetch(profileImageUrl);
+          const blob = await res.blob();
+          const file = new File([blob], `profile_${Date.now()}.png`, { type: 'image/png' });
+          
+          // Generate a unique file path
+          const safeName = creator.name.replace(/\s+/g, '-').toLowerCase();
+          const filePath = `${safeName}/${uuidv4()}.png`;
+          
+          // Upload to Supabase Storage
+          const { data, error } = await supabase.storage
+            .from('profile_images')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (!error && data) {
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('profile_images')
+              .getPublicUrl(data.path);
+              
+            // Update the profileImage to use the Supabase URL
+            profileImageUrl = publicUrl;
+            console.log("Uploaded image URL:", publicUrl);
+          } else {
+            console.error("Error uploading profile image:", error);
+          }
+        } catch (error) {
+          console.error("Failed to upload profile image:", error);
+        }
+      }
+      
       // Step 1: Insert the creator basic info
       const { data: newCreator, error: creatorError } = await supabase
         .from('creators')
         .insert({
-          id: customId, // Use the custom ID instead of letting Supabase generate one
+          id: customId,
           name: creator.name,
-          profile_image: creator.profileImage,
+          profile_image: profileImageUrl,
           gender: creator.gender,
           team: creator.team,
           creator_type: creator.creatorType,
-          needs_review: false, // Explicitly set to false
+          needs_review: false,
           telegram_username: creator.telegramUsername,
           whatsapp_number: creator.whatsappNumber,
           notes: creator.notes
@@ -61,19 +102,29 @@ export const useAddCreator = (
       if (creator.socialLinks && Object.keys(creator.socialLinks).length > 0) {
         const socialLinksWithCreatorId = {
           creator_id: newCreator.id,
-          ...creator.socialLinks
+          ...Object.keys(creator.socialLinks).reduce((acc, key) => {
+            // Only include non-empty values
+            if (creator.socialLinks[key]) {
+              acc[key] = creator.socialLinks[key];
+            }
+            return acc;
+          }, {} as Record<string, string>)
         };
         
         console.log("Adding social links:", socialLinksWithCreatorId);
         
-        const { error: socialLinksError } = await supabase
-          .from('creator_social_links')
-          .insert(socialLinksWithCreatorId);
+        if (Object.keys(socialLinksWithCreatorId).length > 1) { // > 1 because it always includes creator_id
+          const { error: socialLinksError } = await supabase
+            .from('creator_social_links')
+            .insert(socialLinksWithCreatorId);
 
-        if (socialLinksError) {
-          console.error('Error adding social links:', socialLinksError);
+          if (socialLinksError) {
+            console.error('Error adding social links:', socialLinksError);
+          } else {
+            console.log("Social links added successfully");
+          }
         } else {
-          console.log("Social links added successfully");
+          console.log("No social links to add");
         }
       }
 
@@ -102,14 +153,14 @@ export const useAddCreator = (
         id: newCreator.id,
         name: creator.name,
         email: '',
-        profileImage: creator.profileImage || '',
+        profileImage: profileImageUrl || '',
         gender: creator.gender,
         team: creator.team,
         creatorType: creator.creatorType,
         socialLinks: creator.socialLinks || {},
         tags: creator.tags || [],
         assignedTeamMembers: [],
-        needsReview: false, // Explicitly set to false
+        needsReview: false,
         telegramUsername: creator.telegramUsername || '',
         whatsappNumber: creator.whatsappNumber || '',
         notes: creator.notes || ''
