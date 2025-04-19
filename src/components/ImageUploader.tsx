@@ -96,14 +96,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
       const filePath = `${safeName}/${fileName}`;
       
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const profileImagesBucket = buckets?.find(bucket => bucket.name === 'profile_images');
-      
-      if (!profileImagesBucket) {
-        console.error('Profile images bucket does not exist');
-        throw new Error('Storage bucket not configured');
-      }
-      
       const { data, error } = await supabase.storage
         .from('profile_images')
         .upload(filePath, file, {
@@ -145,6 +137,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const supabaseUrl = await uploadToSupabase(file);
       if (supabaseUrl) {
         onImageChange(supabaseUrl);
+        URL.revokeObjectURL(objectUrl);
       } else {
         onImageChange(objectUrl);
       }

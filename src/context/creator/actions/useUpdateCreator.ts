@@ -1,5 +1,7 @@
+
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 export const useUpdateCreator = (
   creators: Creator[],
@@ -10,16 +12,17 @@ export const useUpdateCreator = (
     try {
       console.log("Updating creator:", id, updates);
       
-      // Check if profileImage is a data URL (fallback from failed uploads)
-      if (updates.profileImage && updates.profileImage.startsWith('data:image')) {
+      // Check if profileImage is a data URL or object URL (usually starts with blob: or data:)
+      if (updates.profileImage && (updates.profileImage.startsWith('data:image') || updates.profileImage.startsWith('blob:'))) {
         try {
-          // Convert data URL to file and upload to Supabase
+          // Convert URL to file and upload to Supabase
           const res = await fetch(updates.profileImage);
           const blob = await res.blob();
           const file = new File([blob], `profile_${id}_${Date.now()}.png`, { type: 'image/png' });
           
           // Generate a unique file path
-          const filePath = `${updates.name?.replace(/\s+/g, '-').toLowerCase() || id}_${Date.now()}.png`;
+          const safeName = updates.name?.replace(/\s+/g, '-').toLowerCase() || id;
+          const filePath = `${safeName}/${uuidv4()}.png`;
           
           // Upload to Supabase Storage
           const { data, error } = await supabase.storage
