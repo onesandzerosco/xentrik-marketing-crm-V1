@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 interface ImageUploaderProps {
   currentImage: string;
@@ -90,19 +91,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       setIsUploading(true);
       
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `${name.replace(/\s+/g, '-').toLowerCase()}_${fileName}`;
+      const fileName = `${uuidv4()}.${fileExt}`;
+      
+      const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const filePath = `${safeName}/${fileName}`;
       
       const { data: buckets } = await supabase.storage.listBuckets();
+      const profileImagesBucket = buckets?.find(bucket => bucket.name === 'profile_images');
       
-      if (!buckets?.find(bucket => bucket.name === 'profile_images')) {
-        console.log('Profile images bucket not found, this will cause upload failures');
-        toast({
-          title: "Storage not configured",
-          description: "The storage bucket for profile images doesn't exist. Please contact an administrator.",
-          variant: "destructive",
-        });
-        return '';
+      if (!profileImagesBucket) {
+        console.error('Profile images bucket does not exist');
+        throw new Error('Storage bucket not configured');
       }
       
       const { data, error } = await supabase.storage
@@ -113,7 +112,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         });
       
       if (error) {
-        console.error('Error uploading image:', error);
+        console.error('Supabase storage upload error:', error);
         throw error;
       }
       
@@ -125,7 +124,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     } catch (error) {
       console.error('Error uploading image:', error);
       toast({
-        title: "Error uploading image",
+        title: "Upload Failed",
         description: "There was a problem uploading your image. Please try again.",
         variant: "destructive",
       });
