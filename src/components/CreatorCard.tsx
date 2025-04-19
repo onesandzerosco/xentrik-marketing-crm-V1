@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Creator } from "../types";
@@ -90,13 +89,6 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="truncate">ID: {creator.id}</span>
-            <span className="text-xs">•</span>
-            <Badge variant="outline" className="capitalize">
-              {creator.gender}
-            </Badge>
-            <Badge variant="outline" className="capitalize">
-              {creator.team}
-            </Badge>
           </div>
 
           {(creator.tags && creator.tags.length > 0) && (
