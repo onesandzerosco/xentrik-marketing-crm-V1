@@ -76,12 +76,15 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         });
         
+        // Ensure the gender value is compatible with our updated Gender type
+        const genderValue = creator.gender === "AI" ? "Trans" : creator.gender;
+        
         return {
           id: creator.id,
           name: creator.name,
           email: creator.email || '',
           profileImage: creator.profile_image || '',
-          gender: creator.gender,
+          gender: genderValue,
           team: creator.team,
           creatorType: creator.creator_type,
           socialLinks: formattedSocialLinks,
