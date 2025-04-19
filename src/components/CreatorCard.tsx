@@ -9,9 +9,8 @@ import {
   AlertCircle,
   Instagram,
   Twitter,
-  TwitchIcon,
-  Globe,
-  MessageCircle
+  Youtube,
+  Globe
 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +31,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
 
   const getSocialIcons = () => {
     const icons = [];
+    
     if (creator.socialLinks?.instagram) icons.push(
       <a href={creator.socialLinks.instagram} target="_blank" rel="noopener noreferrer" key="instagram">
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -39,6 +39,7 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
         </Button>
       </a>
     );
+    
     if (creator.socialLinks?.twitter) icons.push(
       <a href={creator.socialLinks.twitter} target="_blank" rel="noopener noreferrer" key="twitter">
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -46,13 +47,25 @@ const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
         </Button>
       </a>
     );
-    if (creator.socialLinks?.chaturbate) icons.push(
-      <a href={creator.socialLinks.chaturbate} target="_blank" rel="noopener noreferrer" key="chaturbate">
+    
+    if (creator.socialLinks?.youtube) icons.push(
+      <a href={creator.socialLinks.youtube} target="_blank" rel="noopener noreferrer" key="youtube">
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <TwitchIcon className="h-4 w-4 text-purple-500" />
+          <Youtube className="h-4 w-4 text-red-500" />
         </Button>
       </a>
     );
+    
+    // Add a generic icon for any other social media
+    if (creator.socialLinks && Object.keys(creator.socialLinks).some(key => 
+      !['instagram', 'twitter', 'youtube'].includes(key) && creator.socialLinks[key])) {
+      icons.push(
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" key="other">
+          <Globe className="h-4 w-4 text-gray-500" />
+        </Button>
+      );
+    }
+    
     return icons;
   };
 

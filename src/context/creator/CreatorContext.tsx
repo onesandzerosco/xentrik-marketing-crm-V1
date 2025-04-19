@@ -59,22 +59,34 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       // Transform the data to match the Creator type
-      const formattedCreators: Creator[] = data.map(creator => ({
-        id: creator.id,
-        name: creator.name,
-        email: creator.email || '',
-        profileImage: creator.profile_image || '',
-        gender: creator.gender,
-        team: creator.team,
-        creatorType: creator.creator_type,
-        socialLinks: creator.creator_social_links?.[0] || {},
-        tags: creator.creator_tags?.map(t => t.tag) || [],
-        assignedTeamMembers: [],
-        needsReview: creator.needs_review || false,
-        telegramUsername: creator.telegram_username || '',
-        whatsappNumber: creator.whatsapp_number || '',
-        notes: creator.notes || ''
-      }));
+      const formattedCreators: Creator[] = data.map(creator => {
+        // Extract social links from the first element if it exists
+        const socialLinks = creator.creator_social_links?.[0] || {};
+        
+        return {
+          id: creator.id,
+          name: creator.name,
+          email: creator.email || '',
+          profileImage: creator.profile_image || '',
+          gender: creator.gender,
+          team: creator.team,
+          creatorType: creator.creator_type,
+          socialLinks: {
+            instagram: socialLinks.instagram || '',
+            tiktok: socialLinks.tiktok || '',
+            twitter: socialLinks.twitter || '',
+            reddit: socialLinks.reddit || '',
+            chaturbate: socialLinks.chaturbate || '',
+            youtube: socialLinks.youtube || '',
+          },
+          tags: creator.creator_tags?.map(t => t.tag) || [],
+          assignedTeamMembers: [],
+          needsReview: creator.needs_review || false,
+          telegramUsername: creator.telegram_username || '',
+          whatsappNumber: creator.whatsapp_number || '',
+          notes: creator.notes || ''
+        };
+      });
 
       console.log("Formatted creators data:", formattedCreators);
       setCreators(formattedCreators);

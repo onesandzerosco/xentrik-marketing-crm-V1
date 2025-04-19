@@ -1,3 +1,4 @@
+
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -39,6 +40,7 @@ export const useUpdateCreator = (
               
             // Update the profileImage to use the Supabase URL
             updates.profileImage = publicUrl;
+            console.log("Uploaded image URL:", publicUrl);
           } else {
             console.error("Error uploading data URL image:", error);
           }
@@ -77,13 +79,12 @@ export const useUpdateCreator = (
         
         const socialLinksData = {
           creator_id: id,
-          instagram: updates.socialLinks.instagram,
-          tiktok: updates.socialLinks.tiktok,
-          twitter: updates.socialLinks.twitter,
-          reddit: updates.socialLinks.reddit,
-          chaturbate: updates.socialLinks.chaturbate,
-          youtube: updates.socialLinks.youtube,
-          // Add any custom social links here as needed
+          instagram: updates.socialLinks.instagram || null,
+          tiktok: updates.socialLinks.tiktok || null,
+          twitter: updates.socialLinks.twitter || null,
+          reddit: updates.socialLinks.reddit || null,
+          chaturbate: updates.socialLinks.chaturbate || null,
+          youtube: updates.socialLinks.youtube || null,
         };
         
         // First check if links already exist
@@ -101,6 +102,7 @@ export const useUpdateCreator = (
             
           if (socialError) {
             console.error('Error updating social links:', socialError);
+            throw new Error(`Social links update failed: ${socialError.message}`);
           }
         } else {
           // Insert new links
@@ -110,6 +112,7 @@ export const useUpdateCreator = (
             
           if (socialError) {
             console.error('Error inserting social links:', socialError);
+            throw new Error(`Social links insert failed: ${socialError.message}`);
           }
         }
       }
@@ -123,6 +126,8 @@ export const useUpdateCreator = (
           creator.id === id ? { ...creator, ...updates } : creator
         )
       );
+      
+      console.log("Creator update complete, local state updated");
       
       return id;
     } catch (error) {

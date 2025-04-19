@@ -4,10 +4,12 @@ import { useCreators } from "../context/creator";
 import CreatorsHeader from "../components/creators/list/CreatorsHeader";
 import ActiveFilters from "../components/creators/list/ActiveFilters";
 import CreatorsList from "../components/creators/list/CreatorsList";
+import { useToast } from "@/hooks/use-toast";
 
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -32,6 +34,15 @@ const Creators = () => {
       return () => clearTimeout(timer);
     }
   }, [creators, isLoading]);
+
+  useEffect(() => {
+    // Check if creators data loaded successfully
+    if (creators.length > 0) {
+      // Log for debugging
+      console.log("Creators loaded:", creators.length);
+      console.log("Sample creator data:", creators[0]);
+    }
+  }, [creators]);
   
   const handleClearFilters = () => {
     setSelectedGenders([]);
