@@ -22,6 +22,7 @@ import SecureLogins from './pages/SecureLogins';
 import Index from './pages/Index';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ensureStorageBucket } from "./utils/setupStorage";
+import SharedFiles from './pages/SharedFiles';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -65,6 +66,7 @@ const AppRoutes = () => {
       <Route path="/secure-logins" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
       <Route path="/secure-logins/:id" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
       <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
+      <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
