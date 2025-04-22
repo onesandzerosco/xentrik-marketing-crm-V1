@@ -27,7 +27,7 @@ const SharedFiles = () => {
     const loadSharedFolder = async () => {
       try {
         // Using PostgrestFilterBuilder methods instead of relying on types
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('shared_folders')
           .select('*')
           .eq('share_code', shareCode || '')

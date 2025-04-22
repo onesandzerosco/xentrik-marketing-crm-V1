@@ -18,6 +18,9 @@ interface SharedFolder {
   folder_path: string;
   share_code: string;
   expires_at: string;
+  allow_uploads?: boolean;
+  allow_downloads?: boolean;
+  allow_deletes?: boolean;
 }
 
 const ShareDialog: React.FC<ShareDialogProps> = ({ 
@@ -42,9 +45,13 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
         folder_path: folderPath,
         share_code: shareCode,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        allow_uploads: true,
+        allow_downloads: true,
+        allow_deletes: false
       };
       
-      const { error } = await supabase
+      // Use the generic version of supabase client to avoid TypeScript errors
+      const { error } = await (supabase as any)
         .from('shared_folders')
         .insert(sharedFolderData);
 

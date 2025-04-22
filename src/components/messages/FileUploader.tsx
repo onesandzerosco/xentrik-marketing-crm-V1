@@ -26,8 +26,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = '',
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const path = `${creatorId}${folderPath ? '/' + folderPath : ''}/${safeName}`;
       
-      // Track progress manually using xhr
-      const xhr = new XMLHttpRequest();
+      // Create a new progress tracker
+      const fileId = file.name;
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileId]: 0
+      }));
+      
+      // Use the upload method without progress event
       const { data, error } = await supabase.storage
         .from('creator_files')
         .upload(path, file, {
@@ -35,16 +41,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = '',
           upsert: false
         });
 
-      // Set up our own progress tracking
-      xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percent = (event.loaded / event.total) * 100;
-          setUploadProgress(prev => ({
-            ...prev,
-            [file.name]: percent
-          }));
-        }
-      });
+      // Simulate progress (since we can't track it directly)
+      // This is a fallback approach - in a real app, we'd use XHR
+      setUploadProgress(prev => ({
+        ...prev,
+        [fileId]: 100
+      }));
 
       if (error) throw error;
       
