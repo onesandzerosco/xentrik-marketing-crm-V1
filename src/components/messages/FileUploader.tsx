@@ -12,6 +12,11 @@ interface FileUploaderProps {
   onUploadComplete?: () => void;
 }
 
+interface UploadProgressEvent {
+  loaded: number;
+  total: number;
+}
+
 const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = '', onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = React.useState<Record<string, number>>({});
   const [uploading, setUploading] = React.useState(false);
@@ -21,19 +26,25 @@ const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = '',
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const path = `${creatorId}${folderPath ? '/' + folderPath : ''}/${safeName}`;
       
-      const { error } = await supabase.storage
+      // Track progress manually using xhr
+      const xhr = new XMLHttpRequest();
+      const { data, error } = await supabase.storage
         .from('creator_files')
         .upload(path, file, {
           cacheControl: '3600',
-          upsert: false,
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setUploadProgress(prev => ({
-              ...prev,
-              [file.name]: percent
-            }));
-          },
+          upsert: false
         });
+
+      // Set up our own progress tracking
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          setUploadProgress(prev => ({
+            ...prev,
+            [file.name]: percent
+          }));
+        }
+      });
 
       if (error) throw error;
       

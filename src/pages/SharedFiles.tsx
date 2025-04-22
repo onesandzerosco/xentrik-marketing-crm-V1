@@ -4,19 +4,34 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import FileUploader from '@/components/messages/FileUploader';
 
+// Define a type for the shared folder data
+interface SharedFolder {
+  id: string;
+  creator_id: string;
+  folder_path: string;
+  share_code: string;
+  created_at: string;
+  expires_at: string;
+  allow_uploads: boolean;
+  allow_downloads: boolean;
+  allow_deletes: boolean;
+}
+
 const SharedFiles = () => {
   const { shareCode } = useParams<{ shareCode: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sharedFolder, setSharedFolder] = useState<any>(null);
+  const [sharedFolder, setSharedFolder] = useState<SharedFolder | null>(null);
 
   useEffect(() => {
     const loadSharedFolder = async () => {
       try {
+        // Using PostgrestFilterBuilder methods instead of relying on types
         const { data, error } = await supabase
           .from('shared_folders')
           .select('*')
-          .eq('share_code', shareCode)
+          .eq('share_code', shareCode || '')
+          .limit(1)
           .single();
 
         if (error) throw error;
@@ -27,7 +42,7 @@ const SharedFiles = () => {
           throw new Error('This share link has expired');
         }
 
-        setSharedFolder(data);
+        setSharedFolder(data as SharedFolder);
       } catch (error) {
         console.error('Error loading shared folder:', error);
         setError(error instanceof Error ? error.message : 'An error occurred');

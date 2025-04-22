@@ -12,6 +12,14 @@ interface ShareDialogProps {
   onClose: () => void;
 }
 
+// Define a custom interface for the shared folder
+interface SharedFolder {
+  creator_id: string;
+  folder_path: string;
+  share_code: string;
+  expires_at: string;
+}
+
 const ShareDialog: React.FC<ShareDialogProps> = ({ 
   creatorId, 
   folderPath, 
@@ -28,14 +36,17 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
       // Generate a random share code
       const shareCode = Math.random().toString(36).substring(2, 15);
       
+      // Using insert with typed data instead of relying on table types
+      const sharedFolderData: SharedFolder = {
+        creator_id: creatorId,
+        folder_path: folderPath,
+        share_code: shareCode,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+      };
+      
       const { error } = await supabase
         .from('shared_folders')
-        .insert({
-          creator_id: creatorId,
-          folder_path: folderPath,
-          share_code: shareCode,
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        });
+        .insert(sharedFolderData);
 
       if (error) throw error;
 
