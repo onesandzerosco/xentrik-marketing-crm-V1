@@ -7,7 +7,8 @@ import {
   Users, 
   MessageSquare, 
   UserCog, 
-  Lock 
+  Lock,
+  FileUp
 } from 'lucide-react';
 
 interface NavItem {
@@ -52,6 +53,11 @@ const navItems: NavItem[] = [
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
+  },
+  {
+    path: '/shared-files',
+    label: 'Shared Files',
+    icon: <FileUp className="h-5 w-5" />,
   },
 ];
 
