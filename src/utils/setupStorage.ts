@@ -1,43 +1,57 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '../integrations/supabase/client';
 
-export async function ensureStorageBucket(bucketName: string = 'profile_images') {
+/**
+ * Ensures that necessary storage buckets exist
+ */
+export const ensureStorageBucket = async () => {
   try {
-    // Check if bucket exists
-    const { data: buckets, error: getBucketsError } = await supabase
+    // Check if creator_files bucket exists
+    const { data: creatorBuckets, error: creatorBucketsError } = await supabase
       .storage
       .listBuckets();
     
-    if (getBucketsError) {
-      console.error('Error listing buckets:', getBucketsError);
-      return false;
+    if (creatorBucketsError) throw creatorBucketsError;
+    
+    // Create creator_files bucket if it doesn't exist
+    const creatorFilesBucketExists = creatorBuckets?.some(bucket => bucket.name === 'creator_files');
+    
+    if (!creatorFilesBucketExists) {
+      const { error: createError } = await supabase
+        .storage
+        .createBucket('creator_files', { public: false });
+      
+      if (createError) throw createError;
+      
+      console.log('Created creator_files bucket');
+      
+      // Set bucket policy (public access)
+      const { error: policyError } = await supabase
+        .storage
+        .from('creator_files')
+        .createSignedUrl('dummy.txt', 1);
+      
+      if (policyError && !policyError.message.includes('not found')) {
+        throw policyError;
+      }
     }
     
-    const bucketExists = buckets.some(bucket => bucket.name === bucketName);
+    // Check if team bucket exists
+    const teamBucketExists = creatorBuckets?.some(bucket => bucket.name === 'team');
     
-    if (!bucketExists) {
-      console.log(`Bucket ${bucketName} does not exist, attempting to create it...`);
-      // Try to create the bucket
-      const { error: createBucketError } = await supabase
+    if (!teamBucketExists) {
+      const { error: createTeamError } = await supabase
         .storage
-        .createBucket(bucketName, {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-        });
-        
-      if (createBucketError) {
-        console.error(`Error creating ${bucketName} bucket:`, createBucketError);
-        return false;
-      }
+        .createBucket('team', { public: true });
       
-      console.log(`${bucketName} bucket created successfully`);
-    } else {
-      console.log(`${bucketName} bucket already exists`);
+      if (createTeamError) throw createTeamError;
+      
+      console.log('Created team bucket');
     }
     
     return true;
-  } catch (error) {
-    console.error('Error ensuring storage bucket exists:', error);
+  } catch (err) {
+    console.error('Error ensuring storage buckets:', err);
     return false;
   }
-}
+};

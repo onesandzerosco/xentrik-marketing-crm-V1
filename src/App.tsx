@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -5,6 +6,7 @@ import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/creator';
 import { ActivityProvider } from './context/ActivityContext';
+import { TeamProvider } from './context/TeamContext';
 import { AnimatePresence } from 'framer-motion';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -37,12 +39,14 @@ function App() {
       <ActivityProvider>
         <SupabaseAuthProvider>
           <AuthProvider>
-            <div className="app flex h-screen w-full bg-premium-dark">
-              <Toaster />
-              <AnimatePresence mode="wait">
-                <AppRoutes />
-              </AnimatePresence>
-            </div>
+            <TeamProvider>
+              <div className="app flex h-screen w-full bg-premium-dark">
+                <Toaster />
+                <AnimatePresence mode="wait">
+                  <AppRoutes />
+                </AnimatePresence>
+              </div>
+            </TeamProvider>
           </AuthProvider>
         </SupabaseAuthProvider>
       </ActivityProvider>

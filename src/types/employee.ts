@@ -1,5 +1,5 @@
 
-export type EmployeeRole = "Admin" | "Manager" | "Employee";
+export type TeamMemberRole = "Chatters" | "Creative Director" | "Manager" | "Developer" | "Editor";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
 export type EmployeeTeam = "A" | "B" | "C";
 
@@ -7,7 +7,7 @@ export interface Employee {
   id: string;
   name: string;
   email: string;
-  role: EmployeeRole;
+  role: TeamMemberRole;
   status: EmployeeStatus;
   telegram?: string;
   permissions?: string[];
@@ -20,11 +20,11 @@ export interface Employee {
 }
 
 export type EmployeeFilters = {
-  roles: EmployeeRole[];
+  roles: TeamMemberRole[];
   statuses: EmployeeStatus[];
   searchQuery: string;
   sortOption: string;
 };
 
 // This is the type needed for the filter components
-export type FilterRole = EmployeeRole | "Active" | "Inactive";
+export type FilterRole = TeamMemberRole | "Active" | "Inactive";

@@ -193,8 +193,10 @@ export type Database = {
           last_login: string | null
           name: string
           pending_telegram: boolean | null
+          phone_number: string | null
           profile_image: string | null
           role: string
+          roles: string[] | null
           status: string
           telegram: string | null
           updated_at: string | null
@@ -207,8 +209,10 @@ export type Database = {
           last_login?: string | null
           name: string
           pending_telegram?: boolean | null
+          phone_number?: string | null
           profile_image?: string | null
           role: string
+          roles?: string[] | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -221,8 +225,10 @@ export type Database = {
           last_login?: string | null
           name?: string
           pending_telegram?: boolean | null
+          phone_number?: string | null
           profile_image?: string | null
           role?: string
+          roles?: string[] | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -283,6 +289,35 @@ export type Database = {
           },
         ]
       }
+      team_member_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          profile_id: string | null
+          role: Database["public"]["Enums"]["team_member_role"]
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string | null
+          role: Database["public"]["Enums"]["team_member_role"]
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string | null
+          role?: Database["public"]["Enums"]["team_member_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_member_roles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string | null
@@ -306,12 +341,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_team_member: {
+        Args: {
+          email: string
+          password: string
+          name: string
+          phone?: string
+          telegram?: string
+          roles?: string[]
+          teams?: string[]
+        }
+        Returns: string
+      }
     }
     Enums: {
       creator_type: "Real" | "AI"
       gender: "Male" | "Female" | "Trans" | "AI"
       team: "A Team" | "B Team" | "C Team"
+      team_member_role:
+        | "Chatters"
+        | "Creative Director"
+        | "Manager"
+        | "Developer"
+        | "Editor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -430,6 +482,13 @@ export const Constants = {
       creator_type: ["Real", "AI"],
       gender: ["Male", "Female", "Trans", "AI"],
       team: ["A Team", "B Team", "C Team"],
+      team_member_role: [
+        "Chatters",
+        "Creative Director",
+        "Manager",
+        "Developer",
+        "Editor",
+      ],
     },
   },
 } as const

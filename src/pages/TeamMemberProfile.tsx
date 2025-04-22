@@ -1,224 +1,292 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useTeam } from "@/context/TeamContext";
 import { useToast } from "@/hooks/use-toast";
-import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "../types/employee";
-import { useForm } from "react-hook-form";
+import { TeamMember } from "@/types/team";
+import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { teamMemberFormSchema, TeamMemberFormValues } from "@/schemas/teamMemberSchema";
+import { useForm } from "react-hook-form";
+import { ArrowLeft, User, Mail, MessageSquare, Phone, Building, Users, Shield, Clock } from "lucide-react";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import ProfileImageUploader from "@/components/team/ProfileImageUploader";
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import EditTeamMemberModal from "@/components/team/EditTeamMemberModal";
 
-// Import the refactored components
-import ProfileHeader from "@/components/team/ProfileHeader";
-import ProfileFormContainer from "@/components/team/ProfileFormContainer";
-import LoadingState from "@/components/team/LoadingState";
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  roles: z.array(z.string()).min(1, { message: "Select at least one role" }),
+  status: z.enum(["Active", "Inactive", "Paused"]),
+  teams: z.array(z.string()).optional(),
+  department: z.string().optional(),
+  telegram: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  profileImage: z.string().optional(),
+});
 
-// Storage key for employees data
-const EMPLOYEES_STORAGE_KEY = 'team_employees_data';
+type FormValues = z.infer<typeof formSchema>;
 
 const TeamMemberProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const location = useLocation();
+  const { teamMembers, loading, updateTeamMember } = useTeam();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedTeams, setSelectedTeams] = useState<EmployeeTeam[]>([]);
-  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
-  const returnToTeam = location.state?.returnToTeam || false;
-  const isCurrentUser = user?.id === id;
-
-  // Form setup
-  const form = useForm<TeamMemberFormValues>({
-    resolver: zodResolver(teamMemberFormSchema),
+  
+  const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
-      role: "Employee" as "Admin" | "Manager" | "Employee",
-      status: "Active" as EmployeeStatus,
-      telegram: "",
-      department: "",
-      permissions: [],
-      profileImage: "",
+      roles: [],
+      status: "Active",
       teams: [],
-      assignedCreators: []
-    }
+      department: "",
+      telegram: "",
+      phoneNumber: "",
+      profileImage: "",
+    },
   });
-
-  // Load employee data on component mount
+  
+  // Find the team member by ID
   useEffect(() => {
-    const loadEmployee = () => {
-      setLoading(true);
-      try {
-        const savedEmployees = localStorage.getItem(EMPLOYEES_STORAGE_KEY);
-        if (savedEmployees) {
-          const employeesData = JSON.parse(savedEmployees) as Employee[];
-          const foundEmployee = employeesData.find(emp => emp.id === id);
-          
-          if (foundEmployee) {
-            setEmployee(foundEmployee);
-            setSelectedTeams(foundEmployee.teams || []);
-            setSelectedCreators(foundEmployee.assignedCreators || []);
-            
-            // Reset form with employee data
-            form.reset({
-              name: foundEmployee.name,
-              email: foundEmployee.email,
-              role: foundEmployee.role as "Admin" | "Manager" | "Employee",
-              status: foundEmployee.status,
-              telegram: foundEmployee.telegram || "",
-              department: foundEmployee.department || "",
-              permissions: foundEmployee.permissions || [],
-              profileImage: foundEmployee.profileImage || "",
-              teams: foundEmployee.teams || [],
-              assignedCreators: foundEmployee.assignedCreators || []
-            });
-          } else {
-            toast({
-              title: "Employee not found",
-              description: "Could not find the requested team member",
-              variant: "destructive"
-            });
-            navigate('/team');
-          }
-        } else {
-          toast({
-            title: "Data not available",
-            description: "Could not load team member data",
-            variant: "destructive"
-          });
-          navigate('/team');
-        }
-      } catch (error) {
-        console.error("Error loading employee data:", error);
+    if (teamMembers.length > 0 && id) {
+      const member = teamMembers.find(m => m.id === id);
+      if (member) {
+        setTeamMember(member);
+        form.reset({
+          name: member.name,
+          email: member.email,
+          roles: member.roles || [],
+          status: member.status,
+          teams: member.teams || [],
+          department: member.department || "",
+          telegram: member.telegram || "",
+          phoneNumber: member.phoneNumber || "",
+          profileImage: member.profileImage || "",
+        });
+      } else {
         toast({
-          title: "Error",
-          description: "An error occurred while loading the team member data",
+          title: "Not Found",
+          description: "Team member not found",
           variant: "destructive"
         });
         navigate('/team');
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (id) {
-      loadEmployee();
-    } else {
-      navigate('/team');
     }
-  }, [id, navigate, toast, form]);
-
-  // Handle form submission
-  const handleSubmit = (values: TeamMemberFormValues) => {
-    if (!employee) return;
-    
-    // For current users who are admins, prevent changing their own role
-    if (isCurrentUser && values.role !== employee.role) {
-      // Reset role to original value
-      values.role = employee.role as "Admin" | "Manager" | "Employee";
-    }
-    
-    // Prevent current users from deactivating themselves
-    if (isCurrentUser && values.status !== "Active") {
-      values.status = "Active";
-    }
-    
-    // Add selected teams and creators to the form values
-    values.teams = selectedTeams;
-    values.assignedCreators = selectedCreators;
-    
-    try {
-      const savedEmployees = localStorage.getItem(EMPLOYEES_STORAGE_KEY);
-      if (savedEmployees) {
-        const employeesData = JSON.parse(savedEmployees) as Employee[];
-        const updatedEmployees = employeesData.map(emp => 
-          emp.id === id ? { ...emp, ...values } : emp
-        );
-        
-        // Save updated employees back to localStorage
-        localStorage.setItem(EMPLOYEES_STORAGE_KEY, JSON.stringify(updatedEmployees));
-        
-        // Update the local state
-        setEmployee(prev => prev && { ...prev, ...values });
-        
-        toast({
-          title: "Changes saved",
-          description: "Team member information has been updated successfully"
-        });
-      }
-    } catch (error) {
-      console.error("Error updating employee:", error);
-      toast({
-        title: "Error saving changes",
-        description: "An error occurred while saving changes",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handle profile image change
-  const handleProfileImageChange = (url: string) => {
-    form.setValue("profileImage", url);
+  }, [teamMembers, id, form, navigate, toast]);
+  
+  // Get initials for avatar fallback
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase();
   };
   
-  // Toggle team selection
-  const toggleTeam = (team: EmployeeTeam) => {
-    setSelectedTeams(prev => {
-      if (prev.includes(team)) {
-        return prev.filter(t => t !== team);
-      } else {
-        return [...prev, team];
-      }
-    });
-  };
-  
-  // Toggle creator selection
-  const toggleCreator = (creatorId: string) => {
-    setSelectedCreators(prev => {
-      if (prev.includes(creatorId)) {
-        return prev.filter(id => id !== creatorId);
-      } else {
-        return [...prev, creatorId];
-      }
-    });
-  };
-
-  // Handle going back
-  const handleBack = () => {
-    if (returnToTeam) {
-      navigate('/team');
-    } else {
-      navigate(-1);
+  // Get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return 'bg-green-500 text-green-50';
+      case 'Inactive': return 'bg-red-500 text-red-50';
+      case 'Paused': return 'bg-yellow-500 text-yellow-50';
+      default: return 'bg-gray-500 text-gray-50';
     }
   };
-
-  if (loading) {
-    return <LoadingState />;
+  
+  if (loading || !teamMember) {
+    return (
+      <div className="container mx-auto px-4 py-8 min-h-screen">
+        <div className="flex items-center space-x-2 mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/team')}
+            className="rounded-full p-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Back</span>
+          </Button>
+          <h1 className="text-2xl font-bold">Loading...</h1>
+        </div>
+        
+        <div className="flex justify-center items-center py-16">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-primary-foreground"></div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <ProfileHeader 
-        name={employee?.name || "Team Member Profile"} 
-        handleBack={handleBack} 
+    <div className="container mx-auto px-4 py-8 min-h-screen">
+      <div className="flex items-center space-x-2 mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/team')}
+          className="rounded-full p-2"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Back</span>
+        </Button>
+        <h1 className="text-2xl font-bold">{teamMember.name}</h1>
+        <Badge className={getStatusColor(teamMember.status)}>
+          {teamMember.status}
+        </Badge>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Profile Card */}
+        <Card className="md:col-span-1">
+          <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={teamMember.profileImage} alt={teamMember.name} />
+                <AvatarFallback className="text-lg bg-primary/20 text-primary">
+                  {getInitials(teamMember.name)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            <CardTitle>{teamMember.name}</CardTitle>
+            <CardDescription className="flex items-center justify-center gap-1 mt-1">
+              <Mail className="h-3.5 w-3.5" />
+              <span>{teamMember.email}</span>
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-4">
+            {teamMember.roles && teamMember.roles.length > 0 && (
+              <div className="flex gap-1 flex-wrap justify-center">
+                {teamMember.roles.map(role => (
+                  <Badge 
+                    key={role} 
+                    variant="outline" 
+                    className={
+                      role === 'Creative Director' ? 'bg-red-500/10 text-red-400' :
+                      role === 'Manager' ? 'bg-blue-500/10 text-blue-400' :
+                      'bg-primary/10 text-primary/80'
+                    }
+                  >
+                    {role}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
+            <div className="pt-2 space-y-3">
+              {/* Last login time */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm">Last login:</span>
+                </div>
+                <span className="text-sm">{teamMember.lastLogin || 'Never'}</span>
+              </div>
+              
+              {/* Teams */}
+              {teamMember.teams && teamMember.teams.length > 0 && (
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="h-4 w-4" />
+                    <span className="text-sm">Teams:</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {teamMember.teams.map(team => (
+                      <Badge key={team} variant="outline" className="bg-primary/5">
+                        Team {team}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Department */}
+              {teamMember.department && (
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Building className="h-4 w-4" />
+                    <span className="text-sm">Department:</span>
+                  </div>
+                  <span className="text-sm">{teamMember.department}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Contact Info */}
+            {(teamMember.telegram || teamMember.phoneNumber) && (
+              <div className="border-t pt-4 mt-4 space-y-3">
+                <h3 className="text-sm font-medium">Contact Information</h3>
+                
+                {teamMember.telegram && (
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">@{teamMember.telegram}</span>
+                  </div>
+                )}
+                
+                {teamMember.phoneNumber && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{teamMember.phoneNumber}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+          
+          <CardFooter>
+            <Button 
+              onClick={() => setEditModalOpen(true)}
+              className="w-full text-black rounded-[15px] px-4 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
+            >
+              Edit Profile
+            </Button>
+          </CardFooter>
+        </Card>
+        
+        {/* Additional Cards/Info here if needed */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Account Activity</CardTitle>
+            <CardDescription>Recent activity and assignments</CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="space-y-4">
+              {/* This is a placeholder for future functionality */}
+              <p className="text-muted-foreground text-center py-8">
+                Activity tracking coming soon
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Edit Modal */}
+      <EditTeamMemberModal 
+        teamMember={teamMember}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onUpdate={updateTeamMember}
       />
-
-      {employee && (
-        <ProfileFormContainer
-          form={form}
-          handleSubmit={handleSubmit}
-          handleBack={handleBack}
-          isCurrentUser={isCurrentUser}
-          selectedTeams={selectedTeams}
-          toggleTeam={toggleTeam}
-          selectedCreators={selectedCreators}
-          toggleCreator={toggleCreator}
-          handleProfileImageChange={handleProfileImageChange}
-          employeeName={employee.name}
-        />
-      )}
     </div>
   );
 };
