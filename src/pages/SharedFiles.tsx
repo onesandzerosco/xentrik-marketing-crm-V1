@@ -26,7 +26,7 @@ const SharedFiles = () => {
   useEffect(() => {
     const loadSharedFolder = async () => {
       try {
-        // Using PostgrestFilterBuilder methods instead of relying on types
+        // Using any type assertion to bypass type checking
         const { data, error } = await (supabase as any)
           .from('shared_folders')
           .select('*')
@@ -42,6 +42,7 @@ const SharedFiles = () => {
           throw new Error('This share link has expired');
         }
 
+        // Type assertion to SharedFolder
         setSharedFolder(data as SharedFolder);
       } catch (error) {
         console.error('Error loading shared folder:', error);
