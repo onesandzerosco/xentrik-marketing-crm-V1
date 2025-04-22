@@ -1,7 +1,7 @@
 
-import { Employee, EmployeeRole, EmployeeStatus } from "../types/employee";
+import { Employee, TeamMemberRole, EmployeeStatus, EmployeeRole } from "../types/employee";
 
-type FilterRole = EmployeeRole | "Active" | "Inactive";
+type FilterRole = TeamMemberRole | "Active" | "Inactive";
 
 // Mock creators data array for mapping IDs to names
 const mockCreators = [
@@ -57,8 +57,16 @@ export const filterAndSortEmployees = (
         return a.lastLogin === "Never" ? 1 : (b.lastLogin === "Never" ? -1 : b.lastLogin.localeCompare(a.lastLogin));
       case "role":
         // Sort by role "importance" (Admin > Manager > Employee)
-        const roleOrder = { "Admin": 0, "Manager": 1, "Employee": 2 };
-        return roleOrder[a.role] - roleOrder[b.role];
+        const roleOrder: Record<TeamMemberRole, number> = { 
+          "Admin": 0, 
+          "Manager": 1, 
+          "Employee": 2,
+          "Chatters": 3,
+          "Creative Director": 4,
+          "Developer": 5,
+          "Editor": 6
+        };
+        return (roleOrder[a.role] || 999) - (roleOrder[b.role] || 999);
       default:
         return 0;
     }
@@ -76,4 +84,3 @@ export const FILTER_KEYS = {
 export const getMockCreators = () => {
   return [...mockCreators];
 };
-

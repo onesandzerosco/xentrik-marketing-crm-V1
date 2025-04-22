@@ -1,12 +1,12 @@
 
-import { Employee } from "../types/employee";
+import { Employee, TeamMemberRole } from "../types/employee";
 
 export const mockEmployees: Employee[] = [
   {
     id: "1",
     name: "John Admin",
     email: "john.admin@example.com",
-    role: "Admin",
+    role: "Admin" as TeamMemberRole,
     status: "Active",
     telegram: "johnadmin",
     department: "Executive",
@@ -36,7 +36,7 @@ export const mockEmployees: Employee[] = [
     id: "3",
     name: "Mike Employee",
     email: "mike.employee@example.com",
-    role: "Employee",
+    role: "Employee" as TeamMemberRole,
     status: "Active",
     telegram: "mikeemployee",
     department: "Sales",
@@ -50,7 +50,7 @@ export const mockEmployees: Employee[] = [
     id: "4",
     name: "Lisa Designer",
     email: "lisa.designer@example.com",
-    role: "Employee",
+    role: "Employee" as TeamMemberRole,
     status: "Paused",
     telegram: "lisadesigner",
     department: "Design",
@@ -64,7 +64,7 @@ export const mockEmployees: Employee[] = [
     id: "5",
     name: "David Developer",
     email: "david.developer@example.com",
-    role: "Employee",
+    role: "Employee" as TeamMemberRole,
     status: "Inactive",
     department: "Engineering",
     permissions: ["view_reports"],
