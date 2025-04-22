@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
 import { useCreators } from '@/context/creator';
-import { Folder, FileStack } from 'lucide-react';
+import { Folder } from 'lucide-react';
 
 const SharedFiles = () => {
   const { creators } = useCreators();
@@ -17,7 +17,7 @@ const SharedFiles = () => {
           <Link key={creator.id} to={`/creator-files/${creator.id}`}>
             <Card className="p-4 hover:bg-accent/5 transition-colors cursor-pointer group">
               <div className="flex items-center gap-4">
-                <div className="relative">
+                <div>
                   {creator.profileImage ? (
                     <img 
                       src={creator.profileImage} 
@@ -29,9 +29,6 @@ const SharedFiles = () => {
                       <Folder className="w-6 h-6 text-primary/60 group-hover:text-primary/80 transition-colors" />
                     </div>
                   )}
-                  <div className="absolute -bottom-1 -right-1 bg-primary/20 rounded-full p-1 group-hover:bg-primary/30 transition-all">
-                    <FileStack className="w-3 h-3 text-primary/70 group-hover:text-primary" />
-                  </div>
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-medium group-hover:text-primary transition-colors">{creator.name}</h3>
