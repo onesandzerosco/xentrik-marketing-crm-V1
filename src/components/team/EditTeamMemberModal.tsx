@@ -126,13 +126,18 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
     "Editor"
   ];
   
-  const teamOptions: ("A" | "B" | "C")[] = ["A", "B", "C"];
+  // Use user-facing labels for the teams
+  const teamOptions: { value: "A" | "B" | "C"; label: string }[] = [
+    { value: "A", label: "A Team" },
+    { value: "B", label: "B Team" },
+    { value: "C", label: "C Team" },
+  ];
   
   if (!teamMember) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl"> {/* make modal wider */}
         <DialogHeader>
           <DialogTitle>Edit Team Member</DialogTitle>
           <DialogDescription>
@@ -313,33 +318,33 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
                   render={() => (
                     <FormItem>
                       <FormLabel>Teams</FormLabel>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="flex gap-4 flex-row">
                         {teamOptions.map((team) => (
                           <FormField
-                            key={team}
+                            key={team.value}
                             control={form.control}
                             name="teams"
                             render={({ field }) => {
                               return (
                                 <FormItem
-                                  key={team}
-                                  className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3"
+                                  key={team.value}
+                                  className="flex flex-row items-center space-x-2 rounded-md border p-3"
                                 >
                                   <FormControl>
                                     <Checkbox
-                                      checked={field.value?.includes(team)}
+                                      checked={field.value?.includes(team.value)}
                                       onCheckedChange={(checked) => {
                                         const currentTeams = field.value || [];
                                         return checked
-                                          ? field.onChange([...currentTeams, team])
+                                          ? field.onChange([...currentTeams, team.value])
                                           : field.onChange(
-                                              currentTeams.filter((t) => t !== team)
+                                              currentTeams.filter((t) => t !== team.value)
                                             );
                                       }}
                                     />
                                   </FormControl>
                                   <FormLabel className="font-normal cursor-pointer">
-                                    Team {team}
+                                    {team.label}
                                   </FormLabel>
                                 </FormItem>
                               );
@@ -378,3 +383,4 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
 };
 
 export default EditTeamMemberModal;
+
