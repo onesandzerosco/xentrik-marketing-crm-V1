@@ -3,7 +3,7 @@ import React from 'react';
 import MessageController, { useMessageController } from '@/components/messages/MessageController';
 import MessageHeader from '@/components/messages/MessageHeader';
 import MessageContent from '@/components/messages/MessageContent';
-import FileManager from '@/components/messages/FileManager';
+import FileSharing from '@/components/messages/FileSharing';
 
 const Messages: React.FC = () => {
   const messageController = useMessageController();
@@ -31,16 +31,11 @@ const Messages: React.FC = () => {
               setSearchTerm={messageController.setSearchTerm}
               setSelectedTags={messageController.setSelectedTags}
             />
+            
+            {selectedCreator && (
+              <FileSharing creatorId={selectedCreator.id} />
+            )}
           </div>
-
-          {selectedCreator && (
-            <div className="bg-card rounded-lg border p-6">
-              <FileManager 
-                creatorId={selectedCreator.id}
-                allowDelete={true}
-              />
-            </div>
-          )}
         </div>
       </div>
     </div>
