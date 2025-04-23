@@ -1,14 +1,12 @@
 
 import React from "react";
-import AddTeamMemberHeader from "@/components/team/AddTeamMemberHeader";
-import AddTeamMemberForm from "@/components/team/AddTeamMemberForm";
+import NewTeamMemberOnboardingForm from "@/components/team/NewTeamMemberOnboardingForm";
 
-const AddTeamMember = () => {
+const AddTeamMember: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#181828] p-6">
-      <div className="max-w-7xl mx-auto">
-        <AddTeamMemberHeader />
-        <AddTeamMemberForm />
+      <div className="max-w-3xl mx-auto">
+        <NewTeamMemberOnboardingForm />
       </div>
     </div>
   );
