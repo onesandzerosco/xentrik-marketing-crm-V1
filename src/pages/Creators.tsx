@@ -16,7 +16,7 @@ const Creators = () => {
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Pass searchQuery as searchQuery (not search)
+  // Pass searchQuery to filterCreators
   const filteredCreators = filterCreators({
     gender: selectedGenders,
     team: selectedTeams,

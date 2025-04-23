@@ -8,7 +8,7 @@ export const useCreatorFilters = (creators: Creator[]) => {
     team?: string[]; 
     creatorType?: string[]; 
     reviewStatus?: string[];
-    searchQuery?: string; // Added searchQuery property to the filters type
+    searchQuery?: string;
   }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
