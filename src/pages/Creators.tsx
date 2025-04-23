@@ -63,7 +63,8 @@ const Creators = () => {
         setSelectedTeams={setSelectedTeams}
         setSelectedClasses={setSelectedClasses}
         handleClearFilters={handleClearFilters}
-        // connect search
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
 
       {/* Remove old ActiveFilters, can show chip-row if you want */}
@@ -89,4 +90,3 @@ const Creators = () => {
 };
 
 export default Creators;
-

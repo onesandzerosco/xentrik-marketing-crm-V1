@@ -7,13 +7,15 @@ export const useCreatorFilters = (creators: Creator[]) => {
     gender?: string[]; 
     team?: string[]; 
     creatorType?: string[]; 
-    reviewStatus?: string[] 
+    reviewStatus?: string[];
+    search?: string; 
   }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
       let teamMatch = true;
       let creatorTypeMatch = true;
       let reviewStatusMatch = true;
+      let searchMatch = true;
 
       if (filters.gender && filters.gender.length > 0) {
         genderMatch = filters.gender.includes(creator.gender);
@@ -31,8 +33,16 @@ export const useCreatorFilters = (creators: Creator[]) => {
         const isInReview = creator.needsReview === true;
         reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
       }
+      
+      if (filters.search && filters.search.trim() !== '') {
+        const searchLower = filters.search.toLowerCase().trim();
+        searchMatch = 
+          (creator.name?.toLowerCase().includes(searchLower) || false) || 
+          (creator.email?.toLowerCase().includes(searchLower) || false) ||
+          (creator.telegram_username?.toLowerCase().includes(searchLower) || false);
+      }
 
-      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch;
+      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch && searchMatch;
     });
   }, [creators]);
 

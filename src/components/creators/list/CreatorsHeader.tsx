@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Users, Filter, Plus, SlidersHorizontal, AlertCircle } from "lucide-react";
@@ -23,6 +23,8 @@ interface CreatorsHeaderProps {
   setSelectedTeams: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedClasses: React.Dispatch<React.SetStateAction<string[]>>;
   handleClearFilters: () => void;
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const genderTags = ["Male", "Female", "Trans"];
@@ -39,12 +41,11 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
   setSelectedTeams,
   setSelectedClasses,
   handleClearFilters,
+  searchQuery,
+  setSearchQuery
 }) => {
-  const [searchValue, setSearchValue] = useState("");
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchValue(e.target.value);
-    // Push down to parent state if you want. For demo just local.
+    setSearchQuery(e.target.value);
   };
 
   const toggleGender = (g: string) => {
@@ -83,7 +84,7 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
           <Input
             placeholder="Search by name or email..."
             className="pl-10 h-12 w-full bg-background border-border text-foreground"
-            value={searchValue}
+            value={searchQuery}
             onChange={handleSearchChange}
           />
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -166,7 +167,7 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
         {/* Clear button if any filters are active */}
-        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
+        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || searchQuery) && (
           <Button variant="ghost" size="sm" className="h-12" onClick={handleClearFilters}>
             <span className="mr-1">Clear</span>
             <Filter className="h-4 w-4" />
@@ -178,4 +179,3 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
 };
 
 export default CreatorsHeader;
-
