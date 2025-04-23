@@ -8,21 +8,23 @@ import { Button } from "@/components/ui/button";
 import { Save, UserPlus, Mail, Lock, Phone, MessageSquare, Briefcase, Shield, Building } from "lucide-react";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { TeamMemberRole } from "@/types/employee";
+import { TeamMemberRole, EmployeeTeam } from "@/types/employee";
 
-const roles = [
+// Define roles that match the TeamMemberRole type
+const roles: TeamMemberRole[] = [
   "Chatters",
   "Creative Director",
   "Manager",
   "Developer",
-  "Editor",
-] as const;
+  "Editor"
+];
 
+// Define teams that match the EmployeeTeam type
 const teams = [
-  { label: "Team A", value: "A" },
-  { label: "Team B", value: "B" },
-  { label: "Team C", value: "C" },
-] as const;
+  { label: "Team A", value: "A" as EmployeeTeam },
+  { label: "Team B", value: "B" as EmployeeTeam },
+  { label: "Team C", value: "C" as EmployeeTeam }
+];
 
 const schema = z.object({
   name: z.string().min(2, { message: "Full Name is required" }),
@@ -32,9 +34,7 @@ const schema = z.object({
   telegram: z.string().optional(),
   phoneNumber: z.string().optional(),
   department: z.string().optional(),
-  roles: z.array(z.enum([
-    "Chatters", "Creative Director", "Manager", "Developer", "Editor",
-  ])).min(1, { message: "Select at least one role" }),
+  roles: z.array(z.enum(["Chatters", "Creative Director", "Manager", "Developer", "Editor"])).min(1, { message: "Select at least one role" }),
   teams: z.array(z.enum(["A", "B", "C"])).min(1, { message: "Select at least one team" }),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ["confirmPassword"],
@@ -242,7 +242,7 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
                 name="roles"
                 control={form.control}
                 render={({ field }) => {
-                  const isChecked = field.value.includes(role as TeamMemberRole);
+                  const isChecked = field.value.includes(role);
                   return (
                     <button
                       type="button"
@@ -255,7 +255,7 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
                       aria-pressed={isChecked}
                       onClick={() =>
                         isChecked
-                          ? field.onChange(field.value.filter((r: string) => r !== role))
+                          ? field.onChange(field.value.filter((r) => r !== role))
                           : field.onChange([...field.value, role])
                       }
                     >
@@ -293,7 +293,7 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
                       aria-pressed={isChecked}
                       onClick={() =>
                         isChecked
-                          ? field.onChange(field.value.filter((t: string) => t !== team.value))
+                          ? field.onChange(field.value.filter((t) => t !== team.value))
                           : field.onChange([...field.value, team.value])
                       }
                     >
