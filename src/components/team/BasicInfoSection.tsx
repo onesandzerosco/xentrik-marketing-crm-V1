@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
+// Props for the direct form approach
 interface Props {
   form: {
     name: string;
@@ -25,7 +26,7 @@ interface Props {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-// For react-hook-form integration
+// Props for react-hook-form integration
 interface FormProps {
   control: Control<TeamMemberFormValues>;
   isCurrentUser: boolean;
