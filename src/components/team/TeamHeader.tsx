@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { 
   Users, 
-  UserPlus, 
   Search,
   SlidersHorizontal,
   X,
@@ -28,7 +27,6 @@ interface TeamHeaderProps {
   filters: TeamFilters;
   onFiltersChange: (filters: TeamFilters) => void;
   onClearFilters: () => void;
-  onAddTeamMemberClick: () => void;
 }
 
 const TeamHeader: React.FC<TeamHeaderProps> = ({
@@ -37,7 +35,6 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
   filters,
   onFiltersChange,
   onClearFilters,
-  onAddTeamMemberClick
 }) => {
   const [searchValue, setSearchValue] = useState(filters.searchQuery);
 
@@ -91,15 +88,6 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
               {memberCount} team members
             </Badge>
           )}
-          
-          <Button 
-            onClick={onAddTeamMemberClick} 
-            size="sm"
-            className="text-black rounded-[15px] px-3 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Team Member
-          </Button>
         </div>
       </div>
       

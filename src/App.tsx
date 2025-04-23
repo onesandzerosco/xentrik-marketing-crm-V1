@@ -19,7 +19,6 @@ import Messages from './pages/Messages';
 import NotFound from './pages/NotFound';
 import UserManagement from './pages/UserManagement';
 import Team from './pages/Team';
-import AddTeamMember from './pages/AddTeamMember';
 import TeamMemberProfile from './pages/TeamMemberProfile';
 import SecureLogins from './pages/SecureLogins';
 import Index from './pages/Index';
@@ -64,7 +63,6 @@ const AppRoutes = () => {
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
       <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-      <Route path="/team/add" element={<ProtectedRoute><AddTeamMember /></ProtectedRoute>} />
       <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />

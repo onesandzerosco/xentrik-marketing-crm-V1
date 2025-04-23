@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
 import { TeamProvider, useTeam } from '@/context/TeamContext';
-import { TeamMember, TeamFilters, TeamMemberFormValues } from '@/types/team';
+import { TeamMember, TeamFilters } from '@/types/team';
 import TeamHeader from '@/components/team/TeamHeader';
 import TeamActiveFilters from '@/components/team/TeamActiveFilters';
 import TeamMembersList from '@/components/team/TeamMembersList';
-import AddTeamMemberModal from '@/components/team/AddTeamMemberModal';
 import EditTeamMemberModal from '@/components/team/EditTeamMemberModal';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,11 +13,9 @@ const TeamContent = () => {
   const { 
     teamMembers, 
     loading, 
-    addTeamMember, 
-    updateTeamMember, 
+    updateTeamMember,
     filterTeamMembers 
   } = useTeam();
-  const { toast } = useToast();
   
   // State for filters
   const [filters, setFilters] = useState<TeamFilters>({
@@ -29,7 +26,6 @@ const TeamContent = () => {
   });
   
   // State for modals
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   
@@ -49,34 +45,6 @@ const TeamContent = () => {
       status: [],
       searchQuery: '',
     });
-  };
-  
-  // Handle adding a new team member
-  const handleAddTeamMember = async (formValues: TeamMemberFormValues) => {
-    try {
-      await addTeamMember({
-        name: formValues.name,
-        email: formValues.email,
-        roles: formValues.roles,
-        status: 'Active',
-        teams: formValues.teams || [],
-        telegram: formValues.telegram,
-        phoneNumber: formValues.phoneNumber,
-        department: formValues.department,
-        profileImage: formValues.profileImage,
-      }, formValues.password);
-      
-      toast({
-        title: "Team member added",
-        description: `${formValues.name} has been added to the team`
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add team member",
-        variant: "destructive"
-      });
-    }
   };
   
   // Handle editing a team member
@@ -99,7 +67,6 @@ const TeamContent = () => {
         filters={filters}
         onFiltersChange={handleFiltersChange}
         onClearFilters={handleClearFilters}
-        onAddTeamMemberClick={() => setAddModalOpen(true)}
       />
       
       <TeamActiveFilters 
@@ -116,12 +83,6 @@ const TeamContent = () => {
           onEditMember={handleEditMember}
         />
       </div>
-      
-      <AddTeamMemberModal 
-        open={addModalOpen}
-        onOpenChange={setAddModalOpen}
-        onAdd={handleAddTeamMember}
-      />
       
       <EditTeamMemberModal 
         teamMember={selectedMember}
