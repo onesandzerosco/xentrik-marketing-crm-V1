@@ -63,6 +63,7 @@ const AppRoutes = () => {
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
       <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+      <Route path="/team/onboard" element={<ProtectedRoute><TeamMemberOnboarding /></ProtectedRoute>} />
       <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
