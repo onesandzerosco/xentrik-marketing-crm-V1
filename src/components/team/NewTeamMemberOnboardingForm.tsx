@@ -5,9 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Save, UserPlus, Mail, Lock, Phone, Telegram, Briefcase, Shield, Building } from "lucide-react";
+import { Save, UserPlus, Mail, Lock, Phone, MessageSquare, Briefcase, Shield, Building } from "lucide-react";
 import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { TeamMemberRole } from "@/types/employee";
 
 const roles = [
   "Chatters",
@@ -15,13 +16,13 @@ const roles = [
   "Manager",
   "Developer",
   "Editor",
-];
+] as const;
 
 const teams = [
   { label: "Team A", value: "A" },
   { label: "Team B", value: "B" },
   { label: "Team C", value: "C" },
-];
+] as const;
 
 const schema = z.object({
   name: z.string().min(2, { message: "Full Name is required" }),
@@ -241,7 +242,7 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
                 name="roles"
                 control={form.control}
                 render={({ field }) => {
-                  const isChecked = field.value.includes(role);
+                  const isChecked = field.value.includes(role as TeamMemberRole);
                   return (
                     <button
                       type="button"
