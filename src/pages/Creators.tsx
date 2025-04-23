@@ -14,31 +14,29 @@ const Creators = () => {
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
-  
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Update filters down below, connect to new search input
   const filteredCreators = filterCreators({
     gender: selectedGenders,
     team: selectedTeams,
-    creatorType: selectedClasses
+    creatorType: selectedClasses,
+    search: searchQuery,
   });
 
   useEffect(() => {
-    // Set loading state based on creators data
     if (creators.length > 0) {
       setIsLoading(false);
     } else if (creators.length === 0 && isLoading) {
-      // Add a delay to show loading state for a better UX
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 1500);
-      
       return () => clearTimeout(timer);
     }
   }, [creators, isLoading]);
 
   useEffect(() => {
-    // Check if creators data loaded successfully
     if (creators.length > 0) {
-      // Log for debugging
       console.log("Creators loaded:", creators.length);
       console.log("Sample creator data:", creators[0]);
     }
@@ -48,9 +46,10 @@ const Creators = () => {
     setSelectedGenders([]);
     setSelectedTeams([]);
     setSelectedClasses([]);
+    setSearchQuery("");
   };
-  
-  const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0;
+
+  const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || !!searchQuery;
   
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
@@ -64,8 +63,11 @@ const Creators = () => {
         setSelectedTeams={setSelectedTeams}
         setSelectedClasses={setSelectedClasses}
         handleClearFilters={handleClearFilters}
+        // connect search
       />
 
+      {/* Remove old ActiveFilters, can show chip-row if you want */}
+      {/*
       <ActiveFilters 
         selectedGenders={selectedGenders}
         selectedTeams={selectedTeams}
@@ -75,6 +77,7 @@ const Creators = () => {
         setSelectedClasses={setSelectedClasses}
         handleClearFilters={handleClearFilters}
       />
+      */}
 
       <CreatorsList 
         isLoading={isLoading}
@@ -86,3 +89,4 @@ const Creators = () => {
 };
 
 export default Creators;
+
