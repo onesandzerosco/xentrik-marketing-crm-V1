@@ -10,18 +10,18 @@ const Creators = () => {
   const { creators, filterCreators } = useCreators();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
+
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Update filters down below, connect to new search input
+  // Pass searchQuery as searchQuery (not search)
   const filteredCreators = filterCreators({
     gender: selectedGenders,
     team: selectedTeams,
     creatorType: selectedClasses,
-    search: searchQuery,
+    searchQuery,
   });
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Creators = () => {
       console.log("Sample creator data:", creators[0]);
     }
   }, [creators]);
-  
+
   const handleClearFilters = () => {
     setSelectedGenders([]);
     setSelectedTeams([]);
@@ -50,7 +50,7 @@ const Creators = () => {
   };
 
   const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || !!searchQuery;
-  
+
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
       <CreatorsHeader 
@@ -68,7 +68,7 @@ const Creators = () => {
       />
 
       {/* Remove old ActiveFilters, can show chip-row if you want */}
-      {/*
+      {/* 
       <ActiveFilters 
         selectedGenders={selectedGenders}
         selectedTeams={selectedTeams}

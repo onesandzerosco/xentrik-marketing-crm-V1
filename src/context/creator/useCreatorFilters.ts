@@ -8,7 +8,7 @@ export const useCreatorFilters = (creators: Creator[]) => {
     team?: string[]; 
     creatorType?: string[]; 
     reviewStatus?: string[];
-    search?: string; 
+    searchQuery?: string; // changed from `search`
   }) => {
     return creators.filter((creator) => {
       let genderMatch = true;
@@ -34,12 +34,12 @@ export const useCreatorFilters = (creators: Creator[]) => {
         reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
       }
       
-      if (filters.search && filters.search.trim() !== '') {
-        const searchLower = filters.search.toLowerCase().trim();
+      if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+        const searchLower = filters.searchQuery.toLowerCase().trim();
         searchMatch = 
           (creator.name?.toLowerCase().includes(searchLower) || false) || 
           (creator.email?.toLowerCase().includes(searchLower) || false) ||
-          (creator.telegram_username?.toLowerCase().includes(searchLower) || false);
+          (creator.telegramUsername?.toLowerCase().includes(searchLower) || false);
       }
 
       return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch && searchMatch;
