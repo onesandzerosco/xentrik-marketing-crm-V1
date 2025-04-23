@@ -1,4 +1,3 @@
-
 import { Creator, EngagementStats } from "../../types";
 
 export interface CreatorContextType {
@@ -9,5 +8,11 @@ export interface CreatorContextType {
   isDeleting: boolean;
   getCreator: (id: string) => Creator | undefined;
   getCreatorStats: (id: string) => EngagementStats | undefined;
-  filterCreators: (filters: { gender?: string[]; team?: string[]; creatorType?: string[]; reviewStatus?: string[] }) => Creator[];
+  filterCreators: (filters: { 
+    gender?: string[]; 
+    team?: string[]; 
+    creatorType?: string[]; 
+    reviewStatus?: string[]; 
+    searchQuery?: string; 
+  }) => Creator[];
 }
