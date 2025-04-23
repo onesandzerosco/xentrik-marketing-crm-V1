@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { 
   Users, 
   SlidersHorizontal,
+  UserPlus,
+  Filter,
+  Plus
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { TeamMemberRole } from '@/types/employee';
 import { TeamFilters } from '@/types/team';
-import { UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface TeamHeaderProps {
@@ -68,49 +69,129 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-4 w-full">
-        <div className="flex-grow max-w-3xl">
+    <div className="mb-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        {/* Left: Icon + Title */}
+        <div className="flex items-center gap-2">
+          <Users className="h-6 w-6 text-yellow-400" />
+          <h1 className="text-3xl font-bold">Team</h1>
+        </div>
+        {/* Member Count + Onboard Button */}
+        <div className="flex gap-3 items-center">
+          <span className="rounded-full bg-secondary text-xs px-3 py-1">
+            {isLoading ? "..." : `${memberCount} members`}
+          </span>
+          <Button 
+            onClick={() => navigate('/team/onboard')}
+            variant="premium" 
+            className="flex items-center gap-2 shadow-premium-yellow hover:shadow-premium-highlight"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Team Member
+          </Button>
+        </div>
+      </div>
+      
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-3 mt-6">
+        {/* Search field */}
+        <div className="relative flex-1">
           <Input
             placeholder="Search by name or email..."
-            className="bg-[#252538] text-white border-none rounded-xl h-12 px-4 text-sm"
+            className="pl-10 h-12 w-full bg-background border-border text-foreground"
             value={searchValue}
             onChange={handleSearchChange}
           />
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
+          </span>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Roles
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Teams
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
-          >
-            Status
-          </Button>
-        </div>
+        {/* Role Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+              <SlidersHorizontal className="h-5 w-5" />
+              Roles
+              {filters.roles.length > 0 && (
+                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{filters.roles.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
+            <DropdownMenuLabel>Filter by role</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {["Admin", "Manager", "Employee"].map((role) => (
+              <DropdownMenuCheckboxItem
+                key={role}
+                checked={filters.roles.includes(role as TeamMemberRole)}
+                onCheckedChange={() => toggleRole(role as TeamMemberRole)}
+              >
+                {role}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         
-        <Button
-          onClick={() => navigate('/team/onboard')}
-          className="bg-[#FFD54F] text-black rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#FFD54F]/90"
-        >
-          <UserPlus className="h-4 w-4" />
-          Add Team Member
-        </Button>
+        {/* Team Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+              <Users className="h-5 w-5" />
+              Teams
+              {filters.teams.length > 0 && (
+                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{filters.teams.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
+            <DropdownMenuLabel>Filter by team</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {["A", "B", "C"].map((team) => (
+              <DropdownMenuCheckboxItem
+                key={team}
+                checked={filters.teams.includes(team as any)}
+                onCheckedChange={() => toggleTeam(team as any)}
+              >
+                Team {team}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Status Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+              <Filter className="h-5 w-5" />
+              Status
+              {filters.status.length > 0 && (
+                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{filters.status.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
+            <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {["Active", "Inactive", "Paused"].map((status) => (
+              <DropdownMenuCheckboxItem
+                key={status}
+                checked={filters.status.includes(status as any)}
+                onCheckedChange={() => toggleStatus(status as any)}
+              >
+                {status}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        {/* Clear button if any filters are active */}
+        {(filters.roles.length > 0 || filters.teams.length > 0 || filters.status.length > 0 || filters.searchQuery) && (
+          <Button variant="ghost" size="sm" className="h-12" onClick={onClearFilters}>
+            <span className="mr-1">Clear</span>
+            <Filter className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

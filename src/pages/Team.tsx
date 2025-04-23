@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { TeamProvider, useTeam } from '@/context/TeamContext';
 import { TeamMember, TeamFilters } from '@/types/team';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
 import TeamHeader from '@/components/team/TeamHeader';
 import TeamActiveFilters from '@/components/team/TeamActiveFilters';
 import TeamMembersList from '@/components/team/TeamMembersList';
@@ -64,25 +62,13 @@ const TeamContent = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <TeamHeader 
-          memberCount={filteredMembers.length}
-          isLoading={loading}
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-        />
-        
-        <Button
-          onClick={() => navigate('/team/onboard')}
-          variant="premium"
-          size="lg"
-          className="gap-2"
-        >
-          <UserPlus className="h-5 w-5" />
-          Add Team Member
-        </Button>
-      </div>
+      <TeamHeader 
+        memberCount={filteredMembers.length}
+        isLoading={loading}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        onClearFilters={handleClearFilters}
+      />
       
       <TeamActiveFilters 
         filters={filters}
