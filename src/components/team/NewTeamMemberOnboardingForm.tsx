@@ -10,14 +10,9 @@ import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { TeamMemberRole, EmployeeTeam } from "@/types/employee";
 
-// Define roles that match the TeamMemberRole type
-const roles: TeamMemberRole[] = [
-  "Chatters",
-  "Creative Director",
-  "Manager",
-  "Developer",
-  "Editor"
-];
+// Define the specific roles we want to use in this form
+const formRoles = ["Chatters", "Creative Director", "Manager", "Developer", "Editor"] as const;
+type FormRole = typeof formRoles[number];
 
 // Define teams that match the EmployeeTeam type
 const teams = [
@@ -34,7 +29,7 @@ const schema = z.object({
   telegram: z.string().optional(),
   phoneNumber: z.string().optional(),
   department: z.string().optional(),
-  roles: z.array(z.enum(["Chatters", "Creative Director", "Manager", "Developer", "Editor"])).min(1, { message: "Select at least one role" }),
+  roles: z.array(z.enum(formRoles)).min(1, { message: "Select at least one role" }),
   teams: z.array(z.enum(["A", "B", "C"])).min(1, { message: "Select at least one team" }),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ["confirmPassword"],
@@ -236,7 +231,7 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
         <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50 space-y-3">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white"><Shield className="w-5 h-5" /> Roles <span className="text-red-500">*</span></h2>
           <div className="flex flex-wrap gap-3">
-            {roles.map(role => (
+            {formRoles.map(role => (
               <Controller
                 key={role}
                 name="roles"
