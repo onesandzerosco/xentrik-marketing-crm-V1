@@ -1,157 +1,116 @@
 
 import React from "react";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Control } from "react-hook-form";
-import { z } from "zod";
+import { Label } from "@/components/ui/label";
 
-// Define the form schema fields we need for this component
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(["Admin", "Manager", "Employee"]),
-  status: z.enum(["Active", "Inactive", "Paused"]),
-  telegram: z.string().optional(),
-  department: z.string().optional(),
-});
-
-interface BasicInfoSectionProps {
-  control: Control<z.infer<typeof formSchema>>;
-  isCurrentUser: boolean;
+interface Props {
+  form: {
+    name: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    telegram: string;
+    phoneNumber: string;
+    department: string;
+  };
+  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
-  control,
-  isCurrentUser,
-}) => {
-  return (
-    <div className="flex-1 space-y-4">
-      <FormField
-        control={control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Full Name</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email Address</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FormField
-          control={control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              {isCurrentUser && (
-                <FormDescription>
-                  You cannot change your own role.
-                </FormDescription>
-              )}
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-                disabled={isCurrentUser}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Manager">Manager</SelectItem>
-                  <SelectItem value="Employee">Employee</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              {isCurrentUser && (
-                <FormDescription>
-                  You cannot change your own status.
-                </FormDescription>
-              )}
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-                disabled={isCurrentUser}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Paused">Paused</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+const BasicInfoSection: React.FC<Props> = ({ form, onInputChange }) => (
+  <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
+    <h2 className="text-xl font-bold mb-6 text-white">Basic Information</h2>
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="name" className="text-white mb-1">Full Name</Label>
+        <Input
+          id="name"
+          name="name"
+          value={form.name}
+          onChange={onInputChange}
+          placeholder="John Doe"
+          className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+          autoFocus
+          required
         />
       </div>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FormField
-          control={control}
-          name="telegram"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telegram Username</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="username (without @)" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      <div>
+        <Label htmlFor="email" className="text-white mb-1">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          value={form.email}
+          onChange={onInputChange}
+          placeholder="john.doe@example.com"
+          className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+          required
         />
-        
-        <FormField
-          control={control}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="password" className="text-white mb-1">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={onInputChange}
+            placeholder="********"
+            className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="confirmPassword" className="text-white mb-1">Confirm Password</Label>
+          <Input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            value={form.confirmPassword}
+            onChange={onInputChange}
+            placeholder="********"
+            className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+            required
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="telegram" className="text-white mb-1">Telegram</Label>
+          <Input
+            id="telegram"
+            name="telegram"
+            value={form.telegram}
+            onChange={onInputChange}
+            placeholder="username"
+            className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+          />
+        </div>
+        <div>
+          <Label htmlFor="phoneNumber" className="text-white mb-1">Phone Number</Label>
+          <Input
+            id="phoneNumber"
+            name="phoneNumber"
+            value={form.phoneNumber}
+            onChange={onInputChange}
+            placeholder="+1234567890"
+            className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
+          />
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="department" className="text-white mb-1">Department</Label>
+        <Input
+          id="department"
           name="department"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Department" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          value={form.department}
+          onChange={onInputChange}
+          placeholder="Marketing"
+          className="bg-[#23233a] text-white border-none placeholder:text-neutral-400"
         />
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 export default BasicInfoSection;
