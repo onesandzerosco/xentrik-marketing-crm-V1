@@ -1,19 +1,18 @@
 
 import React, { useState } from "react";
-import OnboardingFormContainer from "@/components/creators/onboarding/OnboardingFormContainer";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Save } from "lucide-react";
+import OnboardingFormContainer from "@/components/creators/onboarding/OnboardingFormContainer";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/ui/back-button";
 import ProfileImageUploader from "@/components/team/ProfileImageUploader";
+import { Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-// We'll create local simple form state for Team Member
 type Gender = "Male" | "Female" | "Trans";
 type Team = "A Team" | "B Team" | "C Team";
 type Role = "Admin" | "Manager" | "Employee";
 
-interface TeamMemberFormState {
+interface AddTeamMemberForm {
   name: string;
   email: string;
   gender: Gender;
@@ -25,7 +24,7 @@ interface TeamMemberFormState {
   department: string;
 }
 
-const defaultFormState: TeamMemberFormState = {
+const defaultForm: AddTeamMemberForm = {
   name: "",
   email: "",
   gender: "Male",
@@ -37,14 +36,15 @@ const defaultFormState: TeamMemberFormState = {
   department: "",
 };
 
-const AddTeamMember = () => {
-  const { toast } = useToast();
+const AddTeamMember: React.FC = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState<TeamMemberFormState>(defaultFormState);
+  const { toast } = useToast();
+  const [form, setForm] = useState<AddTeamMemberForm>(defaultForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handlers
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -58,7 +58,7 @@ const AddTeamMember = () => {
     try {
       // TODO: Integrate actual submit logic (e.g. Supabase)
       toast({
-        title: "Team member added",
+        title: "Team member added!",
         description: `${form.name} has been added to the team.`,
       });
       navigate("/team");
@@ -76,7 +76,7 @@ const AddTeamMember = () => {
   return (
     <div className="min-h-screen bg-[#141428] p-6">
       <OnboardingFormContainer>
-        {/* Page Header */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <BackButton to="/team" />
@@ -93,9 +93,9 @@ const AddTeamMember = () => {
           </Button>
         </div>
 
-        {/* Main Form */}
-        <form onSubmit={handleSubmit}>
-          {/* Info & Profile image side-by-side */}
+        {/* Main form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic Info & Profile image side-by-side */}
           <div className="flex flex-col md:flex-row gap-6 mb-6">
             {/* Basic Info */}
             <div className="flex-1 bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
@@ -112,6 +112,7 @@ const AddTeamMember = () => {
                     onChange={handleChange}
                     className="w-full bg-[#232347] rounded py-2 px-4 border border-[#373757] text-white"
                     placeholder="Enter team member name"
+                    required
                   />
                 </div>
                 {/* Email */}
@@ -126,6 +127,7 @@ const AddTeamMember = () => {
                     onChange={handleChange}
                     className="w-full bg-[#232347] rounded py-2 px-4 border border-[#373757] text-white"
                     placeholder="name@example.com"
+                    required
                   />
                 </div>
                 {/* Gender */}
@@ -189,7 +191,7 @@ const AddTeamMember = () => {
                 </div>
               </div>
             </div>
-            {/* Profile image */}
+            {/* Profile Image */}
             <div className="flex flex-col items-center justify-center min-w-[280px] bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
               <ProfileImageUploader
                 value={form.profileImage}
