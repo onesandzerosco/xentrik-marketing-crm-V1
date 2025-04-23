@@ -20,6 +20,7 @@ import NotFound from './pages/NotFound';
 import UserManagement from './pages/UserManagement';
 import Team from './pages/Team';
 import TeamMemberProfile from './pages/TeamMemberProfile';
+import TeamMemberOnboarding from './pages/TeamMemberOnboarding';
 import SecureLogins from './pages/SecureLogins';
 import Index from './pages/Index';
 import ProtectedRoute from './components/auth/ProtectedRoute';

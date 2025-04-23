@@ -35,7 +35,13 @@ const OnboardingTeamMemberForm = () => {
       // Generate a random password for the new team member
       const tempPassword = Math.random().toString(36).slice(-8);
       
-      await addTeamMember(data, tempPassword);
+      // Convert single role string to an array for the API
+      const teamMemberData = {
+        ...data,
+        roles: [data.role], // Convert single role to array for API
+      };
+      
+      await addTeamMember(teamMemberData, tempPassword);
       
       toast({
         title: "Success",
