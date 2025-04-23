@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,11 +9,9 @@ import { Form } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { TeamMemberRole, EmployeeTeam } from "@/types/employee";
 
-// Define the specific roles we want to use in this form
 const formRoles = ["Chatters", "Creative Director", "Manager", "Developer", "Editor"] as const;
 type FormRole = typeof formRoles[number];
 
-// Define teams that match the EmployeeTeam type
 const teams = [
   { label: "Team A", value: "A" as EmployeeTeam },
   { label: "Team B", value: "B" as EmployeeTeam },
@@ -64,12 +61,10 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
     defaultValues,
   });
 
-  // For preview, just intercept submit if no onSubmit provided
   const handleFormSubmit = form.handleSubmit((values) => {
     if (onSubmit) {
       onSubmit(values);
     } else {
-      // Demo feedback
       alert("Submitted! " + JSON.stringify(values, null, 2));
     }
   });
@@ -81,9 +76,6 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
         className="space-y-8 max-w-2xl mx-auto"
         autoComplete="off"
       >
-        <h1 className="flex items-center gap-2 text-2xl md:text-3xl font-bold text-white">
-          <UserPlus className="w-7 h-7" /> Add New Team Member
-        </h1>
         <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
@@ -172,7 +164,6 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
               )}
             </div>
           </div>
-          {/* Contact + Department */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="text-white font-medium" htmlFor="telegram">
@@ -227,7 +218,6 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
             />
           </div>
         </div>
-        {/* Role selection */}
         <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50 space-y-3">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white"><Shield className="w-5 h-5" /> Roles <span className="text-red-500">*</span></h2>
           <div className="flex flex-wrap gap-3">
@@ -265,7 +255,6 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
             <span className="text-xs text-red-500">{form.formState.errors.roles.message}</span>
           )}
         </div>
-        {/* Teams selection */}
         <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50 space-y-3">
           <h2 className="text-lg font-bold flex items-center gap-2 text-white"><Building className="w-5 h-5" /> Teams <span className="text-red-500">*</span></h2>
           <div className="flex flex-wrap gap-3">
@@ -303,7 +292,6 @@ const NewTeamMemberOnboardingForm: React.FC<Props> = ({
             <span className="text-xs text-red-500">{form.formState.errors.teams.message}</span>
           )}
         </div>
-        {/* Save Button */}
         <div className="flex justify-end mt-6">
           <Button
             type="submit"
