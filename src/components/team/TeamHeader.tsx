@@ -2,10 +2,7 @@
 import React, { useState } from 'react';
 import { 
   Users, 
-  Search,
   SlidersHorizontal,
-  X,
-  AlertCircle
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +17,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { TeamMemberRole } from '@/types/employee';
 import { TeamFilters } from '@/types/team';
+import { UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface TeamHeaderProps {
   memberCount: number;
@@ -36,6 +35,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
   onFiltersChange,
   onClearFilters,
 }) => {
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState(filters.searchQuery);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,145 +67,50 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
     onFiltersChange({ ...filters, status: newStatus });
   };
 
-  const hasActiveFilters = filters.roles.length > 0 || 
-                          filters.teams.length > 0 || 
-                          filters.status.length > 0 || 
-                          filters.searchQuery !== '';
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-6 w-6 text-primary" />
-          <h1 className="text-3xl font-bold">Team Management</h1>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {isLoading ? (
-            <div className="text-sm text-muted-foreground animate-pulse">Loading...</div>
-          ) : (
-            <Badge variant="outline" className="bg-primary/10">
-              {memberCount} team members
-            </Badge>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4 w-full">
+        <div className="flex-grow max-w-3xl">
           <Input
             placeholder="Search by name or email..."
-            className="pl-10"
+            className="bg-[#252538] text-white border-none rounded-xl h-12 px-4 text-sm"
             value={searchValue}
             onChange={handleSearchChange}
           />
-          {searchValue && (
-            <button 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2"
-              onClick={() => {
-                setSearchValue('');
-                onFiltersChange({ ...filters, searchQuery: '' });
-              }}
-            >
-              <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-            </button>
-          )}
         </div>
         
-        <div className="flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <SlidersHorizontal className="h-4 w-4" />
-                Roles
-                {filters.roles.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {filters.roles.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Filter by role</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {["Chatters", "Creative Director", "Manager", "Developer", "Editor"].map((role) => (
-                <DropdownMenuCheckboxItem
-                  key={role}
-                  checked={filters.roles.includes(role as TeamMemberRole)}
-                  onCheckedChange={() => toggleRole(role as TeamMemberRole)}
-                >
-                  {role}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Roles
+          </Button>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Users className="h-4 w-4" />
-                Teams
-                {filters.teams.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {filters.teams.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by team</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {["A", "B", "C"].map((team) => (
-                <DropdownMenuCheckboxItem
-                  key={team}
-                  checked={filters.teams.includes(team as "A" | "B" | "C")}
-                  onCheckedChange={() => toggleTeam(team as "A" | "B" | "C")}
-                >
-                  Team {team}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button 
+            variant="outline" 
+            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Teams
+          </Button>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Status
-                {filters.status.length > 0 && (
-                  <Badge variant="secondary" className="ml-1">
-                    {filters.status.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {["Active", "Inactive", "Paused"].map((status) => (
-                <DropdownMenuCheckboxItem
-                  key={status}
-                  checked={filters.status.includes(status as "Active" | "Inactive" | "Paused")}
-                  onCheckedChange={() => toggleStatus(status as "Active" | "Inactive" | "Paused")}
-                >
-                  {status}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onClearFilters}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            className="bg-[#252538] text-white border-none rounded-xl px-4 py-2 text-sm flex items-center gap-2"
+          >
+            Status
+          </Button>
         </div>
+        
+        <Button
+          onClick={() => navigate('/team/onboard')}
+          className="bg-[#FFD54F] text-black rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-[#FFD54F]/90"
+        >
+          <UserPlus className="h-4 w-4" />
+          Add Team Member
+        </Button>
       </div>
     </div>
   );
