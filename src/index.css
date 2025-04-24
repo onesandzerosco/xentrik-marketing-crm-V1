@@ -33,6 +33,12 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 20% 18%;
     --sidebar-ring: 54 100% 60%;      /* Banana yellow ring */
+    
+    /* Premium dark theme specific variables */
+    --premium-dark-bg: #141428;
+    --premium-panel-bg: #1a1a33;
+    --premium-border: #252538;
+    --premium-yellow-gradient: linear-gradient(to right, #f5d020, #f5a320);
   }
 
   * {

@@ -5,6 +5,12 @@ textarea,
 select {
   background-color: hsl(var(--secondary)) !important;
   color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Fix for select elements */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
 }
 
 /* Fix for popover menus that might have white backgrounds */
@@ -24,3 +30,23 @@ select {
   border: 1px solid hsl(var(--border));
 }
 
+/* Premium specific styling */
+.premium-input {
+  background-color: var(--premium-panel-bg) !important;
+  border-color: var(--premium-border) !important;
+}
+
+.premium-select {
+  background-color: var(--premium-panel-bg) !important;
+  border-color: var(--premium-border) !important;
+}
+
+.premium-checkbox {
+  border-color: var(--premium-border) !important;
+}
+
+.premium-panel {
+  background-color: var(--premium-panel-bg);
+  border: 1px solid var(--premium-border);
+  border-radius: 0.75rem;
+}

@@ -72,10 +72,11 @@ const TeamMemberEdit = () => {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      // Cast roles to TeamMemberRole[] to fix the type error
+      // Fix the type conversion for both roles and teams properties
       await updateTeamMember(teamMember.id, {
         ...values,
         roles: values.roles as unknown as TeamMemberRole[],
+        teams: values.teams as unknown as ("A" | "B" | "C")[]
       });
       
       toast({
@@ -196,7 +197,7 @@ const TeamMemberEdit = () => {
                           disabled={isCurrentUser}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-[#1a1a33] border-[#252538]">
                               <SelectValue placeholder="Select status" />
                             </SelectTrigger>
                           </FormControl>
@@ -218,7 +219,7 @@ const TeamMemberEdit = () => {
                         <FormItem>
                           <FormLabel>Telegram</FormLabel>
                           <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input placeholder="username" {...field} className="bg-[#1a1a33] border-[#252538]" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -231,7 +232,7 @@ const TeamMemberEdit = () => {
                         <FormItem>
                           <FormLabel>Phone Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="+1234567890" {...field} />
+                            <Input placeholder="+1234567890" {...field} className="bg-[#1a1a33] border-[#252538]" />
                           </FormControl>
                         </FormItem>
                       )}
@@ -245,7 +246,7 @@ const TeamMemberEdit = () => {
                       <FormItem>
                         <FormLabel>Department</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter department" {...field} />
+                          <Input placeholder="Enter department" {...field} className="bg-[#1a1a33] border-[#252538]" />
                         </FormControl>
                       </FormItem>
                     )}
@@ -265,6 +266,7 @@ const TeamMemberEdit = () => {
                         id={`role-${role}`} 
                         checked={form.watch("roles")?.includes(role)} 
                         onCheckedChange={() => handleRoleToggle(role)}
+                        className="border-[#252538] data-[state=checked]:bg-gradient-premium-yellow data-[state=checked]:text-black"
                       />
                       <label
                         htmlFor={`role-${role}`}
@@ -287,6 +289,7 @@ const TeamMemberEdit = () => {
                         id={`team-${team}`} 
                         checked={form.watch("teams")?.includes(team)} 
                         onCheckedChange={() => handleTeamToggle(team)}
+                        className="border-[#252538] data-[state=checked]:bg-gradient-premium-yellow data-[state=checked]:text-black"
                       />
                       <label
                         htmlFor={`team-${team}`}
@@ -298,8 +301,6 @@ const TeamMemberEdit = () => {
                   ))}
                 </div>
               </div>
-              
-              {/* Creator assignments could go here if needed */}
             </div>
           </div>
 
@@ -309,6 +310,7 @@ const TeamMemberEdit = () => {
               type="button"
               variant="outline"
               onClick={() => navigate(`/team/${teamMember.id}`)}
+              className="border-[#252538] hover:bg-[#252538]/20"
             >
               Cancel
             </Button>
