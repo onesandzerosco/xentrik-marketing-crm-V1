@@ -6,15 +6,35 @@ import { useAuth } from '@/context/AuthContext';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { BackButton } from '@/components/ui/back-button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import ProfileImageSection from '@/components/team/ProfileImageSection';
-import BasicInfoSection from '@/components/team/BasicInfoSection';
-import TeamAssignmentSection from '@/components/team/TeamAssignmentSection';
-import CreatorsAssignmentSection from '@/components/team/CreatorsAssignmentSection';
-import { teamMemberFormSchema } from '@/schemas/teamMemberSchema';
 import { useToast } from '@/hooks/use-toast';
+
+const teamMemberFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  status: z.enum(["Active", "Inactive", "Paused"]),
+  telegram: z.string().optional(),
+  department: z.string().optional(),
+  profileImage: z.string().optional(),
+  teams: z.array(z.string()).default([]),
+  role: z.enum(["Admin", "Manager", "Employee"]).optional(),
+  roles: z.array(z.string()).default([]),
+  phoneNumber: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof teamMemberFormSchema>;
 
 const TeamMemberEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +46,7 @@ const TeamMemberEdit = () => {
   const teamMember = id ? teamMembers.find(member => member.id === id) : null;
   const isCurrentUser = user?.id === id;
 
-  const form = useForm<z.infer<typeof teamMemberFormSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(teamMemberFormSchema),
     defaultValues: {
       name: teamMember?.name || '',
@@ -49,7 +69,7 @@ const TeamMemberEdit = () => {
     );
   }
 
-  const handleSubmit = async (values: z.infer<typeof teamMemberFormSchema>) => {
+  const handleSubmit = async (values: FormValues) => {
     try {
       await updateTeamMember(teamMember.id, values);
       toast({
@@ -64,6 +84,36 @@ const TeamMemberEdit = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Available roles
+  const availableRoles = [
+    "Manager",
+    "Creative Director",
+    "Developer",
+    "Editor",
+    "Chatters"
+  ];
+
+  // Team options
+  const teamOptions = ["A", "B", "C"];
+
+  // Handle role toggle
+  const handleRoleToggle = (role: string) => {
+    const currentRoles = form.getValues("roles") || [];
+    const updatedRoles = currentRoles.includes(role)
+      ? currentRoles.filter(r => r !== role)
+      : [...currentRoles, role];
+    form.setValue("roles", updatedRoles);
+  };
+
+  // Handle team toggle
+  const handleTeamToggle = (team: string) => {
+    const currentTeams = form.getValues("teams") || [];
+    const updatedTeams = currentTeams.includes(team)
+      ? currentTeams.filter(t => t !== team)
+      : [...currentTeams, team];
+    form.setValue("teams", updatedTeams);
   };
 
   return (
@@ -83,43 +133,171 @@ const TeamMemberEdit = () => {
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <ProfileImageSection 
-                profileImage={form.watch("profileImage") || ""}
-                name={form.watch("name") || teamMember.name}
-                handleProfileImageChange={(url) => form.setValue("profileImage", url)}
-              />
+              {/* Profile Image */}
+              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+                <h2 className="text-xl font-semibold mb-4">Profile Image</h2>
+                <ProfileImageSection 
+                  profileImage={form.watch("profileImage") || ""}
+                  name={form.watch("name") || teamMember.name}
+                  handleProfileImageChange={(url) => form.setValue("profileImage", url)}
+                />
+              </div>
               
-              <BasicInfoSection 
-                control={form.control}
-                isCurrentUser={isCurrentUser}
-              />
+              {/* Basic Info */}
+              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+                <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter name" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Enter email" 
+                            {...field} 
+                            disabled={isCurrentUser}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={isCurrentUser}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Inactive">Inactive</SelectItem>
+                            <SelectItem value="Paused">Paused</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="telegram"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telegram</FormLabel>
+                          <FormControl>
+                            <Input placeholder="username" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+1234567890" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter department" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
-              <TeamAssignmentSection 
-                selectedTeams={form.watch("teams") || []}
-                toggleTeam={(team) => {
-                  const currentTeams = form.getValues("teams") || [];
-                  const newTeams = currentTeams.includes(team)
-                    ? currentTeams.filter(t => t !== team)
-                    : [...currentTeams, team];
-                  form.setValue("teams", newTeams);
-                }}
-              />
-
-              <CreatorsAssignmentSection 
-                selectedCreators={form.watch("assignedCreators") || []}
-                toggleCreator={(creatorId) => {
-                  const currentCreators = form.getValues("assignedCreators") || [];
-                  const newCreators = currentCreators.includes(creatorId)
-                    ? currentCreators.filter(id => id !== creatorId)
-                    : [...currentCreators, creatorId];
-                  form.setValue("assignedCreators", newCreators);
-                }}
-              />
+              {/* Roles */}
+              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+                <h2 className="text-xl font-semibold mb-4">Roles</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {availableRoles.map((role) => (
+                    <div key={role} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`role-${role}`} 
+                        checked={form.watch("roles")?.includes(role)} 
+                        onCheckedChange={() => handleRoleToggle(role)}
+                      />
+                      <label
+                        htmlFor={`role-${role}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {role}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Teams */}
+              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+                <h2 className="text-xl font-semibold mb-4">Teams</h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {teamOptions.map((team) => (
+                    <div key={team} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`team-${team}`} 
+                        checked={form.watch("teams")?.includes(team)} 
+                        onCheckedChange={() => handleTeamToggle(team)}
+                      />
+                      <label
+                        htmlFor={`team-${team}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Team {team}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Creator assignments could go here if needed */}
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex justify-end gap-4">
             <Button
               type="button"
