@@ -2,9 +2,10 @@
 import React from "react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils";
-import { ButtonProps } from "./button";
+import type { ButtonProps as ShadcnButtonProps } from "./button";
 
-export interface PremiumButtonProps extends ButtonProps {
+// We need to use the proper ButtonProps from the Button component
+export interface PremiumButtonProps extends Omit<ShadcnButtonProps, "variant"> {
   variant?: "default" | "outline" | "destructive";
 }
 

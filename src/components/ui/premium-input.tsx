@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Input, InputProps } from "./input";
+import { Input } from "./input";
 import { cn } from "@/lib/utils";
 
-export interface PremiumInputProps extends InputProps {}
+export interface PremiumInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 export const PremiumInput: React.FC<PremiumInputProps> = ({ 
   className, 

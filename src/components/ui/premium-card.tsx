@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardProps } from "./card";
+import { Card, CardContent, CardFooter, CardHeader } from "./card";
 import { cn } from "@/lib/utils";
 
 interface PremiumCardProps extends React.HTMLAttributes<HTMLDivElement> {
