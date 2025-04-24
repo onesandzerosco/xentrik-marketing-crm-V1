@@ -3,28 +3,17 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTeam } from '@/context/TeamContext';
 import { useAuth } from '@/context/AuthContext';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { BackButton } from '@/components/ui/back-button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import ProfileImageSection from '@/components/team/ProfileImageSection';
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberRole } from '@/types/employee';
+import TeamMemberEditHeader from '@/components/team/TeamMemberEditHeader';
+import TeamMemberEditForm from '@/components/team/TeamMemberEditForm';
+import { z } from 'zod';
 
-const teamMemberFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
+const formSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
   status: z.enum(["Active", "Inactive", "Paused"]),
   telegram: z.string().optional(),
   department: z.string().optional(),
@@ -35,7 +24,7 @@ const teamMemberFormSchema = z.object({
   phoneNumber: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof teamMemberFormSchema>;
+type FormValues = z.infer<typeof formSchema>;
 
 const TeamMemberEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,7 +37,7 @@ const TeamMemberEdit = () => {
   const isCurrentUser = user?.id === id;
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(teamMemberFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: teamMember?.name || '',
       email: teamMember?.email || '',
@@ -72,7 +61,6 @@ const TeamMemberEdit = () => {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      // Fix the type conversion for both roles and teams properties
       await updateTeamMember(teamMember.id, {
         ...values,
         roles: values.roles as unknown as TeamMemberRole[],
@@ -93,238 +81,23 @@ const TeamMemberEdit = () => {
     }
   };
 
-  // Available roles - make sure they match TeamMemberRole type
-  const availableRoles = [
-    "Manager",
-    "Creative Director",
-    "Developer",
-    "Editor",
-    "Chatters"
-  ];
-
-  // Team options
-  const teamOptions = ["A", "B", "C"];
-
-  // Handle role toggle
-  const handleRoleToggle = (role: string) => {
-    const currentRoles = form.getValues("roles") || [];
-    const updatedRoles = currentRoles.includes(role)
-      ? currentRoles.filter(r => r !== role)
-      : [...currentRoles, role];
-    form.setValue("roles", updatedRoles);
-  };
-
-  // Handle team toggle
-  const handleTeamToggle = (team: string) => {
-    const currentTeams = form.getValues("teams") || [];
-    const updatedTeams = currentTeams.includes(team)
-      ? currentTeams.filter(t => t !== team)
-      : [...currentTeams, team];
-    form.setValue("teams", updatedTeams);
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-6">
-        <BackButton to={`/team/${teamMember.id}`} />
-        <div>
-          <h1 className="text-2xl font-bold">Edit Team Member</h1>
-          <p className="text-sm text-muted-foreground">
-            Update information for {teamMember.name}
-            {isCurrentUser && " (me)"}
-          </p>
-        </div>
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              {/* Profile Image */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <h2 className="text-xl font-semibold mb-4">Profile Image</h2>
-                <ProfileImageSection 
-                  profileImage={form.watch("profileImage") || ""}
-                  name={form.watch("name") || teamMember.name}
-                  handleProfileImageChange={(url) => form.setValue("profileImage", url)}
-                />
-              </div>
-              
-              {/* Basic Info */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter name" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="email" 
-                            placeholder="Enter email" 
-                            {...field} 
-                            disabled={isCurrentUser}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                          disabled={isCurrentUser}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="bg-[#1a1a33] border-[#252538]">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Inactive">Inactive</SelectItem>
-                            <SelectItem value="Paused">Paused</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="telegram"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telegram</FormLabel>
-                          <FormControl>
-                            <Input placeholder="username" {...field} className="bg-[#1a1a33] border-[#252538]" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phoneNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+1234567890" {...field} className="bg-[#1a1a33] border-[#252538]" />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="department"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Department</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter department" {...field} className="bg-[#1a1a33] border-[#252538]" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Roles */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <h2 className="text-xl font-semibold mb-4">Roles</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {availableRoles.map((role) => (
-                    <div key={role} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`role-${role}`} 
-                        checked={form.watch("roles")?.includes(role)} 
-                        onCheckedChange={() => handleRoleToggle(role)}
-                        className="border-[#252538] data-[state=checked]:bg-gradient-premium-yellow data-[state=checked]:text-black"
-                      />
-                      <label
-                        htmlFor={`role-${role}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {role}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Teams */}
-              <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-                <h2 className="text-xl font-semibold mb-4">Teams</h2>
-                <div className="grid grid-cols-3 gap-3">
-                  {teamOptions.map((team) => (
-                    <div key={team} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`team-${team}`} 
-                        checked={form.watch("teams")?.includes(team)} 
-                        onCheckedChange={() => handleTeamToggle(team)}
-                        className="border-[#252538] data-[state=checked]:bg-gradient-premium-yellow data-[state=checked]:text-black"
-                      />
-                      <label
-                        htmlFor={`team-${team}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        Team {team}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/team/${teamMember.id}`)}
-              className="border-[#252538] hover:bg-[#252538]/20"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="text-black rounded-[15px] px-4 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
-            >
-              Save Changes
-            </Button>
-          </div>
-        </form>
-      </Form>
+      <TeamMemberEditHeader
+        memberName={teamMember.name}
+        isCurrentUser={isCurrentUser}
+        onSave={form.handleSubmit(handleSubmit)}
+      />
+      
+      <TeamMemberEditForm
+        form={form}
+        onSubmit={handleSubmit}
+        isCurrentUser={isCurrentUser}
+        teamMember={teamMember}
+      />
     </div>
   );
 };
 
 export default TeamMemberEdit;
+
