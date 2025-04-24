@@ -1,43 +1,64 @@
 
 import React from 'react';
-import MessageController, { useMessageController } from '@/components/messages/MessageController';
-import MessageHeader from '@/components/messages/MessageHeader';
-import MessageContent from '@/components/messages/MessageContent';
-import FileSharing from '@/components/messages/FileSharing';
+import { useToast } from '@/hooks/use-toast';
+import WebhookMessageForm from '@/components/messages/WebhookMessageForm';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Messages: React.FC = () => {
-  const messageController = useMessageController();
-  const selectedCreator = messageController.selectedRecipients[0];
+  const { toast } = useToast();
   
+  const handleWebhookSend = async (recipients: { id: string; type: 'creator' | 'team' }[], message: string) => {
+    if (!message.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Replace with your n8n webhook URL
+      const webhookUrl = process.env.N8N_WEBHOOK_URL || '';
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          recipients,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send message');
+
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
+      });
+    } catch (error) {
+      console.error('Error sending webhook:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="flex min-h-screen w-full bg-secondary/5">
-      <div className="flex-grow flex flex-col p-6 w-full max-w-[1400px] mx-auto gap-6">
-        <MessageHeader />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div>
-            <MessageContent 
-              recipients={messageController.recipients}
-              selectedRecipientIds={messageController.selectedRecipientIds}
-              selectedRecipients={messageController.selectedRecipients}
-              message={messageController.message}
-              searchTerm={messageController.searchTerm}
-              isLoading={messageController.isLoading}
-              selectedTags={messageController.selectedTags}
-              handleSelectRecipient={messageController.handleSelectRecipient}
-              handleRemoveRecipient={messageController.handleRemoveRecipient}
-              handleSendMessage={messageController.handleSendMessage}
-              setMessage={messageController.setMessage}
-              setSearchTerm={messageController.setSearchTerm}
-              setSelectedTags={messageController.setSelectedTags}
-            />
-            
-            {selectedCreator && (
-              <FileSharing creatorId={selectedCreator.id} />
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto p-6">
+      <Card className="max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle>Send Messages</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WebhookMessageForm onSend={handleWebhookSend} />
+        </CardContent>
+      </Card>
     </div>
   );
 };
