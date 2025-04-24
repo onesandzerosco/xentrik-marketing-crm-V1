@@ -23,6 +23,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@/components/ui/avatar';
+import { useAuth } from '@/context/AuthContext';
 
 interface TeamMemberCardProps {
   teamMember: TeamMember;
@@ -34,6 +35,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   onEditClick
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const getInitials = (name: string) => {
     return name
@@ -52,6 +54,8 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       default: return 'bg-gray-500';
     }
   };
+
+  const isCurrentUser = user?.id === teamMember.id;
 
   return (
     <Card className="overflow-hidden flex flex-col h-full rounded-lg border border-[#333333] bg-premium-card hover:bg-premium-highlight shadow-md">
@@ -90,7 +94,10 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
               {getInitials(teamMember.name)}
             </AvatarFallback>
           </Avatar>
-          <h3 className="text-xl font-semibold">{teamMember.name}</h3>
+          <h3 className="text-xl font-semibold">
+            {teamMember.name}
+            {isCurrentUser && <span className="ml-2 text-muted-foreground text-sm font-normal">(me)</span>}
+          </h3>
           <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
             <Mail className="h-3.5 w-3.5" />
             <span>{teamMember.email}</span>
