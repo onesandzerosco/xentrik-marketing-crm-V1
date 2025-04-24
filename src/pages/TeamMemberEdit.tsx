@@ -62,7 +62,7 @@ const TeamMemberEdit = () => {
       await updateTeamMember(teamMember.id, {
         ...values,
         roles: values.roles as unknown as TeamMemberRole[],
-        teams: values.teams as ("A" | "B" | "C")[]
+        teams: values.teams
       });
       
       toast({
