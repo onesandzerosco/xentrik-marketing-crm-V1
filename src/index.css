@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -304,14 +303,14 @@
   /* Premium button styles with improved transitions and corners */
   .premium-button {
     @apply bg-gradient-premium-yellow text-black font-medium rounded-xl shadow-premium-yellow 
-    hover:shadow-premium-highlight hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:opacity-90;
+    hover:shadow-premium-highlight transition-all duration-300 transform hover:-translate-y-1 hover:opacity-90;
   }
   
   .premium-button-outline {
     @apply border border-brand-yellow/50 text-brand-yellow rounded-xl 
     hover:bg-brand-yellow/10 transition-all duration-300 hover:opacity-90;
   }
-  
+
   /* New premium navigation styles with improved hover effects */
   .premium-nav-item {
     @apply flex items-center gap-3 rounded-xl px-3 py-3 text-muted-foreground transition-all duration-300 hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:opacity-90;
