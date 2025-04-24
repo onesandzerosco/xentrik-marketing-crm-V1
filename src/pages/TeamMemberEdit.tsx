@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import ProfileImageSection from '@/components/team/ProfileImageSection';
 import { useToast } from '@/hooks/use-toast';
+import { TeamMemberRole } from '@/types/employee';
 
 const teamMemberFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -71,7 +72,12 @@ const TeamMemberEdit = () => {
 
   const handleSubmit = async (values: FormValues) => {
     try {
-      await updateTeamMember(teamMember.id, values);
+      // Cast roles to TeamMemberRole[] to fix the type error
+      await updateTeamMember(teamMember.id, {
+        ...values,
+        roles: values.roles as unknown as TeamMemberRole[],
+      });
+      
       toast({
         title: "Success",
         description: "Team member updated successfully",
@@ -86,7 +92,7 @@ const TeamMemberEdit = () => {
     }
   };
 
-  // Available roles
+  // Available roles - make sure they match TeamMemberRole type
   const availableRoles = [
     "Manager",
     "Creative Director",
