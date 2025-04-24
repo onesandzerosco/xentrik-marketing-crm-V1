@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +26,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ensureStorageBucket } from "./utils/setupStorage";
 import SharedFiles from './pages/SharedFiles';
 import CreatorFiles from './pages/CreatorFiles';
+import TeamMemberEdit from './pages/TeamMemberEdit';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -66,6 +66,7 @@ const AppRoutes = () => {
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
       <Route path="/team/onboard" element={<ProtectedRoute><TeamMemberOnboarding /></ProtectedRoute>} />
       <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
+      <Route path="/team/:id/edit" element={<ProtectedRoute><TeamMemberEdit /></ProtectedRoute>} />
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />

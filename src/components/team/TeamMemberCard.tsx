@@ -158,7 +158,7 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           <Button 
             variant="ghost" 
             className="rounded-none py-3 text-primary/80 hover:text-primary hover:bg-background/10"
-            onClick={onEditClick}
+            onClick={() => navigate(`/team/${teamMember.id}/edit`)}
           >
             <Pencil className="h-4 w-4 mr-2" />
             Edit

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -26,7 +25,6 @@ import {
   AvatarFallback,
 } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import EditTeamMemberModal from "@/components/team/EditTeamMemberModal";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -45,12 +43,11 @@ type FormValues = z.infer<typeof formSchema>;
 const TeamMemberProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { teamMembers, loading, updateTeamMember } = useTeam();
+  const { teamMembers, loading } = useTeam();
   const { toast } = useToast();
   const { user } = useAuth();
   
   const [teamMember, setTeamMember] = useState<TeamMember | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -254,7 +251,7 @@ const TeamMemberProfile = () => {
           
           <CardFooter>
             <Button 
-              onClick={() => setEditModalOpen(true)}
+              onClick={() => navigate(`/team/${teamMember.id}/edit`)}
               className="w-full text-black rounded-[15px] px-4 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
             >
               Edit Profile
@@ -279,14 +276,6 @@ const TeamMemberProfile = () => {
           </CardContent>
         </Card>
       </div>
-      
-      {/* Edit Modal */}
-      <EditTeamMemberModal 
-        teamMember={teamMember}
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        onUpdate={updateTeamMember}
-      />
     </div>
   );
 };
