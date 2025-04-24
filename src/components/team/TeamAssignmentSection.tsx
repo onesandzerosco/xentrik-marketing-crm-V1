@@ -2,14 +2,13 @@
 import React from 'react';
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 import { EmployeeTeam } from "@/types/employee";
+import { FormValues } from './TeamMemberEditForm';
 
 // Define two different interfaces for different usage contexts
 interface TeamAssignmentFormProps {
-  control: Control<TeamMemberFormValues>;
+  control: Control<FormValues>;
   selectedTeams?: never;
   toggleTeam?: never;
 }
@@ -44,11 +43,11 @@ const TeamAssignmentSection: React.FC<TeamAssignmentSectionProps> = (props) => {
                     <div key={team} className="flex items-center space-x-2">
                       <Checkbox 
                         id={`team-${team}`} 
-                        checked={field.value?.includes(team as any)} 
+                        checked={field.value?.includes(team as EmployeeTeam)} 
                         onCheckedChange={(checked) => {
                           const currentValue = field.value || [];
                           if (checked) {
-                            field.onChange([...currentValue, team]);
+                            field.onChange([...currentValue, team as EmployeeTeam]);
                           } else {
                             field.onChange(currentValue.filter(val => val !== team));
                           }

@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberRole } from '@/types/employee';
 import TeamMemberEditHeader from '@/components/team/TeamMemberEditHeader';
-import TeamMemberEditForm from '@/components/team/TeamMemberEditForm';
+import TeamMemberEditForm, { FormValues } from '@/components/team/TeamMemberEditForm';
 import { z } from 'zod';
 
 const formSchema = z.object({
@@ -18,13 +18,11 @@ const formSchema = z.object({
   telegram: z.string().optional(),
   department: z.string().optional(),
   profileImage: z.string().optional(),
-  teams: z.array(z.string()).default([]),
+  teams: z.array(z.enum(["A", "B", "C"])).default([]),
   role: z.enum(["Admin", "Manager", "Employee"]).optional(),
   roles: z.array(z.string()).default([]),
   phoneNumber: z.string().optional(),
 });
-
-type FormValues = z.infer<typeof formSchema>;
 
 const TeamMemberEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,7 +41,7 @@ const TeamMemberEdit = () => {
       email: teamMember?.email || '',
       roles: teamMember?.roles || [],
       status: teamMember?.status || 'Active',
-      teams: teamMember?.teams || [],
+      teams: teamMember?.teams as ("A" | "B" | "C")[] || [],
       department: teamMember?.department || '',
       telegram: teamMember?.telegram || '',
       phoneNumber: teamMember?.phoneNumber || '',
@@ -64,7 +62,7 @@ const TeamMemberEdit = () => {
       await updateTeamMember(teamMember.id, {
         ...values,
         roles: values.roles as unknown as TeamMemberRole[],
-        teams: values.teams as unknown as ("A" | "B" | "C")[]
+        teams: values.teams as ("A" | "B" | "C")[]
       });
       
       toast({
@@ -100,4 +98,3 @@ const TeamMemberEdit = () => {
 };
 
 export default TeamMemberEdit;
-

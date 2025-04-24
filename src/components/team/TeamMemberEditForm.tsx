@@ -7,6 +7,7 @@ import ProfileImageSection from './ProfileImageSection';
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
 import TeamAssignmentSection from './TeamAssignmentSection';
+import { EmployeeTeam } from '@/types/employee';
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -15,13 +16,13 @@ const formSchema = z.object({
   telegram: z.string().optional(),
   department: z.string().optional(),
   profileImage: z.string().optional(),
-  teams: z.array(z.string()).default([]),
+  teams: z.array(z.enum(["A", "B", "C"])).default([]),
   role: z.enum(["Admin", "Manager", "Employee"]).optional(),
   roles: z.array(z.string()).default([]),
   phoneNumber: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+export type FormValues = z.infer<typeof formSchema>;
 
 interface TeamMemberEditFormProps {
   form: UseFormReturn<FormValues>;
@@ -64,4 +65,3 @@ const TeamMemberEditForm: React.FC<TeamMemberEditFormProps> = ({
 };
 
 export default TeamMemberEditForm;
-

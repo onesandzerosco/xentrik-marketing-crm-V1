@@ -4,10 +4,10 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
+import { FormValues } from './TeamMemberEditForm';
 
 interface TeamRolesSectionProps {
-  control: Control<TeamMemberFormValues>;
+  control: Control<FormValues>;
 }
 
 const TeamRolesSection: React.FC<TeamRolesSectionProps> = ({ control }) => {
