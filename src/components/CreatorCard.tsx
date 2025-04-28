@@ -4,35 +4,16 @@ import { Link } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Share2, Upload } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
-import { Progress } from "@/components/ui/progress";
+import { LineChart, Edit } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 interface CreatorCardProps {
   creator: Creator;
-  fileStats?: {
-    total: number;
-    uploading: number;
-  };
 }
 
-const CreatorCard = ({ creator, fileStats = { total: 0, uploading: 0 } }: CreatorCardProps) => {
-  const { toast } = useToast();
-  const hasUploads = fileStats.uploading > 0;
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent the Link navigation
-    e.stopPropagation(); // Prevent event bubbling
-    const shareUrl = `${window.location.origin}/creator-files/${creator.id}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Link copied!",
-      description: "The sharing link has been copied to your clipboard.",
-    });
-  };
-
+const CreatorCard = ({ creator }: CreatorCardProps) => {
   return (
-    <Link to={`/creator-files/${creator.id}`}>
+    <Link to={`/creator-profile/${creator.id}`}>
       <Card className="p-4 hover:bg-accent/5 transition-colors group cursor-pointer">
         <div className="flex items-center gap-4">
           <div className="shrink-0">
@@ -56,35 +37,34 @@ const CreatorCard = ({ creator, fileStats = { total: 0, uploading: 0 } }: Creato
               <div>
                 <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
                 <div className="text-sm text-muted-foreground mt-0.5 text-left">
-                  {fileStats.total} {fileStats.total === 1 ? 'file' : 'files'}
+                  ID: {creator.id}
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant="secondary">{creator.gender}</Badge>
+                  <Badge variant="secondary">{creator.team}</Badge>
+                  <Badge variant="secondary">{creator.creatorType}</Badge>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={handleShare}
-                  className="h-9 hover:bg-gradient-premium-yellow hover:text-black transition-all"
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="premium" 
-                  className="h-9 shadow-premium-yellow hover:shadow-premium-highlight"
-                >
-                  <Upload className="h-4 w-4 mr-1" />
-                  View Files
-                </Button>
+                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    variant="ghost" 
+                    className="h-9 hover:bg-gradient-premium-yellow hover:text-black transition-all"
+                  >
+                    <LineChart className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                  <Button 
+                    variant="premium" 
+                    className="h-9 shadow-premium-yellow hover:shadow-premium-highlight"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                </Link>
               </div>
             </div>
-            
-            {hasUploads && (
-              <div className="mt-3">
-                <Progress value={65} className="h-2" />
-                <span className="text-xs text-primary mt-1 block">
-                  {fileStats.uploading} files uploading...
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </Card>
