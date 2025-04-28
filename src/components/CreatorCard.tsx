@@ -52,12 +52,12 @@ const CreatorCard = ({ creator }: CreatorCardProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-4">
-                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()} className="flex-1">
+                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                   <Button 
                     variant="ghost" 
-                    className="w-full h-9 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
+                    className="px-6 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
                   >
-                    <LineChart className="h-4 w-4" />
+                    <LineChart className="h-4 w-4 mr-2" />
                     Analytics
                   </Button>
                 </Link>
