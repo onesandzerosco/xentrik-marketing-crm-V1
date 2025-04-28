@@ -1,16 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import VoiceGenerator from '@/components/voice/VoiceGenerator';
-import VoiceLibrary from '@/components/voice/VoiceLibrary';
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import VoiceGeneratorLayout from '@/components/voice/VoiceGeneratorLayout';
 import { useCreators } from '@/context/creator';
+import { useToast } from '@/hooks/use-toast';
 
 const VoiceGeneration: React.FC = () => {
   const { creators } = useCreators();
   const { toast } = useToast();
   
-  useEffect(() => {
+  React.useEffect(() => {
     // Initialize the voice cache in local storage if it doesn't exist
     const voiceCache = localStorage.getItem('voiceGenerationCache');
     if (!voiceCache) {
@@ -19,15 +18,9 @@ const VoiceGeneration: React.FC = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
-      <Card className="border border-premium-border shadow-premium-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl font-semibold">Voice Generator</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <VoiceGenerator creators={creators} toast={toast} />
-          <VoiceLibrary toast={toast} />
-        </CardContent>
+    <div className="container mx-auto p-6 max-w-7xl">
+      <Card className="border border-premium-border shadow-premium-sm bg-gradient-to-br from-accent/5 to-accent/10">
+        <VoiceGeneratorLayout creators={creators} toast={toast} />
       </Card>
     </div>
   );
