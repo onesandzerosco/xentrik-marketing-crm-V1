@@ -29,16 +29,14 @@ const Sidebar = () => {
           <SidebarTrigger />
         </div>
         
-        <SidebarContent className="pt-8">
+        <SidebarContent className="pt-8 h-full flex flex-col">
           <SidebarLogo />
           
           <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
             <SidebarNav isAdmin={isAdmin} />
           </div>
 
-          <div className="mt-auto p-3 border-t border-premium-border/20">
-            {user && <SidebarUserSection />}
-          </div>
+          {user && <div className="mb-4"><SidebarUserSection /></div>}
         </SidebarContent>
       </div>
     </SidebarComponent>
