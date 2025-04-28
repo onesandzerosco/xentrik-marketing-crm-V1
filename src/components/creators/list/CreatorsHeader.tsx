@@ -60,25 +60,8 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
 
   return (
     <div className="mb-8">
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 ">
-        {/* Left: Icon + Title */}
-        <div className="flex items-center gap-2">
-          <Users className="h-6 w-6 text-yellow-400" />
-          <h1 className="text-3xl font-bold">Creators</h1>
-        </div>
-        {/* Member Count + Onboard Button */}
-        <div className="flex gap-3 items-center">
-          <span className="rounded-full bg-secondary text-xs px-3 py-1">{isLoading ? "..." : `${creatorCount} creators`}</span>
-          <Link to="/creators/onboard">
-            <Button variant="premium" className="flex items-center gap-2 shadow-premium-yellow hover:shadow-premium-highlight">
-              <Plus className="h-4 w-4 mr-1" />
-              Onboard Creator
-            </Button>
-          </Link>
-        </div>
-      </div>
       {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-3 mt-6">
+      <div className="flex flex-col md:flex-row gap-3">
         {/* Search field */}
         <div className="relative flex-1">
           <Input
