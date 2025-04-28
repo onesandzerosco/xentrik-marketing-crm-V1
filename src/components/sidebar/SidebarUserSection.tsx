@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +42,7 @@ const SidebarUserSection: React.FC = () => {
                 <AvatarFallback className="bg-premium-accent1/10">{getUserInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex flex-col text-left min-w-0">
-                <span className="font-medium text-sm truncate max-w-[120px] text-white group-hover:text-black">{user.email}</span>
+                <span className="font-medium text-sm truncate max-w-[120px] text-white hover:text-black">{user.email}</span>
                 <span className="text-xs text-muted-foreground">User</span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
