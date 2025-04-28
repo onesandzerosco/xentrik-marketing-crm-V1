@@ -1,15 +1,44 @@
 
 import React from 'react';
-import { Folder } from 'lucide-react';
+import { Folder, Search, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-export const EmptyState = () => {
+interface EmptyStateProps {
+  isFiltered?: boolean;
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({ isFiltered = false }) => {
+  const handleUploadClick = () => {
+    document.getElementById('file-upload-trigger')?.click();
+  };
+  
+  if (isFiltered) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
+        <h3 className="text-lg font-medium mb-2">No matching files found</h3>
+        <p className="text-sm text-muted-foreground max-w-md text-center">
+          Try adjusting your search or filter criteria to find what you're looking for.
+        </p>
+      </div>
+    );
+  }
+  
   return (
-    <div className="text-center py-12">
-      <Folder className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-      <p className="text-muted-foreground">No files uploaded yet</p>
-      <p className="text-sm text-muted-foreground mt-1">
-        Upload files using the button above
+    <div className="flex flex-col items-center justify-center py-16">
+      <Folder className="h-12 w-12 text-muted-foreground/50 mb-4" />
+      <h3 className="text-lg font-medium mb-2">No files uploaded yet</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        Upload files to start sharing with this creator
       </p>
+      <Button 
+        onClick={handleUploadClick}
+        variant="premium"
+        className="flex items-center gap-2 text-black"
+      >
+        <Upload className="h-4 w-4" />
+        <span>Upload Files</span>
+      </Button>
     </div>
   );
 };

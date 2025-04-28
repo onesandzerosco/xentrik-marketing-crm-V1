@@ -1,61 +1,92 @@
 
 import React from 'react';
-import { File } from 'lucide-react';
+import { FileText, Image, File, Video, AudioLines, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
-
-interface FileItem {
-  name: string;
-  size: number;
-  created_at: string;
-  url: string;
-  type: string;
-}
+import { CreatorFileType } from '@/pages/CreatorFiles';
 
 interface FileGridProps {
-  files: FileItem[];
+  files: CreatorFileType[];
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({ files }) => {
-  const getFileIcon = (type: string) => {
+  const getFileIcon = (type: string, large = false) => {
+    const size = large ? "h-16 w-16" : "h-10 w-10";
+    
     switch (type) {
       case 'image':
-        return <File className="h-10 w-10 text-purple-500" />;
+        return <Image className={`${size} text-purple-500`} />;
       case 'document':
-        return <File className="h-10 w-10 text-amber-500" />;
+        return <FileText className={`${size} text-amber-500`} />;
+      case 'video':
+        return <Video className={`${size} text-blue-500`} />;
+      case 'audio':
+        return <AudioLines className={`${size} text-green-500`} />;
       default:
-        return <File className="h-10 w-10 text-blue-500" />;
+        return <File className={`${size} text-gray-500`} />;
     }
   };
 
+  const renderPreview = (file: CreatorFileType) => {
+    if (file.type === 'image' && file.url) {
+      return (
+        <div className="relative w-full h-32 flex items-center justify-center mb-2 overflow-hidden rounded-md">
+          <img 
+            src={file.url} 
+            alt={file.name} 
+            className="object-cover w-full h-full hover:scale-105 transition-transform"
+            loading="lazy"
+            onError={(e) => {
+              // Fallback to icon on image load error
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement!.appendChild(
+                document.createElement('div')
+              ).innerHTML = getFileIcon(file.type, true).props.className;
+            }}
+          />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex items-center justify-center w-full h-32 mb-2 bg-accent/5 rounded-md">
+        {getFileIcon(file.type, true)}
+      </div>
+    );
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
       {files.map((file) => (
         <div
-          key={file.name}
-          className="group flex flex-col items-center p-4 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer"
+          key={file.id}
+          className="group flex flex-col p-3 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer border border-transparent hover:border-accent/20"
         >
-          <div className="relative w-full h-32 flex items-center justify-center mb-2">
-            {getFileIcon(file.type)}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                asChild
-                className="shadow-md"
-              >
-                <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                  Download
-                </a>
-              </Button>
+          {renderPreview(file)}
+          
+          <div className="flex flex-col space-y-1">
+            <span className="text-sm font-medium truncate w-full">
+              {file.name}
+            </span>
+            <div className="flex justify-between w-full text-xs text-muted-foreground">
+              <span>{formatFileSize(file.size)}</span>
+              <span>{formatDate(file.created_at)}</span>
             </div>
           </div>
-          <span className="text-sm font-medium text-center truncate w-full">
-            {file.name}
-          </span>
-          <div className="flex justify-between w-full mt-1 text-xs text-muted-foreground">
-            <span>{formatFileSize(file.size)}</span>
-            <span>{formatDate(file.created_at)}</span>
+          
+          <div className="mt-2 pt-2 border-t border-accent/10 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="w-full flex items-center justify-center gap-1.5 hover:bg-accent/20"
+            >
+              <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </a>
+            </Button>
           </div>
         </div>
       ))}

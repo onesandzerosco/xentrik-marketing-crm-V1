@@ -1,116 +1,83 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Upload, File } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { useDropzone } from 'react-dropzone';
+import React, { useState, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface FileUploaderProps {
+  id: string;
   creatorId: string;
-  folderPath?: string;
-  id?: string;
+  onUploadComplete?: () => void;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = 'shared', id }) => {
+const FileUploader: React.FC<FileUploaderProps> = ({ id, creatorId, onUploadComplete }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const { toast } = useToast();
 
-  const onDrop = async (acceptedFiles: File[]) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
     setIsUploading(true);
     
     try {
-      for (const file of acceptedFiles) {
-        const fileId = file.name;
-        setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
-
+      const uploadedFiles = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const path = `${creatorId}/${folderPath}/${safeName}`;
+        const filePath = `${creatorId}/shared/${safeName}`;
         
-        await supabase.storage
+        const { error } = await supabase.storage
           .from('creator_files')
-          .upload(path, file, {
+          .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true
           });
-
-        setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
+          
+        if (error) {
+          throw error;
+        }
+        
+        uploadedFiles.push(file.name);
       }
       
       toast({
-        title: "Files uploaded successfully",
-        description: "Your files have been shared successfully",
+        title: uploadedFiles.length > 1 
+          ? `${uploadedFiles.length} files uploaded` 
+          : '1 file uploaded',
+        description: uploadedFiles.length > 1 
+          ? `Successfully uploaded ${uploadedFiles.length} files` 
+          : `Successfully uploaded ${uploadedFiles[0]}`,
       });
-
-      // Reload page to show new files
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      
+      // Reset the input
+      e.target.value = '';
+      
+      // Call the callback if it exists
+      if (onUploadComplete) {
+        onUploadComplete();
+      }
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('Upload error:', error);
       toast({
-        title: "Upload failed",
-        description: "There was an error uploading your files",
-        variant: "destructive",
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Failed to upload the file(s)',
+        variant: 'destructive',
       });
     } finally {
       setIsUploading(false);
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    multiple: true
-  });
-
   return (
-    <div id={id} className={id ? "" : "p-6 border border-border rounded-lg shadow-sm"}>
-      {!id && <h2 className="text-lg font-semibold mb-4">Upload Files</h2>}
-      
-      <div className="space-y-4">
-        <div
-          {...getRootProps()}
-          className={`
-            border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-            transition-colors duration-200 ease-in-out 
-            ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
-          `}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              {isDragActive ? 'Drop files here' : 'Drag and drop files here, or click to select'}
-            </p>
-          </div>
-        </div>
-
-        {/* Progress indicators */}
-        {Object.entries(uploadProgress).length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Uploading Files</h3>
-            {Object.entries(uploadProgress).map(([fileName, progress]) => (
-              <div key={fileName} className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <File className="h-4 w-4" />
-                  <span className="text-sm truncate flex-1">{fileName}</span>
-                  <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} className="h-1" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {isUploading && (
-          <Button disabled className="w-full">
-            Uploading...
-          </Button>
-        )}
-      </div>
-    </div>
+    <input
+      id={id}
+      type="file"
+      onChange={handleFileChange}
+      disabled={isUploading}
+      multiple
+      className="hidden"
+    />
   );
 };
 

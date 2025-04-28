@@ -1,4 +1,3 @@
-
 export const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -10,7 +9,19 @@ export const formatFileSize = (bytes: number) => {
 export const formatDate = (dateString: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
+  
+  if (isNaN(date.getTime())) return '';
+  
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  if (date.getFullYear() === today.getFullYear()) {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -18,10 +29,19 @@ export const formatDate = (dateString: string) => {
 };
 
 export const getFileType = (extension: string): string => {
-  const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-  const documentTypes = ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx'];
+  const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
+  const documentTypes = ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'csv', 'rtf', 'ppt', 'pptx'];
+  const videoTypes = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
+  const audioTypes = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'];
   
   if (imageTypes.includes(extension)) return 'image';
   if (documentTypes.includes(extension)) return 'document';
+  if (videoTypes.includes(extension)) return 'video';
+  if (audioTypes.includes(extension)) return 'audio';
+  
   return 'other';
+};
+
+export const getFileExtension = (filename: string): string => {
+  return filename.split('.').pop()?.toLowerCase() || '';
 };
