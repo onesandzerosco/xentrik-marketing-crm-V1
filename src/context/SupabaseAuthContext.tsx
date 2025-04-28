@@ -44,7 +44,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (event === 'SIGNED_OUT') {
         navigate('/login');
       } else if (event === 'SIGNED_IN') {
-        navigate('/dashboard');
+        // Check for a stored route in localStorage
+        const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
+        // Navigate to the last visited route or default to dashboard
+        navigate(lastVisitedRoute || '/dashboard');
       }
     });
 
