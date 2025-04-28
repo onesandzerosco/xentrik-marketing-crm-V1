@@ -7,9 +7,15 @@ interface FileUploaderProps {
   id: string;
   creatorId: string;
   onUploadComplete?: () => void;
+  folder?: string;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ id, creatorId, onUploadComplete }) => {
+const FileUploader: React.FC<FileUploaderProps> = ({ 
+  id, 
+  creatorId, 
+  onUploadComplete,
+  folder = 'shared'
+}) => {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
@@ -25,7 +31,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ id, creatorId, onUploadComp
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filePath = `${creatorId}/shared/${safeName}`;
+        const filePath = `${creatorId}/${folder}/${safeName}`;
         
         const { error } = await supabase.storage
           .from('creator_files')

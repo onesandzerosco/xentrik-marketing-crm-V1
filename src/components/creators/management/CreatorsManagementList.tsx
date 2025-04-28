@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Creator } from "@/types";
 import CreatorCard from "@/components/CreatorCard";
 import ManagementEmptyState from "./ManagementEmptyState";
@@ -28,7 +29,13 @@ const CreatorsManagementList: React.FC<CreatorsManagementListProps> = ({ isLoadi
   return (
     <div className="space-y-2">
       {creators.map(creator => (
-        <CreatorCard key={creator.id} creator={creator} />
+        <Link key={creator.id} to={`/creator-profile/${creator.id}`}>
+          <CreatorCard 
+            key={creator.id} 
+            creator={creator} 
+            variant="default"
+          />
+        </Link>
       ))}
     </div>
   );

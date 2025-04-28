@@ -34,10 +34,13 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
   return (
     <div className="space-y-2">
       {creators.map(creator => (
-        <CreatorCard 
-          key={creator.id} 
-          creator={creator} 
-        />
+        <div key={creator.id}>
+          <CreatorCard 
+            creator={creator} 
+            variant="files"
+            fileCount={fileCountsMap[creator.id]?.total || 0}
+          />
+        </div>
       ))}
     </div>
   );

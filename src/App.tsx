@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -30,6 +29,7 @@ import SharedFiles from './pages/SharedFiles';
 import CreatorFiles from './pages/CreatorFiles';
 import TeamMemberEdit from './pages/TeamMemberEdit';
 import VoiceGeneration from './pages/VoiceGeneration';
+import CreatorUpload from './pages/CreatorUpload';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -93,6 +93,7 @@ const AppRoutes = () => {
       <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
       <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
+      <Route path="/upload/:id" element={<CreatorUpload />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -28,7 +28,12 @@ const CreatorsList: React.FC<CreatorsListProps> = ({ isLoading, creators, hasFil
   return (
     <div className="space-y-2">
       {creators.map(creator => (
-        <CreatorCard key={creator.id} creator={creator} />
+        <Link key={creator.id} to={`/creator-profile/${creator.id}`}>
+          <CreatorCard 
+            creator={creator} 
+            variant="default"
+          />
+        </Link>
       ))}
     </div>
   );
