@@ -32,7 +32,7 @@ const CreatorCard = ({ creator }: CreatorCardProps) => {
             )}
           </div>
           
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex items-center justify-between">
             <div className="flex flex-col">
               <div className="text-left">
                 <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
@@ -51,27 +51,28 @@ const CreatorCard = ({ creator }: CreatorCardProps) => {
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-2 mt-4">
-                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    className="px-6 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
-                  >
-                    <LineChart className="h-4 w-4 mr-2" />
-                    Analytics
-                  </Button>
-                </Link>
-                <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    className="h-9"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
-              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 ml-4">
+              <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="ghost" 
+                  className="px-8 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
+                >
+                  <LineChart className="h-4 w-4 mr-2" />
+                  Analytics
+                </Button>
+              </Link>
+              <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  className="h-9"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
