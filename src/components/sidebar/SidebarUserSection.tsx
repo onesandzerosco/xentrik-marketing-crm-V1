@@ -36,7 +36,7 @@ const SidebarUserSection: React.FC = () => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-start p-2 rounded-xl hover:bg-gradient-premium-yellow hover:text-black transition-all duration-300 group"
+            className="w-full justify-start p-2 rounded-xl hover:bg-gradient-premium-yellow hover:text-white transition-all duration-300 group"
           >
             <div className="flex items-center gap-3 w-full min-w-0">
               <Avatar className="h-9 w-9 flex-shrink-0 border border-premium-accent1/30">
@@ -44,15 +44,15 @@ const SidebarUserSection: React.FC = () => {
                 <AvatarFallback className="bg-premium-accent1/10">{getUserInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex flex-col text-left min-w-0">
-                <span className="font-medium text-sm truncate max-w-[120px] group-hover:text-black transition-colors">{user.email}</span>
-                <span className="text-xs text-muted-foreground group-hover:text-black/70 transition-colors">User</span>
+                <span className="font-medium text-sm truncate max-w-[120px] text-white group-hover:text-white transition-colors">{user.email}</span>
+                <span className="text-xs text-muted-foreground group-hover:text-white/70 transition-colors">User</span>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-black/70 transition-colors flex-shrink-0" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-white/70 transition-colors flex-shrink-0" />
             </div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 bg-premium-card border-premium-border shadow-premium-md">
-          <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer hover:bg-gradient-premium-yellow hover:text-black">
+          <DropdownMenuItem onClick={() => navigate('/account')} className="cursor-pointer hover:bg-gradient-premium-yellow hover:text-white">
             <Settings className="mr-2 h-4 w-4" />
             <span>Account Settings</span>
           </DropdownMenuItem>
