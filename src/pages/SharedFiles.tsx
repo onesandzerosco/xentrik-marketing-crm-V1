@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useCreators } from '../context/creator';
 import SharedFilesHeader from "../components/files/SharedFilesHeader";
-import CreatorsList from "../components/creators/list/CreatorsList";
+import SharedFilesCreatorList from "../components/files/shared/SharedFilesCreatorList";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -88,10 +88,11 @@ const SharedFiles = () => {
         setSearchQuery={setSearchQuery}
       />
 
-      <CreatorsList 
+      <SharedFilesCreatorList 
         isLoading={isLoading}
         creators={filteredCreators}
         hasFilters={hasFilters}
+        fileCountsMap={fileCountsMap}
       />
     </div>
   );
