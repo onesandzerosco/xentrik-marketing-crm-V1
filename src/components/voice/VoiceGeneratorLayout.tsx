@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Creator } from '@/types';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
 
-// Voice tone options
 const VOICE_TONES = [
   { id: 'normal', name: 'Normal' },
   { id: 'tired', name: 'Tired' },
@@ -21,7 +19,6 @@ const VOICE_TONES = [
   { id: 'whisper', name: 'Whisper' },
 ];
 
-// Ambience options
 const AMBIENCE_OPTIONS = [
   { id: 'none', name: 'None' },
   { id: 'coffee_shop', name: 'Coffee Shop' },
@@ -51,25 +48,19 @@ interface VoiceGeneratorLayoutProps {
 }
 
 const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, toast }) => {
-  // State for creator selection
   const [selectedCreator, setSelectedCreator] = useState<string>('');
-  
-  // State for voice generation
   const [text, setText] = useState<string>('');
   const [voiceTone, setVoiceTone] = useState<string>('normal');
   const [ambience, setAmbience] = useState<string>('none');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  
-  // State for voice library
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+
   const audioRef = React.useRef<HTMLAudioElement>(null);
-  
-  // Load voice notes when creator changes
+
   React.useEffect(() => {
     if (selectedCreator) {
       setIsLoading(true);
@@ -81,7 +72,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       setVoiceNotes([]);
     }
   }, [selectedCreator]);
-  
+
   const loadVoiceNotes = (creatorId: string) => {
     try {
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
@@ -120,15 +111,12 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     setIsGenerating(true);
 
     try {
-      // Simulate API call with timeout
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mock audio generation with a placeholder base64 audio
       const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
       setGeneratedAudio(mockAudioBase64);
       
-      // Store in local cache
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
       const creatorCache = voiceGenerationCache[selectedCreator] || [];
       
@@ -149,7 +137,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       voiceGenerationCache[selectedCreator] = creatorCache;
       localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
       
-      // Update voice notes
       setVoiceNotes(creatorCache);
       
       toast({
@@ -168,7 +155,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     }
   };
 
-  // Play audio
   const playAudio = (id: string, audioSrc: string) => {
     setPlayingId(id);
     const audio = new Audio(audioSrc);
@@ -176,7 +162,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     audio.play();
   };
 
-  // Copy to clipboard
   const copyAudioToClipboard = () => {
     toast({
       title: "Success",
@@ -184,7 +169,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     });
   };
 
-  // Download audio
   const downloadAudio = (audioSrc: string, text: string) => {
     const link = document.createElement('a');
     link.href = audioSrc;
@@ -194,7 +178,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     document.body.removeChild(link);
   };
 
-  // Delete voice note
   const deleteVoiceNote = (id: string) => {
     try {
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
@@ -219,13 +202,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     }
   };
 
-  // Filter notes by search term
   const filteredNotes = searchTerm 
     ? voiceNotes.filter(note => 
         note.text.toLowerCase().includes(searchTerm.toLowerCase()))
     : voiceNotes;
 
-  // Format date
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -243,9 +224,8 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       <CardContent className="p-6">
         <div className="space-y-8">
-          {/* Creator Selection - Full Width */}
           <div className="w-full">
-            <Label className="text-sm font-medium mb-2 block">Select Creator</Label>
+            <Label className="text-sm font-medium block">Select Creator</Label>
             <Select 
               value={selectedCreator} 
               onValueChange={setSelectedCreator}
@@ -270,11 +250,9 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                 <TabsTrigger value="library" className="flex-1">Voice Library</TabsTrigger>
               </TabsList>
 
-              {/* Generate Tab */}
               <TabsContent value="generate" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Voice Settings Column */}
-                  <div className="space-y-6">
+                <div className="space-y-6 w-full">
+                  <div className="w-full space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label className="text-sm font-medium block">Voice Tone</Label>
@@ -344,34 +322,31 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                     </Button>
                   </div>
 
-                  {/* Preview Column */}
-                  <div>
+                  <div className="w-full">
                     {generatedAudio && !isGenerating ? (
                       <PremiumCard className="h-full flex flex-col">
                         <div className="p-5 flex-1">
                           <h3 className="font-semibold mb-4 text-lg">Preview Generated Voice Note</h3>
-                          <div className="space-y-4">
-                            <ScrollArea className="h-[160px] w-full">
-                              <p className="text-sm text-muted-foreground mb-4">{text}</p>
-                            </ScrollArea>
-                            
-                            <div className="flex flex-col gap-3">
-                              <Button onClick={() => playAudio("preview", generatedAudio)} variant="outline" className="w-full">
-                                <Play className="mr-2 h-4 w-4" />
-                                {playingId === "preview" ? "Playing..." : "Play"}
-                              </Button>
-                              <Button onClick={copyAudioToClipboard} variant="outline" className="w-full">
-                                <Copy className="mr-2 h-4 w-4" />
-                                Copy
-                              </Button>
-                              <Button onClick={() => downloadAudio(generatedAudio, text)} variant="outline" className="w-full">
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
-                              </Button>
-                            </div>
-                            
-                            <audio ref={audioRef} src={generatedAudio} className="hidden" />
+                          <ScrollArea className="h-[160px] w-full">
+                            <p className="text-sm text-muted-foreground mb-4">{text}</p>
+                          </ScrollArea>
+                          
+                          <div className="flex flex-col gap-3">
+                            <Button onClick={() => playAudio("preview", generatedAudio)} variant="outline" className="w-full">
+                              <Play className="mr-2 h-4 w-4" />
+                              {playingId === "preview" ? "Playing..." : "Play"}
+                            </Button>
+                            <Button onClick={copyAudioToClipboard} variant="outline" className="w-full">
+                              <Copy className="mr-2 h-4 w-4" />
+                              Copy
+                            </Button>
+                            <Button onClick={() => downloadAudio(generatedAudio, text)} variant="outline" className="w-full">
+                              <Download className="mr-2 h-4 w-4" />
+                              Download
+                            </Button>
                           </div>
+                          
+                          <audio ref={audioRef} src={generatedAudio} className="hidden" />
                         </div>
                       </PremiumCard>
                     ) : (
@@ -393,7 +368,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                 </div>
               </TabsContent>
 
-              {/* Library Tab */}
               <TabsContent value="library" className="space-y-6">
                 <div className="space-y-6">
                   <div>
