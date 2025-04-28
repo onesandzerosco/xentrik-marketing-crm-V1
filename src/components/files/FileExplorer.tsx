@@ -53,21 +53,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   });
 
   return (
-    <div className="max-w-[1400px] mx-auto">
+    <div className="max-w-full mx-auto space-y-6">
       <FileHeader 
         creatorName={creatorName}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
 
-      <div className="grid grid-cols-12 gap-6 mt-6">
+      <div className="grid grid-cols-12 gap-6">
         <div className="col-span-3">
-          <div className="bg-accent/5 rounded-lg p-4 sticky top-4">
-            <FolderNav 
-              activeFolder={activeFolder}
-              onFolderChange={setActiveFolder}
-            />
-          </div>
+          <FolderNav 
+            activeFolder={activeFolder}
+            onFolderChange={setActiveFolder}
+          />
         </div>
 
         <div className="col-span-9">
