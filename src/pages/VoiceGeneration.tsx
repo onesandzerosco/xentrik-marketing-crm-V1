@@ -10,7 +10,6 @@ const VoiceGeneration: React.FC = () => {
   const { toast } = useToast();
   
   React.useEffect(() => {
-    // Initialize the voice cache in local storage if it doesn't exist
     const voiceCache = localStorage.getItem('voiceGenerationCache');
     if (!voiceCache) {
       localStorage.setItem('voiceGenerationCache', JSON.stringify({}));
@@ -18,8 +17,8 @@ const VoiceGeneration: React.FC = () => {
   }, []);
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <Card className="border border-premium-border shadow-premium-sm bg-gradient-to-br from-accent/5 to-accent/10">
+    <div className="container mx-auto p-6 max-w-5xl">
+      <Card className="border shadow-sm">
         <VoiceGeneratorLayout creators={creators} toast={toast} />
       </Card>
     </div>
