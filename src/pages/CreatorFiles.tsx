@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -29,7 +28,6 @@ const CreatorFiles = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Initialize storage bucket
   useEffect(() => {
     ensureStorageBucket();
   }, []);
@@ -133,7 +131,6 @@ const CreatorFiles = () => {
   };
 
   const handleUploadFile = () => {
-    // Trigger file uploader
     document.getElementById('file-upload-trigger')?.click();
   };
 
@@ -149,18 +146,18 @@ const CreatorFiles = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="premium"
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={viewMode === 'grid' ? 'bg-accent' : ''}
+              className="text-black"
             >
               <Grid2x2 className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="premium"
               size="sm"
               onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? 'bg-accent' : ''}
+              className="text-black"
             >
               <LayoutList className="h-4 w-4" />
             </Button>
@@ -168,7 +165,6 @@ const CreatorFiles = () => {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]">
-          {/* Search bar */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input 
@@ -179,36 +175,29 @@ const CreatorFiles = () => {
             />
           </div>
           
-          {/* Upload button */}
           <Button 
             onClick={handleUploadFile}
-            className="flex items-center gap-2"
+            variant="premium"
+            className="flex items-center gap-2 text-black"
           >
             <Upload className="h-4 w-4" />
             <span>Upload</span>
           </Button>
-          
-          {/* Hidden file uploader component */}
-          <div className="hidden">
-            <FileUploader id="file-upload-trigger" creatorId={creator.id} folderPath="shared" />
-          </div>
         </div>
       </div>
 
-      {/* Filter options - similar to Google Drive */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <Button variant="outline" size="sm" className="rounded-full">
+        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
           <span>Type</span>
         </Button>
-        <Button variant="outline" size="sm" className="rounded-full">
+        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
           <span>Modified</span>
         </Button>
-        <Button variant="outline" size="sm" className="rounded-full">
+        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
           <span>Location</span>
         </Button>
       </div>
 
-      {/* Files list */}
       <PremiumCard className="mb-4">
         {filteredFiles.length > 0 ? (
           viewMode === 'grid' ? (
