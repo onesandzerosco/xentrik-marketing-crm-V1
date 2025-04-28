@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
@@ -14,8 +13,7 @@ import SidebarLogo from '../sidebar/SidebarLogo';
 import SidebarNav from '../sidebar/SidebarNav';
 import SidebarUserSection from '../sidebar/SidebarUserSection';
 import { useRouteMemory } from '@/hooks/useRouteMemory';
-import { Bell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -27,10 +25,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
   const [pageTitle, setPageTitle] = useState("Dashboard");
   
-  // Use our centralized route memory hook
   useRouteMemory();
   
-  // Update page title based on current route
   useEffect(() => {
     const path = location.pathname;
     if (path.includes('/dashboard')) setPageTitle('Dashboard');
@@ -85,10 +81,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
               <h1 className="ml-4 text-lg font-semibold">{pageTitle}</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-white">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
+              <NotificationsDropdown />
             </div>
           </div>
           
