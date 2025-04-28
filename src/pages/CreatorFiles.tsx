@@ -64,7 +64,7 @@ const CreatorFiles = () => {
         created_at: file.created_at || new Date().toISOString(),
         url: data?.signedUrl || '',
         type,
-        status: 'complete' // Add default status
+        status: 'complete' as const // Explicitly type as literal 'complete'
       };
     }));
 
