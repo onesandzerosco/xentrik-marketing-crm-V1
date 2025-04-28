@@ -186,14 +186,26 @@ const CreatorFiles = () => {
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 relative z-10">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm relative z-10"
+        >
           <span>Type</span>
         </Button>
-        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm relative z-10"
+        >
           <span>Modified</span>
         </Button>
-        <Button variant="outline" size="sm" className="bg-white text-black hover:bg-white/90 rounded-full border-none">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm relative z-10"
+        >
           <span>Location</span>
         </Button>
       </div>
