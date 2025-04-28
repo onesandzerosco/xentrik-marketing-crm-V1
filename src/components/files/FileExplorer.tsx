@@ -11,6 +11,7 @@ import { FileViewSkeleton } from '@/components/files/FileViewSkeleton';
 import FileUploader from '@/components/messages/FileUploader';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
+import { BackButton } from "@/components/ui/back-button";
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -53,6 +54,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     <div className="flex h-[calc(100vh-70px)] overflow-hidden bg-background">
       {/* Sidebar */}
       <div className="w-56 border-r p-4">
+        <BackButton to="/shared-files" className="mb-4" />
         <FolderNav 
           activeFolder={activeFolder}
           onFolderChange={setActiveFolder}
@@ -67,7 +69,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <div>
               <h1 className="text-xl font-semibold">{creatorName}'s Files</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <div className="relative w-64">
                 <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input 
@@ -87,9 +89,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               <Button 
                 onClick={handleUploadFile}
                 variant="default"
+                className="px-6"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload
+                Upload Files
               </Button>
             </div>
           </div>
