@@ -37,7 +37,6 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
         <CreatorCard 
           key={creator.id} 
           creator={creator} 
-          fileStats={fileCountsMap[creator.id] || { total: 0, uploading: 0 }}
         />
       ))}
     </div>
