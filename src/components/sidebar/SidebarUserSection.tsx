@@ -36,7 +36,7 @@ const SidebarUserSection: React.FC = () => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-start p-2 rounded-xl hover:bg-gradient-premium-yellow hover:text-black transition-all duration-300 group"
+            className="w-full justify-start p-2 rounded-xl transition-all duration-300 group hover:bg-gradient-premium-yellow"
           >
             <div className="flex items-center gap-3 w-full min-w-0">
               <Avatar className="h-9 w-9 flex-shrink-0 border border-premium-accent1/30">
