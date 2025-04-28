@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,13 @@ const Sidebar = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
+  
+  // Store current location path in localStorage when it changes
+  useEffect(() => {
+    if (location.pathname !== "/login" && !location.pathname.includes("/auth")) {
+      localStorage.setItem("lastVisitedRoute", location.pathname);
+    }
+  }, [location.pathname]);
 
   if (isMobile) {
     return null;

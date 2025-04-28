@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import PageTransition from '../PageTransition';
 import {
@@ -21,6 +21,14 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
   const { user } = useSupabaseAuth();
+  const location = useLocation();
+  
+  // Store current path when user navigates
+  useEffect(() => {
+    if (isAuthenticated && location.pathname !== "/login") {
+      localStorage.setItem("lastVisitedRoute", location.pathname);
+    }
+  }, [location.pathname, isAuthenticated]);
   
   if (isLoading) {
     return (

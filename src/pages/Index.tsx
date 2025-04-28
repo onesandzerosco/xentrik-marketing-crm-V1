@@ -10,7 +10,10 @@ const Index = () => {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        navigate('/dashboard');
+        // Check for a stored route in localStorage
+        const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
+        // Navigate to the last visited route or default to dashboard
+        navigate(lastVisitedRoute || '/dashboard');
       } else {
         navigate('/login');
       }
