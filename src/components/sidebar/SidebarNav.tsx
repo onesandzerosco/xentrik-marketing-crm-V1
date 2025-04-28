@@ -80,9 +80,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-300",
-                "hover:bg-gradient-premium-yellow hover:text-white hover:-translate-y-0.5 hover:shadow-premium-yellow",
+                "hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow",
                 "active:translate-y-0 active:opacity-90",
-                isActive ? "bg-gradient-premium-yellow text-white shadow-premium-yellow" : ""
+                isActive ? "bg-gradient-premium-yellow text-black shadow-premium-yellow" : ""
               )
             }
           >
