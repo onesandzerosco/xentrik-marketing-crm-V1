@@ -8,6 +8,7 @@ import { CreatorProvider } from './context/creator';
 import { ActivityProvider } from './context/ActivityContext';
 import { TeamProvider } from './context/TeamContext';
 import { AnimatePresence } from 'framer-motion';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
@@ -36,24 +37,36 @@ ensureStorageBucket().catch(err => {
   console.error("Error setting up storage bucket:", err);
 });
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <CreatorProvider>
-      <ActivityProvider>
-        <SupabaseAuthProvider>
-          <AuthProvider>
-            <TeamProvider>
-              <div className="app flex h-screen w-full bg-premium-dark">
-                <Toaster />
-                <AnimatePresence mode="wait">
-                  <AppRoutes />
-                </AnimatePresence>
-              </div>
-            </TeamProvider>
-          </AuthProvider>
-        </SupabaseAuthProvider>
-      </ActivityProvider>
-    </CreatorProvider>
+    <QueryClientProvider client={queryClient}>
+      <CreatorProvider>
+        <ActivityProvider>
+          <SupabaseAuthProvider>
+            <AuthProvider>
+              <TeamProvider>
+                <div className="app flex h-screen w-full bg-premium-dark">
+                  <Toaster />
+                  <AnimatePresence mode="wait">
+                    <AppRoutes />
+                  </AnimatePresence>
+                </div>
+              </TeamProvider>
+            </AuthProvider>
+          </SupabaseAuthProvider>
+        </ActivityProvider>
+      </CreatorProvider>
+    </QueryClientProvider>
   );
 }
 
