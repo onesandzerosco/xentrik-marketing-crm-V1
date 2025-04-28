@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 interface CreatorsHeaderProps {
   isLoading: boolean;
@@ -59,6 +60,21 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
 
   return (
     <div className="mb-8">
+      {/* Header with Creator Count and Onboard Button */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold flex items-center text-white">
+          <Users className="h-6 w-6 mr-2 text-white" /> 
+          Total Creators: <span className="ml-2 text-primary">{isLoading ? "..." : creatorCount}</span>
+        </h1>
+        
+        <Link to="/creators/onboard">
+          <Button variant="premium" className="shadow-premium-yellow hover:shadow-premium-highlight">
+            <Plus className="h-4 w-4 mr-2" />
+            Onboard Creator
+          </Button>
+        </Link>
+      </div>
+      
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-3">
         {/* Search field */}
@@ -77,10 +93,10 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
-              <SlidersHorizontal className="h-5 w-5" />
+              <SlidersHorizontal className="h-5 w-5 text-white" />
               Gender
               {selectedGenders.length > 0 && (
-                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedGenders.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedGenders.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
@@ -103,10 +119,10 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
-              <Users className="h-5 w-5" />
+              <Users className="h-5 w-5 text-white" />
               Teams
               {selectedTeams.length > 0 && (
-                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedTeams.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedTeams.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
@@ -129,10 +145,10 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
-              <AlertCircle className="h-5 w-5" />
+              <AlertCircle className="h-5 w-5 text-white" />
               Class
               {selectedClasses.length > 0 && (
-                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedClasses.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedClasses.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
@@ -155,7 +171,7 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || searchQuery) && (
           <Button variant="ghost" size="sm" className="h-12 text-white hover:text-white/80" onClick={handleClearFilters}>
             <span className="mr-1">Clear</span>
-            <Filter className="h-4 w-4" />
+            <Filter className="h-4 w-4 text-white" />
           </Button>
         )}
       </div>
