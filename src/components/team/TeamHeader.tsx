@@ -60,7 +60,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
 
   return (
     <div className="mb-8">
-      {/* Header with Count and Add Button - Adjusted spacing and sizing */}
+      {/* Header with Count and Add Button - Adjusted to match creators page */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
         {/* Left: Icon + Title */}
         <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <Button 
             onClick={() => navigate('/team/onboard')} 
             variant="premium" 
-            className="flex items-center gap-2 shadow-premium-yellow hover:shadow-premium-highlight h-10"
+            className="flex items-center gap-2 shadow-premium-yellow hover:shadow-premium-highlight"
           >
             <Plus className="h-4 w-4" />
             Onboard Team Member
@@ -83,18 +83,18 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
         </div>
       </div>
       
-      {/* Search and Filters - Adjusted to match CreatorsHeader */}
+      {/* Search and Filters - Adjusted to match creators page */}
       <div className="flex flex-col md:flex-row gap-3">
         {/* Search field */}
         <div className="relative flex-1">
           <Input 
             placeholder="Search by name or email..." 
-            className="pl-10 h-10 w-full bg-background border-white/20 text-white" 
+            className="pl-10 h-12 w-full bg-background border-white/20 text-white" 
             value={searchValue} 
             onChange={handleSearchChange} 
           />
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <SlidersHorizontal className="h-4 w-4 text-white" />
+            <SlidersHorizontal className="h-5 w-5 text-white" />
           </span>
         </div>
         
@@ -103,9 +103,9 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <DropdownMenuTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-full flex gap-2 items-center min-w-[120px] h-10 border-white/20 text-white"
+              className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white"
             >
-              <SlidersHorizontal className="h-4 w-4 text-white" />
+              <SlidersHorizontal className="h-5 w-5 text-white" />
               Roles
               {filters.roles.length > 0 && 
                 <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">
@@ -135,9 +135,9 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <DropdownMenuTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-full flex gap-2 items-center min-w-[120px] h-10 border-white/20 text-white"
+              className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white"
             >
-              <Users className="h-4 w-4 text-white" />
+              <Users className="h-5 w-5 text-white" />
               Teams
               {filters.teams.length > 0 && 
                 <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">
@@ -167,9 +167,9 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <DropdownMenuTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-full flex gap-2 items-center min-w-[120px] h-10 border-white/20 text-white"
+              className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white"
             >
-              <Filter className="h-4 w-4 text-white" />
+              <Filter className="h-5 w-5 text-white" />
               Status
               {filters.status.length > 0 && 
                 <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">
@@ -199,7 +199,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-10 text-white hover:text-white/80" 
+            className="h-12 text-white hover:text-white/80" 
             onClick={onClearFilters}
           >
             <span className="mr-1">Clear</span>
