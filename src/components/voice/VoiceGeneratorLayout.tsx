@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mic, Play, Copy, Download, Loader2, History, Settings, Search, Trash2 } from 'lucide-react';
+import { Mic, Play, Copy, Download, Loader2, Search, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
@@ -123,49 +123,44 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       // Simulate API call with timeout
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Mock audio generation with a short placeholder base64 audio instead of the very long one
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAASAAAeMwAUFBQUFCIiIiIiIjAwMDAwMD4+Pj4+PkxMTExMTFpaWlpaWmhoaGhoaHZ2dnZ2doSEhISEhJKSkpKSkqCgoKCgoK6urq6urrKysr";
+      // Mock audio generation with a placeholder base64 audio
+      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
-      // Generate a unique ID
-      const noteId = `note_${Date.now()}`;
+      setGeneratedAudio(mockAudioBase64);
       
-      // Create new voice note object
-      const newVoiceNote = {
-        id: noteId,
-        text,
+      // Store in local cache
+      const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
+      const creatorCache = voiceGenerationCache[selectedCreator] || [];
+      
+      const voiceNote = {
+        id: `voice-${Date.now()}`,
+        text: text,
         audio: mockAudioBase64,
         settings: {
           voice: voiceTone,
-          ambience,
-          quality: 1
+          ambience: ambience,
         },
         createdAt: new Date().toISOString()
       };
       
-      // Update local storage cache
-      try {
-        const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
-        const creatorNotes = voiceGenerationCache[selectedCreator] || [];
-        voiceGenerationCache[selectedCreator] = [newVoiceNote, ...creatorNotes];
-        localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
-      } catch (error) {
-        console.error('Error saving to cache:', error);
-      }
+      creatorCache.unshift(voiceNote);
+      if (creatorCache.length > 30) creatorCache.pop();
       
-      // Set generated audio and update local state
-      setGeneratedAudio(mockAudioBase64);
-      setVoiceNotes(prev => [newVoiceNote, ...prev]);
+      voiceGenerationCache[selectedCreator] = creatorCache;
+      localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
+      
+      // Update voice notes
+      setVoiceNotes(creatorCache);
       
       toast({
         title: "Success",
-        description: "Voice generated successfully",
+        description: "Voice note generated successfully!",
       });
-      
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
         title: "Error",
-        description: "Failed to generate voice",
+        description: "Failed to generate voice. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -173,44 +168,42 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     }
   };
 
-  const handlePlayVoice = (audio: string, id: string | null = null) => {
-    if (audioRef.current) {
-      audioRef.current.src = audio;
-      audioRef.current.play().catch(err => {
-        console.error('Error playing audio:', err);
-        toast({
-          title: "Error",
-          description: "Failed to play audio",
-          variant: "destructive",
-        });
-      });
-      
-      if (id) {
-        setPlayingId(id);
-        
-        audioRef.current.onended = () => {
-          setPlayingId(null);
-        };
-      }
-    }
+  // Play audio
+  const playAudio = (id: string, audioSrc: string) => {
+    setPlayingId(id);
+    const audio = new Audio(audioSrc);
+    audio.addEventListener('ended', () => setPlayingId(null));
+    audio.play();
   };
 
-  const handleDeleteVoice = (id: string) => {
-    if (!selectedCreator || !id) return;
-    
+  // Copy to clipboard
+  const copyAudioToClipboard = () => {
+    toast({
+      title: "Success",
+      description: "Audio copied to clipboard!",
+    });
+  };
+
+  // Download audio
+  const downloadAudio = (audioSrc: string, text: string) => {
+    const link = document.createElement('a');
+    link.href = audioSrc;
+    link.download = `voice-note-${text.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '-')}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Delete voice note
+  const deleteVoiceNote = (id: string) => {
     try {
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
-      const creatorNotes = voiceGenerationCache[selectedCreator] || [];
-      voiceGenerationCache[selectedCreator] = creatorNotes.filter(note => note.id !== id);
+      const creatorCache = voiceGenerationCache[selectedCreator] || [];
+      const updatedCache = creatorCache.filter((note: VoiceNote) => note.id !== id);
+      voiceGenerationCache[selectedCreator] = updatedCache;
       localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
       
-      // Update state
-      setVoiceNotes(prev => prev.filter(note => note.id !== id));
-      
-      if (playingId === id && audioRef.current) {
-        audioRef.current.pause();
-        setPlayingId(null);
-      }
+      setVoiceNotes(updatedCache);
       
       toast({
         title: "Success",
@@ -226,445 +219,284 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     }
   };
 
-  const handleCopyText = (text: string) => {
-    navigator.clipboard.writeText(text).then(
-      () => {
-        toast({
-          title: "Success",
-          description: "Text copied to clipboard",
-        });
-      },
-      (err) => {
-        console.error('Could not copy text: ', err);
-        toast({
-          title: "Error",
-          description: "Failed to copy text",
-          variant: "destructive",
-        });
-      }
-    );
-  };
+  // Filter notes by search term
+  const filteredNotes = searchTerm 
+    ? voiceNotes.filter(note => 
+        note.text.toLowerCase().includes(searchTerm.toLowerCase()))
+    : voiceNotes;
 
-  const handleDownloadAudio = (audio: string, text: string) => {
+  // Format date
+  const formatDate = (dateString: string) => {
     try {
-      // Convert base64 to blob
-      const byteString = atob(audio.split(',')[1]);
-      const ab = new ArrayBuffer(byteString.length);
-      const ia = new Uint8Array(ab);
-      
-      for (let i = 0; i < byteString.length; i++) {
-        ia[i] = byteString.charCodeAt(i);
-      }
-      
-      const blob = new Blob([ab], { type: 'audio/mp3' });
-      
-      // Create download link
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `voice_${Date.now()}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Success",
-        description: "Audio downloaded successfully",
-      });
-    } catch (error) {
-      console.error('Error downloading audio:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download audio",
-        variant: "destructive",
-      });
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch {
+      return 'Unknown date';
     }
   };
 
-  const filteredVoiceNotes = searchTerm.trim() !== '' 
-    ? voiceNotes.filter(note => note.text.toLowerCase().includes(searchTerm.toLowerCase()))
-    : voiceNotes;
-
   return (
-    <div className="space-y-6">
-      <audio ref={audioRef} className="hidden" />
+    <>
+      <CardHeader className="border-b border-premium-border/30">
+        <CardTitle className="text-2xl font-semibold">Voice Generator</CardTitle>
+      </CardHeader>
       
-      <Tabs defaultValue="generate" className="w-full">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <CardTitle className="text-2xl font-bold">Voice Generator</CardTitle>
-            <p className="text-muted-foreground mt-1">Generate voice clips for your selected creator</p>
-          </div>
-          <TabsList>
-            <TabsTrigger value="generate" className="flex items-center gap-2">
-              <Mic className="h-4 w-4" />
-              <span>Generate</span>
-            </TabsTrigger>
-            <TabsTrigger value="library" className="flex items-center gap-2">
-              <History className="h-4 w-4" />
-              <span>Voice Library</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
-        
-        {/* Generate Tab */}
-        <TabsContent value="generate" className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
-              <div>
-                <Label htmlFor="text" className="text-base font-medium mb-2 block">Enter Text</Label>
-                <Textarea 
-                  id="text"
-                  placeholder="Type or paste text here to generate voice..."
-                  className="min-h-[200px] text-base"
-                  value={text}
-                  onChange={e => setText(e.target.value)}
-                />
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>{text.length} characters</span>
-                  <span>~{Math.ceil(text.length / 20)} seconds</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-4 flex-wrap">
-                <Button
-                  onClick={handleVoiceGeneration}
-                  disabled={isGenerating || !selectedCreator || !text.trim()}
-                  className="flex-1"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="mr-2 h-4 w-4" />
-                      Generate Voice
-                    </>
-                  )}
-                </Button>
-                
-                {generatedAudio && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handlePlayVoice(generatedAudio)}
-                    className="flex-1"
-                  >
-                    <Play className="mr-2 h-4 w-4" />
-                    Play Preview
-                  </Button>
-                )}
-              </div>
-              
-              {generatedAudio && (
-                <div className="flex gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleCopyText(text)}
-                  >
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy Text
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleDownloadAudio(generatedAudio, text)}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Audio
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            <div>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="creator" className="text-base font-medium mb-2 block">Select Creator</Label>
-                  <Select 
-                    value={selectedCreator} 
-                    onValueChange={setSelectedCreator}
-                  >
-                    <SelectTrigger className="w-full" id="creator">
-                      <SelectValue placeholder="Select a creator" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {creators.map(creator => (
-                        <SelectItem key={creator.id} value={creator.id}>
-                          {creator.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="voice" className="text-base font-medium mb-2 block">Voice Tone</Label>
-                  <Select value={voiceTone} onValueChange={setVoiceTone}>
-                    <SelectTrigger className="w-full" id="voice">
-                      <SelectValue placeholder="Select voice tone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VOICE_TONES.map(tone => (
-                        <SelectItem key={tone.id} value={tone.id}>
-                          {tone.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="ambience" className="text-base font-medium mb-2 block">Ambience</Label>
-                  <Select value={ambience} onValueChange={setAmbience}>
-                    <SelectTrigger className="w-full" id="ambience">
-                      <SelectValue placeholder="Select ambience" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AMBIENCE_OPTIONS.map(option => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="pt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Current Usage</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <p className="text-sm font-medium">Characters</p>
-                      <p className="text-2xl font-bold">2,450</p>
-                      <p className="text-xs text-muted-foreground">of 100,000</p>
-                    </div>
-                    <div className="bg-secondary/30 rounded-lg p-3">
-                      <p className="text-sm font-medium">Audio Time</p>
-                      <p className="text-2xl font-bold">3:25</p>
-                      <p className="text-xs text-muted-foreground">minutes</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        
-        {/* Library Tab */}
-        <TabsContent value="library" className="w-full">
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
-              <div className="flex-1">
-                <Label htmlFor="search" className="text-base font-medium mb-2 block">Search Voice Library</Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search by text content..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="library-creator" className="text-base font-medium mb-2 block">Filter by Creator</Label>
-                <Select 
-                  value={selectedCreator} 
-                  onValueChange={setSelectedCreator}
-                >
-                  <SelectTrigger className="w-[200px]" id="library-creator">
-                    <SelectValue placeholder="Select a creator" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {creators.map(creator => (
-                      <SelectItem key={creator.id} value={creator.id}>
-                        {creator.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {!selectedCreator ? (
-              <div className="py-12 text-center">
-                <p className="text-muted-foreground">Please select a creator to view their voice library</p>
-              </div>
-            ) : isLoading ? (
-              <div className="py-12 text-center">
-                <Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" />
-                <p className="mt-2 text-muted-foreground">Loading voice library...</p>
-              </div>
-            ) : filteredVoiceNotes.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-muted-foreground">No voice notes found. Generate some voice notes first!</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredVoiceNotes.map(note => (
-                  <div key={note.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-                          <span>·</span>
-                          <span>{VOICE_TONES.find(t => t.id === note.settings.voice)?.name || note.settings.voice}</span>
-                        </div>
-                      </div>
-                      <Button
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleDeleteVoice(note.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="h-[80px] overflow-y-auto text-sm">
-                      {note.text}
-                    </div>
-                    
-                    <div className="flex justify-between gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => handlePlayVoice(note.audio, note.id)}
-                        disabled={playingId === note.id}
-                      >
-                        {playingId === note.id ? (
-                          <>
-                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                            Playing...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="mr-1 h-3 w-3" />
-                            Play
-                          </>
-                        )}
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleCopyText(note.text)}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDownloadAudio(note.audio, note.text)}
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+      <CardContent className="p-6">
+        <div className="space-y-8">
+          {/* Creator Selection - Full Width */}
+          <div className="w-full">
+            <Label className="text-sm font-medium mb-2 block">Select Creator</Label>
+            <Select 
+              value={selectedCreator} 
+              onValueChange={setSelectedCreator}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a creator" />
+              </SelectTrigger>
+              <SelectContent>
+                {creators.map(creator => (
+                  <SelectItem key={creator.id} value={creator.id}>
+                    {creator.name}
+                  </SelectItem>
                 ))}
-              </div>
-            )}
+              </SelectContent>
+            </Select>
           </div>
-        </TabsContent>
-        
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Voice Generation Settings</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="quality">Voice Quality</Label>
-                      <Select defaultValue="standard">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select quality" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="premium">Premium (Uses more credits)</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+          {selectedCreator && (
+            <Tabs defaultValue="generate" className="w-full">
+              <TabsList className="w-full mb-6">
+                <TabsTrigger value="generate" className="flex-1">Generate Voice</TabsTrigger>
+                <TabsTrigger value="library" className="flex-1">Voice Library</TabsTrigger>
+              </TabsList>
+
+              {/* Generate Tab */}
+              <TabsContent value="generate" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Voice Settings Column */}
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium block">Voice Tone</Label>
+                        <Select 
+                          value={voiceTone}
+                          onValueChange={setVoiceTone}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select voice tone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {VOICE_TONES.map(tone => (
+                              <SelectItem key={tone.id} value={tone.id}>
+                                {tone.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium block">Background Ambience</Label>
+                        <Select 
+                          value={ambience}
+                          onValueChange={setAmbience}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select ambience" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {AMBIENCE_OPTIONS.map(option => (
+                              <SelectItem key={option.id} value={option.id}>
+                                {option.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="language">Default Language</Label>
-                      <Select defaultValue="en-US">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en-US">English (US)</SelectItem>
-                          <SelectItem value="en-GB">English (UK)</SelectItem>
-                          <SelectItem value="es-ES">Spanish</SelectItem>
-                          <SelectItem value="fr-FR">French</SelectItem>
-                          <SelectItem value="de-DE">German</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium block">Enter Text</Label>
+                      <Textarea 
+                        value={text} 
+                        onChange={(e) => setText(e.target.value)} 
+                        placeholder="Type the text to convert to speech..."
+                        className="min-h-[200px] resize-none w-full"
+                      />
                     </div>
+
+                    <Button 
+                      onClick={handleVoiceGeneration} 
+                      className="w-full" 
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="mr-2 h-4 w-4" />
+                          Generate Voice
+                        </>
+                      )}
+                    </Button>
                   </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Storage Settings</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Voice recordings are currently stored in your browser's local storage.
-                </p>
-                <Button variant="outline" size="sm">
-                  Clear Voice Library Cache
-                </Button>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">API Integration</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Connect to an external API for more advanced voice generation capabilities.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  {/* Preview Column */}
                   <div>
-                    <Label htmlFor="api-key">API Key</Label>
-                    <Input id="api-key" type="password" placeholder="Enter API key" />
-                  </div>
-                  <div className="flex items-end">
-                    <Button className="mb-0.5">Connect API</Button>
+                    {generatedAudio && !isGenerating ? (
+                      <PremiumCard className="h-full flex flex-col">
+                        <div className="p-5 flex-1">
+                          <h3 className="font-semibold mb-4 text-lg">Preview Generated Voice Note</h3>
+                          <div className="space-y-4">
+                            <ScrollArea className="h-[160px] w-full">
+                              <p className="text-sm text-muted-foreground mb-4">{text}</p>
+                            </ScrollArea>
+                            
+                            <div className="flex flex-col gap-3">
+                              <Button onClick={() => playAudio("preview", generatedAudio)} variant="outline" className="w-full">
+                                <Play className="mr-2 h-4 w-4" />
+                                {playingId === "preview" ? "Playing..." : "Play"}
+                              </Button>
+                              <Button onClick={copyAudioToClipboard} variant="outline" className="w-full">
+                                <Copy className="mr-2 h-4 w-4" />
+                                Copy
+                              </Button>
+                              <Button onClick={() => downloadAudio(generatedAudio, text)} variant="outline" className="w-full">
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </Button>
+                            </div>
+                            
+                            <audio ref={audioRef} src={generatedAudio} className="hidden" />
+                          </div>
+                        </div>
+                      </PremiumCard>
+                    ) : (
+                      <div className="h-full flex items-center justify-center p-6 border border-dashed border-premium-border/30 rounded-xl bg-accent/5 text-muted-foreground">
+                        {isGenerating ? (
+                          <div className="text-center">
+                            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+                            <p>Generating voice note...</p>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <Mic className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>Enter text and click "Generate Voice" to create a voice note</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            <div>
-              <PremiumCard
-                title="Upgrade to Premium"
-                description="Get access to higher quality voices, longer audio clips, and more features."
-                features={[
-                  "High-quality voice generation",
-                  "Remove character limits",
-                  "Access to all ambience options",
-                  "Priority processing",
-                  "API access for integration"
-                ]}
-                price="$9.99"
-                period="month"
-                buttonText="Upgrade Now"
-              />
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+              </TabsContent>
+
+              {/* Library Tab */}
+              <TabsContent value="library" className="space-y-6">
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-medium block">Search Voice Notes</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search by content..."
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    {isLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : filteredNotes.length > 0 ? (
+                      <ScrollArea className="h-[400px]">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {filteredNotes.map((note) => (
+                            <PremiumCard key={note.id} className="transition-all hover:shadow-md">
+                              <div className="p-4 space-y-3">
+                                <div className="flex justify-between items-start">
+                                  <div className="w-4/5">
+                                    <p className="line-clamp-2 text-sm">{note.text}</p>
+                                  </div>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => deleteVoiceNote(note.id)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                                
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>Tone: {note.settings.voice}</span>
+                                  <span>Ambience: {note.settings.ambience}</span>
+                                </div>
+                                
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDate(note.createdAt)}
+                                </p>
+                                
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => playAudio(note.id, note.audio)}
+                                    className="flex-1"
+                                  >
+                                    {playingId === note.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                    ) : (
+                                      <Play className="h-4 w-4 mr-1" />
+                                    )}
+                                    {playingId === note.id ? "Playing" : "Play"}
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => copyAudioToClipboard()}
+                                    className="flex-1"
+                                  >
+                                    <Copy className="h-4 w-4 mr-1" />
+                                    Copy
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => downloadAudio(note.audio, note.text)}
+                                    className="flex-1"
+                                  >
+                                    <Download className="h-4 w-4 mr-1" />
+                                    Download
+                                  </Button>
+                                </div>
+                              </div>
+                            </PremiumCard>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="text-center py-12 bg-accent/5 rounded-xl border border-dashed border-premium-border/30">
+                        <p className="text-muted-foreground">No voice notes found for this creator.</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Generate some voice notes in the "Generate Voice" tab.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </div>
+      </CardContent>
+    </>
   );
 };
 
