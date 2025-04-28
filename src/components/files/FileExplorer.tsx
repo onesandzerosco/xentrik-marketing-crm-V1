@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/files/EmptyState';
 import { FileViewSkeleton } from '@/components/files/FileViewSkeleton';
 import FileUploader from '@/components/messages/FileUploader';
 import { CreatorFileType } from '@/pages/CreatorFiles';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from "@/components/ui/use-toast";
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -45,30 +45,30 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRefresh();
   };
 
-  // Filter files based on search and folder
   const filteredFiles = files.filter(file => {
     const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFolder = !activeFolder || file.type === activeFolder;
-    return matchesSearch && matchesFolder;
+    return matchesSearch;
   });
 
   return (
-    <div className="max-w-full mx-auto space-y-6">
+    <div className="max-w-[1400px] mx-auto p-6">
       <FileHeader 
         creatorName={creatorName}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-3">
-          <FolderNav 
-            activeFolder={activeFolder}
-            onFolderChange={setActiveFolder}
-          />
-        </div>
+      <div className="mt-6 flex gap-6">
+        <aside className="w-56">
+          <PremiumCard className="p-4">
+            <FolderNav 
+              activeFolder={activeFolder}
+              onFolderChange={setActiveFolder}
+            />
+          </PremiumCard>
+        </aside>
 
-        <div className="col-span-9">
+        <main className="flex-1">
           <div className="flex justify-end gap-2 mb-4">
             <Button
               variant="outline"
@@ -83,14 +83,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <Button 
               onClick={handleUploadFile}
               variant="premium"
-              className="flex items-center gap-2 text-black"
+              className="flex items-center gap-2"
             >
               <Upload className="h-4 w-4" />
               <span>Upload</span>
             </Button>
           </div>
 
-          <PremiumCard className="overflow-hidden">
+          <PremiumCard>
             {isLoading ? (
               <FileViewSkeleton viewMode={viewMode} />
             ) : filteredFiles.length > 0 ? (
@@ -100,10 +100,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 <FileList files={filteredFiles} />
               )
             ) : (
-              <EmptyState isFiltered={!!searchQuery || !!activeFolder} />
+              <EmptyState isFiltered={!!searchQuery} />
             )}
           </PremiumCard>
-        </div>
+        </main>
       </div>
       
       <div className="hidden">

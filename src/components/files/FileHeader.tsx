@@ -16,23 +16,23 @@ export const FileHeader: React.FC<FileHeaderProps> = ({
   onSearchChange,
 }) => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div>
+      <div className="flex items-center gap-4 mb-6">
         <BackButton to="/shared-files" />
         <div>
           <h1 className="text-2xl font-semibold">{creatorName}&apos;s Files</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Browse and download shared files
+            Browse and manage shared files
           </p>
         </div>
       </div>
 
-      <div className="flex gap-4 items-center">
-        <div className="relative flex-1">
+      <div className="max-w-md">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
             placeholder="Search files..." 
-            className="pl-10 bg-accent/10"
+            className="pl-10"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
