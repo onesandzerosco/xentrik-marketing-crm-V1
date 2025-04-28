@@ -16,6 +16,7 @@ export interface CreatorFileType {
   created_at: string;
   url: string;
   type: string;
+  status?: 'uploading' | 'complete';
 }
 
 const CreatorFiles = () => {
@@ -62,7 +63,8 @@ const CreatorFiles = () => {
         size: file.metadata?.size || 0,
         created_at: file.created_at || new Date().toISOString(),
         url: data?.signedUrl || '',
-        type
+        type,
+        status: 'complete' // Add default status
       };
     }));
 
