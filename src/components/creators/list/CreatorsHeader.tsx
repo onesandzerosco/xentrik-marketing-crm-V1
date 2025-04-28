@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Users, Filter, Plus, SlidersHorizontal, AlertCircle } from "lucide-react";
 import {
@@ -66,33 +65,34 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         <div className="relative flex-1">
           <Input
             placeholder="Search by name or email..."
-            className="pl-10 h-12 w-full bg-background border-border text-foreground"
+            className="pl-10 h-12 w-full bg-background border-white/20 text-white"
             value={searchQuery}
             onChange={handleSearchChange}
           />
           <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
+            <SlidersHorizontal className="h-5 w-5 text-white" />
           </span>
         </div>
         {/* Gender Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
               <SlidersHorizontal className="h-5 w-5" />
               Gender
               {selectedGenders.length > 0 && (
-                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{selectedGenders.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedGenders.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
-            <DropdownMenuLabel>Filter by gender</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by gender</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
             {genderTags.map((g) => (
               <DropdownMenuCheckboxItem
                 key={g}
                 checked={selectedGenders.includes(g)}
                 onCheckedChange={() => toggleGender(g)}
+                className="text-white"
               >
                 {g}
               </DropdownMenuCheckboxItem>
@@ -102,22 +102,23 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         {/* Team Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
               <Users className="h-5 w-5" />
               Teams
               {selectedTeams.length > 0 && (
-                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{selectedTeams.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedTeams.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
-            <DropdownMenuLabel>Filter by team</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by team</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
             {teamTags.map((t) => (
               <DropdownMenuCheckboxItem
                 key={t}
                 checked={selectedTeams.includes(t)}
                 onCheckedChange={() => toggleTeam(t)}
+                className="text-white"
               >
                 {t}
               </DropdownMenuCheckboxItem>
@@ -127,22 +128,23 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         {/* Class Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12">
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
               <AlertCircle className="h-5 w-5" />
               Class
               {selectedClasses.length > 0 && (
-                <span className="ml-1 bg-primary/10 text-xs px-2 py-0.5 rounded-full">{selectedClasses.length}</span>
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full">{selectedClasses.length}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="z-50 w-44 bg-background">
-            <DropdownMenuLabel>Filter by class</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by class</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
             {classTags.map((c) => (
               <DropdownMenuCheckboxItem
                 key={c}
                 checked={selectedClasses.includes(c)}
                 onCheckedChange={() => toggleClass(c)}
+                className="text-white"
               >
                 {c}
               </DropdownMenuCheckboxItem>
@@ -151,7 +153,7 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
         </DropdownMenu>
         {/* Clear button if any filters are active */}
         {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || searchQuery) && (
-          <Button variant="ghost" size="sm" className="h-12" onClick={handleClearFilters}>
+          <Button variant="ghost" size="sm" className="h-12 text-white hover:text-white/80" onClick={handleClearFilters}>
             <span className="mr-1">Clear</span>
             <Filter className="h-4 w-4" />
           </Button>
