@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import PageTransition from '../PageTransition';
@@ -13,6 +13,9 @@ import {
 import SidebarLogo from '../sidebar/SidebarLogo';
 import SidebarNav from '../sidebar/SidebarNav';
 import SidebarUserSection from '../sidebar/SidebarUserSection';
+import { useRouteMemory } from '@/hooks/useRouteMemory';
+import { Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,13 +25,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
   const { user } = useSupabaseAuth();
   const location = useLocation();
+  const [pageTitle, setPageTitle] = useState("Dashboard");
   
-  // Store current path when user navigates
+  // Use our centralized route memory hook
+  useRouteMemory();
+  
+  // Update page title based on current route
   useEffect(() => {
-    if (isAuthenticated && location.pathname !== "/login") {
-      localStorage.setItem("lastVisitedRoute", location.pathname);
-    }
-  }, [location.pathname, isAuthenticated]);
+    const path = location.pathname;
+    if (path.includes('/dashboard')) setPageTitle('Dashboard');
+    else if (path.includes('/creators')) setPageTitle('Creators');
+    else if (path.includes('/team')) setPageTitle('Team');
+    else if (path.includes('/users')) setPageTitle('User Management');
+    else if (path.includes('/messages')) setPageTitle('Messages');
+    else if (path.includes('/shared-files')) setPageTitle('Shared Files');
+    else if (path.includes('/creator-files')) setPageTitle('Creator Files');
+    else if (path.includes('/secure-logins')) setPageTitle('Secure Logins');
+    else if (path.includes('/account')) setPageTitle('Account Settings');
+    else if (path.includes('/voice-generation')) setPageTitle('Voice Generation');
+    else setPageTitle('Dashboard');
+  }, [location.pathname]);
   
   if (isLoading) {
     return (
@@ -63,9 +79,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         </Sidebar>
         
         <SidebarInset className="bg-premium-dark overflow-y-auto">
-          <div className="flex items-center border-b border-premium-border/20 bg-premium-darker p-4">
-            <SidebarTrigger />
-            <h1 className="ml-4 text-lg font-semibold">Dashboard</h1>
+          <div className="flex items-center justify-between border-b border-premium-border/20 bg-premium-darker p-4">
+            <div className="flex items-center">
+              <SidebarTrigger />
+              <h1 className="ml-4 text-lg font-semibold">{pageTitle}</h1>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-white">
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+              </Button>
+            </div>
           </div>
           
           <PageTransition>

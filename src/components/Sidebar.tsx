@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +11,7 @@ import {
 import SidebarLogo from "./sidebar/SidebarLogo";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarUserSection from "./sidebar/SidebarUserSection";
+import { useRouteMemory } from "@/hooks/useRouteMemory";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -18,12 +19,8 @@ const Sidebar = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
   
-  // Store current location path in localStorage when it changes
-  useEffect(() => {
-    if (location.pathname !== "/login" && !location.pathname.includes("/auth")) {
-      localStorage.setItem("lastVisitedRoute", location.pathname);
-    }
-  }, [location.pathname]);
+  // Use the centralized route memory hook
+  useRouteMemory();
 
   if (isMobile) {
     return null;

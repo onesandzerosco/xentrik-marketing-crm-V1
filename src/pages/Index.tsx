@@ -22,7 +22,10 @@ const Index = () => {
   
   return (
     <div className="flex h-screen w-full items-center justify-center">
-      Loading...
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-premium-border border-t-brand-yellow"></div>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
     </div>
   );
 };

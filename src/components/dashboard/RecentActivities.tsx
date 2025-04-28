@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Activity, ChangeDetail } from "@/types/activity";
 import { formatDistanceToNow } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +18,7 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities: initial
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const supabaseChannelRef = useRef<any>(null);
 
   // Set up a real-time subscription to activities
   useEffect(() => {
@@ -32,43 +33,38 @@ const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities: initial
         schema: 'public',
         table: 'activities'
       }, (payload) => {
-        // When a new activity is added, refresh the list
-        fetchLatestActivities();
-      })
-      .subscribe();
-
-    // Fetch latest activities function
-    const fetchLatestActivities = async () => {
-      try {
-        setIsLoading(true);
+        console.log('Received activity update:', payload);
         
-        // In a production app, you would fetch from Supabase here
-        // Since we're still using the context, we'll just use the provided activities
-        setActivities(initialActivities);
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching activities:', error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch recent activities",
-          variant: "destructive",
+        // When we receive updates, refresh activities using context data
+        // This avoids race conditions with polling
+        setActivities(prev => {
+          // If it's a new activity, add it to the top
+          if (payload.eventType === 'INSERT') {
+            const newActivity = payload.new as Activity;
+            // Ensure we don't add duplicates by checking IDs
+            const exists = prev.some(activity => activity.id === newActivity.id);
+            if (!exists) {
+              return [newActivity, ...prev];
+            }
+          }
+          return [...prev];
         });
-        setIsLoading(false);
+      })
+      .subscribe((status) => {
+        console.log('Supabase channel status:', status);
+      });
+    
+    // Store the channel reference for cleanup
+    supabaseChannelRef.current = channel;
+    
+    // Clean up function
+    return () => {
+      if (supabaseChannelRef.current) {
+        console.log('Removing Supabase channel');
+        supabase.removeChannel(supabaseChannelRef.current);
       }
     };
-
-    // Set up polling as backup for real-time (every 30 seconds)
-    const pollingInterval = setInterval(() => {
-      fetchLatestActivities();
-    }, 30000);
-
-    return () => {
-      // Clean up subscriptions and intervals
-      supabase.removeChannel(channel);
-      clearInterval(pollingInterval);
-    };
-  }, [initialActivities, toast]);
+  }, [initialActivities]);
 
   // Map activity type to color
   const getActivityColor = (type: string) => {
