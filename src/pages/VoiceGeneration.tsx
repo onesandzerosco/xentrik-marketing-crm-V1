@@ -19,7 +19,7 @@ const VoiceGeneration: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
-      <Card className="border border-premium-border shadow-premium-sm bg-gradient-to-br from-accent/5 to-accent/10">
+      <Card className="border-premium-border shadow-premium-sm">
         <VoiceGeneratorLayout creators={creators} toast={toast} />
       </Card>
     </div>
