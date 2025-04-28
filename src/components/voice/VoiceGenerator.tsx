@@ -135,104 +135,106 @@ const VoiceGenerator: React.FC<VoiceGeneratorProps> = ({ creators, toast }) => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div>
-            <Label>Select Creator</Label>
-            <Select 
-              value={selectedCreator} 
-              onValueChange={setSelectedCreator}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a creator" />
-              </SelectTrigger>
-              <SelectContent>
-                {creators.map(creator => (
-                  <SelectItem key={creator.id} value={creator.id}>
-                    {creator.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedCreator && (
-            <>
-              <div>
-                <Label>Voice Tone</Label>
-                <Select 
-                  value={voiceTone}
-                  onValueChange={setVoiceTone}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select voice tone" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {VOICE_TONES.map(tone => (
-                      <SelectItem key={tone.id} value={tone.id}>
-                        {tone.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Background Ambience</Label>
-                <Select 
-                  value={ambience}
-                  onValueChange={setAmbience}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select ambience" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AMBIENCE_OPTIONS.map(option => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Enter Text</Label>
-                <Textarea 
-                  value={text} 
-                  onChange={(e) => setText(e.target.value)} 
-                  placeholder="Type the text to convert to speech..."
-                  className="min-h-[120px]"
-                />
-              </div>
-
-              <Button 
-                onClick={handleVoiceGeneration} 
-                className="w-full" 
-                disabled={isGenerating}
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium mb-1.5">Select Creator</Label>
+              <Select 
+                value={selectedCreator} 
+                onValueChange={setSelectedCreator}
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Mic className="mr-2 h-4 w-4" />
-                    Generate Voice
-                  </>
-                )}
-              </Button>
-            </>
-          )}
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose a creator" />
+                </SelectTrigger>
+                <SelectContent>
+                  {creators.map(creator => (
+                    <SelectItem key={creator.id} value={creator.id}>
+                      {creator.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedCreator && (
+              <>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5">Voice Tone</Label>
+                  <Select 
+                    value={voiceTone}
+                    onValueChange={setVoiceTone}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select voice tone" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VOICE_TONES.map(tone => (
+                        <SelectItem key={tone.id} value={tone.id}>
+                          {tone.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium mb-1.5">Background Ambience</Label>
+                  <Select 
+                    value={ambience}
+                    onValueChange={setAmbience}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select ambience" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AMBIENCE_OPTIONS.map(option => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Enter Text</Label>
+                  <Textarea 
+                    value={text} 
+                    onChange={(e) => setText(e.target.value)} 
+                    placeholder="Type the text to convert to speech..."
+                    className="min-h-[120px] resize-none"
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleVoiceGeneration} 
+                  className="w-full" 
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="mr-2 h-4 w-4" />
+                      Generate Voice
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         <div>
           {generatedAudio && !isGenerating && (
-            <Card className="bg-gradient-to-br from-accent/10 to-accent/5">
-              <div className="p-4">
-                <p className="font-semibold">Preview Generated Voice Note</p>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{text}</p>
+            <Card className="bg-gradient-to-br from-accent/10 to-accent/5 p-6">
+              <h3 className="font-semibold mb-4">Preview Generated Voice Note</h3>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{text}</p>
                 
                 <div className="flex flex-col gap-3">
                   <Button onClick={playAudio} variant="outline" className="w-full">
