@@ -1,143 +1,92 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Creator } from "../types";
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Creator } from '@/types';
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  BarChart2, 
-  Pencil,
-  AlertCircle,
-  Instagram,
-  Twitter,
-  Youtube,
-  Globe
-} from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Share2, Upload } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
 
 interface CreatorCardProps {
   creator: Creator;
+  fileStats?: {
+    total: number;
+    uploading: number;
+  };
 }
 
-const CreatorCard: React.FC<CreatorCardProps> = ({ creator }) => {
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map(part => part[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
+const CreatorCard = ({ creator, fileStats = { total: 0, uploading: 0 } }: CreatorCardProps) => {
+  const { toast } = useToast();
+  const hasUploads = fileStats.uploading > 0;
 
-  const getSocialIcons = () => {
-    const icons = [];
-    
-    if (creator.socialLinks?.instagram) icons.push(
-      <a href={creator.socialLinks.instagram} target="_blank" rel="noopener noreferrer" key="instagram">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Instagram className="h-4 w-4 text-pink-500" />
-        </Button>
-      </a>
-    );
-    
-    if (creator.socialLinks?.twitter) icons.push(
-      <a href={creator.socialLinks.twitter} target="_blank" rel="noopener noreferrer" key="twitter">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Twitter className="h-4 w-4 text-blue-400" />
-        </Button>
-      </a>
-    );
-    
-    if (creator.socialLinks?.youtube) icons.push(
-      <a href={creator.socialLinks.youtube} target="_blank" rel="noopener noreferrer" key="youtube">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Youtube className="h-4 w-4 text-red-500" />
-        </Button>
-      </a>
-    );
-    
-    if (creator.socialLinks && Object.keys(creator.socialLinks).some(key => 
-      !['instagram', 'twitter', 'youtube'].includes(key) && creator.socialLinks[key])) {
-      icons.push(
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" key="other">
-          <Globe className="h-4 w-4 text-gray-500" />
-        </Button>
-      );
-    }
-    
-    return icons;
-  };
-
-  const getTagClass = (tag: string) => {
-    if (["Male", "Female", "Trans"].includes(tag)) {
-      return "bg-violet-500/10 text-violet-200";
-    }
-    if (["A Team", "B Team", "C Team"].includes(tag)) {
-      return "bg-amber-500/10 text-amber-200";
-    }
-    if (["Real", "AI"].includes(tag)) {
-      return "bg-emerald-500/10 text-emerald-200";
-    }
-    return "";
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/creator-files/${creator.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link copied!",
+      description: "The sharing link has been copied to your clipboard.",
+    });
   };
 
   return (
-    <div className={`flex items-center gap-4 p-4 bg-card border border-border rounded-lg hover:bg-accent/5 transition-colors ${creator.needsReview ? "border-red-500" : ""}`}>
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        <Avatar className="h-12 w-12 border border-border shrink-0">
-          <AvatarImage src={creator.profileImage} alt={creator.name} />
-          <AvatarFallback>{getInitials(creator.name)}</AvatarFallback>
-        </Avatar>
+    <Card className="p-4 hover:bg-accent/5 transition-colors group">
+      <div className="flex items-center gap-4">
+        <div className="shrink-0">
+          {creator.profileImage ? (
+            <img 
+              src={creator.profileImage} 
+              alt={creator.name} 
+              className="w-12 h-12 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-all"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-premium-highlight/10 flex items-center justify-center">
+              <span className="text-lg font-semibold text-primary/60 group-hover:text-primary/80 transition-colors">
+                {creator.name[0].toUpperCase()}
+              </span>
+            </div>
+          )}
+        </div>
         
-        <div className="flex-1 min-w-0 space-y-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium truncate">{creator.name}</h3>
-            {creator.needsReview && (
-              <Badge variant="destructive" className="shrink-0">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Review
-              </Badge>
-            )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
+              <div className="text-sm text-muted-foreground mt-0.5">
+                {fileStats.total} {fileStats.total === 1 ? 'file' : 'files'}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={handleShare}
+                className="h-9 hover:bg-gradient-premium-yellow hover:text-black transition-all"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+              <Link to={`/creator-files/${creator.id}`}>
+                <Button 
+                  variant="premium" 
+                  className="h-9 shadow-premium-yellow hover:shadow-premium-highlight"
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  View Files
+                </Button>
+              </Link>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="truncate">ID: {creator.id}</span>
-          </div>
-
-          {(creator.tags && creator.tags.length > 0) && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {creator.tags.map(tag => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary" 
-                  className={`text-xs ${getTagClass(tag)}`}
-                >
-                  {tag}
-                </Badge>
-              ))}
+          {hasUploads && (
+            <div className="mt-3">
+              <Progress value={65} className="h-2" />
+              <span className="text-xs text-primary mt-1 block">
+                {fileStats.uploading} files uploading...
+              </span>
             </div>
           )}
         </div>
       </div>
-
-      <div className="flex items-center gap-2">
-        {getSocialIcons()}
-        <div className="h-6 w-px bg-border mx-2" />
-        <Link to={`/creators/${creator.id}/analytics`}>
-          <Button variant="outline" size="sm" className="h-8">
-            <BarChart2 className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Link to={`/creators/${creator.id}`}>
-          <Button 
-            variant="premium" 
-            size="sm" 
-            className="h-8 shadow-premium-yellow hover:shadow-premium-highlight"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
-    </div>
+    </Card>
   );
 };
 
