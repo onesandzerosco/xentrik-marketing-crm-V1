@@ -5,6 +5,9 @@ import CreatorsHeader from "../components/creators/list/CreatorsHeader";
 import ActiveFilters from "../components/creators/list/ActiveFilters";
 import CreatorsList from "../components/creators/list/CreatorsList";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { BarChart2, Edit } from "lucide-react";
 
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
@@ -67,23 +70,26 @@ const Creators = () => {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* Remove old ActiveFilters, can show chip-row if you want */}
-      {/* 
-      <ActiveFilters 
-        selectedGenders={selectedGenders}
-        selectedTeams={selectedTeams}
-        selectedClasses={selectedClasses}
-        setSelectedGenders={setSelectedGenders}
-        setSelectedTeams={setSelectedTeams}
-        setSelectedClasses={setSelectedClasses}
-        handleClearFilters={handleClearFilters}
-      />
-      */}
-
       <CreatorsList 
         isLoading={isLoading}
         creators={filteredCreators}
         hasFilters={hasFilters}
+        renderCreatorActions={(creator) => (
+          <div className="flex gap-2">
+            <Link to={`/creators/${creator.id}/analytics`}>
+              <Button variant="outline" size="sm" className="border-white/20 text-white">
+                <BarChart2 className="h-4 w-4 mr-2" />
+                Analytics
+              </Button>
+            </Link>
+            <Link to={`/creators/${creator.id}`}>
+              <Button variant="outline" size="sm" className="border-white/20 text-white">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            </Link>
+          </div>
+        )}
       />
     </div>
   );
