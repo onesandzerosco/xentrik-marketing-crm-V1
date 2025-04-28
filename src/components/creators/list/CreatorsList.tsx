@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Creator } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Instagram, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import EmptyState from "./EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -23,18 +23,14 @@ const CreatorsList: React.FC<CreatorsListProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-1 gap-6">
+        {[...Array(3)].map((_, i) => (
           <Card key={i} className="p-6 bg-card/50 backdrop-blur-sm shadow-sm border border-[#252538]">
-            <div className="flex gap-4 items-start">
+            <div className="flex gap-4 items-center">
               <Skeleton className="h-16 w-16 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-5 w-1/2" />
                 <Skeleton className="h-4 w-5/6" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-16" />
-                </div>
               </div>
             </div>
           </Card>
@@ -57,10 +53,10 @@ const CreatorsList: React.FC<CreatorsListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="flex flex-col gap-4">
       {creators.map((creator) => (
-        <Card key={creator.id} className="p-6 bg-card/50 backdrop-blur-sm shadow-sm border border-[#252538]">
-          <div className="flex gap-4 items-start">
+        <Card key={creator.id} className="p-4 bg-[#171727] backdrop-blur-sm shadow-sm border border-[#252538] relative">
+          <div className="flex gap-4 items-center">
             <Avatar className="h-16 w-16 border-2 border-[#252538] shadow-md">
               <AvatarImage src={creator.profileImage} alt={creator.name} />
               <AvatarFallback className="text-lg font-semibold bg-[#252538]">
@@ -69,9 +65,8 @@ const CreatorsList: React.FC<CreatorsListProps> = ({
             </Avatar>
             
             <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-lg line-clamp-1">{creator.name}</h3>
-              </div>
+              <h3 className="font-bold text-lg text-white">{creator.name}</h3>
+              <p className="text-gray-400 text-sm mb-2">ID: {creator.id?.split("-")[0] || "unknown"}</p>
               
               <div className="flex flex-wrap gap-2 mt-1">
                 {creator.gender && (
@@ -87,35 +82,15 @@ const CreatorsList: React.FC<CreatorsListProps> = ({
                   </Badge>
                 )}
                 
-                {creator.creatorType === "AI" && (
+                {creator.creatorType && (
                   <Badge variant="outline" className="bg-[#252538]/30 text-white border-[#252538]/80">
-                    <AlertCircle className="h-3 w-3 mr-1" />
-                    AI
+                    {creator.creatorType}
                   </Badge>
                 )}
               </div>
-              
-              <div className="mt-3 flex flex-col gap-2">
-                {creator.socialLinks?.instagram && (
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Instagram className="h-3.5 w-3.5 mr-1" /> 
-                    {creator.socialLinks.instagram}
-                  </div>
-                )}
-                
-                {creator.needsReview && (
-                  <Badge variant="outline" className="mt-1 w-fit bg-red-900/40 text-red-200 border-red-800/30">
-                    Needs Review
-                  </Badge>
-                )}
-              </div>
-              
-              {renderCreatorActions && (
-                <div className="mt-4">
-                  {renderCreatorActions(creator)}
-                </div>
-              )}
             </div>
+            
+            {renderCreatorActions && renderCreatorActions(creator)}
           </div>
         </Card>
       ))}
