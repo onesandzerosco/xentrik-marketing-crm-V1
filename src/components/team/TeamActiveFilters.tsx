@@ -49,28 +49,28 @@ const TeamActiveFilters: React.FC<TeamActiveFiltersProps> = ({
       <span className="text-sm text-muted-foreground mr-2">Active filters:</span>
       
       {filters.roles.map(role => (
-        <Badge key={role} variant="secondary" className="px-3 py-1.5 gap-1 text-sm">
+        <Badge key={role} variant="secondary" className="px-2 py-1 gap-1">
           {role}
           <button onClick={() => removeRole(role)} className="ml-1">
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
         </Badge>
       ))}
       
       {filters.teams.map(team => (
-        <Badge key={team} variant="secondary" className="px-3 py-1.5 gap-1 text-sm">
+        <Badge key={team} variant="secondary" className="px-2 py-1 gap-1">
           Team {team}
           <button onClick={() => removeTeam(team)} className="ml-1">
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
         </Badge>
       ))}
       
       {filters.status.map(status => (
-        <Badge key={status} variant="secondary" className="px-3 py-1.5 gap-1 text-sm">
+        <Badge key={status} variant="secondary" className="px-2 py-1 gap-1">
           {status}
           <button onClick={() => removeStatus(status)} className="ml-1">
-            <X className="h-3.5 w-3.5" />
+            <X className="h-3 w-3" />
           </button>
         </Badge>
       ))}
@@ -79,7 +79,7 @@ const TeamActiveFilters: React.FC<TeamActiveFiltersProps> = ({
         variant="ghost" 
         size="sm" 
         onClick={onClearFilters}
-        className="ml-auto text-sm"
+        className="ml-auto"
       >
         <X className="h-4 w-4 mr-2" />
         Clear all
