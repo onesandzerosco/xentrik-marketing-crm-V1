@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useCreators } from '../context/creator';
-import CreatorsHeader from "../components/creators/list/CreatorsHeader";
+import SharedFilesHeader from "../components/files/SharedFilesHeader";
 import CreatorsList from "../components/creators/list/CreatorsList";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from '@tanstack/react-query';
@@ -74,7 +74,7 @@ const SharedFiles = () => {
 
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
-      <CreatorsHeader 
+      <SharedFilesHeader 
         isLoading={isLoading}
         creatorCount={filteredCreators.length}
         selectedGenders={selectedGenders}
