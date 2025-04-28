@@ -52,7 +52,7 @@ const CreatorCard = ({ creator, fileStats = { total: 0, uploading: 0 } }: Creato
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
-              <div className="text-sm text-muted-foreground mt-0.5">
+              <div className="text-sm text-muted-foreground mt-0.5 text-left">
                 {fileStats.total} {fileStats.total === 1 ? 'file' : 'files'}
               </div>
             </div>
