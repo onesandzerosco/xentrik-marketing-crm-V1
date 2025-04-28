@@ -65,12 +65,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="border-b p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold">{creatorName}'s Files</h1>
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0 flex-shrink-0">
+              <h1 className="text-xl font-semibold truncate">{creatorName}'s Files</h1>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative w-64">
+            <div className="flex items-center gap-3 flex-1 justify-end">
+              <div className="relative w-64 min-w-0 flex-1 max-w-md">
                 <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input 
                   placeholder="Search files..." 
@@ -83,16 +83,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
+                className="flex-shrink-0"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
               <Button 
                 onClick={handleUploadFile}
                 variant="default"
-                className="px-6"
+                className="px-4 flex-shrink-0"
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Files
+                Upload
               </Button>
             </div>
           </div>
