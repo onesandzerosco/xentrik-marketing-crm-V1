@@ -3,6 +3,11 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
+import {
+  Sidebar as SidebarComponent,
+  SidebarContent,
+  SidebarTrigger
+} from "@/components/ui/sidebar";
 import SidebarLogo from "./sidebar/SidebarLogo";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarUserSection from "./sidebar/SidebarUserSection";
@@ -18,19 +23,25 @@ const Sidebar = () => {
   }
 
   return (
-    <aside className="fixed h-screen w-60 bg-premium-darker border-r border-premium-border/30 flex flex-col shadow-premium-md z-10">
-      <div className="flex flex-col h-full overflow-hidden pt-8">
-        <SidebarLogo />
+    <SidebarComponent>
+      <div className="relative h-full flex flex-col">
+        <div className="absolute top-4 right-2">
+          <SidebarTrigger />
+        </div>
         
-        <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent -mt-8">
-          <SidebarNav isAdmin={isAdmin} />
-        </div>
+        <SidebarContent className="pt-8">
+          <SidebarLogo />
+          
+          <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
+            <SidebarNav isAdmin={isAdmin} />
+          </div>
 
-        <div className="mt-auto p-3 border-t border-premium-border/20">
-          {user && <SidebarUserSection />}
-        </div>
+          <div className="mt-auto p-3 border-t border-premium-border/20">
+            {user && <SidebarUserSection />}
+          </div>
+        </SidebarContent>
       </div>
-    </aside>
+    </SidebarComponent>
   );
 };
 

@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 interface FileUploaderProps {
   creatorId: string;
   folderPath?: string;
+  id?: string;
 }
 
-const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = 'shared' }) => {
+const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = 'shared', id }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const { toast } = useToast();
@@ -42,6 +43,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = 'sh
         title: "Files uploaded successfully",
         description: "Your files have been shared successfully",
       });
+
+      // Reload page to show new files
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Upload failed:', error);
       toast({
@@ -60,8 +66,8 @@ const FileUploader: React.FC<FileUploaderProps> = ({ creatorId, folderPath = 'sh
   });
 
   return (
-    <div className="p-6 border border-border rounded-lg shadow-sm">
-      <h2 className="text-lg font-semibold mb-4">Upload Files</h2>
+    <div id={id} className={id ? "" : "p-6 border border-border rounded-lg shadow-sm"}>
+      {!id && <h2 className="text-lg font-semibold mb-4">Upload Files</h2>}
       
       <div className="space-y-4">
         <div

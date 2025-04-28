@@ -7,7 +7,10 @@ import { BackButton } from '@/components/ui/back-button';
 import FileUploader from '@/components/messages/FileUploader';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Folder, File, Grid2x2, LayoutList } from 'lucide-react';
+import { Folder, File, Grid2x2, LayoutList, Search, Upload } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import PremiumCard from "@/components/ui/premium-card";
+import { ensureStorageBucket } from '@/utils/setupStorage';
 
 interface CreatorFile {
   name: string;
@@ -24,6 +27,12 @@ const CreatorFiles = () => {
   const [files, setFiles] = useState<CreatorFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Initialize storage bucket
+  useEffect(() => {
+    ensureStorageBucket();
+  }, []);
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -81,6 +90,10 @@ const CreatorFiles = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const filteredFiles = files.filter(file => 
+    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!creator) return (
     <div className="p-8">
       <h1 className="text-2xl font-semibold">Creator not found</h1>
@@ -101,67 +114,118 @@ const CreatorFiles = () => {
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
-        return <File className="h-6 w-6 text-purple-500" />;
+        return <File className="h-10 w-10 text-purple-500" />;
+      case 'document':
+        return <File className="h-10 w-10 text-amber-500" />;
       default:
-        return <File className="h-6 w-6 text-amber-500" />;
+        return <File className="h-10 w-10 text-blue-500" />;
     }
   };
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const handleUploadFile = () => {
+    // Trigger file uploader
+    document.getElementById('file-upload-trigger')?.click();
+  };
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <BackButton to="/shared-files" />
-          <div>
-            <h1 className="text-2xl font-semibold">{creator.name}&apos;s Files</h1>
-            <p className="text-muted-foreground">Manage and organize files</p>
+    <div className="p-6 max-w-full mx-auto">
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <BackButton to="/shared-files" />
+            <div>
+              <h1 className="text-2xl font-semibold">Welcome to {creator.name}&apos;s Drive</h1>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className={viewMode === 'grid' ? 'bg-accent' : ''}
+            >
+              <Grid2x2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-accent' : ''}
+            >
+              <LayoutList className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setViewMode('grid')}
-            className={viewMode === 'grid' ? 'bg-accent' : ''}
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]">
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search in Drive" 
+              className="pl-10 bg-accent/10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          {/* Upload button */}
+          <Button 
+            onClick={handleUploadFile}
+            className="flex items-center gap-2"
           >
-            <Grid2x2 className="h-4 w-4" />
+            <Upload className="h-4 w-4" />
+            <span>Upload</span>
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setViewMode('list')}
-            className={viewMode === 'list' ? 'bg-accent' : ''}
-          >
-            <LayoutList className="h-4 w-4" />
-          </Button>
+          
+          {/* Hidden file uploader component */}
+          <div className="hidden">
+            <FileUploader id="file-upload-trigger" creatorId={creator.id} folderPath="shared" />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        <FileUploader creatorId={creator.id} folderPath="shared" />
+      {/* Filter options - similar to Google Drive */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <Button variant="outline" size="sm" className="rounded-full">
+          <span>Type</span>
+        </Button>
+        <Button variant="outline" size="sm" className="rounded-full">
+          <span>Modified</span>
+        </Button>
+        <Button variant="outline" size="sm" className="rounded-full">
+          <span>Location</span>
+        </Button>
+      </div>
 
-        <Card className="p-6">
-          {files.length > 0 ? (
-            viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                {files.map((file) => (
-                  <div
-                    key={file.name}
-                    className="group flex flex-col items-center p-4 rounded-lg hover:bg-accent/5 transition-colors cursor-pointer"
-                  >
+      {/* Files list */}
+      <PremiumCard className="mb-4">
+        {filteredFiles.length > 0 ? (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {filteredFiles.map((file) => (
+                <div
+                  key={file.name}
+                  className="group flex flex-col items-center p-4 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer"
+                >
+                  <div className="relative w-full h-32 flex items-center justify-center mb-2">
                     {getFileIcon(file.type)}
-                    <span className="mt-2 text-sm font-medium text-center truncate w-full">
-                      {file.name}
-                    </span>
-                    <span className="text-xs text-muted-foreground mt-1">
-                      {formatFileSize(file.size)}
-                    </span>
-                    <div className="opacity-0 group-hover:opacity-100 mt-2 transition-opacity">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-lg transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                       <Button 
-                        variant="ghost" 
+                        variant="secondary" 
                         size="sm" 
                         asChild
-                        className="w-full"
+                        className="shadow-md"
                       >
                         <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
                           Download
@@ -169,21 +233,38 @@ const CreatorFiles = () => {
                       </Button>
                     </div>
                   </div>
-                ))}
+                  <span className="text-sm font-medium text-center truncate w-full">
+                    {file.name}
+                  </span>
+                  <div className="flex justify-between w-full mt-1 text-xs text-muted-foreground">
+                    <span>{formatFileSize(file.size)}</span>
+                    <span>{formatDate(file.created_at)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              <div className="grid grid-cols-[1fr_120px_150px] gap-4 px-4 py-2 font-medium text-sm text-muted-foreground bg-accent/5">
+                <div>Name</div>
+                <div>Size</div>
+                <div>Modified</div>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {files.map((file) => (
-                  <div
-                    key={file.name}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/5 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {getFileIcon(file.type)}
-                      <span className="font-medium truncate">{file.name}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground mx-4">
-                      {formatFileSize(file.size)}
+              {filteredFiles.map((file) => (
+                <div
+                  key={file.name}
+                  className="grid grid-cols-[1fr_120px_150px] gap-4 px-4 py-3 hover:bg-accent/5 transition-colors items-center"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    {getFileIcon(file.type)}
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatFileSize(file.size)}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(file.created_at)}
                     </span>
                     <Button 
                       variant="ghost" 
@@ -195,20 +276,20 @@ const CreatorFiles = () => {
                       </a>
                     </Button>
                   </div>
-                ))}
-              </div>
-            )
-          ) : (
-            <div className="text-center py-12">
-              <Folder className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">No files uploaded yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Upload files using the button above
-              </p>
+                </div>
+              ))}
             </div>
-          )}
-        </Card>
-      </div>
+          )
+        ) : (
+          <div className="text-center py-12">
+            <Folder className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No files uploaded yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Upload files using the button above
+            </p>
+          </div>
+        )}
+      </PremiumCard>
     </div>
   );
 };

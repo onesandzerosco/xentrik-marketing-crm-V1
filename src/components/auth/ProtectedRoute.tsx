@@ -1,9 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
-import Sidebar from '../Sidebar';
 import PageTransition from '../PageTransition';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarTrigger,
+  SidebarInset
+} from "@/components/ui/sidebar";
+import SidebarLogo from '../sidebar/SidebarLogo';
+import SidebarNav from '../sidebar/SidebarNav';
+import SidebarUserSection from '../sidebar/SidebarUserSection';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,7 +20,8 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
-
+  const { user } = useSupabaseAuth();
+  
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-premium-darker">
@@ -27,17 +37,37 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
+  const isAdmin = user?.role === "Admin";
+
   return (
-    <div className="flex w-full">
-      <Sidebar />
-      <main className="w-full pl-60 bg-premium-dark min-h-screen overflow-y-auto">
-        <PageTransition>
-          <div className="max-w-full overflow-x-hidden p-6">
-            {children}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <Sidebar>
+          <SidebarContent className="pt-8">
+            <SidebarLogo />
+            <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
+              <SidebarNav isAdmin={isAdmin} />
+            </div>
+            <div className="mt-auto p-3 border-t border-premium-border/20">
+              {user && <SidebarUserSection />}
+            </div>
+          </SidebarContent>
+        </Sidebar>
+        
+        <SidebarInset className="bg-premium-dark overflow-y-auto">
+          <div className="flex items-center border-b border-premium-border/20 bg-premium-darker p-4">
+            <SidebarTrigger />
+            <h1 className="ml-4 text-lg font-semibold">Dashboard</h1>
           </div>
-        </PageTransition>
-      </main>
-    </div>
+          
+          <PageTransition>
+            <div className="max-w-full overflow-x-hidden">
+              {children}
+            </div>
+          </PageTransition>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
