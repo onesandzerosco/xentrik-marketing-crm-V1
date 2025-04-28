@@ -33,34 +33,42 @@ const CreatorCard = ({ creator }: CreatorCardProps) => {
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col">
+              <div className="text-left">
                 <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
-                <div className="text-sm text-muted-foreground mt-0.5 text-left">
+                <div className="text-sm text-muted-foreground mt-0.5">
                   ID: {creator.id}
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Badge variant="secondary">{creator.gender}</Badge>
-                  <Badge variant="secondary">{creator.team}</Badge>
-                  <Badge variant="secondary">{creator.creatorType}</Badge>
+                  <Badge variant="secondary" className="bg-pink-900/40 text-pink-200 hover:bg-pink-900/60">
+                    {creator.gender}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-yellow-900/40 text-yellow-200 hover:bg-yellow-900/60">
+                    {creator.team}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-blue-900/40 text-blue-200 hover:bg-blue-900/60">
+                    {creator.creatorType}
+                  </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 mt-4">
+                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()} className="flex-1">
                   <Button 
                     variant="ghost" 
-                    className="h-9 hover:bg-gradient-premium-yellow hover:text-black transition-all"
+                    className="w-full h-9 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
                   >
                     <LineChart className="h-4 w-4" />
+                    Analytics
                   </Button>
                 </Link>
                 <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                   <Button 
-                    variant="premium" 
-                    className="h-9 shadow-premium-yellow hover:shadow-premium-highlight"
+                    variant="secondary" 
+                    size="sm"
+                    className="h-9"
                   >
                     <Edit className="h-4 w-4" />
-                    Edit Profile
+                    Edit
                   </Button>
                 </Link>
               </div>
