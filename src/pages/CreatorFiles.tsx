@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -112,7 +113,7 @@ const CreatorFiles = () => {
         <div className="flex items-center gap-4">
           <BackButton to="/shared-files" />
           <div>
-            <h1 className="text-2xl font-semibold">{creator.name}'s Files</h1>
+            <h1 className="text-2xl font-semibold">{creator.name}&apos;s Files</h1>
             <p className="text-muted-foreground">Manage and organize files</p>
           </div>
         </div>
@@ -196,7 +197,7 @@ const CreatorFiles = () => {
                   </div>
                 ))}
               </div>
-            )}
+            )
           ) : (
             <div className="text-center py-12">
               <Folder className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
