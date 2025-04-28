@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -7,13 +6,7 @@ import { BackButton } from '@/components/ui/back-button';
 import FileUploader from '@/components/messages/FileUploader';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Folder, File } from 'lucide-react';
-
-interface FileStats {
-  images: number;
-  documents: number;
-  total: number;
-}
+import { Folder, File, Grid2x2, LayoutList } from 'lucide-react';
 
 interface CreatorFile {
   name: string;
@@ -29,7 +22,7 @@ const CreatorFiles = () => {
   const creator = getCreator(id || '');
   const [files, setFiles] = useState<CreatorFile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<FileStats>({ images: 0, documents: 0, total: 0 });
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const loadFiles = async () => {
@@ -64,7 +57,6 @@ const CreatorFiles = () => {
       }));
 
       setFiles(processedFiles);
-      updateStats(processedFiles);
       setLoading(false);
     };
 
@@ -78,14 +70,6 @@ const CreatorFiles = () => {
     if (imageTypes.includes(extension)) return 'image';
     if (documentTypes.includes(extension)) return 'document';
     return 'other';
-  };
-
-  const updateStats = (files: CreatorFile[]) => {
-    setStats({
-      images: files.filter(f => f.type === 'image').length,
-      documents: files.filter(f => f.type === 'document').length,
-      total: files.length
-    });
   };
 
   const formatFileSize = (bytes: number) => {
@@ -113,71 +97,114 @@ const CreatorFiles = () => {
     );
   }
 
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case 'image':
+        return <File className="h-6 w-6 text-purple-500" />;
+      default:
+        return <File className="h-6 w-6 text-amber-500" />;
+    }
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-8">
-        <BackButton to="/shared-files" />
-        <div>
-          <h1 className="text-2xl font-semibold">{creator.name}'s Files</h1>
-          <p className="text-muted-foreground">Manage and organize files</p>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <BackButton to="/shared-files" />
+          <div>
+            <h1 className="text-2xl font-semibold">{creator.name}'s Files</h1>
+            <p className="text-muted-foreground">Manage and organize files</p>
+          </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="p-6 flex flex-col items-center justify-center bg-gradient-to-br from-blue-500/10 to-blue-600/5">
-          <Folder className="h-8 w-8 mb-2 text-blue-500" />
-          <h3 className="text-xl font-medium">All Files</h3>
-          <p className="text-3xl font-semibold mt-2">{stats.total}</p>
-        </Card>
-        
-        <Card className="p-6 flex flex-col items-center justify-center bg-gradient-to-br from-purple-500/10 to-purple-600/5">
-          <File className="h-8 w-8 mb-2 text-purple-500" />
-          <h3 className="text-xl font-medium">Images</h3>
-          <p className="text-3xl font-semibold mt-2">{stats.images}</p>
-        </Card>
-
-        <Card className="p-6 flex flex-col items-center justify-center bg-gradient-to-br from-amber-500/10 to-amber-600/5">
-          <File className="h-8 w-8 mb-2 text-amber-500" />
-          <h3 className="text-xl font-medium">Documents</h3>
-          <p className="text-3xl font-semibold mt-2">{stats.documents}</p>
-        </Card>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setViewMode('grid')}
+            className={viewMode === 'grid' ? 'bg-accent' : ''}
+          >
+            <Grid2x2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setViewMode('list')}
+            className={viewMode === 'list' ? 'bg-accent' : ''}
+          >
+            <LayoutList className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
         <FileUploader creatorId={creator.id} folderPath="shared" />
 
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Recent Files</h2>
           {files.length > 0 ? (
-            <div className="space-y-3">
-              {files.map((file) => (
-                <div 
-                  key={file.name}
-                  className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg hover:bg-secondary/10 transition-colors"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <File className={`h-5 w-5 ${file.type === 'image' ? 'text-purple-500' : 'text-amber-500'}`} />
-                    <span className="font-medium truncate">{file.name}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground mx-4">
-                    {formatFileSize(file.size)}
-                  </span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    asChild
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                {files.map((file) => (
+                  <div
+                    key={file.name}
+                    className="group flex flex-col items-center p-4 rounded-lg hover:bg-accent/5 transition-colors cursor-pointer"
                   >
-                    <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                      Download
-                    </a>
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    {getFileIcon(file.type)}
+                    <span className="mt-2 text-sm font-medium text-center truncate w-full">
+                      {file.name}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {formatFileSize(file.size)}
+                    </span>
+                    <div className="opacity-0 group-hover:opacity-100 mt-2 transition-opacity">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        asChild
+                        className="w-full"
+                      >
+                        <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                          Download
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {files.map((file) => (
+                  <div
+                    key={file.name}
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/5 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {getFileIcon(file.type)}
+                      <span className="font-medium truncate">{file.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground mx-4">
+                      {formatFileSize(file.size)}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      asChild
+                    >
+                      <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                        Download
+                      </a>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           ) : (
-            <p className="text-center text-muted-foreground py-4">
-              No files uploaded yet
-            </p>
+            <div className="text-center py-12">
+              <Folder className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground">No files uploaded yet</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Upload files using the button above
+              </p>
+            </div>
           )}
         </Card>
       </div>
