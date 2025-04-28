@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   UserCog, 
   Lock,
-  FileUp
+  FileUp,
+  Mic
 } from 'lucide-react';
 
 interface NavItem {
@@ -58,6 +59,11 @@ const navItems: NavItem[] = [
     path: '/shared-files',
     label: 'Shared Files',
     icon: <FileUp className="h-5 w-5" />,
+  },
+  {
+    path: '/voice-generation',
+    label: 'Voice Generator',
+    icon: <Mic className="h-5 w-5" />,
   },
 ];
 
