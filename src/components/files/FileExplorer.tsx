@@ -41,7 +41,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeUserFolder, setActiveUserFolder] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleFolderChange = (folder: string | null) => {
+    setActiveUserFolder(folder);
+  };
 
   const handleUploadFile = () => {
     document.getElementById('file-upload-trigger')?.click();
@@ -82,7 +87,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               ))}
             </div>
           </div>
-          <FolderNav />
+          <FolderNav activeFolder={activeUserFolder} onFolderChange={handleFolderChange} />
         </div>
       </div>
 
