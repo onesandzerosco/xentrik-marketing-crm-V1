@@ -34,18 +34,18 @@ const SidebarUserSection: React.FC = () => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            className="w-full justify-start p-2 rounded-xl transition-all duration-300 hover:bg-gradient-premium-yellow group"
+            className="w-full justify-start p-2 rounded-xl transition-all duration-300"
           >
-            <div className="flex items-center gap-3 w-full min-w-0">
+            <div className="flex items-center gap-3 w-full min-w-0 hover:bg-gradient-premium-yellow hover:text-black p-2 rounded-lg">
               <Avatar className="h-9 w-9 flex-shrink-0 border border-premium-accent1/30">
                 <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email || "User"} />
                 <AvatarFallback className="bg-premium-accent1/10">{getUserInitials()}</AvatarFallback>
               </Avatar>
               <div className="flex-1 flex flex-col text-left min-w-0">
-                <span className="font-medium text-sm truncate max-w-[120px] text-white group-hover:text-black">{user.email}</span>
-                <span className="text-xs text-muted-foreground group-hover:text-black">User</span>
+                <span className="font-medium text-sm truncate max-w-[120px] text-white">{user.email}</span>
+                <span className="text-xs text-muted-foreground">User</span>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-black flex-shrink-0" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             </div>
           </Button>
         </DropdownMenuTrigger>
