@@ -37,7 +37,6 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
         <CreatorCard 
           key={creator.id} 
           creator={creator} 
-          variant="files"
         />
       ))}
     </div>
