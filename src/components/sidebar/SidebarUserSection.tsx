@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Settings, LogOut, ChevronDown } from 'lucide-react';
+
 const SidebarUserSection: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -15,14 +16,18 @@ const SidebarUserSection: React.FC = () => {
     user,
     signOut
   } = useSupabaseAuth();
+
   const handleLogout = () => {
     signOut();
   };
+
   const getUserInitials = () => {
     if (!user || !user.email) return "U";
     return user.email.charAt(0).toUpperCase();
   };
+
   if (!user) return null;
+
   return <div className="px-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -47,11 +52,12 @@ const SidebarUserSection: React.FC = () => {
           </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-premium-border/20" />
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive hover:text-destructive hover:bg-destructive/10">
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="mr-2 h-4 w-4 text-red-600" />
             <span className="text-red-600">Logout</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>;
 };
+
 export default SidebarUserSection;
