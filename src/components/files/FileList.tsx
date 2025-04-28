@@ -13,62 +13,63 @@ export const FileList: React.FC<FileListProps> = ({ files }) => {
   const getFileIcon = (type: string) => {
     switch (type) {
       case 'image':
-        return <Image className="h-5 w-5 text-purple-500" />;
+        return <Image className="h-4 w-4 text-blue-500" />;
       case 'document':
-        return <FileText className="h-5 w-5 text-amber-500" />;
+        return <FileText className="h-4 w-4 text-orange-500" />;
       case 'video':
-        return <Video className="h-5 w-5 text-blue-500" />;
+        return <Video className="h-4 w-4 text-red-500" />;
       case 'audio':
-        return <AudioLines className="h-5 w-5 text-green-500" />;
+        return <AudioLines className="h-4 w-4 text-green-500" />;
       default:
-        return <File className="h-5 w-5 text-gray-500" />;
+        return <File className="h-4 w-4 text-gray-500" />;
     }
   };
 
   return (
-    <div className="divide-y divide-border">
-      <div className="grid grid-cols-[1fr_120px_150px_80px] gap-4 px-4 py-2 font-medium text-xs text-muted-foreground bg-accent/5">
+    <div className="rounded-md border overflow-hidden">
+      <div className="grid grid-cols-[1fr_100px_150px_80px] gap-3 px-4 py-3 font-medium text-xs border-b bg-muted/20">
         <div>Name</div>
-        <div className="hidden sm:block">Size</div>
-        <div className="hidden sm:block">Modified</div>
+        <div>Size</div>
+        <div>Modified</div>
         <div className="text-right">Action</div>
       </div>
-      {files.map((file) => (
-        <div
-          key={file.id}
-          className="grid grid-cols-[1fr_120px_150px_80px] gap-4 px-4 py-3 hover:bg-accent/5 transition-colors items-center"
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            {getFileIcon(file.type)}
-            <span className="truncate">{file.name}</span>
-          </div>
-          <div className="text-xs text-muted-foreground hidden sm:block">
-            {formatFileSize(file.size)}
-          </div>
-          <div className="text-xs text-muted-foreground hidden sm:block">
-            {formatDate(file.created_at)}
-          </div>
-          <div className="flex justify-end">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              asChild
-              className="flex items-center gap-1 hover:bg-accent/10"
-            >
-              <a 
-                href={file.url} 
-                download={file.name} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                aria-label={`Download ${file.name}`}
+      <div className="divide-y">
+        {files.map((file) => (
+          <div
+            key={file.id}
+            className="grid grid-cols-[1fr_100px_150px_80px] gap-3 px-4 py-3 hover:bg-muted/10 transition-colors items-center"
+          >
+            <div className="flex items-center gap-2 overflow-hidden">
+              {getFileIcon(file.type)}
+              <span className="truncate">{file.name}</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {formatFileSize(file.size)}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {formatDate(file.created_at)}
+            </div>
+            <div className="text-right">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                asChild
+                className="h-7 px-2"
               >
-                <Download className="h-4 w-4" />
-                <span className="sr-only">Download</span>
-              </a>
-            </Button>
+                <a 
+                  href={file.url} 
+                  download={file.name} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label={`Download ${file.name}`}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </a>
+              </Button>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCreators } from '@/context/creator';
@@ -78,7 +78,7 @@ const CreatorFiles = () => {
     queryKey: ['creator-files', creator?.id],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false
   });
 
@@ -104,15 +104,13 @@ const CreatorFiles = () => {
   }
 
   return (
-    <div className="p-6">
-      <FileExplorer 
-        files={files}
-        creatorName={creator.name}
-        creatorId={creator.id}
-        isLoading={isLoading}
-        onRefresh={refetch}
-      />
-    </div>
+    <FileExplorer 
+      files={files}
+      creatorName={creator.name}
+      creatorId={creator.id}
+      isLoading={isLoading}
+      onRefresh={refetch}
+    />
   );
 };
 

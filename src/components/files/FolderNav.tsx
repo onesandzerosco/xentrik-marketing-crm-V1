@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Folder, FolderPlus } from 'lucide-react';
+import { Folder, FolderPlus, X, Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,7 +11,7 @@ interface FolderNavProps {
 }
 
 export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChange }) => {
-  const [folders, setFolders] = useState<Array<{id: string, label: string}>>([]);
+  const [folders, setFolders] = useState<Array<{id: string, name: string}>>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const { toast } = useToast();
@@ -20,8 +20,8 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
     if (!newFolderName.trim()) return;
     
     const newFolder = {
-      id: newFolderName.toLowerCase().replace(/\s+/g, '-'),
-      label: newFolderName.trim()
+      id: Date.now().toString(),
+      name: newFolderName.trim()
     };
     
     setFolders([...folders, newFolder]);
@@ -30,63 +30,73 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
     
     toast({
       title: "Folder created",
-      description: `Created folder: ${newFolder.label}`,
+      description: `Created folder: ${newFolder.name}`,
     });
   };
 
+  const cancelCreate = () => {
+    setIsCreating(false);
+    setNewFolderName('');
+  };
+
   return (
-    <div className="space-y-2 min-w-[200px]">
+    <div className="space-y-1 pr-1">
+      <div className="py-2">
+        <h3 className="px-3 text-xs font-medium text-muted-foreground">Folders</h3>
+      </div>
+      
       <Button
-        variant={!activeFolder ? "premium" : "ghost"}
+        variant={!activeFolder ? "secondary" : "ghost"}
         size="sm"
-        className="w-full justify-start gap-2"
+        className="w-full justify-start px-3 font-normal"
         onClick={() => onFolderChange(null)}
       >
-        <Folder className="h-4 w-4" />
-        <span>All Files</span>
+        <Folder className="h-4 w-4 mr-2" />
+        All Files
       </Button>
       
       {folders.map((folder) => (
         <Button
           key={folder.id}
-          variant={activeFolder === folder.id ? "premium" : "ghost"}
+          variant={activeFolder === folder.id ? "secondary" : "ghost"}
           size="sm"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start px-3 font-normal"
           onClick={() => onFolderChange(folder.id)}
         >
-          <Folder className="h-4 w-4" />
-          <span>{folder.label}</span>
+          <Folder className="h-4 w-4 mr-2" />
+          {folder.name}
         </Button>
       ))}
 
       {isCreating ? (
-        <div className="space-y-2">
+        <div className="px-3 py-2">
           <Input
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             placeholder="Folder name"
-            className="h-9"
+            className="text-sm h-8 mb-2"
+            autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleCreateFolder();
-              if (e.key === 'Escape') setIsCreating(false);
+              if (e.key === 'Escape') cancelCreate();
             }}
           />
-          <div className="flex gap-2">
+          <div className="flex gap-1 mt-1">
             <Button
               size="sm"
-              variant="premium"
-              className="flex-1"
+              variant="outline"
+              className="flex-1 h-7"
               onClick={handleCreateFolder}
             >
-              Create
+              <Check className="h-3.5 w-3.5" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="flex-1"
-              onClick={() => setIsCreating(false)}
+              className="flex-1 h-7"
+              onClick={cancelCreate}
             >
-              Cancel
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -94,11 +104,11 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2"
+          className="w-full justify-start px-3 font-normal text-muted-foreground"
           onClick={() => setIsCreating(true)}
         >
-          <FolderPlus className="h-4 w-4" />
-          <span>New Folder</span>
+          <FolderPlus className="h-4 w-4 mr-2" />
+          New Folder
         </Button>
       )}
     </div>

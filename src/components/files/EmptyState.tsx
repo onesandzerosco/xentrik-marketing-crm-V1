@@ -18,7 +18,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ isFiltered = false }) =>
         <Search className="h-12 w-12 text-muted-foreground/50 mb-4" />
         <h3 className="text-lg font-medium mb-2">No matching files found</h3>
         <p className="text-sm text-muted-foreground max-w-md text-center">
-          Try adjusting your search or filter criteria to find what you're looking for.
+          Try adjusting your search criteria to find what you're looking for.
         </p>
       </div>
     );
@@ -33,8 +33,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ isFiltered = false }) =>
       </p>
       <Button 
         onClick={handleUploadClick}
-        variant="premium"
-        className="flex items-center gap-2 text-black"
+        variant="default"
+        className="flex items-center gap-2"
       >
         <Upload className="h-4 w-4" />
         <span>Upload Files</span>

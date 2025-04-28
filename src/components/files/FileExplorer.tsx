@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Upload, RefreshCw } from 'lucide-react';
+import { Upload, RefreshCw, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import PremiumCard from "@/components/ui/premium-card";
-import { FileHeader } from '@/components/files/FileHeader';
+import { Input } from "@/components/ui/input";
 import { FileGrid } from '@/components/files/FileGrid';
 import { FileList } from '@/components/files/FileList';
 import { FolderNav } from '@/components/files/FolderNav';
@@ -51,59 +50,65 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   });
 
   return (
-    <div className="max-w-[1400px] mx-auto p-6">
-      <FileHeader 
-        creatorName={creatorName}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <div className="flex h-[calc(100vh-70px)] overflow-hidden bg-background">
+      {/* Sidebar */}
+      <div className="w-56 border-r p-4">
+        <FolderNav 
+          activeFolder={activeFolder}
+          onFolderChange={setActiveFolder}
+        />
+      </div>
 
-      <div className="mt-6 flex gap-6">
-        <aside className="w-56">
-          <PremiumCard className="p-4">
-            <FolderNav 
-              activeFolder={activeFolder}
-              onFolderChange={setActiveFolder}
-            />
-          </PremiumCard>
-        </aside>
-
-        <main className="flex-1">
-          <div className="flex justify-end gap-2 mb-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
-            
-            <Button 
-              onClick={handleUploadFile}
-              variant="premium"
-              className="flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              <span>Upload</span>
-            </Button>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="border-b p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold">{creatorName}'s Files</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative w-64">
+                <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input 
+                  placeholder="Search files..." 
+                  className="pl-8 h-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+              <Button 
+                onClick={handleUploadFile}
+                variant="default"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+            </div>
           </div>
+        </div>
 
-          <PremiumCard>
-            {isLoading ? (
-              <FileViewSkeleton viewMode={viewMode} />
-            ) : filteredFiles.length > 0 ? (
-              viewMode === 'grid' ? (
-                <FileGrid files={filteredFiles} />
-              ) : (
-                <FileList files={filteredFiles} />
-              )
+        {/* Files area */}
+        <div className="flex-1 overflow-auto p-4">
+          {isLoading ? (
+            <FileViewSkeleton viewMode={viewMode} />
+          ) : filteredFiles.length > 0 ? (
+            viewMode === 'grid' ? (
+              <FileGrid files={filteredFiles} />
             ) : (
-              <EmptyState isFiltered={!!searchQuery} />
-            )}
-          </PremiumCard>
-        </main>
+              <FileList files={filteredFiles} />
+            )
+          ) : (
+            <EmptyState isFiltered={!!searchQuery} />
+          )}
+        </div>
       </div>
       
       <div className="hidden">
