@@ -61,7 +61,7 @@ const TeamContent = () => {
                     filters.searchQuery !== '';
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen">
+    <div className="p-8 w-full max-w-[1400px] mx-auto">
       <TeamHeader 
         memberCount={filteredMembers.length}
         isLoading={loading}
@@ -76,7 +76,7 @@ const TeamContent = () => {
         onClearFilters={handleClearFilters}
       />
       
-      <div className="mt-6">
+      <div className="mt-8">
         <TeamMembersList 
           members={filteredMembers}
           isLoading={loading}

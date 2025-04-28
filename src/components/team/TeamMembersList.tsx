@@ -20,9 +20,9 @@ const TeamMembersList: React.FC<TeamMembersListProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <div className="flex flex-col items-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <Loader2 className="h-8 w-8 animate-spin text-brand-yellow mb-4" />
           <p className="text-muted-foreground">Loading team members...</p>
         </div>
       </div>
