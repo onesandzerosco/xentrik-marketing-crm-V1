@@ -14,12 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EditUserRolesModal from "./EditUserRolesModal";
+import { useToast } from "@/hooks/use-toast";
 
 const UserRolesList: React.FC = () => {
   const [users, setUsers] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const fetchUsers = async () => {
     try {
@@ -70,6 +72,8 @@ const UserRolesList: React.FC = () => {
 
   const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => {
     try {
+      setLoading(true);
+      
       // Update the user in Supabase
       const { error } = await supabase
         .from('profiles')
@@ -83,12 +87,27 @@ const UserRolesList: React.FC = () => {
         throw error;
       }
 
+      // Show success message
+      toast({
+        title: "User roles updated",
+        description: "The user's roles have been successfully updated.",
+      });
+
       // Refresh the user list
       fetchUsers();
       setIsModalOpen(false);
       setSelectedUser(null);
     } catch (error) {
       console.error("Error updating user:", error);
+      
+      // Show error message
+      toast({
+        title: "Failed to update roles",
+        description: "There was a problem updating the user's roles.",
+        variant: "destructive",
+      });
+      
+      setLoading(false);
     }
   };
 

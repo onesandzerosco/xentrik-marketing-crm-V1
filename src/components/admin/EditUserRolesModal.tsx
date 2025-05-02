@@ -54,6 +54,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset state when user or open state changes
   useEffect(() => {
@@ -98,6 +99,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
 
   const handleSubmit = () => {
     if (user) {
+      setIsSubmitting(true);
       onUpdate(user.id, primaryRole, additionalRoles);
     }
   };
@@ -166,14 +168,16 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button 
               className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Save Changes
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
