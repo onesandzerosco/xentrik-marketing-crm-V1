@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -124,7 +125,18 @@ function App() {
                     />
                   </Routes>
                 </Router>
-                <ToastContainer position="bottom-right" autoClose={5000" hideProgressBar={false" newestOnTop={false" closeOnClick rtl={false" pauseOnFocusLoss draggable pauseOnHover theme="dark" />
+                <ToastContainer 
+                  position="bottom-right" 
+                  autoClose={5000} 
+                  hideProgressBar={false} 
+                  newestOnTop={false} 
+                  closeOnClick 
+                  rtl={false} 
+                  pauseOnFocusLoss 
+                  draggable 
+                  pauseOnHover 
+                  theme="dark" 
+                />
               </SecureAreaProvider>
             </TeamProvider>
           </ActivityProvider>
