@@ -10,7 +10,8 @@ import {
   CardTitle, 
   CardDescription 
 } from "@/components/ui/card";
-import { Shield } from "lucide-react";
+import { Shield, Users } from "lucide-react";
+import UserRolesList from "@/components/admin/UserRolesList";
 
 const AccessControlPanel: React.FC = () => {
   const { userRole } = useAuth();
@@ -44,15 +45,18 @@ const AccessControlPanel: React.FC = () => {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>User Roles Management</CardTitle>
-          <CardDescription>
-            Assign or remove roles from team members
-          </CardDescription>
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle>User Roles Management</CardTitle>
+            <CardDescription>
+              View and manage roles for all team members
+            </CardDescription>
+          </div>
+          <Users className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <p>Role management functionality will be added here.</p>
+          <UserRolesList />
         </CardContent>
       </Card>
     </div>
