@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, RefreshCw, Search, Folder } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import FileUploader from '@/components/messages/FileUploader';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { BackButton } from "@/components/ui/back-button";
+import { supabase } from '@/integrations/supabase/client';
 
 interface FolderType {
   id: string;
@@ -27,6 +28,7 @@ interface FileExplorerProps {
   currentFolder?: string;
   onFolderChange?: (folder: string) => void;
   availableFolders?: FolderType[];
+  isCreatorView?: boolean;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -37,11 +39,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRefresh,
   currentFolder = 'shared',
   onFolderChange,
-  availableFolders = [{ id: 'shared', name: 'Shared Files' }]
+  availableFolders = [{ id: 'shared', name: 'Shared Files' }],
+  isCreatorView = false
 }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isUserCreator, setIsUserCreator] = useState(isCreatorView);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if current user is the creator (for dynamic permissions)
+    const checkCreatorStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id === creatorId) {
+        setIsUserCreator(true);
+      }
+    };
+
+    checkCreatorStatus();
+  }, [creatorId]);
 
   const handleUploadFile = () => {
     document.getElementById('file-upload-trigger')?.click();
@@ -49,8 +65,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const handleRefresh = () => {
     toast({
-      title: 'Refreshing files',
-      description: 'Getting the latest files...'
+      title: "Refreshing files",
+      description: "Getting the latest files..."
     });
     onRefresh();
   };
@@ -115,14 +131,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              <Button 
-                onClick={handleUploadFile}
-                variant="default"
-                className="px-4 flex-shrink-0"
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
+              {isUserCreator && (
+                <Button 
+                  onClick={handleUploadFile}
+                  variant="default"
+                  className="px-4 flex-shrink-0"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -133,24 +151,27 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <FileViewSkeleton viewMode={viewMode} />
           ) : filteredFiles.length > 0 ? (
             viewMode === 'grid' ? (
-              <FileGrid files={filteredFiles} />
+              <FileGrid files={filteredFiles} isCreatorView={isUserCreator} />
             ) : (
-              <FileList files={filteredFiles} />
+              <FileList files={filteredFiles} isCreatorView={isUserCreator} />
             )
           ) : (
-            <EmptyState isFiltered={!!searchQuery} />
+            <EmptyState isFiltered={!!searchQuery} isCreatorView={isUserCreator} />
           )}
         </div>
       </div>
       
-      <div className="hidden">
-        <FileUploader 
-          id="file-upload-trigger" 
-          creatorId={creatorId} 
-          onUploadComplete={onRefresh}
-          folder={currentFolder}
-        />
-      </div>
+      {isUserCreator && (
+        <div className="hidden">
+          <FileUploader 
+            id="file-upload-trigger" 
+            creatorId={creatorId} 
+            onUploadComplete={onRefresh}
+            folder={currentFolder}
+            bucket="raw_uploads"
+          />
+        </div>
+      )}
     </div>
   );
 };

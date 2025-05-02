@@ -1,16 +1,18 @@
 
 import React from 'react';
-import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2 } from 'lucide-react';
+import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 interface FileListProps {
   files: CreatorFileType[];
+  isCreatorView?: boolean;
 }
 
-export const FileList: React.FC<FileListProps> = ({ files }) => {
+export const FileList: React.FC<FileListProps> = ({ files, isCreatorView = false }) => {
   const { toast } = useToast();
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
@@ -36,6 +38,39 @@ export const FileList: React.FC<FileListProps> = ({ files }) => {
       title: "Link copied!",
       description: "The sharing link has been copied to your clipboard.",
     });
+  };
+  
+  const handleDelete = async (file: CreatorFileType) => {
+    try {
+      // Delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('raw_uploads')
+        .remove([file.bucketPath || '']);
+        
+      if (storageError) throw storageError;
+      
+      // Delete the media record if it exists
+      if (file.id) {
+        const { error: mediaError } = await supabase
+          .from('media')
+          .delete()
+          .eq('id', file.id);
+          
+        if (mediaError) throw mediaError;
+      }
+      
+      toast({
+        title: "File deleted",
+        description: `Successfully deleted ${file.name}`,
+      });
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete the file",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -102,6 +137,16 @@ export const FileList: React.FC<FileListProps> = ({ files }) => {
                         <Download className="h-3.5 w-3.5" />
                       </a>
                     </Button>
+                    {isCreatorView && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(file)}
+                        className="h-7 px-2 text-red-500 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"

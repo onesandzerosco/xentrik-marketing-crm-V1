@@ -18,6 +18,7 @@ export interface CreatorFileType {
   type: string;
   folder: string;
   status?: 'uploading' | 'complete';
+  bucketPath?: string;
 }
 
 const CreatorFiles = () => {
@@ -27,6 +28,7 @@ const CreatorFiles = () => {
   const creator = getCreator(id || '');
   const { toast } = useToast();
   const [currentFolder, setCurrentFolder] = useState('shared');
+  const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   
   useEffect(() => {
     ensureStorageBucket();
@@ -34,14 +36,74 @@ const CreatorFiles = () => {
     if (!id) {
       navigate('/shared-files');
     }
-  }, [id, navigate]);
+    
+    // Check if the current user is the creator
+    const checkCreatorStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && creator && user.id === creator.id) {
+        setIsCurrentUserCreator(true);
+      }
+    };
+    
+    checkCreatorStatus();
+  }, [id, navigate, creator]);
   
   const fetchCreatorFiles = async () => {
     if (!creator?.id) {
       throw new Error('Creator not found');
     }
     
-    // Fetch files from both shared and unsorted folders
+    // Determine if we should fetch from raw_uploads bucket or creator_files bucket
+    // First try fetching from media table for raw_uploads
+    const { data: mediaData, error: mediaError } = await supabase
+      .from('media')
+      .select('*')
+      .eq('creator_id', creator.id);
+    
+    if (mediaError) {
+      console.error('Error fetching media data:', mediaError);
+      // If there's an error, fall back to creator_files
+      return fetchFromCreatorFiles();
+    }
+    
+    if (mediaData && mediaData.length > 0) {
+      // Process files from media table
+      const processedFiles = await Promise.all(mediaData.map(async (media) => {
+        // Get a signed URL for the file
+        const { data } = await supabase.storage
+          .from('raw_uploads')
+          .createSignedUrl(media.bucket_key, 3600);
+        
+        const fileName = media.filename;
+        const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
+        const type = getFileType(fileExt);
+        
+        return {
+          id: media.id,
+          name: fileName,
+          size: media.file_size,
+          created_at: media.created_at,
+          url: data?.signedUrl || '',
+          type,
+          folder: 'shared',
+          status: 'complete' as const,
+          bucketPath: media.bucket_key
+        };
+      }));
+      
+      return processedFiles;
+    }
+    
+    // If no media data, fall back to creator_files
+    return fetchFromCreatorFiles();
+  };
+  
+  const fetchFromCreatorFiles = async () => {
+    if (!creator?.id) {
+      throw new Error('Creator not found');
+    }
+    
+    // Fetch files from both shared and unsorted folders in creator_files bucket
     const folders = ['shared', 'unsorted'];
     let allFiles: CreatorFileType[] = [];
     
@@ -64,6 +126,7 @@ const CreatorFiles = () => {
 
         const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
         const type = getFileType(fileExt);
+        const bucketPath = `${creator.id}/${folder}/${file.name}`;
 
         return {
           id: `${file.id || file.name}`,
@@ -73,7 +136,8 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder,
-          status: 'complete' as const
+          status: 'complete' as const,
+          bucketPath
         };
       }));
       
@@ -133,6 +197,7 @@ const CreatorFiles = () => {
         { id: 'shared', name: 'Shared Files' },
         { id: 'unsorted', name: 'Unsorted Uploads' }
       ]}
+      isCreatorView={isCurrentUserCreator}
     />
   );
 };

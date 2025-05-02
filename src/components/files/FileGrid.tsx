@@ -1,16 +1,18 @@
 
 import React from 'react';
-import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2 } from 'lucide-react';
+import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 interface FileGridProps {
   files: CreatorFileType[];
+  isCreatorView?: boolean;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ files }) => {
+export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false }) => {
   const { toast } = useToast();
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
@@ -39,6 +41,39 @@ export const FileGrid: React.FC<FileGridProps> = ({ files }) => {
       title: "Link copied!",
       description: "The sharing link has been copied to your clipboard.",
     });
+  };
+
+  const handleDelete = async (file: CreatorFileType) => {
+    try {
+      // Delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('raw_uploads')
+        .remove([file.bucketPath || '']);
+        
+      if (storageError) throw storageError;
+      
+      // Delete the media record if it exists
+      if (file.id) {
+        const { error: mediaError } = await supabase
+          .from('media')
+          .delete()
+          .eq('id', file.id);
+          
+        if (mediaError) throw mediaError;
+      }
+      
+      toast({
+        title: "File deleted",
+        description: `Successfully deleted ${file.name}`,
+      });
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete the file",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderPreview = (file: CreatorFileType) => {
@@ -122,13 +157,25 @@ export const FileGrid: React.FC<FileGridProps> = ({ files }) => {
                       <span>Download</span>
                     </a>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleShare(file)}
-                  >
-                    <Share2 className="h-3 w-3" />
-                  </Button>
+                  
+                  {isCreatorView ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(file)}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleShare(file)}
+                    >
+                      <Share2 className="h-3 w-3" />
+                    </Button>
+                  )}
                 </>
               )}
             </div>

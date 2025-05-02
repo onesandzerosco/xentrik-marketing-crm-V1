@@ -8,13 +8,15 @@ interface FileUploaderProps {
   creatorId: string;
   onUploadComplete?: () => void;
   folder?: string;
+  bucket?: string;
 }
 
 const FileUploader: React.FC<FileUploaderProps> = ({ 
   id, 
   creatorId, 
   onUploadComplete,
-  folder = 'shared'
+  folder = 'shared',
+  bucket = 'creator_files'
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
@@ -33,15 +35,33 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const filePath = `${creatorId}/${folder}/${safeName}`;
         
-        const { error } = await supabase.storage
-          .from('creator_files')
+        const { error: uploadError } = await supabase.storage
+          .from(bucket)
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true
           });
           
-        if (error) {
-          throw error;
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // If using the raw_uploads bucket, also insert a record in the media table
+        if (bucket === 'raw_uploads') {
+          const { error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              creator_id: creatorId,
+              bucket_key: filePath,
+              filename: safeName,
+              mime: file.type,
+              file_size: file.size
+            });
+            
+          if (mediaError) {
+            console.error('Media record creation error:', mediaError);
+            // Continue uploading other files even if this record fails
+          }
         }
         
         uploadedFiles.push(file.name);
