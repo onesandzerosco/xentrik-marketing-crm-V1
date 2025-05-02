@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
 
@@ -17,6 +19,19 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signInWithEmail } = useSupabaseAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate('/dashboard');
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +47,35 @@ const Login = () => {
     setIsLoading(true);
     try {
       await signInWithEmail(email, password);
+      
+      // After successful login, check if the user is a creator
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Check if the user is associated with any creator
+        const { data: creatorTeamMembers } = await supabase
+          .from('creator_team_members')
+          .select('creator_id')
+          .eq('team_member_id', user.id)
+          .limit(1);
+        
+        // If the user is associated with a creator, store this info in localStorage
+        if (creatorTeamMembers && creatorTeamMembers.length > 0) {
+          localStorage.setItem('isCreator', 'true');
+          localStorage.setItem('creatorId', creatorTeamMembers[0].creator_id);
+        }
+        
+        // Also fetch the user's role from the profiles table
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileData) {
+          localStorage.setItem('userRole', profileData.role);
+        }
+      }
+      
     } catch (error) {
       // Error is already handled in the context
     } finally {

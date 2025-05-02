@@ -31,6 +31,9 @@ export interface AuthContextType {
     displayName: string,
     profileImage: string
   ) => boolean;
+  isCreator: boolean;
+  creatorId: string | null;
+  userRole: string;
 }
 
 // Create an AuthContext for compatibility
@@ -79,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const authContextValue: AuthContextType = {
     user: {
       ...supabaseAuth.user,
-      role: supabaseAuth.user?.user_metadata?.role || 'Employee',
+      role: supabaseAuth.user?.user_metadata?.role || supabaseAuth.userRole || 'Employee',
       id: supabaseAuth.user?.id,
       email: supabaseAuth.user?.email,
       username: supabaseAuth.user?.email,
@@ -93,6 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     approvePendingUser,
     createTeamMember,
     updateCredentials,
+    isCreator: supabaseAuth.isCreator,
+    creatorId: supabaseAuth.creatorId,
+    userRole: supabaseAuth.userRole,
   };
 
   return (
