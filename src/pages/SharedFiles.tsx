@@ -69,13 +69,16 @@ const SharedFiles = () => {
     displayCreators = creators.filter(creator => creator.id === creatorId);
   }
 
-  // Pass searchQuery to filterCreators
-  const filteredCreators = filterCreators({
+  // Create filter options object
+  const filterOptions = {
     gender: selectedGenders,
     team: selectedTeams,
     creatorType: selectedClasses,
     searchQuery,
-  }, displayCreators);
+  };
+
+  // Pass the filter options to filterCreators
+  const filteredCreators = filterCreators(filterOptions);
 
   useEffect(() => {
     if (creators.length > 0) {
