@@ -12,19 +12,41 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { mockEmployees } from "@/data/mockEmployees"; // Using mock data for initial development
 
 const UserRolesList: React.FC = () => {
   const [users, setUsers] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // In a real app, fetch actual users from Supabase
-    // This would use supabase client to fetch users with their roles
     const fetchUsers = async () => {
       try {
-        // Using mock data for development
-        setUsers(mockEmployees);
+        // Fetch users from Supabase profiles table
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          // Map the data to match our Employee type
+          const formattedUsers = data.map(profile => ({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+            status: profile.status || "Active",
+            permissions: profile.roles || [],
+            profileImage: profile.profile_image,
+            lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
+            createdAt: profile.created_at ? new Date(profile.created_at).toLocaleString() : "Unknown",
+            department: profile.department
+          }));
+          
+          setUsers(formattedUsers);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error fetching users:", error);
