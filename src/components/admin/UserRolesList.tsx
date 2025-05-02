@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Employee } from "@/types/employee";
+import { Employee, TeamMemberRole } from "@/types/employee";
 import { 
   Table, 
   TableBody, 
@@ -30,12 +30,13 @@ const UserRolesList: React.FC = () => {
         }
 
         if (data) {
-          // Map the data to match our Employee type
+          // Map the data to match our Employee type with proper type casting
           const formattedUsers = data.map(profile => ({
             id: profile.id,
             name: profile.name,
             email: profile.email,
-            role: profile.role,
+            // Cast the role string to TeamMemberRole type
+            role: profile.role as TeamMemberRole,
             status: profile.status || "Active",
             permissions: profile.roles || [],
             profileImage: profile.profile_image,
