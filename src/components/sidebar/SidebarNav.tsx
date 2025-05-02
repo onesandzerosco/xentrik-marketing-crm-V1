@@ -9,7 +9,8 @@ import {
   UserCog, 
   Lock,
   FileUp,
-  Mic
+  Mic,
+  Shield
 } from 'lucide-react';
 
 interface NavItem {
@@ -48,6 +49,12 @@ const navItems: NavItem[] = [
     path: '/users',
     label: 'User Management',
     icon: <Users className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    path: '/access-control',
+    label: 'Access Control',
+    icon: <Shield className="h-5 w-5" />,
     adminOnly: true,
   },
   {

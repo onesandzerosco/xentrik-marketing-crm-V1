@@ -20,6 +20,7 @@ export interface Employee {
   department?: string;
   teams?: EmployeeTeam[];
   assignedCreators?: string[]; // IDs of creators assigned to this team member
+  userRoles?: string[]; // Additional roles for the employee
 }
 
 export type EmployeeFilters = {

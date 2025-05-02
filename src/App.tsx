@@ -1,102 +1,140 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
-import { AuthProvider } from './context/AuthContext';
-import { CreatorProvider } from './context/creator';
-import { ActivityProvider } from './context/ActivityContext';
-import { TeamProvider } from './context/TeamContext';
-import { AnimatePresence } from 'framer-motion';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+} from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Creators from './pages/Creators';
-import CreatorProfile from './pages/CreatorProfile';
-import CreatorAnalytics from './pages/CreatorAnalytics';
-import CreatorOnboarding from './pages/CreatorOnboarding';
-import AccountSettings from './pages/AccountSettings';
-import Messages from './pages/Messages';
-import NotFound from './pages/NotFound';
-import UserManagement from './pages/UserManagement';
-import Team from './pages/Team';
-import TeamMemberProfile from './pages/TeamMemberProfile';
-import TeamMemberOnboarding from './pages/TeamMemberOnboarding';
-import SecureLogins from './pages/SecureLogins';
-import Index from './pages/Index';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import { ensureStorageBucket } from "./utils/setupStorage";
+import Creators from './pages/Creators';
+import Team from './pages/Team';
+import UserManagement from './pages/UserManagement';
+import Messages from './pages/Messages';
 import SharedFiles from './pages/SharedFiles';
 import CreatorFiles from './pages/CreatorFiles';
-import TeamMemberEdit from './pages/TeamMemberEdit';
+import SecureLogins from './pages/SecureLogins';
+import AccountSettings from './pages/AccountSettings';
 import VoiceGeneration from './pages/VoiceGeneration';
-import CreatorUpload from './pages/CreatorUpload';
 
-// Call the function to ensure our storage bucket exists
-// We're calling it here in a non-blocking way
-ensureStorageBucket().catch(err => {
-  console.error("Error setting up storage bucket:", err);
-});
+// Import the AuthProvider from the context
+import { AuthProvider } from './context/AuthContext';
+import { CreatorsProvider } from './context/creator';
+import { EmployeesProvider } from './context/employee';
+import { SecureLoginsProvider } from './context/secureLogins';
+import { ToastProvider } from "@/components/ui/use-toast"
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+// Import the AccessControlPanel component
+import AccessControlPanel from "./pages/AccessControlPanel";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CreatorProvider>
-        <ActivityProvider>
-          <SupabaseAuthProvider>
-            <AuthProvider>
-              <TeamProvider>
-                <div className="app flex h-screen w-full bg-premium-dark">
-                  <Toaster />
-                  <AnimatePresence mode="wait">
-                    <AppRoutes />
-                  </AnimatePresence>
-                </div>
-              </TeamProvider>
-            </AuthProvider>
-          </SupabaseAuthProvider>
-        </ActivityProvider>
-      </CreatorProvider>
-    </QueryClientProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <CreatorsProvider>
+          <EmployeesProvider>
+            <SecureLoginsProvider>
+              <Router>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/creators"
+                    element={
+                      <ProtectedRoute>
+                        <Creators />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/team"
+                    element={
+                      <ProtectedRoute>
+                        <Team />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/users"
+                    element={
+                      <ProtectedRoute>
+                        <UserManagement />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/messages"
+                    element={
+                      <ProtectedRoute>
+                        <Messages />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/shared-files"
+                    element={
+                      <ProtectedRoute>
+                        <SharedFiles />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/creator-files/:creatorId"
+                    element={
+                      <ProtectedRoute>
+                        <CreatorFiles />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/secure-logins"
+                    element={
+                      <ProtectedRoute>
+                        <SecureLogins />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/account"
+                    element={
+                      <ProtectedRoute>
+                        <AccountSettings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/voice-generation"
+                    element={
+                      <ProtectedRoute>
+                        <VoiceGeneration />
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Add the new AccessControlPanel route */}
+                  <Route 
+                    path="/access-control" 
+                    element={
+                      <ProtectedRoute>
+                        <AccessControlPanel />
+                      </ProtectedRoute>
+                    } 
+                  />
+                </Routes>
+              </Router>
+            </SecureLoginsProvider>
+          </EmployeesProvider>
+        </CreatorsProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
-
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
-      <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
-      <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-      <Route path="/team/onboard" element={<ProtectedRoute><TeamMemberOnboarding /></ProtectedRoute>} />
-      <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
-      <Route path="/team/:id/edit" element={<ProtectedRoute><TeamMemberEdit /></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />
-      <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
-      <Route path="/creators/:id" element={<ProtectedRoute><CreatorProfile /></ProtectedRoute>} />
-      <Route path="/creators/:id/analytics" element={<ProtectedRoute><CreatorAnalytics /></ProtectedRoute>} />
-      <Route path="/secure-logins" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/secure-logins/:id" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
-      <Route path="/shared/:shareCode" element={<SharedFiles />} />
-      <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
-      <Route path="/upload/:id" element={<CreatorUpload />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
 
 export default App;
