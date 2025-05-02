@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Upload, RefreshCw, Search, Folder } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { BackButton } from "@/components/ui/back-button";
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 interface FolderType {
   id: string;
@@ -48,18 +48,31 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [isUserCreator, setIsUserCreator] = useState(isCreatorView);
   const { toast } = useToast();
   const { user, isCreator, creatorId: authCreatorId, userRole, userRoles = [] } = useSupabaseAuth();
+  const { isCreatorSelf } = useAuth();
 
   useEffect(() => {
     // Check if current user is the creator or has Creator role
     const checkCreatorStatus = async () => {
-      // Check if globally authenticated as a creator
+      // Check if globally authenticated as a creator and if this is their profile
       if (isCreator && authCreatorId === creatorId) {
         setIsUserCreator(true);
         return;
       }
       
+      // Check if user is the creator themselves (exact match on ID)
+      if (user?.id === creatorId) {
+        setIsUserCreator(true);
+        return;
+      }
+
       // Check if user has Creator role in their roles array
       if (userRoles.includes('Creator')) {
+        setIsUserCreator(true);
+        return;
+      }
+      
+      // If user has Admin role, they can manage all creators
+      if (userRole === 'Admin' || userRoles.includes('Admin')) {
         setIsUserCreator(true);
         return;
       }
@@ -80,10 +93,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     };
 
     checkCreatorStatus();
-  }, [creatorId, user, isCreator, authCreatorId, userRoles]);
+  }, [creatorId, user, isCreator, authCreatorId, userRoles, userRole]);
 
   // Check if user can upload files (either has Admin role or Creator role)
-  const canUpload = userRole === 'Admin' || userRoles.includes('Creator') || isUserCreator;
+  const canUpload = userRole === 'Admin' || 
+                   userRoles.includes('Admin') || 
+                   userRoles.includes('Creator') || 
+                   isUserCreator || 
+                   isCreatorSelf;
 
   const handleUploadFile = () => {
     document.getElementById('file-upload-trigger')?.click();
@@ -102,11 +119,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     return matchesSearch;
   });
 
+  // Determine if backButton should go to shared-files or dashboard
+  const backLink = isCreatorSelf ? "/dashboard" : "/shared-files";
+
   return (
     <div className="flex h-[calc(100vh-70px)] overflow-hidden bg-background">
       {/* Sidebar */}
       <div className="w-56 border-r p-4">
-        <BackButton to="/shared-files" className="mb-4" />
+        <BackButton to={backLink} className="mb-4" />
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium mb-2">Folders</h3>
@@ -141,7 +161,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         <div className="border-b p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0 flex-shrink-0">
-              <h1 className="text-xl font-semibold truncate">{creatorName}'s Files</h1>
+              <h1 className="text-xl font-semibold truncate">{isCreatorSelf ? 'My Files' : `${creatorName}'s Files`}</h1>
               <p className="text-sm text-muted-foreground">
                 {availableFolders.find(f => f.id === currentFolder)?.name || 'Files'}
               </p>

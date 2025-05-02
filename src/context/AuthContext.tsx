@@ -35,6 +35,7 @@ export interface AuthContextType {
   creatorId: string | null;
   userRole: string;
   userRoles: string[];
+  isCreatorSelf: boolean; // New property to check if user is viewing their own creator profile
 }
 
 // Create an AuthContext for compatibility
@@ -79,6 +80,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
   
+  // Determine if the user is viewing their own creator profile
+  // This is true when the user is authenticated as a creator and their creatorId matches their userId
+  const isCreatorSelf = supabaseAuth.isAuthenticated && 
+                        supabaseAuth.isCreator && 
+                        supabaseAuth.creatorId === supabaseAuth.user?.id;
+  
   // Create a compatible auth context value
   const authContextValue: AuthContextType = {
     user: {
@@ -101,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     creatorId: supabaseAuth.creatorId,
     userRole: supabaseAuth.userRole,
     userRoles: supabaseAuth.userRoles,
+    isCreatorSelf, // Add the new property to the context
   };
 
   return (
