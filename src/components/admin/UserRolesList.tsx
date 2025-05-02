@@ -72,10 +72,12 @@ const UserRolesList: React.FC = () => {
 
   const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => {
     try {
-      setLoading(true);
+      console.log("Updating user with ID:", userId);
+      console.log("New primary role:", primaryRole);
+      console.log("New additional roles:", additionalRoles);
       
       // Update the user in Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           role: primaryRole,
@@ -84,8 +86,11 @@ const UserRolesList: React.FC = () => {
         .eq('id', userId);
 
       if (error) {
+        console.error("Supabase error details:", error);
         throw error;
       }
+
+      console.log("Update response data:", data);
 
       // Show success message
       toast({
@@ -106,7 +111,7 @@ const UserRolesList: React.FC = () => {
         description: "There was a problem updating the user's roles.",
         variant: "destructive",
       });
-      
+    } finally {
       setLoading(false);
     }
   };

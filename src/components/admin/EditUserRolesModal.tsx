@@ -59,8 +59,13 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   // Reset state when user or open state changes
   useEffect(() => {
     if (user && open) {
+      console.log("Setting modal data for user:", user.id);
+      console.log("Primary role:", user.role);
+      console.log("Additional roles:", user.permissions);
+      
       setPrimaryRole(user.role);
       setAdditionalRoles(user.permissions || []);
+      setIsSubmitting(false);
     }
   }, [user, open]);
 
@@ -99,6 +104,10 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
 
   const handleSubmit = () => {
     if (user) {
+      console.log("Submitting role changes for user:", user.id);
+      console.log("New primary role:", primaryRole);
+      console.log("New additional roles:", additionalRoles);
+      
       setIsSubmitting(true);
       onUpdate(user.id, primaryRole, additionalRoles);
     }
