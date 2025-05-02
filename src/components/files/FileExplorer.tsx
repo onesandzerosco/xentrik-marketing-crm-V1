@@ -98,7 +98,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               ))}
             </div>
           </div>
-          <FolderNav />
+          <FolderNav 
+            activeFolder={currentFolder || null} 
+            onFolderChange={(folder) => {
+              if (folder && onFolderChange) {
+                onFolderChange(folder);
+              }
+            }} 
+          />
         </div>
       </div>
 

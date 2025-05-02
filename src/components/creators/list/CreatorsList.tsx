@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Creator } from "@/types";
 import CreatorCard from "@/components/CreatorCard";
 import EmptyState from "./EmptyState";
