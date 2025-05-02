@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Employee, TeamMemberRole } from "@/types/employee";
+import { Employee, TeamMemberRole, EmployeeStatus } from "@/types/employee";
 import { 
   Table, 
   TableBody, 
@@ -37,7 +37,8 @@ const UserRolesList: React.FC = () => {
             email: profile.email,
             // Cast the role string to TeamMemberRole type
             role: profile.role as TeamMemberRole,
-            status: profile.status || "Active",
+            // Cast the status string to EmployeeStatus type
+            status: (profile.status || "Active") as EmployeeStatus,
             permissions: profile.roles || [],
             profileImage: profile.profile_image,
             lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
