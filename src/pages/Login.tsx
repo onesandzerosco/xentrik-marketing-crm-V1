@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +108,14 @@ const Login = () => {
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
+            
+            <div className="mt-4 text-center">
+              <Link to="/register-creator">
+                <Button variant="outline" className="w-full">
+                  Create Sample Creator Account
+                </Button>
+              </Link>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-xs text-muted-foreground">Powered by Ones &amp; Zeros AI</p>
