@@ -46,18 +46,6 @@ const navItems: NavItem[] = [
     icon: <Lock className="h-5 w-5" />,
   },
   {
-    path: '/users',
-    label: 'User Management',
-    icon: <Users className="h-5 w-5" />,
-    adminOnly: true,
-  },
-  {
-    path: '/access-control',
-    label: 'Access Control',
-    icon: <Shield className="h-5 w-5" />,
-    adminOnly: true,
-  },
-  {
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
@@ -71,6 +59,18 @@ const navItems: NavItem[] = [
     path: '/voice-generation',
     label: 'Voice Generator',
     icon: <Mic className="h-5 w-5" />,
+  },
+  {
+    path: '/access-control',
+    label: 'Access Control',
+    icon: <Shield className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    path: '/users',
+    label: 'User Management',
+    icon: <Users className="h-5 w-5" />,
+    adminOnly: true,
   },
 ];
 
