@@ -21,7 +21,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
-  const { user } = useSupabaseAuth();
+  const { user, userRole } = useSupabaseAuth();
   const location = useLocation();
   const [pageTitle, setPageTitle] = useState("Dashboard");
   
@@ -57,7 +57,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  const isAdmin = user?.role === "Admin";
+  // Consider both role property and Admin being in the userRole
+  const isAdmin = user?.user_metadata?.role === "Admin" || userRole === "Admin";
 
   return (
     <SidebarProvider>

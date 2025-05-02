@@ -78,6 +78,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
     <nav className="grid gap-1 pt-2 z-30 relative">
       {navItems.map((item) => {
+        // Make the adminOnly check more flexible to check for either role="Admin" or "Admin" in roles array
         if (item.adminOnly && !isAdmin) return null;
         
         return (

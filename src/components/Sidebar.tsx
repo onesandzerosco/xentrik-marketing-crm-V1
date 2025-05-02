@@ -16,8 +16,10 @@ import { useRouteMemory } from "@/hooks/useRouteMemory";
 const Sidebar = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const isAdmin = user?.role === "Admin";
+  const { user, userRole } = useAuth();
+  
+  // Consider both role property and Admin being in the userRole
+  const isAdmin = user?.role === "Admin" || userRole === "Admin";
   
   // Use the centralized route memory hook
   useRouteMemory();
