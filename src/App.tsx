@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -19,19 +20,19 @@ import VoiceGeneration from './pages/VoiceGeneration';
 
 // Import the AuthProvider from the context
 import { AuthProvider } from './context/AuthContext';
-import { CreatorsProvider } from './context/creator';
+import { CreatorProvider } from './context/creator';
 import { EmployeesProvider } from './context/employee';
 import { SecureLoginsProvider } from './context/secureLogins';
-import { ToastProvider } from "@/components/ui/use-toast"
+import { Toaster } from "@/components/ui/toaster";
 
 // Import the AccessControlPanel component
 import AccessControlPanel from "./pages/AccessControlPanel";
 
 function App() {
   return (
-    <ToastProvider>
+    <>
       <AuthProvider>
-        <CreatorsProvider>
+        <CreatorProvider>
           <EmployeesProvider>
             <SecureLoginsProvider>
               <Router>
@@ -131,9 +132,10 @@ function App() {
               </Router>
             </SecureLoginsProvider>
           </EmployeesProvider>
-        </CreatorsProvider>
+        </CreatorProvider>
       </AuthProvider>
-    </ToastProvider>
+      <Toaster />
+    </>
   );
 }
 

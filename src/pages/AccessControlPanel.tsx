@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { Employee } from "@/types/employee";
+import { Employee, TeamMemberRole } from "@/types/employee";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -58,7 +58,7 @@ const AccessControlPanel = () => {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          role: profile.role,
+          role: profile.role as TeamMemberRole,
           status: profile.status as "Active" | "Inactive" | "Paused",
           telegram: profile.telegram,
           permissions: [],
@@ -132,7 +132,7 @@ const AccessControlPanel = () => {
       // Update local state
       setEmployees(prev => 
         prev.map(emp => 
-          emp.id === employeeId ? { ...emp, role } : emp
+          emp.id === employeeId ? { ...emp, role: role as TeamMemberRole } : emp
         )
       );
       
