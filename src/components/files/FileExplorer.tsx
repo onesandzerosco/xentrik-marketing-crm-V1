@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Upload, RefreshCw, Search, Folder } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -46,13 +47,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserCreator, setIsUserCreator] = useState(isCreatorView);
   const { toast } = useToast();
-  const { user, isCreator, creatorId: authCreatorId, userRole } = useSupabaseAuth();
+  const { user, isCreator, creatorId: authCreatorId, userRole, userRoles = [] } = useSupabaseAuth();
 
   useEffect(() => {
-    // Check if current user is the creator
+    // Check if current user is the creator or has Creator role
     const checkCreatorStatus = async () => {
       // Check if globally authenticated as a creator
       if (isCreator && authCreatorId === creatorId) {
+        setIsUserCreator(true);
+        return;
+      }
+      
+      // Check if user has Creator role in their roles array
+      if (userRoles.includes('Creator')) {
         setIsUserCreator(true);
         return;
       }
@@ -73,7 +80,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     };
 
     checkCreatorStatus();
-  }, [creatorId, user, isCreator, authCreatorId]);
+  }, [creatorId, user, isCreator, authCreatorId, userRoles]);
+
+  // Check if user can upload files (either has Admin role or Creator role)
+  const canUpload = userRole === 'Admin' || userRoles.includes('Creator') || isUserCreator;
 
   const handleUploadFile = () => {
     document.getElementById('file-upload-trigger')?.click();
@@ -154,7 +164,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              {(isUserCreator || userRole === 'Admin') && (
+              {canUpload && (
                 <Button 
                   onClick={handleUploadFile}
                   variant="default"
@@ -174,17 +184,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <FileViewSkeleton viewMode={viewMode} />
           ) : filteredFiles.length > 0 ? (
             viewMode === 'grid' ? (
-              <FileGrid files={filteredFiles} isCreatorView={isUserCreator || userRole === 'Admin'} />
+              <FileGrid files={filteredFiles} isCreatorView={canUpload} />
             ) : (
-              <FileList files={filteredFiles} isCreatorView={isUserCreator || userRole === 'Admin'} />
+              <FileList files={filteredFiles} isCreatorView={canUpload} />
             )
           ) : (
-            <EmptyState isFiltered={!!searchQuery} isCreatorView={isUserCreator || userRole === 'Admin'} />
+            <EmptyState isFiltered={!!searchQuery} isCreatorView={canUpload} />
           )}
         </div>
       </div>
       
-      {(isUserCreator || userRole === 'Admin') && (
+      {canUpload && (
         <div className="hidden">
           <FileUploader 
             id="file-upload-trigger" 

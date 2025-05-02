@@ -64,15 +64,25 @@ const Login = () => {
           localStorage.setItem('creatorId', creatorTeamMembers[0].creator_id);
         }
         
-        // Also fetch the user's role from the profiles table
+        // Fetch the user's profile data to get roles
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, roles')
           .eq('id', user.id)
           .single();
           
         if (profileData) {
           localStorage.setItem('userRole', profileData.role);
+          
+          // Store roles array in localStorage
+          if (profileData.roles && profileData.roles.length > 0) {
+            localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
+            
+            // Check if user has Creator role
+            if (profileData.roles.includes('Creator')) {
+              localStorage.setItem('isCreator', 'true');
+            }
+          }
         }
       }
       

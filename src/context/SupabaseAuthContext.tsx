@@ -13,6 +13,7 @@ interface SupabaseAuthContextType {
   isCreator: boolean;
   creatorId: string | null;
   userRole: string;
+  userRoles: string[];
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithOAuth: (provider: 'google') => Promise<void>;
   signOut: () => Promise<void>;
@@ -36,12 +37,36 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isCreator, setIsCreator] = useState(false);
   const [creatorId, setCreatorId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState('Employee');
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Helper function to check creator status
   const checkCreatorStatus = async (userId: string) => {
     try {
+      // First check if user has Creator role in profiles.roles
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('roles, role')
+        .eq('id', userId)
+        .single();
+        
+      let hasCreatorRole = false;
+      
+      if (profileData?.roles && Array.isArray(profileData.roles) && profileData.roles.includes('Creator')) {
+        hasCreatorRole = true;
+        setIsCreator(true);
+        localStorage.setItem('isCreator', 'true');
+        setUserRoles(profileData.roles);
+        localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
+      }
+      
+      if (profileData?.role) {
+        setUserRole(profileData.role);
+        localStorage.setItem('userRole', profileData.role);
+      }
+      
+      // Also check creator_team_members for associations
       const { data } = await supabase
         .from('creator_team_members')
         .select('creator_id')
@@ -49,27 +74,22 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .limit(1);
         
       if (data && data.length > 0) {
-        setIsCreator(true);
         setCreatorId(data[0].creator_id);
-        localStorage.setItem('isCreator', 'true');
         localStorage.setItem('creatorId', data[0].creator_id);
-      } else {
-        setIsCreator(false);
-        setCreatorId(null);
-        localStorage.removeItem('isCreator');
-        localStorage.removeItem('creatorId');
-      }
-      
-      // Also fetch user role
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
         
-      if (profileData) {
-        setUserRole(profileData.role);
-        localStorage.setItem('userRole', profileData.role);
+        // If user is directly associated with a creator, mark them as a creator
+        if (!hasCreatorRole) {
+          setIsCreator(true);
+          localStorage.setItem('isCreator', 'true');
+        }
+      } else {
+        // Only reset these if user isn't a creator by role
+        if (!hasCreatorRole) {
+          setIsCreator(false);
+          setCreatorId(null);
+          localStorage.removeItem('isCreator');
+          localStorage.removeItem('creatorId');
+        }
       }
     } catch (error) {
       console.error('Error checking creator status:', error);
@@ -88,18 +108,34 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const storedIsCreator = localStorage.getItem('isCreator');
         const storedCreatorId = localStorage.getItem('creatorId');
         const storedUserRole = localStorage.getItem('userRole');
+        const storedUserRoles = localStorage.getItem('userRoles');
         
-        if (storedIsCreator === 'true' && storedCreatorId) {
+        if (storedIsCreator === 'true') {
           setIsCreator(true);
+        }
+        
+        if (storedCreatorId) {
           setCreatorId(storedCreatorId);
-        } else {
-          // If not in localStorage, fetch it
-          checkCreatorStatus(currentSession.user.id);
         }
         
         if (storedUserRole) {
           setUserRole(storedUserRole);
         }
+        
+        if (storedUserRoles) {
+          try {
+            const parsedRoles = JSON.parse(storedUserRoles);
+            if (Array.isArray(parsedRoles)) {
+              setUserRoles(parsedRoles);
+            }
+          } catch (e) {
+            console.error('Error parsing stored user roles:', e);
+            setUserRoles([]);
+          }
+        }
+        
+        // Always check for updated status
+        checkCreatorStatus(currentSession.user.id);
       }
       
       setIsLoading(false);
@@ -110,9 +146,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         localStorage.removeItem('isCreator');
         localStorage.removeItem('creatorId');
         localStorage.removeItem('userRole');
+        localStorage.removeItem('userRoles');
         setIsCreator(false);
         setCreatorId(null);
         setUserRole('Employee');
+        setUserRoles([]);
       } else if (event === 'SIGNED_IN') {
         // Check for a stored route in localStorage
         const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
@@ -188,9 +226,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       localStorage.removeItem('isCreator');
       localStorage.removeItem('creatorId');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('userRoles');
       setIsCreator(false);
       setCreatorId(null);
       setUserRole('Employee');
+      setUserRoles([]);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -210,6 +250,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isCreator,
         creatorId,
         userRole,
+        userRoles,
         signInWithEmail,
         signInWithOAuth,
         signOut

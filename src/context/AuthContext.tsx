@@ -34,6 +34,7 @@ export interface AuthContextType {
   isCreator: boolean;
   creatorId: string | null;
   userRole: string;
+  userRoles: string[];
 }
 
 // Create an AuthContext for compatibility
@@ -99,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isCreator: supabaseAuth.isCreator,
     creatorId: supabaseAuth.creatorId,
     userRole: supabaseAuth.userRole,
+    userRoles: supabaseAuth.userRoles,
   };
 
   return (
