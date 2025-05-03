@@ -374,6 +374,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_user_roles: {
+        Args: {
+          user_id: string
+          new_primary_role: string
+          new_additional_roles: string[]
+        }
+        Returns: boolean
+      }
       create_team_member: {
         Args: {
           email: string
