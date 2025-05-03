@@ -48,9 +48,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: profile.id,
         name: profile.name || '',
         email: profile.email || '',
-        // Map both the primary role and additional roles correctly
-        role: profile.role || 'Employee', // Primary role from 'role' column
-        roles: profile.roles || [], // Additional roles from 'roles' array column
+        roles: profile.roles || [],
         status: profile.status || 'Active',
         teams: profile.teams || [],
         telegram: profile.telegram,
@@ -80,16 +78,14 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // For the RPC function, we should NOT send 'role' directly as it's not in the function signature
-      // The RPC expects 'roles' array for additional roles
+      // Call the stored procedure to create a team member
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
         phone: newMember.phoneNumber,
         telegram: newMember.telegram,
-        // Don't include 'role' here since it's not in the function parameters
-        roles: newMember.roles, // Send all roles as an array
+        roles: newMember.roles,
         teams: newMember.teams
       });
       
@@ -123,8 +119,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const dbUpdates: any = {
         name: updates.name,
         teams: updates.teams,
-        role: updates.role, // Primary role goes to the 'role' column
-        roles: updates.roles, // Additional roles go to the 'roles' array column
+        roles: updates.roles,
         status: updates.status,
         telegram: updates.telegram,
         phone_number: updates.phoneNumber,
@@ -138,8 +133,6 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           delete dbUpdates[key];
         }
       });
-      
-      console.log("Updating team member with:", dbUpdates);
       
       const { error } = await supabase
         .from('profiles')

@@ -1,5 +1,5 @@
 
-export type TeamMemberRole = "Creator" | "Chatter" | "Admin" | "VA" | "Developer" | "Manager" | "Employee";
+export type TeamMemberRole = "Chatters" | "Creative Director" | "Manager" | "Developer" | "Editor" | "Admin" | "Employee";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
 export type EmployeeTeam = "A" | "B" | "C";
 
@@ -13,8 +13,7 @@ export interface Employee {
   role: TeamMemberRole;
   status: EmployeeStatus;
   telegram?: string;
-  permissions?: TeamMemberRole[]; // Keep for backwards compatibility
-  roles?: TeamMemberRole[];      // New field that matches database schema
+  permissions?: string[];
   profileImage?: string;
   lastLogin: string;
   createdAt: string;

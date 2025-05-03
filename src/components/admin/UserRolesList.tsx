@@ -13,7 +13,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import EditUserRolesModal from "./EditUserRolesModal";
 
 const UserRolesList: React.FC = () => {
@@ -21,7 +20,6 @@ const UserRolesList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const { toast } = useToast();
 
   const fetchUsers = async () => {
     try {
@@ -44,10 +42,7 @@ const UserRolesList: React.FC = () => {
           role: profile.role as TeamMemberRole,
           // Cast the status string to EmployeeStatus type
           status: (profile.status || "Active") as EmployeeStatus,
-          // Ensure permissions is of type TeamMemberRole[]
-          permissions: (profile.roles || []) as TeamMemberRole[],
-          // Also set roles to match the database schema
-          roles: (profile.roles || []) as TeamMemberRole[],
+          permissions: profile.roles || [],
           profileImage: profile.profile_image,
           lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
           createdAt: profile.created_at ? new Date(profile.created_at).toLocaleString() : "Unknown",
@@ -60,11 +55,6 @@ const UserRolesList: React.FC = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load users",
-        variant: "destructive"
-      });
       setLoading(false);
     }
   };
@@ -78,52 +68,27 @@ const UserRolesList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => {
+  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => {
     try {
-      setLoading(true);
-      console.log("Updating user:", userId);
-      console.log("Primary role:", primaryRole);
-      console.log("Additional roles:", additionalRoles);
-      
       // Update the user in Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
-          role: primaryRole, // Primary role goes into the 'role' column
-          roles: additionalRoles // Additional roles go into the 'roles' array column
+          role: primaryRole,
+          roles: additionalRoles
         })
         .eq('id', userId);
 
       if (error) {
-        console.error("Error from Supabase:", error);
         throw error;
       }
 
-      // Update local state
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === userId 
-            ? { ...user, role: primaryRole, permissions: additionalRoles, roles: additionalRoles } 
-            : user
-        )
-      );
-
-      // Show success toast
-      toast({
-        title: "Success",
-        description: "User roles updated successfully"
-      });
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update user roles",
-        variant: "destructive"
-      });
-    } finally {
+      // Refresh the user list
+      fetchUsers();
       setIsModalOpen(false);
       setSelectedUser(null);
-      setLoading(false);
+    } catch (error) {
+      console.error("Error updating user:", error);
     }
   };
 

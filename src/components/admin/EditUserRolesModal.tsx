@@ -26,25 +26,22 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Employee, TeamMemberRole } from "@/types/employee";
-import { useToast } from "@/hooks/use-toast";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => void;
+  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => void;
 }
 
-// These are the roles that can be assigned as primary roles
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
-// These are the roles that can be assigned as additional roles
-const ADDITIONAL_ROLES: TeamMemberRole[] = [
-  "Creator", 
+const ADDITIONAL_ROLES = [
+  "VA", 
   "Chatter", 
-  "Admin", 
-  "VA",
-  "Developer"
+  "Creator", 
+  "Developer",
+  "Editor"
 ];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
@@ -54,19 +51,15 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   onUpdate
 }) => {
   const [primaryRole, setPrimaryRole] = useState<TeamMemberRole>("Employee");
-  const [additionalRoles, setAdditionalRoles] = useState<TeamMemberRole[]>([]);
+  const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   // Reset state when user or open state changes
   useEffect(() => {
     if (user && open) {
       setPrimaryRole(user.role);
-      // Use 'roles' first if available, fall back to 'permissions' for backward compatibility
-      // Make sure we cast to TeamMemberRole[]
-      setAdditionalRoles((user.roles || user.permissions || []) as TeamMemberRole[]);
+      setAdditionalRoles(user.permissions || []);
     }
   }, [user, open]);
 
@@ -93,7 +86,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     setShowAdminAlert(false);
   };
 
-  const toggleAdditionalRole = (role: TeamMemberRole) => {
+  const toggleAdditionalRole = (role: string) => {
     setAdditionalRoles(prev => {
       if (prev.includes(role)) {
         return prev.filter(r => r !== role);
@@ -103,34 +96,9 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     });
   };
 
-  const handleSubmit = async () => {
-    if (!user) return;
-    
-    setIsSubmitting(true);
-    
-    try {
-      console.log("Submitting role changes:");
-      console.log("Primary role:", primaryRole);
-      console.log("Additional roles:", additionalRoles);
-      
-      // Call the provided onUpdate function first
-      await onUpdate(user.id, primaryRole, additionalRoles);
-      
-      toast({
-        title: "Roles updated",
-        description: `Role changes for ${user.name} have been saved.`
-      });
-      
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error updating user roles:", error);
-      toast({
-        title: "Update failed",
-        description: "There was a problem updating the user roles.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = () => {
+    if (user) {
+      onUpdate(user.id, primaryRole, additionalRoles);
     }
   };
 
@@ -198,16 +166,14 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button 
               className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
               onClick={handleSubmit}
-              disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

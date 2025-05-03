@@ -177,6 +177,7 @@ const TeamMemberProfile = () => {
                     key={role} 
                     variant="outline" 
                     className={
+                      role === 'Creative Director' ? 'bg-red-500/10 text-red-400' :
                       role === 'Manager' ? 'bg-blue-500/10 text-blue-400' :
                       'bg-primary/10 text-primary/80'
                     }

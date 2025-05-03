@@ -61,12 +61,12 @@ export const filterAndSortEmployees = (
           "Admin": 0, 
           "Manager": 1, 
           "Employee": 2,
-          "Creator": 3,
-          "Chatter": 4,
-          "VA": 5,
-          "Developer": 6
+          "Chatters": 3,
+          "Creative Director": 4,
+          "Developer": 5,
+          "Editor": 6
         };
-        return (roleOrder[a.role as TeamMemberRole] || 999) - (roleOrder[b.role as TeamMemberRole] || 999);
+        return (roleOrder[a.role] || 999) - (roleOrder[b.role] || 999);
       default:
         return 0;
     }

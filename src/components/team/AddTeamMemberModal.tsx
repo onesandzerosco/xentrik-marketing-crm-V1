@@ -93,12 +93,11 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
   };
   
   const roleOptions: TeamMemberRole[] = [
-    "Chatter", 
+    "Chatters", 
+    "Creative Director", 
     "Manager", 
     "Developer", 
-    "VA",
-    "Creator",
-    "Admin"
+    "Editor"
   ];
   
   const teamOptions: ("A" | "B" | "C")[] = ["A", "B", "C"];

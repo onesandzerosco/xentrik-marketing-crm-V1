@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,19 +10,13 @@ import TeamsSection from "./TeamsSection";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { TeamMemberRole } from "@/types/employee";
-import { useTeam } from "@/context/TeamContext";
 
-const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
-
-// Additional roles that can be assigned
-const ADDITIONAL_ROLES: TeamMemberRole[] = [
-  "Chatter",
+const ROLES = [
+  "Chatters",
+  "Creative Director",
   "Manager",
   "Developer",
-  "VA",
-  "Creator",
-  "Admin"
+  "Editor"
 ];
 
 const TEAMS = [
@@ -39,8 +34,7 @@ interface FormState {
   phoneNumber: string;
   department: string;
   profileImage: string;
-  role: TeamMemberRole; // Primary role (stored in 'role' column)
-  roles: string[]; // Additional roles (stored in 'roles' array column)
+  roles: string[];
   teams: string[];
 }
 
@@ -53,7 +47,6 @@ const defaultForm: FormState = {
   phoneNumber: "",
   department: "",
   profileImage: "",
-  role: "Employee",
   roles: [],
   teams: [],
 };
@@ -63,7 +56,6 @@ const AddTeamMemberForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { addTeamMember } = useTeam();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -73,25 +65,13 @@ const AddTeamMemberForm = () => {
     setForm((prev) => ({ ...prev, profileImage: url }));
   };
 
-  const handlePrimaryRoleChange = (role: TeamMemberRole) => {
-    setForm((prev) => ({ ...prev, role }));
-  };
-
-  const handleRoleToggle = (role: string) => {
+  const handleMultiSelect = (key: "roles" | "teams", value: string) => {
     setForm((prev) => {
-      const roles = prev.roles.includes(role)
-        ? prev.roles.filter((r) => r !== role)
-        : [...prev.roles, role];
-      return { ...prev, roles };
-    });
-  };
-
-  const handleTeamToggle = (team: string) => {
-    setForm((prev) => {
-      const teams = prev.teams.includes(team)
-        ? prev.teams.filter((t) => t !== team)
-        : [...prev.teams, team];
-      return { ...prev, teams };
+      const arr = prev[key];
+      if (arr.includes(value)) {
+        return { ...prev, [key]: arr.filter((v) => v !== value) };
+      }
+      return { ...prev, [key]: [...arr, value] };
     });
   };
 
@@ -113,35 +93,14 @@ const AddTeamMemberForm = () => {
       return;
     }
 
-    try {
-      await addTeamMember({
-        name: form.name,
-        email: form.email,
-        role: form.role,
-        roles: form.roles as TeamMemberRole[],
-        status: "Active",
-        teams: form.teams as ("A" | "B" | "C")[],
-        telegram: form.telegram,
-        phoneNumber: form.phoneNumber,
-        profileImage: form.profileImage,
-        department: form.department
-      }, form.password);
+    // TODO: Integration with team add endpoint here
 
-      toast({
-        title: "Team member added",
-        description: `${form.name} has been added to the team.`,
-      });
-      navigate("/team");
-    } catch (error) {
-      console.error("Error adding team member:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add team member",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    toast({
+      title: "Team member added",
+      description: `${form.name} has been added to the team.`,
+    });
+    setIsSubmitting(false);
+    navigate("/team");
   };
 
   return (
@@ -160,44 +119,15 @@ const AddTeamMemberForm = () => {
               name={form.name}
             />
           </div>
-          
-          {/* Primary Role Selection */}
-          <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
-            <h2 className="text-xl font-bold mb-4 text-white">Primary Role</h2>
-            <div className="grid grid-cols-1 gap-3">
-              {PRIMARY_ROLES.map((role) => (
-                <label
-                  key={role}
-                  className={`flex items-center gap-2 rounded-md border p-3 cursor-pointer transition-all ${
-                    form.role === role
-                      ? "bg-[#2a2a45] border-yellow-400/50"
-                      : "bg-[#1e1e2e] border-[#23233a]"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="primaryRole"
-                    checked={form.role === role}
-                    onChange={() => handlePrimaryRoleChange(role)}
-                    className="accent-yellow-400 w-4 h-4"
-                  />
-                  <span className="text-white text-sm">{role}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          
-          {/* Additional Roles */}
           <RolesSection
-            roles={ADDITIONAL_ROLES}
+            roles={ROLES}
             selected={form.roles}
-            onChange={(role) => handleRoleToggle(role)}
+            onChange={(role) => handleMultiSelect("roles", role)}
           />
-          
           <TeamsSection
             teams={TEAMS}
             selected={form.teams}
-            onChange={(team) => handleTeamToggle(team)}
+            onChange={(team) => handleMultiSelect("teams", team)}
           />
         </div>
       </div>

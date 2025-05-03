@@ -1,6 +1,5 @@
 
 import React from "react";
-import { TeamMemberRole } from "@/types/employee";
 
 interface Props {
   roles: string[];

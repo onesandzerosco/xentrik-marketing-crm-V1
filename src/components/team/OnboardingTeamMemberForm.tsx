@@ -11,7 +11,6 @@ import { TeamMemberFormValues, teamMemberFormSchema } from '@/schemas/teamMember
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
 import TeamAssignmentSection from './TeamAssignmentSection';
-import { TeamMemberRole } from '@/types/employee';
 
 const OnboardingTeamMemberForm = () => {
   const navigate = useNavigate();
@@ -24,7 +23,6 @@ const OnboardingTeamMemberForm = () => {
       name: '',
       email: '',
       role: 'Employee',
-      roles: [],
       status: 'Active',
       teams: [],
       telegram: '',
@@ -37,12 +35,11 @@ const OnboardingTeamMemberForm = () => {
       // Generate a random password for the new team member
       const tempPassword = Math.random().toString(36).slice(-8);
       
-      // Ensure both primary role and additional roles are correctly set
+      // Convert single role to an array and ensure required fields are present
       const teamMemberData = {
-        name: data.name,
-        email: data.email,
-        role: data.role, // Primary role
-        roles: data.roles?.map(role => role as TeamMemberRole) || [data.role], // Cast to TeamMemberRole[]
+        name: data.name, // Ensure name is explicitly set
+        email: data.email, // Ensure email is explicitly set
+        roles: [data.role], // Convert single role to array for API
         status: data.status || 'Active',
         teams: data.teams || [],
         telegram: data.telegram,
