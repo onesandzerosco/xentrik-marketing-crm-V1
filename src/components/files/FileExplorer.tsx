@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Upload, RefreshCw, Search, Folder } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -216,9 +217,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <FileViewSkeleton viewMode={viewMode} />
           ) : filteredFiles.length > 0 ? (
             viewMode === 'grid' ? (
-              <FileGrid files={filteredFiles} isCreatorView={canUpload} />
+              <FileGrid 
+                files={filteredFiles} 
+                isCreatorView={canUpload}
+                onFilesChanged={onRefresh}
+              />
             ) : (
-              <FileList files={filteredFiles} isCreatorView={canUpload} />
+              <FileList 
+                files={filteredFiles} 
+                isCreatorView={canUpload}
+                onFilesChanged={onRefresh}
+              />
             )
           ) : (
             <EmptyState isFiltered={!!searchQuery} isCreatorView={canUpload} />

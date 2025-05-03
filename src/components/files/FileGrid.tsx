@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
@@ -11,14 +12,18 @@ import { useAuth } from '@/context/AuthContext';
 interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
+  onFilesChanged?: () => void;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false }) => {
+export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false, onFilesChanged }) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isAdmin = userRole === "Admin";
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
+  
+  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
+  const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
 
   const getFileIcon = (type: string, large = false) => {
     const size = large ? "h-12 w-12" : "h-5 w-5";
@@ -38,7 +43,6 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
   };
 
   const handleShare = (file: CreatorFileType) => {
-    // Copy the file's sharing URL to clipboard
     navigator.clipboard.writeText(`${window.location.origin}/share/${file.id}`);
     toast({
       title: "Link copied!",
@@ -48,6 +52,8 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
 
   const handleDelete = async (file: CreatorFileType) => {
     try {
+      setProcessingFiles(prev => new Set([...prev, file.id]));
+      
       // Delete the file from storage
       const { error: storageError } = await supabase.storage
         .from('raw_uploads')
@@ -65,17 +71,132 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
         if (mediaError) throw mediaError;
       }
       
+      // Remove from selected files
+      setSelectedFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(file.id);
+        return newSet;
+      });
+      
+      setProcessingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(file.id);
+        return newSet;
+      });
+      
+      // Notify parent component about the change
+      if (onFilesChanged) {
+        onFilesChanged();
+      }
+      
       toast({
         title: "File deleted",
         description: `Successfully deleted ${file.name}`,
       });
     } catch (error) {
       console.error('Delete error:', error);
+      
+      setProcessingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(file.id);
+        return newSet;
+      });
+      
       toast({
         title: "Delete failed",
         description: error instanceof Error ? error.message : "Failed to delete the file",
         variant: "destructive",
       });
+    }
+  };
+  
+  const handleSelectAll = () => {
+    if (selectedFiles.size === files.length) {
+      setSelectedFiles(new Set());
+    } else {
+      const allFileIds = files.map(file => file.id);
+      setSelectedFiles(new Set(allFileIds));
+    }
+  };
+  
+  const handleSelectFile = (fileId: string, checked: boolean) => {
+    setSelectedFiles(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(fileId);
+      } else {
+        newSet.delete(fileId);
+      }
+      return newSet;
+    });
+  };
+  
+  const handleDeleteSelected = async () => {
+    if (selectedFiles.size === 0) return;
+    
+    try {
+      const selectedFileIds = Array.from(selectedFiles);
+      const selectedFileObjects = files.filter(file => selectedFiles.has(file.id));
+      
+      // Add all files to processing state
+      setProcessingFiles(new Set(selectedFileIds));
+      
+      for (const file of selectedFileObjects) {
+        // Delete the file from storage
+        await supabase.storage
+          .from('raw_uploads')
+          .remove([file.bucketPath || '']);
+        
+        // Delete the media record if it exists
+        if (file.id) {
+          await supabase
+            .from('media')
+            .delete()
+            .eq('id', file.id);
+        }
+      }
+      
+      // Clear selections
+      setSelectedFiles(new Set());
+      setProcessingFiles(new Set());
+      
+      // Notify parent component about the change
+      if (onFilesChanged) {
+        onFilesChanged();
+      }
+      
+      toast({
+        title: "Files deleted",
+        description: `Successfully deleted ${selectedFiles.size} files`,
+      });
+    } catch (error) {
+      console.error('Delete selected error:', error);
+      
+      setProcessingFiles(new Set());
+      
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete selected files",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const downloadSelected = async () => {
+    if (selectedFiles.size === 0) return;
+    
+    for (const fileId of selectedFiles) {
+      const file = files.find(f => f.id === fileId);
+      if (file && file.url) {
+        const link = document.createElement('a');
+        link.href = file.url;
+        link.download = file.name;
+        link.target = "_blank";
+        link.click();
+        
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
     }
   };
 
@@ -118,77 +239,137 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
               ({uploadingFiles} uploading)
             </span>
           )}
+          {selectedFiles.size > 0 && (
+            <span className="ml-2">
+              | {selectedFiles.size} selected
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          {selectedFiles.size > 0 ? (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={downloadSelected}
+              >
+                <Download className="h-3.5 w-3.5 mr-1" /> Download Selected
+              </Button>
+              {canDeleteFiles && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  className="text-red-500"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Selected
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSelectAll}
+            >
+              Select All
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {files.map((file) => (
-          <div
-            key={file.id}
-            className="group border rounded-lg overflow-hidden hover:border-primary/50 transition-all"
-          >
-            {renderPreview(file)}
-            
-            <div className="p-3">
-              <div className="text-sm font-medium truncate text-left mb-1">
-                {file.name}
+        {files.map((file) => {
+          const isProcessing = processingFiles.has(file.id);
+          const isChecked = selectedFiles.has(file.id);
+          
+          return (
+            <div
+              key={file.id}
+              className={`group border rounded-lg overflow-hidden transition-all ${
+                isChecked ? 'border-primary ring-2 ring-primary/30' : 'hover:border-primary/50'
+              }`}
+            >
+              <div className="relative">
+                {renderPreview(file)}
+                <div className="absolute top-2 right-2">
+                  <Checkbox 
+                    checked={isChecked}
+                    onCheckedChange={(checked) => handleSelectFile(file.id, !!checked)}
+                    disabled={isProcessing || file.status === 'uploading'}
+                    className="bg-white/80 backdrop-blur-sm border-gray-400"
+                  />
+                </div>
               </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{formatFileSize(file.size)}</span>
-                <span>{formatDate(file.created_at)}</span>
+              
+              <div className="p-3">
+                <div className="text-sm font-medium truncate text-left mb-1">
+                  {file.name}
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{formatFileSize(file.size)}</span>
+                  <span>{formatDate(file.created_at)}</span>
+                </div>
               </div>
-            </div>
-            
-            <div className="px-3 pb-3 flex gap-2">
-              {file.status === 'uploading' ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled
-                  className="w-full"
-                >
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  <span>Uploading...</span>
-                </Button>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    asChild
-                    className="flex-1"
+              
+              <div className="px-3 pb-3 flex gap-2">
+                {file.status === 'uploading' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="w-full"
                   >
-                    <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-3 w-3 mr-1" />
-                      <span>Download</span>
-                    </a>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    <span>Uploading...</span>
                   </Button>
-                  
-                  {canDeleteFiles && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(file)}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      asChild
+                      className="flex-1"
+                      disabled={isProcessing}
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <a href={file.url} download={file.name} target="_blank" rel="noopener noreferrer">
+                        <Download className="h-3 w-3 mr-1" />
+                        <span>Download</span>
+                      </a>
                     </Button>
-                  )}
+                    
+                    {canDeleteFiles && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(file)}
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </Button>
+                    )}
 
-                  {!canDeleteFiles && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleShare(file)}
-                    >
-                      <Share2 className="h-3 w-3" />
-                    </Button>
-                  )}
-                </>
-              )}
+                    {!canDeleteFiles && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare(file)}
+                        disabled={isProcessing}
+                      >
+                        <Share2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );

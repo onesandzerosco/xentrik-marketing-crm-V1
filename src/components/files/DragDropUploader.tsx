@@ -42,7 +42,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
   // Calculate overall progress percentage
   const calculateOverallProgress = useCallback(() => {
     if (totalBytes === 0) return 0;
-    return Math.round((uploadedBytes / totalBytes) * 100);
+    return Math.round((uploadedBytes / totalBytes) * 100 * 100) / 100; // Limit to 2 decimal places
   }, [totalBytes, uploadedBytes]);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -150,7 +150,8 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
       if (success) successCount++;
       
       // Update the overall progress after each file completes
-      setOverallProgress((i + 1) / files.length * 100);
+      const progressValue = ((i + 1) / files.length * 100);
+      setOverallProgress(Math.round(progressValue * 100) / 100); // Limit to 2 decimal places
     }
     
     // All uploads complete
@@ -246,7 +247,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-medium">Overall Progress</span>
-                  <span>{overallProgress}%</span>
+                  <span>{overallProgress.toFixed(2)}%</span>
                 </div>
                 <Progress value={overallProgress} className="h-2" />
               </div>
@@ -260,7 +261,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
                       {file.error ? (
                         <span className="text-destructive">Failed</span>
                       ) : (
-                        <span>{file.progress}%</span>
+                        <span>{file.progress.toFixed(2)}%</span>
                       )}
                     </div>
                     <Progress 
