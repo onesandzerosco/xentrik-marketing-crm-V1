@@ -6,12 +6,15 @@ export type EmployeeTeam = "A" | "B" | "C";
 // Alias for backward compatibility with existing code
 export type EmployeeRole = TeamMemberRole;
 
+// Define what is allowed as primary roles and additional roles
+export type PrimaryRole = "Admin" | "Manager" | "Employee";
+
 export interface Employee {
   id: string;
   name: string;
   email: string;
-  role: TeamMemberRole;
-  roles?: TeamMemberRole[];
+  role: PrimaryRole;
+  roles?: string[];
   status: EmployeeStatus;
   telegram?: string;
   profileImage?: string;

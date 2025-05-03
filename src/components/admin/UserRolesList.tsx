@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Employee, TeamMemberRole, EmployeeStatus } from "@/types/employee";
+import { Employee, EmployeeStatus, PrimaryRole } from "@/types/employee";
 import { 
   Table, 
   TableBody, 
@@ -41,10 +41,10 @@ const UserRolesList: React.FC = () => {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          // Cast the role string to TeamMemberRole type
-          role: profile.role as TeamMemberRole,
-          // Cast the roles array to TeamMemberRole[] type
-          roles: profile.roles as TeamMemberRole[] || [],
+          // Cast the role string to PrimaryRole type
+          role: profile.role as PrimaryRole,
+          // Cast the roles array to string[] type
+          roles: profile.roles as string[] || [],
           // Cast the status string to EmployeeStatus type
           status: (profile.status || "Active") as EmployeeStatus,
           profileImage: profile.profile_image,
@@ -78,7 +78,7 @@ const UserRolesList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => {
+  const handleUpdateUser = async (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => {
     try {
       setLoading(true);
       

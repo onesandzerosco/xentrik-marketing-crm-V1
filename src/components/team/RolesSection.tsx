@@ -9,7 +9,7 @@ interface Props {
 
 const RolesSection: React.FC<Props> = ({ roles, selected, onChange }) => (
   <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
-    <h2 className="text-xl font-bold mb-4 text-white">Roles</h2>
+    <h2 className="text-xl font-bold mb-4 text-white">Additional Roles</h2>
     <div className="grid grid-cols-2 gap-3">
       {roles.map((role) => (
         <label

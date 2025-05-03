@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useTeam } from '@/context/TeamContext';
 import { useToast } from '@/hooks/use-toast';
 import { teamMemberFormSchema, TeamMemberFormValues } from '@/schemas/teamMemberSchema';
-import { TeamMemberRole } from '@/types/employee';
+import { PrimaryRole } from '@/types/employee';
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
 import TeamAssignmentSection from './TeamAssignmentSection';
@@ -28,6 +28,7 @@ const OnboardingTeamMemberForm = () => {
       teams: [],
       telegram: '',
       department: '',
+      roles: []
     }
   });
 
@@ -40,7 +41,7 @@ const OnboardingTeamMemberForm = () => {
       const teamMemberData = {
         name: data.name, // Ensure name is explicitly set
         email: data.email, // Ensure email is explicitly set
-        roles: [data.role] as TeamMemberRole[], // Convert single role to array for API
+        roles: [data.role], // Convert single role to array for API
         status: data.status || 'Active',
         teams: data.teams || [],
         telegram: data.telegram,

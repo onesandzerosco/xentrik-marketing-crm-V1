@@ -25,19 +25,20 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
-import { Employee, TeamMemberRole } from "@/types/employee";
+import { Employee, PrimaryRole } from "@/types/employee";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => void;
+  onUpdate: (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => void;
 }
 
-const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
+const PRIMARY_ROLES: PrimaryRole[] = ["Admin", "Manager", "Employee"];
 
-const ADDITIONAL_ROLES: TeamMemberRole[] = [
+// These are the roles that can be assigned as additional roles
+const ADDITIONAL_ROLES: string[] = [
   "Chatters", 
   "Creative Director", 
   "Developer",
@@ -50,23 +51,23 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   onOpenChange,
   onUpdate
 }) => {
-  const [primaryRole, setPrimaryRole] = useState<TeamMemberRole>("Employee");
-  const [additionalRoles, setAdditionalRoles] = useState<TeamMemberRole[]>([]);
+  const [primaryRole, setPrimaryRole] = useState<PrimaryRole>("Employee");
+  const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
-  const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<PrimaryRole | null>(null);
   const { toast } = useToast();
 
   // Reset state when user or open state changes
   useEffect(() => {
     if (user && open) {
       // Set primary role from user.role
-      setPrimaryRole(user.role);
+      setPrimaryRole(user.role as PrimaryRole);
       // Set additional roles from user.roles (if it exists) or empty array
       setAdditionalRoles(user.roles || []);
     }
   }, [user, open]);
 
-  const handlePrimaryRoleChange = (role: TeamMemberRole) => {
+  const handlePrimaryRoleChange = (role: PrimaryRole) => {
     // If changing to or from Admin, show confirmation
     if (role === "Admin" || primaryRole === "Admin") {
       setPendingRoleChange(role);
@@ -89,7 +90,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     setShowAdminAlert(false);
   };
 
-  const toggleAdditionalRole = (role: TeamMemberRole) => {
+  const toggleAdditionalRole = (role: string) => {
     setAdditionalRoles(prev => {
       if (prev.includes(role)) {
         return prev.filter(r => r !== role);
@@ -129,7 +130,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
               <RadioGroup 
                 value={primaryRole} 
                 className="grid grid-cols-3 gap-2 pt-2"
-                onValueChange={(value) => handlePrimaryRoleChange(value as TeamMemberRole)}
+                onValueChange={(value) => handlePrimaryRoleChange(value as PrimaryRole)}
               >
                 {PRIMARY_ROLES.map(role => (
                   <div key={role} className="flex items-center space-x-2">
