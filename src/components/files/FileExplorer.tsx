@@ -8,6 +8,7 @@ import { FolderNav } from '@/components/files/FolderNav';
 import { EmptyState } from '@/components/files/EmptyState';
 import { FileViewSkeleton } from '@/components/files/FileViewSkeleton';
 import FileUploader from '@/components/messages/FileUploader';
+import DragDropUploader from '@/components/files/DragDropUploader';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { BackButton } from "@/components/ui/back-button";
@@ -46,6 +47,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUserCreator, setIsUserCreator] = useState(isCreatorView);
+  const [showUploader, setShowUploader] = useState(false);
   const { toast } = useToast();
   const { user, isCreator, creatorId: authCreatorId, userRole, userRoles = [] } = useSupabaseAuth();
   const { isCreatorSelf } = useAuth();
@@ -103,7 +105,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                    isCreatorSelf;
 
   const handleUploadFile = () => {
-    document.getElementById('file-upload-trigger')?.click();
+    setShowUploader(true);
   };
 
   const handleRefresh = () => {
@@ -184,16 +186,26 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
-              {canUpload && (
+              <div className="flex gap-2">
                 <Button 
-                  onClick={handleUploadFile}
-                  variant="default"
-                  className="px-4 flex-shrink-0"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                  className="flex-shrink-0"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload
+                  {viewMode === 'grid' ? 'List View' : 'Grid View'}
                 </Button>
-              )}
+                {canUpload && (
+                  <Button 
+                    onClick={handleUploadFile}
+                    variant="default"
+                    className="px-4 flex-shrink-0"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -214,6 +226,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </div>
       </div>
       
+      {/* Hidden file input for simple upload method */}
       {canUpload && (
         <div className="hidden">
           <FileUploader 
@@ -224,6 +237,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             bucket="raw_uploads"
           />
         </div>
+      )}
+
+      {/* Drag & Drop Uploader Component */}
+      {showUploader && (
+        <DragDropUploader
+          creatorId={creatorId}
+          folder={currentFolder}
+          bucket="raw_uploads"
+          onUploadComplete={() => {
+            setShowUploader(false);
+            onRefresh();
+          }}
+          onCancel={() => setShowUploader(false)}
+        />
       )}
     </div>
   );

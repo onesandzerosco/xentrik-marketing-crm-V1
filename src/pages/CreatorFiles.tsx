@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -53,8 +52,7 @@ const CreatorFiles = () => {
       throw new Error('Creator not found');
     }
     
-    // Determine if we should fetch from raw_uploads bucket or creator_files bucket
-    // First try fetching from media table for raw_uploads
+    // Fetch from media table
     const { data: mediaData, error: mediaError } = await supabase
       .from('media')
       .select('*')
@@ -86,7 +84,7 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder: 'shared',
-          status: 'complete' as const,
+          status: media.status === 'uploading' ? 'uploading' : 'complete' as const,
           bucketPath: media.bucket_key
         };
       }));
@@ -153,7 +151,7 @@ const CreatorFiles = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['creator-files', creator?.id],
+    queryKey: ['creator-files', creator?.id, currentFolder],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
     staleTime: 5 * 60 * 1000,

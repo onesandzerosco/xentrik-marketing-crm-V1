@@ -184,6 +184,47 @@ export type Database = {
         }
         Relationships: []
       }
+      file_uploads: {
+        Row: {
+          bucket_key: string
+          created_at: string
+          creator_id: string
+          file_size: number
+          filename: string
+          id: string
+          mime: string
+          status: string
+        }
+        Insert: {
+          bucket_key: string
+          created_at?: string
+          creator_id: string
+          file_size: number
+          filename: string
+          id?: string
+          mime: string
+          status?: string
+        }
+        Update: {
+          bucket_key?: string
+          created_at?: string
+          creator_id?: string
+          file_size?: number
+          filename?: string
+          id?: string
+          mime?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_creator"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media: {
         Row: {
           bucket_key: string
