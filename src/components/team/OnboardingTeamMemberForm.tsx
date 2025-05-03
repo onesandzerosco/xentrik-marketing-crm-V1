@@ -23,6 +23,7 @@ const OnboardingTeamMemberForm = () => {
       name: '',
       email: '',
       role: 'Employee',
+      roles: [],
       status: 'Active',
       teams: [],
       telegram: '',
@@ -39,8 +40,8 @@ const OnboardingTeamMemberForm = () => {
       const teamMemberData = {
         name: data.name,
         email: data.email,
-        role: data.role, // Make sure to include the primary role
-        roles: data.roles || [data.role], // Include additional roles or default to primary role
+        role: data.role, // Primary role
+        roles: data.roles || [data.role], // Additional roles or default to primary role
         status: data.status || 'Active',
         teams: data.teams || [],
         telegram: data.telegram,

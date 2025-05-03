@@ -80,15 +80,16 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // The RPC function expects role as the primary role and roles for additional roles
+      // For the RPC function, we should NOT send 'role' directly as it's not in the function signature
+      // The RPC expects 'roles' array for additional roles
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
         phone: newMember.phoneNumber,
         telegram: newMember.telegram,
-        role: newMember.role, // Primary role for the RPC function
-        roles: newMember.roles, // Additional roles as array
+        // Don't include 'role' here since it's not in the function parameters
+        roles: newMember.roles, // Send all roles as an array
         teams: newMember.teams
       });
       
