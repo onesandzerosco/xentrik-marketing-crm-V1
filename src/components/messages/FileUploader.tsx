@@ -2,11 +2,12 @@
 import React, { useState, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { getUniqueFileName } from '@/utils/fileUtils';
 
 interface FileUploaderProps {
   id: string;
   creatorId: string;
-  onUploadComplete?: () => void;
+  onUploadComplete?: (uploadedFileIds?: string[]) => void;
   folder?: string;
   bucket?: string;
 }
@@ -21,53 +22,6 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  // Check if a file with the same name exists and generate a unique name
-  const getUniqueFileName = async (fileName: string, folderPath: string) => {
-    try {
-      const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-      const extension = fileName.substring(fileName.lastIndexOf('.'));
-      
-      let counter = 0;
-      let uniqueName = fileName;
-      let isUnique = false;
-      
-      while (!isUnique) {
-        // Try to list files that match the current name
-        const { data: existingFiles, error } = await supabase.storage
-          .from(bucket)
-          .list(`${creatorId}/${folderPath}`, {
-            search: uniqueName
-          });
-        
-        if (error) {
-          console.error('Error checking for file existence:', error);
-          break; // In case of error, just use the original file name
-        }
-        
-        // Check if there's any file with the exact same name
-        const exactMatch = existingFiles?.find(file => file.name === uniqueName);
-        
-        if (!exactMatch) {
-          isUnique = true;
-        } else {
-          counter++;
-          uniqueName = `${baseName} (${counter})${extension}`;
-        }
-        
-        // Safety check to prevent infinite loops
-        if (counter > 100) {
-          uniqueName = `${baseName}_${Date.now()}${extension}`;
-          isUnique = true;
-        }
-      }
-      
-      return uniqueName;
-    } catch (error) {
-      console.error('Error generating unique filename:', error);
-      return `${Date.now()}_${fileName}`; // Fallback to timestamp
-    }
-  };
-
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -76,13 +30,21 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     
     try {
       const uploadedFiles = [];
+      const uploadedFileIds = [];
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         
-        // Create a unique file name
-        const uniqueSafeName = await getUniqueFileName(safeName, folder);
+        // Create a unique file name using the utility function
+        const uniqueSafeName = await getUniqueFileName(
+          safeName, 
+          folder, 
+          creatorId, 
+          bucket,
+          supabase
+        );
+        
         const filePath = `${creatorId}/${folder}/${uniqueSafeName}`;
         
         const { error: uploadError } = await supabase.storage
@@ -98,7 +60,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         
         // If using the raw_uploads bucket, also insert a record in the media table
         if (bucket === 'raw_uploads') {
-          const { error: mediaError } = await supabase
+          const { data: mediaData, error: mediaError } = await supabase
             .from('media')
             .insert({
               creator_id: creatorId,
@@ -106,11 +68,14 @@ const FileUploader: React.FC<FileUploaderProps> = ({
               filename: uniqueSafeName,
               mime: file.type,
               file_size: file.size
-            });
+            })
+            .select('id');
             
           if (mediaError) {
             console.error('Media record creation error:', mediaError);
             // Continue uploading other files even if this record fails
+          } else if (mediaData && mediaData[0]) {
+            uploadedFileIds.push(mediaData[0].id);
           }
         }
         
@@ -129,9 +94,9 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       // Reset the input
       e.target.value = '';
       
-      // Call the callback if it exists
+      // Call the callback if it exists, passing the IDs of newly uploaded files
       if (onUploadComplete) {
-        onUploadComplete();
+        onUploadComplete(uploadedFileIds.length > 0 ? uploadedFileIds : undefined);
       }
     } catch (error) {
       console.error('Upload error:', error);

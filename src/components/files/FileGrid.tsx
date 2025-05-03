@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,9 +12,15 @@ interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged?: () => void;
+  recentlyUploadedIds?: string[];
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false, onFilesChanged }) => {
+export const FileGrid: React.FC<FileGridProps> = ({ 
+  files, 
+  isCreatorView = false, 
+  onFilesChanged,
+  recentlyUploadedIds = []
+}) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isAdmin = userRole === "Admin";
@@ -24,6 +29,12 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
+  const [displayFiles, setDisplayFiles] = useState<CreatorFileType[]>(files);
+  
+  // Update display files when input files change
+  useEffect(() => {
+    setDisplayFiles(files);
+  }, [files]);
 
   const getFileIcon = (type: string, large = false) => {
     const size = large ? "h-12 w-12" : "h-5 w-5";
@@ -78,11 +89,15 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
         return newSet;
       });
       
+      // Remove from processing files
       setProcessingFiles(prev => {
         const newSet = new Set(prev);
         newSet.delete(file.id);
         return newSet;
       });
+      
+      // Update local display files to immediately remove this file
+      setDisplayFiles(prev => prev.filter(f => f.id !== file.id));
       
       // Notify parent component about the change
       if (onFilesChanged) {
@@ -111,10 +126,10 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
   };
   
   const handleSelectAll = () => {
-    if (selectedFiles.size === files.length) {
+    if (selectedFiles.size === displayFiles.length) {
       setSelectedFiles(new Set());
     } else {
-      const allFileIds = files.map(file => file.id);
+      const allFileIds = displayFiles.map(file => file.id);
       setSelectedFiles(new Set(allFileIds));
     }
   };
@@ -136,27 +151,41 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
     
     try {
       const selectedFileIds = Array.from(selectedFiles);
-      const selectedFileObjects = files.filter(file => selectedFiles.has(file.id));
+      const selectedFileObjects = displayFiles.filter(file => selectedFiles.has(file.id));
       
       // Add all files to processing state
       setProcessingFiles(new Set(selectedFileIds));
       
+      // Keep track of successfully deleted file IDs
+      const deletedFileIds = new Set<string>();
+      
       for (const file of selectedFileObjects) {
-        // Delete the file from storage
-        await supabase.storage
-          .from('raw_uploads')
-          .remove([file.bucketPath || '']);
-        
-        // Delete the media record if it exists
-        if (file.id) {
-          await supabase
-            .from('media')
-            .delete()
-            .eq('id', file.id);
+        try {
+          // Delete the file from storage
+          await supabase.storage
+            .from('raw_uploads')
+            .remove([file.bucketPath || '']);
+          
+          // Delete the media record if it exists
+          if (file.id) {
+            await supabase
+              .from('media')
+              .delete()
+              .eq('id', file.id);
+          }
+          
+          // Mark this file as successfully deleted
+          deletedFileIds.add(file.id);
+        } catch (error) {
+          console.error(`Error deleting file ${file.id}:`, error);
+          // Continue with other files
         }
       }
       
-      // Clear selections
+      // Update local display files to immediately remove deleted files
+      setDisplayFiles(prev => prev.filter(f => !deletedFileIds.has(f.id)));
+      
+      // Clear selections and processing state
       setSelectedFiles(new Set());
       setProcessingFiles(new Set());
       
@@ -167,7 +196,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
       
       toast({
         title: "Files deleted",
-        description: `Successfully deleted ${selectedFiles.size} files`,
+        description: `Successfully deleted ${deletedFileIds.size} files`,
       });
     } catch (error) {
       console.error('Delete selected error:', error);
@@ -186,7 +215,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
     if (selectedFiles.size === 0) return;
     
     for (const fileId of selectedFiles) {
-      const file = files.find(f => f.id === fileId);
+      const file = displayFiles.find(f => f.id === fileId);
       if (file && file.url) {
         const link = document.createElement('a');
         link.href = file.url;
@@ -279,15 +308,20 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {files.map((file) => {
+        {displayFiles.map((file) => {
           const isProcessing = processingFiles.has(file.id);
           const isChecked = selectedFiles.has(file.id);
+          const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
           
           return (
             <div
               key={file.id}
               className={`group border rounded-lg overflow-hidden transition-all ${
-                isChecked ? 'border-primary ring-2 ring-primary/30' : 'hover:border-primary/50'
+                isChecked 
+                  ? 'border-primary ring-2 ring-primary/30' 
+                  : isNewlyUploaded
+                  ? 'border-yellow-400 ring-2 ring-yellow-300/30'
+                  : 'hover:border-primary/50'
               }`}
             >
               <div className="relative">

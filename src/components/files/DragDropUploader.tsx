@@ -1,9 +1,11 @@
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, X, FileInput, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { getUniqueFileName } from '@/utils/fileUtils';
 
 interface FileUploadProgress {
   name: string;
@@ -16,7 +18,7 @@ interface DragDropUploaderProps {
   creatorId: string;
   folder?: string;
   bucket?: string;
-  onUploadComplete: () => void;
+  onUploadComplete: (uploadedFileIds?: string[]) => void;
   onCancel: () => void;
 }
 
@@ -56,53 +58,6 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
     setIsDragging(false);
   };
 
-  // Check if a file with the same name exists and generate a unique name
-  const getUniqueFileName = async (fileName: string, folderPath: string) => {
-    try {
-      const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-      const extension = fileName.substring(fileName.lastIndexOf('.'));
-      
-      let counter = 0;
-      let uniqueName = fileName;
-      let isUnique = false;
-      
-      while (!isUnique) {
-        // Try to list files that match the current name
-        const { data: existingFiles, error } = await supabase.storage
-          .from(bucket)
-          .list(`${creatorId}/${folderPath}`, {
-            search: uniqueName
-          });
-        
-        if (error) {
-          console.error('Error checking for file existence:', error);
-          break; // In case of error, just use the original file name
-        }
-        
-        // Check if there's any file with the exact same name
-        const exactMatch = existingFiles?.find(file => file.name === uniqueName);
-        
-        if (!exactMatch) {
-          isUnique = true;
-        } else {
-          counter++;
-          uniqueName = `${baseName} (${counter})${extension}`;
-        }
-        
-        // Safety check to prevent infinite loops
-        if (counter > 100) {
-          uniqueName = `${baseName}_${Date.now()}${extension}`;
-          isUnique = true;
-        }
-      }
-      
-      return uniqueName;
-    } catch (error) {
-      console.error('Error generating unique filename:', error);
-      return `${Date.now()}_${fileName}`; // Fallback to timestamp
-    }
-  };
-
   const uploadFile = async (file: File, fileIndex: number) => {
     try {
       // Initialize progress for this file
@@ -116,9 +71,15 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
         return newProgress;
       });
       
-      // Create a unique safe name
+      // Create a unique safe name using the utility function
       const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uniqueSafeName = await getUniqueFileName(safeName, folder);
+      const uniqueSafeName = await getUniqueFileName(
+        safeName, 
+        folder, 
+        creatorId, 
+        bucket,
+        supabase
+      );
       const filePath = `${creatorId}/${folder}/${uniqueSafeName}`;
       
       // Update file progress to show the final filename that will be used
@@ -144,8 +105,9 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
       if (error) throw error;
       
       // If using raw_uploads bucket, add to the media table
+      let fileId: string | undefined;
       if (bucket === 'raw_uploads') {
-        const { error: mediaError } = await supabase
+        const { data: mediaData, error: mediaError } = await supabase
           .from('media')
           .insert({
             creator_id: creatorId,
@@ -153,7 +115,8 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
             filename: uniqueSafeName,
             mime: file.type,
             file_size: file.size
-          });
+          })
+          .select('id');
           
         if (mediaError) {
           console.error('Media record creation error:', mediaError);
@@ -165,6 +128,8 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
             };
             return newProgress;
           });
+        } else if (mediaData && mediaData[0]) {
+          fileId = mediaData[0].id;
         }
       }
       
@@ -181,7 +146,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
       // Update overall progress
       setOverallProgress(calculateOverallProgress());
       
-      return true;
+      return { success: true, fileId };
     } catch (error) {
       console.error('Upload error:', error);
       setFileProgress(prev => {
@@ -192,7 +157,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
         };
         return newProgress;
       });
-      return false;
+      return { success: false };
     }
   };
 
@@ -204,10 +169,16 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
     setOverallProgress(0);
     
     let successCount = 0;
+    const uploadedFileIds: string[] = [];
     
     for (let i = 0; i < files.length; i++) {
-      const success = await uploadFile(files[i], i);
-      if (success) successCount++;
+      const result = await uploadFile(files[i], i);
+      if (result.success) {
+        successCount++;
+        if (result.fileId) {
+          uploadedFileIds.push(result.fileId);
+        }
+      }
       
       // Update the overall progress after each file completes
       const progressValue = ((i + 1) / files.length * 100);
@@ -223,8 +194,8 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
         description: 'Files have been successfully uploaded',
       });
       
-      // Call the completion callback
-      onUploadComplete();
+      // Call the completion callback with the IDs of newly uploaded files
+      onUploadComplete(uploadedFileIds.length > 0 ? uploadedFileIds : undefined);
     }
   };
 

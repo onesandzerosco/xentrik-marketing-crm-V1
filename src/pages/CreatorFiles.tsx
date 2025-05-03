@@ -17,8 +17,9 @@ export interface CreatorFileType {
   url: string;
   type: string;
   folder: string;
-  status?: string;
+  status?: "uploading" | "complete";
   bucketPath?: string;
+  isNewlyUploaded?: boolean;
 }
 
 const CreatorFiles = () => {
@@ -29,6 +30,7 @@ const CreatorFiles = () => {
   const { toast } = useToast();
   const [currentFolder, setCurrentFolder] = useState('shared');
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
+  const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
   
   useEffect(() => {
     ensureStorageBucket();
@@ -57,7 +59,8 @@ const CreatorFiles = () => {
     const { data: mediaData, error: mediaError } = await supabase
       .from('media')
       .select('*')
-      .eq('creator_id', creator.id);
+      .eq('creator_id', creator.id)
+      .order('created_at', { ascending: false }); // Sort by most recent first
     
     if (mediaError) {
       console.error('Error fetching media data:', mediaError);
@@ -77,6 +80,9 @@ const CreatorFiles = () => {
         const fileExt = fileName.split('.').pop()?.toLowerCase() || '';
         const type = getFileType(fileExt);
         
+        // Check if this file is in the recently uploaded list
+        const isNewlyUploaded = recentlyUploadedIds.includes(media.id);
+        
         return {
           id: media.id,
           name: fileName,
@@ -85,9 +91,10 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder: 'shared',
-          status: media.status || 'complete',
-          bucketPath: media.bucket_key
-        };
+          status: media.status as "uploading" | "complete" || 'complete',
+          bucketPath: media.bucket_key,
+          isNewlyUploaded
+        } as CreatorFileType;
       }));
       
       return processedFiles;
@@ -110,7 +117,7 @@ const CreatorFiles = () => {
       const { data: filesData, error: filesError } = await supabase.storage
         .from('creator_files')
         .list(`${creator.id}/${folder}`, {
-          sortBy: { column: 'created_at', order: 'desc' },
+          sortBy: { column: 'created_at', order: 'desc' }, // Sort by most recent first
         });
 
       if (filesError) {
@@ -135,14 +142,17 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder,
-          status: 'complete',
+          status: 'complete' as "uploading" | "complete",
           bucketPath
-        };
+        } as CreatorFileType;
       }));
       
       allFiles = [...allFiles, ...processedFiles];
     }
-
+    
+    // Sort by most recent first
+    allFiles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
     return allFiles;
   };
 
@@ -152,7 +162,7 @@ const CreatorFiles = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['creator-files', creator?.id, currentFolder],
+    queryKey: ['creator-files', creator?.id, currentFolder, recentlyUploadedIds],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
     staleTime: 5 * 60 * 1000,
@@ -161,6 +171,20 @@ const CreatorFiles = () => {
 
   // Filter files by the current folder
   const filteredFiles = files.filter(file => file.folder === currentFolder);
+
+  // Handle when files are uploaded
+  const handleFilesUploaded = (uploadedFileIds?: string[]) => {
+    if (uploadedFileIds && uploadedFileIds.length > 0) {
+      // Set the recently uploaded file IDs
+      setRecentlyUploadedIds(uploadedFileIds);
+    }
+    refetch();
+  };
+  
+  // Clear the recently uploaded IDs when a new upload occurs
+  const handleNewUploadStart = () => {
+    setRecentlyUploadedIds([]);
+  };
 
   useEffect(() => {
     if (error) {
@@ -197,6 +221,9 @@ const CreatorFiles = () => {
         { id: 'unsorted', name: 'Unsorted Uploads' }
       ]}
       isCreatorView={isCurrentUserCreator}
+      onUploadComplete={handleFilesUploaded}
+      onUploadStart={handleNewUploadStart}
+      recentlyUploadedIds={recentlyUploadedIds}
     />
   );
 };
