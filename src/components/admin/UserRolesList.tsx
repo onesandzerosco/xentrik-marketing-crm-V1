@@ -25,6 +25,7 @@ const UserRolesList: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       // Fetch users from Supabase profiles table
       const { data, error } = await supabase
         .from('profiles')
@@ -51,12 +52,17 @@ const UserRolesList: React.FC = () => {
           department: profile.department
         }));
         
+        console.log("Formatted users:", formattedUsers);
         setUsers(formattedUsers);
       }
-      
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast({
+        title: "Error fetching users",
+        description: "There was a problem fetching the users list.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -111,8 +117,6 @@ const UserRolesList: React.FC = () => {
         description: "There was a problem updating the user's roles.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
