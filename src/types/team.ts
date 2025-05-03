@@ -30,6 +30,7 @@ export type TeamMemberFormValues = {
   phoneNumber?: string;
   department?: string;
   profileImage?: string;
+  assignedCreators?: string[];
 };
 
 export interface TeamFilters {

@@ -49,7 +49,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       status: employee.status || "Active",
       telegram: employee.telegram || "",
       department: employee.department || "",
-      permissions: employee.permissions || [],
+      roles: employee.permissions || [],
       profileImage: employee.profileImage || "",
       teams: employee.teams || [],
       assignedCreators: employee.assignedCreators || []
@@ -66,7 +66,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         status: employee.status || "Active",
         telegram: employee.telegram || "",
         department: employee.department || "",
-        permissions: employee.permissions || [],
+        roles: employee.permissions || [],
         profileImage: employee.profileImage || "",
         teams: employee.teams || [],
         assignedCreators: employee.assignedCreators || []

@@ -13,7 +13,8 @@ export interface Employee {
   role: TeamMemberRole;
   status: EmployeeStatus;
   telegram?: string;
-  permissions?: string[];
+  permissions?: TeamMemberRole[]; // Keep for backwards compatibility
+  roles?: TeamMemberRole[];      // New field that matches database schema
   profileImage?: string;
   lastLogin: string;
   createdAt: string;

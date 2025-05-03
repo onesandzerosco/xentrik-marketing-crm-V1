@@ -11,6 +11,7 @@ import { TeamMemberFormValues, teamMemberFormSchema } from '@/schemas/teamMember
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
 import TeamAssignmentSection from './TeamAssignmentSection';
+import { TeamMemberRole } from '@/types/employee';
 
 const OnboardingTeamMemberForm = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const OnboardingTeamMemberForm = () => {
         name: data.name,
         email: data.email,
         role: data.role, // Primary role
-        roles: data.roles || [data.role], // Additional roles or default to primary role
+        roles: data.roles?.map(role => role as TeamMemberRole) || [data.role], // Cast to TeamMemberRole[]
         status: data.status || 'Active',
         teams: data.teams || [],
         telegram: data.telegram,
