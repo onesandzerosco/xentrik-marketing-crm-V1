@@ -1,11 +1,11 @@
 
-import { TeamMemberRole, AdditionalRole } from "./employee";
+import { TeamMemberRole } from "./employee";
 
 export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  roles: (TeamMemberRole | AdditionalRole)[];
+  roles: TeamMemberRole[];
   status: "Active" | "Inactive" | "Paused";
   teams: ("A" | "B" | "C")[];
   telegram?: string;
@@ -21,7 +21,7 @@ export type TeamMemberFormValues = {
   password: string;
   confirmPassword: string;
   name: string;
-  roles: (TeamMemberRole | AdditionalRole)[];
+  roles: TeamMemberRole[];
   teams: ("A" | "B" | "C")[];
   telegram?: string;
   phoneNumber?: string;
@@ -30,7 +30,7 @@ export type TeamMemberFormValues = {
 };
 
 export interface TeamFilters {
-  roles: (TeamMemberRole | AdditionalRole)[];
+  roles: TeamMemberRole[];
   teams: ("A" | "B" | "C")[];
   status: ("Active" | "Inactive" | "Paused")[];
   searchQuery: string;

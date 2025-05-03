@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
-import { Employee, TeamMemberRole, AdditionalRole } from "@/types/employee";
+import { Employee, TeamMemberRole } from "@/types/employee";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
@@ -36,14 +36,12 @@ interface EditUserRolesModalProps {
 
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
-const ADDITIONAL_ROLES: string[] = [
+const ADDITIONAL_ROLES = [
   "VA", 
   "Chatter", 
   "Creator", 
   "Developer",
-  "Editor",
-  "Creative Director",
-  "Chatters"
+  "Editor"
 ];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
@@ -56,18 +54,12 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset state when user or open state changes
   useEffect(() => {
     if (user && open) {
-      console.log("Setting modal data for user:", user.id);
-      console.log("Primary role:", user.role);
-      console.log("Additional roles:", user.permissions);
-      
       setPrimaryRole(user.role);
       setAdditionalRoles(user.permissions || []);
-      setIsSubmitting(false);
     }
   }, [user, open]);
 
@@ -106,11 +98,6 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
 
   const handleSubmit = () => {
     if (user) {
-      console.log("Submitting role changes for user:", user.id);
-      console.log("New primary role:", primaryRole);
-      console.log("New additional roles:", additionalRoles);
-      
-      setIsSubmitting(true);
       onUpdate(user.id, primaryRole, additionalRoles);
     }
   };
@@ -179,16 +166,14 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button 
               className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
               onClick={handleSubmit}
-              disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -91,8 +92,7 @@ const AddTeamMemberModal: React.FC<AddTeamMemberModalProps> = ({
     }
   };
   
-  // Update the roleOptions to use strings instead of directly using TeamMemberRole
-  const roleOptions: string[] = [
+  const roleOptions: TeamMemberRole[] = [
     "Chatters", 
     "Creative Director", 
     "Manager", 

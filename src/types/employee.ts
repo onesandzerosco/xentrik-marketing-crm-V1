@@ -1,13 +1,10 @@
 
-export type TeamMemberRole = "Admin" | "Manager" | "Employee";
+export type TeamMemberRole = "Chatters" | "Creative Director" | "Manager" | "Developer" | "Editor" | "Admin" | "Employee";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
 export type EmployeeTeam = "A" | "B" | "C";
 
 // Alias for backward compatibility with existing code
 export type EmployeeRole = TeamMemberRole;
-
-// New type for additional roles that can be assigned
-export type AdditionalRole = "Chatters" | "Developer" | "Editor" | "VA" | "Chatter" | "Creator";
 
 export interface Employee {
   id: string;
