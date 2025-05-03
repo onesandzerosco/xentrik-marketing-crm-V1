@@ -54,6 +54,7 @@ const UserRolesList: React.FC = () => {
           telegram: profile.telegram
         }));
         
+        console.log("Fetched users:", formattedUsers);
         setUsers(formattedUsers);
       }
       
@@ -74,6 +75,7 @@ const UserRolesList: React.FC = () => {
   }, []);
 
   const handleEdit = (user: Employee) => {
+    console.log("Editing user:", user);
     setSelectedUser(user);
     setIsModalOpen(true);
   };
@@ -99,7 +101,7 @@ const UserRolesList: React.FC = () => {
       
       console.log("Supabase update response:", data);
 
-      // Update the local state
+      // Update the local state to reflect the changes immediately
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId 
@@ -118,7 +120,7 @@ const UserRolesList: React.FC = () => {
       });
       
       // Refetch users to ensure UI is in sync with database
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast({

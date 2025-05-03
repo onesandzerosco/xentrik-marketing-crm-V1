@@ -2,7 +2,6 @@
 import React from "react";
 
 interface Props {
-  roles: string[];
   selected: string[];
   onChange: (role: string) => void;
 }
