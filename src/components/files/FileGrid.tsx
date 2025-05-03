@@ -6,6 +6,7 @@ import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface FileGridProps {
   files: CreatorFileType[];
@@ -14,6 +15,8 @@ interface FileGridProps {
 
 export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false }) => {
   const { toast } = useToast();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "Admin";
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
 
@@ -75,6 +78,9 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
       });
     }
   };
+
+  // Determine if the current user can delete files (either admin or creator)
+  const canDeleteFiles = isAdmin || isCreatorView;
 
   const renderPreview = (file: CreatorFileType) => {
     if (file.type === 'image' && file.url) {
@@ -158,7 +164,7 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
                     </a>
                   </Button>
                   
-                  {isCreatorView ? (
+                  {canDeleteFiles && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -167,7 +173,9 @@ export const FileGrid: React.FC<FileGridProps> = ({ files, isCreatorView = false
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
-                  ) : (
+                  )}
+
+                  {!canDeleteFiles && (
                     <Button
                       variant="outline"
                       size="sm"

@@ -6,6 +6,7 @@ import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface FileListProps {
   files: CreatorFileType[];
@@ -14,6 +15,8 @@ interface FileListProps {
 
 export const FileList: React.FC<FileListProps> = ({ files, isCreatorView = false }) => {
   const { toast } = useToast();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "Admin";
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
 
@@ -72,6 +75,9 @@ export const FileList: React.FC<FileListProps> = ({ files, isCreatorView = false
       });
     }
   };
+
+  // Determine if the current user can delete files (either admin or creator)
+  const canDeleteFiles = isAdmin || isCreatorView;
 
   return (
     <>
@@ -137,7 +143,7 @@ export const FileList: React.FC<FileListProps> = ({ files, isCreatorView = false
                         <Download className="h-3.5 w-3.5" />
                       </a>
                     </Button>
-                    {isCreatorView && (
+                    {canDeleteFiles && (
                       <Button
                         variant="ghost"
                         size="sm"

@@ -43,6 +43,7 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
             creator={creator} 
             variant="files"
             fileCount={fileCountsMap[creator.id]?.total || 0}
+            isAdmin={isAdmin}
           />
         </div>
       ))}
