@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TeamMemberRole } from "@/types/employee";
+import { useTeam } from "@/context/TeamContext";
 
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
@@ -39,7 +39,7 @@ interface FormState {
   phoneNumber: string;
   department: string;
   profileImage: string;
-  primaryRole: TeamMemberRole; // Primary role (stored in 'role' column)
+  role: TeamMemberRole; // Primary role (stored in 'role' column)
   roles: string[]; // Additional roles (stored in 'roles' array column)
   teams: string[];
 }
@@ -53,7 +53,7 @@ const defaultForm: FormState = {
   phoneNumber: "",
   department: "",
   profileImage: "",
-  primaryRole: "Employee",
+  role: "Employee",
   roles: [],
   teams: [],
 };
@@ -63,6 +63,7 @@ const AddTeamMemberForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { addTeamMember } = useTeam();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -73,7 +74,7 @@ const AddTeamMemberForm = () => {
   };
 
   const handlePrimaryRoleChange = (role: TeamMemberRole) => {
-    setForm((prev) => ({ ...prev, primaryRole: role }));
+    setForm((prev) => ({ ...prev, role }));
   };
 
   const handleRoleToggle = (role: string) => {
@@ -112,15 +113,35 @@ const AddTeamMemberForm = () => {
       return;
     }
 
-    // TODO: Integration with team add endpoint here
-    // Make sure to save primaryRole to the 'role' column and roles to the 'roles' array column
+    try {
+      await addTeamMember({
+        name: form.name,
+        email: form.email,
+        role: form.role,
+        roles: form.roles as TeamMemberRole[],
+        status: "Active",
+        teams: form.teams as ("A" | "B" | "C")[],
+        telegram: form.telegram,
+        phoneNumber: form.phoneNumber,
+        profileImage: form.profileImage,
+        department: form.department
+      }, form.password);
 
-    toast({
-      title: "Team member added",
-      description: `${form.name} has been added to the team.`,
-    });
-    setIsSubmitting(false);
-    navigate("/team");
+      toast({
+        title: "Team member added",
+        description: `${form.name} has been added to the team.`,
+      });
+      navigate("/team");
+    } catch (error) {
+      console.error("Error adding team member:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add team member",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -148,7 +169,7 @@ const AddTeamMemberForm = () => {
                 <label
                   key={role}
                   className={`flex items-center gap-2 rounded-md border p-3 cursor-pointer transition-all ${
-                    form.primaryRole === role
+                    form.role === role
                       ? "bg-[#2a2a45] border-yellow-400/50"
                       : "bg-[#1e1e2e] border-[#23233a]"
                   }`}
@@ -156,7 +177,7 @@ const AddTeamMemberForm = () => {
                   <input
                     type="radio"
                     name="primaryRole"
-                    checked={form.primaryRole === role}
+                    checked={form.role === role}
                     onChange={() => handlePrimaryRoleChange(role)}
                     className="accent-yellow-400 w-4 h-4"
                   />

@@ -5,7 +5,8 @@ export interface TeamMember {
   id: string;
   name: string;
   email: string;
-  roles: TeamMemberRole[];
+  role: TeamMemberRole; // Primary role
+  roles: TeamMemberRole[]; // Additional roles
   status: "Active" | "Inactive" | "Paused";
   teams: ("A" | "B" | "C")[];
   telegram?: string;
@@ -21,7 +22,8 @@ export type TeamMemberFormValues = {
   password: string;
   confirmPassword: string;
   name: string;
-  roles: TeamMemberRole[];
+  role: TeamMemberRole; // Primary role
+  roles: TeamMemberRole[]; // Additional roles
   teams: ("A" | "B" | "C")[];
   telegram?: string;
   phoneNumber?: string;

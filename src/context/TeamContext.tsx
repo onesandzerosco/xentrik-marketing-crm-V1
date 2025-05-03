@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -80,18 +79,16 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Call the stored procedure to create a team member
-      // Fix: Pass primary role as the 'role' parameter and additional roles as 'roles'
+      // The RPC function expects separate 'role' and 'roles' parameters
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
         phone: newMember.phoneNumber,
         telegram: newMember.telegram,
-        // The RPC function expects 'role' and 'roles' as separate properties
-        // We need to adjust what we pass here based on TeamMember's properties
-        role: newMember.role, // Primary role
-        roles: newMember.roles, // Additional roles
+        // Need to specify 'role' separately for the RPC function
+        role: newMember.role, // Send primary role as a separate parameter
+        roles: newMember.roles, // Send additional roles as array
         teams: newMember.teams
       });
       
