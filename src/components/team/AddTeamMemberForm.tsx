@@ -10,13 +10,15 @@ import TeamsSection from "./TeamsSection";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { TeamMemberRole } from "@/types/employee";
 
-const ROLES = [
-  "Chatters",
-  "Creative Director",
+const ROLES: TeamMemberRole[] = [
+  "Chatter",
   "Manager",
   "Developer",
-  "Editor"
+  "VA",
+  "Creator",
+  "Admin"
 ];
 
 const TEAMS = [
