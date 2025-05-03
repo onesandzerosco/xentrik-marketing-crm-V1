@@ -14,15 +14,18 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import EditUserRolesModal from "./EditUserRolesModal";
+import { useToast } from "@/hooks/use-toast";
 
 const UserRolesList: React.FC = () => {
   const [users, setUsers] = useState<Employee[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const { toast } = useToast();
 
   const fetchUsers = async () => {
     try {
+      setLoading(true);
       // Fetch users from Supabase profiles table
       const { data, error } = await supabase
         .from('profiles')
@@ -40,13 +43,15 @@ const UserRolesList: React.FC = () => {
           email: profile.email,
           // Cast the role string to TeamMemberRole type
           role: profile.role as TeamMemberRole,
+          // Cast the roles array to TeamMemberRole[] type
+          roles: profile.roles as TeamMemberRole[] || [],
           // Cast the status string to EmployeeStatus type
           status: (profile.status || "Active") as EmployeeStatus,
-          permissions: profile.roles || [],
           profileImage: profile.profile_image,
           lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
           createdAt: profile.created_at ? new Date(profile.created_at).toLocaleString() : "Unknown",
-          department: profile.department
+          department: profile.department,
+          telegram: profile.telegram
         }));
         
         setUsers(formattedUsers);
@@ -55,6 +60,11 @@ const UserRolesList: React.FC = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load users",
+        variant: "destructive"
+      });
       setLoading(false);
     }
   };
@@ -68,14 +78,16 @@ const UserRolesList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => {
+  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => {
     try {
+      setLoading(true);
+      
       // Update the user in Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
-          role: primaryRole,
-          roles: additionalRoles
+          role: primaryRole, // Primary role goes to the role column (enum)
+          roles: additionalRoles // Additional roles go to the roles column (array)
         })
         .eq('id', userId);
 
@@ -83,16 +95,36 @@ const UserRolesList: React.FC = () => {
         throw error;
       }
 
-      // Refresh the user list
-      fetchUsers();
+      // Update the local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, role: primaryRole, roles: additionalRoles } 
+            : user
+        )
+      );
+      
+      // Close the modal
       setIsModalOpen(false);
       setSelectedUser(null);
-    } catch (error) {
+      
+      toast({
+        title: "Success",
+        description: "User roles updated successfully",
+      });
+    } catch (error: any) {
       console.error("Error updating user:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user roles",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center p-12">
         <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
@@ -142,11 +174,15 @@ const UserRolesList: React.FC = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
-                    {user.permissions?.map((permission, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">
-                        {permission}
-                      </Badge>
-                    ))}
+                    {user.roles && user.roles.length > 0 ? (
+                      user.roles.map((role, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          {role}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">None</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

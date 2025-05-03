@@ -26,20 +26,20 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Employee, TeamMemberRole } from "@/types/employee";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => void;
+  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => void;
 }
 
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
-const ADDITIONAL_ROLES = [
-  "VA", 
-  "Chatter", 
-  "Creator", 
+const ADDITIONAL_ROLES: TeamMemberRole[] = [
+  "Chatters", 
+  "Creative Director", 
   "Developer",
   "Editor"
 ];
@@ -51,15 +51,18 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   onUpdate
 }) => {
   const [primaryRole, setPrimaryRole] = useState<TeamMemberRole>("Employee");
-  const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
+  const [additionalRoles, setAdditionalRoles] = useState<TeamMemberRole[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
+  const { toast } = useToast();
 
   // Reset state when user or open state changes
   useEffect(() => {
     if (user && open) {
+      // Set primary role from user.role
       setPrimaryRole(user.role);
-      setAdditionalRoles(user.permissions || []);
+      // Set additional roles from user.roles (if it exists) or empty array
+      setAdditionalRoles(user.roles || []);
     }
   }, [user, open]);
 
@@ -86,7 +89,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     setShowAdminAlert(false);
   };
 
-  const toggleAdditionalRole = (role: string) => {
+  const toggleAdditionalRole = (role: TeamMemberRole) => {
     setAdditionalRoles(prev => {
       if (prev.includes(role)) {
         return prev.filter(r => r !== role);
@@ -99,6 +102,10 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const handleSubmit = () => {
     if (user) {
       onUpdate(user.id, primaryRole, additionalRoles);
+      toast({
+        title: "Roles updated",
+        description: `Roles for ${user.name} have been updated successfully.`
+      });
     }
   };
 
@@ -122,13 +129,13 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
               <RadioGroup 
                 value={primaryRole} 
                 className="grid grid-cols-3 gap-2 pt-2"
+                onValueChange={(value) => handlePrimaryRoleChange(value as TeamMemberRole)}
               >
                 {PRIMARY_ROLES.map(role => (
                   <div key={role} className="flex items-center space-x-2">
                     <RadioGroupItem 
                       value={role} 
-                      id={`role-${role}`} 
-                      onClick={() => handlePrimaryRoleChange(role)}
+                      id={`role-${role}`}
                     />
                     <Label htmlFor={`role-${role}`} className="cursor-pointer">{role}</Label>
                   </div>

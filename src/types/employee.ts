@@ -11,9 +11,9 @@ export interface Employee {
   name: string;
   email: string;
   role: TeamMemberRole;
+  roles?: TeamMemberRole[];
   status: EmployeeStatus;
   telegram?: string;
-  permissions?: string[];
   profileImage?: string;
   lastLogin: string;
   createdAt: string;
