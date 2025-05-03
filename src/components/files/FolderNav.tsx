@@ -15,15 +15,16 @@ interface FolderNavProps {
   currentFolder: string;
   onFolderChange: (folder: string) => void;
   activeFolder?: string | null;
+  onCreateFolder?: (folderName: string) => void;
 }
 
 export const FolderNav: React.FC<FolderNavProps> = ({ 
   folders = [], 
   currentFolder, 
   onFolderChange,
-  activeFolder = null
+  activeFolder = null,
+  onCreateFolder
 }) => {
-  const [customFolders, setCustomFolders] = useState<Array<{id: string, name: string}>>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const { toast } = useToast();
@@ -31,18 +32,16 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   const handleCreateFolder = () => {
     if (!newFolderName.trim()) return;
     
-    const newFolder = {
-      id: Date.now().toString(),
-      name: newFolderName.trim()
-    };
+    if (onCreateFolder) {
+      onCreateFolder(newFolderName.trim());
+    }
     
-    setCustomFolders([...customFolders, newFolder]);
     setNewFolderName('');
     setIsCreating(false);
     
     toast({
       title: "Folder created",
-      description: `Created folder: ${newFolder.name}`,
+      description: `Created folder: ${newFolderName.trim()}`,
     });
   };
 
@@ -68,19 +67,6 @@ export const FolderNav: React.FC<FolderNavProps> = ({
       </Button>
       
       {folders.map((folder) => (
-        <Button
-          key={folder.id}
-          variant={currentFolder === folder.id ? "secondary" : "ghost"}
-          size="sm"
-          className="w-full justify-start px-3 font-normal"
-          onClick={() => onFolderChange(folder.id)}
-        >
-          <Folder className="h-4 w-4 mr-2" />
-          {folder.name}
-        </Button>
-      ))}
-
-      {customFolders.map((folder) => (
         <Button
           key={folder.id}
           variant={currentFolder === folder.id ? "secondary" : "ghost"}

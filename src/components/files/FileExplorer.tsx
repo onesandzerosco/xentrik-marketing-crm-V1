@@ -10,6 +10,8 @@ import { FilterBar } from './FilterBar';
 import { FilterButtons } from './FilterButtons';
 import { FolderNav } from './FolderNav';
 import DragDropUploader from './DragDropUploader';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Folder {
   id: string;
@@ -29,6 +31,7 @@ interface FileExplorerProps {
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
+  onCreateFolder?: (folderName: string) => void;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -43,11 +46,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   isCreatorView = false,
   onUploadComplete,
   onUploadStart,
-  recentlyUploadedIds = []
+  recentlyUploadedIds = [],
+  onCreateFolder
 }) => {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [showUploader, setShowUploader] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { toast } = useToast();
   
   const filteredFiles = files.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,6 +77,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRefresh();
   };
 
+  const handleCreateFolder = (folderName: string) => {
+    if (onCreateFolder) {
+      onCreateFolder(folderName);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
@@ -87,6 +98,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             folders={availableFolders}
             currentFolder={currentFolder}
             onFolderChange={onFolderChange}
+            onCreateFolder={isCreatorView ? handleCreateFolder : undefined}
           />
         </div>
         
@@ -122,6 +134,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   isCreatorView={isCreatorView} 
                   onFilesChanged={handleFilesChanged}
                   recentlyUploadedIds={recentlyUploadedIds}
+                  onUploadClick={isCreatorView ? handleUploadClick : undefined}
                 />
               )
             ) : (
@@ -141,6 +154,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           creatorId={creatorId}
           onUploadComplete={handleUploadComplete}
           onCancel={() => setShowUploader(false)}
+          currentFolder={currentFolder}
         />
       )}
     </div>

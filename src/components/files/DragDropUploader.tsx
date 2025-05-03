@@ -1,334 +1,256 @@
 
-import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, FileInput, Loader2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/components/ui/use-toast";
+import React, { useState, useCallback, useEffect } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { X, Upload, Check, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { Progress } from '@/components/ui/progress';
+import { v4 as uuidv4 } from 'uuid';
 import { getUniqueFileName } from '@/utils/fileUtils';
 
-interface FileUploadProgress {
-  name: string;
+interface UploadingFile {
+  id: string;
+  file: File;
   progress: number;
-  size: number;
+  status: 'uploading' | 'complete' | 'error';
   error?: string;
 }
 
 interface DragDropUploaderProps {
   creatorId: string;
-  folder?: string;
-  bucket?: string;
   onUploadComplete: (uploadedFileIds?: string[]) => void;
   onCancel: () => void;
+  currentFolder?: string;
 }
 
 const DragDropUploader: React.FC<DragDropUploaderProps> = ({
   creatorId,
-  folder = 'shared',
-  bucket = 'raw_uploads',
   onUploadComplete,
-  onCancel
+  onCancel,
+  currentFolder = 'shared'
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
+  const [files, setFiles] = useState<UploadingFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [fileProgress, setFileProgress] = useState<FileUploadProgress[]>([]);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-
-  // Calculate total bytes and uploaded bytes
-  const totalBytes = fileProgress.reduce((sum, file) => sum + file.size, 0);
-  const uploadedBytes = fileProgress.reduce((sum, file) => sum + (file.size * (file.progress / 100)), 0);
   
-  // Calculate overall progress percentage
-  const calculateOverallProgress = useCallback(() => {
-    if (totalBytes === 0) return 0;
-    return Math.round((uploadedBytes / totalBytes) * 100 * 100) / 100; // Limit to 2 decimal places
-  }, [totalBytes, uploadedBytes]);
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const uploadFile = async (file: File, fileIndex: number) => {
-    try {
-      // Initialize progress for this file
-      setFileProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = { 
-          name: file.name, 
-          progress: 0, 
-          size: file.size 
-        };
-        return newProgress;
-      });
-      
-      // Create a unique safe name using the utility function
-      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const uniqueSafeName = await getUniqueFileName(
-        safeName, 
-        folder, 
-        creatorId, 
-        bucket,
-        supabase
-      );
-      const filePath = `${creatorId}/${folder}/${uniqueSafeName}`;
-      
-      // Update file progress to show the final filename that will be used
-      setFileProgress(prev => {
-        const newProgress = [...prev];
-        if (safeName !== uniqueSafeName) {
-          newProgress[fileIndex] = { 
-            ...newProgress[fileIndex], 
-            name: uniqueSafeName.replace(/_/g, ' ')
-          };
-        }
-        return newProgress;
-      });
-      
-      // Create a custom upload handler with progress tracking
-      const { error } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
-        
-      if (error) throw error;
-      
-      // If using raw_uploads bucket, add to the media table
-      let fileId: string | undefined;
-      if (bucket === 'raw_uploads') {
-        const { data: mediaData, error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            creator_id: creatorId,
-            bucket_key: filePath,
-            filename: uniqueSafeName,
-            mime: file.type,
-            file_size: file.size
-          })
-          .select('id');
-          
-        if (mediaError) {
-          console.error('Media record creation error:', mediaError);
-          setFileProgress(prev => {
-            const newProgress = [...prev];
-            newProgress[fileIndex] = { 
-              ...newProgress[fileIndex], 
-              error: 'Failed to record file metadata' 
-            };
-            return newProgress;
-          });
-        } else if (mediaData && mediaData[0]) {
-          fileId = mediaData[0].id;
-        }
-      }
-      
-      // Mark as complete
-      setFileProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = { 
-          ...newProgress[fileIndex], 
-          progress: 100 
-        };
-        return newProgress;
-      });
-      
-      // Update overall progress
-      setOverallProgress(calculateOverallProgress());
-      
-      return { success: true, fileId };
-    } catch (error) {
-      console.error('Upload error:', error);
-      setFileProgress(prev => {
-        const newProgress = [...prev];
-        newProgress[fileIndex] = { 
-          ...newProgress[fileIndex], 
-          error: error instanceof Error ? error.message : 'Upload failed' 
-        };
-        return newProgress;
-      });
-      return { success: false };
-    }
-  };
-
-  const processFiles = async (files: FileList) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const newFiles = acceptedFiles.map(file => ({
+      id: uuidv4(),
+      file,
+      progress: 0,
+      status: 'uploading' as const
+    }));
+    
+    setFiles(prev => [...prev, ...newFiles]);
+  }, []);
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    maxFiles: 10,
+    maxSize: 100 * 1024 * 1024, // 100MB
+  });
+  
+  const uploadFiles = async () => {
     if (files.length === 0) return;
     
     setIsUploading(true);
-    setFileProgress([]);
-    setOverallProgress(0);
+    const uploadedIds: string[] = [];
     
-    let successCount = 0;
-    const uploadedFileIds: string[] = [];
-    
-    for (let i = 0; i < files.length; i++) {
-      const result = await uploadFile(files[i], i);
-      if (result.success) {
-        successCount++;
-        if (result.fileId) {
-          uploadedFileIds.push(result.fileId);
-        }
-      }
+    for (const fileObj of files) {
+      if (fileObj.status !== 'uploading') continue;
       
-      // Update the overall progress after each file completes
-      const progressValue = ((i + 1) / files.length * 100);
-      setOverallProgress(Math.round(progressValue * 100) / 100); // Limit to 2 decimal places
+      try {
+        const file = fileObj.file;
+        const fileId = fileObj.id;
+        
+        // Create a unique filename to avoid collisions
+        const uniqueFileName = await getUniqueFileName(
+          file.name, 
+          currentFolder, 
+          creatorId, 
+          'creator_files',
+          supabase
+        );
+        
+        // Upload to storage
+        const { error: uploadError, data } = await supabase.storage
+          .from('creator_files')
+          .upload(`${creatorId}/${currentFolder}/${uniqueFileName}`, file, {
+            cacheControl: '3600',
+            upsert: true,
+          });
+        
+        if (uploadError) {
+          throw uploadError;
+        }
+        
+        // Also create an entry in the media table
+        const { error: mediaError, data: mediaData } = await supabase
+          .from('media')
+          .insert({
+            id: fileId,
+            creator_id: creatorId,
+            filename: uniqueFileName,
+            bucket_key: `${creatorId}/${currentFolder}/${uniqueFileName}`,
+            file_size: file.size,
+            mime: file.type,
+            status: 'complete'
+          })
+          .select('id')
+          .single();
+        
+        if (mediaError) {
+          console.error('Error creating media record:', mediaError);
+        } else {
+          uploadedIds.push(mediaData.id);
+        }
+        
+        // Update file status
+        setFiles(prev =>
+          prev.map(f =>
+            f.id === fileId
+              ? { ...f, status: 'complete', progress: 100 }
+              : f
+          )
+        );
+      } catch (error: any) {
+        console.error('Upload error:', error);
+        
+        // Update file status with error
+        setFiles(prev =>
+          prev.map(f =>
+            f.id === fileObj.id
+              ? { ...f, status: 'error', error: error.message || 'Upload failed' }
+              : f
+          )
+        );
+        
+        toast({
+          title: 'Upload failed',
+          description: `Failed to upload ${fileObj.file.name}: ${error.message || 'Unknown error'}`,
+          variant: 'destructive',
+        });
+      }
     }
     
-    // All uploads complete
     setIsUploading(false);
     
-    if (successCount > 0) {
+    // Check if all files are processed
+    const allComplete = files.every(f => f.status === 'complete' || f.status === 'error');
+    const successCount = files.filter(f => f.status === 'complete').length;
+    
+    if (allComplete) {
       toast({
-        title: successCount > 1 ? `${successCount} files uploaded` : '1 file uploaded',
-        description: 'Files have been successfully uploaded',
+        title: 'Upload complete',
+        description: `Successfully uploaded ${successCount} of ${files.length} files`,
       });
       
-      // Call the completion callback with the IDs of newly uploaded files
-      onUploadComplete(uploadedFileIds.length > 0 ? uploadedFileIds : undefined);
+      // Call the onUploadComplete callback with the IDs of the uploaded files
+      onUploadComplete(uploadedIds);
     }
   };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFiles(e.dataTransfer.files);
-    }
+  
+  const removeFile = (id: string) => {
+    setFiles(prev => prev.filter(file => file.id !== id));
   };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
+  
+  // Upload files automatically when they are added
+  useEffect(() => {
+    if (files.length > 0 && !isUploading) {
+      uploadFiles();
     }
-  };
-
-  const handleBrowseClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
+  }, [files]);
+  
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-2xl border">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Upload Files</h2>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background rounded-lg shadow-lg w-full max-w-2xl">
+        <div className="p-4 border-b flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Upload Files to {currentFolder}</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCancel}
+            disabled={isUploading}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
         
         <div className="p-6">
-          {/* Drag & Drop Area */}
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging ? 'border-primary bg-primary/5' : 'border-muted'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-8 text-center ${
+              isDragActive ? 'border-primary bg-primary/10' : 'border-muted-foreground/25'
+            } ${files.length > 0 ? 'mb-4' : ''}`}
           >
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              multiple 
-              className="hidden" 
-              onChange={handleFileSelect} 
-              disabled={isUploading}
-            />
+            <input {...getInputProps()} />
+            <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
             
-            {isUploading ? (
-              <div className="py-4">
-                <Loader2 className="h-10 w-10 text-muted-foreground animate-spin mx-auto mb-4" />
-                <p className="text-sm font-medium">Uploading files...</p>
-              </div>
+            {isDragActive ? (
+              <p>Drop the files here...</p>
             ) : (
-              <div 
-                className="flex flex-col items-center cursor-pointer"
-                onClick={handleBrowseClick}
-              >
-                <Upload className="h-10 w-10 text-muted-foreground mb-4" />
-                <p className="text-sm font-medium mb-1">
-                  Drag and drop files here or click to browse
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Drag 'n' drop files here, or click to select files
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Support for all file types
+                <p className="text-xs text-muted-foreground mt-1">
+                  Maximum file size: 100MB
                 </p>
               </div>
             )}
           </div>
           
-          {/* Progress Section */}
-          {fileProgress.length > 0 && (
-            <div className="mt-6 space-y-4">
-              {/* Overall Progress */}
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium">Overall Progress</span>
-                  <span>{overallProgress.toFixed(2)}%</span>
-                </div>
-                <Progress value={overallProgress} className="h-2" />
-              </div>
-              
-              {/* Individual Files */}
-              <div className="space-y-3 max-h-48 overflow-y-auto">
-                {fileProgress.map((file, index) => (
-                  <div key={index} className="text-sm">
-                    <div className="flex justify-between mb-1">
-                      <span className="truncate max-w-[70%]">{file.name}</span>
-                      {file.error ? (
-                        <span className="text-destructive">Failed</span>
-                      ) : (
-                        <span>{file.progress.toFixed(2)}%</span>
-                      )}
-                    </div>
+          {files.length > 0 && (
+            <div className="space-y-3 mt-4 max-h-72 overflow-y-auto">
+              {files.map(file => (
+                <div key={file.id} className="flex items-center gap-3 border rounded-md p-3">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium truncate" title={file.file.name}>
+                      {file.file.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
                     <Progress 
                       value={file.progress} 
-                      className={`h-1 ${file.error ? 'bg-destructive/30' : ''}`} 
+                      className={`h-1 mt-1 ${file.status === 'error' ? 'bg-destructive/25' : ''}`} 
                     />
-                    {file.error && (
-                      <p className="text-xs text-destructive mt-1">{file.error}</p>
-                    )}
                   </div>
-                ))}
-              </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {file.status === 'complete' ? (
+                      <Check className="h-5 w-5 text-green-500" />
+                    ) : file.status === 'error' ? (
+                      <div title={file.error || 'Error'}>
+                        <AlertCircle className="h-5 w-5 text-destructive" />
+                      </div>
+                    ) : (
+                      <div className="h-5 w-5 rounded-full border-2 border-t-transparent animate-spin" />
+                    )}
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFile(file.id)}
+                      disabled={isUploading && file.status === 'uploading'}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-          
-          {/* Action Buttons */}
-          <div className="flex justify-end mt-6 space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={onCancel} 
-              disabled={isUploading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleBrowseClick}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Uploading...
-                </>
-              ) : 'Select Files'}
-            </Button>
-          </div>
+        </div>
+        
+        <div className="p-4 border-t flex justify-end gap-2">
+          <Button variant="outline" onClick={onCancel} disabled={isUploading}>
+            Close
+          </Button>
+          <Button onClick={uploadFiles} disabled={isUploading || files.length === 0}>
+            Upload
+          </Button>
         </div>
       </div>
     </div>

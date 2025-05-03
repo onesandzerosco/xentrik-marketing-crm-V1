@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { FileExplorer } from '@/components/files/FileExplorer';
 import { getFileType } from '@/utils/fileUtils';
 import { ensureStorageBucket } from '@/utils/setupStorage';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CreatorFileType {
   id: string;
@@ -22,6 +23,11 @@ export interface CreatorFileType {
   isNewlyUploaded?: boolean;
 }
 
+interface Folder {
+  id: string;
+  name: string;
+}
+
 const CreatorFiles = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,6 +37,10 @@ const CreatorFiles = () => {
   const [currentFolder, setCurrentFolder] = useState('shared');
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
+  const [availableFolders, setAvailableFolders] = useState<Folder[]>([
+    { id: 'shared', name: 'Shared Files' },
+    { id: 'unsorted', name: 'Unsorted Uploads' }
+  ]);
   
   useEffect(() => {
     ensureStorageBucket();
@@ -48,7 +58,92 @@ const CreatorFiles = () => {
     };
     
     checkCreatorStatus();
+    loadCustomFolders();
   }, [id, navigate, creator]);
+  
+  const loadCustomFolders = async () => {
+    if (!creator?.id) return;
+    
+    try {
+      // Try to list all directories in the creator's storage
+      const { data: folders, error } = await supabase.storage
+        .from('creator_files')
+        .list(creator.id, {
+          sortBy: { column: 'name', order: 'asc' }
+        });
+      
+      if (error) {
+        console.error("Error loading folders:", error);
+        return;
+      }
+      
+      // Filter to only include directories (not files)
+      const customFolders = folders
+        ?.filter(item => item.id && item.id !== '.' && item.id !== '..')
+        ?.filter(item => !item.name.includes('.')) // Simple check to exclude files
+        ?.map(folder => ({
+          id: folder.name,
+          name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1) // Capitalize first letter
+        })) || [];
+      
+      // Add the custom folders to the available folders
+      setAvailableFolders(prevFolders => {
+        const existingFolders = prevFolders.filter(f => f.id === 'shared' || f.id === 'unsorted');
+        return [...existingFolders, ...customFolders];
+      });
+      
+    } catch (err) {
+      console.error("Error in loadCustomFolders:", err);
+    }
+  };
+  
+  const handleCreateFolder = async (folderName: string) => {
+    if (!creator?.id || !folderName) return;
+    
+    try {
+      const folderId = folderName.toLowerCase().replace(/\s+/g, '-');
+      
+      // Create an empty file in the folder to "create" the folder
+      const { error } = await supabase.storage
+        .from('creator_files')
+        .upload(`${creator.id}/${folderId}/.folder`, new Blob(['']));
+      
+      if (error) {
+        console.error("Error creating folder:", error);
+        toast({
+          title: "Error creating folder",
+          description: error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add the new folder to the available folders
+      setAvailableFolders(prevFolders => [
+        ...prevFolders, 
+        { id: folderId, name: folderName }
+      ]);
+      
+      // Switch to the new folder
+      setCurrentFolder(folderId);
+      
+      toast({
+        title: "Folder created",
+        description: `Created folder: ${folderName}`,
+      });
+      
+      // Refetch the files
+      refetch();
+      
+    } catch (err) {
+      console.error("Error in handleCreateFolder:", err);
+      toast({
+        title: "Error creating folder",
+        description: "Failed to create folder",
+        variant: "destructive"
+      });
+    }
+  };
   
   const fetchCreatorFiles = async () => {
     if (!creator?.id) {
@@ -109,8 +204,8 @@ const CreatorFiles = () => {
       throw new Error('Creator not found');
     }
     
-    // Fetch files from both shared and unsorted folders in creator_files bucket
-    const folders = ['shared', 'unsorted'];
+    // Get all folders including custom ones
+    const folders = availableFolders.map(f => f.id);
     let allFiles: CreatorFileType[] = [];
     
     for (const folder of folders) {
@@ -125,27 +220,30 @@ const CreatorFiles = () => {
         continue;
       }
 
-      const processedFiles = await Promise.all((filesData || []).map(async (file: any) => {
-        const { data } = await supabase.storage
-          .from('creator_files')
-          .createSignedUrl(`${creator.id}/${folder}/${file.name}`, 3600);
+      const processedFiles = await Promise.all((filesData || [])
+        // Filter out the .folder marker file
+        .filter(file => file.name !== '.folder')
+        .map(async (file: any) => {
+          const { data } = await supabase.storage
+            .from('creator_files')
+            .createSignedUrl(`${creator.id}/${folder}/${file.name}`, 3600);
 
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
-        const type = getFileType(fileExt);
-        const bucketPath = `${creator.id}/${folder}/${file.name}`;
+          const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+          const type = getFileType(fileExt);
+          const bucketPath = `${creator.id}/${folder}/${file.name}`;
 
-        return {
-          id: `${file.id || file.name}`,
-          name: file.name,
-          size: file.metadata?.size || 0,
-          created_at: file.created_at || new Date().toISOString(),
-          url: data?.signedUrl || '',
-          type,
-          folder,
-          status: 'complete' as "uploading" | "complete",
-          bucketPath
-        } as CreatorFileType;
-      }));
+          return {
+            id: `${file.id || file.name}`,
+            name: file.name,
+            size: file.metadata?.size || 0,
+            created_at: file.created_at || new Date().toISOString(),
+            url: data?.signedUrl || '',
+            type,
+            folder,
+            status: 'complete' as "uploading" | "complete",
+            bucketPath
+          } as CreatorFileType;
+        }));
       
       allFiles = [...allFiles, ...processedFiles];
     }
@@ -162,7 +260,7 @@ const CreatorFiles = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['creator-files', creator?.id, currentFolder, recentlyUploadedIds],
+    queryKey: ['creator-files', creator?.id, currentFolder, recentlyUploadedIds, availableFolders],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
     staleTime: 5 * 60 * 1000,
@@ -178,6 +276,8 @@ const CreatorFiles = () => {
       // Set the recently uploaded file IDs
       setRecentlyUploadedIds(uploadedFileIds);
     }
+    // Refresh the custom folders list in case any were created during upload
+    loadCustomFolders();
     refetch();
   };
   
@@ -216,14 +316,12 @@ const CreatorFiles = () => {
       onRefresh={refetch}
       onFolderChange={setCurrentFolder}
       currentFolder={currentFolder}
-      availableFolders={[
-        { id: 'shared', name: 'Shared Files' },
-        { id: 'unsorted', name: 'Unsorted Uploads' }
-      ]}
+      availableFolders={availableFolders}
       isCreatorView={isCurrentUserCreator}
       onUploadComplete={handleFilesUploaded}
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}
+      onCreateFolder={handleCreateFolder}
     />
   );
 };
