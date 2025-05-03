@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Employee, EmployeeRole, EmployeeStatus, EmployeeTeam } from "@/types/employee";
+import { Employee, EmployeeStatus, EmployeeTeam, PrimaryRole } from "@/types/employee";
 
 interface AddEmployeeModalProps {
   open: boolean;
@@ -34,7 +34,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<EmployeeRole>("Employee");
+  const [role, setRole] = useState<PrimaryRole>("Employee");
   const [isActive, setIsActive] = useState(true);
   const [telegram, setTelegram] = useState("");
   const [department, setDepartment] = useState("");

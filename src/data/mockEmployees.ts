@@ -1,12 +1,12 @@
 
-import { Employee, TeamMemberRole } from "../types/employee";
+import { Employee, PrimaryRole } from "../types/employee";
 
 export const mockEmployees: Employee[] = [
   {
     id: "1",
     name: "John Admin",
     email: "john.admin@example.com",
-    role: "Admin" as TeamMemberRole,
+    role: "Admin" as PrimaryRole,
     status: "Active",
     telegram: "johnadmin",
     department: "Executive",
@@ -20,7 +20,7 @@ export const mockEmployees: Employee[] = [
     id: "2",
     name: "Sarah Manager",
     email: "sarah.manager@example.com",
-    role: "Manager",
+    role: "Manager" as PrimaryRole,
     status: "Active",
     telegram: "sarahmanager",
     department: "Marketing",
@@ -34,7 +34,7 @@ export const mockEmployees: Employee[] = [
     id: "3",
     name: "Mike Employee",
     email: "mike.employee@example.com",
-    role: "Employee" as TeamMemberRole,
+    role: "Employee" as PrimaryRole,
     status: "Active",
     telegram: "mikeemployee",
     department: "Sales",
@@ -47,7 +47,7 @@ export const mockEmployees: Employee[] = [
     id: "4",
     name: "Lisa Designer",
     email: "lisa.designer@example.com",
-    role: "Employee" as TeamMemberRole,
+    role: "Employee" as PrimaryRole,
     status: "Paused",
     telegram: "lisadesigner",
     department: "Design",
@@ -60,7 +60,7 @@ export const mockEmployees: Employee[] = [
     id: "5",
     name: "David Developer",
     email: "david.developer@example.com",
-    role: "Employee" as TeamMemberRole,
+    role: "Employee" as PrimaryRole,
     status: "Inactive",
     department: "Engineering",
     profileImage: "/avatar5.png",
@@ -71,7 +71,7 @@ export const mockEmployees: Employee[] = [
     id: "6",
     name: "Rachel Manager",
     email: "rachel.manager@example.com",
-    role: "Manager",
+    role: "Manager" as PrimaryRole,
     status: "Active",
     telegram: "rachelmanager",
     department: "Customer Support",
