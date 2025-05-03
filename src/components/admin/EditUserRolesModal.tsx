@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
-import { Employee, TeamMemberRole } from "@/types/employee";
+import { Employee, TeamMemberRole, AdditionalRole } from "@/types/employee";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
@@ -36,12 +36,14 @@ interface EditUserRolesModalProps {
 
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
-const ADDITIONAL_ROLES = [
+const ADDITIONAL_ROLES: string[] = [
   "VA", 
   "Chatter", 
   "Creator", 
   "Developer",
-  "Editor"
+  "Editor",
+  "Creative Director",
+  "Chatters"
 ];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
