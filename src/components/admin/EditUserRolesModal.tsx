@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Employee, TeamMemberRole } from "@/types/employee";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
@@ -37,9 +39,8 @@ interface EditUserRolesModalProps {
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
 const ADDITIONAL_ROLES = [
-  "VA", 
-  "Chatter", 
-  "Creator", 
+  "Chatters", 
+  "Manager", 
   "Developer",
   "Editor"
 ];
@@ -54,6 +55,8 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Reset state when user or open state changes
   useEffect(() => {
@@ -96,9 +99,30 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     });
   };
 
-  const handleSubmit = () => {
-    if (user) {
-      onUpdate(user.id, primaryRole, additionalRoles);
+  const handleSubmit = async () => {
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Call the provided onUpdate function first
+      await onUpdate(user.id, primaryRole, additionalRoles);
+      
+      toast({
+        title: "Roles updated",
+        description: `Role changes for ${user.name} have been saved.`
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error updating user roles:", error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating the user roles.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -166,14 +190,16 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button 
               className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Save Changes
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

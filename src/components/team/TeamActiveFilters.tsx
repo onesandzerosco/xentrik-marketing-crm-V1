@@ -17,10 +17,10 @@ const TeamActiveFilters: React.FC<TeamActiveFiltersProps> = ({
   onFiltersChange,
   onClearFilters
 }) => {
-  const removeRole = (role: TeamMemberRole) => {
+  const removeRole = (role: string) => {
     onFiltersChange({
       ...filters,
-      roles: filters.roles.filter(r => r !== role)
+      roles: filters.roles.filter(r => r !== role) as TeamMemberRole[]
     });
   };
 
