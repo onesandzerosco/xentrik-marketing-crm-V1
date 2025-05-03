@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,10 @@ import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TeamMemberRole } from "@/types/employee";
 
-const ROLES: TeamMemberRole[] = [
+const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
+
+// Additional roles that can be assigned
+const ADDITIONAL_ROLES: TeamMemberRole[] = [
   "Chatter",
   "Manager",
   "Developer",
@@ -35,7 +39,8 @@ interface FormState {
   phoneNumber: string;
   department: string;
   profileImage: string;
-  roles: string[];
+  primaryRole: TeamMemberRole; // Primary role (stored in 'role' column)
+  roles: string[]; // Additional roles (stored in 'roles' array column)
   teams: string[];
 }
 
@@ -48,6 +53,7 @@ const defaultForm: FormState = {
   phoneNumber: "",
   department: "",
   profileImage: "",
+  primaryRole: "Employee",
   roles: [],
   teams: [],
 };
@@ -66,13 +72,25 @@ const AddTeamMemberForm = () => {
     setForm((prev) => ({ ...prev, profileImage: url }));
   };
 
-  const handleMultiSelect = (key: "roles" | "teams", value: string) => {
+  const handlePrimaryRoleChange = (role: TeamMemberRole) => {
+    setForm((prev) => ({ ...prev, primaryRole: role }));
+  };
+
+  const handleRoleToggle = (role: string) => {
     setForm((prev) => {
-      const arr = prev[key];
-      if (arr.includes(value)) {
-        return { ...prev, [key]: arr.filter((v) => v !== value) };
-      }
-      return { ...prev, [key]: [...arr, value] };
+      const roles = prev.roles.includes(role)
+        ? prev.roles.filter((r) => r !== role)
+        : [...prev.roles, role];
+      return { ...prev, roles };
+    });
+  };
+
+  const handleTeamToggle = (team: string) => {
+    setForm((prev) => {
+      const teams = prev.teams.includes(team)
+        ? prev.teams.filter((t) => t !== team)
+        : [...prev.teams, team];
+      return { ...prev, teams };
     });
   };
 
@@ -95,6 +113,7 @@ const AddTeamMemberForm = () => {
     }
 
     // TODO: Integration with team add endpoint here
+    // Make sure to save primaryRole to the 'role' column and roles to the 'roles' array column
 
     toast({
       title: "Team member added",
@@ -120,15 +139,44 @@ const AddTeamMemberForm = () => {
               name={form.name}
             />
           </div>
+          
+          {/* Primary Role Selection */}
+          <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
+            <h2 className="text-xl font-bold mb-4 text-white">Primary Role</h2>
+            <div className="grid grid-cols-1 gap-3">
+              {PRIMARY_ROLES.map((role) => (
+                <label
+                  key={role}
+                  className={`flex items-center gap-2 rounded-md border p-3 cursor-pointer transition-all ${
+                    form.primaryRole === role
+                      ? "bg-[#2a2a45] border-yellow-400/50"
+                      : "bg-[#1e1e2e] border-[#23233a]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="primaryRole"
+                    checked={form.primaryRole === role}
+                    onChange={() => handlePrimaryRoleChange(role)}
+                    className="accent-yellow-400 w-4 h-4"
+                  />
+                  <span className="text-white text-sm">{role}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          
+          {/* Additional Roles */}
           <RolesSection
-            roles={ROLES}
+            roles={ADDITIONAL_ROLES}
             selected={form.roles}
-            onChange={(role) => handleMultiSelect("roles", role)}
+            onChange={(role) => handleRoleToggle(role)}
           />
+          
           <TeamsSection
             teams={TEAMS}
             selected={form.teams}
-            onChange={(team) => handleMultiSelect("teams", team)}
+            onChange={(team) => handleTeamToggle(team)}
           />
         </div>
       </div>

@@ -86,8 +86,8 @@ const UserRolesList: React.FC = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
-          role: primaryRole,
-          roles: additionalRoles
+          role: primaryRole, // Primary role goes into the 'role' column
+          roles: additionalRoles // Additional roles go into the 'roles' array column
         })
         .eq('id', userId);
 

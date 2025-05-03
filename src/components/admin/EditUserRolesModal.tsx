@@ -27,7 +27,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Employee, TeamMemberRole } from "@/types/employee";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
@@ -36,8 +35,10 @@ interface EditUserRolesModalProps {
   onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => void;
 }
 
+// These are the roles that can be assigned as primary roles
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
+// These are the roles that can be assigned as additional roles
 const ADDITIONAL_ROLES = [
   "Creator", 
   "Chatter", 

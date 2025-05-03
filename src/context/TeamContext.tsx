@@ -48,7 +48,9 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: profile.id,
         name: profile.name || '',
         email: profile.email || '',
-        roles: profile.roles || [],
+        // Map both the primary role and additional roles correctly
+        role: profile.role || 'Employee', // Primary role from 'role' column
+        roles: profile.roles || [], // Additional roles from 'roles' array column
         status: profile.status || 'Active',
         teams: profile.teams || [],
         telegram: profile.telegram,
@@ -79,13 +81,15 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       // Call the stored procedure to create a team member
+      // Make sure to send both role (primary role) and roles (additional roles)
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
         phone: newMember.phoneNumber,
         telegram: newMember.telegram,
-        roles: newMember.roles,
+        role: newMember.role, // Primary role
+        roles: newMember.roles, // Additional roles
         teams: newMember.teams
       });
       
@@ -119,7 +123,8 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const dbUpdates: any = {
         name: updates.name,
         teams: updates.teams,
-        roles: updates.roles,
+        role: updates.role, // Primary role goes to the 'role' column
+        roles: updates.roles, // Additional roles go to the 'roles' array column
         status: updates.status,
         telegram: updates.telegram,
         phone_number: updates.phoneNumber,
@@ -133,6 +138,8 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           delete dbUpdates[key];
         }
       });
+      
+      console.log("Updating team member with:", dbUpdates);
       
       const { error } = await supabase
         .from('profiles')
