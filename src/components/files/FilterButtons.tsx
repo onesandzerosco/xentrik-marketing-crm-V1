@@ -1,17 +1,29 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ListFilter, RefreshCcw, Grid, List } from 'lucide-react';
+import { ListFilter, RefreshCcw, Grid, List, Upload } from 'lucide-react';
 
 interface FilterButtonsProps {
   view: 'list' | 'grid';
   onViewChange: (view: 'list' | 'grid') => void;
   onRefresh: () => void;
+  onUploadClick?: () => void;
 }
 
-export const FilterButtons: React.FC<FilterButtonsProps> = ({ view, onViewChange, onRefresh }) => {
+export const FilterButtons: React.FC<FilterButtonsProps> = ({ view, onViewChange, onRefresh, onUploadClick }) => {
   return (
     <div className="flex items-center space-x-2">
+      {onUploadClick && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onUploadClick}
+          title="Upload"
+        >
+          <Upload className="h-4 w-4 mr-1" />
+          Upload
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon"

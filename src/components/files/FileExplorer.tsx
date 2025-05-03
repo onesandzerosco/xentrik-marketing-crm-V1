@@ -102,6 +102,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 view={view}
                 onViewChange={setView}
                 onRefresh={onRefresh}
+                onUploadClick={isCreatorView ? handleUploadClick : undefined}
               />
             </div>
             
