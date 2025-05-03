@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
+import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2, UploadCloud } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
@@ -13,13 +14,15 @@ interface FileGridProps {
   isCreatorView?: boolean;
   onFilesChanged?: () => void;
   recentlyUploadedIds?: string[];
+  onUploadClick?: () => void;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({ 
   files, 
   isCreatorView = false, 
   onFilesChanged,
-  recentlyUploadedIds = []
+  recentlyUploadedIds = [],
+  onUploadClick
 }) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -296,13 +299,25 @@ export const FileGrid: React.FC<FileGridProps> = ({
               )}
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectAll}
-            >
-              Select All
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAll}
+              >
+                Select All
+              </Button>
+              {isCreatorView && onUploadClick && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onUploadClick}
+                  className="text-primary"
+                >
+                  <UploadCloud className="h-3.5 w-3.5 mr-1" /> Upload
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -13,13 +14,15 @@ interface FileListProps {
   isCreatorView?: boolean;
   onFilesChanged?: () => void;
   recentlyUploadedIds?: string[];
+  onSelectFiles?: (fileIds: string[]) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
   files, 
   isCreatorView = false, 
   onFilesChanged,
-  recentlyUploadedIds = [] 
+  recentlyUploadedIds = [],
+  onSelectFiles
 }) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -35,6 +38,13 @@ export const FileList: React.FC<FileListProps> = ({
   useEffect(() => {
     setDisplayFiles(files);
   }, [files]);
+  
+  // Notify parent component when selection changes
+  useEffect(() => {
+    if (onSelectFiles) {
+      onSelectFiles(Array.from(selectedFiles));
+    }
+  }, [selectedFiles, onSelectFiles]);
   
   const getFileIcon = (type: string) => {
     switch (type) {

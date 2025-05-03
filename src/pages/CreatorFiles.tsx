@@ -145,6 +145,102 @@ const CreatorFiles = () => {
     }
   };
   
+  // Add a new function to handle moving files between folders
+  const handleMoveFilesToFolder = async (fileIds: string[], targetFolderId: string) => {
+    if (!creator?.id || !targetFolderId || fileIds.length === 0) return;
+    
+    try {
+      // Get the files that need to be moved
+      const filesToMove = files.filter(file => fileIds.includes(file.id));
+      
+      for (const file of filesToMove) {
+        // Skip if file is already in the target folder
+        if (file.folder === targetFolderId) continue;
+        
+        // Get the source path and filename
+        const sourcePath = file.bucketPath || '';
+        const fileName = file.name;
+        
+        // Create new path in target folder
+        const newPath = `${creator.id}/${targetFolderId}/${fileName}`;
+        
+        // If the file is stored in creator_files bucket
+        if (sourcePath.includes('creator_files/')) {
+          // First, download the file
+          const { data: fileData, error: downloadError } = await supabase.storage
+            .from('creator_files')
+            .download(sourcePath);
+          
+          if (downloadError || !fileData) {
+            console.error(`Error downloading file ${fileName}:`, downloadError);
+            continue;
+          }
+          
+          // Upload to new location
+          const { error: uploadError } = await supabase.storage
+            .from('creator_files')
+            .upload(newPath, fileData, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error(`Error uploading file ${fileName} to new location:`, uploadError);
+            continue;
+          }
+          
+          // Delete from old location
+          const { error: deleteError } = await supabase.storage
+            .from('creator_files')
+            .remove([sourcePath]);
+            
+          if (deleteError) {
+            console.error(`Error deleting file ${fileName} from old location:`, deleteError);
+          }
+          
+          // If it's a media record, update it
+          const { error: updateError } = await supabase
+            .from('media')
+            .update({ 
+              bucket_key: newPath,
+              // Update other fields if needed
+            })
+            .eq('id', file.id);
+            
+          if (updateError) {
+            console.error(`Error updating media record for ${fileName}:`, updateError);
+          }
+        }
+        else {
+          // For files stored in media table but not in creator_files bucket,
+          // just update their folder assignment
+          const { error: updateError } = await supabase
+            .from('media')
+            .update({ 
+              bucket_key: newPath 
+            })
+            .eq('id', file.id);
+            
+          if (updateError) {
+            console.error(`Error updating media record for ${fileName}:`, updateError);
+          }
+        }
+      }
+      
+      // Refresh the files list
+      refetch();
+      
+      toast({
+        title: "Files moved",
+        description: `Moved ${fileIds.length} files to ${availableFolders.find(f => f.id === targetFolderId)?.name || targetFolderId}`,
+      });
+      
+    } catch (err) {
+      console.error("Error in handleMoveFilesToFolder:", err);
+      throw err;
+    }
+  };
+  
   const fetchCreatorFiles = async () => {
     if (!creator?.id) {
       throw new Error('Creator not found');
@@ -322,6 +418,7 @@ const CreatorFiles = () => {
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={handleCreateFolder}
+      onMoveFilesToFolder={handleMoveFilesToFolder}
     />
   );
 };

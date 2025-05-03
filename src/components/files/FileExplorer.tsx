@@ -12,6 +12,17 @@ import { FolderNav } from './FolderNav';
 import DragDropUploader from './DragDropUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 
 interface Folder {
   id: string;
@@ -32,6 +43,7 @@ interface FileExplorerProps {
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
   onCreateFolder?: (folderName: string) => void;
+  onMoveFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -47,11 +59,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onUploadComplete,
   onUploadStart,
   recentlyUploadedIds = [],
-  onCreateFolder
+  onCreateFolder,
+  onMoveFilesToFolder
 }) => {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [showUploader, setShowUploader] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [targetFolder, setTargetFolder] = useState<string>('');
   const { toast } = useToast();
   
   const filteredFiles = files.filter(file => 
@@ -83,12 +99,52 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  const handleFileSelection = (fileIds: string[]) => {
+    setSelectedFiles(fileIds);
+  };
+
+  const handleMoveSelectedFiles = async () => {
+    if (!targetFolder || selectedFiles.length === 0) {
+      return;
+    }
+
+    try {
+      if (onMoveFilesToFolder) {
+        await onMoveFilesToFolder(selectedFiles, targetFolder);
+      }
+      
+      setShowMoveDialog(false);
+      setSelectedFiles([]);
+      setTargetFolder('');
+      
+      toast({
+        title: "Files moved",
+        description: `Successfully moved ${selectedFiles.length} files to folder`,
+      });
+      
+      onRefresh();
+    } catch (error) {
+      console.error("Error moving files:", error);
+      toast({
+        title: "Error moving files",
+        description: "Failed to move files to the selected folder",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
         creatorName={creatorName}
         onUploadClick={isCreatorView ? handleUploadClick : undefined}
         isCreatorView={isCreatorView}
+        selectedFiles={selectedFiles.length}
+        onMoveFilesClick={() => {
+          if (selectedFiles.length > 0) {
+            setShowMoveDialog(true);
+          }
+        }}
       />
       
       <div className="flex h-full">
@@ -126,7 +182,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   files={filteredFiles} 
                   isCreatorView={isCreatorView} 
                   onFilesChanged={handleFilesChanged}
-                  recentlyUploadedIds={recentlyUploadedIds} 
+                  recentlyUploadedIds={recentlyUploadedIds}
+                  onSelectFiles={handleFileSelection}
                 />
               ) : (
                 <FileGrid 
@@ -135,6 +192,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   onFilesChanged={handleFilesChanged}
                   recentlyUploadedIds={recentlyUploadedIds}
                   onUploadClick={isCreatorView ? handleUploadClick : undefined}
+                  onSelectFiles={handleFileSelection}
                 />
               )
             ) : (
@@ -157,6 +215,45 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           currentFolder={currentFolder}
         />
       )}
+
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move Files to Folder</DialogTitle>
+            <DialogDescription>
+              Select a destination folder for the {selectedFiles.length} selected files.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="folder">Destination Folder</Label>
+              <Select 
+                value={targetFolder} 
+                onValueChange={setTargetFolder}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select folder" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableFolders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMoveDialog(false)}>Cancel</Button>
+            <Button onClick={handleMoveSelectedFiles} disabled={!targetFolder}>
+              Move Files
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
