@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
-import { Employee, EmployeeTeam } from "../../types/employee";
+import { Employee, EmployeeTeam, TeamMemberRole } from "../../types/employee";
 import { teamMemberFormSchema, TeamMemberFormValues } from "@/schemas/teamMemberSchema";
 
 // Import the refactored components
@@ -49,7 +49,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       status: employee.status || "Active",
       telegram: employee.telegram || "",
       department: employee.department || "",
-      roles: employee.permissions || [],
+      roles: employee.permissions as TeamMemberRole[] || [],
       profileImage: employee.profileImage || "",
       teams: employee.teams || [],
       assignedCreators: employee.assignedCreators || []
@@ -66,7 +66,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         status: employee.status || "Active",
         telegram: employee.telegram || "",
         department: employee.department || "",
-        roles: employee.permissions || [],
+        roles: employee.permissions as TeamMemberRole[] || [],
         profileImage: employee.profileImage || "",
         teams: employee.teams || [],
         assignedCreators: employee.assignedCreators || []
@@ -92,7 +92,14 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     values.teams = selectedTeams;
     values.assignedCreators = selectedCreators;
     
-    onUpdateEmployee(employee.id, values);
+    // Cast roles to TeamMemberRole[] before updating
+    const updates: Partial<Employee> = {
+      ...values,
+      roles: values.roles as TeamMemberRole[],
+      permissions: values.roles as TeamMemberRole[] // Keep permissions synced with roles
+    };
+
+    onUpdateEmployee(employee.id, updates);
     onOpenChange(false);
   };
   

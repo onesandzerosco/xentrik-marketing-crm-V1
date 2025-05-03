@@ -32,14 +32,14 @@ interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => void;
+  onUpdate: (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => void;
 }
 
 // These are the roles that can be assigned as primary roles
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
 // These are the roles that can be assigned as additional roles
-const ADDITIONAL_ROLES = [
+const ADDITIONAL_ROLES: TeamMemberRole[] = [
   "Creator", 
   "Chatter", 
   "Admin", 
@@ -54,7 +54,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   onUpdate
 }) => {
   const [primaryRole, setPrimaryRole] = useState<TeamMemberRole>("Employee");
-  const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
+  const [additionalRoles, setAdditionalRoles] = useState<TeamMemberRole[]>([]);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<TeamMemberRole | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,7 +64,9 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   useEffect(() => {
     if (user && open) {
       setPrimaryRole(user.role);
-      setAdditionalRoles(user.permissions || []);
+      // Use 'roles' first if available, fall back to 'permissions' for backward compatibility
+      // Make sure we cast to TeamMemberRole[]
+      setAdditionalRoles((user.roles || user.permissions || []) as TeamMemberRole[]);
     }
   }, [user, open]);
 
@@ -91,7 +93,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     setShowAdminAlert(false);
   };
 
-  const toggleAdditionalRole = (role: string) => {
+  const toggleAdditionalRole = (role: TeamMemberRole) => {
     setAdditionalRoles(prev => {
       if (prev.includes(role)) {
         return prev.filter(r => r !== role);

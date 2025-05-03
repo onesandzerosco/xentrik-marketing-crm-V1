@@ -5,8 +5,8 @@ import { TeamMemberRole } from "@/types/employee";
 export const teamMemberFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  role: z.enum(["Admin", "Manager", "Employee"]),
-  roles: z.array(z.string()).optional(),
+  role: z.enum(["Admin", "Manager", "Employee"] as [string, ...string[]]) as z.ZodEnum<["Admin", "Manager", "Employee"]>,
+  roles: z.array(z.enum(["Admin", "Manager", "Employee", "Creator", "Chatter", "VA", "Developer"] as [string, ...string[]])).optional(),
   status: z.enum(["Active", "Inactive", "Paused"]),
   telegram: z.string().optional(),
   department: z.string().optional(),

@@ -10,7 +10,7 @@ export const mockEmployees: Employee[] = [
     status: "Active",
     telegram: "johnadmin",
     department: "Executive",
-    permissions: ["all"],
+    permissions: ["Admin"] as TeamMemberRole[], // Changed from "all" to a valid TeamMemberRole
     profileImage: "/avatar1.png",
     lastLogin: "Today at 9:30 AM",
     createdAt: "2023-01-15T12:00:00Z",
@@ -25,7 +25,7 @@ export const mockEmployees: Employee[] = [
     status: "Active",
     telegram: "sarahmanager",
     department: "Marketing",
-    permissions: ["view_reports", "edit_team"],
+    permissions: ["Manager", "Developer"] as TeamMemberRole[], // Changed from invalid strings
     profileImage: "/avatar2.png",
     lastLogin: "Yesterday at 5:15 PM",
     createdAt: "2023-02-10T14:30:00Z",
@@ -40,7 +40,7 @@ export const mockEmployees: Employee[] = [
     status: "Active",
     telegram: "mikeemployee",
     department: "Sales",
-    permissions: ["view_reports"],
+    permissions: ["Employee"] as TeamMemberRole[], // Changed from invalid string
     profileImage: "/avatar3.png",
     lastLogin: "2 days ago",
     createdAt: "2023-03-05T09:15:00Z",
@@ -54,7 +54,7 @@ export const mockEmployees: Employee[] = [
     status: "Paused",
     telegram: "lisadesigner",
     department: "Design",
-    permissions: ["view_reports"],
+    permissions: ["Employee", "Developer"] as TeamMemberRole[], // Changed from invalid string
     profileImage: "/avatar4.png", 
     lastLogin: "Last week",
     createdAt: "2023-04-20T11:45:00Z",
@@ -67,7 +67,7 @@ export const mockEmployees: Employee[] = [
     role: "Employee" as TeamMemberRole,
     status: "Inactive",
     department: "Engineering",
-    permissions: ["view_reports"],
+    permissions: ["Employee", "Developer"] as TeamMemberRole[], // Changed from invalid string
     profileImage: "/avatar5.png",
     lastLogin: "1 month ago",
     createdAt: "2023-05-12T15:20:00Z"
@@ -80,7 +80,7 @@ export const mockEmployees: Employee[] = [
     status: "Active",
     telegram: "rachelmanager",
     department: "Customer Support",
-    permissions: ["view_reports", "edit_team"],
+    permissions: ["Manager"] as TeamMemberRole[], // Changed from invalid string
     profileImage: "/avatar6.png",
     lastLogin: "Today at 11:45 AM",
     createdAt: "2023-06-08T10:10:00Z",

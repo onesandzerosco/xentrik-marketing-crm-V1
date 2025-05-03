@@ -44,7 +44,10 @@ const UserRolesList: React.FC = () => {
           role: profile.role as TeamMemberRole,
           // Cast the status string to EmployeeStatus type
           status: (profile.status || "Active") as EmployeeStatus,
-          permissions: profile.roles || [],
+          // Ensure permissions is of type TeamMemberRole[]
+          permissions: (profile.roles || []) as TeamMemberRole[],
+          // Also set roles to match the database schema
+          roles: (profile.roles || []) as TeamMemberRole[],
           profileImage: profile.profile_image,
           lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
           createdAt: profile.created_at ? new Date(profile.created_at).toLocaleString() : "Unknown",
@@ -75,7 +78,7 @@ const UserRolesList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: string[]) => {
+  const handleUpdateUser = async (userId: string, primaryRole: TeamMemberRole, additionalRoles: TeamMemberRole[]) => {
     try {
       setLoading(true);
       console.log("Updating user:", userId);
@@ -100,7 +103,7 @@ const UserRolesList: React.FC = () => {
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user.id === userId 
-            ? { ...user, role: primaryRole, permissions: additionalRoles } 
+            ? { ...user, role: primaryRole, permissions: additionalRoles, roles: additionalRoles } 
             : user
         )
       );
