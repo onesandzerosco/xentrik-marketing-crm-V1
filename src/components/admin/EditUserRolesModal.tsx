@@ -106,6 +106,10 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting role changes:");
+      console.log("Primary role:", primaryRole);
+      console.log("Additional roles:", additionalRoles);
+      
       // Call the provided onUpdate function first
       await onUpdate(user.id, primaryRole, additionalRoles);
       
