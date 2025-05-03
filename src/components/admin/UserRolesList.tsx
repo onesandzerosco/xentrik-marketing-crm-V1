@@ -51,8 +51,11 @@ const UserRolesList: React.FC = () => {
           telegram: profile.telegram
         }));
         
-        console.log("Fetched users:", formattedUsers);
-        setUsers(formattedUsers);
+        // Sort users by role: Admin > Manager > Employee
+        const sortedUsers = sortUsersByRole(formattedUsers);
+        
+        console.log("Fetched users:", sortedUsers);
+        setUsers(sortedUsers);
       }
       
       setLoading(false);
@@ -65,6 +68,20 @@ const UserRolesList: React.FC = () => {
       });
       setLoading(false);
     }
+  };
+
+  // Sort users by role priority: Admin > Manager > Employee
+  const sortUsersByRole = (users: Employee[]): Employee[] => {
+    const rolePriority: Record<PrimaryRole, number> = {
+      "Admin": 0,
+      "Manager": 1,
+      "Employee": 2
+    };
+
+    return [...users].sort((a, b) => {
+      // Sort by role priority first
+      return rolePriority[a.role] - rolePriority[b.role];
+    });
   };
 
   useEffect(() => {
@@ -98,13 +115,15 @@ const UserRolesList: React.FC = () => {
       console.log("Supabase update response:", data);
 
       // Update the local state to reflect the changes immediately
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
+      setUsers(prevUsers => {
+        const updatedUsers = prevUsers.map(user => 
           user.id === userId 
             ? { ...user, role: primaryRole, roles: additionalRoles } 
             : user
-        )
-      );
+        );
+        // Re-sort the list after updates
+        return sortUsersByRole(updatedUsers);
+      });
       
       // Close the modal
       setIsModalOpen(false);
