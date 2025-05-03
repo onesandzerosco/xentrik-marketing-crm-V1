@@ -39,10 +39,11 @@ interface EditUserRolesModalProps {
 const PRIMARY_ROLES: TeamMemberRole[] = ["Admin", "Manager", "Employee"];
 
 const ADDITIONAL_ROLES = [
-  "Chatters", 
-  "Manager", 
-  "Developer",
-  "Editor"
+  "Creator", 
+  "Chatter", 
+  "Admin", 
+  "VA",
+  "Developer"
 ];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({

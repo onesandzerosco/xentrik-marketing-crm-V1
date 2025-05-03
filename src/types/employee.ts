@@ -1,5 +1,5 @@
 
-export type TeamMemberRole = "Chatters" | "Creative Director" | "Manager" | "Developer" | "Editor" | "Admin" | "Employee";
+export type TeamMemberRole = "Creator" | "Chatter" | "Admin" | "VA" | "Developer" | "Manager" | "Employee";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
 export type EmployeeTeam = "A" | "B" | "C";
 
