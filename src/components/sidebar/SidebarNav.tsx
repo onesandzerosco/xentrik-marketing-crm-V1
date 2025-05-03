@@ -12,12 +12,14 @@ import {
   Mic,
   Shield
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  roles?: string[]; // Specific roles that can access this item
 }
 
 interface SidebarNavProps {
@@ -34,6 +36,7 @@ const navItems: NavItem[] = [
     path: '/creators',
     label: 'Creators',
     icon: <Users className="h-5 w-5" />,
+    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see Creators
   },
   {
     path: '/team',
@@ -75,11 +78,24 @@ const navItems: NavItem[] = [
 ];
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
+  const { userRole, userRoles } = useAuth();
+  
   return (
     <nav className="grid gap-1 pt-2 z-30 relative">
       {navItems.map((item) => {
-        // Make the adminOnly check more flexible to check for either role="Admin" or "Admin" in roles array
+        // Skip adminOnly items if user is not admin
         if (item.adminOnly && !isAdmin) return null;
+        
+        // Check if the item has role restrictions
+        if (item.roles) {
+          // Check if user has at least one of the required roles
+          const hasRequiredRole = item.roles.some(role => 
+            userRole === role || (userRoles && userRoles.includes(role))
+          );
+          
+          // Skip if user doesn't have any required role
+          if (!hasRequiredRole) return null;
+        }
         
         return (
           <NavLink
