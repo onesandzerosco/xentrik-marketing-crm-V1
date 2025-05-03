@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
 import CreatorHeader from "@/components/creators/shared/CreatorHeader";
@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const CreatorProfile = () => {
   const { id } = useParams<{ id: string }>();
+  const [isLoading, setIsLoading] = useState(true);
   const {
     creator,
     formState,
@@ -27,8 +28,18 @@ const CreatorProfile = () => {
   const hasPermission = isAdmin || (isCreator && isCreatorSelf);
   
   useEffect(() => {
+    // Set loading to false once creator data is available or after a short timeout
+    if (creator) {
+      setIsLoading(false);
+    } else {
+      const timer = setTimeout(() => setIsLoading(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [creator]);
+  
+  useEffect(() => {
     // If user doesn't have permission, redirect them to the creators list
-    if (!hasPermission && !formState.isLoading) {
+    if (!hasPermission && !isLoading) {
       toast({
         title: "Access denied",
         description: "You don't have permission to edit creator profiles",
@@ -36,14 +47,14 @@ const CreatorProfile = () => {
       });
       navigate('/creators');
     }
-  }, [hasPermission, navigate, formState.isLoading, toast]);
+  }, [hasPermission, navigate, isLoading, toast]);
 
   if (!creator) {
     return <CreatorNotFound />;
   }
   
   // If still checking permissions, don't render anything yet
-  if (!hasPermission && !formState.isLoading) {
+  if (!hasPermission && !isLoading) {
     return null;
   }
 
