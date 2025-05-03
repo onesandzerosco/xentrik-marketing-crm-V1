@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -127,7 +126,7 @@ const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               <Label htmlFor="role">Role</Label>
               <Select 
                 value={role} 
-                onValueChange={(value: EmployeeRole) => setRole(value)}
+                onValueChange={(value: PrimaryRole) => setRole(value)}
               >
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select a role" />
