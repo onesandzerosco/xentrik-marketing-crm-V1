@@ -37,12 +37,13 @@ interface EditUserRolesModalProps {
 
 const PRIMARY_ROLES: PrimaryRole[] = ["Admin", "Manager", "Employee"];
 
-// These are the roles that can be assigned as additional roles
+// Updated additional roles options
 const ADDITIONAL_ROLES: string[] = [
   "Chatters", 
-  "Creative Director", 
+  "VA", 
+  "Admin", 
   "Developer",
-  "Editor"
+  "Creator"
 ];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
@@ -103,10 +104,6 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const handleSubmit = () => {
     if (user) {
       onUpdate(user.id, primaryRole, additionalRoles);
-      toast({
-        title: "Roles updated",
-        description: `Roles for ${user.name} have been updated successfully.`
-      });
     }
   };
 

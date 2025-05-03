@@ -82,8 +82,10 @@ const UserRolesList: React.FC = () => {
     try {
       setLoading(true);
       
+      console.log("Updating user with:", { userId, primaryRole, additionalRoles });
+      
       // Update the user in Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           role: primaryRole, // Primary role goes to the role column (enum)
@@ -94,6 +96,8 @@ const UserRolesList: React.FC = () => {
       if (error) {
         throw error;
       }
+      
+      console.log("Supabase update response:", data);
 
       // Update the local state
       setUsers(prevUsers => 
@@ -112,6 +116,9 @@ const UserRolesList: React.FC = () => {
         title: "Success",
         description: "User roles updated successfully",
       });
+      
+      // Refetch users to ensure UI is in sync with database
+      fetchUsers();
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast({
