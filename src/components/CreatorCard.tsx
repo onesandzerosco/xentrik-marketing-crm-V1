@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LineChart, Edit, Share2, Files } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext"; // Added import for useAuth
 
 interface CreatorCardProps {
   creator: Creator;
@@ -16,6 +17,7 @@ interface CreatorCardProps {
 
 const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCardProps) => {
   const { toast } = useToast();
+  const { userRole } = useAuth(); // Add this to access the user's role
 
   const handleShareButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,6 +34,9 @@ const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCar
       description: `Share this link with ${creator.name} to let them upload files directly.`,
     });
   };
+
+  // Check if user has Admin privileges
+  const isAdmin = userRole === "Admin";
 
   return (
     <Card className="p-4 hover:bg-accent/5 transition-colors group cursor-pointer">
@@ -86,16 +91,20 @@ const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCar
                     Analytics
                   </Button>
                 </Link>
-                <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    className="h-9"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Edit
-                  </Button>
-                </Link>
+                
+                {/* Only show Edit button for Admin users */}
+                {isAdmin && (
+                  <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      className="h-9"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                )}
               </>
             ) : (
               // Files view for SharedFiles page - View Files and Share buttons
@@ -114,15 +123,18 @@ const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCar
                     )}
                   </Button>
                 </Link>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  className="h-9"
-                  onClick={handleShareButtonClick}
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share
-                </Button>
+                {/* Only show Share button for users with appropriate permissions */}
+                {isAdmin && (
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    className="h-9"
+                    onClick={handleShareButtonClick}
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                )}
               </>
             )}
           </div>

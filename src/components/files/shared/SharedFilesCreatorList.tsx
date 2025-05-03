@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { Creator } from "@/types";
 import CreatorCard from "@/components/CreatorCard";
 import SharedFilesEmptyState from "./SharedFilesEmptyState";
+import { useAuth } from "@/context/AuthContext";
 
 interface SharedFilesCreatorListProps {
   isLoading: boolean;
@@ -18,6 +19,9 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
   hasFilters,
   fileCountsMap = {}
 }) => {
+  const { userRole } = useAuth();
+  const isAdmin = userRole === "Admin";
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">

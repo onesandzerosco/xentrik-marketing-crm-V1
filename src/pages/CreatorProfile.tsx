@@ -1,10 +1,13 @@
-import React from "react";
-import { useParams } from "react-router-dom";
+
+import React, { useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
 import CreatorHeader from "@/components/creators/shared/CreatorHeader";
 import ProfileActions from "@/components/profile/ProfileActions";
 import OnboardingFormSections from "@/components/creators/onboarding/OnboardingFormSections";
 import CreatorNotFound from "@/components/creators/profile/CreatorNotFound";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const CreatorProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,9 +18,33 @@ const CreatorProfile = () => {
     handleSave,
     handleAssignTeamMembers
   } = useCreatorProfile(id!);
+  const { userRole, isCreator, isCreatorSelf } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  // Check if the user has permission to edit this creator profile
+  const isAdmin = userRole === "Admin";
+  const hasPermission = isAdmin || (isCreator && isCreatorSelf);
+  
+  useEffect(() => {
+    // If user doesn't have permission, redirect them to the creators list
+    if (!hasPermission && !formState.isLoading) {
+      toast({
+        title: "Access denied",
+        description: "You don't have permission to edit creator profiles",
+        variant: "destructive"
+      });
+      navigate('/creators');
+    }
+  }, [hasPermission, navigate, formState.isLoading, toast]);
 
   if (!creator) {
     return <CreatorNotFound />;
+  }
+  
+  // If still checking permissions, don't render anything yet
+  if (!hasPermission && !formState.isLoading) {
+    return null;
   }
 
   return (
