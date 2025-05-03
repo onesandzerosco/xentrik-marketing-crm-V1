@@ -76,55 +76,62 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     <div className="flex flex-col h-full">
       <FileHeader 
         creatorName={creatorName}
-        onUploadClick={handleUploadClick}
+        onUploadClick={isCreatorView ? handleUploadClick : undefined}
         isCreatorView={isCreatorView}
       />
       
-      <div className="flex flex-col space-y-4 p-6">
-        <FolderNav 
-          folders={availableFolders}
-          currentFolder={currentFolder}
-          onFolderChange={onFolderChange}
-        />
+      <div className="flex h-full">
+        {/* Left sidebar for folder navigation */}
+        <div className="w-64 p-4 border-r">
+          <FolderNav 
+            folders={availableFolders}
+            currentFolder={currentFolder}
+            onFolderChange={onFolderChange}
+          />
+        </div>
         
-        <div className="flex flex-col space-y-4">
-          <div className="flex items-center justify-between">
-            <FilterBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-            <FilterButtons
-              view={view}
-              onViewChange={setView}
-              onRefresh={onRefresh}
-            />
-          </div>
-          
-          {isLoading ? (
-            <FileViewSkeleton view={view} />
-          ) : filteredFiles.length > 0 ? (
-            view === 'list' ? (
-              <FileList 
-                files={filteredFiles} 
-                isCreatorView={isCreatorView} 
-                onFilesChanged={handleFilesChanged}
-                recentlyUploadedIds={recentlyUploadedIds} 
+        {/* Main content area */}
+        <div className="flex-1 p-6">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <FilterBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
+              <FilterButtons
+                view={view}
+                onViewChange={setView}
+                onRefresh={onRefresh}
+              />
+            </div>
+            
+            {isLoading ? (
+              <FileViewSkeleton view={view} />
+            ) : filteredFiles.length > 0 ? (
+              view === 'list' ? (
+                <FileList 
+                  files={filteredFiles} 
+                  isCreatorView={isCreatorView} 
+                  onFilesChanged={handleFilesChanged}
+                  recentlyUploadedIds={recentlyUploadedIds} 
+                />
+              ) : (
+                <FileGrid 
+                  files={filteredFiles} 
+                  isCreatorView={isCreatorView} 
+                  onFilesChanged={handleFilesChanged}
+                  recentlyUploadedIds={recentlyUploadedIds}
+                />
+              )
             ) : (
-              <FileGrid 
-                files={filteredFiles} 
-                isCreatorView={isCreatorView} 
-                onFilesChanged={handleFilesChanged}
-                recentlyUploadedIds={recentlyUploadedIds}
+              <EmptyState 
+                currentFolder={currentFolder} 
+                onUploadClick={isCreatorView ? handleUploadClick : undefined}
+                isCreatorView={isCreatorView}
+                isFiltered={searchQuery.length > 0}
               />
-            )
-          ) : (
-            <EmptyState 
-              currentFolder={currentFolder} 
-              onUploadClick={handleUploadClick}
-              isCreatorView={isCreatorView}
-            />
-          )}
+            )}
+          </div>
         </div>
       </div>
       
