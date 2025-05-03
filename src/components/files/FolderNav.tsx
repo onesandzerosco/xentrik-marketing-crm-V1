@@ -5,13 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 
-interface FolderNavProps {
-  activeFolder: string | null;
-  onFolderChange: (folder: string | null) => void;
+interface Folder {
+  id: string;
+  name: string;
 }
 
-export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChange }) => {
-  const [folders, setFolders] = useState<Array<{id: string, name: string}>>([]);
+interface FolderNavProps {
+  folders: Folder[];
+  currentFolder: string;
+  onFolderChange: (folder: string) => void;
+  activeFolder?: string | null;
+}
+
+export const FolderNav: React.FC<FolderNavProps> = ({ 
+  folders = [], 
+  currentFolder, 
+  onFolderChange,
+  activeFolder = null
+}) => {
+  const [customFolders, setCustomFolders] = useState<Array<{id: string, name: string}>>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const { toast } = useToast();
@@ -24,7 +36,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
       name: newFolderName.trim()
     };
     
-    setFolders([...folders, newFolder]);
+    setCustomFolders([...customFolders, newFolder]);
     setNewFolderName('');
     setIsCreating(false);
     
@@ -49,7 +61,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
         variant={!activeFolder ? "secondary" : "ghost"}
         size="sm"
         className="w-full justify-start px-3 font-normal"
-        onClick={() => onFolderChange(null)}
+        onClick={() => onFolderChange(folders[0]?.id || '')}
       >
         <Folder className="h-4 w-4 mr-2" />
         All Files
@@ -58,7 +70,20 @@ export const FolderNav: React.FC<FolderNavProps> = ({ activeFolder, onFolderChan
       {folders.map((folder) => (
         <Button
           key={folder.id}
-          variant={activeFolder === folder.id ? "secondary" : "ghost"}
+          variant={currentFolder === folder.id ? "secondary" : "ghost"}
+          size="sm"
+          className="w-full justify-start px-3 font-normal"
+          onClick={() => onFolderChange(folder.id)}
+        >
+          <Folder className="h-4 w-4 mr-2" />
+          {folder.name}
+        </Button>
+      ))}
+
+      {customFolders.map((folder) => (
+        <Button
+          key={folder.id}
+          variant={currentFolder === folder.id ? "secondary" : "ghost"}
           size="sm"
           className="w-full justify-start px-3 font-normal"
           onClick={() => onFolderChange(folder.id)}

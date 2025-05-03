@@ -6,9 +6,16 @@ import { Button } from '@/components/ui/button';
 interface EmptyStateProps {
   isFiltered?: boolean;
   isCreatorView?: boolean;
+  onUploadClick?: () => void;
+  currentFolder?: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ isFiltered = false, isCreatorView = false }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ 
+  isFiltered = false, 
+  isCreatorView = false,
+  onUploadClick,
+  currentFolder = ''
+}) => {
   if (isFiltered) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -34,9 +41,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ isFiltered = false, isCr
           ? "You haven't uploaded any files yet. Click the Upload button to get started."
           : "There are no files in this folder. Check back later or contact the creator."}
       </p>
-      {isCreatorView && (
+      {isCreatorView && onUploadClick && (
         <Button 
-          onClick={() => document.getElementById('file-upload-trigger')?.click()}
+          onClick={onUploadClick}
           variant="outline" 
           className="mt-4"
         >

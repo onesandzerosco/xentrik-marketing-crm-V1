@@ -1,39 +1,41 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { ListFilter, RefreshCcw, Grid, List } from 'lucide-react';
 
-export const FilterButtons = () => {
+interface FilterButtonsProps {
+  view: 'list' | 'grid';
+  onViewChange: (view: 'list' | 'grid') => void;
+  onRefresh: () => void;
+}
+
+export const FilterButtons: React.FC<FilterButtonsProps> = ({ view, onViewChange, onRefresh }) => {
   return (
-    <div className="relative mb-6">
-      <div 
-        className="flex gap-2 overflow-x-auto pb-2"
-        style={{ position: 'relative', zIndex: 50 }}
+    <div className="flex items-center space-x-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRefresh}
+        title="Refresh"
       >
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm"
-          style={{ zIndex: 50 }}
-        >
-          <span>Type</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm"
-          style={{ zIndex: 50 }}
-        >
-          <span>Modified</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="bg-white text-black hover:bg-white/90 rounded-full border-none shadow-sm"
-          style={{ zIndex: 50 }}
-        >
-          <span>Location</span>
-        </Button>
-      </div>
+        <RefreshCcw className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={view === 'list' ? 'secondary' : 'ghost'}
+        size="icon"
+        onClick={() => onViewChange('list')}
+        title="List view"
+      >
+        <List className="h-4 w-4" />
+      </Button>
+      <Button
+        variant={view === 'grid' ? 'secondary' : 'ghost'}
+        size="icon"
+        onClick={() => onViewChange('grid')}
+        title="Grid view"
+      >
+        <Grid className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

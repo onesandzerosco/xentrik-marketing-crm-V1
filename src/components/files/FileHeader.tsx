@@ -6,14 +6,18 @@ import { BackButton } from '@/components/ui/back-button';
 
 interface FileHeaderProps {
   creatorName: string;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  onUploadClick?: () => void;
+  isCreatorView?: boolean;
 }
 
 export const FileHeader: React.FC<FileHeaderProps> = ({
   creatorName,
-  searchQuery,
+  searchQuery = "",
   onSearchChange,
+  onUploadClick,
+  isCreatorView = false,
 }) => {
   return (
     <div>
@@ -27,17 +31,19 @@ export const FileHeader: React.FC<FileHeaderProps> = ({
         </div>
       </div>
 
-      <div className="max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            placeholder="Search files..." 
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
+      {onSearchChange && (
+        <div className="max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              placeholder="Search files..." 
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

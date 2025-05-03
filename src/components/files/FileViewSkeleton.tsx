@@ -3,11 +3,17 @@ import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface FileViewSkeletonProps {
-  viewMode: 'grid' | 'list';
+  view: 'grid' | 'list';
+  viewMode?: 'grid' | 'list';
 }
 
-export const FileViewSkeleton: React.FC<FileViewSkeletonProps> = ({ viewMode }) => {
-  if (viewMode === 'list') {
+export const FileViewSkeleton: React.FC<FileViewSkeletonProps> = ({ 
+  view, 
+  viewMode = 'list' // Keeping this for backward compatibility
+}) => {
+  const displayMode = view || viewMode;
+  
+  if (displayMode === 'list') {
     return (
       <div className="rounded-md border overflow-hidden">
         <div className="grid grid-cols-[1fr_100px_150px_80px] gap-3 px-4 py-3 font-medium text-xs border-b bg-muted/20">
