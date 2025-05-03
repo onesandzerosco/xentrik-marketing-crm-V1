@@ -81,13 +81,15 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       
       // Call the stored procedure to create a team member
-      // Make sure to send both role (primary role) and roles (additional roles)
+      // Fix: Pass primary role as the 'role' parameter and additional roles as 'roles'
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
         phone: newMember.phoneNumber,
         telegram: newMember.telegram,
+        // The RPC function expects 'role' and 'roles' as separate properties
+        // We need to adjust what we pass here based on TeamMember's properties
         role: newMember.role, // Primary role
         roles: newMember.roles, // Additional roles
         teams: newMember.teams
