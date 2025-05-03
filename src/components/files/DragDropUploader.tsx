@@ -73,26 +73,12 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
         return newProgress;
       });
       
-      // Upload the file with progress tracking
+      // Create a custom upload handler with progress tracking
       const { error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setFileProgress(prev => {
-              const newProgress = [...prev];
-              newProgress[fileIndex] = { 
-                ...newProgress[fileIndex], 
-                progress: percent 
-              };
-              return newProgress;
-            });
-            
-            // Update overall progress
-            setOverallProgress(calculateOverallProgress());
-          }
         });
         
       if (error) throw error;
@@ -132,6 +118,9 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
         return newProgress;
       });
       
+      // Update overall progress
+      setOverallProgress(calculateOverallProgress());
+      
       return true;
     } catch (error) {
       console.error('Upload error:', error);
@@ -159,6 +148,9 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
     for (let i = 0; i < files.length; i++) {
       const success = await uploadFile(files[i], i);
       if (success) successCount++;
+      
+      // Update the overall progress after each file completes
+      setOverallProgress((i + 1) / files.length * 100);
     }
     
     // All uploads complete

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +17,7 @@ export interface CreatorFileType {
   url: string;
   type: string;
   folder: string;
-  status?: 'uploading' | 'complete';
+  status?: string;
   bucketPath?: string;
 }
 
@@ -84,7 +85,7 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder: 'shared',
-          status: media.status === 'uploading' ? 'uploading' : 'complete' as const,
+          status: media.status || 'complete',
           bucketPath: media.bucket_key
         };
       }));
@@ -134,7 +135,7 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder,
-          status: 'complete' as const,
+          status: 'complete',
           bucketPath
         };
       }));
