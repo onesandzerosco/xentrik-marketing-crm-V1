@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, X, FileInput, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -57,10 +56,54 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
     setIsDragging(false);
   };
 
+  // Check if a file with the same name exists and generate a unique name
+  const getUniqueFileName = async (fileName: string, folderPath: string) => {
+    try {
+      const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+      const extension = fileName.substring(fileName.lastIndexOf('.'));
+      
+      let counter = 0;
+      let uniqueName = fileName;
+      let isUnique = false;
+      
+      while (!isUnique) {
+        // Try to list files that match the current name
+        const { data: existingFiles, error } = await supabase.storage
+          .from(bucket)
+          .list(`${creatorId}/${folderPath}`, {
+            search: uniqueName
+          });
+        
+        if (error) {
+          console.error('Error checking for file existence:', error);
+          break; // In case of error, just use the original file name
+        }
+        
+        // Check if there's any file with the exact same name
+        const exactMatch = existingFiles?.find(file => file.name === uniqueName);
+        
+        if (!exactMatch) {
+          isUnique = true;
+        } else {
+          counter++;
+          uniqueName = `${baseName} (${counter})${extension}`;
+        }
+        
+        // Safety check to prevent infinite loops
+        if (counter > 100) {
+          uniqueName = `${baseName}_${Date.now()}${extension}`;
+          isUnique = true;
+        }
+      }
+      
+      return uniqueName;
+    } catch (error) {
+      console.error('Error generating unique filename:', error);
+      return `${Date.now()}_${fileName}`; // Fallback to timestamp
+    }
+  };
+
   const uploadFile = async (file: File, fileIndex: number) => {
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `${creatorId}/${folder}/${safeName}`;
-    
     try {
       // Initialize progress for this file
       setFileProgress(prev => {
@@ -70,6 +113,23 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
           progress: 0, 
           size: file.size 
         };
+        return newProgress;
+      });
+      
+      // Create a unique safe name
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const uniqueSafeName = await getUniqueFileName(safeName, folder);
+      const filePath = `${creatorId}/${folder}/${uniqueSafeName}`;
+      
+      // Update file progress to show the final filename that will be used
+      setFileProgress(prev => {
+        const newProgress = [...prev];
+        if (safeName !== uniqueSafeName) {
+          newProgress[fileIndex] = { 
+            ...newProgress[fileIndex], 
+            name: uniqueSafeName.replace(/_/g, ' ')
+          };
+        }
         return newProgress;
       });
       
@@ -90,7 +150,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
           .insert({
             creator_id: creatorId,
             bucket_key: filePath,
-            filename: safeName,
+            filename: uniqueSafeName,
             mime: file.type,
             file_size: file.size
           });

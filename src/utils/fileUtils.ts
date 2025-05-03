@@ -1,3 +1,4 @@
+
 export const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -44,4 +45,57 @@ export const getFileType = (extension: string): string => {
 
 export const getFileExtension = (filename: string): string => {
   return filename.split('.').pop()?.toLowerCase() || '';
+};
+
+// Generate a unique file name to handle collisions
+export const getUniqueFileName = async (
+  fileName: string, 
+  folderPath: string, 
+  creatorId: string, 
+  bucket: string,
+  supabase: any
+) => {
+  try {
+    const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+    const extension = fileName.substring(fileName.lastIndexOf('.'));
+    
+    let counter = 0;
+    let uniqueName = fileName;
+    let isUnique = false;
+    
+    while (!isUnique) {
+      // Try to list files that match the current name
+      const { data: existingFiles, error } = await supabase.storage
+        .from(bucket)
+        .list(`${creatorId}/${folderPath}`, {
+          search: uniqueName
+        });
+      
+      if (error) {
+        console.error('Error checking for file existence:', error);
+        break; // In case of error, just use the original file name
+      }
+      
+      // Check if there's any file with the exact same name
+      const exactMatch = existingFiles?.find((file: any) => file.name === uniqueName);
+      
+      if (!exactMatch) {
+        isUnique = true;
+      } else {
+        counter++;
+        uniqueName = `${baseName} (${counter})${extension}`;
+      }
+      
+      // Safety check to prevent infinite loops
+      if (counter > 100) {
+        uniqueName = `${baseName}_${Date.now()}${extension}`;
+        isUnique = true;
+      }
+    }
+    
+    return uniqueName;
+  } catch (error) {
+    console.error('Error generating unique filename:', error);
+    return `${Date.now()}_${fileName}`; // Fallback to timestamp
+  }
 };
