@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, EmployeeStatus, PrimaryRole } from "@/types/employee";
@@ -41,11 +40,8 @@ const UserRolesList: React.FC = () => {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          // Cast the role string to PrimaryRole type
           role: profile.role as PrimaryRole,
-          // Cast the roles array to string[] type
           roles: profile.roles as string[] || [],
-          // Cast the status string to EmployeeStatus type
           status: (profile.status || "Active") as EmployeeStatus,
           profileImage: profile.profile_image,
           lastLogin: profile.last_login ? new Date(profile.last_login).toLocaleString() : "Never",
@@ -86,14 +82,13 @@ const UserRolesList: React.FC = () => {
       
       console.log("Updating user with:", { userId, primaryRole, additionalRoles });
       
-      // Update the user in Supabase
+      // Use RPC function instead of direct update to bypass RLS
       const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          role: primaryRole, // Primary role goes to the role column (enum)
-          roles: additionalRoles // Additional roles go to the roles column (array)
-        })
-        .eq('id', userId);
+        .rpc('admin_update_user_roles', {
+          user_id: userId,
+          new_primary_role: primaryRole,
+          new_additional_roles: additionalRoles
+        });
 
       if (error) {
         throw error;

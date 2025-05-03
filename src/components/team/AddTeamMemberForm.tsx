@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,10 +12,10 @@ import { useNavigate } from "react-router-dom";
 
 const ROLES = [
   "Chatters",
-  "Creative Director",
-  "Manager",
+  "VA",
+  "Admin", 
   "Developer",
-  "Editor"
+  "Creator"
 ];
 
 const TEAMS = [
@@ -120,7 +119,6 @@ const AddTeamMemberForm = () => {
             />
           </div>
           <RolesSection
-            roles={ROLES}
             selected={form.roles}
             onChange={(role) => handleMultiSelect("roles", role)}
           />
