@@ -16,9 +16,6 @@ interface TeamHeaderProps {
   onClearFilters: () => void;
 }
 
-// Update to use the additional roles from the RolesSection component
-const ADDITIONAL_ROLES: TeamMemberRole[] = ["Chatters", "VA", "Admin", "Developer", "Creator"];
-
 const TeamHeader: React.FC<TeamHeaderProps> = ({
   memberCount,
   isLoading,
@@ -101,7 +98,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           </span>
         </div>
         
-        {/* Role Filter - Updated to use additional roles instead of primary roles */}
+        {/* Role Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
@@ -120,11 +117,11 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
             <DropdownMenuLabel className="text-white">Filter by role</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/20" />
-            {ADDITIONAL_ROLES.map(role => (
+            {["Admin", "Manager", "Employee"].map(role => (
               <DropdownMenuCheckboxItem 
                 key={role} 
-                checked={filters.roles.includes(role)} 
-                onCheckedChange={() => toggleRole(role)} 
+                checked={filters.roles.includes(role as TeamMemberRole)} 
+                onCheckedChange={() => toggleRole(role as TeamMemberRole)} 
                 className="text-white"
               >
                 {role}
