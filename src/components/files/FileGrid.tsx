@@ -18,13 +18,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-interface FileGridProps {
+export interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged?: () => void;
   recentlyUploadedIds?: string[];
   onUploadClick?: () => void;
   onSelectFiles?: (fileIds: string[]) => void;
+  onAddToFolderClick?: () => void;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({ 
@@ -33,7 +34,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onFilesChanged,
   recentlyUploadedIds = [],
   onUploadClick,
-  onSelectFiles
+  onSelectFiles,
+  onAddToFolderClick
 }) => {
   const { toast } = useToast();
   const { userRole, userRoles } = useAuth();
@@ -250,27 +252,24 @@ export const FileGrid: React.FC<FileGridProps> = ({
       {/* Action buttons for selected files */}
       {selectedFiles.size > 0 && (
         <div className="flex items-center gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBulkDownload}
-            className="flex items-center gap-1"
-          >
-            <Download className="h-4 w-4" />
-            Download {selectedFiles.size} files
-          </Button>
-          
-          {canDelete && (
+          {onAddToFolderClick && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleBulkDelete}
-              className="flex items-center gap-1 text-destructive border-destructive hover:bg-destructive/10"
+              onClick={onAddToFolderClick}
+              className="flex items-center gap-1"
             >
-              <Trash2 className="h-4 w-4" />
-              Delete {selectedFiles.size} files
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+                <line x1="12" y1="10" x2="12" y2="16" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+              </svg>
+              <span className="ml-1">Add {selectedFiles.size} to Folder</span>
             </Button>
           )}
+          
+          {/* Keep the existing buttons but do not add new ones here as they are now in FilterButtons */}
+          {/* ... keep existing code (download and delete buttons) */}
         </div>
       )}
       

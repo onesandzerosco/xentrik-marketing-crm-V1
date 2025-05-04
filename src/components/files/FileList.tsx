@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,8 @@ import {
   FileAudio, 
   File, 
   Download,
-  Trash2
+  Trash2,
+  FolderPlus
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +31,7 @@ export interface FileListProps {
   onFilesChanged: () => void;
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
+  onAddToFolderClick?: () => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
@@ -36,7 +39,8 @@ export const FileList: React.FC<FileListProps> = ({
   isCreatorView = false,
   onFilesChanged,
   recentlyUploadedIds = [],
-  onSelectFiles
+  onSelectFiles,
+  onAddToFolderClick
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const { toast } = useToast();
@@ -129,6 +133,19 @@ export const FileList: React.FC<FileListProps> = ({
 
   return (
     <div className="w-full relative overflow-x-auto">
+      {selectedFileIds.length > 0 && onAddToFolderClick && (
+        <div className="flex items-center gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onAddToFolderClick}
+          >
+            <FolderPlus className="h-4 w-4 mr-2" />
+            Add {selectedFileIds.length} Files to Folder
+          </Button>
+        </div>
+      )}
+      
       <Table>
         <TableHeader>
           <TableRow>

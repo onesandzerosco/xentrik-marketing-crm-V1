@@ -28,6 +28,8 @@ import { FolderPlus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FileUploaderWithProgress from './FileUploaderWithProgress';
 import { FileDownloader } from './FileDownloader';
+import { useAuth } from '@/context/AuthContext';
+import { canDeleteFiles } from '@/utils/permissionUtils';
 
 interface Folder {
   id: string;
@@ -44,7 +46,7 @@ interface FileExplorerProps {
   currentFolder: string;
   availableFolders: Folder[];
   isCreatorView?: boolean;
-  onUploadComplete?: (uploadedFileIds?: string[]) => void;
+  onUploadComplete?: (uploadedFileIds?: string[]) => Promise<void> | void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
   onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; 
@@ -76,6 +78,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [showAddToFolderDialog, setShowAddToFolderDialog] = useState(false);
   const [targetFolder, setTargetFolder] = useState<string>('');
   const { toast } = useToast();
+  const { userRole, userRoles } = useAuth();
+  const canDelete = canDeleteFiles(userRole, userRoles);
   
   // New folder creation states
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
@@ -232,23 +236,67 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  const handleBulkDownload = () => {
+    if (selectedFiles.length === 0) return;
+    
+    const filesToDownload = files.filter(file => selectedFiles.includes(file.id));
+    
+    // Dispatch a custom event for the FileDownloader to handle
+    const event = new CustomEvent('fileDownloadRequest', {
+      detail: { files: filesToDownload }
+    });
+    window.dispatchEvent(event);
+  };
+  
+  const handleBulkDelete = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    for (const fileId of selectedFiles) {
+      const file = files.find(f => f.id === fileId);
+      if (!file) continue;
+      
+      try {
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+          .from('raw_uploads')
+          .remove([file.bucketPath || '']);
+        
+        if (storageError) throw storageError;
+        
+        // Delete from database
+        const { error: dbError } = await supabase
+          .from('media')
+          .delete()
+          .eq('id', fileId);
+          
+        if (dbError) throw dbError;
+        
+      } catch (error) {
+        console.error(`Error deleting file ${fileId}:`, error);
+        toast({
+          title: "Error deleting file",
+          description: "One or more files could not be deleted. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+    
+    // Clear selection and refresh
+    setSelectedFiles([]);
+    onRefresh();
+    
+    toast({
+      title: "Files deleted",
+      description: `Successfully deleted ${selectedFiles.length} files`,
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
         creatorName={creatorName}
         onUploadClick={isCreatorView ? handleUploadClick : undefined}
         isCreatorView={isCreatorView}
-        selectedFiles={selectedFiles.length}
-        onAddToFolderClick={() => {
-          if (selectedFiles.length > 0) {
-            setShowAddToFolderDialog(true);
-            setAddFolderDialogTab('existing');
-            setNewFolderInDialog('');
-            setTargetFolder('');
-          } else {
-            setShowWarningDialog(true);
-          }
-        }}
       />
       
       <div className="flex h-full">
@@ -275,7 +323,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 view={view}
                 onViewChange={setView}
                 onRefresh={onRefresh}
-                onUploadClick={isCreatorView ? handleUploadClick : undefined}
+                onBulkDownload={handleBulkDownload}
+                onBulkDelete={handleBulkDelete}
+                selectedFilesCount={selectedFiles.length}
+                canDelete={canDelete}
               />
             </div>
             
@@ -289,6 +340,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   onFilesChanged={handleFilesChanged}
                   recentlyUploadedIds={recentlyUploadedIds}
                   onSelectFiles={handleFileSelection}
+                  onAddToFolderClick={selectedFiles.length > 0 ? () => setShowAddToFolderDialog(true) : undefined}
                 />
               ) : (
                 <FileGrid 
@@ -298,6 +350,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   recentlyUploadedIds={recentlyUploadedIds}
                   onUploadClick={isCreatorView ? handleUploadClick : undefined}
                   onSelectFiles={handleFileSelection}
+                  onAddToFolderClick={selectedFiles.length > 0 ? () => setShowAddToFolderDialog(true) : undefined}
                 />
               )
             ) : (

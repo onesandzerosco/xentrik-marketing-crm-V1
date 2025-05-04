@@ -1,29 +1,53 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ListFilter, RefreshCcw, Grid, List, Upload } from 'lucide-react';
+import { RefreshCcw, Grid, List, Download, Trash2 } from 'lucide-react';
 
 interface FilterButtonsProps {
   view: 'list' | 'grid';
   onViewChange: (view: 'list' | 'grid') => void;
   onRefresh: () => void;
-  onUploadClick?: () => void;
+  onBulkDownload?: () => void;
+  onBulkDelete?: () => void;
+  selectedFilesCount?: number;
+  canDelete?: boolean;
 }
 
-export const FilterButtons: React.FC<FilterButtonsProps> = ({ view, onViewChange, onRefresh, onUploadClick }) => {
+export const FilterButtons: React.FC<FilterButtonsProps> = ({ 
+  view, 
+  onViewChange, 
+  onRefresh, 
+  onBulkDownload,
+  onBulkDelete,
+  selectedFilesCount = 0,
+  canDelete = false
+}) => {
   return (
     <div className="flex items-center space-x-2">
-      {onUploadClick && (
+      {selectedFilesCount > 0 && onBulkDownload && (
         <Button
           variant="outline"
           size="sm"
-          onClick={onUploadClick}
-          title="Upload"
+          onClick={onBulkDownload}
+          className="flex items-center gap-1"
         >
-          <Upload className="h-4 w-4 mr-1" />
-          Upload
+          <Download className="h-4 w-4 mr-1" />
+          Download {selectedFilesCount} files
         </Button>
       )}
+      
+      {selectedFilesCount > 0 && canDelete && onBulkDelete && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onBulkDelete}
+          className="flex items-center gap-1 text-destructive border-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4 mr-1" />
+          Delete {selectedFilesCount} files
+        </Button>
+      )}
+
       <Button
         variant="ghost"
         size="icon"
