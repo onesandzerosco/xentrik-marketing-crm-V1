@@ -9,6 +9,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Local storage key for resumable uploads
+const PENDING_UPLOADS_KEY = 'pendingUploads';
+
 const SharedFiles = () => {
   const { creators, filterCreators } = useCreators();
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +23,42 @@ const SharedFiles = () => {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [hasPendingUploads, setHasPendingUploads] = useState(false);
+
+  // Check for pending uploads on component mount
+  useEffect(() => {
+    const checkPendingUploads = () => {
+      try {
+        const pendingUploadsJson = localStorage.getItem(PENDING_UPLOADS_KEY);
+        if (!pendingUploadsJson) {
+          setHasPendingUploads(false);
+          return;
+        }
+        
+        const pendingUploads = JSON.parse(pendingUploadsJson);
+        setHasPendingUploads(pendingUploads.length > 0);
+      } catch (error) {
+        console.error('Error checking pending uploads:', error);
+        localStorage.removeItem(PENDING_UPLOADS_KEY);
+        setHasPendingUploads(false);
+      }
+    };
+    
+    checkPendingUploads();
+    
+    // Set up an event listener for storage changes
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === PENDING_UPLOADS_KEY) {
+        checkPendingUploads();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // If user is a creator viewing their own files, redirect them directly to their files
   useEffect(() => {
@@ -56,14 +95,29 @@ const SharedFiles = () => {
           console.error('Error counting files for creator:', error);
         }
         
+        // Check for any pending uploads for this creator
+        let uploadingCount = 0;
+        try {
+          const pendingUploadsJson = localStorage.getItem(PENDING_UPLOADS_KEY);
+          if (pendingUploadsJson) {
+            const pendingUploads = JSON.parse(pendingUploadsJson);
+            uploadingCount = pendingUploads.filter(
+              (upload: any) => upload.creatorId === creator.id
+            ).length;
+          }
+        } catch (error) {
+          console.error('Error parsing pending uploads:', error);
+        }
+        
         creatorCounts[creator.id] = {
           total: count || 0,
-          uploading: 0 // This would be updated in real-time when uploads are happening
+          uploading: uploadingCount
         };
       }
       
       return creatorCounts;
-    }
+    },
+    enabled: creators.length > 0
   });
 
   // Filter creators based on user role
@@ -114,6 +168,12 @@ const SharedFiles = () => {
 
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
+      {hasPendingUploads && (
+        <div className="mb-4 p-4 bg-amber-50 border-l-4 border-amber-500 text-amber-700 rounded shadow">
+          <p>You have pending uploads that will resume automatically.</p>
+        </div>
+      )}
+      
       <SharedFilesHeader 
         isLoading={isLoading}
         creatorCount={filteredCreators.length}

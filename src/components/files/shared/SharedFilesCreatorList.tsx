@@ -37,15 +37,22 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
 
   return (
     <div className="space-y-2">
-      {creators.map(creator => (
-        <div key={creator.id}>
-          <CreatorCard 
-            creator={creator} 
-            variant="files"
-            fileCount={fileCountsMap[creator.id]?.total || 0}
-          />
-        </div>
-      ))}
+      {creators.map(creator => {
+        const fileCount = fileCountsMap[creator.id]?.total || 0;
+        const uploadingCount = fileCountsMap[creator.id]?.uploading || 0;
+        
+        return (
+          <div key={creator.id}>
+            <CreatorCard 
+              creator={creator} 
+              variant="files"
+              fileCount={fileCount}
+              showUploadingIndicator={uploadingCount > 0}
+              uploadingCount={uploadingCount}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };
