@@ -8,6 +8,15 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface FileGridProps {
   files: CreatorFileType[];
@@ -33,6 +42,11 @@ export const FileGrid: React.FC<FileGridProps> = ({
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
+  
+  // New state for note editing
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [currentEditingFile, setCurrentEditingFile] = useState<CreatorFileType | null>(null);
+  const [noteContent, setNoteContent] = useState("");
   
   // Update parent component when selection changes
   const toggleFileSelection = (fileId: string) => {
@@ -127,16 +141,65 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
   };
 
-  // Function to download selected files
+  // Function to download selected files using the new system
   const handleBulkDownload = () => {
     const filesToDownload = files.filter(file => selectedFiles.has(file.id));
+    triggerDownload(filesToDownload);
+  };
+
+  // Function to trigger download for one or multiple files
+  const triggerDownload = (filesToDownload: CreatorFileType[]) => {
+    if (filesToDownload.length === 0) return;
     
-    for (const file of filesToDownload) {
-      const link = document.createElement('a');
-      link.href = file.url;
-      link.download = file.name;
-      link.target = "_blank";
-      link.click();
+    // Dispatch a custom event for the FileDownloader to handle
+    const event = new CustomEvent('fileDownloadRequest', {
+      detail: { files: filesToDownload }
+    });
+    window.dispatchEvent(event);
+  };
+  
+  // Function to open the note editing dialog
+  const openNoteEditor = (file: CreatorFileType) => {
+    setCurrentEditingFile(file);
+    setNoteContent(file.description || '');
+    setIsEditingNote(true);
+  };
+
+  // Function to save the note
+  const saveNote = async () => {
+    if (!currentEditingFile) return;
+    
+    try {
+      // Save the note to the database
+      const { error } = await supabase
+        .from('media')
+        .update({ 
+          description: noteContent.substring(0, 200) // Limit to 200 chars
+        })
+        .eq('id', currentEditingFile.id);
+        
+      if (error) throw error;
+      
+      // Update the local state
+      if (onFilesChanged) {
+        onFilesChanged();
+      }
+      
+      toast({
+        title: "Note saved",
+        description: "The file description has been updated.",
+      });
+      
+      setIsEditingNote(false);
+      setCurrentEditingFile(null);
+      
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "Error saving note",
+        description: error instanceof Error ? error.message : "Failed to save the note",
+        variant: "destructive",
+      });
     }
   };
 
@@ -228,6 +291,11 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatFileSize(file.size)}
                 </p>
+                {file.description && (
+                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                    {file.description}
+                  </p>
+                )}
               </div>
               
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-3 pt-6 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-1">
@@ -237,11 +305,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                   className="h-8 w-8 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    const link = document.createElement('a');
-                    link.href = file.url;
-                    link.download = file.name;
-                    link.target = "_blank";
-                    link.click();
+                    triggerDownload([file]);
                   }}
                 >
                   <Download className="h-4 w-4" />
@@ -260,24 +324,76 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 </Button>
                 
                 {canDeleteFiles && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(file);
-                    }}
-                    disabled={isProcessing}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openNoteEditor(file);
+                      }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                        <line x1="9" y1="9" x2="10" y2="9" />
+                        <line x1="9" y1="13" x2="15" y2="13" />
+                        <line x1="9" y1="17" x2="15" y2="17" />
+                      </svg>
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(file);
+                      }}
+                      disabled={isProcessing}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
           );
         })}
       </div>
+      
+      {/* Note Editor Dialog */}
+      <Dialog open={isEditingNote} onOpenChange={setIsEditingNote}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Note to File</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="file-note">Note (max 200 characters)</Label>
+            <Textarea
+              id="file-note"
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Enter a description for this file..."
+              className="mt-2"
+              maxLength={200}
+              rows={4}
+            />
+            <div className="text-right text-xs text-muted-foreground mt-1">
+              {noteContent.length}/200 characters
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingNote(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveNote}>
+              Save Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

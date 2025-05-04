@@ -22,6 +22,7 @@ export interface CreatorFileType {
   bucketPath?: string;
   isNewlyUploaded?: boolean;
   folderRefs?: string[]; // Array of folder IDs this file is associated with
+  description?: string; // New field for file descriptions
 }
 
 interface Folder {
@@ -401,7 +402,8 @@ const CreatorFiles = () => {
           folderRefs, // Add folder references from the array
           status: media.status as "uploading" | "complete" || 'complete',
           bucketPath: media.bucket_key,
-          isNewlyUploaded
+          isNewlyUploaded,
+          description: media.description // Add description field to file object
         } as CreatorFileType;
       }));
       

@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input';
 import { FolderPlus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FileUploaderWithProgress from './FileUploaderWithProgress';
+import { FileDownloader } from './FileDownloader';
 
 interface Folder {
   id: string;
@@ -68,7 +69,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onAddFilesToFolder,
   onDeleteFolder
 }) => {
-  const [view, setView] = useState<'list' | 'grid'>('list');
+  // Changed default to 'grid' instead of 'list'
+  const [view, setView] = useState<'list' | 'grid'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showAddToFolderDialog, setShowAddToFolderDialog] = useState(false);
@@ -327,12 +329,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
       {/* Add direct file input for upload (hidden) */}
       {isCreatorView && (
-        <FileUploaderWithProgress
-          id="direct-file-upload"
-          creatorId={creatorId}
-          onUploadComplete={handleUploadComplete}
-          currentFolder={currentFolder}
-        />
+        <>
+          <FileUploaderWithProgress
+            id="direct-file-upload"
+            creatorId={creatorId}
+            onUploadComplete={handleUploadComplete}
+            currentFolder={currentFolder}
+          />
+          <FileDownloader />
+        </>
       )}
 
       {/* Add to Folder Dialog with tabs for existing or new folder */}

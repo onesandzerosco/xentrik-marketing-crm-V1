@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
+import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2, FileEdit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
@@ -7,6 +8,15 @@ import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface FileListProps {
   files: CreatorFileType[];
@@ -32,6 +42,11 @@ export const FileList: React.FC<FileListProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
   const [displayFiles, setDisplayFiles] = useState<CreatorFileType[]>(files);
+  
+  // New state for note editing
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [currentEditingFile, setCurrentEditingFile] = useState<CreatorFileType | null>(null);
+  const [noteContent, setNoteContent] = useState("");
   
   // Update display files when input files change
   useEffect(() => {
@@ -221,21 +236,74 @@ export const FileList: React.FC<FileListProps> = ({
     });
   };
   
-  const downloadSelected = async () => {
+  const downloadSelected = () => {
     if (selectedFiles.size === 0) return;
     
-    for (const fileId of selectedFiles) {
-      const file = displayFiles.find(f => f.id === fileId);
-      if (file && file.url) {
-        const link = document.createElement('a');
-        link.href = file.url;
-        link.download = file.name;
-        link.target = "_blank";
-        link.click();
+    const filesToDownload = displayFiles.filter(file => selectedFiles.has(file.id));
+    triggerDownload(filesToDownload);
+  };
+
+  // Function to trigger download for one or multiple files
+  const triggerDownload = (filesToDownload: CreatorFileType[]) => {
+    if (filesToDownload.length === 0) return;
+    
+    // Dispatch a custom event for the FileDownloader to handle
+    const event = new CustomEvent('fileDownloadRequest', {
+      detail: { files: filesToDownload }
+    });
+    window.dispatchEvent(event);
+  };
+  
+  // Function to open the note editing dialog
+  const openNoteEditor = (file: CreatorFileType) => {
+    setCurrentEditingFile(file);
+    setNoteContent(file.description || '');
+    setIsEditingNote(true);
+  };
+
+  // Function to save the note
+  const saveNote = async () => {
+    if (!currentEditingFile) return;
+    
+    try {
+      // Save the note to the database
+      const { error } = await supabase
+        .from('media')
+        .update({ 
+          description: noteContent.substring(0, 200) // Limit to 200 chars
+        })
+        .eq('id', currentEditingFile.id);
         
-        // Small delay between downloads
-        await new Promise(resolve => setTimeout(resolve, 300));
+      if (error) throw error;
+      
+      // Update the local state
+      setDisplayFiles(prev => 
+        prev.map(file => 
+          file.id === currentEditingFile.id 
+            ? { ...file, description: noteContent } 
+            : file
+        )
+      );
+      
+      if (onFilesChanged) {
+        onFilesChanged();
       }
+      
+      toast({
+        title: "Note saved",
+        description: "The file description has been updated.",
+      });
+      
+      setIsEditingNote(false);
+      setCurrentEditingFile(null);
+      
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "Error saving note",
+        description: error instanceof Error ? error.message : "Failed to save the note",
+        variant: "destructive",
+      });
     }
   };
 
@@ -320,9 +388,16 @@ export const FileList: React.FC<FileListProps> = ({
                     disabled={isProcessing || file.status === 'uploading'}
                   />
                 </div>
-                <div className="flex items-center gap-2 overflow-hidden">
-                  {getFileIcon(file.type)}
-                  <span className="truncate">{file.name}</span>
+                <div className="flex flex-col gap-1 overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    {getFileIcon(file.type)}
+                    <span className="truncate">{file.name}</span>
+                  </div>
+                  {file.description && (
+                    <div className="text-xs text-muted-foreground truncate ml-6">
+                      {file.description}
+                    </div>
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {formatFileSize(file.size)}
@@ -344,36 +419,15 @@ export const FileList: React.FC<FileListProps> = ({
                     <>
                       <Button 
                         variant="ghost" 
-                        size="sm" 
-                        asChild
+                        size="sm"
                         className="h-7 px-2"
                         disabled={isProcessing}
+                        onClick={() => triggerDownload([file])}
+                        aria-label={`Download ${file.name}`}
                       >
-                        <a 
-                          href={file.url} 
-                          download={file.name} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          aria-label={`Download ${file.name}`}
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                        </a>
+                        <Download className="h-3.5 w-3.5" />
                       </Button>
-                      {canDeleteFiles && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(file)}
-                          className="h-7 px-2 text-red-500 hover:text-red-600"
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      )}
+
                       <Button
                         variant="ghost"
                         size="sm"
@@ -383,6 +437,35 @@ export const FileList: React.FC<FileListProps> = ({
                       >
                         <Share2 className="h-3.5 w-3.5" />
                       </Button>
+
+                      {canDeleteFiles && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => openNoteEditor(file)}
+                            className="h-7 px-2 text-blue-500 hover:text-blue-600"
+                            disabled={isProcessing}
+                            aria-label={`Add note to ${file.name}`}
+                          >
+                            <FileEdit className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(file)}
+                            className="h-7 px-2 text-red-500 hover:text-red-600"
+                            disabled={isProcessing}
+                          >
+                            {isProcessing ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -391,6 +474,38 @@ export const FileList: React.FC<FileListProps> = ({
           })}
         </div>
       </div>
+
+      {/* Note Editor Dialog */}
+      <Dialog open={isEditingNote} onOpenChange={setIsEditingNote}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Note to File</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="file-note">Note (max 200 characters)</Label>
+            <Textarea
+              id="file-note"
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="Enter a description for this file..."
+              className="mt-2"
+              maxLength={200}
+              rows={4}
+            />
+            <div className="text-right text-xs text-muted-foreground mt-1">
+              {noteContent.length}/200 characters
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingNote(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveNote}>
+              Save Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
