@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useCreators } from '../context/creator';
 import SharedFilesHeader from "../components/files/SharedFilesHeader";
@@ -83,48 +82,60 @@ const SharedFiles = () => {
       } else {
         // If no creatorId in auth context, try to find a creator that matches the current user's ID
         // This is needed for users who were assigned a Creator role but aren't directly tied to a creator in creator_team_members
-        const { data: { user } } = supabase.auth.getUser();
-        if (user) {
-          console.log("Checking if user is associated with any creator");
-          // Check if there's a creator record for this user
-          supabase
-            .from('creators')
-            .select('id, name')
-            .eq('id', user.id)
-            .single()
-            .then(({ data, error }) => {
-              if (data && !error) {
-                console.log("Found creator match:", data);
-                navigate(`/creator-files/${data.id}`, {
-                  state: { creatorName: data.name }
+        const checkUserCreator = async () => {
+          try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) {
+              console.error("Error getting user:", error);
+              return;
+            }
+            
+            if (user) {
+              console.log("Checking if user is associated with any creator");
+              // Check if there's a creator record for this user
+              const { data: creatorData, error: creatorError } = await supabase
+                .from('creators')
+                .select('id, name')
+                .eq('id', user.id)
+                .single();
+                
+              if (creatorData && !creatorError) {
+                console.log("Found creator match:", creatorData);
+                navigate(`/creator-files/${creatorData.id}`, {
+                  state: { creatorName: creatorData.name }
                 });
               } else {
                 console.log("No direct creator match found, checking creator_team_members");
                 // Try to find if user is in creator_team_members
-                supabase
+                const { data: teamData, error: teamError } = await supabase
                   .from('creator_team_members')
                   .select('creator_id')
                   .eq('team_member_id', user.id)
-                  .single()
-                  .then(({ data: teamData, error: teamError }) => {
-                    if (teamData && !teamError) {
-                      const foundCreatorId = teamData.creator_id;
-                      const creatorData = creators.find(c => c.id === foundCreatorId);
-                      
-                      if (creatorData) {
-                        navigate(`/creator-files/${foundCreatorId}`, { 
-                          state: { creatorName: creatorData.name } 
-                        });
-                      } else {
-                        navigate(`/creator-files/${foundCreatorId}`);
-                      }
-                    } else {
-                      console.log("User has Creator role but no creator association found");
-                    }
-                  });
+                  .single();
+                  
+                if (teamData && !teamError) {
+                  const foundCreatorId = teamData.creator_id;
+                  const creatorData = creators.find(c => c.id === foundCreatorId);
+                  
+                  if (creatorData) {
+                    navigate(`/creator-files/${foundCreatorId}`, { 
+                      state: { creatorName: creatorData.name } 
+                    });
+                  } else {
+                    navigate(`/creator-files/${foundCreatorId}`);
+                  }
+                } else {
+                  console.log("User has Creator role but no creator association found");
+                }
               }
-            });
-        }
+            }
+          } catch (error) {
+            console.error("Error in checkUserCreator:", error);
+          }
+        };
+        
+        checkUserCreator();
       }
     }
   }, [isCreator, creatorId, creators, navigate, userRole, userRoles]);

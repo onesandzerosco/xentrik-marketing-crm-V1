@@ -1,217 +1,176 @@
 
 import React, { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import { 
-  RadioGroup, 
-  RadioGroupItem 
-} from "@/components/ui/radio-group";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckboxGroup } from "@/components/ui/checkbox-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Employee, PrimaryRole } from "@/types/employee";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => void;
+  onUpdate: (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => Promise<void>;
 }
 
-const PRIMARY_ROLES: PrimaryRole[] = ["Admin", "Manager", "Employee"];
-
-// Updated additional roles options
-const ADDITIONAL_ROLES: string[] = [
-  "Chatters", 
-  "VA", 
-  "Admin", 
-  "Developer",
-  "Creator"
-];
+// Available roles for the application
+const availableRoles = ["Chatter", "Creator", "VA"];
+const primaryRoleOptions: PrimaryRole[] = ["Admin", "Manager", "Employee"];
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   user,
   open,
   onOpenChange,
-  onUpdate
+  onUpdate,
 }) => {
   const [primaryRole, setPrimaryRole] = useState<PrimaryRole>("Employee");
-  const [additionalRoles, setAdditionalRoles] = useState<string[]>([]);
-  const [showAdminAlert, setShowAdminAlert] = useState(false);
-  const [pendingRoleChange, setPendingRoleChange] = useState<PrimaryRole | null>(null);
-  const { toast } = useToast();
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingCreator, setIsCreatingCreator] = useState(false);
 
-  // Reset state when user or open state changes
   useEffect(() => {
-    if (user && open) {
-      console.log("Setting initial roles from user:", { role: user.role, roles: user.roles });
-      // Set primary role from user.role
-      setPrimaryRole(user.role as PrimaryRole);
-      // Set additional roles from user.roles (if it exists) or empty array
-      setAdditionalRoles(user.roles || []);
-    }
-  }, [user, open]);
-
-  const handlePrimaryRoleChange = (role: PrimaryRole) => {
-    // If changing to or from Admin, show confirmation
-    if (role === "Admin" || primaryRole === "Admin") {
-      setPendingRoleChange(role);
-      setShowAdminAlert(true);
-    } else {
-      setPrimaryRole(role);
-    }
-  };
-
-  const handleConfirmAdminChange = () => {
-    if (pendingRoleChange) {
-      setPrimaryRole(pendingRoleChange);
-      setPendingRoleChange(null);
-    }
-    setShowAdminAlert(false);
-  };
-
-  const handleCancelAdminChange = () => {
-    setPendingRoleChange(null);
-    setShowAdminAlert(false);
-  };
-
-  const toggleAdditionalRole = (role: string) => {
-    setAdditionalRoles(prev => {
-      if (prev.includes(role)) {
-        return prev.filter(r => r !== role);
-      } else {
-        return [...prev, role];
-      }
-    });
-  };
-
-  const handleSubmit = () => {
     if (user) {
-      console.log("Submitting role update:", { 
-        userId: user.id,
-        primaryRole, 
-        additionalRoles 
-      });
-      onUpdate(user.id, primaryRole, additionalRoles);
+      setPrimaryRole(user.role);
+      setSelectedRoles(user.roles || []);
+    }
+  }, [user]);
+
+  const handleSubmit = async () => {
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Check if we're adding Creator role and user didn't have it before
+      const hadCreatorRole = user.roles?.includes("Creator") || false;
+      const willHaveCreatorRole = selectedRoles.includes("Creator");
+      const needsCreatorEntry = willHaveCreatorRole && !hadCreatorRole;
+      
+      // If we need to create a creator entry
+      if (needsCreatorEntry) {
+        setIsCreatingCreator(true);
+        
+        // First check if this user already has a creator record
+        const { data: existingCreator } = await supabase
+          .from('creators')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (!existingCreator) {
+          // Create a new creator record
+          await supabase.from('creators').insert({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            gender: 'Other', // Default value
+            team: 'A',       // Default team
+            creator_type: 'Standard' // Default type
+          });
+          
+          // Create empty social links record
+          await supabase.from('creator_social_links').insert({
+            creator_id: user.id
+          });
+        }
+        
+        setIsCreatingCreator(false);
+      }
+      
+      // Update roles
+      await onUpdate(user.id, primaryRole, selectedRoles);
+      
+    } catch (error) {
+      console.error("Error updating user roles:", error);
+    } finally {
+      setIsSubmitting(false);
+      onOpenChange(false);
     }
   };
 
-  if (!user) return null;
+  const handleRoleToggle = (role: string) => {
+    if (selectedRoles.includes(role)) {
+      setSelectedRoles(selectedRoles.filter((r) => r !== role));
+    } else {
+      setSelectedRoles([...selectedRoles, role]);
+    }
+  };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User Roles for {user.name}</DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit User Roles</DialogTitle>
+          <DialogDescription>
+            Update roles for {user?.name}
+          </DialogDescription>
+        </DialogHeader>
 
-          <div className="grid gap-6 py-4">
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Primary Role</h3>
-              <p className="text-sm text-muted-foreground">
-                Select the main role for this user
-              </p>
-              
-              <RadioGroup 
-                value={primaryRole} 
-                className="grid grid-cols-3 gap-2 pt-2"
-                onValueChange={(value) => handlePrimaryRoleChange(value as PrimaryRole)}
-              >
-                {PRIMARY_ROLES.map(role => (
-                  <div key={role} className="flex items-center space-x-2">
-                    <RadioGroupItem 
-                      value={role} 
-                      id={`role-${role}`}
-                    />
-                    <Label htmlFor={`role-${role}`} className="cursor-pointer">{role}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">Additional Roles</h3>
-              <p className="text-sm text-muted-foreground">
-                Select all roles that apply to this user
-              </p>
-              
-              <CheckboxGroup className="grid grid-cols-2 gap-2 pt-2">
-                {ADDITIONAL_ROLES.map(role => (
-                  <div key={role} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`additional-role-${role}`}
-                      checked={additionalRoles.includes(role)}
-                      onCheckedChange={() => toggleAdditionalRole(role)}
-                    />
-                    <Label 
-                      htmlFor={`additional-role-${role}`}
-                      className="cursor-pointer"
-                    >
-                      {role}
-                    </Label>
-                  </div>
-                ))}
-              </CheckboxGroup>
-            </div>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Primary Role</h3>
+            <RadioGroup
+              value={primaryRole}
+              onValueChange={(value: PrimaryRole) => setPrimaryRole(value)}
+              className="flex flex-col space-y-1"
+            >
+              {primaryRoleOptions.map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <RadioGroupItem value={role} id={`role-${role}`} />
+                  <Label htmlFor={`role-${role}`}>{role}</Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
-              onClick={handleSubmit}
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <h3 className="text-sm font-medium mb-2">Additional Roles</h3>
+            <div className="grid grid-cols-2 gap-2">
+              {availableRoles.map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`role-${role}`}
+                    checked={selectedRoles.includes(role)}
+                    onCheckedChange={() => handleRoleToggle(role)}
+                  />
+                  <Label htmlFor={`role-${role}`}>{role}</Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      <AlertDialog open={showAdminAlert} onOpenChange={setShowAdminAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Admin Role Change</AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingRoleChange === "Admin" 
-                ? "You are about to grant administrator privileges to this user. This will give them full access to the system."
-                : "You are about to remove administrator privileges from this user. They will lose access to administrative features."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelAdminChange}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleConfirmAdminChange}
-              className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
-            >
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                {isCreatingCreator ? "Creating Creator..." : "Saving..."}
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
