@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
@@ -238,17 +237,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         creatorName={creatorName}
         onUploadClick={isCreatorView ? handleUploadClick : undefined}
         isCreatorView={isCreatorView}
-        selectedFiles={selectedFiles.length}
-        onAddToFolderClick={() => {
-          if (selectedFiles.length > 0) {
-            setShowAddToFolderDialog(true);
-            setAddFolderDialogTab('existing');
-            setNewFolderInDialog('');
-            setTargetFolder('');
-          } else {
-            setShowWarningDialog(true);
-          }
-        }}
       />
       
       <div className="flex h-full">
@@ -289,6 +277,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   onFilesChanged={handleFilesChanged}
                   recentlyUploadedIds={recentlyUploadedIds}
                   onSelectFiles={handleFileSelection}
+                  onAddToFolderClick={() => {
+                    if (selectedFiles.length > 0) {
+                      setShowAddToFolderDialog(true);
+                      setAddFolderDialogTab('existing');
+                      setNewFolderInDialog('');
+                      setTargetFolder('');
+                    } else {
+                      setShowWarningDialog(true);
+                    }
+                  }}
                 />
               ) : (
                 <FileGrid 
@@ -298,6 +296,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   recentlyUploadedIds={recentlyUploadedIds}
                   onUploadClick={isCreatorView ? handleUploadClick : undefined}
                   onSelectFiles={handleFileSelection}
+                  onAddToFolderClick={() => {
+                    if (selectedFiles.length > 0) {
+                      setShowAddToFolderDialog(true);
+                      setAddFolderDialogTab('existing');
+                      setNewFolderInDialog('');
+                      setTargetFolder('');
+                    } else {
+                      setShowWarningDialog(true);
+                    }
+                  }}
                 />
               )
             ) : (
