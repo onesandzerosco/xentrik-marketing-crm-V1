@@ -1,13 +1,14 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
-import FileHeader from './FileHeader';
+import { FileHeader } from './FileHeader';
 import { FileList } from './FileList';
 import { FileGrid } from './FileGrid';
 import { FileViewSkeleton } from './FileViewSkeleton';
 import { EmptyState } from './EmptyState';
 import { FilterBar } from './FilterBar';
 import { FilterButtons } from './FilterButtons';
-import { FolderNav, FolderType } from './FolderNav';
+import { FolderNav } from './FolderNav';
 import DragDropUploader from './DragDropUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,11 +29,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FileUploaderWithProgress from './FileUploaderWithProgress';
 import { FileDownloader } from './FileDownloader';
 
-// Make sure Folder interface is compatible with FolderType
 interface Folder {
   id: string;
   name: string;
-  parent_id: string | null; // Add parent_id to match FolderType
 }
 
 interface FileExplorerProps {
@@ -233,31 +232,30 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
-  // Function to toggle between grid and list views
-  const toggleView = () => {
-    setView(prev => prev === 'grid' ? 'list' : 'grid');
-  };
-
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
         creatorName={creatorName}
-        creatorId={creatorId}
-        isGridView={view === 'grid'}
-        toggleView={toggleView}
-        handleUploadClick={isCreatorView ? handleUploadClick : undefined}
-        handleCreateFolder={() => setShowNewFolderDialog(true)}
-        currentFolder={currentFolder}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onFilesUploaded={handleUploadComplete}
+        onUploadClick={isCreatorView ? handleUploadClick : undefined}
+        isCreatorView={isCreatorView}
+        selectedFiles={selectedFiles.length}
+        onAddToFolderClick={() => {
+          if (selectedFiles.length > 0) {
+            setShowAddToFolderDialog(true);
+            setAddFolderDialogTab('existing');
+            setNewFolderInDialog('');
+            setTargetFolder('');
+          } else {
+            setShowWarningDialog(true);
+          }
+        }}
       />
       
       <div className="flex h-full">
         {/* Left sidebar for folder navigation */}
         <div className="w-64 p-4 border-r">
           <FolderNav 
-            folders={availableFolders as FolderType[]} // Cast to FolderType[] since we've ensured Folder has parent_id
+            folders={availableFolders}
             currentFolder={currentFolder}
             onFolderChange={onFolderChange}
             onDeleteFolder={isCreatorView ? onDeleteFolder : undefined}
