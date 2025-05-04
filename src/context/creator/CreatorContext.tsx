@@ -44,8 +44,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           creator_social_links (*),
           creator_tags (tag)
         `)
-        .is('active', null)
-        .or('active.eq.true');
+        .eq('active', true);
 
       if (error) {
         throw error;

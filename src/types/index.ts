@@ -21,7 +21,7 @@ export interface Creator {
   };
   tags: string[];
   needsReview?: boolean;
-  active?: boolean;
+  active: boolean;
   assignedTeamMembers?: string[];
   telegramUsername?: string;
   whatsappNumber?: string;
