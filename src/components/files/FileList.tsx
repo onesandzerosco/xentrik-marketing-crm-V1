@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export interface FileListProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged: () => void;
+  onFileDeleted?: (fileId: string) => void; // New prop for optimistic UI updates
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
   onAddToFolderClick?: () => void;
@@ -40,6 +42,7 @@ export const FileList: React.FC<FileListProps> = ({
   files, 
   isCreatorView = false,
   onFilesChanged,
+  onFileDeleted,
   recentlyUploadedIds = [],
   onSelectFiles,
   onAddToFolderClick,
@@ -47,6 +50,7 @@ export const FileList: React.FC<FileListProps> = ({
   onRemoveFromFolder
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
@@ -63,6 +67,7 @@ export const FileList: React.FC<FileListProps> = ({
   };
 
   const isFileSelected = (fileId: string) => selectedFileIds.includes(fileId);
+  const isFileDeleting = (fileId: string) => deletingFileIds.has(fileId);
 
   const handleSelectAll = () => {
     if (selectedFileIds.length === files.length) {
@@ -84,6 +89,20 @@ export const FileList: React.FC<FileListProps> = ({
         return;
       }
 
+      // Update UI immediately
+      setDeletingFileIds(prev => new Set([...prev, fileId]));
+      
+      // Notify parent for optimistic UI update if callback exists
+      if (onFileDeleted) {
+        onFileDeleted(fileId);
+      }
+
+      // Remove from selection if selected
+      if (selectedFileIds.includes(fileId)) {
+        setSelectedFileIds(prev => prev.filter(id => id !== fileId));
+      }
+
+      // Delete in background
       const { error } = await supabase.storage
         .from('raw_uploads')
         .remove([fileToDelete.bucketPath || '']);
@@ -94,6 +113,13 @@ export const FileList: React.FC<FileListProps> = ({
           title: "Error deleting file",
           description: error.message,
           variant: "destructive",
+        });
+        
+        // Remove from deleting set if error occurs
+        setDeletingFileIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
         });
         return;
       }
@@ -111,6 +137,13 @@ export const FileList: React.FC<FileListProps> = ({
           description: mediaError.message,
           variant: "destructive",
         });
+        
+        // Remove from deleting set if error occurs
+        setDeletingFileIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
+        });
         return;
       }
 
@@ -118,14 +151,30 @@ export const FileList: React.FC<FileListProps> = ({
         title: "File deleted",
         description: "File deleted successfully.",
       });
+      
+      // Remove from deleting set when complete
+      setDeletingFileIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
+      });
 
+      // Refresh in background
       onFilesChanged();
+      
     } catch (error) {
       console.error("Error deleting file:", error);
       toast({
         title: "Error deleting file",
         description: error instanceof Error ? error.message : "Failed to delete file",
         variant: "destructive",
+      });
+      
+      // Remove from deleting set if error occurs
+      setDeletingFileIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
       });
     }
   };
@@ -218,6 +267,9 @@ export const FileList: React.FC<FileListProps> = ({
             if (file.type === 'document') Icon = FileText;
 
             const isNew = recentlyUploadedIds?.includes(file.id);
+            const isDeleting = isFileDeleting(file.id);
+
+            if (isDeleting) return null; // Skip rendering files being deleted
 
             return (
               <TableRow key={file.id}>
@@ -267,12 +319,16 @@ export const FileList: React.FC<FileListProps> = ({
                           size="sm"
                           onClick={async () => {
                             try {
+                              if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+                                onFileDeleted(file.id); // Optimistically update UI
+                              }
+                              
                               await onRemoveFromFolder([file.id], currentFolder);
                               toast({
                                 title: "File removed",
                                 description: `Removed ${file.name} from folder`,
                               });
-                              onFilesChanged();
+                              onFilesChanged(); // Refresh in background
                             } catch (error) {
                               console.error("Error removing file from folder:", error);
                               toast({

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
@@ -82,6 +83,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const { userRole, userRoles } = useAuth();
   const canDelete = canDeleteFiles(userRole, userRoles);
   
+  // Local state for optimistic UI updates
+  const [localFiles, setLocalFiles] = useState<CreatorFileType[]>(files);
+  
   // New folder creation states
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -90,7 +94,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newFolderInDialog, setNewFolderInDialog] = useState('');
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   
-  const filteredFiles = files.filter(file => 
+  // Update local files when props files change
+  React.useEffect(() => {
+    setLocalFiles(files);
+  }, [files]);
+  
+  const filteredFiles = localFiles.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
@@ -112,6 +121,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleFilesChanged = () => {
+    // No longer immediately triggering a refresh - we'll update the UI optimistically
+    // and let the underlying refresh happen in the background
     onRefresh();
   };
 
@@ -142,7 +153,28 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsFolderCreating(true);
     
     try {
+      // Optimistically update UI
+      const folderId = newFolderName.trim().toLowerCase().replace(/\s+/g, '-');
+      const updatedFolders = [
+        ...availableFolders,
+        { id: folderId, name: newFolderName.trim() }
+      ];
+      
+      // Update the UI to show the files are now in the new folder
+      const updatedFiles = localFiles.map(file => {
+        if (selectedFiles.includes(file.id)) {
+          return {
+            ...file,
+            folderRefs: [...(file.folderRefs || []), folderId]
+          };
+        }
+        return file;
+      });
+      
+      setLocalFiles(updatedFiles);
+      
       if (onCreateFolder) {
+        // Run the actual operation in the background
         await onCreateFolder(newFolderName.trim(), selectedFiles);
       }
       
@@ -178,7 +210,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
 
       try {
+        // Optimistically update UI
+        const updatedFiles = localFiles.map(file => {
+          if (selectedFiles.includes(file.id)) {
+            const folderRefs = [...(file.folderRefs || [])];
+            if (!folderRefs.includes(targetFolder)) {
+              folderRefs.push(targetFolder);
+            }
+            return {
+              ...file,
+              folderRefs
+            };
+          }
+          return file;
+        });
+        
+        setLocalFiles(updatedFiles);
+        
         if (onAddFilesToFolder) {
+          // Run the actual operation in the background
           await onAddFilesToFolder(selectedFiles, targetFolder);
         }
         
@@ -190,8 +240,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           title: "Files added to folder",
           description: `Successfully added ${selectedFiles.length} files to folder`,
         });
-        
-        onRefresh();
       } catch (error) {
         console.error("Error adding files to folder:", error);
         toast({
@@ -199,6 +247,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           description: "Failed to add files to the selected folder",
           variant: "destructive",
         });
+        
+        // Revert the optimistic update on error
+        onRefresh();
       }
     } else {
       // Create new folder from dialog
@@ -212,7 +263,23 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
 
       try {
+        // Optimistically update UI
+        const folderId = newFolderInDialog.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        const updatedFiles = localFiles.map(file => {
+          if (selectedFiles.includes(file.id)) {
+            return {
+              ...file,
+              folderRefs: [...(file.folderRefs || []), folderId]
+            };
+          }
+          return file;
+        });
+        
+        setLocalFiles(updatedFiles);
+        
         if (onCreateFolder) {
+          // Run the actual operation in the background
           await onCreateFolder(newFolderInDialog.trim(), selectedFiles);
         }
         
@@ -224,8 +291,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           title: "Folder created",
           description: `Successfully created folder with ${selectedFiles.length} files`,
         });
-        
-        onRefresh();
       } catch (error) {
         console.error("Error creating folder:", error);
         toast({
@@ -233,6 +298,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           description: "Failed to create the new folder",
           variant: "destructive",
         });
+        
+        // Revert the optimistic update on error
+        onRefresh();
       }
     }
   };
@@ -251,6 +319,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   
   const handleBulkDelete = async () => {
     if (selectedFiles.length === 0) return;
+    
+    // Optimistically update UI first
+    const deletedFileIds = new Set(selectedFiles);
+    const updatedFiles = localFiles.filter(file => !deletedFileIds.has(file.id));
+    setLocalFiles(updatedFiles);
+    
+    // Clear selection since files are being deleted
+    setSelectedFiles([]);
     
     for (const fileId of selectedFiles) {
       const file = files.find(f => f.id === fileId);
@@ -282,8 +358,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
     }
     
-    // Clear selection and refresh
-    setSelectedFiles([]);
+    // Refresh in background to ensure data consistency
     onRefresh();
     
     toast({
@@ -298,7 +373,23 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
     
     try {
+      // Optimistically update UI
+      const updatedFiles = localFiles.map(file => {
+        if (fileIds.includes(file.id)) {
+          return {
+            ...file,
+            folderRefs: (file.folderRefs || []).filter(folder => folder !== folderId)
+          };
+        }
+        return file;
+      });
+      
+      setLocalFiles(updatedFiles);
+      
+      // Run the actual operation in the background
       await onRemoveFromFolder(fileIds, folderId);
+      
+      // Refresh in background to ensure data consistency
       onRefresh();
     } catch (error) {
       console.error("Error removing files from folder:", error);
@@ -307,7 +398,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         description: "Failed to remove files from the folder",
         variant: "destructive",
       });
+      
+      // Revert the optimistic update on error
+      onRefresh();
+      
       throw error;
+    }
+  };
+  
+  const handleFileDeleted = (fileId: string) => {
+    // Optimistically remove the file from the UI
+    setLocalFiles(current => current.filter(file => file.id !== fileId));
+    
+    // Remove from selected files if present
+    if (selectedFiles.includes(fileId)) {
+      setSelectedFiles(current => current.filter(id => id !== fileId));
     }
   };
 
@@ -358,6 +463,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   files={filteredFiles} 
                   isCreatorView={isCreatorView} 
                   onFilesChanged={handleFilesChanged}
+                  onFileDeleted={handleFileDeleted}
                   recentlyUploadedIds={recentlyUploadedIds}
                   onSelectFiles={handleFileSelection}
                   onAddToFolderClick={selectedFiles.length > 0 ? () => setShowAddToFolderDialog(true) : undefined}
@@ -369,6 +475,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   files={filteredFiles} 
                   isCreatorView={isCreatorView} 
                   onFilesChanged={handleFilesChanged}
+                  onFileDeleted={handleFileDeleted}
                   recentlyUploadedIds={recentlyUploadedIds}
                   onUploadClick={isCreatorView ? handleUploadClick : undefined}
                   onSelectFiles={handleFileSelection}
@@ -547,3 +654,4 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     </div>
   );
 };
+

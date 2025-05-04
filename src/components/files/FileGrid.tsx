@@ -22,6 +22,7 @@ export interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged?: () => void;
+  onFileDeleted?: (fileId: string) => void; // New prop for optimistic UI updates
   recentlyUploadedIds?: string[];
   onUploadClick?: () => void;
   onSelectFiles?: (fileIds: string[]) => void;
@@ -34,6 +35,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   files, 
   isCreatorView = false, 
   onFilesChanged,
+  onFileDeleted,
   recentlyUploadedIds = [],
   onUploadClick,
   onSelectFiles,
@@ -54,6 +56,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
+  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
   
   // New state for note editing
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -94,7 +97,26 @@ export const FileGrid: React.FC<FileGridProps> = ({
 
   const handleDelete = async (file: CreatorFileType) => {
     try {
+      // Update UI immediately by marking this file as deleting
+      setDeletingFiles(prev => new Set([...prev, file.id]));
       setProcessingFiles(prev => new Set([...prev, file.id]));
+      
+      // Notify parent for optimistic UI update if callback exists
+      if (onFileDeleted) {
+        onFileDeleted(file.id);
+      }
+      
+      // Remove from selected files if present
+      if (selectedFiles.has(file.id)) {
+        const newSet = new Set(selectedFiles);
+        newSet.delete(file.id);
+        
+        if (onSelectFiles) {
+          onSelectFiles(Array.from(newSet));
+        }
+        
+        setSelectedFiles(newSet);
+      }
       
       // Delete the file from storage
       const { error: storageError } = await supabase.storage
@@ -118,13 +140,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
         newSet.delete(file.id);
         return newSet;
       });
-
-      // Also remove from selected files
-      if (selectedFiles.has(file.id)) {
-        toggleFileSelection(file.id);
-      }
       
-      // Notify parent component about the change
+      // Refresh the list in the background
       if (onFilesChanged) {
         onFilesChanged();
       }
@@ -137,6 +154,13 @@ export const FileGrid: React.FC<FileGridProps> = ({
       console.error('Delete error:', error);
       
       setProcessingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(file.id);
+        return newSet;
+      });
+      
+      // Remove from deleting set on error so file reappears
+      setDeletingFiles(prev => {
         const newSet = new Set(prev);
         newSet.delete(file.id);
         return newSet;
@@ -180,6 +204,13 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
     
     try {
+      // Optimistically update UI
+      if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+        Array.from(selectedFiles).forEach(fileId => {
+          onFileDeleted(fileId);
+        });
+      }
+      
       await onRemoveFromFolder(Array.from(selectedFiles), currentFolder);
       
       toast({
@@ -190,7 +221,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
       // Clear selection
       setSelectedFiles(new Set());
       
-      // Refresh files
+      // Refresh files in background
       if (onFilesChanged) {
         onFilesChanged();
       }
@@ -215,25 +246,31 @@ export const FileGrid: React.FC<FileGridProps> = ({
     if (!currentEditingFile) return;
     
     try {
+      const trimmedNote = noteContent.substring(0, 200); // Limit to 200 chars
+      
+      // Update UI optimistically
+      if (onFilesChanged) {
+        // Give feedback immediately that the note was saved
+        toast({
+          title: "Note saved",
+          description: "The file description has been updated.",
+        });
+      }
+      
       // Save the note to the database
       const { error } = await supabase
         .from('media')
         .update({ 
-          description: noteContent.substring(0, 200) // Limit to 200 chars
+          description: trimmedNote
         })
         .eq('id', currentEditingFile.id);
         
       if (error) throw error;
       
-      // Update the local state
+      // Update the local state in the background
       if (onFilesChanged) {
         onFilesChanged();
       }
-      
-      toast({
-        title: "Note saved",
-        description: "The file description has been updated.",
-      });
       
       setIsEditingNote(false);
       setCurrentEditingFile(null);
@@ -323,6 +360,10 @@ export const FileGrid: React.FC<FileGridProps> = ({
           const isSelected = selectedFiles.has(file.id);
           const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
           const isVideo = file.type === 'video';
+          const isDeleting = deletingFiles.has(file.id);
+          
+          // Skip rendering files being deleted
+          if (isDeleting) return null;
           
           return (
             <div 
@@ -472,11 +513,18 @@ export const FileGrid: React.FC<FileGridProps> = ({
                     onClick={async (e) => {
                       e.stopPropagation();
                       try {
+                        // Optimistically update UI
+                        if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+                          onFileDeleted(file.id);
+                        }
+                        
                         await onRemoveFromFolder([file.id], currentFolder);
                         toast({
                           title: "File removed",
                           description: `Removed ${file.name} from folder`,
                         });
+                        
+                        // Refresh background to keep data consistent
                         if (onFilesChanged) {
                           onFilesChanged();
                         }
