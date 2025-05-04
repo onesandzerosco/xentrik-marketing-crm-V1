@@ -53,7 +53,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.log("Raw creator data from Supabase:", data);
       
       if (!data || data.length === 0) {
-        console.log("No creators found in database");
+        console.log("No active creators found in database");
         setCreators([]);
         setIsLoading(false);
         return;

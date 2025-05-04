@@ -112,7 +112,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
       // Check if creator record already exists
       const { data: existingCreator } = await supabase
         .from('creators')
-        .select('id')
+        .select('id, active')
         .eq('id', creatorId)
         .single();
       
