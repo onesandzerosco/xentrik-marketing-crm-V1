@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
 import { FileList } from './FileList';
@@ -94,38 +94,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newFolderInDialog, setNewFolderInDialog] = useState('');
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   
-  // New state to track files being added to folders for optimistic UI
-  const [filesToFolderMap, setFilesToFolderMap] = useState<Map<string, string[]>>(new Map());
-  
   // Update local files when props files change
-  useEffect(() => {
-    // Merge the incoming files with any optimistic updates
-    if (currentFolder !== 'all' && currentFolder !== 'unsorted') {
-      // Get files being added to this folder
-      const filesBeingAdded = filesToFolderMap.get(currentFolder) || [];
-      
-      if (filesBeingAdded.length > 0) {
-        // Find files that should be displayed in this folder but aren't in the props files
-        const filesFromOtherFolders = localFiles.filter(file => 
-          filesBeingAdded.includes(file.id) && 
-          !files.some(f => f.id === file.id)
-        );
-        
-        // Add folderRefs to these files to make them appear in this folder
-        const enhancedFiles = filesFromOtherFolders.map(file => ({
-          ...file,
-          folderRefs: [...(file.folderRefs || []), currentFolder]
-        }));
-        
-        // Combine with the props files
-        setLocalFiles([...files, ...enhancedFiles]);
-      } else {
-        setLocalFiles(files);
-      }
-    } else {
-      setLocalFiles(files);
-    }
-  }, [files, currentFolder, filesToFolderMap]);
+  React.useEffect(() => {
+    setLocalFiles(files);
+  }, [files]);
   
   const filteredFiles = localFiles.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -255,14 +227,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         
         setLocalFiles(updatedFiles);
         
-        // Add to filesToFolderMap for optimistic UI in folder view
-        setFilesToFolderMap(prev => {
-          const newMap = new Map(prev);
-          const existingFiles = newMap.get(targetFolder) || [];
-          newMap.set(targetFolder, [...existingFiles, ...selectedFiles]);
-          return newMap;
-        });
-        
         if (onAddFilesToFolder) {
           // Run the actual operation in the background
           await onAddFilesToFolder(selectedFiles, targetFolder);
@@ -286,15 +250,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         
         // Revert the optimistic update on error
         onRefresh();
-        
-        // Remove from filesToFolderMap on error
-        setFilesToFolderMap(prev => {
-          const newMap = new Map(prev);
-          if (newMap.has(targetFolder)) {
-            newMap.delete(targetFolder);
-          }
-          return newMap;
-        });
       }
     } else {
       // Create new folder from dialog
@@ -323,14 +278,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         
         setLocalFiles(updatedFiles);
         
-        // Add to filesToFolderMap for optimistic UI in folder view
-        setFilesToFolderMap(prev => {
-          const newMap = new Map(prev);
-          const existingFiles = newMap.get(folderId) || [];
-          newMap.set(folderId, [...existingFiles, ...selectedFiles]);
-          return newMap;
-        });
-        
         if (onCreateFolder) {
           // Run the actual operation in the background
           await onCreateFolder(newFolderInDialog.trim(), selectedFiles);
@@ -354,16 +301,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         
         // Revert the optimistic update on error
         onRefresh();
-        
-        // Remove from filesToFolderMap on error
-        const folderId = newFolderInDialog.trim().toLowerCase().replace(/\s+/g, '-');
-        setFilesToFolderMap(prev => {
-          const newMap = new Map(prev);
-          if (newMap.has(folderId)) {
-            newMap.delete(folderId);
-          }
-          return newMap;
-        });
       }
     }
   };
@@ -447,15 +384,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         return file;
       });
       
-      // If we're in a folder view, filter out the removed files
-      if (currentFolder === folderId) {
-        setLocalFiles(updatedFiles.filter(file => 
-          !fileIds.includes(file.id) || 
-          (file.folderRefs || []).includes(folderId)
-        ));
-      } else {
-        setLocalFiles(updatedFiles);
-      }
+      setLocalFiles(updatedFiles);
       
       // Run the actual operation in the background
       await onRemoveFromFolder(fileIds, folderId);
