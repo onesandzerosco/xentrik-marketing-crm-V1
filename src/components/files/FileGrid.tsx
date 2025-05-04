@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Checkbox } from "@/components/ui/checkbox";
+import { canDeleteFiles, canEditFileDescription } from '@/utils/permissionUtils';
 import {
   Dialog,
   DialogContent,
@@ -38,11 +38,10 @@ export const FileGrid: React.FC<FileGridProps> = ({
   const { toast } = useToast();
   const { userRole, userRoles } = useAuth();
   const isAdmin = userRole === "Admin";
-  const canDeleteFiles = isAdmin || isCreatorView;
   
-  // Determine if the user can edit file descriptions
-  const canEditDescriptions = isAdmin || isCreatorView || 
-    userRoles.includes("VA") || userRoles.includes("Creator");
+  // Use our permission utility functions
+  const canDelete = canDeleteFiles(userRole);
+  const canEdit = canEditFileDescription(userRole, userRoles);
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -142,7 +141,6 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
   };
   
-  // Function to bulk delete selected files
   const handleBulkDelete = async () => {
     const filesToDelete = files.filter(file => selectedFiles.has(file.id));
     
@@ -151,7 +149,6 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
   };
 
-  // Function to download selected files using the new system
   const handleBulkDownload = () => {
     const filesToDownload = files.filter(file => selectedFiles.has(file.id));
     triggerDownload(filesToDownload);
@@ -175,7 +172,6 @@ export const FileGrid: React.FC<FileGridProps> = ({
     setIsEditingNote(true);
   };
 
-  // Function to save the note
   const saveNote = async () => {
     if (!currentEditingFile) return;
     
@@ -262,7 +258,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
             Download {selectedFiles.size} files
           </Button>
           
-          {canDeleteFiles && (
+          {canDelete && (
             <Button
               variant="outline"
               size="sm"
@@ -385,41 +381,41 @@ export const FileGrid: React.FC<FileGridProps> = ({
                   <Share2 className="h-4 w-4" />
                 </Button>
                 
-                {canDeleteFiles && (
-                  <>
-                    {canEditDescriptions && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openNoteEditor(file);
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
-                          <line x1="9" y1="9" x2="10" y2="9" />
-                          <line x1="9" y1="13" x2="15" y2="13" />
-                          <line x1="9" y1="17" x2="15" y2="17" />
-                        </svg>
-                      </Button>
-                    )}
+                {/* Show edit button to users with canEdit permission */}
+                {canEdit && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openNoteEditor(file);
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                      <line x1="9" y1="9" x2="10" y2="9" />
+                      <line x1="9" y1="13" x2="15" y2="13" />
+                      <line x1="9" y1="17" x2="15" y2="17" />
+                    </svg>
+                  </Button>
+                )}
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(file);
-                      }}
-                      disabled={isProcessing}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </>
+                {/* Only show delete button to users with canDelete permission */}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(file);
+                    }}
+                    disabled={isProcessing}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
             </div>

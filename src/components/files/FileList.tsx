@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2, FileEdit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -442,35 +441,33 @@ export const FileList: React.FC<FileListProps> = ({
                         <Share2 className="h-3.5 w-3.5" />
                       </Button>
 
-                      {canDeleteFiles && (
-                        <>
-                          {canEditDescriptions && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => openNoteEditor(file)}
-                              className="h-7 px-2 text-blue-500 hover:text-blue-600"
-                              disabled={isProcessing}
-                              aria-label={`Add note to ${file.name}`}
-                            >
-                              <FileEdit className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
+                      {canEditDescriptions && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => openNoteEditor(file)}
+                          className="h-7 px-2 text-blue-500 hover:text-blue-600"
+                          disabled={isProcessing}
+                          aria-label={`Add note to ${file.name}`}
+                        >
+                          <FileEdit className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
 
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(file)}
-                            className="h-7 px-2 text-red-500 hover:text-red-600"
-                            disabled={isProcessing}
-                          >
-                            {isProcessing ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                        </>
+                      {canDeleteFiles && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(file)}
+                          className="h-7 px-2 text-red-500 hover:text-red-600"
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
                       )}
                     </>
                   )}
