@@ -1,6 +1,6 @@
 
 import JSZip from 'jszip';
-import { getFileExtension } from './fileUtils';
+import { getFileExtension, isVideoFile } from './fileUtils';
 
 /**
  * Checks if a file is a ZIP file based on its extension
@@ -15,11 +15,11 @@ export const isZipFile = (fileName: string): boolean => {
  * @param zipFile The ZIP file to extract
  * @returns Promise containing the extracted files
  */
-export const extractZipFiles = async (zipFile: File): Promise<{ name: string, content: Blob }[]> => {
+export const extractZipFiles = async (zipFile: File): Promise<{ name: string, content: Blob, isVideo: boolean }[]> => {
   try {
     const zip = new JSZip();
     const zipContent = await zip.loadAsync(zipFile);
-    const files: { name: string, content: Blob }[] = [];
+    const files: { name: string, content: Blob, isVideo: boolean }[] = [];
     
     const promises = Object.keys(zipContent.files).map(async (filename) => {
       const zipEntry = zipContent.files[filename];
@@ -30,9 +30,13 @@ export const extractZipFiles = async (zipFile: File): Promise<{ name: string, co
       }
       
       const content = await zipEntry.async('blob');
+      const extractedFileName = filename.split('/').pop() || filename; // Get just the filename without directory path
+      const isVideo = isVideoFile(extractedFileName);
+      
       files.push({
-        name: filename.split('/').pop() || filename, // Get just the filename without directory path
-        content
+        name: extractedFileName,
+        content,
+        isVideo
       });
     });
     

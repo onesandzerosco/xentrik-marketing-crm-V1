@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -200,6 +201,23 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
           const extractedFileIds: string[] = [];
           
           for (const extractedFile of extractedFiles) {
+            // Generate thumbnail for videos from zip
+            let thumbnailUrl = null;
+            if (extractedFile.isVideo) {
+              try {
+                // Convert the Blob to File for thumbnail generation
+                const videoFile = new File(
+                  [extractedFile.content], 
+                  extractedFile.name, 
+                  { type: extractedFile.content.type || 'video/mp4' }
+                );
+                thumbnailUrl = await generateVideoThumbnail(videoFile);
+              } catch (err) {
+                console.error('Error generating video thumbnail for zip file:', err);
+                // Continue without thumbnail
+              }
+            }
+            
             const uniqueFileName = await getUniqueFileName(
               extractedFile.name, 
               folderIdSafe, 
@@ -220,7 +238,8 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
                 mime: extractedFile.content.type || 'application/octet-stream',
                 file_size: extractedFile.content.size,
                 status: 'uploading',
-                folders: folderCreated ? [folderIdSafe] : [] // Empty initially, will be updated
+                folders: folderCreated ? [folderIdSafe] : [], // Empty initially, will be updated
+                thumbnail_url: thumbnailUrl // Add the thumbnail URL if generated
               })
               .select('id');
             
@@ -259,7 +278,8 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
               .from('media')
               .update({ 
                 status: 'complete',
-                folders: [folderIdSafe] // Add to folder
+                folders: [folderIdSafe], // Add to folder
+                thumbnail_url: thumbnailUrl // Ensure thumbnail URL is saved
               })
               .eq('id', fileId);
             
