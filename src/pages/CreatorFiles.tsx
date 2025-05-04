@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileGrid } from '@/components/files/FileGrid';
-import { FileList } from '@/components/files/FileList';
+import FileList from '@/components/files/FileList';
 import FileHeader from '@/components/files/FileHeader';
-import { FolderNav } from '@/components/files/FolderNav';
+import FolderNav from '@/components/files/FolderNav';
 import FileUploader from '@/components/messages/FileUploader';
 import FileUploaderWithProgress from '@/components/files/FileUploaderWithProgress';
-import { FileDownloader } from '@/components/files/FileDownloader';
+import FileDownloader from '@/components/files/FileDownloader';
 import { getFileType, getFileExtension } from '@/utils/fileUtils';
 import { canUploadFiles } from '@/utils/permissionUtils';
 import {
@@ -34,8 +33,6 @@ export interface CreatorFileType {
   bucketPath?: string;
   description?: string;
   thumbnail_url?: string;
-  status?: string;
-  created_at?: string;
 }
 
 interface FolderType {
@@ -48,7 +45,7 @@ const CreatorFiles = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { toast } = useToast();
-  const { userRole, userRoles, user } = useAuth();
+  const { userRole, userRoles, userId } = useAuth();
   
   const [files, setFiles] = useState<CreatorFileType[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
@@ -78,7 +75,7 @@ const CreatorFiles = () => {
         // Check if user is the creator
         const { data: creatorData, error: creatorError } = await supabase
           .from('creators')
-          .select('name')
+          .select('name, user_id')
           .eq('id', id)
           .single();
           
@@ -87,12 +84,12 @@ const CreatorFiles = () => {
         if (creatorData) {
           setCreatorName(creatorData.name);
           
-          // Check if current user is the creator or an admin or VA
+          // Check if current user is the creator or an admin
+          const isUserCreator = creatorData.user_id === userId;
           const isUserAdmin = userRole === "Admin";
-          const isUserCreator = userRole === "Creator" || userRoles.includes("Creator");
           const isUserVA = userRole === "VA" || userRoles.includes("VA");
           
-          setIsCreator(isUserAdmin || isUserCreator || isUserVA);
+          setIsCreator(isUserCreator || isUserAdmin || isUserVA);
         }
       } catch (error) {
         console.error('Error checking creator status:', error);
@@ -100,7 +97,7 @@ const CreatorFiles = () => {
     };
     
     checkCreatorStatus();
-  }, [id, user, userRole, userRoles]);
+  }, [id, userId, userRole, userRoles]);
 
   // Get creator name from location state if available
   useEffect(() => {
@@ -115,7 +112,6 @@ const CreatorFiles = () => {
       if (!id) return;
       
       try {
-        // Fetch folders directly from the 'folders' table
         const { data, error } = await supabase
           .from('folders')
           .select('*')
@@ -124,13 +120,6 @@ const CreatorFiles = () => {
           
         if (error) throw error;
         
-        // Create proper FolderType objects
-        const folderList: FolderType[] = data ? data.map(folder => ({
-          id: folder.id,
-          name: folder.name,
-          parent_id: folder.parent_id
-        })) : [];
-        
         // Add a "shared" root folder
         const sharedFolder: FolderType = {
           id: 'shared',
@@ -138,7 +127,7 @@ const CreatorFiles = () => {
           parent_id: null
         };
         
-        setFolders([sharedFolder, ...folderList]);
+        setFolders([sharedFolder, ...(data || [])]);
         
         // Set initial folder to "shared"
         setCurrentFolder(sharedFolder);
@@ -197,7 +186,7 @@ const CreatorFiles = () => {
     setFolderHierarchy(hierarchy);
   }, [currentFolder, folders]);
 
-  const fetchFiles = async (folderId: string = currentFolderId || 'shared') => {
+  const fetchFiles = async (folderId = currentFolderId) => {
     if (!id) return;
     
     setIsLoading(true);
@@ -258,9 +247,7 @@ const CreatorFiles = () => {
           type: fileType,
           bucketPath: file.bucket_key,
           description: file.description || '',
-          thumbnail_url: file.thumbnail_url || undefined,
-          status: file.status,
-          created_at: file.created_at
+          thumbnail_url: file.thumbnail_url || undefined
         };
       }));
       
@@ -318,14 +305,7 @@ const CreatorFiles = () => {
       
       // Add the new folder to the list
       if (data && data[0]) {
-        // Cast to FolderType to ensure type safety
-        const newFolder: FolderType = {
-          id: data[0].id,
-          name: data[0].name,
-          parent_id: data[0].parent_id
-        };
-        
-        setFolders(prev => [...prev, newFolder]);
+        setFolders(prev => [...prev, data[0]]);
         
         toast({
           title: 'Folder created',
@@ -347,10 +327,10 @@ const CreatorFiles = () => {
     }
   };
 
-  const handleFilesUploaded = (uploadedFileIds: string[] = []) => {
-    fetchFiles(currentFolderId || 'shared');
-    if (uploadedFileIds.length > 0) {
-      setRecentlyExtractedIds(uploadedFileIds);
+  const handleFilesUploaded = (fileIds: string[] = []) => {
+    fetchFiles();
+    if (fileIds.length > 0) {
+      setRecentlyExtractedIds(fileIds);
       // Clear the extracted IDs after a delay
       setTimeout(() => {
         setRecentlyExtractedIds([]);
@@ -388,7 +368,7 @@ const CreatorFiles = () => {
       ) : (
         <div className="space-y-6">
           <FileHeader
-            creatorId={id || ''}
+            creatorId={id}
             creatorName={creatorName || 'Creator'}
             isGridView={isGridView}
             toggleView={toggleView}
@@ -403,6 +383,7 @@ const CreatorFiles = () => {
           <FolderNav
             folders={folders}
             currentFolder={currentFolder}
+            setCurrentFolder={setCurrentFolder}
             folderHierarchy={folderHierarchy}
             onNavigate={handleFolderNavigation}
           />
@@ -411,7 +392,7 @@ const CreatorFiles = () => {
             <FileGrid
               files={filteredFiles}
               isCreatorView={isCreator}
-              onFilesChanged={() => fetchFiles()}
+              onFilesChanged={fetchFiles}
               recentlyUploadedIds={uploadingFiles.map(f => f.id).concat(recentlyExtractedIds)}
               onUploadClick={handleUploadClick}
               onSelectFiles={setSelectedFiles}
@@ -420,7 +401,7 @@ const CreatorFiles = () => {
             <FileList
               files={filteredFiles}
               isCreatorView={isCreator}
-              onFilesChanged={() => fetchFiles()}
+              onFilesChanged={fetchFiles}
               recentlyUploadedIds={uploadingFiles.map(f => f.id).concat(recentlyExtractedIds)}
               onUploadClick={handleUploadClick}
               onSelectFiles={setSelectedFiles}
@@ -461,7 +442,7 @@ const CreatorFiles = () => {
               <FileUploader
                 id="file-upload-input"
                 creatorId={id || ''}
-                onUploadComplete={() => fetchFiles()}
+                onUploadComplete={fetchFiles}
                 folder={currentFolder?.name || 'shared'}
                 bucket="raw_uploads"
               />
@@ -470,7 +451,7 @@ const CreatorFiles = () => {
               <FileUploaderWithProgress
                 id="file-upload-progress-input"
                 creatorId={id || ''}
-                onUploadComplete={handleFilesUploaded}
+                onUploadComplete={fetchFiles}
                 currentFolder={currentFolder?.name || 'shared'}
               />
               

@@ -296,7 +296,7 @@ export const ZipFileUploader: React.FC<ZipFileUploaderProps> = ({
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
                 
-                {(extractingStatus === 'extracting' || extractingStatus === 'complete' || extractingStatus === 'error') && (
+                {extractingStatus !== 'uploading' && extractingStatus !== 'idle' && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Extraction progress</span>
