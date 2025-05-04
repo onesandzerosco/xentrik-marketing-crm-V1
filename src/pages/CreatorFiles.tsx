@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -145,42 +146,44 @@ const CreatorFiles = () => {
     }
   };
   
-  // Change this function to add files to a folder instead of moving them
+  // Update this function to add folders to the file's folders array
   const handleAddFilesToFolder = async (fileIds: string[], targetFolderId: string) => {
     if (!creator?.id || !targetFolderId || fileIds.length === 0) return;
     
     try {
-      // Create folder references for these files
+      // Update each file's folders array to include the targetFolderId
       for (const fileId of fileIds) {
-        // Get existing folder references for this file (if any)
-        const { data: existingRefs, error: fetchError } = await supabase
-          .from('file_folder_refs')
-          .select('*')
-          .eq('file_id', fileId)
-          .eq('folder_id', targetFolderId);
+        // Get the current file to access its folders array
+        const { data: fileData, error: fetchError } = await supabase
+          .from('media')
+          .select('folders')
+          .eq('id', fileId)
+          .single();
           
         if (fetchError) {
-          console.error(`Error checking if file ${fileId} is already in folder:`, fetchError);
+          console.error(`Error fetching file ${fileId}:`, fetchError);
           continue;
         }
         
-        // Skip if reference already exists
-        if (existingRefs && existingRefs.length > 0) {
+        // Create a new folders array with the new folder ID
+        const currentFolders = fileData?.folders || [];
+        
+        // Skip if folder ID is already in the array
+        if (currentFolders.includes(targetFolderId)) {
           console.log(`File ${fileId} is already in folder ${targetFolderId}`);
           continue;
         }
         
-        // Add new folder reference
-        const { error: insertError } = await supabase
-          .from('file_folder_refs')
-          .insert({
-            file_id: fileId,
-            folder_id: targetFolderId,
-            creator_id: creator.id
-          });
+        const updatedFolders = [...currentFolders, targetFolderId];
+        
+        // Update the file with the new folders array
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', fileId);
           
-        if (insertError) {
-          console.error(`Error adding file ${fileId} to folder:`, insertError);
+        if (updateError) {
+          console.error(`Error adding file ${fileId} to folder:`, updateError);
         }
       }
       
@@ -212,27 +215,6 @@ const CreatorFiles = () => {
     }
     
     if (mediaData && mediaData.length > 0) {
-      // Get folder references for all files
-      const { data: folderRefs, error: refsError } = await supabase
-        .from('file_folder_refs')
-        .select('*')
-        .eq('creator_id', creator.id);
-        
-      if (refsError) {
-        console.error('Error fetching folder references:', refsError);
-      }
-      
-      // Create a map of file ID to folder IDs
-      const fileToFoldersMap: Record<string, string[]> = {};
-      if (folderRefs) {
-        folderRefs.forEach(ref => {
-          if (!fileToFoldersMap[ref.file_id]) {
-            fileToFoldersMap[ref.file_id] = [];
-          }
-          fileToFoldersMap[ref.file_id].push(ref.folder_id);
-        });
-      }
-      
       // Process files from media table
       const processedFiles = await Promise.all(mediaData.map(async (media) => {
         // Get a signed URL for the file
@@ -247,8 +229,8 @@ const CreatorFiles = () => {
         // Check if this file is in the recently uploaded list
         const isNewlyUploaded = recentlyUploadedIds.includes(media.id);
         
-        // Get folder references for this file
-        const folderRefs = fileToFoldersMap[media.id] || [];
+        // Get folder references from the new folders array
+        const folderRefs = media.folders || [];
         
         return {
           id: media.id,
@@ -258,7 +240,7 @@ const CreatorFiles = () => {
           url: data?.signedUrl || '',
           type,
           folder: 'shared', // Default folder
-          folderRefs, // Add folder references
+          folderRefs, // Add folder references from the array
           status: media.status as "uploading" | "complete" || 'complete',
           bucketPath: media.bucket_key,
           isNewlyUploaded
@@ -313,6 +295,7 @@ const CreatorFiles = () => {
             url: data?.signedUrl || '',
             type,
             folder,
+            folderRefs: [folder], // Set the current folder as the folder reference
             status: 'complete' as "uploading" | "complete",
             bucketPath
           } as CreatorFileType;

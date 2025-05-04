@@ -232,6 +232,7 @@ export type Database = {
           creator_id: string
           file_size: number
           filename: string
+          folders: string[] | null
           id: string
           mime: string
           status: string
@@ -242,6 +243,7 @@ export type Database = {
           creator_id: string
           file_size: number
           filename: string
+          folders?: string[] | null
           id?: string
           mime: string
           status?: string
@@ -252,6 +254,7 @@ export type Database = {
           creator_id?: string
           file_size?: number
           filename?: string
+          folders?: string[] | null
           id?: string
           mime?: string
           status?: string
