@@ -16,6 +16,10 @@ export interface AuthContextType {
   userRole: string;
   userRoles: string[];
   isCreatorSelf: boolean; // Property to check if user is viewing their own creator profile
+  updateCredentials?: (credentials: { email?: string; password?: string }) => Promise<void>;
+  pendingUsers?: any[];
+  approvePendingUser?: (userId: string, approved: boolean) => Promise<void>;
+  createTeamMember?: (data: any) => Promise<void>;
 }
 
 // Create an AuthContext for compatibility
@@ -59,6 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole: supabaseAuth.userRole,
     userRoles: supabaseAuth.userRoles,
     isCreatorSelf, // Add the new property to the context
+    updateCredentials: supabaseAuth.updateCredentials,
+    pendingUsers: supabaseAuth.pendingUsers || [],
+    approvePendingUser: supabaseAuth.approvePendingUser,
+    createTeamMember: supabaseAuth.createTeamMember,
   };
 
   return (

@@ -16,6 +16,10 @@ interface SupabaseAuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithOAuth: (provider: 'google') => Promise<void>;
   signOut: () => Promise<void>;
+  updateCredentials?: (credentials: { email?: string; password?: string }) => Promise<void>;
+  pendingUsers?: any[];
+  approvePendingUser?: (userId: string, approved: boolean) => Promise<void>;
+  createTeamMember?: (data: any) => Promise<void>;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | null>(null);
@@ -60,6 +64,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         localStorage.setItem('creatorId', userId);
         setUserRoles(profileData.roles);
         localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
+        
+        // Ensure creator record exists and is approved
+        await ensureCreatorRecord(userId);
       }
       
       if (profileData?.role) {
@@ -67,62 +74,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         localStorage.setItem('userRole', profileData.role);
       }
       
-      // Verify if a creator record exists in the creators table
-      if (hasCreatorRole) {
-        const { data: creatorData } = await supabase
-          .from('creators')
-          .select('id')
-          .eq('id', userId)
-          .single();
-          
-        // If no creator record exists but user has Creator role, create one
-        if (!creatorData) {
-          // Get user profile data to create creator
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', userId)
-            .single();
-            
-          if (userData) {
-            // Create creator record
-            await supabase
-              .from('creators')
-              .insert({
-                id: userId,
-                name: userData.name,
-                gender: 'Male', // Default value required
-                team: 'A Team', // Default value required
-                creator_type: 'Real', // Default value required
-              });
-              
-            // Create empty social links record
-            await supabase
-              .from('creator_social_links')
-              .insert({
-                creator_id: userId
-              });
-          }
-        }
-      }
-      
       // Also check creator_team_members for associations
-      const { data: teamMemberData } = await supabase
-        .from('creator_team_members')
-        .select('creator_id')
-        .eq('team_member_id', userId)
-        .limit(1);
+      if (!hasCreatorRole) {
+        const { data: teamMemberData } = await supabase
+          .from('creator_team_members')
+          .select('creator_id')
+          .eq('team_member_id', userId)
+          .limit(1);
         
-      if (teamMemberData && teamMemberData.length > 0) {
-        // If user is directly associated with a creator but doesn't have Creator role,
-        // keep the creatorId but don't set isCreator
-        if (!hasCreatorRole) {
+        if (teamMemberData && teamMemberData.length > 0) {
+          // If user is directly associated with a creator but doesn't have Creator role,
+          // keep the creatorId but don't set isCreator
           setCreatorId(teamMemberData[0].creator_id);
           localStorage.setItem('creatorId', teamMemberData[0].creator_id);
-        }
-      } else {
-        // Only reset these if user isn't a creator by role
-        if (!hasCreatorRole) {
+        } else {
+          // Only reset these if user isn't a creator by role
           setCreatorId(null);
           localStorage.removeItem('creatorId');
         }
@@ -130,6 +96,108 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (error) {
       console.error('Error checking creator status:', error);
     }
+  };
+
+  // Helper function to ensure creator record exists in database
+  const ensureCreatorRecord = async (userId: string) => {
+    try {
+      // Check if creator record exists
+      const { data: existingCreator } = await supabase
+        .from('creators')
+        .select('id, needs_review')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (!existingCreator) {
+        console.log("Creating creator record for user:", userId);
+        
+        // Get user profile data
+        const { data: userData } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', userId)
+          .single();
+          
+        if (userData) {
+          // Create creator record - automatically approved
+          await supabase
+            .from('creators')
+            .insert({
+              id: userId,
+              name: userData.name,
+              gender: 'Male', // Default value required
+              team: 'A Team', // Default value required
+              creator_type: 'Real', // Default value required
+              needs_review: false // Automatically approved
+            });
+          
+          // Create empty social links record
+          await supabase
+            .from('creator_social_links')
+            .insert({
+              creator_id: userId
+            });
+        }
+      } else if (existingCreator.needs_review) {
+        // If creator exists but needs review, automatically approve them
+        await supabase
+          .from('creators')
+          .update({ needs_review: false })
+          .eq('id', userId);
+      }
+    } catch (error) {
+      console.error('Error ensuring creator record exists:', error);
+    }
+  };
+
+  // Helper function to update credentials
+  const updateCredentials = async (credentials: { email?: string; password?: string }) => {
+    try {
+      // Build update object based on provided credentials
+      const updateData: { email?: string; password?: string } = {};
+      if (credentials.email) updateData.email = credentials.email;
+      if (credentials.password) updateData.password = credentials.password;
+      
+      // Update auth credentials
+      const { error } = await supabase.auth.updateUser(updateData);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: "Your account has been updated",
+      });
+      
+      if (credentials.email) {
+        toast({
+          title: "Email Verification",
+          description: "Please check your email to verify the new address",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: error.message,
+      });
+      throw error;
+    }
+  };
+
+  // Helper function to get pending users
+  const fetchPendingUsers = async () => {
+    // This is a placeholder - implement if needed
+    return [];
+  };
+
+  // Helper function to approve pending users
+  const approvePendingUser = async (userId: string, approved: boolean) => {
+    // This is a placeholder - implement if needed
+  };
+
+  // Helper function to create team members
+  const createTeamMember = async (data: any) => {
+    // This is a placeholder - implement if needed
   };
 
   useEffect(() => {
@@ -293,7 +361,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         userRoles,
         signInWithEmail,
         signInWithOAuth,
-        signOut
+        signOut,
+        updateCredentials,
+        pendingUsers: [],
+        approvePendingUser,
+        createTeamMember
       }}
     >
       {children}

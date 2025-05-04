@@ -114,6 +114,13 @@ const UserRolesList: React.FC = () => {
       
       console.log("Supabase update response:", data);
 
+      // Check if Creator role was added
+      const hasCreatorRole = additionalRoles.includes('Creator');
+      
+      if (hasCreatorRole) {
+        await ensureCreatorRecordExists(userId);
+      }
+      
       // Update the local state to reflect the changes immediately
       setUsers(prevUsers => {
         const updatedUsers = prevUsers.map(user => 
@@ -145,6 +152,85 @@ const UserRolesList: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Function to ensure a creator record exists for users with Creator role
+  const ensureCreatorRecordExists = async (userId: string) => {
+    try {
+      // Get user data from profiles table
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', userId)
+        .single();
+      
+      if (userError) {
+        console.error("Error fetching user data:", userError);
+        return;
+      }
+
+      if (!userData || !userData.name) {
+        console.error("User data is missing or incomplete");
+        return;
+      }
+
+      // Check if creator record already exists
+      const { data: existingCreator } = await supabase
+        .from('creators')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      // If creator record doesn't exist, create one
+      if (!existingCreator) {
+        console.log("Creating new creator record for user:", userId);
+        
+        // Create the creator record with required fields
+        const { error: creatorError } = await supabase
+          .from('creators')
+          .insert({
+            id: userId,
+            name: userData.name,
+            gender: 'Male', // Default value
+            team: 'A Team', // Default value
+            creator_type: 'Real', // Default value
+            needs_review: false // Automatically approved
+          });
+
+        if (creatorError) {
+          console.error("Error creating creator record:", creatorError);
+          return;
+        }
+
+        // Create an empty social links record for the creator
+        const { error: socialLinksError } = await supabase
+          .from('creator_social_links')
+          .insert({
+            creator_id: userId
+          });
+
+        if (socialLinksError) {
+          console.error("Error creating social links record:", socialLinksError);
+        }
+        
+        toast({
+          title: "Creator account created",
+          description: `${userData.name} has been set up as a creator`,
+        });
+      } else {
+        // If creator record exists, make sure it's approved
+        const { error: updateError } = await supabase
+          .from('creators')
+          .update({ needs_review: false })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error("Error updating creator approval status:", updateError);
+        }
+      }
+    } catch (error) {
+      console.error("Error ensuring creator record exists:", error);
     }
   };
 
