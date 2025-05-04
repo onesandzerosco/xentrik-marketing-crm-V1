@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo, Play, FolderMinus } from 'lucide-react';
-import { formatFileSize } from '@/utils/fileUtils';
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 import { Checkbox } from "@/components/ui/checkbox";
-import { canDeleteFiles, canEditFileDescription } from '@/utils/permissionUtils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { 
+  FileText, 
+  FileImage, 
+  FileVideo, 
+  FileAudio, 
+  File, 
+  Download,
+  Trash2,
+  FolderPlus,
+  FolderMinus
+} from 'lucide-react';
+import { formatFileSize, formatDate } from '@/utils/fileUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/components/ui/use-toast";
 
-export interface FileGridProps {
+interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
-  onFilesChanged?: () => void;
-  onFileDeleted?: (fileId: string) => void; // New prop for optimistic UI updates
+  onFilesChanged: () => void;
+  onFileDeleted?: (fileId: string) => void; // For optimistic UI updates
   recentlyUploadedIds?: string[];
   onUploadClick?: () => void;
   onSelectFiles?: (fileIds: string[]) => void;
@@ -31,9 +31,9 @@ export interface FileGridProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ 
+export function FileGrid({ 
   files, 
-  isCreatorView = false, 
+  isCreatorView = false,
   onFilesChanged,
   onFileDeleted,
   recentlyUploadedIds = [],
@@ -42,613 +42,283 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onAddToFolderClick,
   currentFolder = 'all',
   onRemoveFromFolder
-}) => {
+}: FileGridProps) {
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
+  const [removingFromFolderIds, setRemovingFromFolderIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { userRole, userRoles } = useAuth();
-  const isAdmin = userRole === "Admin";
-  
-  // Use our permission utility functions with both primary role and roles array
-  const canDelete = canDeleteFiles(userRole, userRoles);
-  const canEdit = canEditFileDescription(userRole, userRoles);
   
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
-  
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
-  const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
-  const [removingFromFolderFiles, setRemovingFromFolderFiles] = useState<Set<string>>(new Set());
-  
-  // New state for note editing
-  const [isEditingNote, setIsEditingNote] = useState(false);
-  const [currentEditingFile, setCurrentEditingFile] = useState<CreatorFileType | null>(null);
-  const [noteContent, setNoteContent] = useState("");
-  
-  // State for video preview
-  const [videoPreview, setVideoPreview] = useState<{ file: CreatorFileType, isOpen: boolean }>({
-    file: {} as CreatorFileType,
-    isOpen: false
-  });
-  
-  // Update parent component when selection changes
+
   const toggleFileSelection = (fileId: string) => {
-    setSelectedFiles(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(fileId)) {
-        newSet.delete(fileId);
+    setSelectedFileIds(prev => {
+      if (prev.includes(fileId)) {
+        return prev.filter(id => id !== fileId);
       } else {
-        newSet.add(fileId);
+        return [...prev, fileId];
       }
-      
-      if (onSelectFiles) {
-        onSelectFiles(Array.from(newSet));
-      }
-      
-      return newSet;
     });
   };
 
-  const handleShare = (file: CreatorFileType) => {
-    navigator.clipboard.writeText(`${window.location.origin}/share/${file.id}`);
-    toast({
-      title: "Link copied!",
-      description: "The sharing link has been copied to your clipboard.",
-    });
-  };
+  const isFileSelected = (fileId: string) => selectedFileIds.includes(fileId);
+  const isFileDeleting = (fileId: string) => deletingFileIds.has(fileId);
+  const isFileRemovingFromFolder = (fileId: string) => removingFromFolderIds.has(fileId);
 
-  const handleDelete = async (file: CreatorFileType) => {
+  const handleDeleteFile = async (fileId: string) => {
     try {
-      // Update UI immediately by marking this file as deleting
-      setDeletingFiles(prev => new Set([...prev, file.id]));
-      setProcessingFiles(prev => new Set([...prev, file.id]));
+      const fileToDelete = files.find(file => file.id === fileId);
+      if (!fileToDelete) {
+        toast({
+          title: "File not found",
+          description: "The file you're trying to delete does not exist.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update UI immediately
+      setDeletingFileIds(prev => new Set([...prev, fileId]));
       
       // Notify parent for optimistic UI update if callback exists
       if (onFileDeleted) {
-        onFileDeleted(file.id);
+        onFileDeleted(fileId);
       }
-      
-      // Remove from selected files if present
-      if (selectedFiles.has(file.id)) {
-        const newSet = new Set(selectedFiles);
-        newSet.delete(file.id);
-        
-        if (onSelectFiles) {
-          onSelectFiles(Array.from(newSet));
-        }
-        
-        setSelectedFiles(newSet);
+
+      // Remove from selection if selected
+      if (selectedFileIds.includes(fileId)) {
+        setSelectedFileIds(prev => prev.filter(id => id !== fileId));
       }
-      
-      // Delete the file from storage
-      const { error: storageError } = await supabase.storage
+
+      // Delete in background
+      const { error } = await supabase.storage
         .from('raw_uploads')
-        .remove([file.bucketPath || '']);
+        .remove([fileToDelete.bucketPath || '']);
+
+      if (error) {
+        console.error("Error deleting file:", error);
+        toast({
+          title: "Error deleting file",
+          description: error.message,
+          variant: "destructive",
+        });
         
-      if (storageError) throw storageError;
-      
-      // Delete the media record if it exists
-      if (file.id) {
-        const { error: mediaError } = await supabase
-          .from('media')
-          .delete()
-          .eq('id', file.id);
-          
-        if (mediaError) throw mediaError;
+        // Remove from deleting set if error occurs
+        setDeletingFileIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
+        });
+        return;
       }
-      
-      setProcessingFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
-      });
-      
-      // Refresh the list in the background
-      if (onFilesChanged) {
-        onFilesChanged();
+
+      // Delete the file metadata from the media table
+      const { error: mediaError } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', fileId);
+
+      if (mediaError) {
+        console.error("Error deleting file metadata:", mediaError);
+        toast({
+          title: "Error deleting file metadata",
+          description: mediaError.message,
+          variant: "destructive",
+        });
+        
+        // Remove from deleting set if error occurs
+        setDeletingFileIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fileId);
+          return newSet;
+        });
+        return;
       }
-      
+
       toast({
         title: "File deleted",
-        description: `Successfully deleted ${file.name}`,
+        description: "File deleted successfully.",
       });
-    } catch (error) {
-      console.error('Delete error:', error);
       
-      setProcessingFiles(prev => {
+      // Remove from deleting set when complete
+      setDeletingFileIds(prev => {
         const newSet = new Set(prev);
-        newSet.delete(file.id);
+        newSet.delete(fileId);
         return newSet;
       });
-      
-      // Remove from deleting set on error so file reappears
-      setDeletingFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
-      });
-      
-      toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete the file",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleBulkDelete = async () => {
-    const filesToDelete = files.filter(file => selectedFiles.has(file.id));
-    
-    for (const file of filesToDelete) {
-      await handleDelete(file);
-    }
-  };
 
-  const handleBulkDownload = () => {
-    const filesToDownload = files.filter(file => selectedFiles.has(file.id));
-    triggerDownload(filesToDownload);
-  };
-
-  // Function to trigger download for one or multiple files
-  const triggerDownload = (filesToDownload: CreatorFileType[]) => {
-    if (filesToDownload.length === 0) return;
-    
-    // Dispatch a custom event for the FileDownloader to handle
-    const event = new CustomEvent('fileDownloadRequest', {
-      detail: { files: filesToDownload }
-    });
-    window.dispatchEvent(event);
-  };
-  
-  const handleRemoveFromFolder = async () => {
-    if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFiles.size === 0) {
-      return;
-    }
-    
-    try {
-      const selectedFileIds = Array.from(selectedFiles);
-      
-      // Optimistically update UI
-      setRemovingFromFolderFiles(prev => new Set([...prev, ...selectedFileIds]));
-      
-      // Optimistically update parent UI
-      if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-        selectedFileIds.forEach(fileId => {
-          onFileDeleted(fileId);
-        });
-      }
-      
-      // Process in background
-      await onRemoveFromFolder(selectedFileIds, currentFolder);
-      
-      toast({
-        title: "Files removed from folder",
-        description: `Successfully removed ${selectedFiles.size} files from this folder`,
-      });
-      
-      // Clear selection
-      setSelectedFiles(new Set());
-      
-      // Remove from processing set
-      setRemovingFromFolderFiles(prev => {
-        const newSet = new Set(prev);
-        selectedFileIds.forEach(id => newSet.delete(id));
-        return newSet;
-      });
-      
-      // Refresh files in background
-      if (onFilesChanged) {
-        onFilesChanged();
-      }
-    } catch (error) {
-      console.error("Error removing files from folder:", error);
-      
-      // Remove from processing set on error
-      setRemovingFromFolderFiles(prev => {
-        const newSet = new Set(prev);
-        Array.from(selectedFiles).forEach(id => newSet.delete(id));
-        return newSet;
-      });
-      
-      toast({
-        title: "Error",
-        description: "Failed to remove files from folder",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Function to open the note editing dialog
-  const openNoteEditor = (file: CreatorFileType) => {
-    setCurrentEditingFile(file);
-    setNoteContent(file.description || '');
-    setIsEditingNote(true);
-  };
-
-  const saveNote = async () => {
-    if (!currentEditingFile) return;
-    
-    try {
-      const trimmedNote = noteContent.substring(0, 200); // Limit to 200 chars
-      
-      // Update UI optimistically
-      if (onFilesChanged) {
-        // Give feedback immediately that the note was saved
-        toast({
-          title: "Note saved",
-          description: "The file description has been updated.",
-        });
-      }
-      
-      // Save the note to the database
-      const { error } = await supabase
-        .from('media')
-        .update({ 
-          description: trimmedNote
-        })
-        .eq('id', currentEditingFile.id);
-        
-      if (error) throw error;
-      
-      // Update the local state in the background
-      if (onFilesChanged) {
-        onFilesChanged();
-      }
-      
-      setIsEditingNote(false);
-      setCurrentEditingFile(null);
+      // Refresh in background
+      onFilesChanged();
       
     } catch (error) {
-      console.error('Error saving note:', error);
+      console.error("Error deleting file:", error);
       toast({
-        title: "Error saving note",
-        description: error instanceof Error ? error.message : "Failed to save the note",
+        title: "Error deleting file",
+        description: error instanceof Error ? error.message : "Failed to delete file",
         variant: "destructive",
       });
-    }
-  };
-  
-  // Function to open video preview
-  const openVideoPreview = (file: CreatorFileType) => {
-    if (file.type === 'video') {
-      setVideoPreview({
-        file,
-        isOpen: true
+      
+      // Remove from deleting set if error occurs
+      setDeletingFileIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
       });
     }
   };
-  
-  // Function to close video preview
-  const closeVideoPreview = () => {
-    setVideoPreview(prev => ({
-      ...prev,
-      isOpen: false
-    }));
+
+  React.useEffect(() => {
+    if (onSelectFiles) {
+      onSelectFiles(selectedFileIds);
+    }
+  }, [selectedFileIds, onSelectFiles]);
+
+  const handleSelectAll = () => {
+    if (selectedFileIds.length === files.length) {
+      setSelectedFileIds([]);
+    } else {
+      setSelectedFileIds(files.map(file => file.id));
+    }
   };
 
-  if (files.length === 0 && onUploadClick) {
-    return (
-      <div className="flex flex-col items-center justify-center border rounded-lg p-10 text-center h-full">
-        <Upload className="h-8 w-8 mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-medium mb-2">No files available</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Upload files to see them here
-        </p>
-        <Button onClick={onUploadClick}>
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Files
-        </Button>
-      </div>
-    );
-  }
+  const isAllSelected = selectedFileIds.length === files.length && files.length > 0;
 
   return (
-    <div>
-      {/* Action buttons for selected files */}
-      {selectedFiles.size > 0 && (
-        <div className="flex items-center gap-2 mb-4">
-          {onAddToFolderClick && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAddToFolderClick}
-              className="flex items-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
-                <line x1="12" y1="10" x2="12" y2="16" />
-                <line x1="9" y1="13" x2="15" y2="13" />
-              </svg>
-              <span className="ml-1">Add {selectedFiles.size} to Folder</span>
-            </Button>
-          )}
-          
-          {showRemoveFromFolder && onRemoveFromFolder && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRemoveFromFolder}
-              className="flex items-center gap-1"
-            >
-              <FolderMinus className="h-4 w-4 mr-1" />
-              <span>Remove {selectedFiles.size} from Folder</span>
-            </Button>
-          )}
-        </div>
-      )}
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {files.map((file) => {
-          const isProcessing = processingFiles.has(file.id);
-          const isSelected = selectedFiles.has(file.id);
-          const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
-          const isVideo = file.type === 'video';
-          const isDeleting = deletingFiles.has(file.id);
-          const isRemoving = removingFromFolderFiles.has(file.id);
-          
-          // Skip rendering files being deleted or removed from folder when in folder view
-          if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
-          
-          return (
-            <div 
-              key={file.id} 
-              className={`relative border rounded-lg overflow-hidden group ${
-                isSelected ? 'ring-2 ring-primary' : ''
-              } ${isNewlyUploaded ? 'border border-yellow-400' : ''}`}
-              onClick={() => toggleFileSelection(file.id)}
-            >
-              {/* Add checkbox in the top right */}
-              <div className="absolute top-2 right-2 z-10">
-                <Checkbox 
-                  checked={isSelected}
-                  onCheckedChange={() => toggleFileSelection(file.id)}
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-5 w-5 border-2 bg-background/80 hover:bg-background"
-                />
-              </div>
-              
-              <div className="aspect-square bg-muted/20 flex items-center justify-center">
-                {file.type === 'image' ? (
-                  <img 
-                    src={file.url} 
-                    alt={file.name}
-                    className="object-cover w-full h-full"
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {files.map((file) => {
+        let Icon = File;
+        if (file.type === 'image') Icon = FileImage;
+        if (file.type === 'video') Icon = FileVideo;
+        if (file.type === 'audio') Icon = FileAudio;
+        if (file.type === 'document') Icon = FileText;
+
+        const isNew = recentlyUploadedIds?.includes(file.id);
+        const isDeleting = isFileDeleting(file.id);
+        const isRemoving = isFileRemovingFromFolder(file.id);
+
+        // Skip rendering files being deleted or removed from folder when in folder view
+        if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
+
+        return (
+          <Card key={file.id}>
+            <CardContent className="p-4 flex flex-col">
+              {isCreatorView && (
+                <div className="absolute top-2 right-2">
+                  <Checkbox
+                    checked={isFileSelected(file.id)}
+                    onCheckedChange={() => toggleFileSelection(file.id)}
                   />
-                ) : isVideo ? (
-                  <div className="w-full h-full relative group cursor-pointer"
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         openVideoPreview(file);
-                       }}>
-                    {file.thumbnail_url ? (
-                      <img 
-                        src={file.thumbnail_url} 
-                        alt={file.name}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center w-full h-full bg-black/5 absolute inset-0">
-                        <FileVideo className="h-10 w-10 text-muted-foreground" />
-                        <span className="text-xs mt-2 text-muted-foreground">Click to preview</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openVideoPreview(file);
-                        }}
-                        className="flex items-center gap-1.5"
-                      >
-                        <Play className="h-4 w-4" />
-                        Play Video
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-3xl font-light text-muted-foreground">
-                    {file.name.split('.').pop()?.toUpperCase()}
-                  </div>
+                </div>
+              )}
+              <div className="relative h-32 w-full flex items-center justify-center rounded-md bg-secondary">
+                <Icon className="h-12 w-12 text-muted-foreground" />
+                {file.type === 'image' && (
+                  <img
+                    src={file.url}
+                    alt={file.name}
+                    className="absolute inset-0 object-cover rounded-md"
+                  />
+                )}
+                {file.type === 'video' && file.thumbnail_url && (
+                  <img
+                    src={file.thumbnail_url}
+                    alt={file.name}
+                    className="absolute inset-0 object-cover rounded-md"
+                  />
                 )}
               </div>
-              
-              <div className="p-3">
-                <p className="truncate text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatFileSize(file.size)}
-                </p>
-                {file.description && (
-                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                    {file.description}
-                  </p>
+              <div className="mt-2 text-sm font-medium truncate">{file.name}</div>
+              <div className="text-xs text-muted-foreground">
+                {formatFileSize(file.size)} - {formatDate(file.created_at)}
+                {isNew && (
+                  <span className="ml-1 rounded-md bg-secondary text-xs text-secondary-foreground px-2 py-0.5">
+                    New
+                  </span>
                 )}
               </div>
-              
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-3 pt-6 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerDownload([file]);
-                  }}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleShare(file);
-                  }}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
-                
-                {/* Show edit button to users with canEdit permission */}
-                {canEdit && (
+            </CardContent>
+            {isCreatorView && (
+              <CardFooter className="flex justify-between items-center p-4">
+                <div className="flex gap-2">
+                  <a href={file.url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </a>
                   <Button 
                     variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openNoteEditor(file);
-                    }}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
-                      <line x1="9" y1="9" x2="10" y2="9" />
-                      <line x1="9" y1="13" x2="15" y2="13" />
-                      <line x1="9" y1="17" x2="15" y2="17" />
-                    </svg>
-                  </Button>
-                )}
-
-                {/* Only show delete button to users with canDelete permission */}
-                {canDelete && (
-                  <Button
-                    variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(file);
-                    }}
-                    disabled={isProcessing}
+                    onClick={() => handleDeleteFile(file.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                  
+                  {showRemoveFromFolder && onRemoveFromFolder && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          // Optimistically update UI
+                          setRemovingFromFolderIds(prev => new Set([...prev, file.id]));
+                          
+                          if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+                            onFileDeleted(file.id); // Optimistically update UI
+                          }
+                          
+                          await onRemoveFromFolder([file.id], currentFolder);
+                          
+                          toast({
+                            title: "File removed",
+                            description: `Removed ${file.name} from folder`,
+                          });
+                          
+                          // Remove from removing set when complete
+                          setRemovingFromFolderIds(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(file.id);
+                            return newSet;
+                          });
+                          
+                          onFilesChanged(); // Refresh in background
+                        } catch (error) {
+                          console.error("Error removing file from folder:", error);
+                          
+                          // Remove from removing set if error occurs
+                          setRemovingFromFolderIds(prev => {
+                            const newSet = new Set(prev);
+                            newSet.delete(file.id);
+                            return newSet;
+                          });
+                          
+                          toast({
+                            title: "Error",
+                            description: "Failed to remove file from folder",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <FolderMinus className="h-4 w-4 mr-2" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
+                {onUploadClick && (
+                  <Button variant="outline" size="sm" onClick={onUploadClick}>
+                    Upload
                   </Button>
                 )}
-                
-                {/* Remove from folder button (only in custom folders) */}
-                {showRemoveFromFolder && onRemoveFromFolder && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        // Optimistically update UI by marking this file as removing
-                        setRemovingFromFolderFiles(prev => new Set([...prev, file.id]));
-                        
-                        // Optimistically update parent UI
-                        if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-                          onFileDeleted(file.id);
-                        }
-                        
-                        // Process in background
-                        await onRemoveFromFolder([file.id], currentFolder);
-                        
-                        // Remove from removing set when complete
-                        setRemovingFromFolderFiles(prev => {
-                          const newSet = new Set(prev);
-                          newSet.delete(file.id);
-                          return newSet;
-                        });
-                        
-                        toast({
-                          title: "File removed",
-                          description: `Removed ${file.name} from folder`,
-                        });
-                        
-                        // Refresh background to keep data consistent
-                        if (onFilesChanged) {
-                          onFilesChanged();
-                        }
-                      } catch (error) {
-                        console.error("Error removing file from folder:", error);
-                        
-                        // Remove from removing set on error
-                        setRemovingFromFolderFiles(prev => {
-                          const newSet = new Set(prev);
-                          newSet.delete(file.id);
-                          return newSet;
-                        });
-                        
-                        toast({
-                          title: "Error",
-                          description: "Failed to remove file from folder",
-                          variant: "destructive",
-                        });
-                      }
-                    }}
-                    disabled={isProcessing}
-                  >
-                    <FolderMinus className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Note Editor Dialog */}
-      <Dialog open={isEditingNote} onOpenChange={setIsEditingNote}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Note to File</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="file-note">Note (max 200 characters)</Label>
-            <Textarea
-              id="file-note"
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Enter a description for this file..."
-              className="mt-2"
-              maxLength={200}
-              rows={4}
-            />
-            <div className="text-right text-xs text-muted-foreground mt-1">
-              {noteContent.length}/200 characters
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingNote(false)}>
-              Cancel
-            </Button>
-            <Button onClick={saveNote}>
-              Save Note
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Video Preview Dialog */}
-      <Dialog open={videoPreview.isOpen} onOpenChange={closeVideoPreview}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{videoPreview.file.name}</DialogTitle>
-          </DialogHeader>
-          <div className="aspect-video w-full bg-black rounded-md overflow-hidden">
-            {videoPreview.isOpen && videoPreview.file.url && (
-              <video 
-                src={videoPreview.file.url} 
-                controls 
-                autoPlay
-                className="w-full h-full"
-              />
+              </CardFooter>
             )}
-          </div>
-          <DialogFooter className="sm:justify-between">
-            <div className="text-sm text-muted-foreground">
-              {videoPreview.file.description && (
-                <p>{videoPreview.file.description}</p>
-              )}
-            </div>
-            <Button onClick={closeVideoPreview}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </Card>
+        );
+      })}
+      {files.length === 0 && (
+        <div className="col-span-full text-center">No files found.</div>
+      )}
     </div>
   );
-};
+}
