@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo, Play } from 'lucide-react';
+import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo, Play, FolderMinus } from 'lucide-react';
 import { formatFileSize } from '@/utils/fileUtils';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +26,8 @@ export interface FileGridProps {
   onUploadClick?: () => void;
   onSelectFiles?: (fileIds: string[]) => void;
   onAddToFolderClick?: () => void;
+  currentFolder?: string;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const FileGrid: React.FC<FileGridProps> = ({ 
@@ -35,7 +37,9 @@ export const FileGrid: React.FC<FileGridProps> = ({
   recentlyUploadedIds = [],
   onUploadClick,
   onSelectFiles,
-  onAddToFolderClick
+  onAddToFolderClick,
+  currentFolder = 'all',
+  onRemoveFromFolder
 }) => {
   const { toast } = useToast();
   const { userRole, userRoles } = useAuth();
@@ -44,6 +48,9 @@ export const FileGrid: React.FC<FileGridProps> = ({
   // Use our permission utility functions with both primary role and roles array
   const canDelete = canDeleteFiles(userRole, userRoles);
   const canEdit = canEditFileDescription(userRole, userRoles);
+  
+  // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
+  const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -167,6 +174,36 @@ export const FileGrid: React.FC<FileGridProps> = ({
     window.dispatchEvent(event);
   };
   
+  const handleRemoveFromFolder = async () => {
+    if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFiles.size === 0) {
+      return;
+    }
+    
+    try {
+      await onRemoveFromFolder(Array.from(selectedFiles), currentFolder);
+      
+      toast({
+        title: "Files removed from folder",
+        description: `Successfully removed ${selectedFiles.size} files from this folder`,
+      });
+      
+      // Clear selection
+      setSelectedFiles(new Set());
+      
+      // Refresh files
+      if (onFilesChanged) {
+        onFilesChanged();
+      }
+    } catch (error) {
+      console.error("Error removing files from folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove files from folder",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Function to open the note editing dialog
   const openNoteEditor = (file: CreatorFileType) => {
     setCurrentEditingFile(file);
@@ -245,8 +282,6 @@ export const FileGrid: React.FC<FileGridProps> = ({
     );
   }
 
-  console.log("Permission check:", { canDelete, canEdit, userRole, userRoles, isCreatorView });
-
   return (
     <div>
       {/* Action buttons for selected files */}
@@ -268,8 +303,17 @@ export const FileGrid: React.FC<FileGridProps> = ({
             </Button>
           )}
           
-          {/* Keep the existing buttons but do not add new ones here as they are now in FilterButtons */}
-          {/* ... keep existing code (download and delete buttons) */}
+          {showRemoveFromFolder && onRemoveFromFolder && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveFromFolder}
+              className="flex items-center gap-1"
+            >
+              <FolderMinus className="h-4 w-4 mr-1" />
+              <span>Remove {selectedFiles.size} from Folder</span>
+            </Button>
+          )}
         </div>
       )}
       
@@ -416,6 +460,37 @@ export const FileGrid: React.FC<FileGridProps> = ({
                     disabled={isProcessing}
                   >
                     <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                {/* Remove from folder button (only in custom folders) */}
+                {showRemoveFromFolder && onRemoveFromFolder && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        await onRemoveFromFolder([file.id], currentFolder);
+                        toast({
+                          title: "File removed",
+                          description: `Removed ${file.name} from folder`,
+                        });
+                        if (onFilesChanged) {
+                          onFilesChanged();
+                        }
+                      } catch (error) {
+                        console.error("Error removing file from folder:", error);
+                        toast({
+                          title: "Error",
+                          description: "Failed to remove file from folder",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
+                  >
+                    <FolderMinus className="h-4 w-4" />
                   </Button>
                 )}
               </div>

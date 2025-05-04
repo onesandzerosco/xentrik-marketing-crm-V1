@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,8 @@ import {
   File, 
   Download,
   Trash2,
-  FolderPlus
+  FolderPlus,
+  FolderMinus
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +32,8 @@ export interface FileListProps {
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
   onAddToFolderClick?: () => void;
+  currentFolder?: string;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
@@ -40,10 +42,15 @@ export const FileList: React.FC<FileListProps> = ({
   onFilesChanged,
   recentlyUploadedIds = [],
   onSelectFiles,
-  onAddToFolderClick
+  onAddToFolderClick,
+  currentFolder = 'all',
+  onRemoveFromFolder
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
+  const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
 
   const toggleFileSelection = (fileId: string) => {
     setSelectedFileIds(prev => {
@@ -123,6 +130,30 @@ export const FileList: React.FC<FileListProps> = ({
     }
   };
 
+  const handleRemoveFromFolder = async () => {
+    if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFileIds.length === 0) {
+      return;
+    }
+    
+    try {
+      await onRemoveFromFolder(selectedFileIds, currentFolder);
+      
+      toast({
+        title: "Files removed from folder",
+        description: `Successfully removed ${selectedFileIds.length} files from this folder`,
+      });
+      
+      setSelectedFileIds([]);
+    } catch (error) {
+      console.error("Error removing files from folder:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove files from folder",
+        variant: "destructive",
+      });
+    }
+  };
+
   React.useEffect(() => {
     if (onSelectFiles) {
       onSelectFiles(selectedFileIds);
@@ -133,16 +164,29 @@ export const FileList: React.FC<FileListProps> = ({
 
   return (
     <div className="w-full relative overflow-x-auto">
-      {selectedFileIds.length > 0 && onAddToFolderClick && (
+      {selectedFileIds.length > 0 && (
         <div className="flex items-center gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onAddToFolderClick}
-          >
-            <FolderPlus className="h-4 w-4 mr-2" />
-            Add {selectedFileIds.length} Files to Folder
-          </Button>
+          {onAddToFolderClick && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAddToFolderClick}
+            >
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Add {selectedFileIds.length} Files to Folder
+            </Button>
+          )}
+          
+          {showRemoveFromFolder && onRemoveFromFolder && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRemoveFromFolder}
+            >
+              <FolderMinus className="h-4 w-4 mr-2" />
+              Remove {selectedFileIds.length} Files from Folder
+            </Button>
+          )}
         </div>
       )}
       
@@ -216,6 +260,33 @@ export const FileList: React.FC<FileListProps> = ({
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </Button>
+                      
+                      {showRemoveFromFolder && onRemoveFromFolder && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              await onRemoveFromFolder([file.id], currentFolder);
+                              toast({
+                                title: "File removed",
+                                description: `Removed ${file.name} from folder`,
+                              });
+                              onFilesChanged();
+                            } catch (error) {
+                              console.error("Error removing file from folder:", error);
+                              toast({
+                                title: "Error",
+                                description: "Failed to remove file from folder",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          <FolderMinus className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 )}

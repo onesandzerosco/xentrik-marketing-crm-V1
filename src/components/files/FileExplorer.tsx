@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
@@ -52,6 +51,7 @@ interface FileExplorerProps {
   onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; 
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -69,7 +69,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   recentlyUploadedIds = [],
   onCreateFolder,
   onAddFilesToFolder,
-  onDeleteFolder
+  onDeleteFolder,
+  onRemoveFromFolder
 }) => {
   // Changed default to 'grid' instead of 'list'
   const [view, setView] = useState<'list' | 'grid'>('grid');
@@ -291,6 +292,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     });
   };
 
+  const handleRemoveFromFolder = async (fileIds: string[], folderId: string) => {
+    if (!onRemoveFromFolder || fileIds.length === 0 || !folderId || folderId === 'all' || folderId === 'unsorted') {
+      return;
+    }
+    
+    try {
+      await onRemoveFromFolder(fileIds, folderId);
+      onRefresh();
+    } catch (error) {
+      console.error("Error removing files from folder:", error);
+      toast({
+        title: "Error removing files",
+        description: "Failed to remove files from the folder",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
@@ -341,6 +361,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   recentlyUploadedIds={recentlyUploadedIds}
                   onSelectFiles={handleFileSelection}
                   onAddToFolderClick={selectedFiles.length > 0 ? () => setShowAddToFolderDialog(true) : undefined}
+                  currentFolder={currentFolder}
+                  onRemoveFromFolder={onRemoveFromFolder ? handleRemoveFromFolder : undefined}
                 />
               ) : (
                 <FileGrid 
@@ -351,6 +373,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                   onUploadClick={isCreatorView ? handleUploadClick : undefined}
                   onSelectFiles={handleFileSelection}
                   onAddToFolderClick={selectedFiles.length > 0 ? () => setShowAddToFolderDialog(true) : undefined}
+                  currentFolder={currentFolder}
+                  onRemoveFromFolder={onRemoveFromFolder ? handleRemoveFromFolder : undefined}
                 />
               )
             ) : (

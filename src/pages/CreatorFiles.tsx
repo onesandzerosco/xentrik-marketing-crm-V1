@@ -365,6 +365,62 @@ const CreatorFiles = () => {
       throw err;
     }
   };
+
+  // New function to remove files from a folder
+  const handleRemoveFromFolder = async (fileIds: string[], folderId: string) => {
+    if (!creator?.id || !folderId || fileIds.length === 0 || folderId === 'all' || folderId === 'unsorted') {
+      return;
+    }
+    
+    try {
+      console.log(`Removing ${fileIds.length} files from folder ${folderId}`);
+      
+      // Update each file's folders array to remove the folderId
+      for (const fileId of fileIds) {
+        // Get the current file to access its folders array
+        const { data: fileData, error: fetchError } = await supabase
+          .from('media')
+          .select('folders')
+          .eq('id', fileId)
+          .single();
+          
+        if (fetchError) {
+          console.error(`Error fetching file ${fileId}:`, fetchError);
+          continue;
+        }
+        
+        // Create a new folders array without the target folder ID
+        const currentFolders = fileData?.folders || [];
+        const updatedFolders = currentFolders.filter(folder => folder !== folderId);
+        
+        console.log(`File ${fileId}: Removing folder ${folderId}, updated folders:`, updatedFolders);
+        
+        // Update the file with the new folders array
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', fileId);
+          
+        if (updateError) {
+          console.error(`Error updating file ${fileId}:`, updateError);
+          throw updateError;
+        }
+      }
+      
+      // Refresh the files list
+      refetch();
+      
+      // If all files are removed from the current folder view, it might be empty
+      // If we're currently viewing that folder, we need to refresh the UI
+      if (currentFolder === folderId) {
+        refetch();
+      }
+      
+    } catch (err) {
+      console.error("Error in handleRemoveFromFolder:", err);
+      throw err;
+    }
+  };
   
   const fetchCreatorFiles = async () => {
     if (!creator?.id) {
@@ -571,6 +627,7 @@ const CreatorFiles = () => {
       onCreateFolder={handleCreateFolder}
       onAddFilesToFolder={handleAddFilesToFolder}
       onDeleteFolder={handleDeleteFolder}
+      onRemoveFromFolder={handleRemoveFromFolder}
     />
   );
 };
