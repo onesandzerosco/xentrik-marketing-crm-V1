@@ -23,6 +23,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { FolderPlus } from 'lucide-react';
 
 interface Folder {
   id: string;
@@ -42,7 +44,7 @@ interface FileExplorerProps {
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
-  onCreateFolder?: (folderName: string) => void;
+  onCreateFolder?: (folderName: string, fileIds: string[]) => void; // Modified to accept fileIds
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
 }
@@ -72,6 +74,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [targetFolder, setTargetFolder] = useState<string>('');
   const { toast } = useToast();
   
+  // New folder creation states
+  const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isFolderCreating, setIsFolderCreating] = useState(false);
+  
   const filteredFiles = files.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -95,9 +102,49 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRefresh();
   };
 
-  const handleCreateFolder = (folderName: string) => {
-    if (onCreateFolder) {
-      onCreateFolder(folderName);
+  const handleInitiateNewFolder = () => {
+    // Clear previous selection and show the dialog
+    setSelectedFiles([]);
+    setNewFolderName('');
+    setShowNewFolderDialog(true);
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim() || selectedFiles.length === 0) {
+      toast({
+        title: "Invalid folder creation",
+        description: selectedFiles.length === 0 
+          ? "Please select at least one file for the new folder." 
+          : "Please enter a folder name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsFolderCreating(true);
+    
+    try {
+      if (onCreateFolder) {
+        onCreateFolder(newFolderName.trim(), selectedFiles);
+      }
+      
+      setShowNewFolderDialog(false);
+      setNewFolderName('');
+      setSelectedFiles([]);
+      
+      toast({
+        title: "Folder created",
+        description: `Successfully created folder with ${selectedFiles.length} files`,
+      });
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      toast({
+        title: "Error creating folder",
+        description: "Failed to create the new folder",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFolderCreating(false);
     }
   };
 
@@ -156,8 +203,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             folders={availableFolders}
             currentFolder={currentFolder}
             onFolderChange={onFolderChange}
-            onCreateFolder={isCreatorView ? handleCreateFolder : undefined}
             onDeleteFolder={isCreatorView ? onDeleteFolder : undefined}
+            onInitiateNewFolder={isCreatorView ? handleInitiateNewFolder : undefined}
           />
         </div>
         
@@ -219,6 +266,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
       )}
 
+      {/* Add to Existing Folder Dialog */}
       <Dialog open={showAddToFolderDialog} onOpenChange={setShowAddToFolderDialog}>
         <DialogContent>
           <DialogHeader>
@@ -253,6 +301,67 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <Button variant="outline" onClick={() => setShowAddToFolderDialog(false)}>Cancel</Button>
             <Button onClick={handleAddToFolder} disabled={!targetFolder}>
               Add Files to Folder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Folder Dialog */}
+      <Dialog open={showNewFolderDialog} onOpenChange={setShowNewFolderDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Select files and enter a name for your new folder.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="folder-name">Folder Name</Label>
+              <Input 
+                id="folder-name"
+                placeholder="Enter folder name" 
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Selected Files ({selectedFiles.length})</Label>
+              {selectedFiles.length === 0 ? (
+                <div className="text-sm text-muted-foreground flex items-center justify-center p-4 border rounded-md">
+                  Please select at least one file to add to this folder
+                </div>
+              ) : (
+                <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+                  <ul className="text-sm">
+                    {selectedFiles.map(id => {
+                      const file = files.find(f => f.id === id);
+                      return (
+                        <li key={id} className="py-1 px-2 truncate">
+                          {file ? file.name : `File ${id}`}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowNewFolderDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim() || selectedFiles.length === 0 || isFolderCreating}
+            >
+              {isFolderCreating ? "Creating..." : "Create Folder"}
             </Button>
           </DialogFooter>
         </DialogContent>

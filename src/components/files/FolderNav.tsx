@@ -27,6 +27,7 @@ interface FolderNavProps {
   activeFolder?: string | null;
   onCreateFolder?: (folderName: string) => void;
   onDeleteFolder?: (folderId: string) => Promise<void>;
+  onInitiateNewFolder?: () => void; // New prop for initiating folder creation
 }
 
 // These are the default folder IDs that should not be deleted
@@ -38,29 +39,12 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   onFolderChange,
   activeFolder = null,
   onCreateFolder,
-  onDeleteFolder
+  onDeleteFolder,
+  onInitiateNewFolder
 }) => {
-  const [isCreating, setIsCreating] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-
-  const handleCreateFolder = () => {
-    if (!newFolderName.trim()) return;
-    
-    if (onCreateFolder) {
-      onCreateFolder(newFolderName.trim());
-    }
-    
-    setNewFolderName('');
-    setIsCreating(false);
-  };
-
-  const cancelCreate = () => {
-    setIsCreating(false);
-    setNewFolderName('');
-  };
 
   const handleDeleteFolder = async () => {
     if (!folderToDelete || !onDeleteFolder) return;
@@ -154,49 +138,15 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         </div>
       )}
 
-      {isCreating ? (
-        <div className="px-3 py-2">
-          <Input
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            placeholder="Folder name"
-            className="text-sm h-8 mb-2"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreateFolder();
-              if (e.key === 'Escape') cancelCreate();
-            }}
-          />
-          <div className="flex gap-1 mt-1">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1 h-7"
-              onClick={handleCreateFolder}
-            >
-              <Check className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="flex-1 h-7"
-              onClick={cancelCreate}
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start px-3 font-normal text-muted-foreground"
-          onClick={() => setIsCreating(true)}
-        >
-          <FolderPlus className="h-4 w-4 mr-2" />
-          New Folder
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="w-full justify-start px-3 font-normal text-muted-foreground mt-4"
+        onClick={() => onInitiateNewFolder && onInitiateNewFolder()}
+      >
+        <FolderPlus className="h-4 w-4 mr-2" />
+        New Folder
+      </Button>
 
       {/* Delete Folder Confirmation Dialog */}
       <AlertDialog open={!!folderToDelete} onOpenChange={(open) => !open && setFolderToDelete(null)}>

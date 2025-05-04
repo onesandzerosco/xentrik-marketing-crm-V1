@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -71,7 +72,7 @@ const CreatorFiles = () => {
       const { data: folderData, error: folderError } = await supabase
         .from('media')
         .select('folders')
-        .eq('creator_id', creator.id);
+        .filter('creator_id', 'eq', creator.id);
       
       if (folderError) {
         console.error("Error loading folders from media table:", folderError);
@@ -153,8 +154,11 @@ const CreatorFiles = () => {
     }
   };
   
-  const handleCreateFolder = async (folderName: string) => {
-    if (!creator?.id || !folderName) return;
+  // Updated to accept fileIds for creating a folder with files already in it
+  const handleCreateFolder = async (folderName: string, fileIds: string[]) => {
+    if (!creator?.id || !folderName || fileIds.length === 0) {
+      return;
+    }
     
     try {
       const folderId = folderName.toLowerCase().replace(/\s+/g, '-');
@@ -174,28 +178,40 @@ const CreatorFiles = () => {
         // Continue anyway as we're now primarily using the database for folder tracking
       }
       
-      // Create a dummy file entry in the media table to register this folder
-      // This ensures the folder exists in the database even if no files are added to it
-      const { error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          creator_id: creator.id,
-          filename: '.folder_placeholder',
-          file_size: 0,
-          bucket_key: `${creator.id}/${folderId}/.folder_placeholder`,
-          mime: 'text/plain',
-          folders: [folderId],
-          status: 'hidden'  // Special status to hide this from file listings
-        });
-      
-      if (mediaError) {
-        console.error("Error creating folder record in database:", mediaError);
-        toast({
-          title: "Error creating folder",
-          description: mediaError.message,
-          variant: "destructive"
-        });
-        return;
+      // Add the selected files to the new folder by updating their folders array
+      for (const fileId of fileIds) {
+        // Get the current file to access its folders array
+        const { data: fileData, error: fetchError } = await supabase
+          .from('media')
+          .select('folders')
+          .eq('id', fileId)
+          .single();
+          
+        if (fetchError) {
+          console.error(`Error fetching file ${fileId}:`, fetchError);
+          continue;
+        }
+        
+        // Create a new folders array with the new folder ID
+        const currentFolders = fileData?.folders || [];
+        
+        // Skip if folder ID is already in the array
+        if (currentFolders.includes(folderId)) {
+          console.log(`File ${fileId} is already in folder ${folderId}`);
+          continue;
+        }
+        
+        const updatedFolders = [...currentFolders, folderId];
+        
+        // Update the file with the new folders array
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', fileId);
+          
+        if (updateError) {
+          console.error(`Error adding file ${fileId} to folder:`, updateError);
+        }
       }
       
       // Add the new folder to the available folders
@@ -222,6 +238,7 @@ const CreatorFiles = () => {
         description: "Failed to create folder",
         variant: "destructive"
       });
+      throw err; // Re-throw to let the caller handle it
     }
   };
   
