@@ -103,6 +103,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleInitiateNewFolder = () => {
+    // If there are no files to select, show an error
+    if (files.length === 0) {
+      toast({
+        title: "No files available",
+        description: "You need to upload files before creating a folder.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Clear previous selection and show the dialog
     setSelectedFiles([]);
     setNewFolderName('');

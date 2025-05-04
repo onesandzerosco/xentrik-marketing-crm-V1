@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -200,8 +199,11 @@ export const FileList: React.FC<FileListProps> = ({
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allFileIds = displayFiles.map(file => file.id);
-      setSelectedFiles(new Set(allFileIds));
+      // Select only non-uploading files
+      const selectableFileIds = displayFiles
+        .filter(file => file.status !== 'uploading')
+        .map(file => file.id);
+      setSelectedFiles(new Set(selectableFileIds));
     } else {
       setSelectedFiles(new Set());
     }
@@ -240,8 +242,9 @@ export const FileList: React.FC<FileListProps> = ({
   // Determine if the current user can delete files (either admin or creator)
   const canDeleteFiles = isAdmin || isCreatorView;
   
-  const allSelected = displayFiles.length > 0 && selectedFiles.size === displayFiles.length;
-  const someSelected = selectedFiles.size > 0 && selectedFiles.size < displayFiles.length;
+  const allSelected = displayFiles.length > 0 && 
+    selectedFiles.size === displayFiles.filter(file => file.status !== 'uploading').length;
+  const someSelected = selectedFiles.size > 0 && !allSelected;
 
   return (
     <>

@@ -27,7 +27,7 @@ interface FolderNavProps {
   activeFolder?: string | null;
   onCreateFolder?: (folderName: string) => void;
   onDeleteFolder?: (folderId: string) => Promise<void>;
-  onInitiateNewFolder?: () => void; // New prop for initiating folder creation
+  onInitiateNewFolder?: () => void; // Prop for initiating folder creation
 }
 
 // These are the default folder IDs that should not be deleted
@@ -145,7 +145,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         onClick={() => onInitiateNewFolder && onInitiateNewFolder()}
       >
         <FolderPlus className="h-4 w-4 mr-2" />
-        New Folder
+        Create Folder with Files
       </Button>
 
       {/* Delete Folder Confirmation Dialog */}
