@@ -102,7 +102,7 @@ export const getUniqueFileName = async (
 
 // Calculate the number of chunks needed for a large file upload
 export const calculateChunks = (fileSize: number, chunkSize: number = 5 * 1024 * 1024) => {
-  return Math.ceil(fileSize / chunkSize);
+  return Math.ceil(fileSize / Math.pow(1024, 2) * 5); // Calculate chunks based on 5MB parts
 };
 
 // Check if a file is a video
@@ -170,4 +170,62 @@ export const generateVideoThumbnail = (videoFile: File): Promise<string> => {
       reject(err);
     }
   });
+};
+
+// Helper function to handle chunked uploads
+export const uploadFileInChunks = async (
+  file: File,
+  bucketName: string,
+  filePath: string,
+  onProgress: (progress: number) => void,
+  supabase: any
+): Promise<void> => {
+  const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  
+  // First get a upload URL
+  const { data: { uploadUrl }, error: urlError } = await supabase.storage
+    .from(bucketName)
+    .createSignedUploadUrl(filePath);
+    
+  if (urlError || !uploadUrl) {
+    throw new Error(urlError?.message || 'Failed to get signed URL');
+  }
+  
+  let uploadedBytes = 0;
+  
+  // Upload each chunk
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, file.size);
+    const chunk = file.slice(start, end);
+    
+    // For each chunk, we're making a regular fetch POST request
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+        'x-upsert': 'true',
+        'Cache-Control': '3600',
+      },
+      body: chunk,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to upload chunk ${i+1}: ${response.statusText}`);
+    }
+    
+    uploadedBytes += (end - start);
+    const progress = Math.min((uploadedBytes / file.size) * 100, 99);
+    onProgress(progress);
+  }
+  
+  // Finalize the upload
+  onProgress(100);
+}
+
+// Helper function to check if a file exceeds the maximum size (1GB by default)
+export const isFileTooLarge = (file: File, maxSizeGB: number = 1): boolean => {
+  const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
+  return file.size > maxSizeBytes;
 };

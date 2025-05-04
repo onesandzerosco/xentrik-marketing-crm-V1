@@ -2,7 +2,13 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { getUniqueFileName, calculateChunks, isVideoFile, generateVideoThumbnail } from '@/utils/fileUtils';
+import { 
+  getUniqueFileName,
+  isVideoFile, 
+  generateVideoThumbnail,
+  uploadFileInChunks,
+  isFileTooLarge
+} from '@/utils/fileUtils';
 import { Progress } from '@/components/ui/progress';
 import { X, FileVideo } from 'lucide-react';
 
@@ -21,7 +27,10 @@ interface FileUploadStatus {
   thumbnail?: string; // For video files
 }
 
-const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks for large files
+// Maximum file size in GB
+const MAX_FILE_SIZE_GB = 1;
+// 10MB chunks for large files
+const CHUNK_SIZE = 10 * 1024 * 1024;
 
 const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({ 
   id, 
@@ -76,18 +85,20 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       // Initialize file statuses and check for large files
       const initialStatuses: FileUploadStatus[] = [];
       let hasLargeFiles = false;
+      let hasTooLargeFiles = false;
       
       // First pass: prepare file statuses and check sizes
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
-        // Check if file is too large (over 5GB)
-        if (file.size > 5 * 1024 * 1024 * 1024) {
+        // Check if file is too large (over 1GB)
+        if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) {
           toast({
             title: "File too large",
-            description: `${file.name} is over 5GB which exceeds the maximum file size limit.`,
+            description: `${file.name} is over ${MAX_FILE_SIZE_GB}GB which exceeds the maximum file size limit.`,
             variant: "destructive",
           });
+          hasTooLargeFiles = true;
           continue;
         }
         
@@ -105,10 +116,23 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       setFileStatuses(initialStatuses);
       setOverallProgress(0);
       
+      if (initialStatuses.length === 0) {
+        setIsUploading(false);
+        e.target.value = '';
+        return;
+      }
+      
       if (hasLargeFiles) {
         toast({
           title: "Large files detected",
           description: "Some files are large and will be uploaded in chunks. This may take a while.",
+        });
+      }
+      
+      if (hasTooLargeFiles && initialStatuses.length > 0) {
+        toast({
+          title: "Some files were skipped",
+          description: `Files larger than ${MAX_FILE_SIZE_GB}GB were skipped.`,
         });
       }
       
@@ -119,7 +143,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
         const file = files[i];
         
         // Skip files that are too large (already warned)
-        if (file.size > 5 * 1024 * 1024 * 1024) continue;
+        if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) continue;
         
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         
@@ -157,21 +181,101 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
           const abortController = new AbortController();
           abortControllersRef.current.set(file.name, abortController);
           
-          const filePath = `${creatorId}/${uniqueSafeName}`;
+          const filePath = `${creatorId}/${currentFolder}/${uniqueSafeName}`;
           
-          // Choose upload strategy based on file size
-          let fileId: string | undefined;
-          
-          if (file.size > CHUNK_SIZE) {
-            // Use chunked upload for large files
-            fileId = await handleLargeFileUpload(file, filePath, uniqueSafeName);
-          } else {
-            // Use direct upload for smaller files
-            fileId = await handleDirectUpload(file, filePath, uniqueSafeName);
+          // Add folder reference
+          let folderArray: string[] = [];
+          if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
+            folderArray = [currentFolder];
           }
           
-          if (fileId) {
+          // Store metadata in the media table first
+          const { data: mediaRecord, error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              creator_id: creatorId,
+              bucket_key: filePath,
+              filename: uniqueSafeName,
+              mime: file.type,
+              file_size: file.size,
+              status: 'uploading', // Mark as uploading initially
+              folders: folderArray
+            })
+            .select('id');
+          
+          if (mediaError) {
+            console.error('Media record creation error:', mediaError);
+            updateFileProgress(file.name, 0, 'error');
+            continue;
+          }
+          
+          if (!mediaRecord || mediaRecord.length === 0) {
+            console.error('Failed to create media record');
+            updateFileProgress(file.name, 0, 'error');
+            continue;
+          }
+          
+          const fileId = mediaRecord[0].id;
+          
+          try {
+            if (file.size > CHUNK_SIZE) {
+              // Handle large file upload using custom chunked upload
+              await uploadFileInChunks(
+                file, 
+                'raw_uploads', 
+                filePath,
+                (progress) => updateFileProgress(file.name, progress),
+                supabase
+              );
+            } else {
+              // Use direct upload for small files
+              const { error: uploadError } = await supabase.storage
+                .from('raw_uploads')
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: true,
+                  onUploadProgress: (progress) => {
+                    const percentage = progress.percent ? progress.percent : 0;
+                    updateFileProgress(file.name, percentage);
+                  },
+                });
+                
+              if (uploadError) {
+                throw uploadError;
+              }
+            }
+            
+            // Update the media record to mark as complete
+            await supabase
+              .from('media')
+              .update({ status: 'complete' })
+              .eq('id', fileId);
+            
+            updateFileProgress(file.name, 100, 'complete');
             uploadedFileIds.push(fileId);
+            
+          } catch (error) {
+            console.error(`Upload error for ${file.name}:`, error);
+            
+            // Update the media record to mark as failed
+            await supabase
+              .from('media')
+              .update({ status: 'error' })
+              .eq('id', fileId);
+              
+            updateFileProgress(file.name, 0, 'error');
+            
+            setFileStatuses(prev => 
+              prev.map(status => 
+                status.name === file.name 
+                  ? { 
+                      ...status, 
+                      error: error instanceof Error ? error.message : 'Upload failed',
+                      status: 'error'
+                    } 
+                  : status
+              )
+            );
           }
           
         } catch (error) {
@@ -224,254 +328,6 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       });
     } finally {
       setIsUploading(false);
-    }
-  };
-  
-  // Handle direct upload for smaller files
-  const handleDirectUpload = async (file: File, filePath: string, fileName: string): Promise<string | undefined> => {
-    // Custom upload with progress tracking
-    const xhr = new XMLHttpRequest();
-    
-    // Setup progress tracking
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = (event.loaded / event.total) * 100;
-        updateFileProgress(file.name, percentComplete);
-      }
-    });
-    
-    // Create a promise to track the XHR request
-    return new Promise<string | undefined>((resolve, reject) => {
-      xhr.onload = async function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // Update file status to complete
-          updateFileProgress(file.name, 100, 'complete');
-          
-          // Add folder reference
-          let folderArray: string[] = [];
-          if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
-            folderArray = [currentFolder];
-          }
-          
-          try {
-            // Store metadata in the media table
-            const { data: mediaRecord, error: mediaError } = await supabase
-              .from('media')
-              .insert({
-                creator_id: creatorId,
-                bucket_key: filePath,
-                filename: fileName,
-                mime: file.type,
-                file_size: file.size,
-                status: 'complete',
-                folders: folderArray
-              })
-              .select('id');
-            
-            if (mediaError) {
-              console.error('Media record creation error:', mediaError);
-              updateFileProgress(file.name, 100, 'error');
-              reject(mediaError);
-              return;
-            }
-            
-            if (mediaRecord && mediaRecord[0]) {
-              resolve(mediaRecord[0].id);
-            } else {
-              resolve(undefined);
-            }
-          } catch (err) {
-            updateFileProgress(file.name, 100, 'error');
-            reject(err);
-          }
-        } else {
-          updateFileProgress(file.name, 0, 'error');
-          reject(new Error(`Upload failed: ${xhr.statusText}`));
-        }
-      };
-      
-      xhr.onerror = function() {
-        updateFileProgress(file.name, 0, 'error');
-        reject(new Error('Network error during upload'));
-      };
-      
-      xhr.onabort = function() {
-        updateFileProgress(file.name, 0, 'error');
-        reject(new Error('Upload cancelled'));
-      };
-      
-      // Get the presigned URL for the upload
-      supabase.storage
-        .from('raw_uploads')
-        .createSignedUploadUrl(filePath)
-        .then(({ data: signedUrlData, error }) => {
-          if (error || !signedUrlData) {
-            reject(error || new Error('Failed to get signed URL'));
-            return;
-          }
-          
-          // Configure the XHR request
-          xhr.open('PUT', signedUrlData.signedUrl);
-          xhr.setRequestHeader('Content-Type', file.type);
-          xhr.send(file);
-        })
-        .catch(reject);
-    });
-  };
-  
-  // Handle chunked upload for larger files
-  const handleLargeFileUpload = async (file: File, filePath: string, fileName: string): Promise<string | undefined> => {
-    try {
-      // Calculate number of chunks
-      const totalChunks = calculateChunks(file.size, CHUNK_SIZE);
-      
-      // Add folder reference
-      let folderArray: string[] = [];
-      if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
-        folderArray = [currentFolder];
-      }
-      
-      // Create the media record first with "uploading" status
-      const { data: mediaRecord, error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          creator_id: creatorId,
-          bucket_key: filePath,
-          filename: fileName,
-          mime: file.type,
-          file_size: file.size,
-          status: 'uploading', // Mark as uploading initially
-          folders: folderArray
-        })
-        .select('id');
-        
-      if (mediaError) {
-        throw mediaError;
-      }
-      
-      if (!mediaRecord || !mediaRecord[0]) {
-        throw new Error('Failed to create media record');
-      }
-      
-      const fileId = mediaRecord[0].id;
-      
-      // Create multipart upload
-      const { data: multipartData, error: multipartError } = await supabase.storage
-        .from('raw_uploads')
-        .createMultipartUpload({ 
-          bucketId: 'raw_uploads',
-          path: filePath,
-          size: file.size,
-          mimeType: file.type
-        });
-      
-      if (multipartError || !multipartData) {
-        throw multipartError || new Error('Failed to create multipart upload');
-      }
-      
-      const { uploadId } = multipartData;
-      const parts = [];
-      const abortController = abortControllersRef.current.get(file.name);
-      
-      // Upload each chunk
-      for (let i = 0; i < totalChunks; i++) {
-        if (abortController?.signal.aborted) {
-          throw new Error('Upload cancelled');
-        }
-        
-        const start = i * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        const chunk = file.slice(start, end);
-        
-        // Get signed URL for this part
-        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-          .from('raw_uploads')
-          .getSignedUrlPath({
-            bucketId: 'raw_uploads',
-            path: filePath,
-            uploadId,
-            partNumber: i + 1,
-          });
-        
-        if (signedUrlError || !signedUrlData) {
-          throw signedUrlError || new Error('Failed to get signed URL for part');
-        }
-        
-        // Upload this part
-        const response = await fetch(signedUrlData.signedUrl, {
-          method: 'PUT',
-          body: chunk,
-          headers: {
-            'Content-Type': file.type
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Failed to upload part ${i+1}: ${response.statusText}`);
-        }
-        
-        // Get the ETag from the response headers
-        const etag = response.headers.get('etag');
-        
-        if (!etag) {
-          throw new Error(`No ETag received for part ${i+1}`);
-        }
-        
-        parts.push({
-          partNumber: i + 1,
-          etag
-        });
-        
-        // Update progress
-        const progress = Math.min(100 * ((i + 1) / totalChunks), 99); // Cap at 99% until complete
-        updateFileProgress(file.name, progress);
-      }
-      
-      // Complete the multipart upload
-      const { error: completeError } = await supabase.storage
-        .from('raw_uploads')
-        .completeMultipartUpload({
-          bucketId: 'raw_uploads',
-          path: filePath,
-          uploadId,
-          parts
-        });
-      
-      if (completeError) {
-        throw completeError;
-      }
-      
-      // Update the media record to mark as complete
-      const { error: updateError } = await supabase
-        .from('media')
-        .update({ status: 'complete' })
-        .eq('id', fileId);
-      
-      if (updateError) {
-        console.error('Error updating media status:', updateError);
-        // Don't throw here, the upload succeeded
-      }
-      
-      // Update file status to complete
-      updateFileProgress(file.name, 100, 'complete');
-      
-      return fileId;
-      
-    } catch (error) {
-      console.error('Chunked upload error:', error);
-      updateFileProgress(file.name, 0, 'error');
-      setFileStatuses(prev => 
-        prev.map(status => 
-          status.name === file.name 
-            ? { 
-                ...status, 
-                error: error instanceof Error ? error.message : 'Chunked upload failed',
-                status: 'error'
-              } 
-            : status
-        )
-      );
-      throw error;
     }
   };
 
