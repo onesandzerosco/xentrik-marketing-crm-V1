@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,7 @@ import {
   FileAudio, 
   File, 
   Download,
-  Trash2,
-  FolderPlus
+  Trash2
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,7 +29,6 @@ export interface FileListProps {
   onFilesChanged: () => void;
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
-  onAddToFolderClick?: () => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
@@ -39,8 +36,7 @@ export const FileList: React.FC<FileListProps> = ({
   isCreatorView = false,
   onFilesChanged,
   recentlyUploadedIds = [],
-  onSelectFiles,
-  onAddToFolderClick
+  onSelectFiles
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const { toast } = useToast();
@@ -133,30 +129,6 @@ export const FileList: React.FC<FileListProps> = ({
 
   return (
     <div className="w-full relative overflow-x-auto">
-      {/* Display action buttons when files are selected */}
-      {selectedFileIds.length > 0 && isCreatorView && (
-        <div className="mb-4 flex items-center gap-2">
-          {onAddToFolderClick && (
-            <Button variant="outline" onClick={onAddToFolderClick}>
-              <FolderPlus className="h-4 w-4 mr-2" />
-              Add {selectedFileIds.length} Files to Folder
-            </Button>
-          )}
-          <Button variant="outline" onClick={() => {}}>
-            <Download className="h-4 w-4 mr-2" />
-            Download {selectedFileIds.length} Files
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => {}}
-            className="text-destructive border-destructive hover:bg-destructive/10"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete {selectedFileIds.length} Files
-          </Button>
-        </div>
-      )}
-      
       <Table>
         <TableHeader>
           <TableRow>
