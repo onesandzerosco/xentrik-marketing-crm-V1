@@ -6,7 +6,7 @@ interface Props {
   onChange: (role: string) => void;
 }
 
-// Update to use the new role options
+// Update to use the additional roles that match what's used in the TeamHeader component
 const AVAILABLE_ROLES = ["Chatters", "VA", "Admin", "Developer", "Creator"];
 
 const RolesSection: React.FC<Props> = ({ selected, onChange }) => (
