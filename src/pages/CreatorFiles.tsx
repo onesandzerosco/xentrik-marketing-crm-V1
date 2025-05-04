@@ -260,9 +260,13 @@ const CreatorFiles = () => {
         throw filesError;
       }
       
+      console.log(`Found ${filesInFolder?.length || 0} files in folder ${folderId} to update`);
+      
       // Update each file to remove this folder from its folders array
       for (const file of filesInFolder || []) {
         const updatedFolders = (file.folders || []).filter(f => f !== folderId);
+        
+        console.log(`Updating file ${file.id}: removing folder ${folderId}, new folders:`, updatedFolders);
         
         const { error: updateError } = await supabase
           .from('media')
@@ -280,9 +284,9 @@ const CreatorFiles = () => {
         .from('creator_files')
         .remove([`${creator.id}/${folderId}/.folder`]);
       
-      if (deleteError) {
+      if (deleteError && !deleteError.message.includes('Object not found')) {
         console.error("Error deleting folder:", deleteError);
-        throw deleteError;
+        // Don't throw here, continue with UI update even if storage deletion fails
       }
       
       // Update the UI by removing the folder from availableFolders
@@ -290,13 +294,19 @@ const CreatorFiles = () => {
         prevFolders.filter(folder => folder.id !== folderId)
       );
       
-      // If the current folder is the one being deleted, switch to 'shared'
+      // If the current folder is the one being deleted, switch to 'all' instead of 'shared'
       if (currentFolder === folderId) {
         setCurrentFolder('all');
       }
       
-      // Refresh the files list
+      // Refresh the files list to reflect the changes
       refetch();
+      
+      // Show success message
+      toast({
+        title: "Folder deleted",
+        description: "Files have been moved to Unsorted Uploads",
+      });
       
       return Promise.resolve();
       
