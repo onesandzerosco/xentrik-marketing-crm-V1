@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
-import FileHeader from './FileHeader'; // Changed from import { FileHeader }
+import FileHeader from './FileHeader';
 import { FileList } from './FileList';
 import { FileGrid } from './FileGrid';
 import { FileViewSkeleton } from './FileViewSkeleton';
@@ -233,19 +234,24 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  // Function to toggle between grid and list views
+  const toggleView = () => {
+    setView(prev => prev === 'grid' ? 'list' : 'grid');
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileHeader 
         creatorName={creatorName}
         creatorId={creatorId}
-        isGridView={isGridView}
+        isGridView={view === 'grid'}
         toggleView={toggleView}
         handleUploadClick={isCreatorView ? handleUploadClick : undefined}
-        handleCreateFolder={handleOpenNewFolderDialog}
+        handleCreateFolder={() => setShowNewFolderDialog(true)}
         currentFolder={currentFolder}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onFilesUploaded={handleFilesUploaded}
+        onFilesUploaded={handleUploadComplete}
       />
       
       <div className="flex h-full">

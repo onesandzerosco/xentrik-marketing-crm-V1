@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -353,7 +354,7 @@ const CreatorFiles = () => {
     }
   };
 
-  const canUpload = canUploadFiles(user?.role, user?.roles);
+  const canUpload = canUploadFiles(user?.role, user?.roles || []);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -383,7 +384,7 @@ const CreatorFiles = () => {
       ) : (
         <div className="space-y-6">
           <FileHeader
-            creatorId={id}
+            creatorId={id || ''}
             creatorName={creatorName || 'Creator'}
             isGridView={isGridView}
             toggleView={toggleView}
@@ -397,9 +398,7 @@ const CreatorFiles = () => {
 
           <FolderNav
             folders={folders}
-            currentFolder={currentFolder}
-            setCurrentFolder={setCurrentFolder}
-            folderHierarchy={folderHierarchy}
+            currentFolder={currentFolder?.id || ''}
             onFolderChange={(folderId) => {
               const folder = folders.find(f => f.id === folderId);
               if (folder) {

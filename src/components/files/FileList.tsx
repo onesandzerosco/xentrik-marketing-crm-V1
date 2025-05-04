@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,7 +12,7 @@ import {
   FileImage,
   FileVideo,
   FileAudio,
-  FilePdf,
+  File as FileIcon, 
   FileArchive,
   FileCode,
   File 
@@ -151,7 +152,7 @@ export const FileList: React.FC<FileListProps> = ({
       case 'audio':
         return <FileAudio className="h-4 w-4 mr-2 text-amber-500" />;
       case 'pdf':
-        return <FilePdf className="h-4 w-4 mr-2 text-red-500" />;
+        return <FileIcon className="h-4 w-4 mr-2 text-red-500" />;
       case 'archive':
         return <FileArchive className="h-4 w-4 mr-2 text-orange-500" />;
       case 'code':
@@ -173,9 +174,8 @@ export const FileList: React.FC<FileListProps> = ({
                     <Checkbox
                       id="select-all"
                       checked={files.length > 0 && selectedFileIds.length === files.length}
-                      indeterminate={selectedFileIds.length > 0 && selectedFileIds.length < files.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      onCheckedChange={(checked) => {
+                        if (checked) {
                           const allFileIds = files.map(file => file.id);
                           setSelectedFileIds(allFileIds);
                           if (onSelectFiles) {
