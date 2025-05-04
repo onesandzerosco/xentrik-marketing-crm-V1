@@ -23,19 +23,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-interface Folder {
+export interface FolderType {
   id: string;
   name: string;
+  parent_id: string | null;
 }
 
 interface FolderNavProps {
-  folders: Folder[];
-  currentFolder: string;
+  folders: FolderType[];
+  currentFolder: string | FolderType | null;
   onFolderChange: (folder: string) => void;
   activeFolder?: string | null;
   onCreateFolder?: (folderName: string) => void;
   onDeleteFolder?: (folderId: string) => Promise<void>;
   onInitiateNewFolder?: () => void; // Prop for initiating folder creation
+  folderHierarchy?: FolderType[];
+  onNavigate?: (folder: FolderType) => void;
+  setCurrentFolder?: (folder: FolderType | null) => void;
 }
 
 // These are the default folder IDs that should not be deleted
@@ -48,7 +52,10 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   activeFolder = null,
   onCreateFolder,
   onDeleteFolder,
-  onInitiateNewFolder
+  onInitiateNewFolder,
+  folderHierarchy,
+  onNavigate,
+  setCurrentFolder
 }) => {
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -89,6 +96,26 @@ export const FolderNav: React.FC<FolderNavProps> = ({
     }
   };
 
+  // Handle folder navigation when onNavigate is provided
+  const handleFolderClick = (folder: FolderType) => {
+    if (onNavigate) {
+      onNavigate(folder);
+    } else {
+      // Legacy behavior
+      onFolderChange(folder.id);
+    }
+  };
+
+  // Get current folder ID safely
+  const getCurrentFolderId = (): string => {
+    if (typeof currentFolder === 'string') {
+      return currentFolder;
+    } else if (currentFolder && typeof currentFolder === 'object') {
+      return currentFolder.id;
+    }
+    return '';
+  };
+
   // Separate default folders from custom folders
   const defaultFolders = folders.filter(folder => DEFAULT_FOLDERS.includes(folder.id));
   const customFolders = folders.filter(folder => !DEFAULT_FOLDERS.includes(folder.id));
@@ -112,10 +139,10 @@ export const FolderNav: React.FC<FolderNavProps> = ({
       {defaultFolders.map((folder) => (
         <Button
           key={folder.id}
-          variant={currentFolder === folder.id ? "secondary" : "ghost"}
+          variant={getCurrentFolderId() === folder.id ? "secondary" : "ghost"}
           size="sm"
           className="w-full justify-start px-3 font-normal"
-          onClick={() => onFolderChange(folder.id)}
+          onClick={() => handleFolderClick(folder)}
         >
           <Folder className="h-4 w-4 mr-2" />
           {folder.name}
@@ -129,10 +156,10 @@ export const FolderNav: React.FC<FolderNavProps> = ({
           {customFolders.map((folder) => (
             <div key={folder.id} className="flex items-center group">
               <Button
-                variant={currentFolder === folder.id ? "secondary" : "ghost"}
+                variant={getCurrentFolderId() === folder.id ? "secondary" : "ghost"}
                 size="sm"
                 className="w-full justify-start px-3 font-normal"
-                onClick={() => onFolderChange(folder.id)}
+                onClick={() => handleFolderClick(folder)}
               >
                 <Folder className="h-4 w-4 mr-2" />
                 {folder.name}

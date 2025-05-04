@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 const supabaseUrl = "https://rdzwpiokpyssqhnfiqrt.supabase.co";
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkendwaW9rcHlzc3FobmZpcXJ0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDY2NzcxMiwiZXhwIjoyMDYwMjQzNzEyfQ.pNv8PoMf5q-7Y6X3yp3R5B4QJTUHn4N_QGup-QB5g78";
 
 type RequestBody = {
   zipUrl: string;
