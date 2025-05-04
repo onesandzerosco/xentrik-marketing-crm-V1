@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, EmployeeStatus, PrimaryRole } from "@/types/employee";
@@ -247,7 +248,9 @@ const UserRolesList: React.FC = () => {
       // Update the creator record to mark it as inactive
       const { error } = await supabase
         .from('creators')
-        .update({ active: false })
+        .update({
+          active: false
+        })
         .eq('id', userId);
 
       if (error) {

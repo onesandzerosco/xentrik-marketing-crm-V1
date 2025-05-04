@@ -138,6 +138,7 @@ export type Database = {
       }
       creators: {
         Row: {
+          active: boolean | null
           created_at: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
           email: string | null
@@ -153,6 +154,7 @@ export type Database = {
           whatsapp_number: string | null
         }
         Insert: {
+          active?: boolean | null
           created_at?: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
           email?: string | null
@@ -168,6 +170,7 @@ export type Database = {
           whatsapp_number?: string | null
         }
         Update: {
+          active?: boolean | null
           created_at?: string | null
           creator_type?: Database["public"]["Enums"]["creator_type"]
           email?: string | null
