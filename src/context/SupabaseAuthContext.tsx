@@ -16,10 +16,20 @@ interface SupabaseAuthContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithOAuth: (provider: 'google') => Promise<void>;
   signOut: () => Promise<void>;
-  updateCredentials?: (credentials: { email?: string; password?: string }) => Promise<void>;
+  updateCredentials: (credentials: { 
+    email?: string; 
+    password?: string;
+    currentPassword?: string;
+    displayName?: string;
+    profileImage?: string;
+  }) => Promise<boolean>;
   pendingUsers?: any[];
   approvePendingUser?: (userId: string, approved: boolean) => Promise<void>;
-  createTeamMember?: (data: any) => Promise<void>;
+  createTeamMember: (data: { 
+    username: string; 
+    email: string; 
+    role: string;
+  }) => Promise<boolean>;
 }
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | null>(null);
@@ -150,13 +160,32 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // Helper function to update credentials
-  const updateCredentials = async (credentials: { email?: string; password?: string }) => {
+  // Helper function to update credentials - Updated to return Promise<boolean>
+  const updateCredentials = async (credentials: { 
+    email?: string; 
+    password?: string;
+    currentPassword?: string;
+    displayName?: string;
+    profileImage?: string;
+  }): Promise<boolean> => {
     try {
       // Build update object based on provided credentials
-      const updateData: { email?: string; password?: string } = {};
+      const updateData: { email?: string; password?: string; data?: Record<string, any> } = {};
       if (credentials.email) updateData.email = credentials.email;
       if (credentials.password) updateData.password = credentials.password;
+      
+      // Add user metadata updates if provided
+      if (credentials.displayName || credentials.profileImage) {
+        updateData.data = {};
+        
+        if (credentials.displayName) {
+          updateData.data.name = credentials.displayName;
+        }
+        
+        if (credentials.profileImage) {
+          updateData.data.avatar_url = credentials.profileImage;
+        }
+      }
       
       // Update auth credentials
       const { error } = await supabase.auth.updateUser(updateData);
@@ -174,13 +203,15 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           description: "Please check your email to verify the new address",
         });
       }
+      
+      return true;
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Update failed",
         description: error.message,
       });
-      throw error;
+      return false;
     }
   };
 
@@ -195,9 +226,42 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // This is a placeholder - implement if needed
   };
 
-  // Helper function to create team members
-  const createTeamMember = async (data: any) => {
-    // This is a placeholder - implement if needed
+  // Helper function to create team members - Updated to return Promise<boolean>
+  const createTeamMember = async (data: { 
+    username: string; 
+    email: string; 
+    role: string;
+  }): Promise<boolean> => {
+    try {
+      // Create a random temporary password
+      const tempPassword = Math.random().toString(36).slice(-10);
+      
+      // Call the create_team_member function
+      const { data: newUser, error } = await supabase.rpc(
+        'create_team_member',
+        { 
+          email: data.email, 
+          password: tempPassword,
+          name: data.username,
+          roles: [data.role]
+        }
+      );
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log("Team member created with ID:", newUser);
+      return true;
+    } catch (error: any) {
+      console.error("Error creating team member:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to create team member",
+        description: error.message || "An unknown error occurred"
+      });
+      return false;
+    }
   };
 
   useEffect(() => {
