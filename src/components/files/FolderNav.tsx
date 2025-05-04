@@ -145,7 +145,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         onClick={() => onInitiateNewFolder && onInitiateNewFolder()}
       >
         <FolderPlus className="h-4 w-4 mr-2" />
-        Create Folder with Files
+        Create Folder
       </Button>
 
       {/* Delete Folder Confirmation Dialog */}

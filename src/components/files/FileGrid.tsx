@@ -7,6 +7,7 @@ import { formatFileSize } from '@/utils/fileUtils';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface FileGridProps {
   files: CreatorFileType[];
@@ -143,11 +144,15 @@ export const FileGrid: React.FC<FileGridProps> = ({
             } ${isNewlyUploaded ? 'border border-yellow-400' : ''}`}
             onClick={() => toggleFileSelection(file.id)}
           >
-            {isSelected && (
-              <div className="absolute top-2 right-2 z-10">
-                <CheckCircle className="h-5 w-5 text-primary" />
-              </div>
-            )}
+            {/* Add checkbox in the top right */}
+            <div className="absolute top-2 right-2 z-10">
+              <Checkbox 
+                checked={isSelected}
+                onCheckedChange={() => toggleFileSelection(file.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-5 w-5 border-2 bg-background/80 hover:bg-background"
+              />
+            </div>
             
             <div className="aspect-square bg-muted/20 flex items-center justify-center">
               {file.type === 'image' ? (
