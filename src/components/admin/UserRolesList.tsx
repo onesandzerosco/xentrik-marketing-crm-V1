@@ -186,7 +186,7 @@ const UserRolesList: React.FC = () => {
       // Check if creator record already exists
       const { data: existingCreator } = await supabase
         .from('creators')
-        .select('id')
+        .select('id, active')
         .eq('id', userId)
         .maybeSingle();
 
@@ -203,7 +203,8 @@ const UserRolesList: React.FC = () => {
             gender: 'Male', // Default value
             team: 'A Team', // Default value
             creator_type: 'Real', // Default value
-            needs_review: false // Automatically approved
+            needs_review: false, // Automatically approved
+            active: true // Explicitly set to active
           });
 
         if (creatorError) {
@@ -226,8 +227,27 @@ const UserRolesList: React.FC = () => {
           title: "Creator account created",
           description: `${userData.name} has been set up as a creator`,
         });
+      } else if (!existingCreator.active) {
+        // If creator record exists but is inactive, make it active again
+        const { error: updateError } = await supabase
+          .from('creators')
+          .update({ 
+            active: true,
+            needs_review: false // Also ensure it's approved
+          })
+          .eq('id', userId);
+          
+        if (updateError) {
+          console.error("Error updating creator active status:", updateError);
+        } else {
+          console.log("Reactivated existing creator account:", userId);
+          toast({
+            title: "Creator account reactivated",
+            description: `${userData.name} has been reactivated as a creator`,
+          });
+        }
       } else {
-        // If creator record exists, make sure it's approved
+        // If creator record exists and is already active, just ensure it's approved
         const { error: updateError } = await supabase
           .from('creators')
           .update({ needs_review: false })

@@ -118,6 +118,17 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
       
       if (existingCreator) {
         console.log("Creator record already exists for user:", creatorId);
+        // Update the creator to ensure it's active
+        const { error: updateError } = await supabase
+          .from('creators')
+          .update({ active: true })
+          .eq('id', creatorId);
+          
+        if (updateError) {
+          console.error("Error updating creator active status:", updateError);
+        } else {
+          console.log("Updated creator active status to true");
+        }
         return;
       }
       
@@ -130,6 +141,7 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
           gender: 'Male', // Default value required by the schema
           team: 'A Team', // Default value required by the schema
           creator_type: 'Real', // Default value required by the schema
+          active: true // Explicitly set to active
         });
       
       if (creatorError) {

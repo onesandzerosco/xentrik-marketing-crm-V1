@@ -44,7 +44,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           creator_social_links (*),
           creator_tags (tag)
         `)
-        .eq('active', true);
+        .eq('active', true); // Only select active creators
 
       if (error) {
         throw error;
@@ -92,7 +92,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           tags: creator.creator_tags?.map(t => t.tag) || [],
           assignedTeamMembers: [],
           needsReview: creator.needs_review || false,
-          active: creator.active !== false, // Default to true if not explicitly set to false
+          active: true, // Always true since we're only fetching active creators
           telegramUsername: creator.telegram_username || '',
           whatsappNumber: creator.whatsapp_number || '',
           notes: creator.notes || ''
