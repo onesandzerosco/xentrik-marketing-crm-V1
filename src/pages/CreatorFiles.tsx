@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -457,7 +456,6 @@ const CreatorFiles = () => {
               isCreatorView={isCreator}
               onFilesChanged={fetchFiles}
               recentlyUploadedIds={uploadingFiles.map(f => f.id).concat(recentlyExtractedIds)}
-              onUploadClick={handleUploadClick}
               onSelectFiles={setSelectedFiles}
             />
           )}

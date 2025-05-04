@@ -33,7 +33,7 @@ const FileHeader: React.FC<FileHeaderProps> = ({
   onFilesUploaded
 }) => {
   const { userRole, userRoles } = useAuth();
-  const canUpload = canUploadFiles(userRole, userRoles);
+  const canUpload = canUploadFiles(userRole, userRoles || []);  // Added fallback empty array for userRoles
 
   return (
     <div className="flex flex-col space-y-4">

@@ -1,514 +1,290 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2, FileEdit } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatFileSize, formatDate } from '@/utils/fileUtils';
-import { CreatorFileType } from '@/pages/CreatorFiles';
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
-import { canDeleteFiles, canEditFileDescription } from '@/utils/permissionUtils';
+import { 
+  MoreHorizontal, 
+  Download, 
+  Trash2, 
+  Copy, 
+  CheckCircle2, 
+  FileText,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  FilePdf,
+  FileArchive,
+  FileCode,
+  File 
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/components/ui/use-toast";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
+import { CreatorFileType } from '@/pages/CreatorFiles';
 
-interface FileListProps {
+export interface FileListProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
-  onFilesChanged?: () => void;
+  onFilesChanged: () => void;
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
-  files, 
-  isCreatorView = false, 
+  files,
+  isCreatorView = false,
   onFilesChanged,
   recentlyUploadedIds = [],
   onSelectFiles
 }) => {
+  const [fileToDelete, setFileToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const { toast } = useToast();
-  const { userRole, userRoles } = useAuth();
-  
-  // Use our permission utility functions with both primary role and roles array
-  const canEdit = canEditFileDescription(userRole, userRoles);
-  const canDelete = canDeleteFiles(userRole, userRoles);
-  
-  const totalFiles = files.length;
-  const uploadingFiles = files.filter(file => file.status === 'uploading').length;
-  
-  const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
-  const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
-  const [displayFiles, setDisplayFiles] = useState<CreatorFileType[]>(files);
-  
-  // New state for note editing
-  const [isEditingNote, setIsEditingNote] = useState(false);
-  const [currentEditingFile, setCurrentEditingFile] = useState<CreatorFileType | null>(null);
-  const [noteContent, setNoteContent] = useState("");
-  
-  // Update display files when input files change
-  useEffect(() => {
-    setDisplayFiles(files);
-  }, [files]);
-  
-  // Notify parent component when selection changes
-  useEffect(() => {
-    if (onSelectFiles) {
-      onSelectFiles(Array.from(selectedFiles));
-    }
-  }, [selectedFiles, onSelectFiles]);
-  
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'image':
-        return <Image className="h-4 w-4 text-blue-500" />;
-      case 'document':
-        return <FileText className="h-4 w-4 text-orange-500" />;
-      case 'video':
-        return <Video className="h-4 w-4 text-red-500" />;
-      case 'audio':
-        return <AudioLines className="h-4 w-4 text-green-500" />;
-      default:
-        return <File className="h-4 w-4 text-gray-500" />;
-    }
+
+  const handleDownload = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const handleShare = (file: CreatorFileType) => {
-    navigator.clipboard.writeText(`${window.location.origin}/share/${file.id}`);
-    toast({
-      title: "Link copied!",
-      description: "The sharing link has been copied to your clipboard.",
-    });
-  };
-  
-  const handleDelete = async (file: CreatorFileType) => {
-    try {
-      setProcessingFiles(prev => new Set([...prev, file.id]));
-      
-      // Delete the file from storage
-      const { error: storageError } = await supabase.storage
-        .from('raw_uploads')
-        .remove([file.bucketPath || '']);
-        
-      if (storageError) throw storageError;
-      
-      // Delete the media record if it exists
-      if (file.id) {
-        const { error: mediaError } = await supabase
-          .from('media')
-          .delete()
-          .eq('id', file.id);
-          
-        if (mediaError) throw mediaError;
-      }
-      
-      // Remove from selected files
-      setSelectedFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        toast({
+          title: "Link copied",
+          description: "File link copied to clipboard.",
+        });
+      })
+      .catch(err => {
+        console.error("Failed to copy:", err);
+        toast({
+          title: "Error",
+          description: "Failed to copy link to clipboard.",
+          variant: "destructive",
+        });
       });
-      
-      // Remove from processing files
-      setProcessingFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
-      });
-      
-      // Update local display files to immediately remove this file
-      setDisplayFiles(prev => prev.filter(f => f.id !== file.id));
-      
-      // Notify parent component about the change
-      if (onFilesChanged) {
-        onFilesChanged();
-      }
-      
-      toast({
-        title: "File deleted",
-        description: `Successfully deleted ${file.name}`,
-      });
-    } catch (error) {
-      console.error('Delete error:', error);
-      
-      setProcessingFiles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(file.id);
-        return newSet;
-      });
-      
-      toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete the file",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleDeleteSelected = async () => {
-    if (selectedFiles.size === 0) return;
-    
-    try {
-      const selectedFileIds = Array.from(selectedFiles);
-      const selectedFileObjects = displayFiles.filter(file => selectedFiles.has(file.id));
-      
-      // Add all files to processing state
-      setProcessingFiles(new Set(selectedFileIds));
-      
-      // Keep track of successfully deleted file IDs
-      const deletedFileIds = new Set<string>();
-      
-      for (const file of selectedFileObjects) {
-        try {
-          // Delete the file from storage
-          await supabase.storage
-            .from('raw_uploads')
-            .remove([file.bucketPath || '']);
-          
-          // Delete the media record if it exists
-          if (file.id) {
-            await supabase
-              .from('media')
-              .delete()
-              .eq('id', file.id);
-          }
-          
-          // Mark this file as successfully deleted
-          deletedFileIds.add(file.id);
-        } catch (error) {
-          console.error(`Error deleting file ${file.id}:`, error);
-          // Continue with other files
-        }
-      }
-      
-      // Update local display files to immediately remove deleted files
-      setDisplayFiles(prev => prev.filter(f => !deletedFileIds.has(f.id)));
-      
-      // Clear selections and processing state
-      setSelectedFiles(new Set());
-      setProcessingFiles(new Set());
-      
-      // Notify parent component about the change
-      if (onFilesChanged) {
-        onFilesChanged();
-      }
-      
-      toast({
-        title: "Files deleted",
-        description: `Successfully deleted ${deletedFileIds.size} files`,
-      });
-    } catch (error) {
-      console.error('Delete selected error:', error);
-      
-      setProcessingFiles(new Set());
-      
-      toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete selected files",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      // Select only non-uploading files
-      const selectableFileIds = displayFiles
-        .filter(file => file.status !== 'uploading')
-        .map(file => file.id);
-      setSelectedFiles(new Set(selectableFileIds));
-    } else {
-      setSelectedFiles(new Set());
-    }
-  };
-  
-  const handleSelectFile = (fileId: string, checked: boolean) => {
-    setSelectedFiles(prev => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(fileId);
-      } else {
-        newSet.delete(fileId);
-      }
-      return newSet;
-    });
-  };
-  
-  const downloadSelected = () => {
-    if (selectedFiles.size === 0) return;
-    
-    const filesToDownload = displayFiles.filter(file => selectedFiles.has(file.id));
-    triggerDownload(filesToDownload);
   };
 
-  // Function to trigger download for one or multiple files
-  const triggerDownload = (filesToDownload: CreatorFileType[]) => {
-    if (filesToDownload.length === 0) return;
+  const handleDeleteFile = async () => {
+    if (!fileToDelete) return;
     
-    // Dispatch a custom event for the FileDownloader to handle
-    const event = new CustomEvent('fileDownloadRequest', {
-      detail: { files: filesToDownload }
-    });
-    window.dispatchEvent(event);
-  };
-  
-  // Function to open the note editing dialog
-  const openNoteEditor = (file: CreatorFileType) => {
-    setCurrentEditingFile(file);
-    setNoteContent(file.description || '');
-    setIsEditingNote(true);
-  };
-
-  // Function to save the note
-  const saveNote = async () => {
-    if (!currentEditingFile) return;
+    setIsDeleting(true);
     
     try {
-      // Save the note to the database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('media')
-        .update({ 
-          description: noteContent.substring(0, 200) // Limit to 200 chars
-        })
-        .eq('id', currentEditingFile.id);
+        .delete()
+        .eq('id', fileToDelete);
         
       if (error) throw error;
       
-      // Update the local state
-      setDisplayFiles(prev => 
-        prev.map(file => 
-          file.id === currentEditingFile.id 
-            ? { ...file, description: noteContent } 
-            : file
-        )
-      );
-      
-      if (onFilesChanged) {
-        onFilesChanged();
-      }
-      
       toast({
-        title: "Note saved",
-        description: "The file description has been updated.",
+        title: "File deleted",
+        description: `Successfully deleted file`,
       });
       
-      setIsEditingNote(false);
-      setCurrentEditingFile(null);
-      
+      onFilesChanged();
     } catch (error) {
-      console.error('Error saving note:', error);
+      console.error("Error deleting file:", error);
       toast({
-        title: "Error saving note",
-        description: error instanceof Error ? error.message : "Failed to save the note",
+        title: "Error deleting file",
+        description: error instanceof Error ? error.message : "Failed to delete file",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
+      setFileToDelete(null);
     }
   };
 
-  console.log("FileList permissions:", { canEdit, canDelete, userRole, userRoles, isCreatorView });
-  
-  const allSelected = displayFiles.length > 0 && 
-    selectedFiles.size === displayFiles.filter(file => file.status !== 'uploading').length;
-  const someSelected = selectedFiles.size > 0 && !allSelected;
+  const handleCheckboxChange = (fileId: string) => {
+    const isSelected = selectedFileIds.includes(fileId);
+    let newSelection: string[];
+    
+    if (isSelected) {
+      newSelection = selectedFileIds.filter(id => id !== fileId);
+    } else {
+      newSelection = [...selectedFileIds, fileId];
+    }
+    
+    setSelectedFileIds(newSelection);
+    if (onSelectFiles) {
+      onSelectFiles(newSelection);
+    }
+  };
+
+  const isFileSelected = (fileId: string) => {
+    return selectedFileIds.includes(fileId);
+  };
+
+  const getFileIcon = (fileType: string) => {
+    switch (fileType) {
+      case 'image':
+        return <FileImage className="h-4 w-4 mr-2 text-emerald-500" />;
+      case 'video':
+        return <FileVideo className="h-4 w-4 mr-2 text-violet-500" />;
+      case 'audio':
+        return <FileAudio className="h-4 w-4 mr-2 text-amber-500" />;
+      case 'pdf':
+        return <FilePdf className="h-4 w-4 mr-2 text-red-500" />;
+      case 'archive':
+        return <FileArchive className="h-4 w-4 mr-2 text-orange-500" />;
+      case 'code':
+        return <FileCode className="h-4 w-4 mr-2 text-blue-500" />;
+      default:
+        return <FileText className="h-4 w-4 mr-2 text-gray-500" />;
+    }
+  };
 
   return (
-    <>
-      <div className="mb-4 flex items-center justify-between px-1">
-        <div className="text-sm text-muted-foreground">
-          {totalFiles} {totalFiles === 1 ? 'file' : 'files'}
-          {uploadingFiles > 0 && (
-            <span className="ml-2 text-primary">
-              ({uploadingFiles} uploading)
-            </span>
+    <div className="rounded-lg border overflow-hidden">
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800">
+        <div className="flex items-center space-x-2">
+          {isCreatorView && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button variant="ghost" size="sm" className="p-0 h-auto w-auto">
+                    <Checkbox
+                      id="select-all"
+                      checked={files.length > 0 && selectedFileIds.length === files.length}
+                      indeterminate={selectedFileIds.length > 0 && selectedFileIds.length < files.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const allFileIds = files.map(file => file.id);
+                          setSelectedFileIds(allFileIds);
+                          if (onSelectFiles) {
+                            onSelectFiles(allFileIds);
+                          }
+                        } else {
+                          setSelectedFileIds([]);
+                          if (onSelectFiles) {
+                            onSelectFiles([]);
+                          }
+                        }
+                      }}
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {files.length > 0 && selectedFileIds.length === files.length ? "Deselect All" : "Select All"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
-          {selectedFiles.size > 0 && (
-            <span className="ml-2">
-              | {selectedFiles.size} selected
-            </span>
-          )}
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {files.length} files
+          </p>
         </div>
-        {selectedFiles.size > 0 && (
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={downloadSelected}
-            >
-              <Download className="h-3.5 w-3.5 mr-1" /> Download Selected
-            </Button>
-            {canDelete && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleDeleteSelected}
-                className="text-red-500"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Selected
-              </Button>
-            )}
-          </div>
-        )}
       </div>
 
-      <div className="rounded-md border overflow-hidden">
-        <div className="grid grid-cols-[40px_1fr_100px_150px_120px] gap-3 px-4 py-3 font-medium text-xs border-b bg-muted/20">
-          <div className="flex items-center">
-            <Checkbox 
-              checked={allSelected} 
-              onCheckedChange={handleSelectAll}
-              className="data-[state=indeterminate]:bg-primary"
-              data-state={someSelected ? "indeterminate" : allSelected ? "checked" : "unchecked"}
-            />
-          </div>
-          <div>Name</div>
-          <div>Size</div>
-          <div>Modified</div>
-          <div className="text-right">Actions</div>
-        </div>
-        <div className="divide-y">
-          {displayFiles.map((file) => {
-            const isProcessing = processingFiles.has(file.id);
-            const isChecked = selectedFiles.has(file.id);
-            const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
-            
-            return (
-              <div
-                key={file.id}
-                className={`grid grid-cols-[40px_1fr_100px_150px_120px] gap-3 px-4 py-3 hover:bg-muted/10 transition-colors items-center ${
-                  isNewlyUploaded ? 'border border-yellow-400 bg-yellow-50/10' : ''
-                }`}
-              >
-                <div className="flex items-center">
-                  <Checkbox 
-                    checked={isChecked}
-                    onCheckedChange={(checked) => handleSelectFile(file.id, !!checked)}
-                    disabled={isProcessing || file.status === 'uploading'}
-                  />
-                </div>
-                <div className="flex flex-col gap-1 overflow-hidden">
-                  <div className="flex items-center gap-2">
-                    {getFileIcon(file.type)}
-                    <span className="truncate">{file.name}</span>
+      <div className="bg-white dark:bg-gray-950">
+        {files.map((file) => {
+          const isNew = recentlyUploadedIds?.includes(file.id);
+          return (
+            <div key={file.id} className="group flex items-center space-x-4 py-3 px-4 border-b last:border-b-0 dark:border-gray-800">
+              {isCreatorView && (
+                <Checkbox
+                  checked={isFileSelected(file.id)}
+                  onCheckedChange={() => handleCheckboxChange(file.id)}
+                  id={`file-${file.id}`}
+                  className="shrink-0"
+                />
+              )}
+              
+              <div className="flex items-center w-full">
+                {getFileIcon(file.type)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    {file.name}
+                    {isNew && (
+                      <CheckCircle2 className="inline-block h-3 w-3 ml-1 text-blue-500 align-top" />
+                    )}
+                  </p>
+                  <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                    <span>{file.type}</span>
+                    <span className="mx-1">•</span>
+                    <span>{file.size} KB</span>
+                    <span className="mx-1">•</span>
+                    <span>Uploaded {formatDistanceToNow(new Date(file.created_at || Date.now()), { addSuffix: true })}</span>
                   </div>
-                  {file.description && (
-                    <div className="text-xs text-muted-foreground truncate ml-6">
-                      {file.description}
-                    </div>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatFileSize(file.size)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {formatDate(file.created_at)}
-                </div>
-                <div className="flex justify-end gap-2">
-                  {file.status === 'uploading' ? (
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      disabled
-                      className="h-7 px-2"
-                    >
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    </Button>
-                  ) : (
-                    <>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-7 px-2"
-                        disabled={isProcessing}
-                        onClick={() => triggerDownload([file])}
-                        aria-label={`Download ${file.name}`}
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                      </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleShare(file)}
-                        className="h-7 px-2"
-                        disabled={isProcessing}
-                      >
-                        <Share2 className="h-3.5 w-3.5" />
-                      </Button>
-
-                      {canEdit && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => openNoteEditor(file)}
-                          className="h-7 px-2 text-blue-500 hover:text-blue-600"
-                          disabled={isProcessing}
-                          aria-label={`Add note to ${file.name}`}
-                        >
-                          <FileEdit className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-
-                      {canDelete && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(file)}
-                          className="h-7 px-2 text-red-500 hover:text-red-600"
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      )}
-                    </>
-                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="w-8 h-8 p-0 opacity-0 group-hover:opacity-100">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" forceMount>
+                  <DropdownMenuItem onClick={() => handleDownload(file.url, file.name)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCopyToClipboard(file.url)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Link
+                  </DropdownMenuItem>
+                  {isCreatorView && (
+                    <DropdownMenuItem onClick={() => setFileToDelete(file.id)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Note Editor Dialog */}
-      <Dialog open={isEditingNote} onOpenChange={setIsEditingNote}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Note to File</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="file-note">Note (max 200 characters)</Label>
-            <Textarea
-              id="file-note"
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Enter a description for this file..."
-              className="mt-2"
-              maxLength={200}
-              rows={4}
-            />
-            <div className="text-right text-xs text-muted-foreground mt-1">
-              {noteContent.length}/200 characters
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditingNote(false)}>
-              Cancel
-            </Button>
-            <Button onClick={saveNote}>
-              Save Note
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      <AlertDialog open={!!fileToDelete} onOpenChange={(open) => !open && setFileToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete file?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this file? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteFile}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };
