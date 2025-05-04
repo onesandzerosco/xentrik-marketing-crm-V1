@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo } from 'lucide-react';
+import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo, Play } from 'lucide-react';
 import { formatFileSize } from '@/utils/fileUtils';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -314,10 +314,18 @@ export const FileGrid: React.FC<FileGridProps> = ({
                          e.stopPropagation();
                          openVideoPreview(file);
                        }}>
-                    <div className="flex flex-col items-center justify-center w-full h-full bg-black/5 absolute inset-0">
-                      <FileVideo className="h-10 w-10 text-muted-foreground" />
-                      <span className="text-xs mt-2 text-muted-foreground">Click to preview</span>
-                    </div>
+                    {file.thumbnail_url ? (
+                      <img 
+                        src={file.thumbnail_url} 
+                        alt={file.name}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center w-full h-full bg-black/5 absolute inset-0">
+                        <FileVideo className="h-10 w-10 text-muted-foreground" />
+                        <span className="text-xs mt-2 text-muted-foreground">Click to preview</span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                       <Button 
                         variant="secondary" 
@@ -326,7 +334,9 @@ export const FileGrid: React.FC<FileGridProps> = ({
                           e.stopPropagation();
                           openVideoPreview(file);
                         }}
+                        className="flex items-center gap-1.5"
                       >
+                        <Play className="h-4 w-4" />
                         Play Video
                       </Button>
                     </div>

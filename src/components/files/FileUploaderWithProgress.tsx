@@ -255,7 +255,10 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
             // Update the media record to mark as complete
             await supabase
               .from('media')
-              .update({ status: 'complete' })
+              .update({ 
+                status: 'complete', 
+                thumbnail_url: thumbnailUrl // Save the thumbnail URL if it exists
+              })
               .eq('id', fileId);
             
             updateFileProgress(file.name, 100, 'complete');
@@ -440,4 +443,3 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
 };
 
 export default FileUploaderWithProgress;
-

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -22,7 +21,8 @@ export interface CreatorFileType {
   bucketPath?: string;
   isNewlyUploaded?: boolean;
   folderRefs?: string[]; // Array of folder IDs this file is associated with
-  description?: string; // New field for file descriptions
+  description?: string; // Field for file descriptions
+  thumbnail_url?: string; // New field for video thumbnails
 }
 
 interface Folder {
@@ -403,7 +403,8 @@ const CreatorFiles = () => {
           status: media.status as "uploading" | "complete" || 'complete',
           bucketPath: media.bucket_key,
           isNewlyUploaded,
-          description: media.description // Add description field to file object
+          description: media.description, // Add description field to file object
+          thumbnail_url: media.thumbnail_url // Add thumbnail_url for videos
         } as CreatorFileType;
       }));
       
