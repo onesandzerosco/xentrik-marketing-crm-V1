@@ -55,11 +55,6 @@ export const FolderNav: React.FC<FolderNavProps> = ({
     
     setNewFolderName('');
     setIsCreating(false);
-    
-    toast({
-      title: "Folder created",
-      description: `Created folder: ${newFolderName.trim()}`,
-    });
   };
 
   const cancelCreate = () => {

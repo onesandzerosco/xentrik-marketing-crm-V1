@@ -34,6 +34,7 @@ const CreatorFiles = () => {
   const { getCreator } = useCreators();
   const creator = getCreator(id || '');
   const { toast } = useToast();
+  
   const [currentFolder, setCurrentFolder] = useState('shared');
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
@@ -61,7 +62,62 @@ const CreatorFiles = () => {
     loadCustomFolders();
   }, [id, navigate, creator]);
   
+  // Updated to use a more reliable approach for loading folders
   const loadCustomFolders = async () => {
+    if (!creator?.id) return;
+    
+    try {
+      // First try to get custom folders from the database
+      const { data: folderData, error: folderError } = await supabase
+        .from('media')
+        .select('folders')
+        .eq('creator_id', creator.id);
+      
+      if (folderError) {
+        console.error("Error loading folders from media table:", folderError);
+        // Fall back to listing storage directories
+        loadFoldersFromStorage();
+        return;
+      }
+      
+      // Extract unique folder IDs from all files
+      const uniqueFolders = new Set<string>();
+      folderData?.forEach(item => {
+        if (item.folders && Array.isArray(item.folders)) {
+          item.folders.forEach(folder => {
+            if (folder !== 'shared' && folder !== 'unsorted') {
+              uniqueFolders.add(folder);
+            }
+          });
+        }
+      });
+      
+      // Convert folder IDs to folder objects with proper naming
+      const customFolders = Array.from(uniqueFolders).map(folderId => ({
+        id: folderId,
+        name: folderId.charAt(0).toUpperCase() + folderId.slice(1).replace(/-/g, ' ')
+      }));
+      
+      // Set the available folders
+      setAvailableFolders(prevFolders => {
+        const defaultFolders = prevFolders.filter(f => f.id === 'shared' || f.id === 'unsorted');
+        return [...defaultFolders, ...customFolders];
+      });
+      
+      // If no folders found in the database, try to list from storage as fallback
+      if (customFolders.length === 0) {
+        loadFoldersFromStorage();
+      }
+      
+    } catch (err) {
+      console.error("Error in loadCustomFolders:", err);
+      // Fall back to listing storage directories
+      loadFoldersFromStorage();
+    }
+  };
+  
+  // Fallback method to load folders from storage
+  const loadFoldersFromStorage = async () => {
     if (!creator?.id) return;
     
     try {
@@ -73,7 +129,7 @@ const CreatorFiles = () => {
         });
       
       if (error) {
-        console.error("Error loading folders:", error);
+        console.error("Error loading folders from storage:", error);
         return;
       }
       
@@ -83,7 +139,7 @@ const CreatorFiles = () => {
         ?.filter(item => !item.name.includes('.')) // Simple check to exclude files
         ?.map(folder => ({
           id: folder.name,
-          name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1) // Capitalize first letter
+          name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1).replace(/-/g, ' ') // Capitalize and format
         })) || [];
       
       // Add the custom folders to the available folders
@@ -93,7 +149,7 @@ const CreatorFiles = () => {
       });
       
     } catch (err) {
-      console.error("Error in loadCustomFolders:", err);
+      console.error("Error in loadFoldersFromStorage:", err);
     }
   };
   
@@ -103,16 +159,40 @@ const CreatorFiles = () => {
     try {
       const folderId = folderName.toLowerCase().replace(/\s+/g, '-');
       
-      // Create an empty file in the folder to "create" the folder
-      const { error } = await supabase.storage
+      // Create an empty file in the folder to "create" the folder in storage
+      const { error: storageError } = await supabase.storage
         .from('creator_files')
         .upload(`${creator.id}/${folderId}/.folder`, new Blob(['']));
       
-      if (error) {
-        console.error("Error creating folder:", error);
+      if (storageError) {
+        console.error("Error creating folder in storage:", storageError);
+        toast({
+          title: "Warning",
+          description: "Created folder in database but storage folder creation failed. Some features may be limited.",
+          variant: "destructive"
+        });
+        // Continue anyway as we're now primarily using the database for folder tracking
+      }
+      
+      // Create a dummy file entry in the media table to register this folder
+      // This ensures the folder exists in the database even if no files are added to it
+      const { error: mediaError } = await supabase
+        .from('media')
+        .insert({
+          creator_id: creator.id,
+          filename: '.folder_placeholder',
+          file_size: 0,
+          bucket_key: `${creator.id}/${folderId}/.folder_placeholder`,
+          mime: 'text/plain',
+          folders: [folderId],
+          status: 'hidden'  // Special status to hide this from file listings
+        });
+      
+      if (mediaError) {
+        console.error("Error creating folder record in database:", mediaError);
         toast({
           title: "Error creating folder",
-          description: error.message,
+          description: mediaError.message,
           variant: "destructive"
         });
         return;
