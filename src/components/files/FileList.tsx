@@ -24,6 +24,7 @@ interface FileListProps {
   onFilesChanged?: () => void;
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
+  onUploadClick?: () => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
@@ -31,7 +32,8 @@ export const FileList: React.FC<FileListProps> = ({
   isCreatorView = false, 
   onFilesChanged,
   recentlyUploadedIds = [],
-  onSelectFiles
+  onSelectFiles,
+  onUploadClick
 }) => {
   const { toast } = useToast();
   const { userRole, userRoles } = useAuth();
@@ -311,6 +313,12 @@ export const FileList: React.FC<FileListProps> = ({
     }
   };
 
+  // Function to format date safely
+  const safeFormatDate = (dateString?: string) => {
+    if (!dateString) return "Unknown date";
+    return formatDate(dateString);
+  };
+
   console.log("FileList permissions:", { canEdit, canDelete, userRole, userRoles, isCreatorView });
   
   const allSelected = displayFiles.length > 0 && 
@@ -376,6 +384,7 @@ export const FileList: React.FC<FileListProps> = ({
             const isProcessing = processingFiles.has(file.id);
             const isChecked = selectedFiles.has(file.id);
             const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
+            const isUploading = file.status === 'uploading';
             
             return (
               <div
@@ -388,7 +397,7 @@ export const FileList: React.FC<FileListProps> = ({
                   <Checkbox 
                     checked={isChecked}
                     onCheckedChange={(checked) => handleSelectFile(file.id, !!checked)}
-                    disabled={isProcessing || file.status === 'uploading'}
+                    disabled={isProcessing || isUploading}
                   />
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden">
@@ -406,10 +415,10 @@ export const FileList: React.FC<FileListProps> = ({
                   {formatFileSize(file.size)}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {formatDate(file.created_at)}
+                  {safeFormatDate(file.created_at)}
                 </div>
                 <div className="flex justify-end gap-2">
-                  {file.status === 'uploading' ? (
+                  {isUploading ? (
                     <Button 
                       variant="ghost" 
                       size="sm"

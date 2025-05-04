@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -59,6 +58,7 @@ export const ZipFileUploader: React.FC<ZipFileUploaderProps> = ({
     }
   };
 
+  // Fix the type comparison issue
   const closeDialog = () => {
     setIsDialogOpen(false);
     setSelectedFile(null);
@@ -296,7 +296,7 @@ export const ZipFileUploader: React.FC<ZipFileUploaderProps> = ({
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
                 
-                {extractingStatus !== 'uploading' && extractingStatus !== 'idle' && (
+                {(extractingStatus === 'extracting' || extractingStatus === 'complete' || extractingStatus === 'error') && (
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Extraction progress</span>

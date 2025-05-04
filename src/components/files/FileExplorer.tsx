@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
-import { FileHeader } from './FileHeader';
+import FileHeader from './FileHeader';
 import { FileList } from './FileList';
 import { FileGrid } from './FileGrid';
 import { FileViewSkeleton } from './FileViewSkeleton';

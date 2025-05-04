@@ -1,19 +1,20 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/toast';
 import { useAuth } from '@/context/AuthContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileGrid } from '@/components/files/FileGrid';
-import FileList from '@/components/files/FileList';
+import { FileList } from '@/components/files/FileList';
 import FileHeader from '@/components/files/FileHeader';
-import FolderNav from '@/components/files/FolderNav';
+import { FolderNav } from '@/components/files/FolderNav';
 import FileUploader from '@/components/messages/FileUploader';
 import FileUploaderWithProgress from '@/components/files/FileUploaderWithProgress';
-import FileDownloader from '@/components/files/FileDownloader';
+import { FileDownloader } from '@/components/files/FileDownloader';
 import { getFileType, getFileExtension } from '@/utils/fileUtils';
 import { canUploadFiles } from '@/utils/permissionUtils';
 import {
@@ -33,6 +34,8 @@ export interface CreatorFileType {
   bucketPath?: string;
   description?: string;
   thumbnail_url?: string;
+  status?: string;
+  created_at?: string;
 }
 
 interface FolderType {
@@ -45,7 +48,7 @@ const CreatorFiles = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const { toast } = useToast();
-  const { userRole, userRoles, userId } = useAuth();
+  const { userRole, userRoles, user } = useAuth();
   
   const [files, setFiles] = useState<CreatorFileType[]>([]);
   const [folders, setFolders] = useState<FolderType[]>([]);
@@ -75,7 +78,7 @@ const CreatorFiles = () => {
         // Check if user is the creator
         const { data: creatorData, error: creatorError } = await supabase
           .from('creators')
-          .select('name, user_id')
+          .select('name')
           .eq('id', id)
           .single();
           
@@ -84,12 +87,12 @@ const CreatorFiles = () => {
         if (creatorData) {
           setCreatorName(creatorData.name);
           
-          // Check if current user is the creator or an admin
-          const isUserCreator = creatorData.user_id === userId;
+          // Check if current user is the creator or an admin or VA
           const isUserAdmin = userRole === "Admin";
+          const isUserCreator = userRole === "Creator" || userRoles.includes("Creator");
           const isUserVA = userRole === "VA" || userRoles.includes("VA");
           
-          setIsCreator(isUserCreator || isUserAdmin || isUserVA);
+          setIsCreator(isUserAdmin || isUserCreator || isUserVA);
         }
       } catch (error) {
         console.error('Error checking creator status:', error);
@@ -97,7 +100,7 @@ const CreatorFiles = () => {
     };
     
     checkCreatorStatus();
-  }, [id, userId, userRole, userRoles]);
+  }, [id, user, userRole, userRoles]);
 
   // Get creator name from location state if available
   useEffect(() => {
@@ -127,7 +130,11 @@ const CreatorFiles = () => {
           parent_id: null
         };
         
-        setFolders([sharedFolder, ...(data || [])]);
+        if (data) {
+          setFolders([sharedFolder, ...(data as FolderType[])]); 
+        } else {
+          setFolders([sharedFolder]);
+        }
         
         // Set initial folder to "shared"
         setCurrentFolder(sharedFolder);
@@ -186,7 +193,7 @@ const CreatorFiles = () => {
     setFolderHierarchy(hierarchy);
   }, [currentFolder, folders]);
 
-  const fetchFiles = async (folderId = currentFolderId) => {
+  const fetchFiles = async (folderId: string = currentFolderId || 'shared') => {
     if (!id) return;
     
     setIsLoading(true);
@@ -247,7 +254,9 @@ const CreatorFiles = () => {
           type: fileType,
           bucketPath: file.bucket_key,
           description: file.description || '',
-          thumbnail_url: file.thumbnail_url || undefined
+          thumbnail_url: file.thumbnail_url || undefined,
+          status: file.status,
+          created_at: file.created_at
         };
       }));
       
@@ -305,7 +314,9 @@ const CreatorFiles = () => {
       
       // Add the new folder to the list
       if (data && data[0]) {
-        setFolders(prev => [...prev, data[0]]);
+        // Cast to FolderType to ensure type safety
+        const newFolder = data[0] as FolderType;
+        setFolders(prev => [...prev, newFolder]);
         
         toast({
           title: 'Folder created',
@@ -328,7 +339,7 @@ const CreatorFiles = () => {
   };
 
   const handleFilesUploaded = (fileIds: string[] = []) => {
-    fetchFiles();
+    fetchFiles(currentFolderId || 'shared');
     if (fileIds.length > 0) {
       setRecentlyExtractedIds(fileIds);
       // Clear the extracted IDs after a delay
