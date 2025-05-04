@@ -35,9 +35,13 @@ export const FileGrid: React.FC<FileGridProps> = ({
   onSelectFiles
 }) => {
   const { toast } = useToast();
-  const { userRole } = useAuth();
+  const { userRole, userRoles } = useAuth();
   const isAdmin = userRole === "Admin";
   const canDeleteFiles = isAdmin || isCreatorView;
+  
+  // Determine if the user can edit file descriptions
+  const canEditDescriptions = isAdmin || isCreatorView || 
+    userRoles.includes("VA") || userRoles.includes("Creator");
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -130,7 +134,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
       });
     }
   };
-
+  
   // Function to bulk delete selected files
   const handleBulkDelete = async () => {
     const filesToDelete = files.filter(file => selectedFiles.has(file.id));
@@ -324,23 +328,25 @@ export const FileGrid: React.FC<FileGridProps> = ({
                 
                 {canDeleteFiles && (
                   <>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openNoteEditor(file);
-                      }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
-                        <line x1="9" y1="9" x2="10" y2="9" />
-                        <line x1="9" y1="13" x2="15" y2="13" />
-                        <line x1="9" y1="17" x2="15" y2="17" />
-                      </svg>
-                    </Button>
+                    {canEditDescriptions && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-blue-500 hover:text-blue-600"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openNoteEditor(file);
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                          <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z" />
+                          <line x1="9" y1="9" x2="10" y2="9" />
+                          <line x1="9" y1="13" x2="15" y2="13" />
+                          <line x1="9" y1="17" x2="15" y2="17" />
+                        </svg>
+                      </Button>
+                    )}
 
                     <Button
                       variant="ghost"

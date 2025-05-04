@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { FileText, Image, File, Video, AudioLines, Download, Share2, Loader2, Trash2, FileEdit } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -33,10 +34,14 @@ export const FileList: React.FC<FileListProps> = ({
   onSelectFiles
 }) => {
   const { toast } = useToast();
-  const { userRole } = useAuth();
+  const { userRole, userRoles } = useAuth();
   const isAdmin = userRole === "Admin";
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
+  
+  // Determine if the user can edit file descriptions
+  const canEditDescriptions = isAdmin || isCreatorView || 
+    userRoles.includes("VA") || userRoles.includes("Creator");
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -439,16 +444,18 @@ export const FileList: React.FC<FileListProps> = ({
 
                       {canDeleteFiles && (
                         <>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => openNoteEditor(file)}
-                            className="h-7 px-2 text-blue-500 hover:text-blue-600"
-                            disabled={isProcessing}
-                            aria-label={`Add note to ${file.name}`}
-                          >
-                            <FileEdit className="h-3.5 w-3.5" />
-                          </Button>
+                          {canEditDescriptions && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => openNoteEditor(file)}
+                              className="h-7 px-2 text-blue-500 hover:text-blue-600"
+                              disabled={isProcessing}
+                              aria-label={`Add note to ${file.name}`}
+                            >
+                              <FileEdit className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
 
                           <Button
                             variant="ghost"
