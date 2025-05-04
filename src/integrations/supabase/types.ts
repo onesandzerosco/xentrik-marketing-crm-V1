@@ -237,6 +237,7 @@ export type Database = {
           id: string
           mime: string
           status: string
+          thumbnail_url: string | null
         }
         Insert: {
           bucket_key: string
@@ -249,6 +250,7 @@ export type Database = {
           id?: string
           mime: string
           status?: string
+          thumbnail_url?: string | null
         }
         Update: {
           bucket_key?: string
@@ -261,6 +263,7 @@ export type Database = {
           id?: string
           mime?: string
           status?: string
+          thumbnail_url?: string | null
         }
         Relationships: []
       }

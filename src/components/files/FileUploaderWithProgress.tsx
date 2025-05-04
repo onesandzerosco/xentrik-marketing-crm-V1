@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -199,7 +198,8 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
               mime: file.type,
               file_size: file.size,
               status: 'uploading', // Mark as uploading initially
-              folders: folderArray
+              folders: folderArray,
+              thumbnail_url: thumbnailUrl // Store the thumbnail URL
             })
             .select('id');
           
