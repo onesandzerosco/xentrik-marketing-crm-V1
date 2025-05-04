@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";

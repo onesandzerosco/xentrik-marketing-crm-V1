@@ -230,6 +230,7 @@ export type Database = {
           bucket_key: string
           created_at: string
           creator_id: string
+          description: string | null
           file_size: number
           filename: string
           folders: string[] | null
@@ -241,6 +242,7 @@ export type Database = {
           bucket_key: string
           created_at?: string
           creator_id: string
+          description?: string | null
           file_size: number
           filename: string
           folders?: string[] | null
@@ -252,6 +254,7 @@ export type Database = {
           bucket_key?: string
           created_at?: string
           creator_id?: string
+          description?: string | null
           file_size?: number
           filename?: string
           folders?: string[] | null
