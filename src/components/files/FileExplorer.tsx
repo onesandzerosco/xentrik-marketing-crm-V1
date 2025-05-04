@@ -45,7 +45,7 @@ interface FileExplorerProps {
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
-  onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; // Modified to accept fileIds
+  onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; 
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
 }
@@ -81,6 +81,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [isFolderCreating, setIsFolderCreating] = useState(false);
   const [addFolderDialogTab, setAddFolderDialogTab] = useState('existing');
   const [newFolderInDialog, setNewFolderInDialog] = useState('');
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
   
   const filteredFiles = files.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,18 +107,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleInitiateNewFolder = () => {
-    // If there are no files to select, show an error
-    if (files.length === 0) {
-      toast({
-        title: "No files available",
-        description: "You need to upload files before creating a folder.",
-        variant: "destructive",
-      });
+    // Check if there are files selected - if not, show warning
+    if (selectedFiles.length === 0) {
+      setShowWarningDialog(true);
       return;
     }
     
-    // Clear previous selection and show the dialog
-    setSelectedFiles([]);
+    // Clear previous inputs and show the dialog
     setNewFolderName('');
     setShowNewFolderDialog(true);
   };
@@ -245,6 +241,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             setAddFolderDialogTab('existing');
             setNewFolderInDialog('');
             setTargetFolder('');
+          } else {
+            setShowWarningDialog(true);
           }
         }}
       />
@@ -309,6 +307,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Warning dialog for no files selected */}
+      <Dialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>No Files Selected</DialogTitle>
+            <DialogDescription>
+              Please select at least 1 file to create a folder.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowWarningDialog(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {showUploader && (
         <DragDropUploader 
@@ -415,24 +428,18 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
             <div className="grid gap-2">
               <Label>Selected Files ({selectedFiles.length})</Label>
-              {selectedFiles.length === 0 ? (
-                <div className="text-sm text-muted-foreground flex items-center justify-center p-4 border rounded-md">
-                  Please select at least one file to add to this folder
-                </div>
-              ) : (
-                <div className="max-h-40 overflow-y-auto border rounded-md p-2">
-                  <ul className="text-sm">
-                    {selectedFiles.map(id => {
-                      const file = files.find(f => f.id === id);
-                      return (
-                        <li key={id} className="py-1 px-2 truncate">
-                          {file ? file.name : `File ${id}`}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
+              <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+                <ul className="text-sm">
+                  {selectedFiles.map(id => {
+                    const file = files.find(f => f.id === id);
+                    return (
+                      <li key={id} className="py-1 px-2 truncate">
+                        {file ? file.name : `File ${id}`}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           </div>
           

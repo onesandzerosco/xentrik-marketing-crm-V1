@@ -14,6 +14,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Folder {
   id: string;
@@ -44,6 +52,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
 }) => {
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
   const { toast } = useToast();
 
   const handleDeleteFolder = async () => {
@@ -68,6 +77,15 @@ export const FolderNav: React.FC<FolderNavProps> = ({
     } finally {
       setIsDeleting(false);
       setFolderToDelete(null);
+    }
+  };
+  
+  const handleCreateFolderClick = () => {
+    if (onInitiateNewFolder) {
+      onInitiateNewFolder();
+    } else {
+      // If there's no handler, show the warning
+      setShowWarning(true);
     }
   };
 
@@ -142,11 +160,26 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         variant="ghost"
         size="sm"
         className="w-full justify-start px-3 font-normal text-muted-foreground mt-4"
-        onClick={() => onInitiateNewFolder && onInitiateNewFolder()}
+        onClick={handleCreateFolderClick}
       >
         <FolderPlus className="h-4 w-4 mr-2" />
         Create Folder
       </Button>
+
+      {/* Warning Dialog - No Files Selected */}
+      <Dialog open={showWarning} onOpenChange={setShowWarning}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>No Files Selected</DialogTitle>
+            <DialogDescription>
+              Please select at least 1 file to create a folder.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowWarning(false)}>OK</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Folder Confirmation Dialog */}
       <AlertDialog open={!!folderToDelete} onOpenChange={(open) => !open && setFolderToDelete(null)}>
