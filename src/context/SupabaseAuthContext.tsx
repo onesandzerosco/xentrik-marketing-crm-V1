@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -58,48 +59,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         localStorage.setItem('isCreator', 'true');
         setUserRoles(profileData.roles);
         localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
-        
-        // Check if this user has a creator record in the creators table
-        const { data: creatorData } = await supabase
-          .from('creators')
-          .select('id')
-          .eq('id', userId)
-          .single();
-        
-        // If the user has Creator role but no creator record, create one
-        if (!creatorData) {
-          // Get user profile data
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('name, email')
-            .eq('id', userId)
-            .single();
-          
-          if (userData) {
-            // Create creator record
-            await supabase.from('creators').insert({
-              id: userId,
-              name: userData.name,
-              email: userData.email,
-              gender: 'Other', // Default value
-              team: 'A',       // Default team
-              creator_type: 'Standard' // Default type
-            });
-            
-            // Create empty social links
-            await supabase.from('creator_social_links').insert({
-              creator_id: userId
-            });
-            
-            // Set creatorId
-            setCreatorId(userId);
-            localStorage.setItem('creatorId', userId);
-          }
-        } else {
-          // Set creatorId from existing record
-          setCreatorId(creatorData.id);
-          localStorage.setItem('creatorId', creatorData.id);
-        }
       }
       
       if (profileData?.role) {

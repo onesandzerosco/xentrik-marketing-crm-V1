@@ -85,8 +85,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   
   // Local state for optimistic UI updates
   const [localFiles, setLocalFiles] = useState<CreatorFileType[]>(files);
-  // Track files being added to folders for optimistic UI
-  const [pendingFolderAdditions, setPendingFolderAdditions] = useState<Record<string, string[]>>({});
   
   // New folder creation states
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
@@ -96,54 +94,42 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newFolderInDialog, setNewFolderInDialog] = useState('');
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   
+  // New state to track files being added to folders for optimistic UI
+  const [filesToFolderMap, setFilesToFolderMap] = useState<Map<string, string[]>>(new Map());
+  
   // Update local files when props files change
   useEffect(() => {
-    setLocalFiles(files);
-  }, [files]);
-  
-  // This filtered files function now accounts for pending folder additions
-  const filteredFiles = React.useMemo(() => {
-    // Start with search filter
-    let result = localFiles.filter(file => 
-      file.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    // Then apply folder filtering with optimistic updates
-    if (currentFolder !== 'all') {
-      if (currentFolder === 'unsorted') {
-        // For unsorted, show files that are not in any custom folder
-        result = result.filter(file => {
-          // Get all custom folders
-          const customFolders = (file.folderRefs || []).filter(
-            folder => folder !== 'all' && folder !== 'unsorted'
-          );
-          
-          // Check if this file is pending addition to any folder
-          const isPendingAdditionToAnyFolder = Object.entries(pendingFolderAdditions)
-            .some(([folderId, fileIds]) => 
-              folderId !== 'all' && 
-              folderId !== 'unsorted' && 
-              fileIds.includes(file.id)
-            );
-            
-          return customFolders.length === 0 && !isPendingAdditionToAnyFolder;
-        });
+    // Merge the incoming files with any optimistic updates
+    if (currentFolder !== 'all' && currentFolder !== 'unsorted') {
+      // Get files being added to this folder
+      const filesBeingAdded = filesToFolderMap.get(currentFolder) || [];
+      
+      if (filesBeingAdded.length > 0) {
+        // Find files that should be displayed in this folder but aren't in the props files
+        const filesFromOtherFolders = localFiles.filter(file => 
+          filesBeingAdded.includes(file.id) && 
+          !files.some(f => f.id === file.id)
+        );
+        
+        // Add folderRefs to these files to make them appear in this folder
+        const enhancedFiles = filesFromOtherFolders.map(file => ({
+          ...file,
+          folderRefs: [...(file.folderRefs || []), currentFolder]
+        }));
+        
+        // Combine with the props files
+        setLocalFiles([...files, ...enhancedFiles]);
       } else {
-        // For other folders, show files in that specific folder
-        result = result.filter(file => {
-          // Check if file is already in this folder
-          const isInFolder = file.folderRefs?.includes(currentFolder);
-          
-          // Check if file is pending addition to this folder
-          const isPendingAddition = pendingFolderAdditions[currentFolder]?.includes(file.id);
-          
-          return isInFolder || isPendingAddition;
-        });
+        setLocalFiles(files);
       }
+    } else {
+      setLocalFiles(files);
     }
-    
-    return result;
-  }, [localFiles, searchQuery, currentFolder, pendingFolderAdditions]);
+  }, [files, currentFolder, filesToFolderMap]);
+  
+  const filteredFiles = localFiles.filter(file => 
+    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   
   const handleUploadClick = () => {
     const fileInput = document.getElementById('direct-file-upload');
@@ -195,19 +181,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsFolderCreating(true);
     
     try {
-      // Generate a folder ID that's predictable for optimistic updates
+      // Optimistically update UI
       const folderId = newFolderName.trim().toLowerCase().replace(/\s+/g, '-');
+      const updatedFolders = [
+        ...availableFolders,
+        { id: folderId, name: newFolderName.trim() }
+      ];
       
-      // Optimistically update UI before the server operation
-      const newFolder = { 
-        id: folderId, 
-        name: newFolderName.trim() 
-      };
-      
-      // Update available folders optimistically
-      const updatedFolders = [...availableFolders, newFolder];
-      
-      // Update local files optimistically
+      // Update the UI to show the files are now in the new folder
       const updatedFiles = localFiles.map(file => {
         if (selectedFiles.includes(file.id)) {
           return {
@@ -217,12 +198,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         }
         return file;
       });
-      
-      // Add to pending folder additions
-      setPendingFolderAdditions(prev => ({
-        ...prev,
-        [folderId]: [...selectedFiles]
-      }));
       
       setLocalFiles(updatedFiles);
       
@@ -239,31 +214,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         title: "Folder created",
         description: `Successfully created folder with ${selectedFiles.length} files`,
       });
-      
-      // Clean up the pending state after successful operation
-      setPendingFolderAdditions(prev => {
-        const updated = { ...prev };
-        delete updated[folderId];
-        return updated;
-      });
-      
-      // Optional: Switch to the new folder to show the files
-      onFolderChange(folderId);
-      
     } catch (error) {
       console.error("Error creating folder:", error);
-      
-      // Revert optimistic UI updates on error
-      setLocalFiles(files);
-      
-      // Clear pending folder additions
-      setPendingFolderAdditions(prev => {
-        const folderId = newFolderName.trim().toLowerCase().replace(/\s+/g, '-');
-        const updated = { ...prev };
-        delete updated[folderId];
-        return updated;
-      });
-      
       toast({
         title: "Error creating folder",
         description: "Failed to create the new folder",
@@ -301,13 +253,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           return file;
         });
         
-        // Add to pending additions for optimistic UI updates in folder views
-        setPendingFolderAdditions(prev => ({
-          ...prev,
-          [targetFolder]: [...(prev[targetFolder] || []), ...selectedFiles]
-        }));
-        
         setLocalFiles(updatedFiles);
+        
+        // Add to filesToFolderMap for optimistic UI in folder view
+        setFilesToFolderMap(prev => {
+          const newMap = new Map(prev);
+          const existingFiles = newMap.get(targetFolder) || [];
+          newMap.set(targetFolder, [...existingFiles, ...selectedFiles]);
+          return newMap;
+        });
         
         if (onAddFilesToFolder) {
           // Run the actual operation in the background
@@ -322,30 +276,24 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           title: "Files added to folder",
           description: `Successfully added ${selectedFiles.length} files to folder`,
         });
-        
-        // Clean up pending state after successful operation
-        setPendingFolderAdditions(prev => {
-          const updated = { ...prev };
-          delete updated[targetFolder];
-          return updated;
-        });
       } catch (error) {
         console.error("Error adding files to folder:", error);
-        
-        // Revert the optimistic update on error
-        setLocalFiles(files);
-        
-        // Clear pending folder additions for this folder
-        setPendingFolderAdditions(prev => {
-          const updated = { ...prev };
-          delete updated[targetFolder];
-          return updated;
-        });
-        
         toast({
           title: "Error adding files to folder",
           description: "Failed to add files to the selected folder",
           variant: "destructive",
+        });
+        
+        // Revert the optimistic update on error
+        onRefresh();
+        
+        // Remove from filesToFolderMap on error
+        setFilesToFolderMap(prev => {
+          const newMap = new Map(prev);
+          if (newMap.has(targetFolder)) {
+            newMap.delete(targetFolder);
+          }
+          return newMap;
         });
       }
     } else {
@@ -360,10 +308,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
 
       try {
-        // Generate folder ID
+        // Optimistically update UI
         const folderId = newFolderInDialog.trim().toLowerCase().replace(/\s+/g, '-');
         
-        // Optimistically update UI
         const updatedFiles = localFiles.map(file => {
           if (selectedFiles.includes(file.id)) {
             return {
@@ -374,13 +321,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           return file;
         });
         
-        // Add to pending additions for optimistic UI
-        setPendingFolderAdditions(prev => ({
-          ...prev,
-          [folderId]: [...selectedFiles]
-        }));
-        
         setLocalFiles(updatedFiles);
+        
+        // Add to filesToFolderMap for optimistic UI in folder view
+        setFilesToFolderMap(prev => {
+          const newMap = new Map(prev);
+          const existingFiles = newMap.get(folderId) || [];
+          newMap.set(folderId, [...existingFiles, ...selectedFiles]);
+          return newMap;
+        });
         
         if (onCreateFolder) {
           // Run the actual operation in the background
@@ -395,34 +344,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           title: "Folder created",
           description: `Successfully created folder with ${selectedFiles.length} files`,
         });
-        
-        // Clean up pending state after successful operation
-        setPendingFolderAdditions(prev => {
-          const updated = { ...prev };
-          delete updated[folderId];
-          return updated;
-        });
-        
-        // Optional: Switch to the new folder to show the files
-        onFolderChange(folderId);
       } catch (error) {
         console.error("Error creating folder:", error);
-        
-        // Revert optimistic UI on error
-        setLocalFiles(files);
-        
-        // Clear pending folder additions
-        const folderId = newFolderInDialog.trim().toLowerCase().replace(/\s+/g, '-');
-        setPendingFolderAdditions(prev => {
-          const updated = { ...prev };
-          delete updated[folderId];
-          return updated;
-        });
-        
         toast({
           title: "Error creating folder",
           description: "Failed to create the new folder",
           variant: "destructive",
+        });
+        
+        // Revert the optimistic update on error
+        onRefresh();
+        
+        // Remove from filesToFolderMap on error
+        const folderId = newFolderInDialog.trim().toLowerCase().replace(/\s+/g, '-');
+        setFilesToFolderMap(prev => {
+          const newMap = new Map(prev);
+          if (newMap.has(folderId)) {
+            newMap.delete(folderId);
+          }
+          return newMap;
         });
       }
     }
@@ -507,7 +447,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         return file;
       });
       
-      setLocalFiles(updatedFiles);
+      // If we're in a folder view, filter out the removed files
+      if (currentFolder === folderId) {
+        setLocalFiles(updatedFiles.filter(file => 
+          !fileIds.includes(file.id) || 
+          (file.folderRefs || []).includes(folderId)
+        ));
+      } else {
+        setLocalFiles(updatedFiles);
+      }
       
       // Run the actual operation in the background
       await onRemoveFromFolder(fileIds, folderId);
@@ -516,15 +464,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       onRefresh();
     } catch (error) {
       console.error("Error removing files from folder:", error);
-      
-      // Revert the optimistic UI update on error
-      setLocalFiles(files);
-      
       toast({
         title: "Error removing files",
         description: "Failed to remove files from the folder",
         variant: "destructive",
       });
+      
+      // Revert the optimistic update on error
+      onRefresh();
+      
+      throw error;
     }
   };
   
@@ -536,16 +485,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     if (selectedFiles.includes(fileId)) {
       setSelectedFiles(current => current.filter(id => id !== fileId));
     }
-    
-    // Remove from any pending folder additions
-    Object.keys(pendingFolderAdditions).forEach(folderId => {
-      if (pendingFolderAdditions[folderId].includes(fileId)) {
-        setPendingFolderAdditions(prev => ({
-          ...prev,
-          [folderId]: prev[folderId].filter(id => id !== fileId)
-        }));
-      }
-    });
   };
 
   return (
@@ -755,7 +694,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               <div className="max-h-40 overflow-y-auto border rounded-md p-2">
                 <ul className="text-sm">
                   {selectedFiles.map(id => {
-                    const file = localFiles.find(f => f.id === id);
+                    const file = files.find(f => f.id === id);
                     return (
                       <li key={id} className="py-1 px-2 truncate">
                         {file ? file.name : `File ${id}`}
@@ -786,3 +725,4 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     </div>
   );
 };
+

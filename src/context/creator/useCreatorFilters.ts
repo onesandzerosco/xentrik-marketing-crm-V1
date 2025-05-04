@@ -1,44 +1,50 @@
 
+import { useCallback } from "react";
 import { Creator } from "@/types";
 
-interface CreatorFilters {
-  gender?: string[];
-  team?: string[];
-  creatorType?: string[];
-  reviewStatus?: string[];
-  searchQuery?: string;
-}
-
 export const useCreatorFilters = (creators: Creator[]) => {
-  const filterCreators = (filters: CreatorFilters) => {
-    const { gender, team, creatorType, reviewStatus, searchQuery } = filters;
+  const filterCreators = useCallback((filters: { 
+    gender?: string[]; 
+    team?: string[]; 
+    creatorType?: string[]; 
+    reviewStatus?: string[];
+    searchQuery?: string;
+  }) => {
+    return creators.filter((creator) => {
+      let genderMatch = true;
+      let teamMatch = true;
+      let creatorTypeMatch = true;
+      let reviewStatusMatch = true;
+      let searchMatch = true;
 
-    return creators.filter((creator: Creator) => {
-      // Gender filter
-      const matchesGender = !gender?.length || gender.includes(creator.gender);
+      if (filters.gender && filters.gender.length > 0) {
+        genderMatch = filters.gender.includes(creator.gender);
+      }
 
-      // Team filter
-      const matchesTeam = !team?.length || team.includes(creator.team);
+      if (filters.team && filters.team.length > 0) {
+        teamMatch = filters.team.includes(creator.team);
+      }
 
-      // Creator type filter
-      const matchesType = !creatorType?.length || creatorType.includes(creator.creatorType);
+      if (filters.creatorType && filters.creatorType.length > 0) {
+        creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
+      }
+
+      if (filters.reviewStatus && filters.reviewStatus.length > 0) {
+        const isInReview = creator.needsReview === true;
+        reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
+      }
       
-      // Review status filter
-      const matchesReviewStatus = !reviewStatus?.length || 
-        (reviewStatus.includes('Needs Review') && creator.needsReview) || 
-        (reviewStatus.includes('Reviewed') && !creator.needsReview);
+      if (filters.searchQuery && filters.searchQuery.trim() !== '') {
+        const searchLower = filters.searchQuery.toLowerCase().trim();
+        searchMatch = 
+          (creator.name?.toLowerCase().includes(searchLower) || false) || 
+          (creator.email?.toLowerCase().includes(searchLower) || false) ||
+          (creator.telegramUsername?.toLowerCase().includes(searchLower) || false);
+      }
 
-      // Search filter (case insensitive)
-      const matchesSearch = !searchQuery || 
-        creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (creator.email && creator.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (creator.telegramUsername && creator.telegramUsername.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      return matchesGender && matchesTeam && matchesType && matchesReviewStatus && matchesSearch;
+      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch && searchMatch;
     });
-  };
+  }, [creators]);
 
   return { filterCreators };
 };
-
-export default useCreatorFilters;

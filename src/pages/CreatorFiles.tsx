@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -217,7 +216,7 @@ const CreatorFiles = () => {
         }
       }
       
-      // Add the new folder to the available folders optimistically
+      // Add the new folder to the available folders
       setAvailableFolders(prevFolders => [
         ...prevFolders, 
         { id: folderId, name: folderName }
@@ -234,8 +233,6 @@ const CreatorFiles = () => {
       // Refetch the files
       refetch();
       
-      return Promise.resolve();
-      
     } catch (err) {
       console.error("Error in handleCreateFolder:", err);
       toast({
@@ -243,7 +240,7 @@ const CreatorFiles = () => {
         description: "Failed to create folder",
         variant: "destructive"
       });
-      return Promise.reject(err); // Re-throw to let the caller handle it
+      throw err; // Re-throw to let the caller handle it
     }
   };
   
@@ -321,24 +318,9 @@ const CreatorFiles = () => {
   
   // Update this function to add folders to the file's folders array
   const handleAddFilesToFolder = async (fileIds: string[], targetFolderId: string) => {
-    if (!creator?.id || !targetFolderId || fileIds.length === 0) {
-      return Promise.reject("Invalid parameters");
-    }
+    if (!creator?.id || !targetFolderId || fileIds.length === 0) return;
     
     try {
-      // Optimistically update available folders if this is a new folder
-      const folderExists = availableFolders.some(folder => folder.id === targetFolderId);
-      
-      if (!folderExists && targetFolderId !== 'all' && targetFolderId !== 'unsorted') {
-        // This is a new folder, add it to available folders
-        const folderName = targetFolderId.charAt(0).toUpperCase() + targetFolderId.slice(1).replace(/-/g, ' ');
-        
-        setAvailableFolders(prevFolders => [
-          ...prevFolders, 
-          { id: targetFolderId, name: folderName }
-        ]);
-      }
-      
       // Update each file's folders array to include the targetFolderId
       for (const fileId of fileIds) {
         // Get the current file to access its folders array
@@ -372,25 +354,22 @@ const CreatorFiles = () => {
           
         if (updateError) {
           console.error(`Error adding file ${fileId} to folder:`, updateError);
-          throw updateError;
         }
       }
       
       // Refresh the files list
       refetch();
       
-      return Promise.resolve();
-      
     } catch (err) {
       console.error("Error in handleAddFilesToFolder:", err);
-      return Promise.reject(err);
+      throw err;
     }
   };
 
   // New function to remove files from a folder
   const handleRemoveFromFolder = async (fileIds: string[], folderId: string) => {
     if (!creator?.id || !folderId || fileIds.length === 0 || folderId === 'all' || folderId === 'unsorted') {
-      return Promise.reject("Invalid parameters");
+      return;
     }
     
     try {
@@ -428,14 +407,18 @@ const CreatorFiles = () => {
         }
       }
       
-      // Refresh the files list in the background
+      // Refresh the files list
       refetch();
       
-      return Promise.resolve();
+      // If all files are removed from the current folder view, it might be empty
+      // If we're currently viewing that folder, we need to refresh the UI
+      if (currentFolder === folderId) {
+        refetch();
+      }
       
     } catch (err) {
       console.error("Error in handleRemoveFromFolder:", err);
-      return Promise.reject(err);
+      throw err;
     }
   };
   
