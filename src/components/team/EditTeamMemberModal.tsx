@@ -120,10 +120,10 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
   
   const roleOptions: TeamMemberRole[] = [
     "Chatters", 
-    "Creative Director", 
+    "VA", 
     "Manager", 
     "Developer", 
-    "Editor"
+    "Admin"
   ];
   
   // Use user-facing labels for the teams
