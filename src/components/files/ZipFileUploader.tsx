@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -58,7 +59,6 @@ export const ZipFileUploader: React.FC<ZipFileUploaderProps> = ({
     }
   };
 
-  // Fix the type comparison issue
   const closeDialog = () => {
     setIsDialogOpen(false);
     setSelectedFile(null);

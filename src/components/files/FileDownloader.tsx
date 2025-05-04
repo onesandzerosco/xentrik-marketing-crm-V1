@@ -116,7 +116,7 @@ export const FileDownloader: React.FC = () => {
 
   return (
     <Dialog open={isDownloading}>
-      <DialogContent className="sm:max-w-md" hideClose={true}>
+      <DialogContent className="sm:max-w-md">
         <div className="space-y-4 py-4">
           <div className="flex flex-col items-center gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

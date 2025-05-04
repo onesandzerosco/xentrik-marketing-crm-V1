@@ -29,9 +29,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import FileUploaderWithProgress from './FileUploaderWithProgress';
 import { FileDownloader } from './FileDownloader';
 
-interface Folder {
+interface FolderType {
   id: string;
   name: string;
+  parent_id: string | null;
 }
 
 interface FileExplorerProps {
@@ -42,7 +43,7 @@ interface FileExplorerProps {
   onRefresh: () => void;
   onFolderChange: (folder: string) => void;
   currentFolder: string;
-  availableFolders: Folder[];
+  availableFolders: FolderType[];
   isCreatorView?: boolean;
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   onUploadStart?: () => void;
@@ -50,6 +51,24 @@ interface FileExplorerProps {
   onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; 
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
+}
+
+// Update FileHeaderProps to match what FileHeader expects
+interface FileHeaderProps {
+  creatorId: string;
+  creatorName: string;
+  isGridView: boolean;
+  toggleView: () => void;
+  handleUploadClick: () => void;
+  handleCreateFolder: () => void;
+  currentFolder: string;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  onFilesUploaded?: (fileIds: string[]) => void;
+  // Add these new props
+  isCreatorView?: boolean;
+  selectedFiles?: number;
+  onAddToFolderClick?: () => void;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -232,24 +251,46 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  // Create a modified version of FileHeader to match the props we have available
+  const CustomFileHeader = () => {
+    // Add dummy functions for props we're not using
+    const toggleView = () => setView(prev => prev === 'grid' ? 'list' : 'grid');
+    
+    return (
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">{creatorName}'s Files</h2>
+        <div className="flex space-x-2">
+          {isCreatorView && (
+            <Button variant="default" size="sm" onClick={handleUploadClick}>
+              Upload Files
+            </Button>
+          )}
+          {selectedFiles.length > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                if (selectedFiles.length > 0) {
+                  setShowAddToFolderDialog(true);
+                  setAddFolderDialogTab('existing');
+                  setNewFolderInDialog('');
+                  setTargetFolder('');
+                } else {
+                  setShowWarningDialog(true);
+                }
+              }}
+            >
+              Add {selectedFiles.length} files to folder
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <FileHeader 
-        creatorName={creatorName}
-        onUploadClick={isCreatorView ? handleUploadClick : undefined}
-        isCreatorView={isCreatorView}
-        selectedFiles={selectedFiles.length}
-        onAddToFolderClick={() => {
-          if (selectedFiles.length > 0) {
-            setShowAddToFolderDialog(true);
-            setAddFolderDialogTab('existing');
-            setNewFolderInDialog('');
-            setTargetFolder('');
-          } else {
-            setShowWarningDialog(true);
-          }
-        }}
-      />
+      <CustomFileHeader />
       
       <div className="flex h-full">
         {/* Left sidebar for folder navigation */}
@@ -257,7 +298,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           <FolderNav 
             folders={availableFolders}
             currentFolder={currentFolder}
-            onFolderChange={onFolderChange}
+            onNavigate={(folder) => onFolderChange(folder.id)}
             onDeleteFolder={isCreatorView ? onDeleteFolder : undefined}
             onInitiateNewFolder={isCreatorView ? handleInitiateNewFolder : undefined}
           />
