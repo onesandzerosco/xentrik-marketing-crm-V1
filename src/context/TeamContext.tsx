@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -44,20 +43,32 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
       if (error) throw error;
       
-      const formattedTeamMembers: TeamMember[] = data.map((profile: any) => ({
-        id: profile.id,
-        name: profile.name || '',
-        email: profile.email || '',
-        roles: profile.roles || [],
-        status: profile.status || 'Active',
-        teams: profile.teams || [],
-        telegram: profile.telegram,
-        phoneNumber: profile.phone_number,
-        lastLogin: profile.last_login || 'Never',
-        profileImage: profile.profile_image,
-        department: profile.department,
-        createdAt: profile.created_at
-      }));
+      const formattedTeamMembers: TeamMember[] = data
+        .map((profile: any) => ({
+          id: profile.id,
+          name: profile.name || '',
+          email: profile.email || '',
+          roles: profile.roles || [],
+          status: profile.status || 'Active',
+          teams: profile.teams || [],
+          telegram: profile.telegram,
+          phoneNumber: profile.phone_number,
+          lastLogin: profile.last_login || 'Never',
+          profileImage: profile.profile_image,
+          department: profile.department,
+          createdAt: profile.created_at
+        }))
+        // Filter out team members who only have the "Creator" role
+        .filter((member: TeamMember) => {
+          // If they have no roles or roles is empty, keep them
+          if (!member.roles || member.roles.length === 0) return true;
+          
+          // If they have only one role and it's "Creator", exclude them
+          if (member.roles.length === 1 && member.roles[0] === "Creator") return false;
+          
+          // Otherwise, keep them
+          return true;
+        });
       
       setTeamMembers(formattedTeamMembers);
       setError(null);

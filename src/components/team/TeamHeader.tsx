@@ -117,7 +117,7 @@ const TeamHeader: React.FC<TeamHeaderProps> = ({
           <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
             <DropdownMenuLabel className="text-white">Filter by role</DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-white/20" />
-            {["Admin", "Manager", "Employee"].map(role => (
+            {["VA", "Chatters", "Admin", "Developer"].map(role => (
               <DropdownMenuCheckboxItem 
                 key={role} 
                 checked={filters.roles.includes(role as TeamMemberRole)} 
