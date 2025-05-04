@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -96,16 +95,14 @@ const AccountSettings = () => {
       return;
     }
 
-    // Call the updateCredentials function from AuthContext with additional profile data
-    const success = updateCredentials(
-      username, 
-      currentPassword, 
-      newPassword, 
-      email, 
-      userData.emailVerified,
+    // Fix: Pass a credentials object instead of multiple arguments
+    const success = updateCredentials({ 
+      email: email !== user.email ? email : undefined,
+      password: newPassword ? newPassword : undefined,
+      currentPassword,
       displayName,
       profileImage
-    );
+    });
     
     if (success) {
       toast({

@@ -16,10 +16,20 @@ export interface AuthContextType {
   userRole: string;
   userRoles: string[];
   isCreatorSelf: boolean; // Property to check if user is viewing their own creator profile
-  updateCredentials?: (credentials: { email?: string; password?: string }) => Promise<void>;
+  updateCredentials?: (credentials: { 
+    email?: string; 
+    password?: string;
+    currentPassword?: string;
+    displayName?: string;
+    profileImage?: string;
+  }) => Promise<boolean>;
   pendingUsers?: any[];
   approvePendingUser?: (userId: string, approved: boolean) => Promise<void>;
-  createTeamMember?: (data: any) => Promise<void>;
+  createTeamMember?: (data: { 
+    username: string; 
+    email: string; 
+    role: string;
+  }) => Promise<boolean>;
 }
 
 // Create an AuthContext for compatibility

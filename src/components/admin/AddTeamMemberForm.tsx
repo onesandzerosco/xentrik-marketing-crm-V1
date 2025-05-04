@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { EmployeeRole } from "@/types/employee";
 import { UserPlus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const AddTeamMemberForm: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -29,25 +30,39 @@ const AddTeamMemberForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { createTeamMember } = useAuth();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     setIsSubmitting(true);
     
-    // Add a small delay to simulate processing
-    setTimeout(() => {
-      const success = createTeamMember(username, email, role);
+    // Fix: Pass a single data object to createTeamMember instead of 3 separate arguments
+    const success = createTeamMember({ 
+      username, 
+      email, 
+      role 
+    });
+    
+    if (success) {
+      // Reset form
+      setUsername("");
+      setEmail("");
+      setRole("Employee");
       
-      if (success) {
-        // Reset form
-        setUsername("");
-        setEmail("");
-        setRole("Employee");
-      }
-      
-      setIsSubmitting(false);
-    }, 500);
+      toast({
+        title: "Team member added",
+        description: `${username} has been added to the team.`
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add team member."
+      });
+    }
+    
+    setIsSubmitting(false);
   };
 
   return (
