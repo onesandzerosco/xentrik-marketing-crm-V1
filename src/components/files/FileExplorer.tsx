@@ -1,16 +1,15 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2, Trash2, Upload, Download, FolderPlus, FilePlus2, MoreHorizontal } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import FileHeader from './FileHeader';
+import { FileHeader } from './FileHeader';
 import FileGrid from './FileGrid';
 import FileList from './FileList';
-import EmptyState from './EmptyState';
-import FileViewSkeleton from './FileViewSkeleton';
+import { EmptyState } from './EmptyState';
+import { FileViewSkeleton } from './FileViewSkeleton';
 import FileUploaderWithProgress from './FileUploaderWithProgress';
 import DragDropUploader from './DragDropUploader';
-import FolderNav from './FolderNav';
+import { FolderNav } from './FolderNav';
 import { FileDownloader } from './FileDownloader';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import {
@@ -19,7 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -430,15 +428,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           creatorId={creatorId}
           onUploadComplete={onUploadComplete}
           currentFolder={currentFolder}
+          onCancel={() => {}} // Adding the missing onCancel prop
         />
       )}
       
       {permissions.canUpload && (
         <DragDropUploader
           creatorId={creatorId}
-          onUploadStart={onUploadStart}
           onUploadComplete={onUploadComplete}
           currentFolder={currentFolder}
+          onCancel={() => {}} // Adding the missing onCancel prop
         />
       )}
       

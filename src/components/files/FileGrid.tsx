@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -155,11 +154,11 @@ const FileGrid: React.FC<FileGridProps> = ({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <FileDownloader files={[file]}>
-                            <Button size="icon" variant="ghost" className="h-7 w-7">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => e.stopPropagation()}>
+                            <FileDownloader files={[file]}>
                               <Download className="h-4 w-4" />
-                            </Button>
-                          </FileDownloader>
+                            </FileDownloader>
+                          </Button>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Download</p>

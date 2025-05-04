@@ -105,11 +105,11 @@ const FileList: React.FC<FileListProps> = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <FileDownloader files={[file]}>
-                              <Button size="icon" variant="ghost" className="h-7 w-7">
+                            <Button size="icon" variant="ghost" className="h-7 w-7">
+                              <FileDownloader files={[file]}>
                                 <Download className="h-4 w-4" />
-                              </Button>
-                            </FileDownloader>
+                              </FileDownloader>
+                            </Button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Download</p>
@@ -166,6 +166,6 @@ const FileList: React.FC<FileListProps> = ({
       </Table>
     </div>
   );
-};
+}
 
 export default FileList;

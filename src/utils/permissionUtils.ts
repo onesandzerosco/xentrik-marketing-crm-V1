@@ -44,9 +44,9 @@ export const getMediaPermissions = (
   }
 
   // Creators can edit, upload, download, and delete their own files
-  if (isCreatorSelf) {
+  if (isCreatorSelf || allRoles.includes('Creator')) {
     permissions.canUpload = true;
-    permissions.canDelete = true;
+    permissions.canDelete = isCreatorSelf; // Only delete own files
     permissions.canEdit = true;
     return permissions;
   }
