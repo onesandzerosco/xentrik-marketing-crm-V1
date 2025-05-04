@@ -228,20 +228,27 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
                 supabase
               );
             } else {
-              // Use direct upload for small files
+              // For small files, we'll manually track progress
+              // Start the upload
               const { error: uploadError } = await supabase.storage
                 .from('raw_uploads')
                 .upload(filePath, file, {
                   cacheControl: '3600',
-                  upsert: true,
-                  onUploadProgress: (progress) => {
-                    const percentage = progress.percent ? progress.percent : 0;
-                    updateFileProgress(file.name, percentage);
-                  },
+                  upsert: true
                 });
                 
               if (uploadError) {
                 throw uploadError;
+              }
+              
+              // Since we can't track progress directly, we'll simulate progress
+              // with incremental updates
+              for (let percent = 0; percent <= 100; percent += 10) {
+                updateFileProgress(file.name, percent);
+                // Only add a small delay for the last few percents to appear smooth
+                if (percent > 70) {
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                }
               }
             }
             
@@ -433,3 +440,4 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
 };
 
 export default FileUploaderWithProgress;
+

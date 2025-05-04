@@ -1,4 +1,3 @@
-
 export const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -183,46 +182,49 @@ export const uploadFileInChunks = async (
   const CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunks
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   
-  // First get a upload URL
-  const { data: { uploadUrl }, error: urlError } = await supabase.storage
-    .from(bucketName)
-    .createSignedUploadUrl(filePath);
-    
-  if (urlError || !uploadUrl) {
-    throw new Error(urlError?.message || 'Failed to get signed URL');
-  }
-  
-  let uploadedBytes = 0;
-  
-  // Upload each chunk
-  for (let i = 0; i < totalChunks; i++) {
-    const start = i * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const chunk = file.slice(start, end);
-    
-    // For each chunk, we're making a regular fetch POST request
-    const response = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': file.type,
-        'x-upsert': 'true',
-        'Cache-Control': '3600',
-      },
-      body: chunk,
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to upload chunk ${i+1}: ${response.statusText}`);
+  try {
+    // Initialize the upload
+    const { data: { uploadUrl }, error: urlError } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, new Blob([]), {
+        upsert: true
+      });
+      
+    if (urlError) {
+      throw new Error(urlError.message || 'Failed to initialize upload');
     }
     
-    uploadedBytes += (end - start);
-    const progress = Math.min((uploadedBytes / file.size) * 100, 99);
-    onProgress(progress);
+    let uploadedBytes = 0;
+    
+    // Upload each chunk
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+      const chunk = file.slice(start, end);
+      
+      // For each chunk, update the file with the new chunk data
+      const { error: chunkError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, chunk, {
+          upsert: true
+        });
+      
+      if (chunkError) {
+        throw new Error(`Failed to upload chunk ${i+1}: ${chunkError.message}`);
+      }
+      
+      uploadedBytes += (end - start);
+      const progress = Math.min((uploadedBytes / file.size) * 100, 99);
+      onProgress(progress);
+    }
+    
+    // Finalize the upload
+    onProgress(100);
+  } catch (error) {
+    console.error("Error in chunked upload:", error);
+    throw error;
   }
-  
-  // Finalize the upload
-  onProgress(100);
-}
+};
 
 // Helper function to check if a file exceeds the maximum size (1GB by default)
 export const isFileTooLarge = (file: File, maxSizeGB: number = 1): boolean => {
