@@ -51,6 +51,7 @@ export const FileList: React.FC<FileListProps> = ({
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
+  const [removingFromFolderIds, setRemovingFromFolderIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
@@ -68,6 +69,7 @@ export const FileList: React.FC<FileListProps> = ({
 
   const isFileSelected = (fileId: string) => selectedFileIds.includes(fileId);
   const isFileDeleting = (fileId: string) => deletingFileIds.has(fileId);
+  const isFileRemovingFromFolder = (fileId: string) => removingFromFolderIds.has(fileId);
 
   const handleSelectAll = () => {
     if (selectedFileIds.length === files.length) {
@@ -185,20 +187,49 @@ export const FileList: React.FC<FileListProps> = ({
     }
     
     try {
-      await onRemoveFromFolder(selectedFileIds, currentFolder);
+      // Optimistically update UI by marking files as removing
+      const fileIdsToRemove = [...selectedFileIds];
+      
+      // Update UI immediately
+      setRemovingFromFolderIds(prev => new Set([...prev, ...fileIdsToRemove]));
+      
+      // Notify parent for optimistic UI update if callback exists
+      if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+        fileIdsToRemove.forEach(fileId => {
+          onFileDeleted(fileId);
+        });
+      }
+      
+      // Send removal request in background
+      await onRemoveFromFolder(fileIdsToRemove, currentFolder);
       
       toast({
         title: "Files removed from folder",
-        description: `Successfully removed ${selectedFileIds.length} files from this folder`,
+        description: `Successfully removed ${fileIdsToRemove.length} files from this folder`,
       });
       
+      // Update selection state
       setSelectedFileIds([]);
+      
+      // Remove from removing set when complete
+      setRemovingFromFolderIds(prev => {
+        const newSet = new Set(prev);
+        fileIdsToRemove.forEach(id => newSet.delete(id));
+        return newSet;
+      });
     } catch (error) {
       console.error("Error removing files from folder:", error);
       toast({
         title: "Error",
         description: "Failed to remove files from folder",
         variant: "destructive",
+      });
+      
+      // Remove from removing set if error occurs
+      setRemovingFromFolderIds(prev => {
+        const newSet = new Set(prev);
+        selectedFileIds.forEach(id => newSet.delete(id));
+        return newSet;
       });
     }
   };
@@ -268,8 +299,10 @@ export const FileList: React.FC<FileListProps> = ({
 
             const isNew = recentlyUploadedIds?.includes(file.id);
             const isDeleting = isFileDeleting(file.id);
+            const isRemoving = isFileRemovingFromFolder(file.id);
 
-            if (isDeleting) return null; // Skip rendering files being deleted
+            // Skip rendering files being deleted or removed from folder when in folder view
+            if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
 
             return (
               <TableRow key={file.id}>
@@ -319,18 +352,38 @@ export const FileList: React.FC<FileListProps> = ({
                           size="sm"
                           onClick={async () => {
                             try {
+                              // Optimistically update UI
+                              setRemovingFromFolderIds(prev => new Set([...prev, file.id]));
+                              
                               if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
                                 onFileDeleted(file.id); // Optimistically update UI
                               }
                               
                               await onRemoveFromFolder([file.id], currentFolder);
+                              
                               toast({
                                 title: "File removed",
                                 description: `Removed ${file.name} from folder`,
                               });
+                              
+                              // Remove from removing set when complete
+                              setRemovingFromFolderIds(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(file.id);
+                                return newSet;
+                              });
+                              
                               onFilesChanged(); // Refresh in background
                             } catch (error) {
                               console.error("Error removing file from folder:", error);
+                              
+                              // Remove from removing set if error occurs
+                              setRemovingFromFolderIds(prev => {
+                                const newSet = new Set(prev);
+                                newSet.delete(file.id);
+                                return newSet;
+                              });
+                              
                               toast({
                                 title: "Error",
                                 description: "Failed to remove file from folder",

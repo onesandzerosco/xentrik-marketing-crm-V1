@@ -57,6 +57,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
   const [deletingFiles, setDeletingFiles] = useState<Set<string>>(new Set());
+  const [removingFromFolderFiles, setRemovingFromFolderFiles] = useState<Set<string>>(new Set());
   
   // New state for note editing
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -204,14 +205,20 @@ export const FileGrid: React.FC<FileGridProps> = ({
     }
     
     try {
+      const selectedFileIds = Array.from(selectedFiles);
+      
       // Optimistically update UI
+      setRemovingFromFolderFiles(prev => new Set([...prev, ...selectedFileIds]));
+      
+      // Optimistically update parent UI
       if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-        Array.from(selectedFiles).forEach(fileId => {
+        selectedFileIds.forEach(fileId => {
           onFileDeleted(fileId);
         });
       }
       
-      await onRemoveFromFolder(Array.from(selectedFiles), currentFolder);
+      // Process in background
+      await onRemoveFromFolder(selectedFileIds, currentFolder);
       
       toast({
         title: "Files removed from folder",
@@ -221,12 +228,27 @@ export const FileGrid: React.FC<FileGridProps> = ({
       // Clear selection
       setSelectedFiles(new Set());
       
+      // Remove from processing set
+      setRemovingFromFolderFiles(prev => {
+        const newSet = new Set(prev);
+        selectedFileIds.forEach(id => newSet.delete(id));
+        return newSet;
+      });
+      
       // Refresh files in background
       if (onFilesChanged) {
         onFilesChanged();
       }
     } catch (error) {
       console.error("Error removing files from folder:", error);
+      
+      // Remove from processing set on error
+      setRemovingFromFolderFiles(prev => {
+        const newSet = new Set(prev);
+        Array.from(selectedFiles).forEach(id => newSet.delete(id));
+        return newSet;
+      });
+      
       toast({
         title: "Error",
         description: "Failed to remove files from folder",
@@ -361,9 +383,10 @@ export const FileGrid: React.FC<FileGridProps> = ({
           const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
           const isVideo = file.type === 'video';
           const isDeleting = deletingFiles.has(file.id);
+          const isRemoving = removingFromFolderFiles.has(file.id);
           
-          // Skip rendering files being deleted
-          if (isDeleting) return null;
+          // Skip rendering files being deleted or removed from folder when in folder view
+          if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
           
           return (
             <div 
@@ -513,12 +536,24 @@ export const FileGrid: React.FC<FileGridProps> = ({
                     onClick={async (e) => {
                       e.stopPropagation();
                       try {
-                        // Optimistically update UI
+                        // Optimistically update UI by marking this file as removing
+                        setRemovingFromFolderFiles(prev => new Set([...prev, file.id]));
+                        
+                        // Optimistically update parent UI
                         if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
                           onFileDeleted(file.id);
                         }
                         
+                        // Process in background
                         await onRemoveFromFolder([file.id], currentFolder);
+                        
+                        // Remove from removing set when complete
+                        setRemovingFromFolderFiles(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(file.id);
+                          return newSet;
+                        });
+                        
                         toast({
                           title: "File removed",
                           description: `Removed ${file.name} from folder`,
@@ -530,6 +565,14 @@ export const FileGrid: React.FC<FileGridProps> = ({
                         }
                       } catch (error) {
                         console.error("Error removing file from folder:", error);
+                        
+                        // Remove from removing set on error
+                        setRemovingFromFolderFiles(prev => {
+                          const newSet = new Set(prev);
+                          newSet.delete(file.id);
+                          return newSet;
+                        });
+                        
                         toast({
                           title: "Error",
                           description: "Failed to remove file from folder",
@@ -537,6 +580,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
                         });
                       }
                     }}
+                    disabled={isProcessing}
                   >
                     <FolderMinus className="h-4 w-4" />
                   </Button>
