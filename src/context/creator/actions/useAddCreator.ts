@@ -1,4 +1,3 @@
-
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -80,6 +79,7 @@ export const useAddCreator = (
           team: creator.team,
           creator_type: creator.creatorType,
           needs_review: creator.needsReview !== undefined ? creator.needsReview : false,
+          active: creator.active !== undefined ? creator.active : true, // Ensure active is set
           telegram_username: creator.telegramUsername || null,
           whatsapp_number: creator.whatsappNumber || null,
           notes: creator.notes || null
@@ -182,6 +182,7 @@ export const useAddCreator = (
         tags: creator.tags || [],
         assignedTeamMembers: [],
         needsReview: creator.needsReview !== undefined ? creator.needsReview : false,
+        active: creator.active !== undefined ? creator.active : true, // Ensure active property is set
         telegramUsername: creator.telegramUsername || '',
         whatsappNumber: creator.whatsappNumber || '',
         notes: creator.notes || ''

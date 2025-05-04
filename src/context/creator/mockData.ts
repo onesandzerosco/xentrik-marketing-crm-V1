@@ -17,6 +17,7 @@ export const initialCreators: Creator[] = [
     },
     tags: ["Male", "A Team"],
     needsReview: true,
+    active: true,
   },
   {
     id: "2",
@@ -32,6 +33,7 @@ export const initialCreators: Creator[] = [
     },
     tags: ["Female", "B Team"],
     needsReview: false,
+    active: true,
   },
   {
     id: "3",
@@ -45,6 +47,7 @@ export const initialCreators: Creator[] = [
       twitter: "https://twitter.com",
     },
     tags: ["Trans", "C Team"],
+    active: true,
   },
   {
     id: "4",
@@ -59,6 +62,7 @@ export const initialCreators: Creator[] = [
       twitter: "https://twitter.com",
     },
     tags: ["AI", "B Team"],
+    active: true,
   },
   {
     id: "5",
@@ -72,6 +76,7 @@ export const initialCreators: Creator[] = [
       twitter: "https://twitter.com",
     },
     tags: ["AI", "A Team"],
+    active: true,
   },
   {
     id: "6",
@@ -86,6 +91,7 @@ export const initialCreators: Creator[] = [
       twitter: "https://twitter.com",
     },
     tags: ["AI", "A Team"],
+    active: true,
   },
 ];
 

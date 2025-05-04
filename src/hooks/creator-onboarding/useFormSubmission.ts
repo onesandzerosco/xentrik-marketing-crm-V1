@@ -32,6 +32,7 @@ export function useFormSubmission() {
       socialLinks: socialLinksObj,
       tags: [formState.gender, formState.team, formState.creatorType],
       needsReview: false,
+      active: true, // Add active property
       telegramUsername: formState.telegramUsername || undefined,
       whatsappNumber: formState.whatsappNumber || undefined,
       notes: formState.notes || undefined,

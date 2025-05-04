@@ -42,6 +42,7 @@ export function useSubmission() {
         socialLinks,
         tags: [formState.gender, formState.team, formState.creatorType], // Default tags
         needsReview: false, // Explicitly set to false
+        active: true, // Add required active property
         telegramUsername: formState.telegramUsername,
         whatsappNumber: formState.whatsappNumber,
         notes: formState.notes
