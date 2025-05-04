@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FolderPlus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Folder {
   id: string;
@@ -44,7 +45,7 @@ interface FileExplorerProps {
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
-  onCreateFolder?: (folderName: string, fileIds: string[]) => void; // Modified to accept fileIds
+  onCreateFolder?: (folderName: string, fileIds: string[]) => Promise<void>; // Modified to accept fileIds
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
 }
@@ -78,6 +79,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [showNewFolderDialog, setShowNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isFolderCreating, setIsFolderCreating] = useState(false);
+  const [addFolderDialogTab, setAddFolderDialogTab] = useState('existing');
+  const [newFolderInDialog, setNewFolderInDialog] = useState('');
   
   const filteredFiles = files.filter(file => 
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -135,7 +138,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     
     try {
       if (onCreateFolder) {
-        onCreateFolder(newFolderName.trim(), selectedFiles);
+        await onCreateFolder(newFolderName.trim(), selectedFiles);
       }
       
       setShowNewFolderDialog(false);
@@ -163,32 +166,69 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const handleAddToFolder = async () => {
-    if (!targetFolder || selectedFiles.length === 0) {
-      return;
-    }
-
-    try {
-      if (onAddFilesToFolder) {
-        await onAddFilesToFolder(selectedFiles, targetFolder);
+    if (addFolderDialogTab === 'existing') {
+      // Add to existing folder
+      if (!targetFolder || selectedFiles.length === 0) {
+        return;
       }
-      
-      setShowAddToFolderDialog(false);
-      setSelectedFiles([]);
-      setTargetFolder('');
-      
-      toast({
-        title: "Files added to folder",
-        description: `Successfully added ${selectedFiles.length} files to folder`,
-      });
-      
-      onRefresh();
-    } catch (error) {
-      console.error("Error adding files to folder:", error);
-      toast({
-        title: "Error adding files to folder",
-        description: "Failed to add files to the selected folder",
-        variant: "destructive",
-      });
+
+      try {
+        if (onAddFilesToFolder) {
+          await onAddFilesToFolder(selectedFiles, targetFolder);
+        }
+        
+        setShowAddToFolderDialog(false);
+        setSelectedFiles([]);
+        setTargetFolder('');
+        
+        toast({
+          title: "Files added to folder",
+          description: `Successfully added ${selectedFiles.length} files to folder`,
+        });
+        
+        onRefresh();
+      } catch (error) {
+        console.error("Error adding files to folder:", error);
+        toast({
+          title: "Error adding files to folder",
+          description: "Failed to add files to the selected folder",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Create new folder from dialog
+      if (!newFolderInDialog.trim() || selectedFiles.length === 0) {
+        toast({
+          title: "Invalid folder creation",
+          description: "Please enter a folder name.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        if (onCreateFolder) {
+          await onCreateFolder(newFolderInDialog.trim(), selectedFiles);
+        }
+        
+        setShowAddToFolderDialog(false);
+        setNewFolderInDialog('');
+        setSelectedFiles([]);
+        
+        toast({
+          title: "Folder created",
+          description: `Successfully created folder with ${selectedFiles.length} files`,
+        });
+        
+        onRefresh();
+      } catch (error) {
+        console.error("Error creating folder:", error);
+        toast({
+          title: "Error creating folder",
+          description: "Failed to create the new folder",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -202,6 +242,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onAddToFolderClick={() => {
           if (selectedFiles.length > 0) {
             setShowAddToFolderDialog(true);
+            setAddFolderDialogTab('existing');
+            setNewFolderInDialog('');
+            setTargetFolder('');
           }
         }}
       />
@@ -276,43 +319,76 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
       )}
 
-      {/* Add to Existing Folder Dialog */}
+      {/* Add to Folder Dialog with tabs for existing or new folder */}
       <Dialog open={showAddToFolderDialog} onOpenChange={setShowAddToFolderDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Files to Folder</DialogTitle>
             <DialogDescription>
-              Select a destination folder for the {selectedFiles.length} selected files.
+              Select a destination for the {selectedFiles.length} selected files.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="folder">Destination Folder</Label>
-              <Select 
-                value={targetFolder} 
-                onValueChange={setTargetFolder}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select folder" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableFolders.map((folder) => (
-                    <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddToFolderDialog(false)}>Cancel</Button>
-            <Button onClick={handleAddToFolder} disabled={!targetFolder}>
-              Add Files to Folder
-            </Button>
-          </DialogFooter>
+          <Tabs value={addFolderDialogTab} onValueChange={setAddFolderDialogTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="existing">Existing Folder</TabsTrigger>
+              <TabsTrigger value="new">New Folder</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="existing">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="folder">Destination Folder</Label>
+                  <Select 
+                    value={targetFolder} 
+                    onValueChange={setTargetFolder}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select folder" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableFolders.map((folder) => (
+                        <SelectItem key={folder.id} value={folder.id}>
+                          {folder.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowAddToFolderDialog(false)}>Cancel</Button>
+                <Button onClick={handleAddToFolder} disabled={!targetFolder}>
+                  Add Files to Folder
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+            
+            <TabsContent value="new">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="new-folder-name">New Folder Name</Label>
+                  <Input 
+                    id="new-folder-name"
+                    placeholder="Enter folder name" 
+                    value={newFolderInDialog}
+                    onChange={(e) => setNewFolderInDialog(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowAddToFolderDialog(false)}>Cancel</Button>
+                <Button 
+                  onClick={handleAddToFolder} 
+                  disabled={!newFolderInDialog.trim()}
+                >
+                  Create Folder
+                </Button>
+              </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
