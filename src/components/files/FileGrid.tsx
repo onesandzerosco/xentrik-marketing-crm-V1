@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Share2, Download, CheckCircle } from 'lucide-react';
+import { Upload, Trash2, Share2, Download, CheckCircle, FileVideo } from 'lucide-react';
 import { formatFileSize } from '@/utils/fileUtils';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +51,12 @@ export const FileGrid: React.FC<FileGridProps> = ({
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [currentEditingFile, setCurrentEditingFile] = useState<CreatorFileType | null>(null);
   const [noteContent, setNoteContent] = useState("");
+  
+  // State for video preview
+  const [videoPreview, setVideoPreview] = useState<{ file: CreatorFileType, isOpen: boolean }>({
+    file: {} as CreatorFileType,
+    isOpen: false
+  });
   
   // Update parent component when selection changes
   const toggleFileSelection = (fileId: string) => {
@@ -205,6 +212,24 @@ export const FileGrid: React.FC<FileGridProps> = ({
       });
     }
   };
+  
+  // Function to open video preview
+  const openVideoPreview = (file: CreatorFileType) => {
+    if (file.type === 'video') {
+      setVideoPreview({
+        file,
+        isOpen: true
+      });
+    }
+  };
+  
+  // Function to close video preview
+  const closeVideoPreview = () => {
+    setVideoPreview(prev => ({
+      ...prev,
+      isOpen: false
+    }));
+  };
 
   if (files.length === 0 && onUploadClick) {
     return (
@@ -256,6 +281,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
           const isProcessing = processingFiles.has(file.id);
           const isSelected = selectedFiles.has(file.id);
           const isNewlyUploaded = recentlyUploadedIds.includes(file.id);
+          const isVideo = file.type === 'video';
           
           return (
             <div 
@@ -282,6 +308,29 @@ export const FileGrid: React.FC<FileGridProps> = ({
                     alt={file.name}
                     className="object-cover w-full h-full"
                   />
+                ) : isVideo ? (
+                  <div className="w-full h-full relative group cursor-pointer"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         openVideoPreview(file);
+                       }}>
+                    <div className="flex flex-col items-center justify-center w-full h-full bg-black/5 absolute inset-0">
+                      <FileVideo className="h-10 w-10 text-muted-foreground" />
+                      <span className="text-xs mt-2 text-muted-foreground">Click to preview</span>
+                    </div>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openVideoPreview(file);
+                        }}
+                      >
+                        Play Video
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
                   <div className="text-3xl font-light text-muted-foreground">
                     {file.name.split('.').pop()?.toUpperCase()}
@@ -396,6 +445,33 @@ export const FileGrid: React.FC<FileGridProps> = ({
             <Button onClick={saveNote}>
               Save Note
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Video Preview Dialog */}
+      <Dialog open={videoPreview.isOpen} onOpenChange={closeVideoPreview}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{videoPreview.file.name}</DialogTitle>
+          </DialogHeader>
+          <div className="aspect-video w-full bg-black rounded-md overflow-hidden">
+            {videoPreview.isOpen && videoPreview.file.url && (
+              <video 
+                src={videoPreview.file.url} 
+                controls 
+                autoPlay
+                className="w-full h-full"
+              />
+            )}
+          </div>
+          <DialogFooter className="sm:justify-between">
+            <div className="text-sm text-muted-foreground">
+              {videoPreview.file.description && (
+                <p>{videoPreview.file.description}</p>
+              )}
+            </div>
+            <Button onClick={closeVideoPreview}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

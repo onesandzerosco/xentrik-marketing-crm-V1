@@ -32,7 +32,7 @@ export const formatDate = (dateString: string) => {
 export const getFileType = (extension: string): string => {
   const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'];
   const documentTypes = ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'csv', 'rtf', 'ppt', 'pptx'];
-  const videoTypes = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
+  const videoTypes = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'mpg', 'mpeg', 'm4v'];
   const audioTypes = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'];
   
   if (imageTypes.includes(extension)) return 'image';
@@ -77,7 +77,7 @@ export const getUniqueFileName = async (
       }
       
       // Check if there's any file with the exact same name
-      const exactMatch = existingFiles?.find((file: any) => file.name === uniqueName);
+      const exactMatch = existingFiles?.some((file: any) => file.name === uniqueName);
       
       if (!exactMatch) {
         isUnique = true;
@@ -98,4 +98,76 @@ export const getUniqueFileName = async (
     console.error('Error generating unique filename:', error);
     return `${Date.now()}_${fileName}`; // Fallback to timestamp
   }
+};
+
+// Calculate the number of chunks needed for a large file upload
+export const calculateChunks = (fileSize: number, chunkSize: number = 5 * 1024 * 1024) => {
+  return Math.ceil(fileSize / chunkSize);
+};
+
+// Check if a file is a video
+export const isVideoFile = (fileName: string): boolean => {
+  const extension = getFileExtension(fileName);
+  return ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'mpg', 'mpeg', 'm4v'].includes(extension);
+};
+
+// Generate a video thumbnail from a video file
+export const generateVideoThumbnail = (videoFile: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.playsInline = true;
+      video.muted = true;
+      
+      // Create object URL for the video file
+      const url = URL.createObjectURL(videoFile);
+      video.src = url;
+      
+      video.onloadedmetadata = () => {
+        // Seek to a position to capture the thumbnail
+        video.currentTime = Math.min(1, video.duration / 3);
+        
+        video.onseeked = () => {
+          try {
+            // Create canvas to draw the video frame
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              URL.revokeObjectURL(url);
+              reject(new Error('Could not get canvas context'));
+              return;
+            }
+            
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to data URL (thumbnail)
+            const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.7);
+            URL.revokeObjectURL(url);
+            resolve(thumbnailUrl);
+          } catch (err) {
+            URL.revokeObjectURL(url);
+            reject(err);
+          }
+        };
+        
+        video.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error('Error loading video'));
+        };
+      };
+      
+      video.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Error loading video'));
+      };
+      
+    } catch (err) {
+      reject(err);
+    }
+  });
 };
