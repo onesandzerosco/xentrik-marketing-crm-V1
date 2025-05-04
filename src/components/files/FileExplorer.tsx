@@ -43,7 +43,7 @@ interface FileExplorerProps {
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
   onCreateFolder?: (folderName: string) => void;
-  onMoveFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -60,13 +60,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onUploadStart,
   recentlyUploadedIds = [],
   onCreateFolder,
-  onMoveFilesToFolder
+  onAddFilesToFolder
 }) => {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [showUploader, setShowUploader] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [showAddToFolderDialog, setShowAddToFolderDialog] = useState(false);
   const [targetFolder, setTargetFolder] = useState<string>('');
   const { toast } = useToast();
   
@@ -103,31 +103,31 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setSelectedFiles(fileIds);
   };
 
-  const handleMoveSelectedFiles = async () => {
+  const handleAddToFolder = async () => {
     if (!targetFolder || selectedFiles.length === 0) {
       return;
     }
 
     try {
-      if (onMoveFilesToFolder) {
-        await onMoveFilesToFolder(selectedFiles, targetFolder);
+      if (onAddFilesToFolder) {
+        await onAddFilesToFolder(selectedFiles, targetFolder);
       }
       
-      setShowMoveDialog(false);
+      setShowAddToFolderDialog(false);
       setSelectedFiles([]);
       setTargetFolder('');
       
       toast({
-        title: "Files moved",
-        description: `Successfully moved ${selectedFiles.length} files to folder`,
+        title: "Files added to folder",
+        description: `Successfully added ${selectedFiles.length} files to folder`,
       });
       
       onRefresh();
     } catch (error) {
-      console.error("Error moving files:", error);
+      console.error("Error adding files to folder:", error);
       toast({
-        title: "Error moving files",
-        description: "Failed to move files to the selected folder",
+        title: "Error adding files to folder",
+        description: "Failed to add files to the selected folder",
         variant: "destructive",
       });
     }
@@ -140,9 +140,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onUploadClick={isCreatorView ? handleUploadClick : undefined}
         isCreatorView={isCreatorView}
         selectedFiles={selectedFiles.length}
-        onMoveFilesClick={() => {
+        onAddToFolderClick={() => {
           if (selectedFiles.length > 0) {
-            setShowMoveDialog(true);
+            setShowAddToFolderDialog(true);
           }
         }}
       />
@@ -216,10 +216,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
       )}
 
-      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+      <Dialog open={showAddToFolderDialog} onOpenChange={setShowAddToFolderDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Move Files to Folder</DialogTitle>
+            <DialogTitle>Add Files to Folder</DialogTitle>
             <DialogDescription>
               Select a destination folder for the {selectedFiles.length} selected files.
             </DialogDescription>
@@ -247,9 +247,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowMoveDialog(false)}>Cancel</Button>
-            <Button onClick={handleMoveSelectedFiles} disabled={!targetFolder}>
-              Move Files
+            <Button variant="outline" onClick={() => setShowAddToFolderDialog(false)}>Cancel</Button>
+            <Button onClick={handleAddToFolder} disabled={!targetFolder}>
+              Add Files to Folder
             </Button>
           </DialogFooter>
         </DialogContent>

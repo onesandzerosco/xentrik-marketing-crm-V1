@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, FolderInput } from 'lucide-react';
+import { Upload, FolderPlus } from 'lucide-react';
 
 interface FileHeaderProps {
   creatorName: string;
   onUploadClick?: () => void;
   isCreatorView?: boolean;
   selectedFiles?: number;
-  onMoveFilesClick?: () => void;
+  onAddToFolderClick?: () => void;
 }
 
 export const FileHeader: React.FC<FileHeaderProps> = ({ 
@@ -16,7 +16,7 @@ export const FileHeader: React.FC<FileHeaderProps> = ({
   onUploadClick, 
   isCreatorView = false,
   selectedFiles = 0,
-  onMoveFilesClick
+  onAddToFolderClick
 }) => {
   return (
     <div className="border-b px-6 py-4">
@@ -29,10 +29,10 @@ export const FileHeader: React.FC<FileHeaderProps> = ({
         </div>
         
         <div className="flex gap-2">
-          {selectedFiles > 0 && onMoveFilesClick && (
-            <Button variant="outline" onClick={onMoveFilesClick}>
-              <FolderInput className="h-4 w-4 mr-2" />
-              Move {selectedFiles} Files
+          {selectedFiles > 0 && onAddToFolderClick && (
+            <Button variant="outline" onClick={onAddToFolderClick}>
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Add {selectedFiles} Files to Folder
             </Button>
           )}
           

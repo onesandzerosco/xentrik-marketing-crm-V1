@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +20,7 @@ export interface CreatorFileType {
   status?: "uploading" | "complete";
   bucketPath?: string;
   isNewlyUploaded?: boolean;
+  folderRefs?: string[]; // Array of folder IDs this file is associated with
 }
 
 interface Folder {
@@ -145,98 +145,50 @@ const CreatorFiles = () => {
     }
   };
   
-  // Add a new function to handle moving files between folders
-  const handleMoveFilesToFolder = async (fileIds: string[], targetFolderId: string) => {
+  // Change this function to add files to a folder instead of moving them
+  const handleAddFilesToFolder = async (fileIds: string[], targetFolderId: string) => {
     if (!creator?.id || !targetFolderId || fileIds.length === 0) return;
     
     try {
-      // Get the files that need to be moved
-      const filesToMove = files.filter(file => fileIds.includes(file.id));
-      
-      for (const file of filesToMove) {
-        // Skip if file is already in the target folder
-        if (file.folder === targetFolderId) continue;
-        
-        // Get the source path and filename
-        const sourcePath = file.bucketPath || '';
-        const fileName = file.name;
-        
-        // Create new path in target folder
-        const newPath = `${creator.id}/${targetFolderId}/${fileName}`;
-        
-        // If the file is stored in creator_files bucket
-        if (sourcePath.includes('creator_files/')) {
-          // First, download the file
-          const { data: fileData, error: downloadError } = await supabase.storage
-            .from('creator_files')
-            .download(sourcePath);
+      // Create folder references for these files
+      for (const fileId of fileIds) {
+        // Get existing folder references for this file (if any)
+        const { data: existingRefs, error: fetchError } = await supabase
+          .from('file_folder_refs')
+          .select('*')
+          .eq('file_id', fileId)
+          .eq('folder_id', targetFolderId);
           
-          if (downloadError || !fileData) {
-            console.error(`Error downloading file ${fileName}:`, downloadError);
-            continue;
-          }
-          
-          // Upload to new location
-          const { error: uploadError } = await supabase.storage
-            .from('creator_files')
-            .upload(newPath, fileData, {
-              cacheControl: '3600',
-              upsert: true
-            });
-            
-          if (uploadError) {
-            console.error(`Error uploading file ${fileName} to new location:`, uploadError);
-            continue;
-          }
-          
-          // Delete from old location
-          const { error: deleteError } = await supabase.storage
-            .from('creator_files')
-            .remove([sourcePath]);
-            
-          if (deleteError) {
-            console.error(`Error deleting file ${fileName} from old location:`, deleteError);
-          }
-          
-          // If it's a media record, update it
-          const { error: updateError } = await supabase
-            .from('media')
-            .update({ 
-              bucket_key: newPath,
-              // Update other fields if needed
-            })
-            .eq('id', file.id);
-            
-          if (updateError) {
-            console.error(`Error updating media record for ${fileName}:`, updateError);
-          }
+        if (fetchError) {
+          console.error(`Error checking if file ${fileId} is already in folder:`, fetchError);
+          continue;
         }
-        else {
-          // For files stored in media table but not in creator_files bucket,
-          // just update their folder assignment
-          const { error: updateError } = await supabase
-            .from('media')
-            .update({ 
-              bucket_key: newPath 
-            })
-            .eq('id', file.id);
-            
-          if (updateError) {
-            console.error(`Error updating media record for ${fileName}:`, updateError);
-          }
+        
+        // Skip if reference already exists
+        if (existingRefs && existingRefs.length > 0) {
+          console.log(`File ${fileId} is already in folder ${targetFolderId}`);
+          continue;
+        }
+        
+        // Add new folder reference
+        const { error: insertError } = await supabase
+          .from('file_folder_refs')
+          .insert({
+            file_id: fileId,
+            folder_id: targetFolderId,
+            creator_id: creator.id
+          });
+          
+        if (insertError) {
+          console.error(`Error adding file ${fileId} to folder:`, insertError);
         }
       }
       
       // Refresh the files list
       refetch();
       
-      toast({
-        title: "Files moved",
-        description: `Moved ${fileIds.length} files to ${availableFolders.find(f => f.id === targetFolderId)?.name || targetFolderId}`,
-      });
-      
     } catch (err) {
-      console.error("Error in handleMoveFilesToFolder:", err);
+      console.error("Error in handleAddFilesToFolder:", err);
       throw err;
     }
   };
@@ -260,6 +212,27 @@ const CreatorFiles = () => {
     }
     
     if (mediaData && mediaData.length > 0) {
+      // Get folder references for all files
+      const { data: folderRefs, error: refsError } = await supabase
+        .from('file_folder_refs')
+        .select('*')
+        .eq('creator_id', creator.id);
+        
+      if (refsError) {
+        console.error('Error fetching folder references:', refsError);
+      }
+      
+      // Create a map of file ID to folder IDs
+      const fileToFoldersMap: Record<string, string[]> = {};
+      if (folderRefs) {
+        folderRefs.forEach(ref => {
+          if (!fileToFoldersMap[ref.file_id]) {
+            fileToFoldersMap[ref.file_id] = [];
+          }
+          fileToFoldersMap[ref.file_id].push(ref.folder_id);
+        });
+      }
+      
       // Process files from media table
       const processedFiles = await Promise.all(mediaData.map(async (media) => {
         // Get a signed URL for the file
@@ -274,6 +247,9 @@ const CreatorFiles = () => {
         // Check if this file is in the recently uploaded list
         const isNewlyUploaded = recentlyUploadedIds.includes(media.id);
         
+        // Get folder references for this file
+        const folderRefs = fileToFoldersMap[media.id] || [];
+        
         return {
           id: media.id,
           name: fileName,
@@ -281,7 +257,8 @@ const CreatorFiles = () => {
           created_at: media.created_at,
           url: data?.signedUrl || '',
           type,
-          folder: 'shared',
+          folder: 'shared', // Default folder
+          folderRefs, // Add folder references
           status: media.status as "uploading" | "complete" || 'complete',
           bucketPath: media.bucket_key,
           isNewlyUploaded
@@ -363,8 +340,13 @@ const CreatorFiles = () => {
     refetchOnWindowFocus: false
   });
 
-  // Filter files by the current folder
-  const filteredFiles = files.filter(file => file.folder === currentFolder);
+  // Filter files based on the current folder
+  const filteredFiles = currentFolder === 'shared' 
+    ? files // Show all files in the shared folder
+    : files.filter(file => 
+        file.folderRefs?.includes(currentFolder) || // File is referenced in this folder
+        file.folder === currentFolder // Or file is directly in this folder
+      );
 
   // Handle when files are uploaded
   const handleFilesUploaded = (uploadedFileIds?: string[]) => {
@@ -418,7 +400,7 @@ const CreatorFiles = () => {
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={handleCreateFolder}
-      onMoveFilesToFolder={handleMoveFilesToFolder}
+      onAddFilesToFolder={handleAddFilesToFolder}
     />
   );
 };
