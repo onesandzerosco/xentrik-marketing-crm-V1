@@ -16,7 +16,7 @@ const SharedFiles = () => {
   const { creators, filterCreators } = useCreators();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { isCreator, creatorId, userRole, userRoles, isCreatorSelf } = useAuth();
+  const { userRole, userRoles, creatorId } = useAuth();
   const navigate = useNavigate();
 
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
@@ -60,23 +60,74 @@ const SharedFiles = () => {
     };
   }, []);
 
-  // If user is a creator viewing their own files, redirect them directly to their files
+  // Check if user is a creator (either by primary role OR additional roles)
+  const isCreator = userRole === "Creator" || userRoles.includes("Creator");
+
+  // If user is a creator, redirect them directly to their files
   useEffect(() => {
-    if (isCreatorSelf && creatorId) {
-      // Find the creator data to get the name for display
-      const creatorData = creators.find(c => c.id === creatorId);
-      if (creatorData) {
-        navigate(`/creator-files/${creatorId}`, { 
-          state: { 
-            creatorName: creatorData.name 
-          } 
-        });
+    if (isCreator) {
+      // First check if we have a creatorId directly from auth context
+      if (creatorId) {
+        // Find the creator data to get the name for display
+        const creatorData = creators.find(c => c.id === creatorId);
+        if (creatorData) {
+          navigate(`/creator-files/${creatorId}`, { 
+            state: { creatorName: creatorData.name } 
+          });
+          return;
+        } else {
+          // If creator data isn't loaded yet, just navigate with ID
+          navigate(`/creator-files/${creatorId}`);
+          return;
+        }
       } else {
-        // If creator data isn't loaded yet, just navigate with ID
-        navigate(`/creator-files/${creatorId}`);
+        // If no creatorId in auth context, try to find a creator that matches the current user's ID
+        // This is needed for users who were assigned a Creator role but aren't directly tied to a creator in creator_team_members
+        const { data: { user } } = supabase.auth.getUser();
+        if (user) {
+          console.log("Checking if user is associated with any creator");
+          // Check if there's a creator record for this user
+          supabase
+            .from('creators')
+            .select('id, name')
+            .eq('id', user.id)
+            .single()
+            .then(({ data, error }) => {
+              if (data && !error) {
+                console.log("Found creator match:", data);
+                navigate(`/creator-files/${data.id}`, {
+                  state: { creatorName: data.name }
+                });
+              } else {
+                console.log("No direct creator match found, checking creator_team_members");
+                // Try to find if user is in creator_team_members
+                supabase
+                  .from('creator_team_members')
+                  .select('creator_id')
+                  .eq('team_member_id', user.id)
+                  .single()
+                  .then(({ data: teamData, error: teamError }) => {
+                    if (teamData && !teamError) {
+                      const foundCreatorId = teamData.creator_id;
+                      const creatorData = creators.find(c => c.id === foundCreatorId);
+                      
+                      if (creatorData) {
+                        navigate(`/creator-files/${foundCreatorId}`, { 
+                          state: { creatorName: creatorData.name } 
+                        });
+                      } else {
+                        navigate(`/creator-files/${foundCreatorId}`);
+                      }
+                    } else {
+                      console.log("User has Creator role but no creator association found");
+                    }
+                  });
+              }
+            });
+        }
       }
     }
-  }, [isCreatorSelf, creatorId, creators, navigate]);
+  }, [isCreator, creatorId, creators, navigate, userRole, userRoles]);
 
   // Get file counts for each creator
   const { data: fileCountsMap = {} } = useQuery({

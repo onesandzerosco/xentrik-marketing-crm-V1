@@ -80,11 +80,17 @@ const navItems: NavItem[] = [
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   const { userRole, userRoles } = useAuth();
   
+  // Check if user has Creator role - needed for conditional rendering
+  const isCreator = userRole === "Creator" || userRoles.includes("Creator");
+  
   return (
     <nav className="grid gap-1 pt-2 z-30 relative">
       {navItems.map((item) => {
         // Skip adminOnly items if user is not admin
         if (item.adminOnly && !isAdmin) return null;
+        
+        // Special handling for Creators module - hide it for users with Creator role
+        if (item.path === '/creators' && isCreator) return null;
         
         // Check if the item has role restrictions
         if (item.roles) {

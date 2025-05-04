@@ -5,9 +5,11 @@ import CreatorsHeader from "../components/creators/list/CreatorsHeader";
 import ActiveFilters from "../components/creators/list/ActiveFilters";
 import CreatorsManagementList from "../components/creators/management/CreatorsManagementList";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
+  const { userRole, userRoles } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -15,6 +17,11 @@ const Creators = () => {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Check if user has both Chatter and Creator roles
+  const isChatter = userRole === "Chatter" || userRoles.includes("Chatter");
+  const isCreator = userRole === "Creator" || userRoles.includes("Creator");
+  const isAdmin = userRole === "Admin" || userRoles.includes("Admin");
 
   // Pass searchQuery to filterCreators
   const filteredCreators = filterCreators({
@@ -41,6 +48,19 @@ const Creators = () => {
       console.log("Sample creator data:", creators[0]);
     }
   }, [creators]);
+
+  // Determine if user should have access to this page
+  useEffect(() => {
+    // If user is only a Creator (not also a Chatter, VA, or Admin), they shouldn't access this page
+    if (isCreator && !isChatter && !isAdmin && userRole !== "VA" && !userRoles.includes("VA")) {
+      toast({
+        title: "Access Restricted",
+        description: "You don't have permission to view the creators list",
+        variant: "destructive"
+      });
+      // Note: We could redirect here if needed
+    }
+  }, [isCreator, isChatter, isAdmin, userRole, userRoles, toast]);
 
   const handleClearFilters = () => {
     setSelectedGenders([]);
