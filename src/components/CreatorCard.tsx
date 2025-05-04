@@ -4,20 +4,28 @@ import { Link } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Share2, Files } from 'lucide-react';
+import { LineChart, Edit, Share2, Files, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext"; // Added import for useAuth
+import { useAuth } from "@/context/AuthContext";
 
 interface CreatorCardProps {
   creator: Creator;
   variant?: 'default' | 'files';
   fileCount?: number;
+  showUploadingIndicator?: boolean;
+  uploadingCount?: number;
 }
 
-const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCardProps) => {
+const CreatorCard = ({ 
+  creator, 
+  variant = 'default', 
+  fileCount = 0, 
+  showUploadingIndicator = false,
+  uploadingCount = 0 
+}: CreatorCardProps) => {
   const { toast } = useToast();
-  const { userRole } = useAuth(); // Add this to access the user's role
+  const { userRole } = useAuth();
 
   const handleShareButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -119,6 +127,13 @@ const CreatorCard = ({ creator, variant = 'default', fileCount = 0 }: CreatorCar
                     {fileCount > 0 && (
                       <span className="ml-1 bg-primary/20 text-black px-1.5 rounded-full text-xs">
                         {fileCount}
+                      </span>
+                    )}
+                    
+                    {showUploadingIndicator && (
+                      <span className="ml-2 flex items-center text-xs">
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        {uploadingCount} uploading
                       </span>
                     )}
                   </Button>
