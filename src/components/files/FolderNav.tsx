@@ -39,7 +39,7 @@ interface FolderNavProps {
 }
 
 // These are the default folder IDs that should not be deleted
-const DEFAULT_FOLDERS = ['shared', 'unsorted'];
+const DEFAULT_FOLDERS = ['all', 'unsorted'];
 
 export const FolderNav: React.FC<FolderNavProps> = ({ 
   folders = [], 
@@ -103,24 +103,21 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         variant={!activeFolder ? "secondary" : "ghost"}
         size="sm"
         className="w-full justify-start px-3 font-normal"
-        onClick={() => onFolderChange(folders[0]?.id || '')}
+        onClick={() => onFolderChange('all')}
       >
         <Folder className="h-4 w-4 mr-2" />
         All Files
       </Button>
       
-      {defaultFolders.map((folder) => (
-        <Button
-          key={folder.id}
-          variant={currentFolder === folder.id ? "secondary" : "ghost"}
-          size="sm"
-          className="w-full justify-start px-3 font-normal"
-          onClick={() => onFolderChange(folder.id)}
-        >
-          <Folder className="h-4 w-4 mr-2" />
-          {folder.name}
-        </Button>
-      ))}
+      <Button
+        variant={currentFolder === 'unsorted' ? "secondary" : "ghost"}
+        size="sm"
+        className="w-full justify-start px-3 font-normal"
+        onClick={() => onFolderChange('unsorted')}
+      >
+        <Folder className="h-4 w-4 mr-2" />
+        Unsorted Uploads
+      </Button>
       
       {customFolders.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">

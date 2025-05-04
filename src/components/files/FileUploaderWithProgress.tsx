@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -349,7 +348,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
           // Create a unique file name
           const uniqueSafeName = await getUniqueFileName(
             safeName, 
-            currentFolder, 
+            currentFolder === 'all' ? 'unsorted' : currentFolder, // Use unsorted if all files is selected
             creatorId, 
             'raw_uploads',
             supabase
@@ -359,11 +358,11 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
           const abortController = new AbortController();
           abortControllersRef.current.set(file.name, abortController);
           
-          const filePath = `${creatorId}/${currentFolder}/${uniqueSafeName}`;
+          const filePath = `${creatorId}/${currentFolder === 'all' ? 'unsorted' : currentFolder}/${uniqueSafeName}`;
           
-          // Add folder reference
+          // Determine folder array based on current folder
           let folderArray: string[] = [];
-          if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
+          if (currentFolder !== 'all') {
             folderArray = [currentFolder];
           }
           

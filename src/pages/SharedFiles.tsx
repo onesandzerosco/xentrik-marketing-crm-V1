@@ -46,12 +46,18 @@ const SharedFiles = () => {
       const creatorCounts: Record<string, { total: number, uploading: number }> = {};
       
       for (const creator of creators) {
-        const { data: filesData } = await supabase.storage
-          .from('creator_files')
-          .list(`${creator.id}/shared`);
+        // Count files in the media table for this creator
+        const { count, error } = await supabase
+          .from('media')
+          .select('id', { count: 'exact', head: true })
+          .eq('creator_id', creator.id);
           
+        if (error) {
+          console.error('Error counting files for creator:', error);
+        }
+        
         creatorCounts[creator.id] = {
-          total: filesData?.length || 0,
+          total: count || 0,
           uploading: 0 // This would be updated in real-time when uploads are happening
         };
       }

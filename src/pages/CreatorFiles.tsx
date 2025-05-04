@@ -37,11 +37,11 @@ const CreatorFiles = () => {
   const creator = getCreator(id || '');
   const { toast } = useToast();
   
-  const [currentFolder, setCurrentFolder] = useState('shared');
+  const [currentFolder, setCurrentFolder] = useState('all');
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
   const [availableFolders, setAvailableFolders] = useState<Folder[]>([
-    { id: 'shared', name: 'Shared Files' },
+    { id: 'all', name: 'All Files' },
     { id: 'unsorted', name: 'Unsorted Uploads' }
   ]);
   
@@ -87,7 +87,7 @@ const CreatorFiles = () => {
       folderData?.forEach(item => {
         if (item.folders && Array.isArray(item.folders)) {
           item.folders.forEach(folder => {
-            if (folder !== 'shared' && folder !== 'unsorted') {
+            if (folder !== 'all' && folder !== 'unsorted') {
               uniqueFolders.add(folder);
             }
           });
@@ -102,7 +102,7 @@ const CreatorFiles = () => {
       
       // Set the available folders
       setAvailableFolders(prevFolders => {
-        const defaultFolders = prevFolders.filter(f => f.id === 'shared' || f.id === 'unsorted');
+        const defaultFolders = prevFolders.filter(f => f.id === 'all' || f.id === 'unsorted');
         return [...defaultFolders, ...customFolders];
       });
       
@@ -139,6 +139,7 @@ const CreatorFiles = () => {
       const customFolders = folders
         ?.filter(item => item.id && item.id !== '.' && item.id !== '..')
         ?.filter(item => !item.name.includes('.')) // Simple check to exclude files
+        ?.filter(item => item.name !== 'all' && item.name !== 'unsorted')
         ?.map(folder => ({
           id: folder.name,
           name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1).replace(/-/g, ' ') // Capitalize and format
@@ -146,8 +147,8 @@ const CreatorFiles = () => {
       
       // Add the custom folders to the available folders
       setAvailableFolders(prevFolders => {
-        const existingFolders = prevFolders.filter(f => f.id === 'shared' || f.id === 'unsorted');
-        return [...existingFolders, ...customFolders];
+        const defaultFolders = prevFolders.filter(f => f.id === 'all' || f.id === 'unsorted');
+        return [...defaultFolders, ...customFolders];
       });
       
     } catch (err) {
@@ -291,7 +292,7 @@ const CreatorFiles = () => {
       
       // If the current folder is the one being deleted, switch to 'shared'
       if (currentFolder === folderId) {
-        setCurrentFolder('shared');
+        setCurrentFolder('all');
       }
       
       // Refresh the files list
@@ -398,7 +399,7 @@ const CreatorFiles = () => {
           created_at: media.created_at,
           url: data?.signedUrl || '',
           type,
-          folder: 'shared', // Default folder
+          folder: 'all', // Default folder
           folderRefs, // Add folder references from the array
           status: media.status as "uploading" | "complete" || 'complete',
           bucketPath: media.bucket_key,
@@ -485,12 +486,26 @@ const CreatorFiles = () => {
   });
 
   // Filter files based on the current folder
-  const filteredFiles = currentFolder === 'shared' 
-    ? files // Show all files in the shared folder
-    : files.filter(file => 
+  const filteredFiles = (() => {
+    if (currentFolder === 'all') {
+      // Show all files when 'all' is selected
+      return files;
+    } else if (currentFolder === 'unsorted') {
+      // Show only files that aren't in any custom folders
+      return files.filter(file => {
+        const customFolders = (file.folderRefs || []).filter(
+          folder => folder !== 'all' && folder !== 'unsorted'
+        );
+        return customFolders.length === 0;
+      });
+    } else {
+      // Show files in the selected custom folder
+      return files.filter(file => 
         file.folderRefs?.includes(currentFolder) || // File is referenced in this folder
         file.folder === currentFolder // Or file is directly in this folder
       );
+    }
+  })();
 
   // Handle when files are uploaded
   const handleFilesUploaded = (uploadedFileIds?: string[]) => {
