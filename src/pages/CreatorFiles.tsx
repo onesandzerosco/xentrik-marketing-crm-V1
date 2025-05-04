@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -143,6 +142,68 @@ const CreatorFiles = () => {
         description: "Failed to create folder",
         variant: "destructive"
       });
+    }
+  };
+  
+  const handleDeleteFolder = async (folderId: string): Promise<void> => {
+    if (!creator?.id || !folderId) return Promise.reject("Missing creator or folder ID");
+    
+    try {
+      // First, remove this folder from all files that reference it
+      const { data: filesInFolder, error: filesError } = await supabase
+        .from('media')
+        .select('id, folders')
+        .filter('creator_id', 'eq', creator.id)
+        .filter('folders', 'cs', `{"${folderId}"}`); // Find files with this folder in the array
+        
+      if (filesError) {
+        console.error("Error fetching files in folder:", filesError);
+        throw filesError;
+      }
+      
+      // Update each file to remove this folder from its folders array
+      for (const file of filesInFolder || []) {
+        const updatedFolders = (file.folders || []).filter(f => f !== folderId);
+        
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', file.id);
+          
+        if (updateError) {
+          console.error(`Error updating file ${file.id}:`, updateError);
+          // Continue with other files even if one update fails
+        }
+      }
+      
+      // Delete the folder marker file in storage
+      const { error: deleteError } = await supabase.storage
+        .from('creator_files')
+        .remove([`${creator.id}/${folderId}/.folder`]);
+      
+      if (deleteError) {
+        console.error("Error deleting folder:", deleteError);
+        throw deleteError;
+      }
+      
+      // Update the UI by removing the folder from availableFolders
+      setAvailableFolders(prevFolders => 
+        prevFolders.filter(folder => folder.id !== folderId)
+      );
+      
+      // If the current folder is the one being deleted, switch to 'shared'
+      if (currentFolder === folderId) {
+        setCurrentFolder('shared');
+      }
+      
+      // Refresh the files list
+      refetch();
+      
+      return Promise.resolve();
+      
+    } catch (err) {
+      console.error("Error in handleDeleteFolder:", err);
+      return Promise.reject(err);
     }
   };
   
@@ -384,6 +445,7 @@ const CreatorFiles = () => {
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={handleCreateFolder}
       onAddFilesToFolder={handleAddFilesToFolder}
+      onDeleteFolder={handleDeleteFolder}
     />
   );
 };

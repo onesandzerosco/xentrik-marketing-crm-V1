@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
@@ -43,6 +44,7 @@ interface FileExplorerProps {
   recentlyUploadedIds?: string[];
   onCreateFolder?: (folderName: string) => void;
   onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onDeleteFolder?: (folderId: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -59,7 +61,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onUploadStart,
   recentlyUploadedIds = [],
   onCreateFolder,
-  onAddFilesToFolder
+  onAddFilesToFolder,
+  onDeleteFolder
 }) => {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [showUploader, setShowUploader] = useState(false);
@@ -154,6 +157,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             currentFolder={currentFolder}
             onFolderChange={onFolderChange}
             onCreateFolder={isCreatorView ? handleCreateFolder : undefined}
+            onDeleteFolder={isCreatorView ? onDeleteFolder : undefined}
           />
         </div>
         

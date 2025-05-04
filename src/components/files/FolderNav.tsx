@@ -1,9 +1,19 @@
 
 import React, { useState } from 'react';
-import { Folder, FolderPlus, X, Check } from 'lucide-react';
+import { Folder, FolderPlus, X, Check, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Folder {
   id: string;
@@ -16,17 +26,24 @@ interface FolderNavProps {
   onFolderChange: (folder: string) => void;
   activeFolder?: string | null;
   onCreateFolder?: (folderName: string) => void;
+  onDeleteFolder?: (folderId: string) => Promise<void>;
 }
+
+// These are the default folder IDs that should not be deleted
+const DEFAULT_FOLDERS = ['shared', 'unsorted'];
 
 export const FolderNav: React.FC<FolderNavProps> = ({ 
   folders = [], 
   currentFolder, 
   onFolderChange,
   activeFolder = null,
-  onCreateFolder
+  onCreateFolder,
+  onDeleteFolder
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const handleCreateFolder = () => {
@@ -50,6 +67,35 @@ export const FolderNav: React.FC<FolderNavProps> = ({
     setNewFolderName('');
   };
 
+  const handleDeleteFolder = async () => {
+    if (!folderToDelete || !onDeleteFolder) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      await onDeleteFolder(folderToDelete);
+      
+      toast({
+        title: "Folder deleted",
+        description: `Successfully deleted folder`,
+      });
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      toast({
+        title: "Error deleting folder",
+        description: error instanceof Error ? error.message : "Failed to delete folder",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setFolderToDelete(null);
+    }
+  };
+
+  // Separate default folders from custom folders
+  const defaultFolders = folders.filter(folder => DEFAULT_FOLDERS.includes(folder.id));
+  const customFolders = folders.filter(folder => !DEFAULT_FOLDERS.includes(folder.id));
+
   return (
     <div className="space-y-1 pr-1">
       <div className="py-2">
@@ -66,7 +112,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         All Files
       </Button>
       
-      {folders.map((folder) => (
+      {defaultFolders.map((folder) => (
         <Button
           key={folder.id}
           variant={currentFolder === folder.id ? "secondary" : "ghost"}
@@ -78,6 +124,40 @@ export const FolderNav: React.FC<FolderNavProps> = ({
           {folder.name}
         </Button>
       ))}
+      
+      {customFolders.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+          <h3 className="px-3 text-xs font-medium text-muted-foreground mb-2">Custom Folders</h3>
+          
+          {customFolders.map((folder) => (
+            <div key={folder.id} className="flex items-center group">
+              <Button
+                variant={currentFolder === folder.id ? "secondary" : "ghost"}
+                size="sm"
+                className="w-full justify-start px-3 font-normal"
+                onClick={() => onFolderChange(folder.id)}
+              >
+                <Folder className="h-4 w-4 mr-2" />
+                {folder.name}
+              </Button>
+              
+              {onDeleteFolder && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="opacity-0 group-hover:opacity-100 -ml-8 h-7 w-7 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setFolderToDelete(folder.id);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {isCreating ? (
         <div className="px-3 py-2">
@@ -122,6 +202,28 @@ export const FolderNav: React.FC<FolderNavProps> = ({
           New Folder
         </Button>
       )}
+
+      {/* Delete Folder Confirmation Dialog */}
+      <AlertDialog open={!!folderToDelete} onOpenChange={(open) => !open && setFolderToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete folder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the folder. Files within this folder will not be deleted, but they will no longer be associated with this folder.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteFolder}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
