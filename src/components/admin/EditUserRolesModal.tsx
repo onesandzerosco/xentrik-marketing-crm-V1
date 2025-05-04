@@ -27,6 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CheckboxGroup } from "@/components/ui/checkbox-group";
 import { Employee, PrimaryRole } from "@/types/employee";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditUserRolesModalProps {
   user: Employee | null;
@@ -102,13 +103,79 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     });
   };
 
-  const handleSubmit = () => {
+  // Create creator record if user is assigned Creator role
+  const createCreatorRecord = async (userId: string, userName: string) => {
+    try {
+      // Generate a unique ID for the creator
+      const creatorId = userId;
+      
+      // Check if creator record already exists
+      const { data: existingCreator } = await supabase
+        .from('creators')
+        .select('id')
+        .eq('id', creatorId)
+        .single();
+      
+      if (existingCreator) {
+        console.log("Creator record already exists for user:", creatorId);
+        return;
+      }
+      
+      // Insert new creator record with minimal info
+      const { error: creatorError } = await supabase
+        .from('creators')
+        .insert({
+          id: creatorId,
+          name: userName,
+          gender: 'Male', // Default value required by the schema
+          team: 'A Team', // Default value required by the schema
+          creator_type: 'Real', // Default value required by the schema
+        });
+      
+      if (creatorError) {
+        throw creatorError;
+      }
+      
+      // Create empty social links record
+      const { error: socialLinksError } = await supabase
+        .from('creator_social_links')
+        .insert({
+          creator_id: creatorId
+        });
+      
+      if (socialLinksError) {
+        throw socialLinksError;
+      }
+      
+      console.log("Successfully created creator record for user:", creatorId);
+      
+    } catch (error) {
+      console.error("Error creating creator record:", error);
+      toast({
+        title: "Error creating creator record",
+        description: "Please try again or contact support.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
     if (user) {
       console.log("Submitting role update:", { 
         userId: user.id,
         primaryRole, 
         additionalRoles 
       });
+      
+      // Check if Creator role was added
+      const hadCreatorRole = user.roles && user.roles.includes("Creator");
+      const hasCreatorRole = additionalRoles.includes("Creator");
+      
+      // Create creator record if Creator role was added
+      if (!hadCreatorRole && hasCreatorRole) {
+        await createCreatorRecord(user.id, user.name);
+      }
+      
       onUpdate(user.id, primaryRole, additionalRoles);
     }
   };

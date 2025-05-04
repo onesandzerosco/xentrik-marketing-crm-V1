@@ -62,7 +62,7 @@ const SharedFiles = () => {
 
   // If user is a creator viewing their own files, redirect them directly to their files
   useEffect(() => {
-    if (isCreatorSelf && creatorId) {
+    if (isCreator && isCreatorSelf && creatorId) {
       // Find the creator data to get the name for display
       const creatorData = creators.find(c => c.id === creatorId);
       if (creatorData) {
@@ -76,7 +76,7 @@ const SharedFiles = () => {
         navigate(`/creator-files/${creatorId}`);
       }
     }
-  }, [isCreatorSelf, creatorId, creators, navigate]);
+  }, [isCreator, isCreatorSelf, creatorId, creators, navigate]);
 
   // Get file counts for each creator
   const { data: fileCountsMap = {} } = useQuery({
@@ -124,7 +124,6 @@ const SharedFiles = () => {
   let displayCreators = creators;
   
   // If user is a creator but not admin/VA, they should only see their own files
-  // Note: We only need this as a fallback since we're redirecting creators directly
   if (isCreator && !["Admin", "VA", "Chatter"].some(role => userRole === role || userRoles.includes(role))) {
     displayCreators = creators.filter(creator => creator.id === creatorId);
   }
@@ -166,6 +165,11 @@ const SharedFiles = () => {
 
   const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || !!searchQuery;
 
+  // Final list of creators to display based on filters and role
+  const finalCreators = React.useMemo(() => {
+    return displayCreators === creators ? filteredCreators : displayCreators;
+  }, [displayCreators, creators, filteredCreators]);
+
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
       {hasPendingUploads && (
@@ -176,7 +180,7 @@ const SharedFiles = () => {
       
       <SharedFilesHeader 
         isLoading={isLoading}
-        creatorCount={filteredCreators.length}
+        creatorCount={finalCreators.length}
         selectedGenders={selectedGenders}
         selectedTeams={selectedTeams}
         selectedClasses={selectedClasses}
@@ -190,7 +194,7 @@ const SharedFiles = () => {
 
       <SharedFilesCreatorList 
         isLoading={isLoading}
-        creators={filteredCreators}
+        creators={finalCreators}
         hasFilters={hasFilters}
         fileCountsMap={fileCountsMap}
       />

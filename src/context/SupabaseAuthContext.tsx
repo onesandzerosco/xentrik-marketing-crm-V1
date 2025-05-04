@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -57,6 +56,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         hasCreatorRole = true;
         setIsCreator(true);
         localStorage.setItem('isCreator', 'true');
+        setCreatorId(userId); // Set the creator ID to the user's ID
+        localStorage.setItem('creatorId', userId);
         setUserRoles(profileData.roles);
         localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
       }
@@ -66,28 +67,63 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         localStorage.setItem('userRole', profileData.role);
       }
       
+      // Verify if a creator record exists in the creators table
+      if (hasCreatorRole) {
+        const { data: creatorData } = await supabase
+          .from('creators')
+          .select('id')
+          .eq('id', userId)
+          .single();
+          
+        // If no creator record exists but user has Creator role, create one
+        if (!creatorData) {
+          // Get user profile data to create creator
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('name')
+            .eq('id', userId)
+            .single();
+            
+          if (userData) {
+            // Create creator record
+            await supabase
+              .from('creators')
+              .insert({
+                id: userId,
+                name: userData.name,
+                gender: 'Male', // Default value required
+                team: 'A Team', // Default value required
+                creator_type: 'Real', // Default value required
+              });
+              
+            // Create empty social links record
+            await supabase
+              .from('creator_social_links')
+              .insert({
+                creator_id: userId
+              });
+          }
+        }
+      }
+      
       // Also check creator_team_members for associations
-      const { data } = await supabase
+      const { data: teamMemberData } = await supabase
         .from('creator_team_members')
         .select('creator_id')
         .eq('team_member_id', userId)
         .limit(1);
         
-      if (data && data.length > 0) {
-        setCreatorId(data[0].creator_id);
-        localStorage.setItem('creatorId', data[0].creator_id);
-        
-        // If user is directly associated with a creator, mark them as a creator
+      if (teamMemberData && teamMemberData.length > 0) {
+        // If user is directly associated with a creator but doesn't have Creator role,
+        // keep the creatorId but don't set isCreator
         if (!hasCreatorRole) {
-          setIsCreator(true);
-          localStorage.setItem('isCreator', 'true');
+          setCreatorId(teamMemberData[0].creator_id);
+          localStorage.setItem('creatorId', teamMemberData[0].creator_id);
         }
       } else {
         // Only reset these if user isn't a creator by role
         if (!hasCreatorRole) {
-          setIsCreator(false);
           setCreatorId(null);
-          localStorage.removeItem('isCreator');
           localStorage.removeItem('creatorId');
         }
       }
@@ -135,7 +171,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
         
         // Always check for updated status
-        checkCreatorStatus(currentSession.user.id);
+        setTimeout(() => {
+          checkCreatorStatus(currentSession.user.id);
+        }, 0);
       }
       
       setIsLoading(false);
@@ -167,7 +205,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       if (currentSession?.user) {
         // Check creator status for existing session
-        checkCreatorStatus(currentSession.user.id);
+        setTimeout(() => {
+          checkCreatorStatus(currentSession.user.id);
+        }, 0);
       }
       
       setIsLoading(false);

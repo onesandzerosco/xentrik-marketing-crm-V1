@@ -5,37 +5,17 @@ import { useSupabaseAuth } from './SupabaseAuthContext';
 // This file re-exports Supabase auth functionality 
 // to maintain compatibility with existing components
 
-// Mock interface for pending users (previously from Auth0)
-export interface PendingUser {
-  id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-}
-
 // AuthContext types
 export interface AuthContextType {
   user: any;
   isAuthenticated: boolean;
   isLoading: boolean;
   signOut: () => Promise<void>;
-  pendingUsers: PendingUser[];
-  approvePendingUser: (id: string, approved: boolean) => void;
-  createTeamMember: (username: string, email: string, role: string) => boolean;
-  updateCredentials: (
-    username: string,
-    currentPassword: string,
-    newPassword: string,
-    email: string,
-    emailVerified: boolean,
-    displayName: string,
-    profileImage: string
-  ) => boolean;
   isCreator: boolean;
   creatorId: string | null;
   userRole: string;
   userRoles: string[];
-  isCreatorSelf: boolean; // New property to check if user is viewing their own creator profile
+  isCreatorSelf: boolean; // Property to check if user is viewing their own creator profile
 }
 
 // Create an AuthContext for compatibility
@@ -53,32 +33,6 @@ export const useAuth = () => {
 // Compatible Auth Provider that wraps SupabaseAuth
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const supabaseAuth = useSupabaseAuth();
-  
-  // Mock empty pending users array (since we're using Supabase now)
-  const pendingUsers: PendingUser[] = [];
-  
-  // Mock functions for compatibility
-  const approvePendingUser = (id: string, approved: boolean) => {
-    console.log('Approve pending user is not implemented with Supabase');
-  };
-  
-  const createTeamMember = (username: string, email: string, role: string) => {
-    console.log('Create team member function is not implemented with Supabase');
-    return true;
-  };
-  
-  const updateCredentials = (
-    username: string,
-    currentPassword: string,
-    newPassword: string,
-    email: string,
-    emailVerified: boolean,
-    displayName: string,
-    profileImage: string
-  ) => {
-    console.log('Update credentials is not implemented with Supabase');
-    return true;
-  };
   
   // Determine if the user is viewing their own creator profile
   // This is true when the user is authenticated as a creator and their creatorId matches their userId
@@ -100,10 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: supabaseAuth.isAuthenticated,
     isLoading: supabaseAuth.isLoading,
     signOut: supabaseAuth.signOut,
-    pendingUsers,
-    approvePendingUser,
-    createTeamMember,
-    updateCredentials,
     isCreator: supabaseAuth.isCreator,
     creatorId: supabaseAuth.creatorId,
     userRole: supabaseAuth.userRole,

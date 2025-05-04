@@ -37,9 +37,11 @@ export const useCreatorFilters = (creators: Creator[]) => {
       if (filters.searchQuery && filters.searchQuery.trim() !== '') {
         const searchLower = filters.searchQuery.toLowerCase().trim();
         searchMatch = 
-          (creator.name?.toLowerCase().includes(searchLower) || false) || 
-          (creator.email?.toLowerCase().includes(searchLower) || false) ||
-          (creator.telegramUsername?.toLowerCase().includes(searchLower) || false);
+          ((creator.name?.toLowerCase() || '').includes(searchLower)) || 
+          ((creator.email?.toLowerCase() || '').includes(searchLower)) ||
+          ((creator.telegramUsername?.toLowerCase() || '').includes(searchLower)) ||
+          ((creator.whatsappNumber?.toLowerCase() || '').includes(searchLower)) ||
+          ((creator.id?.toLowerCase() || '').includes(searchLower));
       }
 
       return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch && searchMatch;

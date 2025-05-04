@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect } from "react";
 import { useCreators } from "../context/creator";
+import { useAuth } from "@/context/AuthContext";
 import CreatorsHeader from "../components/creators/list/CreatorsHeader";
-import ActiveFilters from "../components/creators/list/ActiveFilters";
 import CreatorsManagementList from "../components/creators/management/CreatorsManagementList";
 import { useToast } from "@/hooks/use-toast";
 
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
+  const { userRole, userRoles, isCreator, creatorId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -51,11 +52,22 @@ const Creators = () => {
 
   const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || !!searchQuery;
 
+  // Filter creators based on user role
+  const displayCreators = React.useMemo(() => {
+    // If user is a Creator themselves but not an Admin/VA/Chatter, only show their own profile
+    if (isCreator && 
+        creatorId && 
+        !["Admin", "VA", "Chatter"].some(role => userRole === role || userRoles.includes(role))) {
+      return creators.filter(creator => creator.id === creatorId);
+    }
+    return filteredCreators;
+  }, [creators, filteredCreators, isCreator, creatorId, userRole, userRoles]);
+
   return (
     <div className="p-8 w-full max-w-[1400px] mx-auto">
       <CreatorsHeader 
         isLoading={isLoading}
-        creatorCount={filteredCreators.length}
+        creatorCount={displayCreators.length}
         selectedGenders={selectedGenders}
         selectedTeams={selectedTeams}
         selectedClasses={selectedClasses}
@@ -67,22 +79,9 @@ const Creators = () => {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* Remove old ActiveFilters, can show chip-row if you want */}
-      {/* 
-      <ActiveFilters 
-        selectedGenders={selectedGenders}
-        selectedTeams={selectedTeams}
-        selectedClasses={selectedClasses}
-        setSelectedGenders={setSelectedGenders}
-        setSelectedTeams={setSelectedTeams}
-        setSelectedClasses={setSelectedClasses}
-        handleClearFilters={handleClearFilters}
-      />
-      */}
-
       <CreatorsManagementList 
         isLoading={isLoading}
-        creators={filteredCreators}
+        creators={displayCreators}
         hasFilters={hasFilters}
       />
     </div>

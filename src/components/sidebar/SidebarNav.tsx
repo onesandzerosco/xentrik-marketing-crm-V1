@@ -20,6 +20,7 @@ interface NavItem {
   icon: React.ReactNode;
   adminOnly?: boolean;
   roles?: string[]; // Specific roles that can access this item
+  allowCreator?: boolean; // Allow Creator role to access this item
 }
 
 interface SidebarNavProps {
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
     label: 'Creators',
     icon: <Users className="h-5 w-5" />,
     roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see Creators
+    allowCreator: true, // Allow Creator to see their own profile
   },
   {
     path: '/team',
@@ -78,7 +80,7 @@ const navItems: NavItem[] = [
 ];
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
-  const { userRole, userRoles } = useAuth();
+  const { userRole, userRoles, isCreator } = useAuth();
   
   return (
     <nav className="grid gap-1 pt-2 z-30 relative">
@@ -93,8 +95,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
             userRole === role || (userRoles && userRoles.includes(role))
           );
           
-          // Skip if user doesn't have any required role
-          if (!hasRequiredRole) return null;
+          // Special case: if allowCreator is true, creators can see this item even without the specified roles
+          const creatorAccess = item.allowCreator && isCreator;
+          
+          // Skip if user doesn't have any required role and is not a creator with special access
+          if (!hasRequiredRole && !creatorAccess) return null;
         }
         
         return (
