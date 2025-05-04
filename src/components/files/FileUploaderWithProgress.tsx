@@ -8,6 +8,7 @@ import {
   uploadFileInChunks,
   isFileTooLarge
 } from '@/utils/fileUtils';
+import { isZipFile, extractZipFiles, getZipBaseName } from '@/utils/zipUtils';
 import { Progress } from '@/components/ui/progress';
 import { X, FileVideo } from 'lucide-react';
 
@@ -85,10 +86,27 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       const initialStatuses: FileUploadStatus[] = [];
       let hasLargeFiles = false;
       let hasTooLargeFiles = false;
+      let hasZipFiles = false;
+      const zipFiles: File[] = [];
+      const regularFiles: File[] = [];
       
-      // First pass: prepare file statuses and check sizes
+      // First pass: prepare file statuses and check sizes and types
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        
+        // Check if file is a ZIP file
+        if (isZipFile(file.name)) {
+          hasZipFiles = true;
+          zipFiles.push(file);
+          initialStatuses.push({
+            name: file.name,
+            progress: 0,
+            status: 'processing'
+          });
+          continue;
+        }
+        
+        regularFiles.push(file);
         
         // Check if file is too large (over 1GB)
         if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) {
@@ -135,11 +153,152 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
         });
       }
       
-      const uploadedFileIds: string[] = [];
+      if (hasZipFiles) {
+        toast({
+          title: "ZIP files detected",
+          description: "ZIP files will be unpacked automatically into a new folder.",
+        });
+      }
       
-      // Process files sequentially to avoid overwhelming the API
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      const uploadedFileIds: string[] = [];
+
+      // First handle the ZIP files
+      for (let i = 0; i < zipFiles.length; i++) {
+        const zipFile = zipFiles[i];
+        const zipFileName = zipFile.name;
+        const folderName = getZipBaseName(zipFileName);
+        
+        try {
+          updateFileProgress(zipFileName, 10, 'processing');
+          
+          // Extract the files from the ZIP
+          const extractedFiles = await extractZipFiles(zipFile);
+          updateFileProgress(zipFileName, 30, 'processing');
+          
+          // Create a new folder with the ZIP file name
+          const folderIdSafe = folderName.toLowerCase().replace(/\s+/g, '-');
+          
+          // Update progress
+          updateFileProgress(zipFileName, 50, 'processing');
+          
+          // Create an empty file in the folder to "create" the folder in storage
+          const { error: storageError } = await supabase.storage
+            .from('creator_files')
+            .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
+          
+          if (storageError) {
+            console.error("Error creating folder in storage:", storageError);
+            updateFileProgress(zipFileName, 0, 'error');
+            continue;
+          }
+          
+          updateFileProgress(zipFileName, 60, 'uploading');
+          
+          // Upload each extracted file to the newly created folder
+          let processedFiles = 0;
+          let folderCreated = false;
+          const extractedFileIds: string[] = [];
+          
+          for (const extractedFile of extractedFiles) {
+            const uniqueFileName = await getUniqueFileName(
+              extractedFile.name, 
+              folderIdSafe, 
+              creatorId, 
+              'raw_uploads',
+              supabase
+            );
+            
+            const filePath = `${creatorId}/${folderIdSafe}/${uniqueFileName}`;
+            
+            // Store metadata in the media table
+            const { data: mediaRecord, error: mediaError } = await supabase
+              .from('media')
+              .insert({
+                creator_id: creatorId,
+                bucket_key: filePath,
+                filename: uniqueFileName,
+                mime: extractedFile.content.type || 'application/octet-stream',
+                file_size: extractedFile.content.size,
+                status: 'uploading',
+                folders: folderCreated ? [folderIdSafe] : [] // Empty initially, will be updated
+              })
+              .select('id');
+            
+            if (mediaError) {
+              console.error('Media record creation error:', mediaError);
+              continue;
+            }
+            
+            if (!mediaRecord || mediaRecord.length === 0) {
+              console.error('Failed to create media record');
+              continue;
+            }
+            
+            const fileId = mediaRecord[0].id;
+            extractedFileIds.push(fileId);
+            
+            // Upload the file content
+            const { error: uploadError } = await supabase.storage
+              .from('raw_uploads')
+              .upload(filePath, extractedFile.content, {
+                cacheControl: '3600',
+                upsert: true
+              });
+              
+            if (uploadError) {
+              console.error(`Upload error for ${uniqueFileName}:`, uploadError);
+              await supabase
+                .from('media')
+                .update({ status: 'error' })
+                .eq('id', fileId);
+              continue;
+            }
+            
+            // Update the media record to mark as complete
+            await supabase
+              .from('media')
+              .update({ 
+                status: 'complete',
+                folders: [folderIdSafe] // Add to folder
+              })
+              .eq('id', fileId);
+            
+            processedFiles++;
+            const zipProgress = 60 + Math.floor((processedFiles / extractedFiles.length) * 40);
+            updateFileProgress(zipFileName, zipProgress, 'uploading');
+            
+            // After first file, indicate that folder exists for remaining files
+            if (!folderCreated) {
+              folderCreated = true;
+            }
+          }
+          
+          // Mark ZIP file as complete when all extracted files are processed
+          updateFileProgress(zipFileName, 100, 'complete');
+          uploadedFileIds.push(...extractedFileIds);
+          
+          // Add the newly created folder to available folders list (will be picked up on refresh)
+          toast({
+            title: "ZIP file processed",
+            description: `Created folder "${folderName}" with ${extractedFiles.length} files`,
+          });
+          
+        } catch (error) {
+          console.error(`Error processing ZIP file ${zipFileName}:`, error);
+          updateFileProgress(zipFileName, 0, 'error');
+          setFileStatuses(prev => 
+            prev.map(status => 
+              status.name === zipFileName
+                ? { ...status, error: error instanceof Error ? error.message : 'Failed to process ZIP file' }
+                : status
+            )
+          );
+        }
+      }
+      
+      // Process regular files sequentially to avoid overwhelming the API
+      for (let i = 0; i < regularFiles.length; i++) {
+        const file = regularFiles[i];
         
         // Skip files that are too large (already warned)
         if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) continue;
@@ -263,7 +422,6 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
             
             updateFileProgress(file.name, 100, 'complete');
             uploadedFileIds.push(fileId);
-            
           } catch (error) {
             console.error(`Upload error for ${file.name}:`, error);
             
@@ -369,7 +527,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
         disabled={isUploading}
         multiple
         className="hidden"
-        accept="image/*,video/*,audio/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain"
+        accept="image/*,video/*,audio/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,application/zip"
       />
       
       {/* Progress display overlay */}
@@ -430,7 +588,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
                   )}
                 </div>
                 {file.status === 'processing' && (
-                  <p className="text-xs text-amber-500 mt-1">Processing video...</p>
+                  <p className="text-xs text-amber-500 mt-1">Processing file...</p>
                 )}
                 {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
               </div>
