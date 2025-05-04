@@ -7,6 +7,7 @@ import { CreatorFileType } from '@/pages/CreatorFiles';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { canDeleteFiles, canEditFileDescription } from '@/utils/permissionUtils';
 import {
   Dialog,
   DialogContent,
@@ -34,13 +35,13 @@ export const FileList: React.FC<FileListProps> = ({
 }) => {
   const { toast } = useToast();
   const { userRole, userRoles } = useAuth();
-  const isAdmin = userRole === "Admin";
+  
+  // Use our permission utility functions with both primary role and roles array
+  const canEdit = canEditFileDescription(userRole, userRoles);
+  const canDelete = canDeleteFiles(userRole, userRoles);
+  
   const totalFiles = files.length;
   const uploadingFiles = files.filter(file => file.status === 'uploading').length;
-  
-  // Determine if the user can edit file descriptions
-  const canEditDescriptions = isAdmin || isCreatorView || 
-    userRoles.includes("VA") || userRoles.includes("Creator");
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
   const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
@@ -310,8 +311,7 @@ export const FileList: React.FC<FileListProps> = ({
     }
   };
 
-  // Determine if the current user can delete files (either admin or creator)
-  const canDeleteFiles = isAdmin || isCreatorView;
+  console.log("FileList permissions:", { canEdit, canDelete, userRole, userRoles, isCreatorView });
   
   const allSelected = displayFiles.length > 0 && 
     selectedFiles.size === displayFiles.filter(file => file.status !== 'uploading').length;
@@ -342,7 +342,7 @@ export const FileList: React.FC<FileListProps> = ({
             >
               <Download className="h-3.5 w-3.5 mr-1" /> Download Selected
             </Button>
-            {canDeleteFiles && (
+            {canDelete && (
               <Button 
                 variant="outline" 
                 size="sm"
@@ -441,7 +441,7 @@ export const FileList: React.FC<FileListProps> = ({
                         <Share2 className="h-3.5 w-3.5" />
                       </Button>
 
-                      {canEditDescriptions && (
+                      {canEdit && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -454,7 +454,7 @@ export const FileList: React.FC<FileListProps> = ({
                         </Button>
                       )}
 
-                      {canDeleteFiles && (
+                      {canDelete && (
                         <Button
                           variant="ghost"
                           size="sm"

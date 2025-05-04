@@ -39,8 +39,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
   const { userRole, userRoles } = useAuth();
   const isAdmin = userRole === "Admin";
   
-  // Use our permission utility functions
-  const canDelete = canDeleteFiles(userRole);
+  // Use our permission utility functions with both primary role and roles array
+  const canDelete = canDeleteFiles(userRole, userRoles);
   const canEdit = canEditFileDescription(userRole, userRoles);
   
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set());
@@ -242,6 +242,8 @@ export const FileGrid: React.FC<FileGridProps> = ({
       </div>
     );
   }
+
+  console.log("Permission check:", { canDelete, canEdit, userRole, userRoles, isCreatorView });
 
   return (
     <div>

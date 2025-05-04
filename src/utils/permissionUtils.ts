@@ -10,6 +10,7 @@ export const canEditFileDescription = (userRole: string, userRoles: string[]): b
   return userRole === "Admin" || 
          userRole === "Creator" || 
          userRoles.includes("VA") || 
+         userRoles.includes("Creator") ||
          userRole === "VA";
 };
 
@@ -17,8 +18,10 @@ export const canEditFileDescription = (userRole: string, userRoles: string[]): b
  * Determines if a user can delete files based on their role
  * - Only Admins and Creators can delete files
  */
-export const canDeleteFiles = (userRole: string): boolean => {
-  return userRole === "Admin" || userRole === "Creator";
+export const canDeleteFiles = (userRole: string, userRoles: string[]): boolean => {
+  return userRole === "Admin" || 
+         userRole === "Creator" ||
+         userRoles.includes("Creator");
 };
 
 /**
@@ -30,6 +33,7 @@ export const canUploadFiles = (userRole: string, userRoles: string[]): boolean =
   return userRole === "Admin" || 
          userRole === "Creator" || 
          userRoles.includes("VA") || 
+         userRoles.includes("Creator") ||
          userRole === "VA";
 };
 
@@ -42,7 +46,7 @@ export const useFilePermissions = () => {
 
   return {
     canEdit: canEditFileDescription(userRole, userRoles),
-    canDelete: canDeleteFiles(userRole),
+    canDelete: canDeleteFiles(userRole, userRoles),
     canUpload: canUploadFiles(userRole, userRoles),
     // All authenticated users can download files
     canDownload: true
