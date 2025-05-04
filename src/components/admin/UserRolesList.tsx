@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Employee, EmployeeStatus, PrimaryRole } from "@/types/employee";
@@ -100,6 +99,11 @@ const UserRolesList: React.FC = () => {
       
       console.log("Updating user with:", { userId, primaryRole, additionalRoles });
       
+      // Check if the user previously had Creator role
+      const currentUser = users.find(user => user.id === userId);
+      const hadCreatorRole = currentUser?.roles?.includes('Creator') || false;
+      const hasCreatorRole = additionalRoles.includes('Creator');
+      
       // Use RPC function instead of direct update to bypass RLS
       const { data, error } = await supabase
         .rpc('admin_update_user_roles', {
@@ -114,11 +118,14 @@ const UserRolesList: React.FC = () => {
       
       console.log("Supabase update response:", data);
 
-      // Check if Creator role was added
-      const hasCreatorRole = additionalRoles.includes('Creator');
-      
-      if (hasCreatorRole) {
+      // If Creator role is being added
+      if (!hadCreatorRole && hasCreatorRole) {
         await ensureCreatorRecordExists(userId);
+      }
+      
+      // If Creator role is being removed
+      if (hadCreatorRole && !hasCreatorRole) {
+        await disableCreatorRecord(userId);
       }
       
       // Update the local state to reflect the changes immediately
@@ -231,6 +238,33 @@ const UserRolesList: React.FC = () => {
       }
     } catch (error) {
       console.error("Error ensuring creator record exists:", error);
+    }
+  };
+
+  // Function to disable a creator record when Creator role is removed
+  const disableCreatorRecord = async (userId: string) => {
+    try {
+      // Update the creator record to mark it as inactive
+      const { error } = await supabase
+        .from('creators')
+        .update({ active: false })
+        .eq('id', userId);
+
+      if (error) {
+        console.error("Error disabling creator record:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update creator status",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Creator status updated",
+          description: "User is no longer listed as a creator",
+        });
+      }
+    } catch (error) {
+      console.error("Error disabling creator record:", error);
     }
   };
 

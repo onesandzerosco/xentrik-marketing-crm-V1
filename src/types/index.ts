@@ -1,3 +1,4 @@
+
 export type Team = "A Team" | "B Team" | "C Team";
 export type Gender = "Male" | "Female" | "Trans";
 export type CreatorType = "Real" | "AI";
@@ -20,6 +21,7 @@ export interface Creator {
   };
   tags: string[];
   needsReview?: boolean;
+  active?: boolean;
   assignedTeamMembers?: string[];
   telegramUsername?: string;
   whatsappNumber?: string;

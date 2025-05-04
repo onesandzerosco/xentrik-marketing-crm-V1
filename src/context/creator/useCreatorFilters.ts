@@ -11,6 +11,11 @@ export const useCreatorFilters = (creators: Creator[]) => {
     searchQuery?: string;
   }) => {
     return creators.filter((creator) => {
+      // Skip inactive creators (those who had Creator role removed)
+      if (creator.active === false) {
+        return false;
+      }
+      
       let genderMatch = true;
       let teamMatch = true;
       let creatorTypeMatch = true;

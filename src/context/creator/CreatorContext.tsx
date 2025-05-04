@@ -43,7 +43,9 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           *,
           creator_social_links (*),
           creator_tags (tag)
-        `);
+        `)
+        .is('active', null)
+        .or('active.eq.true');
 
       if (error) {
         throw error;
@@ -91,6 +93,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           tags: creator.creator_tags?.map(t => t.tag) || [],
           assignedTeamMembers: [],
           needsReview: creator.needs_review || false,
+          active: creator.active !== false, // Default to true if not explicitly set to false
           telegramUsername: creator.telegram_username || '',
           whatsappNumber: creator.whatsapp_number || '',
           notes: creator.notes || ''
