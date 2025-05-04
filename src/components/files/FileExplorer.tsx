@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FolderPlus } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FileUploaderWithProgress from './FileUploaderWithProgress';
 
 interface Folder {
   id: string;
@@ -68,7 +69,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onDeleteFolder
 }) => {
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const [showUploader, setShowUploader] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [showAddToFolderDialog, setShowAddToFolderDialog] = useState(false);
@@ -88,14 +88,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   );
   
   const handleUploadClick = () => {
-    if (onUploadStart) {
-      onUploadStart();
+    const fileInput = document.getElementById('direct-file-upload');
+    if (fileInput) {
+      if (onUploadStart) {
+        onUploadStart();
+      }
+      fileInput.click();
     }
-    setShowUploader(true);
   };
   
   const handleUploadComplete = (uploadedFileIds?: string[]) => {
-    setShowUploader(false);
     if (onUploadComplete) {
       onUploadComplete(uploadedFileIds);
     }
@@ -322,12 +324,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {showUploader && (
-        <DragDropUploader 
+
+      {/* Add direct file input for upload (hidden) */}
+      {isCreatorView && (
+        <FileUploaderWithProgress
+          id="direct-file-upload"
           creatorId={creatorId}
           onUploadComplete={handleUploadComplete}
-          onCancel={() => setShowUploader(false)}
           currentFolder={currentFolder}
         />
       )}
