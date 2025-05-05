@@ -11,7 +11,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Shield, Users } from "lucide-react";
-import UserRolesList from "@/components/admin/UserRolesList";
+import UserRolesList from "@/components/admin/users/UserRolesList";
 
 const AccessControlPanel: React.FC = () => {
   const { userRole } = useAuth();
