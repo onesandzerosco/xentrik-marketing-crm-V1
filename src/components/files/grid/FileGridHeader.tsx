@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { FolderPlus, FolderMinus } from 'lucide-react';
+import { FolderPlus, FolderMinus, Trash2 } from 'lucide-react';
 import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileGridHeaderProps {
@@ -10,6 +10,7 @@ interface FileGridHeaderProps {
   onAddToFolderClick?: () => void;
   currentFolder?: string;
   onRemoveFromFolderClick?: () => void;
+  onDeleteFilesClick?: () => void;
 }
 
 export const FileGridHeader: React.FC<FileGridHeaderProps> = ({
@@ -18,8 +19,9 @@ export const FileGridHeader: React.FC<FileGridHeaderProps> = ({
   onAddToFolderClick,
   currentFolder = 'all',
   onRemoveFromFolderClick,
+  onDeleteFilesClick,
 }) => {
-  const { canManageFolders } = useFilePermissions();
+  const { canManageFolders, canDelete } = useFilePermissions();
   
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
@@ -55,6 +57,18 @@ export const FileGridHeader: React.FC<FileGridHeaderProps> = ({
             </Button>
           )}
         </>
+      )}
+      
+      {canDelete && onDeleteFilesClick && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDeleteFilesClick}
+          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete {selectedFileIds.length} Files
+        </Button>
       )}
     </div>
   );

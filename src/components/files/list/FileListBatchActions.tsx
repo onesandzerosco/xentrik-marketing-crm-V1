@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FolderPlus, FolderMinus } from 'lucide-react';
+import { FolderPlus, FolderMinus, Trash2 } from 'lucide-react';
 import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileListBatchActionsProps {
@@ -11,6 +11,7 @@ interface FileListBatchActionsProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   currentFolder: string;
   handleRemoveFromFolder: () => void;
+  onDeleteFiles?: () => void;
 }
 
 export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
@@ -18,9 +19,10 @@ export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
   onAddToFolderClick,
   showRemoveFromFolder,
   currentFolder,
-  handleRemoveFromFolder
+  handleRemoveFromFolder,
+  onDeleteFiles
 }) => {
-  const { canManageFolders } = useFilePermissions();
+  const { canManageFolders, canDelete } = useFilePermissions();
   
   if (selectedFileIds.length === 0) return null;
 
@@ -56,6 +58,18 @@ export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
             </Button>
           )}
         </>
+      )}
+      
+      {canDelete && onDeleteFiles && (
+        <Button 
+          size="sm" 
+          variant="secondary" 
+          onClick={onDeleteFiles} 
+          className="flex gap-2 items-center text-destructive hover:bg-destructive/10"
+        >
+          <Trash2 className="h-4 w-4" />
+          <span>Delete Files</span>
+        </Button>
       )}
     </div>
   );

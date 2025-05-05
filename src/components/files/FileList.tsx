@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { Button } from "@/components/ui/button";
@@ -179,6 +180,76 @@ export const FileList: React.FC<FileListProps> = ({
     }
   };
 
+  // Handle bulk deletion of files
+  const handleDeleteFiles = async () => {
+    if (selectedFileIds.length === 0 || !canDelete) return;
+    
+    try {
+      toast({
+        title: "Deleting files",
+        description: `Deleting ${selectedFileIds.length} files...`,
+      });
+      
+      // Find the files to delete
+      const filesToDelete = files.filter(file => selectedFileIds.includes(file.id));
+      
+      // Update UI for all files being deleted
+      const newDeletingIds = new Set(deletingFileIds);
+      selectedFileIds.forEach(id => newDeletingIds.add(id));
+      setDeletingFileIds(newDeletingIds);
+      
+      // Delete each file
+      for (const file of filesToDelete) {
+        // Delete the file from storage if it has a bucketPath
+        if (file.bucketPath) {
+          await supabase.storage
+            .from('raw_uploads')
+            .remove([file.bucketPath]);
+        }
+        
+        // Delete the file metadata
+        await supabase
+          .from('media')
+          .delete()
+          .eq('id', file.id);
+          
+        // Notify parent component if callback exists
+        if (onFileDeleted) {
+          onFileDeleted(file.id);
+        }
+        
+        // Remove from deleting set when complete
+        setDeletingFileIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(file.id);
+          return newSet;
+        });
+      }
+      
+      // Clear selection
+      setSelectedFileIds([]);
+      
+      // Show success message
+      toast({
+        title: "Files deleted",
+        description: `Successfully deleted ${selectedFileIds.length} files`,
+      });
+      
+      // Refresh file list
+      onFilesChanged();
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the files",
+        variant: "destructive",
+      });
+      
+      // Clear deleting state
+      setDeletingFileIds(new Set());
+    }
+  };
+
   const handleRemoveFromFolder = async () => {
     if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFileIds.length === 0 || !canManageFolders) {
       return;
@@ -226,8 +297,7 @@ export const FileList: React.FC<FileListProps> = ({
   
   // Handle file row click to preview/open the file
   const handleFileClick = (file: CreatorFileType) => {
-    // We don't need to do anything here as we have dedicated preview button now
-    // This is just a stub to satisfy the interface
+    // This is just a stub - we have dedicated preview button now
   };
 
   // Filter out files being deleted when in folder view
@@ -247,6 +317,7 @@ export const FileList: React.FC<FileListProps> = ({
         onRemoveFromFolder={onRemoveFromFolder}
         currentFolder={currentFolder}
         handleRemoveFromFolder={handleRemoveFromFolder}
+        onDeleteFiles={canDelete ? handleDeleteFiles : undefined}
       />
       
       <Table>
