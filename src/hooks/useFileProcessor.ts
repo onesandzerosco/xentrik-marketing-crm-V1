@@ -42,6 +42,8 @@ export const useFileProcessor = ({
         updateFileProgress(file.name, 0, 'processing');
         try {
           thumbnailUrl = await generateVideoThumbnail(file);
+          console.log(`Generated thumbnail for ${file.name}:`, thumbnailUrl ? 'Success' : 'Failed');
+          
           // Update the UI with the thumbnail
           setFileStatuses(prev => 
             prev.map(status => 
@@ -105,6 +107,7 @@ export const useFileProcessor = ({
       }
       
       const fileId = mediaRecord[0].id;
+      console.log(`Created media record for ${file.name} with ID ${fileId}, thumbnail:`, thumbnailUrl);
       
       try {
         if (file.size > chunkSize) {
@@ -142,13 +145,17 @@ export const useFileProcessor = ({
         }
         
         // Update the media record to mark as complete
-        await supabase
+        const { error: updateError } = await supabase
           .from('media')
           .update({ 
             status: 'complete', 
             thumbnail_url: thumbnailUrl // Save the thumbnail URL if it exists
           })
           .eq('id', fileId);
+          
+        if (updateError) {
+          console.error('Error updating media record:', updateError);
+        }
         
         updateFileProgress(file.name, 100, 'complete');
         return fileId;

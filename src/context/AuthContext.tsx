@@ -54,6 +54,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         supabaseAuth.isCreator && 
                         supabaseAuth.creatorId === supabaseAuth.user?.id;
   
+  // Explicitly determine isCreator status from both primary role and additional roles
+  const isCreator = 
+    supabaseAuth.userRole === 'Creator' || 
+    (supabaseAuth.userRoles && supabaseAuth.userRoles.includes('Creator'));
+  
   // Create a compatible auth context value
   const authContextValue: AuthContextType = {
     user: {
@@ -68,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: supabaseAuth.isAuthenticated,
     isLoading: supabaseAuth.isLoading,
     signOut: supabaseAuth.signOut,
-    isCreator: supabaseAuth.isCreator,
+    isCreator, // Use our explicit calculation
     creatorId: supabaseAuth.creatorId,
     userRole: supabaseAuth.userRole,
     userRoles: supabaseAuth.userRoles,

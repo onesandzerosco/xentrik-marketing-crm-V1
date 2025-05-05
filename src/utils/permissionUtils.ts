@@ -34,8 +34,8 @@ export const canDeleteFiles = (userRole: string, userRoles: string[]): boolean =
 export const canUploadFiles = (userRole: string, userRoles: string[]): boolean => {
   return userRole === "Admin" || 
          userRole === "Creator" || 
-         userRoles.includes("VA") || 
          userRoles.includes("Creator") ||
+         userRoles.includes("VA") || 
          userRole === "VA";
 };
 
@@ -57,7 +57,7 @@ export const canManageFolders = (userRole: string, userRoles: string[]): boolean
  * @returns Object with permission flags
  */
 export const useFilePermissions = () => {
-  const { userRole, userRoles } = useAuth();
+  const { userRole, userRoles, isCreator } = useAuth();
 
   return {
     canEdit: canEditFileDescription(userRole, userRoles),

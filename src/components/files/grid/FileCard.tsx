@@ -54,6 +54,9 @@ export const FileCard: React.FC<FileCardProps> = ({
   if (file.type === 'audio') Icon = FileAudio;
   if (file.type === 'document') Icon = FileText;
 
+  // Ensure thumbnail URLs are being used if they exist
+  const hasThumbnail = file.type === 'video' && file.thumbnail_url;
+
   return (
     <Card className={`overflow-hidden h-full flex flex-col ${isNew ? 'border-2 border-green-500' : ''}`}>
       <div className="relative">
@@ -74,11 +77,16 @@ export const FileCard: React.FC<FileCardProps> = ({
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          {file.type === 'video' && file.thumbnail_url && (
+          {hasThumbnail && (
             <img
               src={file.thumbnail_url}
               alt={file.name}
               className="absolute inset-0 w-full h-full object-cover"
+              onError={(e) => {
+                console.error("Error loading thumbnail:", file.thumbnail_url);
+                // Hide the broken image on error
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           )}
           

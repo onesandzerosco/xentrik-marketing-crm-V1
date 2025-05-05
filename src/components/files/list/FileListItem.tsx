@@ -99,6 +99,13 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   // Skip rendering files being removed from folder when in folder view
   if (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted') return null;
 
+  // Add debugging info for video thumbnails
+  React.useEffect(() => {
+    if (file.type === 'video') {
+      console.log(`File ${file.name} thumbnail URL:`, file.thumbnail_url);
+    }
+  }, [file]);
+
   return (
     <TableRow key={file.id} className={isCreatorView ? "cursor-pointer" : ""}>
       <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
