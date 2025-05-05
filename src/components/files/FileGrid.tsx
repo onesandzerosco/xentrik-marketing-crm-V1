@@ -35,7 +35,8 @@ export function FileGrid({
 }: FileGridProps) {
   const {
     selectedFileIds,
-    setSelectedFileIds
+    setSelectedFileIds,
+    handleRemoveFromFolder
   } = useFileGrid({
     files,
     onFilesChanged,
@@ -46,6 +47,14 @@ export function FileGrid({
   });
 
   const { canManageFolders } = useFilePermissions();
+  
+  // Prepare the handler for removing files from folder via button in header
+  const handleRemoveFilesFromFolder = () => {
+    if (selectedFileIds.length > 0 && onRemoveFromFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+      onRemoveFromFolder(selectedFileIds, currentFolder);
+      setSelectedFileIds([]);
+    }
+  };
 
   if (files.length === 0) {
     return <EmptyState />;
@@ -57,6 +66,8 @@ export function FileGrid({
         selectedFileIds={selectedFileIds}
         isCreatorView={isCreatorView}
         onAddToFolderClick={canManageFolders ? onAddToFolderClick : undefined}
+        currentFolder={currentFolder}
+        onRemoveFromFolderClick={canManageFolders ? handleRemoveFilesFromFolder : undefined}
       />
       
       <FileGridContainer 

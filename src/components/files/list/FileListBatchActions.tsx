@@ -30,28 +30,32 @@ export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
         {selectedFileIds.length} file{selectedFileIds.length !== 1 ? 's' : ''} selected
       </span>
       
-      {onAddToFolderClick && canManageFolders && (
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          onClick={onAddToFolderClick} 
-          className="flex gap-2 items-center"
-        >
-          <FolderPlus className="h-4 w-4" />
-          <span>Add to Folder</span>
-        </Button>
-      )}
-      
-      {showRemoveFromFolder && canManageFolders && (
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          onClick={handleRemoveFromFolder} 
-          className="flex gap-2 items-center"
-        >
-          <FolderMinus className="h-4 w-4" />
-          <span>Remove from Folder</span>
-        </Button>
+      {canManageFolders && (
+        <>
+          {onAddToFolderClick && (
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={onAddToFolderClick} 
+              className="flex gap-2 items-center"
+            >
+              <FolderPlus className="h-4 w-4" />
+              <span>Add to Folder</span>
+            </Button>
+          )}
+          
+          {showRemoveFromFolder && (
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              onClick={handleRemoveFromFolder} 
+              className="flex gap-2 items-center"
+            >
+              <FolderMinus className="h-4 w-4" />
+              <span>Remove from Folder</span>
+            </Button>
+          )}
+        </>
       )}
     </div>
   );
