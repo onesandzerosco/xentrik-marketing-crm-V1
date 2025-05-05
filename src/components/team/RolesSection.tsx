@@ -1,5 +1,6 @@
 
 import React from "react";
+import { EXCLUSIVE_ROLES } from "@/components/admin/users/constants";
 
 interface Props {
   selected: string[];
@@ -8,9 +9,6 @@ interface Props {
 
 // Update to use the new role options
 const AVAILABLE_ROLES = ["Chatters", "VA", "Admin", "Developer", "Creator"];
-
-// Define exclusive roles that cannot be combined with other roles
-const EXCLUSIVE_ROLES = ["Creator", "Admin"];
 
 const RolesSection: React.FC<Props> = ({ selected, onChange }) => {
   // Check if a role should be disabled
@@ -40,7 +38,18 @@ const RolesSection: React.FC<Props> = ({ selected, onChange }) => {
       updatedRoles = updatedRoles.filter(r => r !== role);
     }
     
-    onChange(role);
+    // Update the parent component with the new roles array
+    updatedRoles.forEach(r => {
+      if (!selected.includes(r)) {
+        onChange(r); // Add role
+      }
+    });
+    
+    selected.forEach(r => {
+      if (!updatedRoles.includes(r)) {
+        onChange(r); // Remove role
+      }
+    });
   };
 
   return (
