@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 export const canEditFileDescription = (userRole: string, userRoles: string[]): boolean => {
   return userRole === "Admin" || 
          userRole === "Creator" || 
+         userRoles.includes("Creator") ||
          (userRoles.includes("VA") && !userRoles.includes("Chatters")) || 
          userRole === "VA";
 };
@@ -39,6 +40,19 @@ export const canUploadFiles = (userRole: string, userRoles: string[]): boolean =
 };
 
 /**
+ * Determines if a user can remove files from folders based on their role
+ * - Admins, Creators, and VAs can remove files from folders
+ * - Chatters CANNOT remove files from folders
+ */
+export const canManageFolders = (userRole: string, userRoles: string[]): boolean => {
+  return userRole === "Admin" || 
+         userRole === "Creator" ||
+         userRoles.includes("Creator") ||
+         userRoles.includes("VA") || 
+         userRole === "VA";
+};
+
+/**
  * Hook to get user permissions for file operations
  * @returns Object with permission flags
  */
@@ -49,6 +63,7 @@ export const useFilePermissions = () => {
     canEdit: canEditFileDescription(userRole, userRoles),
     canDelete: canDeleteFiles(userRole, userRoles),
     canUpload: canUploadFiles(userRole, userRoles),
+    canManageFolders: canManageFolders(userRole, userRoles),
     // All authenticated users can download files, including Chatters
     canDownload: true
   };

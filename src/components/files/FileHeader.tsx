@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Upload } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileHeaderProps {
   creatorName: string;
@@ -15,14 +15,8 @@ export const FileHeader: React.FC<FileHeaderProps> = ({
   onUploadClick, 
   isCreatorView = false
 }) => {
-  const { userRole, userRoles } = useAuth();
+  const { canUpload } = useFilePermissions();
   
-  // Only show upload button for Creators and Admins
-  const canUpload = 
-    userRole === "Admin" || 
-    userRole === "Creator" || 
-    userRoles.includes("Creator");
-
   return (
     <div className="border-b px-6 py-4">
       <div className="flex items-center justify-between">

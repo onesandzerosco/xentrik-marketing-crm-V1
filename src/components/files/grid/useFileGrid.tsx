@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface UseFileGridProps {
   files: CreatorFileType[];
@@ -25,6 +25,7 @@ export function useFileGrid({
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
   const [removingFromFolderIds, setRemovingFromFolderIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { canManageFolders } = useFilePermissions();
   
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
@@ -163,7 +164,7 @@ export function useFileGrid({
 
   // Handle removing a file from folder
   const handleRemoveFromFolder = async (fileId: string) => {
-    if (!onRemoveFromFolder || currentFolder === 'all' || currentFolder === 'unsorted') {
+    if (!onRemoveFromFolder || currentFolder === 'all' || currentFolder === 'unsorted' || !canManageFolders) {
       return;
     }
     

@@ -53,7 +53,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   onFilesChanged
 }) => {
   const { toast } = useToast();
-  const { canDelete, canEdit } = useFilePermissions();
+  const { canDelete, canEdit, canManageFolders } = useFilePermissions();
   const [isRemoving, setIsRemoving] = React.useState(false);
   
   // Determine which icon to show based on file type
@@ -66,7 +66,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   // Handle removing a file from folder
   const handleRemoveFromFolderClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!onRemoveFromFolder) return;
+    if (!onRemoveFromFolder || !canManageFolders) return;
     
     try {
       setIsRemoving(true);
@@ -186,8 +186,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             </Button>
           )}
           
-          {/* Remove from folder button - only for creators */}
-          {showRemoveFromFolder && onRemoveFromFolder && canDelete && (
+          {/* Remove from folder button - only for creators and VAs */}
+          {showRemoveFromFolder && onRemoveFromFolder && canManageFolders && (
             <Button 
               variant="ghost" 
               size="icon"

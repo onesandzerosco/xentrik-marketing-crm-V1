@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { Button } from "@/components/ui/button";
@@ -42,7 +41,7 @@ export const FileList: React.FC<FileListProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
-  const { canDelete } = useFilePermissions();
+  const { canDelete, canManageFolders } = useFilePermissions();
 
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
@@ -181,7 +180,7 @@ export const FileList: React.FC<FileListProps> = ({
   };
 
   const handleRemoveFromFolder = async () => {
-    if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFileIds.length === 0) {
+    if (!showRemoveFromFolder || !onRemoveFromFolder || selectedFileIds.length === 0 || !canManageFolders) {
       return;
     }
     
