@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -49,20 +48,23 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
   const calculateOverallProgress = (statuses: FileUploadStatus[]) => {
     if (statuses.length === 0) return 0;
     
-    // Filter out completed files to avoid skewing the progress
-    const activeFiles = statuses.filter(file => file.status !== 'complete' && file.status !== 'error');
+    // Filter out completed and error files
+    const activeFiles = statuses.filter(file => 
+      file.status !== 'complete' && file.status !== 'error'
+    );
     
-    // If all files are complete or error, return 100%
+    // If no active files but we have completed files, return 100%
     if (activeFiles.length === 0) {
-      // Check if at least one file is complete
       if (statuses.some(file => file.status === 'complete')) {
         return 100;
       }
       return 0;
     }
     
-    // Calculate progress only for active files
+    // Calculate the sum of progress for active files
     const totalProgress = activeFiles.reduce((sum, file) => sum + file.progress, 0);
+    
+    // Return the average progress
     return Math.round(totalProgress / activeFiles.length);
   };
 
@@ -540,15 +542,11 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       abortControllersRef.current.delete(fileName);
     }
     
-    setFileStatuses(prev => 
-      prev.filter(status => status.name !== fileName)
-    );
-    
-    // Recalculate overall progress
     setFileStatuses(prev => {
-      const newOverallProgress = calculateOverallProgress(prev);
+      const newStatuses = prev.filter(status => status.name !== fileName);
+      const newOverallProgress = calculateOverallProgress(newStatuses);
       setOverallProgress(newOverallProgress);
-      return prev;
+      return newStatuses;
     });
   };
 
