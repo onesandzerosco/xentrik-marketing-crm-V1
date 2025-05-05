@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DragDropUploader from '../DragDropUploader';
 
@@ -20,6 +20,11 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   onUploadComplete,
   currentFolder
 }) => {
+  // Prevent modal from rendering if it's not open
+  if (!isOpen) {
+    return null;
+  }
+
   // This function is called when the upload is complete
   const handleUploadComplete = (fileIds?: string[]) => {
     if (onUploadComplete) {
