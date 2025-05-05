@@ -48,7 +48,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
   const calculateOverallProgress = (statuses: FileUploadStatus[]) => {
     if (statuses.length === 0) return 0;
     const totalProgress = statuses.reduce((sum, file) => sum + file.progress, 0);
-    return totalProgress / statuses.length;
+    return Math.round(totalProgress / statuses.length);
   };
 
   const updateFileProgress = (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {
