@@ -1,3 +1,4 @@
+
 export const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -55,19 +56,21 @@ export const getUniqueFileName = async (
   supabase: any
 ) => {
   try {
-    const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
-    const extension = fileName.substring(fileName.lastIndexOf('.'));
+    // Split the file name into base name and extension
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const baseName = lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
+    const extension = lastDotIndex !== -1 ? fileName.substring(lastDotIndex) : '';
     
     let counter = 0;
     let uniqueName = fileName;
     let isUnique = false;
     
     while (!isUnique) {
-      // Try to list files that match the current name
+      // Try to list files that match the current folder
       const { data: existingFiles, error } = await supabase.storage
         .from(bucket)
         .list(`${creatorId}/${folderPath}`, {
-          search: uniqueName
+          limit: 100
         });
       
       if (error) {
@@ -82,6 +85,7 @@ export const getUniqueFileName = async (
         isUnique = true;
       } else {
         counter++;
+        // Format: filename (1).extension, filename (2).extension, etc.
         uniqueName = `${baseName} (${counter})${extension}`;
       }
       
@@ -92,6 +96,7 @@ export const getUniqueFileName = async (
       }
     }
     
+    console.log(`Generated unique filename: ${uniqueName} from original: ${fileName}`);
     return uniqueName;
   } catch (error) {
     console.error('Error generating unique filename:', error);

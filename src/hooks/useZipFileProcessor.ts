@@ -119,6 +119,7 @@ export const useZipFileProcessor = ({
           }
         }
         
+        // Use getUniqueFileName to handle duplicate files
         const uniqueFileName = await getUniqueFileName(
           extractedFile.name, 
           folderIdSafe, 
