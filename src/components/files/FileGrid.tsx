@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -224,7 +225,7 @@ export function FileGrid({
 
         return (
           <Card key={file.id} className="overflow-hidden h-full flex flex-col">
-            <CardContent className="p-4 flex flex-col relative">
+            <div className="relative">
               {isCreatorView && (
                 <div className="absolute top-2 right-2 z-10">
                   <Checkbox
@@ -234,27 +235,126 @@ export function FileGrid({
                   />
                 </div>
               )}
+              
+              {/* Thumbnail container that fills the available space */}
               <div 
-                className="relative h-32 w-full flex items-center justify-center rounded-md bg-secondary mb-2 cursor-pointer overflow-hidden"
+                className="relative h-40 w-full cursor-pointer"
                 onClick={() => handleFileClick(file)}
               >
-                <Icon className="h-12 w-12 text-muted-foreground" />
+                {/* Default icon shown when no thumbnail */}
+                <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+                  <Icon className="h-12 w-12 text-muted-foreground" />
+                </div>
+                
+                {/* Actual image or video thumbnail overlay */}
                 {file.type === 'image' && file.url && (
                   <img
                     src={file.url}
                     alt={file.name}
-                    className="absolute inset-0 w-full h-full object-contain rounded-md"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
                 {file.type === 'video' && file.thumbnail_url && (
                   <img
                     src={file.thumbnail_url}
                     alt={file.name}
-                    className="absolute inset-0 w-full h-full object-contain rounded-md"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
+                
+                {/* Action buttons overlay on hover */}
+                {isCreatorView && (
+                  <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+                    <a href={file.url} target="_blank" rel="noopener noreferrer">
+                      <Button variant="secondary" size="icon" className="h-8 w-8">
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </a>
+                    <Button 
+                      variant="secondary" 
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFile(file.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    
+                    {onEditNote && (
+                      <Button 
+                        variant="secondary" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditNote(file);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {showRemoveFromFolder && onRemoveFromFolder && (
+                      <Button 
+                        variant="secondary" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            // Optimistically update UI
+                            setRemovingFromFolderIds(prev => new Set([...prev, file.id]));
+                            
+                            if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+                              onFileDeleted(file.id); // Optimistically update UI
+                            }
+                            
+                            await onRemoveFromFolder([file.id], currentFolder);
+                            
+                            toast({
+                              title: "File removed",
+                              description: `Removed ${file.name} from folder`,
+                            });
+                            
+                            // Remove from removing set when complete
+                            setRemovingFromFolderIds(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(file.id);
+                              return newSet;
+                            });
+                            
+                            onFilesChanged(); // Refresh in background
+                          } catch (error) {
+                            console.error("Error removing file from folder:", error);
+                            
+                            // Remove from removing set if error occurs
+                            setRemovingFromFolderIds(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(file.id);
+                              return newSet;
+                            });
+                            
+                            toast({
+                              title: "Error",
+                              description: "Failed to remove file from folder",
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                      >
+                        <FolderMinus className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="mt-2 text-sm font-medium truncate">{file.name}</div>
+            </div>
+            
+            {/* File details section below thumbnail but inside card */}
+            <CardContent className="p-4 flex-grow">
+              <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
               <div className="text-xs text-muted-foreground">
                 {formatFileSize(file.size)} - {formatDate(file.created_at)}
                 {isNew && (
@@ -269,90 +369,12 @@ export function FileGrid({
                 </div>
               )}
             </CardContent>
-            {isCreatorView && (
-              <CardFooter className="flex flex-wrap gap-1 justify-between items-center p-3 pt-0 mt-auto">
-                <div className="flex flex-wrap gap-1">
-                  <a href={file.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </a>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => handleDeleteFile(file.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  
-                  {onEditNote && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => onEditNote(file)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  )}
-                  
-                  {showRemoveFromFolder && onRemoveFromFolder && (
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={async () => {
-                        try {
-                          // Optimistically update UI
-                          setRemovingFromFolderIds(prev => new Set([...prev, file.id]));
-                          
-                          if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-                            onFileDeleted(file.id); // Optimistically update UI
-                          }
-                          
-                          await onRemoveFromFolder([file.id], currentFolder);
-                          
-                          toast({
-                            title: "File removed",
-                            description: `Removed ${file.name} from folder`,
-                          });
-                          
-                          // Remove from removing set when complete
-                          setRemovingFromFolderIds(prev => {
-                            const newSet = new Set(prev);
-                            newSet.delete(file.id);
-                            return newSet;
-                          });
-                          
-                          onFilesChanged(); // Refresh in background
-                        } catch (error) {
-                          console.error("Error removing file from folder:", error);
-                          
-                          // Remove from removing set if error occurs
-                          setRemovingFromFolderIds(prev => {
-                            const newSet = new Set(prev);
-                            newSet.delete(file.id);
-                            return newSet;
-                          });
-                          
-                          toast({
-                            title: "Error",
-                            description: "Failed to remove file from folder",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                    >
-                      <FolderMinus className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                {onUploadClick && (
-                  <Button variant="outline" size="sm" onClick={onUploadClick}>
-                    Upload
-                  </Button>
-                )}
+            
+            {isCreatorView && onUploadClick && (
+              <CardFooter className="p-3 pt-0 mt-auto">
+                <Button variant="outline" size="sm" onClick={onUploadClick} className="w-full">
+                  Upload
+                </Button>
               </CardFooter>
             )}
           </Card>
