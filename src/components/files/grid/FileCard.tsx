@@ -83,75 +83,80 @@ export const FileCard: React.FC<FileCardProps> = ({
             />
           )}
           
-          {/* Action buttons overlay on hover */}
-          {isCreatorView && (
-            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+          {/* Action buttons overlay on hover - now showing for all users */}
+          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+            {/* Preview button - available for all users */}
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(file.url, '_blank', 'noopener,noreferrer');
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            
+            {/* Download button - available for all users */}
+            <a href={file.url} download={file.name}>
               <Button 
                 variant="secondary" 
                 size="icon" 
                 className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(file.url, '_blank', 'noopener,noreferrer');
-                }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <Eye className="h-4 w-4" />
+                <Download className="h-4 w-4" />
               </Button>
-              
-              <a href={file.url} download={file.name}>
-                <Button 
-                  variant="secondary" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              </a>
-              
-              {canDelete && (
-                <Button 
-                  variant="secondary" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteFile(file.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {onEditNote && canEdit && (
-                <Button 
-                  variant="secondary" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditNote(file);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {showRemoveFromFolder && onRemoveFromFolder && (
-                <Button 
-                  variant="secondary" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemoveFromFolder(file.id);
-                  }}
-                >
-                  <FolderMinus className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          )}
+            </a>
+            
+            {/* Creator-specific actions */}
+            {isCreatorView && (
+              <>
+                {canDelete && (
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteFile(file.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                {onEditNote && canEdit && (
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditNote(file);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+                
+                {showRemoveFromFolder && onRemoveFromFolder && (
+                  <Button 
+                    variant="secondary" 
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromFolder(file.id);
+                    }}
+                  >
+                    <FolderMinus className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
       

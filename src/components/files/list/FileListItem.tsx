@@ -129,73 +129,79 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       <TableCell>{file.type}</TableCell>
       <TableCell>{formatFileSize(file.size)}</TableCell>
       <TableCell>{formatDate(file.created_at)}</TableCell>
-      {isCreatorView && (
-        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-end gap-1 flex-wrap">
+      {/* File actions column - now showing for all users */}
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-end gap-1 flex-wrap">
+          {/* Preview button - available for all users */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(file.url, '_blank', 'noopener,noreferrer');
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          
+          {/* Download button - available for all users */}
+          <a href={file.url} download={file.name}>
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(file.url, '_blank', 'noopener,noreferrer');
-              }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <Eye className="h-4 w-4" />
+              <Download className="h-4 w-4" />
             </Button>
-            
-            <a href={file.url} download={file.name}>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </a>
-            
-            {canDelete && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteFile(file.id);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {onEditNote && canEdit && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditNote(file);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {showRemoveFromFolder && onRemoveFromFolder && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleRemoveFromFolderClick}
-              >
-                <FolderMinus className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </TableCell>
-      )}
+          </a>
+          
+          {/* Creator-specific actions */}
+          {isCreatorView && (
+            <>
+              {canDelete && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFile(file.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onEditNote && canEdit && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditNote(file);
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {showRemoveFromFolder && onRemoveFromFolder && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleRemoveFromFolderClick}
+                >
+                  <FolderMinus className="h-4 w-4" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </TableCell>
     </TableRow>
   );
 };
