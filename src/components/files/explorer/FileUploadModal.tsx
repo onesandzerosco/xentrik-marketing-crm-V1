@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import DragDropUploader from '../DragDropUploader';
 
 interface FileUploadModalProps {
@@ -36,7 +37,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh] overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
@@ -44,14 +45,16 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <DragDropUploader 
-            creatorId={creatorId} 
-            onUploadComplete={handleUploadComplete}
-            onCancel={() => onOpenChange(false)}
-            currentFolder={currentFolder}
-          />
-        </div>
+        <ScrollArea className="max-h-[calc(90vh-140px)]">
+          <div className="py-4">
+            <DragDropUploader 
+              creatorId={creatorId} 
+              onUploadComplete={handleUploadComplete}
+              onCancel={() => onOpenChange(false)}
+              currentFolder={currentFolder}
+            />
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

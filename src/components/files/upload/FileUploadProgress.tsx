@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { X, FileVideo } from 'lucide-react';
 import { FileUploadStatus } from '@/hooks/useFileUploader';
 import { isVideoFile } from '@/utils/fileUtils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FileUploadProgressProps {
   fileStatuses: FileUploadStatus[];
@@ -43,48 +44,50 @@ const FileUploadProgress: React.FC<FileUploadProgressProps> = ({
         <Progress value={overallProgress} className="h-2" />
       </div>
       
-      <div className="max-h-60 overflow-y-auto space-y-3">
-        {fileStatuses.map((file) => (
-          <div key={file.name} className="text-sm">
-            <div className="flex justify-between mb-1">
-              <div className="flex items-center gap-2">
-                {file.thumbnail && (
-                  <div className="h-6 w-6 rounded overflow-hidden bg-black flex-shrink-0">
-                    <img src={file.thumbnail} alt="Video thumbnail" className="h-full w-full object-cover" />
-                  </div>
-                )}
-                {!file.thumbnail && isVideoFile(file.name) && (
-                  <FileVideo size={16} className="text-muted-foreground" />
-                )}
-                <span className="truncate max-w-[140px]" title={file.name}>{file.name}</span>
+      <ScrollArea className="max-h-60">
+        <div className="space-y-3">
+          {fileStatuses.map((file) => (
+            <div key={file.name} className="text-sm">
+              <div className="flex justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  {file.thumbnail && (
+                    <div className="h-6 w-6 rounded overflow-hidden bg-black flex-shrink-0">
+                      <img src={file.thumbnail} alt="Video thumbnail" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  {!file.thumbnail && isVideoFile(file.name) && (
+                    <FileVideo size={16} className="text-muted-foreground" />
+                  )}
+                  <span className="truncate max-w-[140px]" title={file.name}>{file.name}</span>
+                </div>
+                <span>{Math.round(file.progress)}%</span>
               </div>
-              <span>{Math.round(file.progress)}%</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Progress 
-                value={file.progress} 
-                className={`h-1.5 flex-grow ${
-                  file.status === 'error' ? 'bg-red-200' : 
-                  file.status === 'processing' ? 'bg-yellow-200' : ''
-                }`}
-              />
-              {file.status === 'uploading' && (
-                <button 
-                  onClick={() => onCancelUpload(file.name)}
-                  className="text-muted-foreground hover:text-destructive"
-                  aria-label="Cancel upload"
-                >
-                  <X size={12} />
-                </button>
+              <div className="flex items-center space-x-2">
+                <Progress 
+                  value={file.progress} 
+                  className={`h-1.5 flex-grow ${
+                    file.status === 'error' ? 'bg-red-200' : 
+                    file.status === 'processing' ? 'bg-yellow-200' : ''
+                  }`}
+                />
+                {file.status === 'uploading' && (
+                  <button 
+                    onClick={() => onCancelUpload(file.name)}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label="Cancel upload"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              {file.status === 'processing' && (
+                <p className="text-xs text-amber-500 mt-1">Processing file...</p>
               )}
+              {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
             </div>
-            {file.status === 'processing' && (
-              <p className="text-xs text-amber-500 mt-1">Processing file...</p>
-            )}
-            {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
