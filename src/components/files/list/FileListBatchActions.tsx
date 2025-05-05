@@ -65,7 +65,7 @@ export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
           size="sm" 
           variant="secondary" 
           onClick={onDeleteFiles} 
-          className="flex gap-2 items-center text-destructive hover:bg-destructive/10"
+          className="flex gap-2 items-center text-red-500 hover:text-red-600 hover:bg-red-500/10"
         >
           <Trash2 className="h-4 w-4" />
           <span>Delete Files</span>

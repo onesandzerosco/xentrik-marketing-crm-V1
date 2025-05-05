@@ -64,7 +64,7 @@ export const FileGridHeader: React.FC<FileGridHeaderProps> = ({
           variant="outline"
           size="sm"
           onClick={onDeleteFilesClick}
-          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+          className="text-red-500 border-red-500/50 hover:bg-red-500/10 hover:text-red-600"
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Delete {selectedFileIds.length} Files

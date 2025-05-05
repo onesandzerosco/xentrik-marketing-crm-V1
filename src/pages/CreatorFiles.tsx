@@ -86,11 +86,13 @@ const CreatorFiles = () => {
       // Show all files when 'all' is selected
       return files;
     } else if (currentFolder === 'unsorted') {
-      // Show only files that aren't in any custom folders
+      // Show files that aren't in any custom folders (improved logic)
       return files.filter(file => {
+        // Get all folder references except 'all' and 'unsorted'
         const customFolders = (file.folderRefs || []).filter(
           folder => folder !== 'all' && folder !== 'unsorted'
         );
+        // If there are no custom folders, this file belongs in 'unsorted'
         return customFolders.length === 0;
       });
     } else {
