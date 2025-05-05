@@ -1,20 +1,17 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { FileHeader } from './FileHeader';
 import { FolderNav } from './FolderNav';
-import { FileGrid } from './FileGrid';
-import { FileList } from './FileList';
-import { FilterBar } from './FilterBar';
-import { FileViewSkeleton } from './FileViewSkeleton';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import DragDropUploader from './DragDropUploader';
-import { useToast } from "@/components/ui/use-toast";
 import { useFilePermissions } from '@/utils/permissionUtils';
-import { supabase } from '@/integrations/supabase/client';
+import { useFileExplorer } from './explorer/useFileExplorer';
+import { FileUploadModal } from './explorer/FileUploadModal';
+import { CreateFolderModal } from './explorer/CreateFolderModal';
+import { AddToFolderModal } from './explorer/AddToFolderModal';
+import { DeleteFolderModal } from './explorer/DeleteFolderModal';
+import { EditNoteModal } from './explorer/EditNoteModal';
+import { FileExplorerContent } from './explorer/FileExplorerContent';
+import { useToast } from "@/components/ui/use-toast";
 
 interface Folder {
   id: string;
@@ -58,169 +55,71 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onDeleteFolder,
   onRemoveFromFolder
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
-  const [targetFolderId, setTargetFolderId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
-  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
-  const { toast } = useToast();
   const permissions = useFilePermissions();
+  const { toast } = useToast();
   
-  // New state for editing file notes
-  const [isEditNoteModalOpen, setIsEditNoteModalOpen] = useState(false);
-  const [editingFile, setEditingFile] = useState<CreatorFileType | null>(null);
-  const [editingNote, setEditingNote] = useState('');
-  
-  // Handler for note editing
-  const handleEditNote = (file: CreatorFileType) => {
-    setEditingFile(file);
-    setEditingNote(file.description || '');
-    setIsEditNoteModalOpen(true);
-  };
-  
-  // Save the edited note
-  const handleSaveNote = async () => {
-    if (!editingFile) return;
-    
-    try {
-      // Update the file's description in the database
-      const { error } = await supabase
-        .from('media')
-        .update({ description: editingNote })
-        .eq('id', editingFile.id);
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Note updated",
-        description: "File description has been updated successfully.",
-      });
-      
-      // Close the modal and refresh the files list
-      setIsEditNoteModalOpen(false);
-      setEditingFile(null);
-      setEditingNote('');
-      onRefresh();
-      
-    } catch (error) {
-      console.error("Error updating note:", error);
-      toast({
-        title: "Error updating note",
-        description: "An error occurred while updating the file description.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Filter files based on search and type filters
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = searchQuery === '' || 
-      file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-    
-    return matchesSearch && matchesType;
+  const {
+    viewMode,
+    isUploadModalOpen,
+    setIsUploadModalOpen,
+    isAddFolderModalOpen,
+    setIsAddFolderModalOpen,
+    selectedFileIds,
+    setSelectedFileIds,
+    newFolderName,
+    setNewFolderName,
+    isAddToFolderModalOpen,
+    setIsAddToFolderModalOpen,
+    targetFolderId,
+    setTargetFolderId,
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    isDeleteFolderModalOpen,
+    setIsDeleteFolderModalOpen,
+    isEditNoteModalOpen,
+    setIsEditNoteModalOpen,
+    editingFile,
+    editingNote,
+    setEditingNote,
+    filteredFiles,
+    customFolders,
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
+    handleDeleteFolderClick,
+    handleDeleteFolder,
+    handleEditNote,
+    handleSaveNote,
+    handleFileDeleted
+  } = useFileExplorer({
+    files,
+    availableFolders,
+    currentFolder,
+    onRefresh,
+    onCreateFolder,
+    onAddFilesToFolder,
+    onDeleteFolder,
+    onRemoveFromFolder
   });
-  
-  // Handler for creating a new folder
-  const handleCreateFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFolderName.trim()) {
+
+  // Helper function to handle "Add to Folder" button click
+  const handleAddToFolderButtonClick = () => {
+    if (selectedFileIds.length > 0 && customFolders.length > 0) {
+      setIsAddToFolderModalOpen(true);
+    } else if (selectedFileIds.length === 0) {
       toast({
-        title: "Folder name required",
-        description: "Please enter a valid folder name",
-        variant: "destructive"
+        title: "Select files first",
+        description: "Please select at least one file to add to a folder",
       });
-      return;
-    }
-    
-    try {
-      await onCreateFolder(newFolderName, selectedFileIds);
-      setIsAddFolderModalOpen(false);
-      setNewFolderName('');
-      setSelectedFileIds([]);
-    } catch (error) {
+    } else {
       toast({
-        title: "Error creating folder",
-        description: "Failed to create folder",
-        variant: "destructive"
+        title: "No custom folders",
+        description: "Please create a folder first",
       });
+      setIsAddFolderModalOpen(true);
     }
   };
-
-  // Handler for adding files to an existing folder
-  const handleAddToFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetFolderId || selectedFileIds.length === 0) {
-      toast({
-        title: "Selection required",
-        description: "Please select a folder and at least one file",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await onAddFilesToFolder(selectedFileIds, targetFolderId);
-      setIsAddToFolderModalOpen(false);
-      setTargetFolderId('');
-      toast({
-        title: "Files added to folder",
-        description: `${selectedFileIds.length} files added to folder successfully`,
-      });
-      setSelectedFileIds([]);
-    } catch (error) {
-      toast({
-        title: "Error adding to folder",
-        description: "Failed to add files to folder",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handler for deleting a folder - Modified to return a Promise
-  const handleDeleteFolderClick = async (folderId: string): Promise<void> => {
-    setFolderToDelete(folderId);
-    setIsDeleteFolderModalOpen(true);
-    return Promise.resolve(); // Return a resolved promise
-  };
-
-  // Handle the actual folder deletion
-  const handleDeleteFolder = async () => {
-    if (!folderToDelete) return;
-    
-    try {
-      await onDeleteFolder(folderToDelete);
-      setFolderToDelete(null);
-      setIsDeleteFolderModalOpen(false);
-    } catch (error) {
-      toast({
-        title: "Error deleting folder",
-        description: "Failed to delete folder",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handler for file deletion
-  const handleFileDeleted = (fileId: string) => {
-    // Remove the file from selectedFileIds if it's selected
-    setSelectedFileIds(prev => prev.filter(id => id !== fileId));
-  };
-
-  // Custom folders (excluding 'all' and 'unsorted')
-  const customFolders = availableFolders.filter(
-    folder => folder.id !== 'all' && folder.id !== 'unsorted'
-  );
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
@@ -250,237 +149,76 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           />
         </div>
         
-        <div className="flex-1 min-w-0">
-          <FilterBar 
-            activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}
-            onFilterChange={(filter) => {
-              setSelectedTypes(filter ? [filter] : []);
-            }}
-            searchQuery={searchQuery}
-            onSearchChange={(query) => setSearchQuery(query)}
-          />
-          
-          {isLoading ? (
-            <FileViewSkeleton view={viewMode} />
-          ) : viewMode === 'grid' ? (
-            <FileGrid 
-              files={filteredFiles}
-              isCreatorView={isCreatorView}
-              onFilesChanged={onRefresh}
-              onFileDeleted={handleFileDeleted}
-              recentlyUploadedIds={recentlyUploadedIds}
-              onSelectFiles={setSelectedFileIds}
-              onAddToFolderClick={() => {
-                if (selectedFileIds.length > 0 && customFolders.length > 0) {
-                  setIsAddToFolderModalOpen(true);
-                } else if (selectedFileIds.length === 0) {
-                  toast({
-                    title: "Select files first",
-                    description: "Please select at least one file to add to a folder",
-                  });
-                } else {
-                  toast({
-                    title: "No custom folders",
-                    description: "Please create a folder first",
-                  });
-                  setIsAddFolderModalOpen(true);
-                }
-              }}
-              currentFolder={currentFolder}
-              onRemoveFromFolder={onRemoveFromFolder}
-              onEditNote={handleEditNote}
-            />
-          ) : (
-            <FileList 
-              files={filteredFiles}
-              isCreatorView={isCreatorView}
-              onFilesChanged={onRefresh}
-              onFileDeleted={handleFileDeleted}
-              recentlyUploadedIds={recentlyUploadedIds}
-              onSelectFiles={setSelectedFileIds}
-              onAddToFolderClick={() => {
-                if (selectedFileIds.length > 0 && customFolders.length > 0) {
-                  setIsAddToFolderModalOpen(true);
-                } else if (selectedFileIds.length === 0) {
-                  toast({
-                    title: "Select files first",
-                    description: "Please select at least one file to add to a folder",
-                  });
-                } else {
-                  toast({
-                    title: "No custom folders",
-                    description: "Please create a folder first",
-                  });
-                  setIsAddFolderModalOpen(true);
-                }
-              }}
-              currentFolder={currentFolder}
-              onRemoveFromFolder={onRemoveFromFolder}
-              onEditNote={handleEditNote}
-            />
-          )}
-        </div>
+        <FileExplorerContent
+          isLoading={isLoading}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
+          filteredFiles={filteredFiles}
+          isCreatorView={isCreatorView}
+          onFilesChanged={onRefresh}
+          onFileDeleted={handleFileDeleted}
+          recentlyUploadedIds={recentlyUploadedIds}
+          selectedFileIds={selectedFileIds}
+          setSelectedFileIds={setSelectedFileIds}
+          onAddToFolderClick={handleAddToFolderButtonClick}
+          currentFolder={currentFolder}
+          onRemoveFromFolder={onRemoveFromFolder}
+          onEditNote={handleEditNote}
+        />
       </div>
       
       {/* Upload Modal */}
-      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
-            <DialogDescription>
-              Upload files to {creatorName}'s storage
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <DragDropUploader 
-              creatorId={creatorId} 
-              onUploadComplete={(fileIds) => {
-                onUploadComplete?.(fileIds);
-                setIsUploadModalOpen(false);
-              }}
-              onCancel={() => setIsUploadModalOpen(false)}
-              currentFolder={currentFolder}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <FileUploadModal
+        isOpen={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        creatorId={creatorId}
+        creatorName={creatorName}
+        onUploadComplete={(fileIds) => {
+          onUploadComplete?.(fileIds);
+        }}
+        currentFolder={currentFolder}
+      />
       
       {/* Create Folder Modal */}
-      <Dialog open={isAddFolderModalOpen} onOpenChange={setIsAddFolderModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>
-              Enter a name for your new folder.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleCreateFolderSubmit}>
-            <div className="py-4">
-              <Label htmlFor="folderName">Folder Name</Label>
-              <Input 
-                id="folderName" 
-                value={newFolderName} 
-                onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="My Folder"
-                className="mt-2"
-              />
-              
-              <div className="mt-4 text-sm text-muted-foreground">
-                {selectedFileIds.length > 0 ? (
-                  `${selectedFileIds.length} files will be added to this folder.`
-                ) : (
-                  "No files selected. You can add files to this folder later."
-                )}
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddFolderModalOpen(false)} type="button">
-                Cancel
-              </Button>
-              <Button type="submit">Create Folder</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CreateFolderModal
+        isOpen={isAddFolderModalOpen}
+        onOpenChange={setIsAddFolderModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        selectedFileIds={selectedFileIds}
+        onSubmit={handleCreateFolderSubmit}
+      />
       
       {/* Add to Folder Modal */}
-      <Dialog open={isAddToFolderModalOpen} onOpenChange={setIsAddToFolderModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add to Folder</DialogTitle>
-            <DialogDescription>
-              Select a folder to add the selected files to.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <form onSubmit={handleAddToFolderSubmit}>
-            <div className="py-4">
-              <Label htmlFor="folderId">Select Folder</Label>
-              <select 
-                id="folderId" 
-                value={targetFolderId} 
-                onChange={(e) => setTargetFolderId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm mt-2"
-              >
-                <option value="">-- Select a folder --</option>
-                {customFolders.map(folder => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </select>
-              
-              <div className="mt-4 text-sm text-muted-foreground">
-                {selectedFileIds.length} files will be added to the selected folder.
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddToFolderModalOpen(false)} type="button">
-                Cancel
-              </Button>
-              <Button type="submit" disabled={!targetFolderId}>Add to Folder</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AddToFolderModal
+        isOpen={isAddToFolderModalOpen}
+        onOpenChange={setIsAddToFolderModalOpen}
+        targetFolderId={targetFolderId}
+        setTargetFolderId={setTargetFolderId}
+        selectedFileIds={selectedFileIds}
+        customFolders={customFolders}
+        onSubmit={handleAddToFolderSubmit}
+      />
       
       {/* Delete Folder Confirmation Modal */}
-      <Dialog open={isDeleteFolderModalOpen} onOpenChange={setIsDeleteFolderModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Folder</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this folder? The files will remain available in "Unsorted Uploads".
-            </DialogDescription>
-          </DialogHeader>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteFolderModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteFolder}>
-              Delete Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteFolderModal
+        isOpen={isDeleteFolderModalOpen}
+        onOpenChange={setIsDeleteFolderModalOpen}
+        onConfirm={handleDeleteFolder}
+      />
       
       {/* Edit Note Modal */}
-      <Dialog open={isEditNoteModalOpen} onOpenChange={setIsEditNoteModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit File Description</DialogTitle>
-            <DialogDescription>
-              Update the description for {editingFile?.name}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <Label htmlFor="fileDescription">Description</Label>
-            <Textarea 
-              id="fileDescription" 
-              value={editingNote} 
-              onChange={(e) => setEditingNote(e.target.value)}
-              placeholder="Add a description for this file..."
-              className="mt-2"
-              rows={4}
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditNoteModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveNote}>
-              Save Description
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditNoteModal
+        isOpen={isEditNoteModalOpen}
+        onOpenChange={setIsEditNoteModalOpen}
+        editingFile={editingFile}
+        editingNote={editingNote}
+        setEditingNote={setEditingNote}
+        onSave={handleSaveNote}
+      />
     </div>
   );
 };
