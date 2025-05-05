@@ -34,6 +34,22 @@ export const useZipFileProcessor = ({
       // Update progress
       updateFileProgress(zipFileName, 50, 'processing');
       
+      // Get the user session to ensure we have auth context
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        console.error("User is not authenticated for folder creation");
+        updateFileProgress(zipFileName, 0, 'error');
+        setFileStatuses(prev => 
+          prev.map(status => 
+            status.name === zipFileName
+              ? { ...status, error: 'Authentication required for ZIP processing' }
+              : status
+          )
+        );
+        return [];
+      }
+      
       // Create an empty file in the folder to "create" the folder in storage
       const { error: storageError } = await supabase.storage
         .from('creator_files')
@@ -42,6 +58,13 @@ export const useZipFileProcessor = ({
       if (storageError) {
         console.error("Error creating folder in storage:", storageError);
         updateFileProgress(zipFileName, 0, 'error');
+        setFileStatuses(prev => 
+          prev.map(status => 
+            status.name === zipFileName
+              ? { ...status, error: `Failed to create folder: ${storageError.message}` }
+              : status
+          )
+        );
         return [];
       }
       
@@ -89,7 +112,7 @@ export const useZipFileProcessor = ({
             mime: extractedFile.content.type || 'application/octet-stream',
             file_size: extractedFile.content.size,
             status: 'uploading',
-            folders: folderCreated ? [folderIdSafe] : [], // Empty initially, will be updated
+            folders: folderCreated ? [folderIdSafe] : [folderIdSafe], // Always include folder
             thumbnail_url: thumbnailUrl // Add the thumbnail URL if generated
           })
           .select('id');
