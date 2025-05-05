@@ -187,7 +187,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
-  // Handler for deleting a folder
+  // Handler for deleting a folder - Modified to return a Promise
+  const handleDeleteFolderClick = async (folderId: string): Promise<void> => {
+    setFolderToDelete(folderId);
+    setIsDeleteFolderModalOpen(true);
+    return Promise.resolve(); // Return a resolved promise
+  };
+
+  // Handle the actual folder deletion
   const handleDeleteFolder = async () => {
     if (!folderToDelete) return;
     
@@ -239,10 +246,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 });
               }
             }}
-            onDeleteFolder={(folderId) => {
-              setFolderToDelete(folderId);
-              setIsDeleteFolderModalOpen(true);
-            }}
+            onDeleteFolder={handleDeleteFolderClick}
           />
         </div>
         

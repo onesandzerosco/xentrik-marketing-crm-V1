@@ -34,7 +34,7 @@ interface FolderNavProps {
   onFolderChange: (folder: string) => void;
   activeFolder?: string | null;
   onInitiateNewFolder?: () => void; // Prop for initiating folder creation
-  onDeleteFolder?: (folderId: string) => Promise<void>;
+  onDeleteFolder?: (folderId: string) => Promise<void>; // Updated to Promise<void>
 }
 
 // These are the default folder IDs that should not be deleted
