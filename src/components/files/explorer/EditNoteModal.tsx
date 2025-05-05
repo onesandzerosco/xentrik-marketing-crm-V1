@@ -1,8 +1,8 @@
+
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { CreatorFileType } from '@/types/fileTypes';
 
 interface EditNoteModalProps {
@@ -20,36 +20,38 @@ export const EditNoteModal: React.FC<EditNoteModalProps> = ({
   editingFile,
   editingNote,
   setEditingNote,
-  onSave
+  onSave,
 }) => {
+  if (!editingFile) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[700px] w-full max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Edit File Description</DialogTitle>
-          <DialogDescription>
-            Update the description for {editingFile?.name}
-          </DialogDescription>
+          <DialogTitle>Edit Note for {editingFile.name}</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
-          <Label htmlFor="fileDescription">Description</Label>
-          <Textarea 
-            id="fileDescription" 
-            value={editingNote} 
+          <Textarea
+            placeholder="Add a note about this file..."
+            value={editingNote}
             onChange={(e) => setEditingNote(e.target.value)}
-            placeholder="Add a description for this file..."
-            className="mt-2"
-            rows={4}
+            className="min-h-[150px]"
+            autoFocus
           />
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button onClick={onSave}>
-            Save Description
+            Save Note
           </Button>
         </DialogFooter>
       </DialogContent>

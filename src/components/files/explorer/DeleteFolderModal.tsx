@@ -1,7 +1,15 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 
 interface DeleteFolderModalProps {
   isOpen: boolean;
@@ -12,27 +20,25 @@ interface DeleteFolderModalProps {
 export const DeleteFolderModal: React.FC<DeleteFolderModalProps> = ({
   isOpen,
   onOpenChange,
-  onConfirm
+  onConfirm,
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete Folder</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to delete this folder? The files will remain available in "Unsorted Uploads".
-          </DialogDescription>
-        </DialogHeader>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
-            Delete Folder
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="sm:max-w-[700px] w-full">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this folder? The files inside will not be deleted, 
+            but they will be moved to unsorted files.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="bg-red-500 hover:bg-red-600">
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };

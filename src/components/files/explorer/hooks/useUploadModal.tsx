@@ -4,10 +4,10 @@ import { useState } from 'react';
 export const useUploadModal = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
-  // Setting standard modal dimensions for consistency
+  // Increasing modal dimensions for better visibility and less scrolling
   const modalDimensions = {
-    width: '500px',
-    maxHeight: '85vh'
+    width: '700px',
+    maxHeight: '90vh'
   };
 
   return {

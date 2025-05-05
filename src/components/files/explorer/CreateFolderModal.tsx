@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface CreateFolderModalProps {
   isOpen: boolean;
@@ -22,41 +22,44 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   selectedFileIds,
   onSubmit
 }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[700px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
           <DialogDescription>
-            Enter a name for your new folder.
+            {selectedFileIds.length > 0 
+              ? `Create a new folder and add ${selectedFileIds.length} selected files` 
+              : 'Create a new folder for organizing your files'}
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={onSubmit}>
-          <div className="py-4">
-            <Label htmlFor="folderName">Folder Name</Label>
-            <Input 
-              id="folderName" 
-              value={newFolderName} 
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="My Folder"
-              className="mt-2"
-            />
-            
-            <div className="mt-4 text-sm text-muted-foreground">
-              {selectedFileIds.length > 0 ? (
-                `${selectedFileIds.length} files will be added to this folder.`
-              ) : (
-                "No files selected. You can add files to this folder later."
-              )}
+        <form onSubmit={handleSubmit} className="py-4">
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="folderName">Folder Name</Label>
+              <Input
+                id="folderName"
+                placeholder="Enter folder name"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                autoFocus
+              />
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Create Folder</Button>
+            <Button type="submit" disabled={!newFolderName.trim()}>
+              Create Folder
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
