@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface Folder {
   id: string;
@@ -52,6 +53,8 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const { toast } = useToast();
+  // Add permission check for showing delete folder button
+  const { canManageFolders } = useFilePermissions();
 
   const handleDeleteFolder = async () => {
     if (!folderToDelete || !onDeleteFolder) return;
@@ -133,7 +136,8 @@ export const FolderNav: React.FC<FolderNavProps> = ({
                 {folder.name}
               </Button>
               
-              {onDeleteFolder && (
+              {/* Only show delete button if user has permission */}
+              {onDeleteFolder && canManageFolders && (
                 <Button
                   variant="ghost"
                   size="sm"
