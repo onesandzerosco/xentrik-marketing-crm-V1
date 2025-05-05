@@ -244,9 +244,9 @@ export const FileList: React.FC<FileListProps> = ({
         selectedFileIds={selectedFileIds}
         onAddToFolderClick={onAddToFolderClick}
         showRemoveFromFolder={showRemoveFromFolder}
-        onRemoveFromFolder={onRemoveFromFolder}
+        onRemoveFromFolder={handleRemoveFromFolder}
         currentFolder={currentFolder}
-        handleRemoveFromFolder={handleRemoveFromFolder}
+        canManageFolders={canManageFolders}
       />
       
       <Table>

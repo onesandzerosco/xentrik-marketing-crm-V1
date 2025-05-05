@@ -1,58 +1,62 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import { FolderPlus, FolderMinus } from 'lucide-react';
-import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileListBatchActionsProps {
   selectedFileIds: string[];
   onAddToFolderClick?: () => void;
   showRemoveFromFolder: boolean;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  handleRemoveFromFolder?: () => void;
   currentFolder: string;
-  handleRemoveFromFolder: () => void;
+  canManageFolders?: boolean; // New prop to check permissions
 }
 
 export const FileListBatchActions: React.FC<FileListBatchActionsProps> = ({
   selectedFileIds,
   onAddToFolderClick,
   showRemoveFromFolder,
+  handleRemoveFromFolder,
   currentFolder,
-  handleRemoveFromFolder
+  canManageFolders = false // Default to false for safety
 }) => {
-  const { canManageFolders } = useFilePermissions();
-  
-  if (selectedFileIds.length === 0) return null;
+  if (selectedFileIds.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-background border rounded-lg shadow-lg py-2 px-4 z-50 flex gap-2">
-      <span className="flex items-center mr-2 text-sm font-medium">
-        {selectedFileIds.length} file{selectedFileIds.length !== 1 ? 's' : ''} selected
-      </span>
-      
-      {onAddToFolderClick && canManageFolders && (
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          onClick={onAddToFolderClick} 
-          className="flex gap-2 items-center"
-        >
-          <FolderPlus className="h-4 w-4" />
-          <span>Add to Folder</span>
-        </Button>
-      )}
-      
-      {showRemoveFromFolder && canManageFolders && (
-        <Button 
-          size="sm" 
-          variant="secondary" 
-          onClick={handleRemoveFromFolder} 
-          className="flex gap-2 items-center"
-        >
-          <FolderMinus className="h-4 w-4" />
-          <span>Remove from Folder</span>
-        </Button>
-      )}
+    <div className="sticky top-0 z-10 mb-2 p-2 bg-background border rounded-md shadow flex items-center justify-between">
+      <div className="text-sm">
+        {selectedFileIds.length} {selectedFileIds.length === 1 ? 'file' : 'files'} selected
+      </div>
+      <div className="flex items-center gap-2">
+        {/* Add to folder button */}
+        {onAddToFolderClick && canManageFolders && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onAddToFolderClick}
+            className="flex items-center gap-1"
+          >
+            <FolderPlus className="h-4 w-4 mr-1" />
+            Add to Folder
+          </Button>
+        )}
+        
+        {/* Remove from folder button */}
+        {showRemoveFromFolder && handleRemoveFromFolder && canManageFolders && currentFolder !== 'all' && currentFolder !== 'unsorted' && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRemoveFromFolder}
+            className="flex items-center gap-1"
+          >
+            <FolderMinus className="h-4 w-4 mr-1" />
+            Remove from Folder
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
