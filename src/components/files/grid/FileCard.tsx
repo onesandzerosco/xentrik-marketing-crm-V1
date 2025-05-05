@@ -59,8 +59,7 @@ export const FileCard: React.FC<FileCardProps> = ({
       <div className="relative">
         {/* Thumbnail container that fills the available space */}
         <div 
-          className="relative h-40 w-full cursor-pointer"
-          onClick={() => onFileClick(file)}
+          className="relative h-40 w-full"
         >
           {/* Default icon shown when no thumbnail */}
           <div className="absolute inset-0 flex items-center justify-center bg-secondary">
@@ -83,7 +82,7 @@ export const FileCard: React.FC<FileCardProps> = ({
             />
           )}
           
-          {/* Action buttons overlay on hover - now showing for all users */}
+          {/* Action buttons overlay */}
           <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
             {/* Preview button - available for all users */}
             <Button 
@@ -110,57 +109,54 @@ export const FileCard: React.FC<FileCardProps> = ({
               </Button>
             </a>
             
-            {/* Creator-specific actions */}
-            {isCreatorView && (
-              <>
-                {canDelete && (
-                  <Button 
-                    variant="secondary" 
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteFile(file.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-                
-                {onEditNote && canEdit && (
-                  <Button 
-                    variant="secondary" 
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditNote(file);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
-                
-                {showRemoveFromFolder && onRemoveFromFolder && (
-                  <Button 
-                    variant="secondary" 
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveFromFolder(file.id);
-                    }}
-                  >
-                    <FolderMinus className="h-4 w-4" />
-                  </Button>
-                )}
-              </>
+            {/* Edit description button - available for creators and VAs */}
+            {canEdit && onEditNote && (
+              <Button 
+                variant="secondary" 
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditNote(file);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Delete button - only for creators */}
+            {canDelete && (
+              <Button 
+                variant="secondary" 
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteFile(file.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            
+            {/* Remove from folder button - only for creators */}
+            {showRemoveFromFolder && onRemoveFromFolder && canDelete && (
+              <Button 
+                variant="secondary" 
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemoveFromFolder(file.id);
+                }}
+              >
+                <FolderMinus className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>
       </div>
       
-      {/* File details section below thumbnail but inside card */}
       <CardContent className="p-4 flex-grow">
         <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
         <div className="text-xs text-muted-foreground">

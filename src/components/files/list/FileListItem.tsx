@@ -15,7 +15,6 @@ import {
   File, 
   Download,
   Trash2,
-  FolderPlus,
   FolderMinus,
   Pencil,
   Eye
@@ -101,7 +100,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   if (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted') return null;
 
   return (
-    <TableRow key={file.id} className={isCreatorView ? "cursor-pointer" : ""} onClick={() => isCreatorView && handleFileClick(file)}>
+    <TableRow key={file.id} className={isCreatorView ? "cursor-pointer" : ""}>
       <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
         {isCreatorView && (
           <Checkbox
@@ -129,7 +128,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       <TableCell>{file.type}</TableCell>
       <TableCell>{formatFileSize(file.size)}</TableCell>
       <TableCell>{formatDate(file.created_at)}</TableCell>
-      {/* File actions column - now showing for all users */}
+      {/* File actions column */}
       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-end gap-1 flex-wrap">
           {/* Preview button - available for all users */}
@@ -157,48 +156,46 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             </Button>
           </a>
           
-          {/* Creator-specific actions */}
-          {isCreatorView && (
-            <>
-              {canDelete && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteFile(file.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {onEditNote && canEdit && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditNote(file);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
-              
-              {showRemoveFromFolder && onRemoveFromFolder && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={handleRemoveFromFolderClick}
-                >
-                  <FolderMinus className="h-4 w-4" />
-                </Button>
-              )}
-            </>
+          {/* Edit description button - available for creators and VAs */}
+          {onEditNote && canEdit && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditNote(file);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* Delete button - only for creators */}
+          {canDelete && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteFile(file.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* Remove from folder button - only for creators */}
+          {showRemoveFromFolder && onRemoveFromFolder && canDelete && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleRemoveFromFolderClick}
+            >
+              <FolderMinus className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </TableCell>
