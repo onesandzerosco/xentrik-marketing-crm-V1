@@ -227,8 +227,8 @@ export const FileList: React.FC<FileListProps> = ({
   
   // Handle file row click to preview/open the file
   const handleFileClick = (file: CreatorFileType) => {
-    // Open file in a new tab for preview instead of download
-    window.open(file.url, '_blank', 'noopener,noreferrer');
+    // We don't need to do anything here as we have dedicated preview button now
+    // This is just a stub to satisfy the interface
   };
 
   // Filter out files being deleted when in folder view

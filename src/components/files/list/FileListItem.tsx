@@ -17,7 +17,8 @@ import {
   Trash2,
   FolderPlus,
   FolderMinus,
-  Pencil
+  Pencil,
+  Eye
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -131,8 +132,25 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       {isCreatorView && (
         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-end gap-1 flex-wrap">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(file.url, '_blank', 'noopener,noreferrer');
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            
             <a href={file.url} download={file.name}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Download className="h-4 w-4" />
               </Button>
             </a>

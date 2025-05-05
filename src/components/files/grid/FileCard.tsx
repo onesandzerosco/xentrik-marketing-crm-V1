@@ -12,7 +12,8 @@ import {
   Download,
   Trash2,
   FolderMinus,
-  Pencil
+  Pencil,
+  Eye
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 
@@ -85,8 +86,25 @@ export const FileCard: React.FC<FileCardProps> = ({
           {/* Action buttons overlay on hover */}
           {isCreatorView && (
             <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(file.url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              
               <a href={file.url} download={file.name}>
-                <Button variant="secondary" size="icon" className="h-8 w-8">
+                <Button 
+                  variant="secondary" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Download className="h-4 w-4" />
                 </Button>
               </a>
