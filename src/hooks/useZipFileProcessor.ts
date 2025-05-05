@@ -50,22 +50,35 @@ export const useZipFileProcessor = ({
         return [];
       }
       
-      // Create an empty file in the folder to "create" the folder in storage
-      const { error: storageError } = await supabase.storage
-        .from('creator_files')
-        .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
-      
-      if (storageError) {
-        console.error("Error creating folder in storage:", storageError);
-        updateFileProgress(zipFileName, 0, 'error');
-        setFileStatuses(prev => 
-          prev.map(status => 
-            status.name === zipFileName
-              ? { ...status, error: `Failed to create folder: ${storageError.message}` }
-              : status
-          )
-        );
-        return [];
+      try {
+        // Create an empty file in the folder to "create" the folder in storage
+        const { error: storageError } = await supabase.storage
+          .from('creator_files')
+          .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
+        
+        if (storageError) {
+          console.error("Error creating folder in storage:", storageError);
+          // Try to create the folder in raw_uploads instead
+          const { error: rawUploadsError } = await supabase.storage
+            .from('raw_uploads')
+            .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
+            
+          if (rawUploadsError) {
+            console.error("Error creating folder in raw_uploads:", rawUploadsError);
+            updateFileProgress(zipFileName, 0, 'error');
+            setFileStatuses(prev => 
+              prev.map(status => 
+                status.name === zipFileName
+                  ? { ...status, error: `Failed to create folder: ${rawUploadsError.message}` }
+                  : status
+              )
+            );
+            return [];
+          }
+        }
+      } catch (folderError) {
+        console.error("Exception creating folder:", folderError);
+        // Continue anyway, since the folder might already exist
       }
       
       updateFileProgress(zipFileName, 60, 'uploading');
@@ -102,68 +115,73 @@ export const useZipFileProcessor = ({
         
         const filePath = `${creatorId}/${folderIdSafe}/${uniqueFileName}`;
         
-        // Store metadata in the media table
-        const { data: mediaRecord, error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            creator_id: creatorId,
-            bucket_key: filePath,
-            filename: uniqueFileName,
-            mime: extractedFile.content.type || 'application/octet-stream',
-            file_size: extractedFile.content.size,
-            status: 'uploading',
-            folders: folderCreated ? [folderIdSafe] : [folderIdSafe], // Always include folder
-            thumbnail_url: thumbnailUrl // Add the thumbnail URL if generated
-          })
-          .select('id');
-        
-        if (mediaError) {
-          console.error('Media record creation error:', mediaError);
-          continue;
-        }
-        
-        if (!mediaRecord || mediaRecord.length === 0) {
-          console.error('Failed to create media record');
-          continue;
-        }
-        
-        const fileId = mediaRecord[0].id;
-        extractedFileIds.push(fileId);
-        
-        // Upload the file content
-        const { error: uploadError } = await supabase.storage
-          .from('raw_uploads')
-          .upload(filePath, extractedFile.content, {
-            cacheControl: '3600',
-            upsert: true
-          });
+        try {
+          // Store metadata in the media table
+          const { data: mediaRecord, error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              creator_id: creatorId,
+              bucket_key: filePath,
+              filename: uniqueFileName,
+              mime: extractedFile.content.type || 'application/octet-stream',
+              file_size: extractedFile.content.size,
+              status: 'uploading',
+              folders: [folderIdSafe], // Always include folder
+              thumbnail_url: thumbnailUrl // Add the thumbnail URL if generated
+            })
+            .select('id');
           
-        if (uploadError) {
-          console.error(`Upload error for ${uniqueFileName}:`, uploadError);
+          if (mediaError) {
+            console.error('Media record creation error:', mediaError);
+            continue;
+          }
+          
+          if (!mediaRecord || mediaRecord.length === 0) {
+            console.error('Failed to create media record');
+            continue;
+          }
+          
+          const fileId = mediaRecord[0].id;
+          extractedFileIds.push(fileId);
+          
+          // Upload the file content
+          const { error: uploadError } = await supabase.storage
+            .from('raw_uploads')
+            .upload(filePath, extractedFile.content, {
+              cacheControl: '3600',
+              upsert: true
+            });
+            
+          if (uploadError) {
+            console.error(`Upload error for ${uniqueFileName}:`, uploadError);
+            await supabase
+              .from('media')
+              .update({ status: 'error' })
+              .eq('id', fileId);
+            continue;
+          }
+          
+          // Update the media record to mark as complete
           await supabase
             .from('media')
-            .update({ status: 'error' })
+            .update({ 
+              status: 'complete',
+              folders: [folderIdSafe], // Ensure folder ID is saved
+              thumbnail_url: thumbnailUrl // Ensure thumbnail URL is saved
+            })
             .eq('id', fileId);
-          continue;
-        }
-        
-        // Update the media record to mark as complete
-        await supabase
-          .from('media')
-          .update({ 
-            status: 'complete',
-            folders: [folderIdSafe], // Add to folder
-            thumbnail_url: thumbnailUrl // Ensure thumbnail URL is saved
-          })
-          .eq('id', fileId);
-        
-        processedFiles++;
-        const zipProgress = 60 + Math.floor((processedFiles / extractedFiles.length) * 40);
-        updateFileProgress(zipFileName, zipProgress, 'uploading');
-        
-        // After first file, indicate that folder exists for remaining files
-        if (!folderCreated) {
-          folderCreated = true;
+          
+          processedFiles++;
+          const zipProgress = 60 + Math.floor((processedFiles / extractedFiles.length) * 40);
+          updateFileProgress(zipFileName, zipProgress, 'uploading');
+          
+          // After first file, indicate that folder exists for remaining files
+          if (!folderCreated) {
+            folderCreated = true;
+          }
+        } catch (fileError) {
+          console.error(`Error processing file ${extractedFile.name}:`, fileError);
+          // Continue with next file
         }
       }
       
