@@ -15,6 +15,12 @@ interface CreatorCardProps {
   fileCount?: number;
   showUploadingIndicator?: boolean;
   uploadingCount?: number;
+  permissions?: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canUpload: boolean;
+    canDownload: boolean;
+  };
 }
 
 const CreatorCard = ({ 
@@ -22,7 +28,8 @@ const CreatorCard = ({
   variant = 'default', 
   fileCount = 0, 
   showUploadingIndicator = false,
-  uploadingCount = 0 
+  uploadingCount = 0,
+  permissions 
 }: CreatorCardProps) => {
   const { toast } = useToast();
   const { userRole } = useAuth();
@@ -43,8 +50,10 @@ const CreatorCard = ({
     });
   };
 
-  // Check if user has Admin privileges
+  // Check if user has Admin privileges or permission to upload
   const isAdmin = userRole === "Admin";
+  // Use permissions if provided, otherwise default to only admin having privileges
+  const canUpload = permissions?.canUpload || isAdmin;
 
   return (
     <Card className="p-4 hover:bg-accent/5 transition-colors group cursor-pointer">
@@ -138,8 +147,8 @@ const CreatorCard = ({
                     )}
                   </Button>
                 </Link>
-                {/* Only show Share button for users with appropriate permissions */}
-                {isAdmin && (
+                {/* Show Share button for users with appropriate permissions */}
+                {canUpload && (
                   <Button 
                     variant="secondary" 
                     size="sm"
