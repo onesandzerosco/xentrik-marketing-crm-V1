@@ -41,6 +41,11 @@ const navItems: NavItem[] = [
     hideForCreator: true, // Hide only for Creator role
   },
   {
+    path: '/shared-files',
+    label: 'Shared Files',
+    icon: <FileUp className="h-5 w-5" />,
+  },
+  {
     path: '/team',
     label: 'Team',
     icon: <UserCog className="h-5 w-5" />,
@@ -54,11 +59,6 @@ const navItems: NavItem[] = [
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
-  },
-  {
-    path: '/shared-files',
-    label: 'Shared Files',
-    icon: <FileUp className="h-5 w-5" />,
   },
   {
     path: '/voice-generation',
