@@ -37,24 +37,22 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Upload Files</DialogTitle>
           <DialogDescription>
             Upload files to {creatorName}'s storage
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[calc(90vh-140px)]">
-          <div className="py-4">
-            <DragDropUploader 
-              creatorId={creatorId} 
-              onUploadComplete={handleUploadComplete}
-              onCancel={() => onOpenChange(false)}
-              currentFolder={currentFolder}
-            />
-          </div>
-        </ScrollArea>
+        <div className="flex-grow overflow-hidden flex flex-col">
+          <DragDropUploader 
+            creatorId={creatorId} 
+            onUploadComplete={handleUploadComplete}
+            onCancel={() => onOpenChange(false)}
+            currentFolder={currentFolder}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

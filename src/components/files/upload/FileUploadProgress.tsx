@@ -24,7 +24,7 @@ const FileUploadProgress: React.FC<FileUploadProgressProps> = ({
   }
 
   return (
-    <div className="fixed bottom-5 right-5 bg-background border border-border rounded-md shadow-lg p-4 w-80 z-50">
+    <div className="fixed bottom-5 right-5 bg-background border border-border rounded-md shadow-lg p-4 w-80 z-50 flex flex-col">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-medium">Uploading Files</h3>
         <button 
@@ -44,7 +44,7 @@ const FileUploadProgress: React.FC<FileUploadProgressProps> = ({
         <Progress value={overallProgress} className="h-2" />
       </div>
       
-      <ScrollArea className="max-h-60">
+      <ScrollArea className="max-h-60 flex-grow">
         <div className="space-y-3">
           {fileStatuses.map((file) => (
             <div key={file.name} className="text-sm">
