@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';

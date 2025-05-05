@@ -40,9 +40,9 @@ export const canUploadFiles = (userRole: string, userRoles: string[]): boolean =
 };
 
 /**
- * Determines if a user can remove files from folders based on their role
- * - Admins, Creators, and VAs can remove files from folders
- * - Chatters CANNOT remove files from folders
+ * Determines if a user can manage folders (add/remove files from folders) based on their role
+ * - Admins, Creators, and VAs can manage folders
+ * - Chatters CANNOT manage folders
  */
 export const canManageFolders = (userRole: string, userRoles: string[]): boolean => {
   return userRole === "Admin" || 
