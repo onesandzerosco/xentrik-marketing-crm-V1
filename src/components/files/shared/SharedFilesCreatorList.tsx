@@ -11,13 +11,20 @@ interface SharedFilesCreatorListProps {
   creators: Creator[];
   hasFilters: boolean;
   fileCountsMap?: Record<string, { total: number; uploading: number }>;
+  permissions?: {
+    canEdit: boolean;
+    canDelete: boolean;
+    canUpload: boolean;
+    canDownload: boolean;
+  };
 }
 
 const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({ 
   isLoading, 
   creators, 
   hasFilters,
-  fileCountsMap = {}
+  fileCountsMap = {},
+  permissions
 }) => {
   const { userRole } = useAuth();
   const isAdmin = userRole === "Admin";
@@ -49,6 +56,7 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
               fileCount={fileCount}
               showUploadingIndicator={uploadingCount > 0}
               uploadingCount={uploadingCount}
+              permissions={permissions}
             />
           </div>
         );

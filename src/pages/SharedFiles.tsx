@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useCreators } from '../context/creator';
 import SharedFilesHeader from "../components/files/SharedFilesHeader";
@@ -8,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 // Local storage key for resumable uploads
 const PENDING_UPLOADS_KEY = 'pendingUploads';
@@ -18,6 +18,7 @@ const SharedFiles = () => {
   const { toast } = useToast();
   const { isCreator, creatorId, userRole, userRoles, isCreatorSelf } = useAuth();
   const navigate = useNavigate();
+  const permissions = useFilePermissions();
 
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -197,6 +198,7 @@ const SharedFiles = () => {
         creators={finalCreators}
         hasFilters={hasFilters}
         fileCountsMap={fileCountsMap}
+        permissions={permissions}
       />
     </div>
   );
