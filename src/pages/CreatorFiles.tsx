@@ -8,6 +8,7 @@ import { FileExplorer } from '@/components/files/FileExplorer';
 import { getFileType } from '@/utils/fileUtils';
 import { ensureStorageBucket } from '@/utils/setupStorage';
 import { v4 as uuidv4 } from 'uuid';
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 export interface CreatorFileType {
   id: string;
@@ -36,6 +37,7 @@ const CreatorFiles = () => {
   const { getCreator } = useCreators();
   const creator = getCreator(id || '');
   const { toast } = useToast();
+  const permissions = useFilePermissions();
   
   const [currentFolder, setCurrentFolder] = useState('all');
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
@@ -620,7 +622,7 @@ const CreatorFiles = () => {
       onFolderChange={setCurrentFolder}
       currentFolder={currentFolder}
       availableFolders={availableFolders}
-      isCreatorView={isCurrentUserCreator}
+      isCreatorView={isCurrentUserCreator || permissions.canEdit || permissions.canDelete}
       onUploadComplete={handleFilesUploaded}
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}

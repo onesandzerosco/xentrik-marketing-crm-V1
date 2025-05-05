@@ -20,7 +20,8 @@ import {
   Download,
   Trash2,
   FolderPlus,
-  FolderMinus
+  FolderMinus,
+  Pencil
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,7 @@ export interface FileListProps {
   onAddToFolderClick?: () => void;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote?: (file: CreatorFileType) => void;
 }
 
 export const FileList: React.FC<FileListProps> = ({ 
@@ -47,7 +49,8 @@ export const FileList: React.FC<FileListProps> = ({
   onSelectFiles,
   onAddToFolderClick,
   currentFolder = 'all',
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  onEditNote
 }) => {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
@@ -241,6 +244,11 @@ export const FileList: React.FC<FileListProps> = ({
   }, [selectedFileIds, onSelectFiles]);
 
   const isAllSelected = selectedFileIds.length === files.length && files.length > 0;
+  
+  // Handle file row click to preview/open the file
+  const handleFileClick = (file: CreatorFileType) => {
+    window.open(file.url, '_blank');
+  };
 
   return (
     <div className="w-full relative overflow-x-auto">
@@ -305,8 +313,8 @@ export const FileList: React.FC<FileListProps> = ({
             if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
 
             return (
-              <TableRow key={file.id}>
-                <TableCell className="font-medium">
+              <TableRow key={file.id} className={isCreatorView ? "cursor-pointer" : ""} onClick={() => isCreatorView && handleFileClick(file)}>
+                <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
                   {isCreatorView && (
                     <Checkbox
                       checked={isFileSelected(file.id)}
@@ -317,40 +325,66 @@ export const FileList: React.FC<FileListProps> = ({
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     <Icon className="h-4 w-4" />
-                    {file.name}
+                    <span className="truncate max-w-[200px]">{file.name}</span>
                     {isNew && (
                       <span className="ml-1 rounded-md bg-secondary text-xs text-secondary-foreground px-2 py-0.5">
                         New
                       </span>
                     )}
                   </div>
+                  {file.description && (
+                    <div className="text-xs text-muted-foreground italic truncate max-w-[200px] mt-1">
+                      "{file.description}"
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>{file.type}</TableCell>
                 <TableCell>{formatFileSize(file.size)}</TableCell>
                 <TableCell>{formatDate(file.created_at)}</TableCell>
                 {isCreatorView && (
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex justify-end gap-1 flex-wrap">
                       <a href={file.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
+                        <Button variant="ghost" size="sm" className="h-8 px-2">
+                          <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
                       </a>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDeleteFile(file.id)}
+                        className="h-8 px-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(file.id);
+                        }}
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
+                        <Trash2 className="h-4 w-4 mr-1" />
                         Delete
                       </Button>
+                      
+                      {onEditNote && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditNote(file);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                       
                       {showRemoveFromFolder && onRemoveFromFolder && (
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={async () => {
+                          className="h-8 px-2"
+                          onClick={async (e) => {
+                            e.stopPropagation();
                             try {
                               // Optimistically update UI
                               setRemovingFromFolderIds(prev => new Set([...prev, file.id]));
@@ -392,7 +426,7 @@ export const FileList: React.FC<FileListProps> = ({
                             }
                           }}
                         >
-                          <FolderMinus className="h-4 w-4 mr-2" />
+                          <FolderMinus className="h-4 w-4 mr-1" />
                           Remove
                         </Button>
                       )}

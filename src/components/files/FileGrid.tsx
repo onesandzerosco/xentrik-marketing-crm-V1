@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,8 @@ import {
   Download,
   Trash2,
   FolderPlus,
-  FolderMinus
+  FolderMinus,
+  Pencil
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,6 +31,7 @@ interface FileGridProps {
   onAddToFolderClick?: () => void;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote?: (file: CreatorFileType) => void;
 }
 
 export function FileGrid({ 
@@ -41,7 +44,8 @@ export function FileGrid({
   onSelectFiles,
   onAddToFolderClick,
   currentFolder = 'all',
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  onEditNote
 }: FileGridProps) {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
@@ -182,6 +186,11 @@ export function FileGrid({
   };
 
   const isAllSelected = selectedFileIds.length === files.length && files.length > 0;
+  
+  // Handle file click to preview/open the file
+  const handleFileClick = (file: CreatorFileType) => {
+    window.open(file.url, '_blank');
+  };
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -200,30 +209,33 @@ export function FileGrid({
         if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
 
         return (
-          <Card key={file.id}>
-            <CardContent className="p-4 flex flex-col">
+          <Card key={file.id} className="overflow-hidden h-full flex flex-col">
+            <CardContent className="p-4 flex flex-col relative">
               {isCreatorView && (
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 right-2 z-10">
                   <Checkbox
                     checked={isFileSelected(file.id)}
                     onCheckedChange={() => toggleFileSelection(file.id)}
                   />
                 </div>
               )}
-              <div className="relative h-32 w-full flex items-center justify-center rounded-md bg-secondary">
+              <div 
+                className="relative h-32 w-full flex items-center justify-center rounded-md bg-secondary mb-2 cursor-pointer overflow-hidden"
+                onClick={() => handleFileClick(file)}
+              >
                 <Icon className="h-12 w-12 text-muted-foreground" />
-                {file.type === 'image' && (
+                {file.type === 'image' && file.url && (
                   <img
                     src={file.url}
                     alt={file.name}
-                    className="absolute inset-0 object-cover rounded-md"
+                    className="absolute inset-0 w-full h-full object-cover rounded-md"
                   />
                 )}
                 {file.type === 'video' && file.thumbnail_url && (
                   <img
                     src={file.thumbnail_url}
                     alt={file.name}
-                    className="absolute inset-0 object-cover rounded-md"
+                    className="absolute inset-0 w-full h-full object-cover rounded-md"
                   />
                 )}
               </div>
@@ -236,29 +248,48 @@ export function FileGrid({
                   </span>
                 )}
               </div>
+              {file.description && (
+                <div className="mt-1 text-xs text-muted-foreground italic truncate">
+                  "{file.description}"
+                </div>
+              )}
             </CardContent>
             {isCreatorView && (
-              <CardFooter className="flex justify-between items-center p-4">
-                <div className="flex gap-2">
+              <CardFooter className="flex flex-wrap gap-1 justify-between items-center p-3 pt-0 mt-auto">
+                <div className="flex flex-wrap gap-1">
                   <a href={file.url} target="_blank" rel="noopener noreferrer">
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-4 w-4 mr-2" />
+                    <Button variant="ghost" size="sm" className="h-8 px-2">
+                      <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
                   </a>
                   <Button 
                     variant="ghost" 
                     size="sm"
+                    className="h-8 px-2"
                     onClick={() => handleDeleteFile(file.id)}
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
+                    <Trash2 className="h-4 w-4 mr-1" />
                     Delete
                   </Button>
+                  
+                  {onEditNote && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-8 px-2"
+                      onClick={() => onEditNote(file)}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
                   
                   {showRemoveFromFolder && onRemoveFromFolder && (
                     <Button 
                       variant="ghost" 
                       size="sm"
+                      className="h-8 px-2"
                       onClick={async () => {
                         try {
                           // Optimistically update UI
@@ -301,7 +332,7 @@ export function FileGrid({
                         }
                       }}
                     >
-                      <FolderMinus className="h-4 w-4 mr-2" />
+                      <FolderMinus className="h-4 w-4 mr-1" />
                       Remove
                     </Button>
                   )}
