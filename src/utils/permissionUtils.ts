@@ -5,18 +5,19 @@ import { useAuth } from '@/context/AuthContext';
 /**
  * Determines if a user can edit file descriptions based on their role
  * - Admins, Creators, and VAs can edit descriptions
+ * - Chatters CANNOT edit descriptions
  */
 export const canEditFileDescription = (userRole: string, userRoles: string[]): boolean => {
   return userRole === "Admin" || 
          userRole === "Creator" || 
-         userRoles.includes("VA") || 
-         userRoles.includes("Creator") ||
+         (userRoles.includes("VA") && !userRoles.includes("Chatters")) || 
          userRole === "VA";
 };
 
 /**
  * Determines if a user can delete files based on their role
  * - Only Admins and Creators can delete files
+ * - VAs and Chatters CANNOT delete files
  */
 export const canDeleteFiles = (userRole: string, userRoles: string[]): boolean => {
   return userRole === "Admin" || 

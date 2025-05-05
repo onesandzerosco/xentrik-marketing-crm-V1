@@ -19,6 +19,7 @@ import {
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileGridProps {
   files: CreatorFileType[];
@@ -51,6 +52,7 @@ export function FileGrid({
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
   const [removingFromFolderIds, setRemovingFromFolderIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { canDelete, canEdit } = useFilePermissions();
   
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
@@ -70,6 +72,16 @@ export function FileGrid({
   const isFileRemovingFromFolder = (fileId: string) => removingFromFolderIds.has(fileId);
 
   const handleDeleteFile = async (fileId: string) => {
+    // Check permission before proceeding
+    if (!canDelete) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to delete files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const fileToDelete = files.find(file => file.id === fileId);
       if (!fileToDelete) {
@@ -184,7 +196,7 @@ export function FileGrid({
       setSelectedFileIds(files.map(file => file.id));
     }
   };
-
+  
   const isAllSelected = selectedFileIds.length === files.length && files.length > 0;
   
   // Handle file click to preview/open the file
@@ -270,19 +282,22 @@ export function FileGrid({
                         <Download className="h-4 w-4" />
                       </Button>
                     </a>
-                    <Button 
-                      variant="secondary" 
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteFile(file.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                     
-                    {onEditNote && (
+                    {canDelete && (
+                      <Button 
+                        variant="secondary" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteFile(file.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    
+                    {onEditNote && canEdit && (
                       <Button 
                         variant="secondary" 
                         size="icon"

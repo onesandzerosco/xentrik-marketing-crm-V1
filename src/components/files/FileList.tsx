@@ -25,6 +25,7 @@ import {
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 export interface FileListProps {
   files: CreatorFileType[];
@@ -55,6 +56,7 @@ export const FileList: React.FC<FileListProps> = ({
   const [deletingFileIds, setDeletingFileIds] = useState<Set<string>>(new Set());
   const [removingFromFolderIds, setRemovingFromFolderIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+  const { canDelete, canEdit } = useFilePermissions();
 
   // Show remove from folder button only in custom folders (not in 'all' or 'unsorted')
   const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted';
@@ -82,6 +84,16 @@ export const FileList: React.FC<FileListProps> = ({
   };
 
   const handleDeleteFile = async (fileId: string) => {
+    // Check permission before proceeding
+    if (!canDelete) {
+      toast({
+        title: "Permission denied",
+        description: "You don't have permission to delete files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const fileToDelete = files.find(file => file.id === fileId);
       if (!fileToDelete) {
@@ -348,19 +360,22 @@ export const FileList: React.FC<FileListProps> = ({
                           <Download className="h-4 w-4" />
                         </Button>
                       </a>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteFile(file.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                       
-                      {onEditNote && (
+                      {canDelete && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteFile(file.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      {onEditNote && canEdit && (
                         <Button 
                           variant="ghost" 
                           size="icon"
