@@ -28,7 +28,7 @@ export const EditNoteModal: React.FC<EditNoteModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] w-full max-h-[90vh]">
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Edit Note for {editingFile.name}</DialogTitle>
         </DialogHeader>

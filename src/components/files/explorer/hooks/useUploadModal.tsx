@@ -4,9 +4,9 @@ import { useState } from 'react';
 export const useUploadModal = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
-  // Increasing modal dimensions for better visibility and less scrolling
+  // Decreasing width and maintaining large height for better visibility with less horizontal space
   const modalDimensions = {
-    width: '700px',
+    width: '500px',
     maxHeight: '90vh'
   };
 

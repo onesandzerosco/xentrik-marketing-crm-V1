@@ -36,7 +36,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] w-full max-h-[90vh]">
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add to Folder</DialogTitle>
           <DialogDescription>

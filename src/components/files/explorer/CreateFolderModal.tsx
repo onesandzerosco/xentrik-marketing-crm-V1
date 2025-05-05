@@ -29,7 +29,7 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] w-full max-h-[90vh]">
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
           <DialogDescription>

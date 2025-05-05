@@ -24,7 +24,7 @@ export const DeleteFolderModal: React.FC<DeleteFolderModalProps> = ({
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[700px] w-full">
+      <AlertDialogContent className="sm:max-w-[500px] w-full">
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Folder</AlertDialogTitle>
           <AlertDialogDescription>
