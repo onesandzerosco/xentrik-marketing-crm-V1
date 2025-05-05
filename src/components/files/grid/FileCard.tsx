@@ -55,7 +55,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   if (file.type === 'document') Icon = FileText;
 
   return (
-    <Card className="overflow-hidden h-full flex flex-col">
+    <Card className={`overflow-hidden h-full flex flex-col ${isNew ? 'border-2 border-green-500' : ''}`}>
       <div className="relative">
         {/* Thumbnail container that fills the available space */}
         <div 
@@ -165,13 +165,6 @@ export const FileCard: React.FC<FileCardProps> = ({
         {file.description && (
           <div className="mt-1 text-xs text-muted-foreground italic truncate">
             "{file.description}"
-          </div>
-        )}
-        {isNew && (
-          <div className="mt-1">
-            <span className="rounded-md bg-green-500 text-xs text-white px-2 py-0.5">
-              New
-            </span>
           </div>
         )}
       </CardContent>
