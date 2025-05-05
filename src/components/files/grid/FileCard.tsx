@@ -85,7 +85,7 @@ export const FileCard: React.FC<FileCardProps> = ({
           {/* Action buttons overlay on hover */}
           {isCreatorView && (
             <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
-              <a href={file.url} target="_blank" rel="noopener noreferrer">
+              <a href={file.url} download={file.name}>
                 <Button variant="secondary" size="icon" className="h-8 w-8">
                   <Download className="h-4 w-4" />
                 </Button>

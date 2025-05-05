@@ -131,7 +131,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       {isCreatorView && (
         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-end gap-1 flex-wrap">
-            <a href={file.url} target="_blank" rel="noopener noreferrer">
+            <a href={file.url} download={file.name}>
               <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Download className="h-4 w-4" />
               </Button>
