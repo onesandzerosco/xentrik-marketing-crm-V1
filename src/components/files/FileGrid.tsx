@@ -5,6 +5,7 @@ import { useFileGrid } from './grid/useFileGrid';
 import { FileGridHeader } from './grid/FileGridHeader';
 import { EmptyState } from './grid/EmptyState';
 import { FileGridContainer } from './grid/FileGridContainer';
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 interface FileGridProps {
   files: CreatorFileType[];
@@ -44,6 +45,8 @@ export function FileGrid({
     onRemoveFromFolder
   });
 
+  const { canManageFolders } = useFilePermissions();
+
   if (files.length === 0) {
     return <EmptyState />;
   }
@@ -53,7 +56,7 @@ export function FileGrid({
       <FileGridHeader 
         selectedFileIds={selectedFileIds}
         isCreatorView={isCreatorView}
-        onAddToFolderClick={onAddToFolderClick}
+        onAddToFolderClick={canManageFolders ? onAddToFolderClick : undefined}
       />
       
       <FileGridContainer 

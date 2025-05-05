@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { Button } from "@/components/ui/button";
@@ -147,8 +146,8 @@ export const FileCard: React.FC<FileCardProps> = ({
               </Button>
             )}
             
-            {/* Remove from folder button - only for creators */}
-            {showRemoveFromFolder && onRemoveFromFolder && canDelete && (
+            {/* Remove from folder button - for users with canManageFolders permission */}
+            {showRemoveFromFolder && onRemoveFromFolder && canEdit && (
               <Button 
                 variant="secondary" 
                 size="icon"

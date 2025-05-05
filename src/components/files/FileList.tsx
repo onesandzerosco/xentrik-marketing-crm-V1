@@ -242,7 +242,7 @@ export const FileList: React.FC<FileListProps> = ({
     <div className="w-full relative overflow-x-auto">
       <FileListBatchActions
         selectedFileIds={selectedFileIds}
-        onAddToFolderClick={onAddToFolderClick}
+        onAddToFolderClick={canManageFolders ? onAddToFolderClick : undefined}
         showRemoveFromFolder={showRemoveFromFolder}
         onRemoveFromFolder={onRemoveFromFolder}
         currentFolder={currentFolder}

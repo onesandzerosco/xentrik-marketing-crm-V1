@@ -29,7 +29,7 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
   currentFolder,
   onRemoveFromFolder
 }) => {
-  const { canDelete, canEdit } = useFilePermissions();
+  const { canDelete, canEdit, canManageFolders } = useFilePermissions();
   const {
     isFileSelected,
     toggleFileSelection,

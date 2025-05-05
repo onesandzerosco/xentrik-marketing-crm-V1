@@ -193,7 +193,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
             </Button>
           )}
           
-          {/* Remove from folder button - only for creators and VAs */}
+          {/* Remove from folder button - for users with canManageFolders permission */}
           {showRemoveFromFolder && onRemoveFromFolder && canManageFolders && (
             <Button 
               variant="ghost" 
