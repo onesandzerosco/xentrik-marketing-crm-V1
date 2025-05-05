@@ -47,6 +47,9 @@ const ADDITIONAL_ROLES: string[] = [
   "Creator"
 ];
 
+// Define exclusive roles that cannot be combined with other roles
+const EXCLUSIVE_ROLES = ["Creator", "Admin"];
+
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   user,
   open,
@@ -95,12 +98,36 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
 
   const toggleAdditionalRole = (role: string) => {
     setAdditionalRoles(prev => {
-      if (prev.includes(role)) {
-        return prev.filter(r => r !== role);
+      // Create a copy of the current roles
+      let updatedRoles = [...prev];
+      
+      // If role is being added
+      if (!prev.includes(role)) {
+        // Check if the role to add is an exclusive role
+        if (EXCLUSIVE_ROLES.includes(role)) {
+          // If adding an exclusive role, clear all other roles and only add this one
+          return [role];
+        } else {
+          // If adding a non-exclusive role, remove any exclusive roles first
+          updatedRoles = updatedRoles.filter(r => !EXCLUSIVE_ROLES.includes(r));
+          // Then add the new role
+          updatedRoles.push(role);
+        }
       } else {
-        return [...prev, role];
+        // If removing a role, just filter it out
+        updatedRoles = updatedRoles.filter(r => r !== role);
       }
+      
+      return updatedRoles;
     });
+  };
+
+  // Determine if a checkbox should be disabled based on current selections
+  const isRoleDisabled = (role: string): boolean => {
+    // If current roles include any exclusive role and this isn't that role
+    return additionalRoles.some(r => 
+      EXCLUSIVE_ROLES.includes(r) && r !== role
+    );
   };
 
   // Create creator record if user is assigned Creator role
@@ -231,6 +258,9 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
               <p className="text-sm text-muted-foreground">
                 Select all roles that apply to this user
               </p>
+              <p className="text-xs text-amber-500">
+                Note: Creator and Admin are exclusive roles and cannot be combined with other roles
+              </p>
               
               <CheckboxGroup className="grid grid-cols-2 gap-2 pt-2">
                 {ADDITIONAL_ROLES.map(role => (
@@ -239,10 +269,12 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
                       id={`additional-role-${role}`}
                       checked={additionalRoles.includes(role)}
                       onCheckedChange={() => toggleAdditionalRole(role)}
+                      disabled={isRoleDisabled(role)}
+                      className={isRoleDisabled(role) ? "opacity-50" : ""}
                     />
                     <Label 
                       htmlFor={`additional-role-${role}`}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
                     >
                       {role}
                     </Label>
