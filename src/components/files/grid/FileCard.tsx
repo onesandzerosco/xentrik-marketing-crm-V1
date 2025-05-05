@@ -161,15 +161,17 @@ export const FileCard: React.FC<FileCardProps> = ({
         <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
         <div className="text-xs text-muted-foreground">
           {formatFileSize(file.size)} - {formatDate(file.created_at)}
-          {isNew && (
-            <span className="ml-1 rounded-md bg-secondary text-xs text-secondary-foreground px-2 py-0.5">
-              New
-            </span>
-          )}
         </div>
         {file.description && (
           <div className="mt-1 text-xs text-muted-foreground italic truncate">
             "{file.description}"
+          </div>
+        )}
+        {isNew && (
+          <div className="mt-1">
+            <span className="rounded-md bg-green-500 text-xs text-white px-2 py-0.5">
+              New
+            </span>
           </div>
         )}
       </CardContent>

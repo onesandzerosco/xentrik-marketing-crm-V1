@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, ChangeEvent } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -47,8 +48,22 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
 
   const calculateOverallProgress = (statuses: FileUploadStatus[]) => {
     if (statuses.length === 0) return 0;
-    const totalProgress = statuses.reduce((sum, file) => sum + file.progress, 0);
-    return Math.round(totalProgress / statuses.length);
+    
+    // Filter out completed files to avoid skewing the progress
+    const activeFiles = statuses.filter(file => file.status !== 'complete' && file.status !== 'error');
+    
+    // If all files are complete or error, return 100%
+    if (activeFiles.length === 0) {
+      // Check if at least one file is complete
+      if (statuses.some(file => file.status === 'complete')) {
+        return 100;
+      }
+      return 0;
+    }
+    
+    // Calculate progress only for active files
+    const totalProgress = activeFiles.reduce((sum, file) => sum + file.progress, 0);
+    return Math.round(totalProgress / activeFiles.length);
   };
 
   const updateFileProgress = (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {
@@ -566,7 +581,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
           <div className="mb-4">
             <div className="flex justify-between text-sm mb-1">
               <span>Overall progress</span>
-              <span>{Math.round(overallProgress)}%</span>
+              <span>{overallProgress}%</span>
             </div>
             <Progress value={overallProgress} className="h-2" />
           </div>

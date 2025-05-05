@@ -20,6 +20,15 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   onUploadComplete,
   currentFolder
 }) => {
+  // This function is called when the upload is complete
+  const handleUploadComplete = (fileIds?: string[]) => {
+    if (onUploadComplete) {
+      onUploadComplete(fileIds);
+    }
+    // Only close the modal after the upload is complete
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px]">
@@ -33,10 +42,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
         <div className="py-4">
           <DragDropUploader 
             creatorId={creatorId} 
-            onUploadComplete={(fileIds) => {
-              onUploadComplete?.(fileIds);
-              onOpenChange(false);
-            }}
+            onUploadComplete={handleUploadComplete}
             onCancel={() => onOpenChange(false)}
             currentFolder={currentFolder}
           />
