@@ -11,8 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { DragDropUploader } from './DragDropUploader';
-import { useToast } from "@/hooks/use-toast";
+import DragDropUploader from './DragDropUploader';
+import { useToast } from "@/components/ui/use-toast";
 import { useFilePermissions } from '@/utils/permissionUtils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -219,11 +219,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     <div className="w-full max-w-[1400px] mx-auto pb-10">
       <FileHeader 
         creatorName={creatorName}
-        currentView={viewMode}
-        setCurrentView={setViewMode}
         onUploadClick={() => setIsUploadModalOpen(true)}
-        showUploadButton={isCreatorView && permissions.canUpload}
-        fileCount={filteredFiles.length}
+        isCreatorView={isCreatorView}
       />
       
       <div className="mt-4 flex flex-col lg:flex-row gap-4">
@@ -232,7 +229,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             folders={availableFolders}
             currentFolder={currentFolder}
             onFolderChange={onFolderChange}
-            onAddFolderClick={() => {
+            onInitiateNewFolder={() => {
               if (selectedFileIds.length > 0) {
                 setIsAddFolderModalOpen(true);
               } else {
@@ -242,21 +239,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 });
               }
             }}
-            onDeleteFolderClick={(folderId) => {
+            onDeleteFolder={(folderId) => {
               setFolderToDelete(folderId);
               setIsDeleteFolderModalOpen(true);
             }}
-            showAddButton={isCreatorView && permissions.canUpload}
-            showDeleteButton={isCreatorView && permissions.canDelete}
           />
         </div>
         
         <div className="flex-1 min-w-0">
           <FilterBar 
+            activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}
+            onFilterChange={(filter) => {
+              setSelectedTypes(filter ? [filter] : []);
+            }}
             searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            selectedTypes={selectedTypes}
-            setSelectedTypes={setSelectedTypes}
+            onSearchChange={(query) => setSearchQuery(query)}
           />
           
           {isLoading ? (
@@ -338,16 +335,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 onUploadComplete?.(fileIds);
                 setIsUploadModalOpen(false);
               }}
-              onUploadStart={onUploadStart}
+              onCancel={() => setIsUploadModalOpen(false)}
               currentFolder={currentFolder}
             />
           </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsUploadModalOpen(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       

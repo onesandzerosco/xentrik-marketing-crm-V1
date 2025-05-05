@@ -193,7 +193,22 @@ export function FileGrid({
   };
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 mt-4">
+      {selectedFileIds.length > 0 && isCreatorView && (
+        <div className="col-span-full flex items-center gap-2 mb-4">
+          {onAddToFolderClick && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAddToFolderClick}
+            >
+              <FolderPlus className="h-4 w-4 mr-2" />
+              Add {selectedFileIds.length} Files to Folder
+            </Button>
+          )}
+        </div>
+      )}
+      
       {files.map((file) => {
         let Icon = File;
         if (file.type === 'image') Icon = FileImage;
@@ -216,6 +231,7 @@ export function FileGrid({
                   <Checkbox
                     checked={isFileSelected(file.id)}
                     onCheckedChange={() => toggleFileSelection(file.id)}
+                    className="bg-background/80"
                   />
                 </div>
               )}
@@ -228,14 +244,14 @@ export function FileGrid({
                   <img
                     src={file.url}
                     alt={file.name}
-                    className="absolute inset-0 w-full h-full object-cover rounded-md"
+                    className="absolute inset-0 w-full h-full object-contain rounded-md"
                   />
                 )}
                 {file.type === 'video' && file.thumbnail_url && (
                   <img
                     src={file.thumbnail_url}
                     alt={file.name}
-                    className="absolute inset-0 w-full h-full object-cover rounded-md"
+                    className="absolute inset-0 w-full h-full object-contain rounded-md"
                   />
                 )}
               </div>
@@ -348,7 +364,7 @@ export function FileGrid({
         );
       })}
       {files.length === 0 && (
-        <div className="col-span-full text-center">No files found.</div>
+        <div className="col-span-full text-center py-10">No files found.</div>
       )}
     </div>
   );

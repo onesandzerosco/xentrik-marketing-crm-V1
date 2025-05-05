@@ -33,9 +33,8 @@ interface FolderNavProps {
   currentFolder: string;
   onFolderChange: (folder: string) => void;
   activeFolder?: string | null;
-  onCreateFolder?: (folderName: string) => void;
-  onDeleteFolder?: (folderId: string) => Promise<void>;
   onInitiateNewFolder?: () => void; // Prop for initiating folder creation
+  onDeleteFolder?: (folderId: string) => Promise<void>;
 }
 
 // These are the default folder IDs that should not be deleted
@@ -46,9 +45,8 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   currentFolder, 
   onFolderChange,
   activeFolder = null,
-  onCreateFolder,
-  onDeleteFolder,
-  onInitiateNewFolder
+  onInitiateNewFolder,
+  onDeleteFolder
 }) => {
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
