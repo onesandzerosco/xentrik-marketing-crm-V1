@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CreatorFileType } from '@/pages/CreatorFiles';
+import { CreatorFileType } from '@/types/fileTypes';
 import { Button } from "@/components/ui/button";
 import { 
   Table,

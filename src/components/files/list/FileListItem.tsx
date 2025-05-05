@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CreatorFileType } from '@/pages/CreatorFiles';
+import { CreatorFileType } from '@/types/fileTypes';
 import { 
   TableCell, 
   TableRow

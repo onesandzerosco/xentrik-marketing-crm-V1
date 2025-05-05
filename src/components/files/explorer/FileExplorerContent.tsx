@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CreatorFileType } from '@/pages/CreatorFiles';
+import { CreatorFileType } from '@/types/fileTypes';
 import { FilterBar } from '../FilterBar';
 import { FileGrid } from '../FileGrid';
 import { FileList } from '../FileList';

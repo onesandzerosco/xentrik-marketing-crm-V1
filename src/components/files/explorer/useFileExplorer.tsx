@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { CreatorFileType } from '@/pages/CreatorFiles';
+import { CreatorFileType } from '@/types/fileTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 

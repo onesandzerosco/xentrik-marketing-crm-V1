@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CreatorFileType } from '@/pages/CreatorFiles';
+import { CreatorFileType, Folder } from '@/types/fileTypes';
 import { FileHeader } from './FileHeader';
 import { FolderNav } from './FolderNav';
 import { useFilePermissions } from '@/utils/permissionUtils';

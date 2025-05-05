@@ -24,7 +24,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-wrap items-center gap-3">
       {onSearchChange && (
         <div className="relative flex-grow max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -38,7 +38,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       )}
       
       {onFilterChange && (
-        <div className="flex gap-2 overflow-x-auto">
+        <div className="flex gap-2">
           {activeFilter && (
             <Button
               variant="outline"
