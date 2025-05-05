@@ -1,16 +1,12 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+import React, { useState, ChangeEvent } from 'react';
 import { useToast } from '@/components/ui/use-toast';
-import { 
-  getUniqueFileName,
-  isVideoFile, 
-  generateVideoThumbnail,
-  uploadFileInChunks,
-  isFileTooLarge
-} from '@/utils/fileUtils';
-import { isZipFile, extractZipFiles, getZipBaseName } from '@/utils/zipUtils';
-import { Progress } from '@/components/ui/progress';
-import { X, FileVideo } from 'lucide-react';
+import { isVideoFile, isFileTooLarge } from '@/utils/fileUtils';
+import { isZipFile } from '@/utils/zipUtils';
+import { useFileUploader, FileUploadStatus } from '@/hooks/useFileUploader';
+import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
+import { useFileProcessor } from '@/hooks/useFileProcessor';
+import FileUploadProgress from './upload/FileUploadProgress';
 
 interface FileUploaderProps {
   id: string;
@@ -19,75 +15,47 @@ interface FileUploaderProps {
   currentFolder: string;
 }
 
-interface FileUploadStatus {
-  name: string;
-  progress: number;
-  status: 'uploading' | 'processing' | 'complete' | 'error';
-  error?: string;
-  thumbnail?: string; // For video files
-}
-
-// Maximum file size in GB
-const MAX_FILE_SIZE_GB = 1;
-// 10MB chunks for large files
-const CHUNK_SIZE = 10 * 1024 * 1024;
-
 const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({ 
   id, 
   creatorId, 
   onUploadComplete,
   currentFolder
 }) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileStatuses, setFileStatuses] = useState<FileUploadStatus[]>([]);
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [showProgress, setShowProgress] = useState(false);
   const { toast } = useToast();
-  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const {
+    isUploading,
+    setIsUploading,
+    fileStatuses,
+    setFileStatuses,
+    overallProgress,
+    showProgress,
+    setShowProgress,
+    abortControllersRef,
+    updateFileProgress,
+    handleCancelUpload,
+    MAX_FILE_SIZE_GB,
+    CHUNK_SIZE
+  } = useFileUploader({ 
+    creatorId, 
+    onUploadComplete, 
+    currentFolder 
+  });
 
-  const calculateOverallProgress = (statuses: FileUploadStatus[]) => {
-    if (statuses.length === 0) return 0;
-    
-    // Filter out completed and error files
-    const activeFiles = statuses.filter(file => 
-      file.status !== 'complete' && file.status !== 'error'
-    );
-    
-    // If no active files but we have completed files, return 100%
-    if (activeFiles.length === 0) {
-      if (statuses.some(file => file.status === 'complete')) {
-        return 100;
-      }
-      return 0;
-    }
-    
-    // Calculate the sum of progress for active files
-    const totalProgress = activeFiles.reduce((sum, file) => sum + file.progress, 0);
-    
-    // Return the average progress
-    return Math.round(totalProgress / activeFiles.length);
-  };
+  const { processZipFile } = useZipFileProcessor({
+    creatorId,
+    updateFileProgress,
+    setFileStatuses
+  });
 
-  const updateFileProgress = (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {
-    setFileStatuses(prevStatuses => {
-      const updatedStatuses = prevStatuses.map(fileStatus => {
-        if (fileStatus.name === fileName) {
-          return { 
-            ...fileStatus, 
-            progress,
-            status: status || fileStatus.status
-          };
-        }
-        return fileStatus;
-      });
-      
-      // Calculate and update overall progress
-      const newOverallProgress = calculateOverallProgress(updatedStatuses);
-      setOverallProgress(newOverallProgress);
-      
-      return updatedStatuses;
-    });
-  };
+  const { processRegularFile } = useFileProcessor({
+    creatorId,
+    currentFolder,
+    updateFileProgress,
+    setFileStatuses,
+    chunkSize: CHUNK_SIZE,
+    maxFileSizeGB: MAX_FILE_SIZE_GB,
+    abortControllersRef
+  });
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -148,7 +116,6 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       }
       
       setFileStatuses(initialStatuses);
-      setOverallProgress(0);
       
       if (initialStatuses.length === 0) {
         setIsUploading(false);
@@ -156,6 +123,7 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
         return;
       }
       
+      // Show toasts for special file types
       if (hasLargeFiles) {
         toast({
           title: "Large files detected",
@@ -180,322 +148,26 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       const uploadedFileIds: string[] = [];
 
       // First handle the ZIP files
-      for (let i = 0; i < zipFiles.length; i++) {
-        const zipFile = zipFiles[i];
-        const zipFileName = zipFile.name;
-        const folderName = getZipBaseName(zipFileName);
+      for (const zipFile of zipFiles) {
+        const extractedFileIds = await processZipFile(zipFile);
+        uploadedFileIds.push(...extractedFileIds);
         
-        try {
-          updateFileProgress(zipFileName, 10, 'processing');
-          
-          // Extract the files from the ZIP
-          const extractedFiles = await extractZipFiles(zipFile);
-          updateFileProgress(zipFileName, 30, 'processing');
-          
-          // Create a new folder with the ZIP file name
-          const folderIdSafe = folderName.toLowerCase().replace(/\s+/g, '-');
-          
-          // Update progress
-          updateFileProgress(zipFileName, 50, 'processing');
-          
-          // Create an empty file in the folder to "create" the folder in storage
-          const { error: storageError } = await supabase.storage
-            .from('creator_files')
-            .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
-          
-          if (storageError) {
-            console.error("Error creating folder in storage:", storageError);
-            updateFileProgress(zipFileName, 0, 'error');
-            continue;
-          }
-          
-          updateFileProgress(zipFileName, 60, 'uploading');
-          
-          // Upload each extracted file to the newly created folder
-          let processedFiles = 0;
-          let folderCreated = false;
-          const extractedFileIds: string[] = [];
-          
-          for (const extractedFile of extractedFiles) {
-            // Generate thumbnail for videos from zip
-            let thumbnailUrl = null;
-            if (extractedFile.isVideo) {
-              try {
-                // Convert the Blob to File for thumbnail generation
-                const videoFile = new File(
-                  [extractedFile.content], 
-                  extractedFile.name, 
-                  { type: extractedFile.content.type || 'video/mp4' }
-                );
-                thumbnailUrl = await generateVideoThumbnail(videoFile);
-              } catch (err) {
-                console.error('Error generating video thumbnail for zip file:', err);
-                // Continue without thumbnail
-              }
-            }
-            
-            const uniqueFileName = await getUniqueFileName(
-              extractedFile.name, 
-              folderIdSafe, 
-              creatorId, 
-              'raw_uploads',
-              supabase
-            );
-            
-            const filePath = `${creatorId}/${folderIdSafe}/${uniqueFileName}`;
-            
-            // Store metadata in the media table
-            const { data: mediaRecord, error: mediaError } = await supabase
-              .from('media')
-              .insert({
-                creator_id: creatorId,
-                bucket_key: filePath,
-                filename: uniqueFileName,
-                mime: extractedFile.content.type || 'application/octet-stream',
-                file_size: extractedFile.content.size,
-                status: 'uploading',
-                folders: folderCreated ? [folderIdSafe] : [], // Empty initially, will be updated
-                thumbnail_url: thumbnailUrl // Add the thumbnail URL if generated
-              })
-              .select('id');
-            
-            if (mediaError) {
-              console.error('Media record creation error:', mediaError);
-              continue;
-            }
-            
-            if (!mediaRecord || mediaRecord.length === 0) {
-              console.error('Failed to create media record');
-              continue;
-            }
-            
-            const fileId = mediaRecord[0].id;
-            extractedFileIds.push(fileId);
-            
-            // Upload the file content
-            const { error: uploadError } = await supabase.storage
-              .from('raw_uploads')
-              .upload(filePath, extractedFile.content, {
-                cacheControl: '3600',
-                upsert: true
-              });
-              
-            if (uploadError) {
-              console.error(`Upload error for ${uniqueFileName}:`, uploadError);
-              await supabase
-                .from('media')
-                .update({ status: 'error' })
-                .eq('id', fileId);
-              continue;
-            }
-            
-            // Update the media record to mark as complete
-            await supabase
-              .from('media')
-              .update({ 
-                status: 'complete',
-                folders: [folderIdSafe], // Add to folder
-                thumbnail_url: thumbnailUrl // Ensure thumbnail URL is saved
-              })
-              .eq('id', fileId);
-            
-            processedFiles++;
-            const zipProgress = 60 + Math.floor((processedFiles / extractedFiles.length) * 40);
-            updateFileProgress(zipFileName, zipProgress, 'uploading');
-            
-            // After first file, indicate that folder exists for remaining files
-            if (!folderCreated) {
-              folderCreated = true;
-            }
-          }
-          
-          // Mark ZIP file as complete when all extracted files are processed
-          updateFileProgress(zipFileName, 100, 'complete');
-          uploadedFileIds.push(...extractedFileIds);
-          
-          // Add the newly created folder to available folders list (will be picked up on refresh)
-          toast({
-            title: "ZIP file processed",
-            description: `Created folder "${folderName}" with ${extractedFiles.length} files`,
-          });
-          
-        } catch (error) {
-          console.error(`Error processing ZIP file ${zipFileName}:`, error);
-          updateFileProgress(zipFileName, 0, 'error');
-          setFileStatuses(prev => 
-            prev.map(status => 
-              status.name === zipFileName
-                ? { ...status, error: error instanceof Error ? error.message : 'Failed to process ZIP file' }
-                : status
-            )
-          );
-        }
+        // Add the newly created folder to available folders list (will be picked up on refresh)
+        const folderName = zipFile.name.split('.')[0];
+        toast({
+          title: "ZIP file processed",
+          description: `Created folder "${folderName}" with ${extractedFileIds.length} files`,
+        });
       }
       
       // Process regular files sequentially to avoid overwhelming the API
-      for (let i = 0; i < regularFiles.length; i++) {
-        const file = regularFiles[i];
-        
+      for (const file of regularFiles) {
         // Skip files that are too large (already warned)
         if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) continue;
         
-        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        
-        try {
-          // Generate thumbnail for videos
-          let thumbnailUrl = null;
-          if (isVideoFile(file.name)) {
-            updateFileProgress(file.name, 0, 'processing');
-            try {
-              thumbnailUrl = await generateVideoThumbnail(file);
-              // Update the UI with the thumbnail
-              setFileStatuses(prev => 
-                prev.map(status => 
-                  status.name === file.name 
-                    ? { ...status, thumbnail: thumbnailUrl, status: 'uploading' } 
-                    : status
-                )
-              );
-            } catch (err) {
-              console.error('Error generating video thumbnail:', err);
-              // Continue without thumbnail
-            }
-          }
-          
-          // Create a unique file name
-          const uniqueSafeName = await getUniqueFileName(
-            safeName, 
-            currentFolder === 'all' ? 'unsorted' : currentFolder, // Use unsorted if all files is selected
-            creatorId, 
-            'raw_uploads',
-            supabase
-          );
-
-          // Create an AbortController for this file
-          const abortController = new AbortController();
-          abortControllersRef.current.set(file.name, abortController);
-          
-          const filePath = `${creatorId}/${currentFolder === 'all' ? 'unsorted' : currentFolder}/${uniqueSafeName}`;
-          
-          // Determine folder array based on current folder
-          let folderArray: string[] = [];
-          if (currentFolder !== 'all') {
-            folderArray = [currentFolder];
-          }
-          
-          // Store metadata in the media table first
-          const { data: mediaRecord, error: mediaError } = await supabase
-            .from('media')
-            .insert({
-              creator_id: creatorId,
-              bucket_key: filePath,
-              filename: uniqueSafeName,
-              mime: file.type,
-              file_size: file.size,
-              status: 'uploading', // Mark as uploading initially
-              folders: folderArray,
-              thumbnail_url: thumbnailUrl // Store the thumbnail URL
-            })
-            .select('id');
-          
-          if (mediaError) {
-            console.error('Media record creation error:', mediaError);
-            updateFileProgress(file.name, 0, 'error');
-            continue;
-          }
-          
-          if (!mediaRecord || mediaRecord.length === 0) {
-            console.error('Failed to create media record');
-            updateFileProgress(file.name, 0, 'error');
-            continue;
-          }
-          
-          const fileId = mediaRecord[0].id;
-          
-          try {
-            if (file.size > CHUNK_SIZE) {
-              // Handle large file upload using custom chunked upload
-              await uploadFileInChunks(
-                file, 
-                'raw_uploads', 
-                filePath,
-                (progress) => updateFileProgress(file.name, progress),
-                supabase
-              );
-            } else {
-              // For small files, we'll manually track progress
-              // Start the upload
-              const { error: uploadError } = await supabase.storage
-                .from('raw_uploads')
-                .upload(filePath, file, {
-                  cacheControl: '3600',
-                  upsert: true
-                });
-                
-              if (uploadError) {
-                throw uploadError;
-              }
-              
-              // Since we can't track progress directly, we'll simulate progress
-              // with incremental updates
-              for (let percent = 0; percent <= 100; percent += 10) {
-                updateFileProgress(file.name, percent);
-                // Only add a small delay for the last few percents to appear smooth
-                if (percent > 70) {
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                }
-              }
-            }
-            
-            // Update the media record to mark as complete
-            await supabase
-              .from('media')
-              .update({ 
-                status: 'complete', 
-                thumbnail_url: thumbnailUrl // Save the thumbnail URL if it exists
-              })
-              .eq('id', fileId);
-            
-            updateFileProgress(file.name, 100, 'complete');
-            uploadedFileIds.push(fileId);
-          } catch (error) {
-            console.error(`Upload error for ${file.name}:`, error);
-            
-            // Update the media record to mark as failed
-            await supabase
-              .from('media')
-              .update({ status: 'error' })
-              .eq('id', fileId);
-              
-            updateFileProgress(file.name, 0, 'error');
-            
-            setFileStatuses(prev => 
-              prev.map(status => 
-                status.name === file.name 
-                  ? { 
-                      ...status, 
-                      error: error instanceof Error ? error.message : 'Upload failed',
-                      status: 'error'
-                    } 
-                  : status
-              )
-            );
-          }
-          
-        } catch (error) {
-          console.error(`Error uploading ${file.name}:`, error);
-          updateFileProgress(
-            file.name, 
-            0, 
-            'error'
-          );
-          setFileStatuses(prev => 
-            prev.map(status => 
-              status.name === file.name 
-                ? { ...status, error: error instanceof Error ? error.message : 'Upload failed' } 
-                : status
-            )
-          );
+        const fileId = await processRegularFile(file);
+        if (fileId) {
+          uploadedFileIds.push(fileId);
         }
       }
       
@@ -535,21 +207,6 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
     }
   };
 
-  const handleCancelUpload = (fileName: string) => {
-    const controller = abortControllersRef.current.get(fileName);
-    if (controller) {
-      controller.abort();
-      abortControllersRef.current.delete(fileName);
-    }
-    
-    setFileStatuses(prev => {
-      const newStatuses = prev.filter(status => status.name !== fileName);
-      const newOverallProgress = calculateOverallProgress(newStatuses);
-      setOverallProgress(newOverallProgress);
-      return newStatuses;
-    });
-  };
-
   return (
     <>
       <input
@@ -563,71 +220,14 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
       />
       
       {/* Progress display overlay */}
-      {showProgress && fileStatuses.length > 0 && (
-        <div className="fixed bottom-5 right-5 bg-background border border-border rounded-md shadow-lg p-4 w-80 z-50">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-medium">Uploading Files</h3>
-            <button 
-              onClick={() => setShowProgress(false)} 
-              className="text-muted-foreground hover:text-foreground"
-              aria-label="Close upload progress"
-            >
-              <X size={16} />
-            </button>
-          </div>
-          
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Overall progress</span>
-              <span>{overallProgress}%</span>
-            </div>
-            <Progress value={overallProgress} className="h-2" />
-          </div>
-          
-          <div className="max-h-60 overflow-y-auto space-y-3">
-            {fileStatuses.map((file) => (
-              <div key={file.name} className="text-sm">
-                <div className="flex justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    {file.thumbnail && (
-                      <div className="h-6 w-6 rounded overflow-hidden bg-black flex-shrink-0">
-                        <img src={file.thumbnail} alt="Video thumbnail" className="h-full w-full object-cover" />
-                      </div>
-                    )}
-                    {!file.thumbnail && isVideoFile(file.name) && (
-                      <FileVideo size={16} className="text-muted-foreground" />
-                    )}
-                    <span className="truncate max-w-[140px]" title={file.name}>{file.name}</span>
-                  </div>
-                  <span>{Math.round(file.progress)}%</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Progress 
-                    value={file.progress} 
-                    className={`h-1.5 flex-grow ${
-                      file.status === 'error' ? 'bg-red-200' : 
-                      file.status === 'processing' ? 'bg-yellow-200' : ''
-                    }`}
-                  />
-                  {file.status === 'uploading' && (
-                    <button 
-                      onClick={() => handleCancelUpload(file.name)}
-                      className="text-muted-foreground hover:text-destructive"
-                      aria-label="Cancel upload"
-                    >
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
-                {file.status === 'processing' && (
-                  <p className="text-xs text-amber-500 mt-1">Processing file...</p>
-                )}
-                {file.error && <p className="text-xs text-destructive mt-1">{file.error}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {showProgress && 
+        <FileUploadProgress 
+          fileStatuses={fileStatuses} 
+          overallProgress={overallProgress} 
+          onClose={() => setShowProgress(false)}
+          onCancelUpload={handleCancelUpload}
+        />
+      }
     </>
   );
 };
