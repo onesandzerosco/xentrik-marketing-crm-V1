@@ -1,8 +1,11 @@
 
-import { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/integrations/supabase/client';
+import { useFileSelection } from './hooks/useFileSelection';
+import { useFolderModals } from './hooks/useFolderModals';
+import { useFileNotes } from './hooks/useFileNotes';
+import { useFileFilters } from './hooks/useFileFilters';
+import { useUploadModal } from './hooks/useUploadModal';
+import { useFolderOperations } from './hooks/useFolderOperations';
 
 interface Folder {
   id: string;
@@ -30,206 +33,153 @@ export const useFileExplorer = ({
   onDeleteFolder,
   onRemoveFromFolder
 }: UseFileExplorerProps) => {
-  // State variables
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
-  const [targetFolderId, setTargetFolderId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
-  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  // Use all the sub-hooks
+  const { 
+    selectedFileIds, 
+    setSelectedFileIds,
+    handleFileDeleted 
+  } = useFileSelection();
   
-  // Edit note state
-  const [isEditNoteModalOpen, setIsEditNoteModalOpen] = useState(false);
-  const [editingFile, setEditingFile] = useState<CreatorFileType | null>(null);
-  const [editingNote, setEditingNote] = useState('');
-  
-  const { toast } = useToast();
-  
-  // Custom folders (excluding 'all' and 'unsorted')
-  const customFolders = availableFolders.filter(
-    folder => folder.id !== 'all' && folder.id !== 'unsorted'
-  );
-  
-  // Filter files based on search and type filters
-  const filteredFiles = files.filter(file => {
-    const matchesSearch = searchQuery === '' || 
-      file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
-    
-    return matchesSearch && matchesType;
-  });
-  
-  // Handler for creating a new folder
-  const handleCreateFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFolderName.trim()) {
-      toast({
-        title: "Folder name required",
-        description: "Please enter a valid folder name",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await onCreateFolder(newFolderName, selectedFileIds);
-      setIsAddFolderModalOpen(false);
-      setNewFolderName('');
-      setSelectedFileIds([]);
-    } catch (error) {
-      toast({
-        title: "Error creating folder",
-        description: "Failed to create folder",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handler for adding files to an existing folder
-  const handleAddToFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!targetFolderId || selectedFileIds.length === 0) {
-      toast({
-        title: "Selection required",
-        description: "Please select a folder and at least one file",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await onAddFilesToFolder(selectedFileIds, targetFolderId);
-      setIsAddToFolderModalOpen(false);
-      setTargetFolderId('');
-      toast({
-        title: "Files added to folder",
-        description: `${selectedFileIds.length} files added to folder successfully`,
-      });
-      setSelectedFileIds([]);
-    } catch (error) {
-      toast({
-        title: "Error adding to folder",
-        description: "Failed to add files to folder",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Handler for deleting a folder - Modified to return a Promise
-  const handleDeleteFolderClick = async (folderId: string): Promise<void> => {
-    setFolderToDelete(folderId);
-    setIsDeleteFolderModalOpen(true);
-    return Promise.resolve(); // Return a resolved promise
-  };
-
-  // Handle the actual folder deletion
-  const handleDeleteFolder = async () => {
-    if (!folderToDelete) return;
-    
-    try {
-      await onDeleteFolder(folderToDelete);
-      setFolderToDelete(null);
-      setIsDeleteFolderModalOpen(false);
-    } catch (error) {
-      toast({
-        title: "Error deleting folder",
-        description: "Failed to delete folder",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Handler for note editing
-  const handleEditNote = (file: CreatorFileType) => {
-    setEditingFile(file);
-    setEditingNote(file.description || '');
-    setIsEditNoteModalOpen(true);
-  };
-  
-  // Save the edited note
-  const handleSaveNote = async () => {
-    if (!editingFile) return;
-    
-    try {
-      // Update the file's description in the database
-      const { error } = await supabase
-        .from('media')
-        .update({ description: editingNote })
-        .eq('id', editingFile.id);
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Note updated",
-        description: "File description has been updated successfully.",
-      });
-      
-      // Close the modal and refresh the files list
-      setIsEditNoteModalOpen(false);
-      setEditingFile(null);
-      setEditingNote('');
-      onRefresh();
-      
-    } catch (error) {
-      console.error("Error updating note:", error);
-      toast({
-        title: "Error updating note",
-        description: "An error occurred while updating the file description.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Handler for file deletion
-  const handleFileDeleted = (fileId: string) => {
-    // Remove the file from selectedFileIds if it's selected
-    setSelectedFileIds(prev => prev.filter(id => id !== fileId));
-  };
-
-  return {
-    viewMode,
-    setViewMode,
-    isUploadModalOpen,
-    setIsUploadModalOpen,
+  const {
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
-    selectedFileIds,
-    setSelectedFileIds,
     newFolderName,
     setNewFolderName,
     isAddToFolderModalOpen,
     setIsAddToFolderModalOpen,
     targetFolderId,
     setTargetFolderId,
-    searchQuery,
-    setSearchQuery,
-    selectedTypes,
-    setSelectedTypes,
     isDeleteFolderModalOpen,
     setIsDeleteFolderModalOpen,
     folderToDelete,
+    setFolderToDelete,
+    handleDeleteFolderClick
+  } = useFolderModals();
+  
+  const {
     isEditNoteModalOpen,
     setIsEditNoteModalOpen,
     editingFile,
     editingNote, 
     setEditingNote,
-    filteredFiles,
-    customFolders,
-    handleCreateFolderSubmit,
-    handleAddToFolderSubmit,
+    handleEditNote,
+    handleSaveNote
+  } = useFileNotes({ onRefresh });
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles
+  } = useFileFilters({ files });
+  
+  const {
+    isUploadModalOpen,
+    setIsUploadModalOpen
+  } = useUploadModal();
+  
+  const {
+    handleCreateFolderSubmit: createFolderBase,
+    handleAddToFolderSubmit: addToFolderBase,
+    handleDeleteFolder: deleteFolderBase
+  } = useFolderOperations({
+    onCreateFolder,
+    onAddFilesToFolder,
+    onDeleteFolder,
+    onRefresh
+  });
+  
+  // Customize folder operations with the state values
+  const handleCreateFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newFolderName.trim()) {
+      return;
+    }
+    
+    // Attach the required values to the event so that the handler can use them
+    (e.currentTarget as any).newFolderName = newFolderName;
+    (e.currentTarget as any).selectedFileIds = selectedFileIds;
+    (e.currentTarget as any).setIsAddFolderModalOpen = setIsAddFolderModalOpen;
+    (e.currentTarget as any).setNewFolderName = setNewFolderName;
+    (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
+    
+    createFolderBase(e);
+  };
+  
+  const handleAddToFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Attach the required values to the event so that the handler can use them
+    (e.currentTarget as any).targetFolderId = targetFolderId;
+    (e.currentTarget as any).selectedFileIds = selectedFileIds;
+    (e.currentTarget as any).setIsAddToFolderModalOpen = setIsAddToFolderModalOpen;
+    (e.currentTarget as any).setTargetFolderId = setTargetFolderId;
+    (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
+    
+    addToFolderBase(e);
+  };
+  
+  const handleDeleteFolder = () => {
+    deleteFolderBase(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
+  };
+  
+  // Custom folders (excluding 'all' and 'unsorted')
+  const customFolders = availableFolders.filter(
+    folder => folder.id !== 'all' && folder.id !== 'unsorted'
+  );
+
+  return {
+    // File selection
+    selectedFileIds,
+    setSelectedFileIds,
+    handleFileDeleted,
+    
+    // Folder modals
+    isAddFolderModalOpen,
+    setIsAddFolderModalOpen,
+    newFolderName,
+    setNewFolderName,
+    isAddToFolderModalOpen,
+    setIsAddToFolderModalOpen,
+    targetFolderId,
+    setTargetFolderId,
+    isDeleteFolderModalOpen,
+    setIsDeleteFolderModalOpen,
+    folderToDelete,
     handleDeleteFolderClick,
-    handleDeleteFolder,
+    
+    // File notes
+    isEditNoteModalOpen,
+    setIsEditNoteModalOpen,
+    editingFile,
+    editingNote, 
+    setEditingNote,
     handleEditNote,
     handleSaveNote,
-    handleFileDeleted
+    
+    // File filtering
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles,
+    
+    // Upload modal
+    isUploadModalOpen,
+    setIsUploadModalOpen,
+    
+    // Folder operations
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
+    handleDeleteFolder,
+    
+    // Custom folders
+    customFolders
   };
 };
