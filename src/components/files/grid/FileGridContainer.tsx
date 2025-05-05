@@ -69,7 +69,7 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
               <FileSelection 
                 fileId={file.id}
                 isSelected={isSelected}
-                onToggleSelection={() => toggleFileSelection(file.id)}
+                onToggleSelection={toggleFileSelection}
               />
             )}
             

@@ -12,6 +12,32 @@ export const useFileSelection = () => {
     setSelectedFileIds(prev => prev.filter(id => id !== fileId));
   };
 
+  // Toggle file selection
+  const toggleFileSelection = (fileId: string) => {
+    setSelectedFileIds(prev => {
+      if (prev.includes(fileId)) {
+        return prev.filter(id => id !== fileId);
+      } else {
+        return [...prev, fileId];
+      }
+    });
+  };
+
+  // Check if a file is selected
+  const isFileSelected = (fileId: string) => {
+    return selectedFileIds.includes(fileId);
+  };
+
+  // Select all files
+  const selectAllFiles = (fileIds: string[]) => {
+    setSelectedFileIds(fileIds);
+  };
+
+  // Unselect all files
+  const clearSelection = () => {
+    setSelectedFileIds([]);
+  };
+
   // Helper function to check if files are selected and display toast if not
   const ensureFilesSelected = () => {
     if (selectedFileIds.length === 0) {
@@ -27,6 +53,10 @@ export const useFileSelection = () => {
   return {
     selectedFileIds,
     setSelectedFileIds,
+    toggleFileSelection,
+    isFileSelected,
+    selectAllFiles,
+    clearSelection,
     handleFileDeleted,
     ensureFilesSelected
   };

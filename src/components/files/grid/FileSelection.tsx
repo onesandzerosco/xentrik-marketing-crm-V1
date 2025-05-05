@@ -18,7 +18,7 @@ export const FileSelection: React.FC<FileSelectionProps> = ({
       <Checkbox
         checked={isSelected}
         onCheckedChange={() => onToggleSelection(fileId)}
-        className="bg-background/80"
+        className="bg-background/80 border-2 border-primary h-5 w-5 rounded-sm"
       />
     </div>
   );
