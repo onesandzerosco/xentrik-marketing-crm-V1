@@ -38,9 +38,7 @@ const navItems: NavItem[] = [
     path: '/creators',
     label: 'Creators',
     icon: <Users className="h-5 w-5" />,
-    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see Creators
-    allowCreator: false, // Don't allow Creator to see Creators module
-    hideForCreator: true, // Hide this item specifically for Creators
+    hideForCreator: true, // Hide only for Creator role
   },
   {
     path: '/team',
@@ -92,20 +90,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         // Skip items that should be hidden for creators if the user is a creator
         if (item.hideForCreator && isCreator) return null;
-        
-        // Check if the item has role restrictions
-        if (item.roles) {
-          // Check if user has at least one of the required roles
-          const hasRequiredRole = item.roles.some(role => 
-            userRole === role || (userRoles && userRoles.includes(role))
-          );
-          
-          // Special case: if allowCreator is true, creators can see this item even without the specified roles
-          const creatorAccess = item.allowCreator && isCreator;
-          
-          // Skip if user doesn't have any required role and is not a creator with special access
-          if (!hasRequiredRole && !creatorAccess) return null;
-        }
         
         return (
           <NavLink
