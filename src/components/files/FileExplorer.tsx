@@ -1,16 +1,12 @@
 
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
-import { FileHeader } from './FileHeader';
-import { FolderNav } from './FolderNav';
 import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFileExplorer } from './explorer/useFileExplorer';
-import { FileUploadModal } from './explorer/FileUploadModal';
-import { CreateFolderModal } from './explorer/CreateFolderModal';
-import { AddToFolderModal } from './explorer/AddToFolderModal';
-import { DeleteFolderModal } from './explorer/DeleteFolderModal';
-import { EditNoteModal } from './explorer/EditNoteModal';
 import { FileExplorerContent } from './explorer/FileExplorerContent';
+import { FileExplorerHeader } from './explorer/FileExplorerHeader';
+import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
+import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { useToast } from "@/components/ui/use-toast";
 
 interface Folder {
@@ -123,31 +119,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
-      <FileHeader 
+      <FileExplorerHeader 
         creatorName={creatorName}
         onUploadClick={() => setIsUploadModalOpen(true)}
         isCreatorView={isCreatorView}
       />
       
       <div className="mt-4 flex flex-col lg:flex-row gap-4">
-        <div className="lg:w-64 shrink-0 mt-1">
-          <FolderNav 
-            folders={availableFolders}
-            currentFolder={currentFolder}
-            onFolderChange={onFolderChange}
-            onInitiateNewFolder={() => {
-              if (selectedFileIds.length > 0) {
-                setIsAddFolderModalOpen(true);
-              } else {
-                toast({
-                  title: "Select files first",
-                  description: "Please select at least one file to add to a new folder",
-                });
-              }
-            }}
-            onDeleteFolder={handleDeleteFolderClick}
-          />
-        </div>
+        <FileExplorerSidebar 
+          folders={availableFolders}
+          currentFolder={currentFolder}
+          onFolderChange={onFolderChange}
+          onInitiateNewFolder={() => setIsAddFolderModalOpen(true)}
+          onDeleteFolder={handleDeleteFolderClick}
+          selectedFileIds={selectedFileIds}
+        />
         
         <FileExplorerContent
           isLoading={isLoading}
@@ -170,54 +156,34 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
       </div>
       
-      {/* Upload Modal */}
-      <FileUploadModal
-        isOpen={isUploadModalOpen}
-        onOpenChange={setIsUploadModalOpen}
+      <FileExplorerModals
+        isUploadModalOpen={isUploadModalOpen}
+        setIsUploadModalOpen={setIsUploadModalOpen}
+        isAddFolderModalOpen={isAddFolderModalOpen}
+        setIsAddFolderModalOpen={setIsAddFolderModalOpen}
+        isAddToFolderModalOpen={isAddToFolderModalOpen}
+        setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
+        isDeleteFolderModalOpen={isDeleteFolderModalOpen}
+        setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
+        isEditNoteModalOpen={isEditNoteModalOpen}
+        setIsEditNoteModalOpen={setIsEditNoteModalOpen}
         creatorId={creatorId}
         creatorName={creatorName}
-        onUploadComplete={(fileIds) => {
-          onUploadComplete?.(fileIds);
-        }}
         currentFolder={currentFolder}
-      />
-      
-      {/* Create Folder Modal */}
-      <CreateFolderModal
-        isOpen={isAddFolderModalOpen}
-        onOpenChange={setIsAddFolderModalOpen}
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}
         selectedFileIds={selectedFileIds}
-        onSubmit={handleCreateFolderSubmit}
-      />
-      
-      {/* Add to Folder Modal */}
-      <AddToFolderModal
-        isOpen={isAddToFolderModalOpen}
-        onOpenChange={setIsAddToFolderModalOpen}
         targetFolderId={targetFolderId}
         setTargetFolderId={setTargetFolderId}
-        selectedFileIds={selectedFileIds}
         customFolders={customFolders}
-        onSubmit={handleAddToFolderSubmit}
-      />
-      
-      {/* Delete Folder Confirmation Modal */}
-      <DeleteFolderModal
-        isOpen={isDeleteFolderModalOpen}
-        onOpenChange={setIsDeleteFolderModalOpen}
-        onConfirm={handleDeleteFolder}
-      />
-      
-      {/* Edit Note Modal */}
-      <EditNoteModal
-        isOpen={isEditNoteModalOpen}
-        onOpenChange={setIsEditNoteModalOpen}
         editingFile={editingFile}
         editingNote={editingNote}
         setEditingNote={setEditingNote}
-        onSave={handleSaveNote}
+        onUploadComplete={onUploadComplete}
+        handleCreateFolderSubmit={handleCreateFolderSubmit}
+        handleAddToFolderSubmit={handleAddToFolderSubmit}
+        handleDeleteFolder={handleDeleteFolder}
+        handleSaveNote={handleSaveNote}
       />
     </div>
   );
