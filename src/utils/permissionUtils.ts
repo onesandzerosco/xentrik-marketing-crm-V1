@@ -49,7 +49,7 @@ export const useFilePermissions = () => {
     canEdit: canEditFileDescription(userRole, userRoles),
     canDelete: canDeleteFiles(userRole, userRoles),
     canUpload: canUploadFiles(userRole, userRoles),
-    // All authenticated users can download files
+    // All authenticated users can download files, including Chatters
     canDownload: true
   };
 };

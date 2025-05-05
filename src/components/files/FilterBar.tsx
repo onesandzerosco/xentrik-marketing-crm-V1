@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { File, Image, FileText, Video, AudioLines, X, Search } from 'lucide-react';
+import { Image, Video, AudioLines, X, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface FilterBarProps {
@@ -19,10 +19,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 }) => {
   const filters = [
     { id: 'image', label: 'Images', icon: Image },
-    { id: 'document', label: 'Documents', icon: FileText },
     { id: 'video', label: 'Videos', icon: Video },
     { id: 'audio', label: 'Audio', icon: AudioLines },
-    { id: 'other', label: 'Other', icon: File },
   ];
 
   return (
