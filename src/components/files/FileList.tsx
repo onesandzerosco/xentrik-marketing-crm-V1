@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CreatorFileType } from '@/pages/CreatorFiles';
 import { Button } from "@/components/ui/button";
@@ -345,44 +344,41 @@ export const FileList: React.FC<FileListProps> = ({
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex justify-end gap-1 flex-wrap">
                       <a href={file.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="sm" className="h-8 px-2">
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Download className="h-4 w-4" />
                         </Button>
                       </a>
                       <Button 
                         variant="ghost" 
-                        size="sm"
-                        className="h-8 px-2"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteFile(file.id);
                         }}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                       
                       {onEditNote && (
                         <Button 
                           variant="ghost" 
-                          size="sm"
-                          className="h-8 px-2"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={(e) => {
                             e.stopPropagation();
                             onEditNote(file);
                           }}
                         >
-                          <Pencil className="h-4 w-4 mr-1" />
-                          Edit
+                          <Pencil className="h-4 w-4" />
                         </Button>
                       )}
                       
                       {showRemoveFromFolder && onRemoveFromFolder && (
                         <Button 
                           variant="ghost" 
-                          size="sm"
-                          className="h-8 px-2"
+                          size="icon"
+                          className="h-8 w-8"
                           onClick={async (e) => {
                             e.stopPropagation();
                             try {
@@ -426,8 +422,7 @@ export const FileList: React.FC<FileListProps> = ({
                             }
                           }}
                         >
-                          <FolderMinus className="h-4 w-4 mr-1" />
-                          Remove
+                          <FolderMinus className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
