@@ -24,25 +24,41 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if bucket exists first
-    const { data: existingBuckets } = await supabase.storage.listBuckets();
-    const bucketExists = existingBuckets?.some(bucket => bucket.name === 'onboard_submissions');
+    // Check if bucket exists
+    const { data: existingBuckets, error: bucketsError } = await supabase
+      .storage
+      .listBuckets();
+    
+    if (bucketsError) {
+      throw new Error(`Error checking buckets: ${bucketsError.message}`);
+    }
+    
+    const bucketName = "onboard_submissions";
+    const bucketExists = existingBuckets?.some(b => b.name === bucketName);
     
     if (!bucketExists) {
       // Create the bucket
-      const { error } = await supabase.storage.createBucket('onboard_submissions', {
-        public: false,
-        allowedMimeTypes: ['application/json'],
-        fileSizeLimit: 1024 * 1024, // 1MB
-      });
+      const { error: createError } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: false,
+          fileSizeLimit: 10485760, // 10MB
+        });
       
-      if (error) {
-        throw error;
+      if (createError) {
+        throw new Error(`Error creating bucket: ${createError.message}`);
       }
+      
+      console.log(`Successfully created bucket: ${bucketName}`);
+    } else {
+      console.log(`Bucket ${bucketName} already exists`);
     }
     
     return new Response(
-      JSON.stringify({ success: true, message: "Bucket created or already exists" }),
+      JSON.stringify({ 
+        success: true, 
+        message: bucketExists ? "Bucket already exists" : "Bucket created successfully" 
+      }),
       { 
         status: 200,
         headers: { 
@@ -51,8 +67,8 @@ serve(async (req) => {
         }
       }
     );
-  } catch (error) {
-    console.error("Error:", error.message);
+  } catch (error: any) {
+    console.error("Error in create-onboard-submissions-bucket function:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

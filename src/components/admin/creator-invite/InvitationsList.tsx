@@ -1,163 +1,175 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, File, Eye, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { AlertCircle, CheckCircle, Clock, MailOpen, RefreshCw, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/utils/fileUtils";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface Invitation {
   id: string;
   email: string;
   stage_name: string | null;
-  status: string;
+  status: 'pending' | 'completed' | 'expired';
   created_at: string;
   expires_at: string;
-  submission_path: string | null;
+  token: string;
 }
 
 const InvitationsList: React.FC = () => {
-  const { toast } = useToast();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
-
+  const { toast } = useToast();
+  
   const fetchInvitations = async () => {
     try {
       setIsLoading(true);
+      
       const { data, error } = await supabase
-        .from("creator_invitations")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
+        .from('creator_invitations')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+        
+      if (error) throw error;
+      
       setInvitations(data || []);
     } catch (error: any) {
       console.error("Error fetching invitations:", error);
       toast({
         variant: "destructive",
         title: "Failed to load invitations",
-        description: error.message || "An unexpected error occurred",
+        description: error.message,
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  const getStatusBadge = (status: string, expiresAt: string) => {
-    const now = new Date();
-    const expiry = new Date(expiresAt);
-    
-    if (now > expiry && status === "pending") {
-      return <Badge variant="outline" className="bg-gray-100 text-gray-500">Expired</Badge>;
-    }
-    
-    switch (status) {
-      case "pending":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-700">Pending</Badge>;
-      case "completed":
-        return <Badge variant="outline" className="bg-green-100 text-green-700">Completed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const viewSubmission = async (submissionPath: string) => {
-    if (!submissionPath) return;
-    
+  
+  const resendInvitation = async (invitation: Invitation) => {
     try {
-      // Get the file from storage
-      const { data, error } = await supabase.storage
-        .from("onboard_submissions")
-        .download(submissionPath);
-        
-      if (error) {
-        throw error;
+      // Send invitation email again
+      const appUrl = window.location.origin;
+      const { error, data } = await supabase.functions.invoke("send-invite-email", {
+        body: {
+          email: invitation.email,
+          stageName: invitation.stage_name || undefined,
+          token: invitation.token,
+          appUrl,
+        },
+      });
+      
+      if (error || data?.error) {
+        throw new Error(error?.message || data?.error || "Failed to resend invitation");
       }
       
-      // Convert to JSON
-      const jsonContent = await data.text();
-      const submission = JSON.parse(jsonContent);
-      
-      // Here you would typically open a modal to display the submission
-      console.log("Submission data:", submission);
-      
-      // For now, we'll just alert with basic info
-      alert(`Submission from: ${submission.name || 'Unknown'}\nView the console for full details.`);
-      
+      toast({
+        title: "Invitation resent",
+        description: `A new email has been sent to ${invitation.email}`,
+      });
     } catch (error: any) {
-      console.error("Error fetching submission:", error);
+      console.error("Error resending invitation:", error);
       toast({
         variant: "destructive",
-        title: "Failed to load submission",
-        description: error.message || "An unexpected error occurred",
+        title: "Failed to resend invitation",
+        description: error.message,
       });
     }
   };
-
+  
+  useEffect(() => {
+    fetchInvitations();
+    
+    // Set up a subscription for real-time updates
+    const channel = supabase
+      .channel('creator_invitations_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'creator_invitations' 
+      }, () => {
+        fetchInvitations();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+  
+  const getStatusBadge = (status: string, expiresAt: string) => {
+    const isExpired = new Date(expiresAt) < new Date();
+    
+    if (status === 'completed') {
+      return <Badge className="bg-green-500"><CheckCircle className="mr-1 h-3 w-3" /> Completed</Badge>;
+    }
+    
+    if (isExpired) {
+      return <Badge variant="destructive"><AlertCircle className="mr-1 h-3 w-3" /> Expired</Badge>;
+    }
+    
+    return <Badge variant="outline" className="border-amber-500 text-amber-500"><Clock className="mr-1 h-3 w-3" /> Pending</Badge>;
+  };
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle>Pending Invitations</CardTitle>
+          <CardTitle>Recent Invitations</CardTitle>
           <CardDescription>
-            Track and manage creator invitations
+            Track status of creator invitations
           </CardDescription>
         </div>
-        <Users className="h-5 w-5 text-muted-foreground" />
+        <Button variant="outline" size="icon" onClick={fetchInvitations} disabled={isLoading}>
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+        </Button>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="text-center py-4">
-            <p>Loading invitations...</p>
-          </div>
-        ) : invitations.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            <p>No invitations found. Invite your first creator above.</p>
+        {invitations.length === 0 ? (
+          <div className="text-center p-6 text-muted-foreground">
+            <MailOpen className="mx-auto h-10 w-10 mb-3 text-muted-foreground/50" />
+            <p>No invitations sent yet</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {invitations.map((invitation) => (
-              <div 
-                key={invitation.id} 
-                className="flex items-center justify-between border rounded-md p-3"
-              >
-                <div className="flex flex-col">
-                  <div className="font-medium">{invitation.email}</div>
-                  {invitation.stage_name && (
-                    <div className="text-sm text-muted-foreground">
-                      {invitation.stage_name}
+          <div className="space-y-4">
+            {invitations.map((invitation) => {
+              const isExpired = new Date(invitation.expires_at) < new Date();
+              const isPending = invitation.status === 'pending' && !isExpired;
+              
+              return (
+                <div 
+                  key={invitation.id} 
+                  className="flex items-center justify-between p-3 rounded-md border border-muted/30 bg-muted/10"
+                >
+                  <div>
+                    <div className="font-medium">{invitation.email}</div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      {invitation.stage_name && <span>as {invitation.stage_name}</span>}
+                      <span className="text-xs">
+                        {format(new Date(invitation.created_at), 'MMM d, yyyy')}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex items-center gap-1 mt-1">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(invitation.created_at)}
-                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(invitation.status, invitation.expires_at)}
+                    
+                    {isPending && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => resendInvitation(invitation)} 
+                        title="Resend invitation"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusBadge(invitation.status, invitation.expires_at)}
-                  
-                  {invitation.submission_path && (
-                    <button
-                      onClick={() => viewSubmission(invitation.submission_path!)}
-                      className="p-1 rounded-full hover:bg-gray-100"
-                      title="View submission"
-                    >
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
