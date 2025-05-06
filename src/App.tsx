@@ -32,6 +32,7 @@ import TeamMemberEdit from './pages/TeamMemberEdit';
 import VoiceGeneration from './pages/VoiceGeneration';
 import CreatorUpload from './pages/CreatorUpload';
 import AccessControlPanel from './pages/AccessControlPanel';
+import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -97,6 +98,10 @@ const AppRoutes = () => {
       <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
+      
+      {/* Public route for creator onboarding from invitation */}
+      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

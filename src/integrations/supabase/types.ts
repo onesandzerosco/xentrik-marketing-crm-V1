@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      creator_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          stage_name: string | null
+          status: string
+          submission_path: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          stage_name?: string | null
+          status?: string
+          submission_path?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          stage_name?: string | null
+          status?: string
+          submission_path?: string | null
+          token?: string
+        }
+        Relationships: []
+      }
       creator_social_links: {
         Row: {
           chaturbate: string | null
