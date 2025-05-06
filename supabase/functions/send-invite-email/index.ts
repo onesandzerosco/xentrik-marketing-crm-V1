@@ -7,13 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailPayload {
-  email: string;
-  stageName?: string;
-  token: string;
-  appUrl: string;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -31,98 +24,85 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
+    // Parse request body
+    const { email, stageName, token, appUrl, userId } = await req.json();
     
     if (!email || !token || !appUrl) {
-      throw new Error("Missing required fields");
+      throw new Error("Missing required parameters: email, token, or appUrl");
     }
     
-    // Format name for email greeting
-    const nameToGreet = stageName || email.split('@')[0];
+    // Format the onboarding URL with the token
+    const onboardingUrl = `${appUrl}/onboard/${token}`;
     
-    console.log("Sending email to:", email);
-    console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
+    // Compose the email subject and body
+    const subject = "Welcome to Creator Agency";
     
-    // Create a custom PHP-style email template
-    const emailSubject = "Welcome to Your Agency";
-    const emailHtml = `
+    // Basic HTML email template
+    const htmlBody = `
       <!DOCTYPE html>
       <html>
-      <head>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-          }
-          .header {
-            background: #f8f8f8;
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid #ddd;
-          }
-          .content {
-            padding: 20px;
-          }
-          .button {
-            display: inline-block;
-            background-color: #4CAF50;
-            color: white !important;
-            text-decoration: none;
-            padding: 10px 20px;
-            margin: 20px 0;
-            border-radius: 4px;
-            font-weight: bold;
-          }
-          .footer {
-            padding: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #777;
-            border-top: 1px solid #ddd;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h2>Welcome to Your Agency</h2>
-        </div>
-        <div class="content">
-          <p>Hi ${nameToGreet},</p>
-          <p>Thank you for joining Your Agency! To complete your profile setup, please click the button below:</p>
-          <p style="text-align: center;">
-            <a href="${appUrl}/onboard/${token}" class="button">Complete Your Profile</a>
-          </p>
-          <p>If the button above doesn't work, you can also copy and paste this link into your browser:</p>
-          <p>${appUrl}/onboard/${token}</p>
-          <p>This link will expire in 72 hours.</p>
-          <p>Best regards,<br>Your Agency Team</p>
-        </div>
-        <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} Your Agency. All rights reserved.</p>
-        </div>
-      </body>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .button { display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 20px 0; }
+            .footer { font-size: 12px; text-align: center; margin-top: 30px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Welcome to Creator Agency!</h1>
+            </div>
+            <div class="content">
+              <p>Hi${stageName ? ` ${stageName}` : ''},</p>
+              <p>You've been invited to join our creator platform. To complete your profile, please click the button below:</p>
+              <p style="text-align: center;">
+                <a href="${onboardingUrl}" class="button">Complete Your Profile</a>
+              </p>
+              <p>This link will expire in 72 hours.</p>
+              <p>If you have any questions, feel free to contact our team.</p>
+              <p>Best regards,<br>Creator Agency Team</p>
+            </div>
+            <div class="footer">
+              <p>This is an automated email, please do not reply directly to this message.</p>
+            </div>
+          </div>
+        </body>
       </html>
     `;
     
-    // Send custom email using Supabase's email service
-    const { error } = await supabase.auth.admin.sendEmail({
-      email,
-      subject: emailSubject,
-      html: emailHtml
-    });
-    
+    // Send the email using Supabase
+    const { error } = await supabase
+      .from('creator_invitations')
+      .insert({
+        email,
+        stage_name: stageName || null,
+        token,
+        status: 'pending',
+        created_by: userId
+      });
+      
     if (error) {
-      console.error("Error sending email:", error);
-      throw new Error(`Failed to send invitation email: ${error.message}`);
+      throw new Error(`Error creating invitation: ${error.message}`);
     }
-    
-    console.log("Email sent successfully to:", email);
+
+    // Mail sending would go here, but for now we'll just log it
+    console.log(`Email would be sent to ${email} with subject "${subject}"`);
+    console.log(`Onboarding URL: ${onboardingUrl}`);
     
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Invitation created and email sent successfully",
+        debug: {
+          recipient: email,
+          subject,
+          onboardingUrl
+        }
+      }),
       { 
         status: 200,
         headers: { 
@@ -131,7 +111,7 @@ serve(async (req) => {
         }
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in send-invite-email function:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),

@@ -35,7 +35,13 @@ const InvitationsList: React.FC = () => {
         
       if (error) throw error;
       
-      setInvitations(data || []);
+      // Cast the data to ensure it matches our Invitation type
+      const typedInvitations = data?.map(invitation => ({
+        ...invitation,
+        status: invitation.status as 'pending' | 'completed' | 'expired'
+      })) || [];
+      
+      setInvitations(typedInvitations);
     } catch (error: any) {
       console.error("Error fetching invitations:", error);
       toast({
