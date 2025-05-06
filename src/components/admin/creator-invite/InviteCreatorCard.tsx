@@ -1,104 +1,132 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Send } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Mail, Plus } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/context/AuthContext';
 
-// Form schema
-const inviteFormSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  stageName: z.string().optional()
+// Validation schema
+const inviteSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  stageName: z.string().optional(),
 });
 
-type InviteFormValues = z.infer<typeof inviteFormSchema>;
+type InviteFormValues = z.infer<typeof inviteSchema>;
 
-const InviteCreatorCard = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const InviteCreatorCard: React.FC = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   
-  // Initialize form
   const form = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteFormSchema),
+    resolver: zodResolver(inviteSchema),
     defaultValues: {
       email: "",
-      stageName: ""
-    }
+      stageName: "",
+    },
   });
 
-  const onSubmit = async (data: InviteFormValues) => {
+  const handleInviteCreator = async (data: InviteFormValues) => {
     try {
-      setIsSubmitting(true);
+      setIsLoading(true);
       
-      // Generate a token (this will be done server-side)
-      const token = crypto.randomUUID();
+      // Initialize onboard_submissions bucket if it doesn't exist
+      try {
+        await supabase.functions.invoke("create-onboard-submissions-bucket");
+      } catch (err) {
+        console.warn("Bucket may already exist:", err);
+        // Continue anyway as this is just a precautionary step
+      }
       
-      // Get the current app URL
+      // Insert invitation record to get a token
+      const { data: invitation, error } = await supabase
+        .from("creator_invitations")
+        .insert({
+          email: data.email,
+          stage_name: data.stageName || null,
+        })
+        .select("token")
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      if (!invitation?.token) {
+        throw new Error("Failed to generate invitation token");
+      }
+
+      // Send invitation email
       const appUrl = window.location.origin;
-      
-      // Call the Supabase Edge Function to send the invitation email
-      const { error, data: responseData } = await supabase.functions.invoke("send-invite-email", {
+      const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
-          token,
+          token: invitation.token,
           appUrl,
-          userId: user?.id // Pass the current user's ID
         },
       });
       
-      if (error) throw error;
+      if (emailError) {
+        console.error("Edge function error:", emailError);
+        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+      }
       
-      console.log("Invitation sent:", responseData);
-      
+      if (emailData?.error) {
+        console.error("Email sending error:", emailData.error);
+        throw new Error(`Email service error: ${emailData.error}`);
+      }
+
       toast({
         title: "Invitation sent",
-        description: `An email has been sent to ${data.email}`,
+        description: `An invitation has been sent to ${data.email}`,
       });
       
-      // Reset form
       form.reset();
-      
     } catch (error: any) {
       console.error("Error sending invitation:", error);
       toast({
         variant: "destructive",
         title: "Failed to send invitation",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Invite Creator</CardTitle>
-        <CardDescription>
-          Send an invitation to a creator to join the platform
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Invite Creator</CardTitle>
+          <CardDescription>
+            Send invitation to a new creator
+          </CardDescription>
+        </div>
+        <Mail className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleInviteCreator)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email address <span className="text-red-500">*</span></FormLabel>
                   <FormControl>
-                    <Input placeholder="creator@example.com" {...field} />
+                    <Input 
+                      placeholder="creator@example.com" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,28 +138,30 @@ const InviteCreatorCard = () => {
               name="stageName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Stage Name (Optional)</FormLabel>
+                  <FormLabel>Stage Name (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="CreatorName" {...field} />
+                    <Input 
+                      placeholder="Creator's stage name" 
+                      {...field} 
+                      disabled={isLoading}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CardContent>
-          
-          <CardFooter>
+
             <Button 
               type="submit" 
-              className="w-full bg-brand-yellow text-black hover:bg-brand-yellow/90"
-              disabled={isSubmitting}
+              className="w-full" 
+              disabled={isLoading}
             >
-              <Send className="mr-2 h-4 w-4" />
-              {isSubmitting ? "Sending..." : "Send Invitation"}
+              <Plus className="mr-2 h-4 w-4" />
+              Invite Creator
             </Button>
-          </CardFooter>
-        </form>
-      </Form>
+          </form>
+        </Form>
+      </CardContent>
     </Card>
   );
 };

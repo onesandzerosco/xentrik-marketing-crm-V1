@@ -7,6 +7,13 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface EmailPayload {
+  email: string;
+  stageName?: string;
+  token: string;
+  appUrl: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -24,85 +31,47 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Parse request body
-    const { email, stageName, token, appUrl, userId } = await req.json();
+    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
     
     if (!email || !token || !appUrl) {
-      throw new Error("Missing required parameters: email, token, or appUrl");
+      throw new Error("Missing required fields");
     }
     
-    // Format the onboarding URL with the token
-    const onboardingUrl = `${appUrl}/onboard/${token}`;
+    // Format name for email greeting
+    const nameToGreet = stageName || email.split('@')[0];
     
-    // Compose the email subject and body
-    const subject = "Welcome to Creator Agency";
+    console.log("Sending email to:", email);
+    console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Basic HTML email template
-    const htmlBody = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
-            .content { padding: 20px; }
-            .button { display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; margin: 20px 0; }
-            .footer { font-size: 12px; text-align: center; margin-top: 30px; color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Welcome to Creator Agency!</h1>
-            </div>
-            <div class="content">
-              <p>Hi${stageName ? ` ${stageName}` : ''},</p>
-              <p>You've been invited to join our creator platform. To complete your profile, please click the button below:</p>
-              <p style="text-align: center;">
-                <a href="${onboardingUrl}" class="button">Complete Your Profile</a>
-              </p>
-              <p>This link will expire in 72 hours.</p>
-              <p>If you have any questions, feel free to contact our team.</p>
-              <p>Best regards,<br>Creator Agency Team</p>
-            </div>
-            <div class="footer">
-              <p>This is an automated email, please do not reply directly to this message.</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-    
-    // Send the email using Supabase
-    const { error } = await supabase
-      .from('creator_invitations')
-      .insert({
+    // Send email using raw API approach
+    const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        "apikey": supabaseServiceKey
+      },
+      body: JSON.stringify({
         email,
-        stage_name: stageName || null,
-        token,
-        status: 'pending',
-        created_by: userId
-      });
-      
-    if (error) {
-      throw new Error(`Error creating invitation: ${error.message}`);
+        data: {
+          name: nameToGreet,
+          onboard_link: `${appUrl}/onboard/${token}`,
+          agency_name: "Your Agency"
+        }
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Error sending email via Supabase:", data);
+      throw new Error(`Failed to send invitation email: ${data.msg || data.message || JSON.stringify(data)}`);
     }
-
-    // Mail sending would go here, but for now we'll just log it
-    console.log(`Email would be sent to ${email} with subject "${subject}"`);
-    console.log(`Onboarding URL: ${onboardingUrl}`);
+    
+    console.log("Email sent successfully:", data);
     
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Invitation created and email sent successfully",
-        debug: {
-          recipient: email,
-          subject,
-          onboardingUrl
-        }
-      }),
+      JSON.stringify({ success: true, data }),
       { 
         status: 200,
         headers: { 
@@ -111,7 +80,7 @@ serve(async (req) => {
         }
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in send-invite-email function:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
