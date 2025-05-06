@@ -9,7 +9,7 @@ import NotesSection from "./NotesSection";
 import { useOnboardingForm } from "@/hooks/useOnboardingForm";
 
 interface OnboardingFormProps {
-  onCloseModal?: () => void;
+  onCloseModal?: (formData: any) => void;
 }
 
 const OnboardingForm: React.FC<OnboardingFormProps> = ({ onCloseModal }) => {

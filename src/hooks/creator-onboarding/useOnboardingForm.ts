@@ -1,9 +1,8 @@
-
 import { useFormHandlers } from "./useFormHandlers";
 import { useFormValidation } from "./useFormValidation";
 import { useFormSubmission } from "./useFormSubmission";
 
-export function useOnboardingForm(onSuccess?: () => void) {
+export function useOnboardingForm(onSuccess?: (formData: any) => void) {
   const { formState, formActions, setErrors } = useFormHandlers();
   const { validateForm } = useFormValidation();
   const { handleSubmit: submitForm } = useFormSubmission();
@@ -21,11 +20,14 @@ export function useOnboardingForm(onSuccess?: () => void) {
       return;
     }
 
-    submitForm(formState);
-    
+    // If onSuccess callback is provided, pass formState to it
     if (onSuccess) {
-      onSuccess();
+      onSuccess(formState);
+      return;
     }
+
+    // Otherwise use default submission
+    submitForm(formState);
     
     // Reset form
     Object.values(formActions).forEach(setter => {

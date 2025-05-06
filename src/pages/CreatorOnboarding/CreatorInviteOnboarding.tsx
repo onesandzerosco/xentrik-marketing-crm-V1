@@ -72,7 +72,8 @@ const CreatorInviteOnboarding: React.FC = () => {
         email: invitation.email,
         stageName: invitation.stage_name,
         submittedAt: new Date().toISOString(),
-        roles: ['Employee', 'Creator'] // Set roles as both Employee and Creator
+        role: 'Employee', // Setting primary role as Employee
+        roles: ['Creator'] // Setting additional role as Creator
       };
 
       // Convert data to JSON
