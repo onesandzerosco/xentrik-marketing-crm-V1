@@ -40,32 +40,30 @@ serve(async (req) => {
     // Format name for email greeting
     const nameToGreet = stageName || email.split('@')[0];
     
-    // Send email through Supabase Auth API directly
-    const { error } = await fetch(`${supabaseUrl}/auth/v1/admin/users/email`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey
-      },
-      body: JSON.stringify({
-        email,
-        email_template: 'invite',
-        email_template_data: {
-          name: nameToGreet,
-          onboard_link: `${appUrl}/onboard/${token}`,
-          agency_name: "Your Agency"
-        }
-      })
-    }).then(res => res.json());
+    console.log("Sending email to:", email);
+    console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
+    
+    // Send email using Supabase's built-in email service
+    const { data, error } = await supabase.auth.admin.createEmailTemplate({
+      type: "invite",
+      email,
+      subject: "Welcome to Your Agency",
+      template_variables: {
+        name: nameToGreet,
+        onboard_link: `${appUrl}/onboard/${token}`,
+        agency_name: "Your Agency"
+      }
+    });
     
     if (error) {
-      console.error("Error sending email:", error);
+      console.error("Error sending email via Supabase:", error);
       throw new Error(`Failed to send invitation email: ${error.message}`);
     }
     
+    console.log("Email sent successfully:", data);
+    
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, data }),
       { 
         status: 200,
         headers: { 
@@ -75,7 +73,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error:", error.message);
+    console.error("Error in send-invite-email function:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
