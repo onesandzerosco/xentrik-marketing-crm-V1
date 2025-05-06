@@ -36,6 +36,14 @@ const InviteCreatorCard: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Initialize onboard_submissions bucket if it doesn't exist
+      try {
+        await supabase.functions.invoke("create-onboard-submissions-bucket");
+      } catch (err) {
+        console.warn("Bucket may already exist:", err);
+        // Continue anyway as this is just a precautionary step
+      }
+      
       // Insert invitation record to get a token
       const { data: invitation, error } = await supabase
         .from("creator_invitations")
@@ -56,7 +64,7 @@ const InviteCreatorCard: React.FC = () => {
 
       // Send invitation email
       const appUrl = window.location.origin;
-      const { error: emailError } = await supabase.functions.invoke("send-invite-email", {
+      const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
@@ -66,7 +74,13 @@ const InviteCreatorCard: React.FC = () => {
       });
       
       if (emailError) {
-        throw emailError;
+        console.error("Edge function error:", emailError);
+        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+      }
+      
+      if (emailData?.error) {
+        console.error("Email sending error:", emailData.error);
+        throw new Error(`Email service error: ${emailData.error}`);
       }
 
       toast({

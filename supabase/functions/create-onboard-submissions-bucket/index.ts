@@ -7,13 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailPayload {
-  email: string;
-  stageName?: string;
-  token: string;
-  appUrl: string;
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -31,41 +24,25 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
+    // Check if bucket exists first
+    const { data: existingBuckets } = await supabase.storage.listBuckets();
+    const bucketExists = existingBuckets?.some(bucket => bucket.name === 'onboard_submissions');
     
-    if (!email || !token || !appUrl) {
-      throw new Error("Missing required fields");
-    }
-    
-    // Format name for email greeting
-    const nameToGreet = stageName || email.split('@')[0];
-    
-    // Send email through Supabase Auth API directly
-    const { error } = await fetch(`${supabaseUrl}/auth/v1/admin/users/email`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey
-      },
-      body: JSON.stringify({
-        email,
-        email_template: 'invite',
-        email_template_data: {
-          name: nameToGreet,
-          onboard_link: `${appUrl}/onboard/${token}`,
-          agency_name: "Your Agency"
-        }
-      })
-    }).then(res => res.json());
-    
-    if (error) {
-      console.error("Error sending email:", error);
-      throw new Error(`Failed to send invitation email: ${error.message}`);
+    if (!bucketExists) {
+      // Create the bucket
+      const { error } = await supabase.storage.createBucket('onboard_submissions', {
+        public: false,
+        allowedMimeTypes: ['application/json'],
+        fileSizeLimit: 1024 * 1024, // 1MB
+      });
+      
+      if (error) {
+        throw error;
+      }
     }
     
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, message: "Bucket created or already exists" }),
       { 
         status: 200,
         headers: { 

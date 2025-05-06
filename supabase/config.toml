@@ -20,3 +20,6 @@ port = 54324
 [functions]
 [functions.send-invite-email]
 verify_jwt = true
+
+[functions.create-onboard-submissions-bucket]
+verify_jwt = true
