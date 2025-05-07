@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,15 +20,13 @@ serve(async (req) => {
   }
   
   try {
+    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Missing Supabase environment variables");
     }
-    
-    // Create Supabase admin client
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Parse request body
     let requestBody;
@@ -70,13 +67,13 @@ serve(async (req) => {
     `;
     const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
     
-    // Send email using direct API call with proper authentication
+    // Use Supabase's built-in mailer with proper API endpoint and authentication
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${supabaseServiceKey}`,
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey
+        "apikey": supabaseServiceKey,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         email,
@@ -86,17 +83,17 @@ serve(async (req) => {
       })
     });
     
-    const data = await response.json();
+    const responseData = await response.json();
     
     if (!response.ok) {
-      console.error("Error sending email via Supabase:", data);
-      throw new Error(`Failed to send invitation email: ${data.msg || data.message || JSON.stringify(data)}`);
+      console.error("Email API error details:", responseData);
+      console.error("Email API status code:", response.status);
+      console.error("Email API status text:", response.statusText);
+      throw new Error(`Failed to send email: ${responseData.message || responseData.error || 'Unknown error'}`);
     }
     
-    console.log("Email sent successfully:", data);
-    
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ success: true, message: "Email sent successfully" }),
       { 
         status: 200,
         headers: { 

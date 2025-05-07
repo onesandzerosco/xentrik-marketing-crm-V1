@@ -37,12 +37,20 @@ const InviteCreatorCard: React.FC = () => {
       
       // Initialize onboard_submissions bucket if it doesn't exist
       try {
-        await supabase.functions.invoke("create-onboard-submissions-bucket");
+        console.log("Creating or checking bucket...");
+        const bucketResponse = await supabase.functions.invoke("create-onboard-submissions-bucket");
+        console.log("Bucket response:", bucketResponse);
+        
+        if (bucketResponse.error) {
+          console.warn("Bucket creation warning:", bucketResponse.error);
+          // Continue anyway as this is just a precautionary step
+        }
       } catch (err) {
-        console.warn("Bucket may already exist:", err);
+        console.warn("Bucket operation warning:", err);
         // Continue anyway as this is just a precautionary step
       }
       
+      console.log("Creating invitation record...");
       // Insert invitation record to get a token
       const { data: invitation, error } = await supabase
         .from("creator_invitations")
@@ -54,16 +62,22 @@ const InviteCreatorCard: React.FC = () => {
         .single();
         
       if (error) {
-        throw error;
+        console.error("Database error:", error);
+        throw new Error(`Database error: ${error.message}`);
       }
       
       if (!invitation?.token) {
+        console.error("No token generated");
         throw new Error("Failed to generate invitation token");
       }
 
+      console.log("Invitation created with token:", invitation.token);
+      
       // Send invitation email
       const appUrl = window.location.origin;
-      const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
+      console.log("Sending email with appUrl:", appUrl);
+      
+      const emailResponse = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
@@ -72,14 +86,16 @@ const InviteCreatorCard: React.FC = () => {
         },
       });
       
-      if (emailError) {
-        console.error("Edge function error:", emailError);
-        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
+      console.log("Email function response:", emailResponse);
+      
+      if (emailResponse.error) {
+        console.error("Edge function error:", emailResponse.error);
+        throw new Error(`Failed to send email: ${emailResponse.error.message || "Edge function error"}`);
       }
       
-      if (emailData?.error) {
-        console.error("Email sending error:", emailData.error);
-        throw new Error(`Email service error: ${emailData.error}`);
+      if (emailResponse.data?.error) {
+        console.error("Email service error:", emailResponse.data.error);
+        throw new Error(`Email service error: ${emailResponse.data.error}`);
       }
 
       toast({
