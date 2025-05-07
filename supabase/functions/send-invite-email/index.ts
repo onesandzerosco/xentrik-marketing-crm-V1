@@ -51,7 +51,7 @@ serve(async (req) => {
     
     // Prepare email content
     const emailSubject = "Welcome to Your Agency";
-    const emailHtml = `
+    const emailContent = `
       <html>
         <body>
           <h2>Welcome to Your Agency</h2>
@@ -65,7 +65,8 @@ serve(async (req) => {
       </html>
     `;
     
-    // We'll use the Supabase REST API directly to send an email
+    // Send email using the Supabase built-in send email function
+    // This uses the SQL function we created in the migration
     const response = await fetch(`${supabaseUrl}/rest/v1/rpc/send_email`, {
       method: "POST",
       headers: {
@@ -76,28 +77,28 @@ serve(async (req) => {
       body: JSON.stringify({
         to_email: email,
         subject: emailSubject,
-        html_content: emailHtml
+        html_content: emailContent
       })
     });
     
-    // Log response for debugging
-    const responseStatus = response.status;
-    console.log("Email API status:", responseStatus);
+    console.log("Email API status:", response.status);
     
+    // Get the response data
     let responseData;
     try {
-      const text = await response.text();
-      console.log("Email API raw response:", text);
-      responseData = text ? JSON.parse(text) : {};
+      const responseText = await response.text();
+      console.log("Raw email API response:", responseText);
+      
+      // Only try to parse as JSON if there's content
+      responseData = responseText ? JSON.parse(responseText) : {};
+      console.log("Parsed email API response:", responseData);
     } catch (e) {
-      console.error("Error processing response:", e);
+      console.error("Error parsing response:", e);
       responseData = { error: "Failed to parse response" };
     }
     
-    console.log("Email API parsed response:", responseData);
-    
     if (!response.ok) {
-      throw new Error(`Email service error: Status ${responseStatus}`);
+      throw new Error(`Failed to send email: Status ${response.status}`);
     }
     
     return new Response(
