@@ -20,6 +20,7 @@ import CreatorInviteOnboarding from "./pages/CreatorOnboarding/CreatorInviteOnbo
 
 // Components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import DashboardLayout from "./components/layouts/DashboardLayout";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -74,13 +75,15 @@ function App() {
             />
             <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
 
-            {/* Protected routes */}
+            {/* Protected routes with Dashboard Layout */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/creators" element={<Creators />} />
-              <Route path="/creators/:id" element={<CreatorProfile />} />
-              <Route path="/creators/new" element={<CreatorOnboarding />} />
-              <Route path="/access-control" element={<AccessControlPanel />} />
+              <Route element={<DashboardLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/creators" element={<Creators />} />
+                <Route path="/creators/:id" element={<CreatorProfile />} />
+                <Route path="/creators/new" element={<CreatorOnboarding />} />
+                <Route path="/access-control" element={<AccessControlPanel />} />
+              </Route>
             </Route>
 
             {/* Redirect root to dashboard if authenticated, otherwise to login */}
