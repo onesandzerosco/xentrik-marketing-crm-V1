@@ -37,14 +37,32 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
     
-    // Format name for email greeting
+    // Format name for email greeting - use stage name or email username part
     const nameToGreet = stageName || email.split('@')[0];
     
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Send email using raw API approach
-    const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+    // Prepare email content
+    const subject = "Welcome to Your Agency";
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Welcome to Your Agency</title>
+        </head>
+        <body>
+          <p>Hi ${nameToGreet},</p>
+          <p>Click the link below to complete your profile…</p>
+          <p><a href="${appUrl}/onboard/${token}">${appUrl}/onboard/${token}</a></p>
+        </body>
+      </html>
+    `;
+    const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
+    
+    // Send email using Supabase auth.email API
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${supabaseServiceKey}`,
@@ -53,11 +71,9 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email,
-        data: {
-          name: nameToGreet,
-          onboard_link: `${appUrl}/onboard/${token}`,
-          agency_name: "Your Agency"
-        }
+        subject,
+        html: htmlContent,
+        text: textContent
       })
     });
     

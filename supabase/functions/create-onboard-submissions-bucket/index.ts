@@ -21,28 +21,42 @@ serve(async (req) => {
       throw new Error("Missing Supabase environment variables");
     }
     
-    // Create Supabase admin client
+    // Create Supabase admin client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if bucket exists first
-    const { data: existingBuckets } = await supabase.storage.listBuckets();
-    const bucketExists = existingBuckets?.some(bucket => bucket.name === 'onboard_submissions');
+    // Check if bucket exists
+    const { data: existingBuckets } = await supabase
+      .storage
+      .listBuckets();
+    
+    const bucketName = "onboard_submissions";
+    const bucketExists = existingBuckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
-      // Create the bucket
-      const { error } = await supabase.storage.createBucket('onboard_submissions', {
-        public: false,
-        allowedMimeTypes: ['application/json'],
-        fileSizeLimit: 1024 * 1024, // 1MB
-      });
+      // Create the bucket if it doesn't exist
+      const { data, error } = await supabase
+        .storage
+        .createBucket(bucketName, {
+          public: false, // Make it private since it contains personal information
+          fileSizeLimit: 1024 * 1024, // 1MB limit for JSON files
+        });
       
       if (error) {
         throw error;
       }
+      
+      console.log(`Bucket '${bucketName}' created successfully:`, data);
+    } else {
+      console.log(`Bucket '${bucketName}' already exists`);
     }
     
     return new Response(
-      JSON.stringify({ success: true, message: "Bucket created or already exists" }),
+      JSON.stringify({ 
+        success: true,
+        message: bucketExists 
+          ? `Bucket '${bucketName}' already exists` 
+          : `Bucket '${bucketName}' created successfully`
+      }),
       { 
         status: 200,
         headers: { 
@@ -51,8 +65,8 @@ serve(async (req) => {
         }
       }
     );
-  } catch (error) {
-    console.error("Error:", error.message);
+  } catch (error: any) {
+    console.error("Error creating bucket:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
