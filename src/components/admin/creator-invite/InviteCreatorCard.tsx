@@ -97,15 +97,8 @@ const InviteCreatorCard: React.FC = () => {
       if (emailResponse.error || emailResponse.data?.error) {
         console.error("Edge function error:", emailResponse.error || emailResponse.data?.error);
         
-        // Delete the invitation record if email sending fails
-        const { error: deleteError } = await supabase
-          .from("creator_invitations")
-          .delete()
-          .eq("token", invitation.token);
-          
-        if (deleteError) {
-          console.error("Error deleting failed invitation:", deleteError);
-        }
+        // We don't need to delete the invitation record here anymore
+        // as the edge function will handle that if email sending fails
         
         throw new Error(emailResponse.error?.message || emailResponse.data?.error || "Failed to send invitation email");
       } else {
