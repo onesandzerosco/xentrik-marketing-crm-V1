@@ -60,64 +60,8 @@ serve(async (req) => {
       <p>Best regards,<br>Your Agency Team</p>
     `;
 
-    // Attempt to send via auth admin API directly
-    console.log("Attempting to send email with auth admin API");
-    const adminResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/invite`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey,
-        "Authorization": `Bearer ${supabaseServiceKey}`
-      },
-      body: JSON.stringify({
-        email,
-        data: {
-          redirect_to: `${appUrl}/onboard/${token}`,
-          user_display_name: nameToGreet
-        }
-      })
-    });
-    
-    const adminStatus = adminResponse.status;
-    console.log("Admin API status:", adminStatus);
-    
-    let adminData = null;
-    try {
-      const adminText = await adminResponse.text();
-      console.log("Admin API response:", adminText);
-      if (adminText && adminText.length > 0) {
-        try {
-          adminData = JSON.parse(adminText);
-        } catch (e) {
-          console.log("Could not parse admin response as JSON");
-        }
-      }
-    } catch (e) {
-      console.error("Error getting admin response:", e);
-    }
-    
-    if (adminStatus === 200) {
-      console.log("Email sent successfully via admin invite API");
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Email sent successfully",
-          method: "admin-invite"
-        }),
-        { 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          },
-          status: 200
-        }
-      );
-    }
-    
-    // If admin invite fails, try the generic email API as fallback
-    console.log("Falling back to generic email API");
-    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/email`, {
+    // Use Supabase's email API directly with raw fetch for better control
+    const emailApiResponse = await fetch(`${supabaseUrl}/auth/v1/admin/email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -127,26 +71,37 @@ serve(async (req) => {
       body: JSON.stringify({
         email,
         subject: "Welcome to Your Agency",
+        template: "invite",
         template_data: {
           action_url: `${appUrl}/onboard/${token}`,
-          product_url: appUrl,
+          email_name: nameToGreet,
+          invite_sender_name: "Your Agency Team",
+          invite_site_title: "Creator Management",
+          invite_site_url: appUrl,
           product_name: "Your Agency"
         },
-        html: htmlContent
+        data: {
+          user_metadata: {
+            token: token,
+            stage_name: stageName || null
+          }
+        },
+        html: htmlContent // Fallback HTML content
       })
     });
     
-    console.log("Email API status:", response.status);
+    const status = emailApiResponse.status;
+    console.log("Email API status:", status);
     
-    // Get the response data
     let responseData = null;
     try {
-      const text = await response.text();
+      const text = await emailApiResponse.text();
       console.log("Response text:", text);
       if (text && text.length > 0) {
         try {
           responseData = JSON.parse(text);
         } catch (e) {
+          console.log("Could not parse response as JSON");
           responseData = { raw: text };
         }
       }
@@ -154,10 +109,8 @@ serve(async (req) => {
       console.error("Error getting response text:", e);
     }
     
-    console.log("Email API response data:", responseData);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to send email: Status ${response.status}`);
+    if (!emailApiResponse.ok) {
+      throw new Error(`Failed to send email: Status ${status}`);
     }
     
     return new Response(

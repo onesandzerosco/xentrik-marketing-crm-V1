@@ -94,16 +94,20 @@ const InviteCreatorCard: React.FC = () => {
       
       console.log("Email function response:", emailResponse);
       
-      if (emailResponse.error) {
-        console.error("Edge function error:", emailResponse.error);
+      if (emailResponse.error || emailResponse.data?.error) {
+        console.error("Edge function error:", emailResponse.error || emailResponse.data?.error);
         
-        // Don't remove the invitation record even if email sending fails
-        // as the admin can still see it in the invitations list
-        toast({
-          variant: "warning",
-          title: "Email notification may have failed",
-          description: "The invitation was created but there might be an issue with the email delivery. The invited creator can still use the link when shared manually.",
-        });
+        // Delete the invitation record if email sending fails
+        const { error: deleteError } = await supabase
+          .from("creator_invitations")
+          .delete()
+          .eq("token", invitation.token);
+          
+        if (deleteError) {
+          console.error("Error deleting failed invitation:", deleteError);
+        }
+        
+        throw new Error(emailResponse.error?.message || emailResponse.data?.error || "Failed to send invitation email");
       } else {
         toast({
           title: "Invitation sent",
