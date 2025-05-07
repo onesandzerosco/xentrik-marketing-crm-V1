@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CreatorProvider } from "./context/creator";
 import { supabase } from "./integrations/supabase/client";
 import { useToast } from "./hooks/use-toast";
+import { SupabaseAuthProvider } from "./context/SupabaseAuthContext";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -60,47 +61,49 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <CreatorProvider>
-        <Router>
-          <Routes>
-            {/* Public routes */}
-            <Route
-              path="/login"
-              element={
-                isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
-              }
-            />
-            <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+    <Router>
+      <SupabaseAuthProvider>
+        <AuthProvider>
+          <CreatorProvider>
+            <Routes>
+              {/* Public routes */}
+              <Route
+                path="/login"
+                element={
+                  isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
+                }
+              />
+              <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
 
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/creators" element={<Creators />} />
-              <Route path="/creators/:id" element={<CreatorProfile />} />
-              <Route path="/creators/new" element={<CreatorOnboarding />} />
-              <Route path="/access-control" element={<AccessControlPanel />} />
-            </Route>
+              {/* Protected routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/creators" element={<Creators />} />
+                <Route path="/creators/:id" element={<CreatorProfile />} />
+                <Route path="/creators/new" element={<CreatorOnboarding />} />
+                <Route path="/access-control" element={<AccessControlPanel />} />
+              </Route>
 
-            {/* Redirect root to dashboard if authenticated, otherwise to login */}
-            <Route
-              path="/"
-              element={
-                isAuthenticated ? (
-                  <Navigate to="/dashboard" />
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
+              {/* Redirect root to dashboard if authenticated, otherwise to login */}
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    <Navigate to="/dashboard" />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
 
-            {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </Router>
-      </CreatorProvider>
-    </AuthProvider>
+              {/* 404 route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </CreatorProvider>
+        </AuthProvider>
+      </SupabaseAuthProvider>
+    </Router>
   );
 }
 
