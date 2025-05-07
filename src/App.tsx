@@ -1,11 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/toaster";
 import { AuthProvider } from "./context/AuthContext";
-import { CreatorsProvider } from "./context/creator";
-import { EmployeesProvider } from "./context/employees";
-import { SettingsProvider } from "./context/settings";
+import { CreatorProvider } from "./context/creator";
 import { supabase } from "./integrations/supabase/client";
 import { useToast } from "./hooks/use-toast";
 
@@ -16,12 +14,10 @@ import Creators from "./pages/Creators";
 import CreatorProfile from "./pages/CreatorProfile";
 import CreatorOnboarding from "./pages/CreatorOnboarding";
 import AccessControlPanel from "./pages/AccessControlPanel";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import CreatorInviteOnboarding from "./pages/CreatorOnboarding/CreatorInviteOnboarding";
 
 // Components
-import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
@@ -64,56 +60,47 @@ function App() {
   }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <SettingsProvider>
-          <CreatorsProvider>
-            <EmployeesProvider>
-              <Router>
-                <Routes>
-                  {/* Public routes */}
-                  <Route
-                    path="/login"
-                    element={
-                      isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
-                    }
-                  />
-                  <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+    <AuthProvider>
+      <CreatorProvider>
+        <Router>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
+              }
+            />
+            <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
 
-                  {/* Protected routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route element={<AppLayout />}>
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/creators" element={<Creators />} />
-                      <Route path="/creators/:id" element={<CreatorProfile />} />
-                      <Route path="/creators/new" element={<CreatorOnboarding />} />
-                      <Route path="/access-control" element={<AccessControlPanel />} />
-                      <Route path="/settings" element={<Settings />} />
-                    </Route>
-                  </Route>
+            {/* Protected routes */}
+            <Route element={<ProtectedRoute children={undefined} />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/creators" element={<Creators />} />
+              <Route path="/creators/:id" element={<CreatorProfile />} />
+              <Route path="/creators/new" element={<CreatorOnboarding />} />
+              <Route path="/access-control" element={<AccessControlPanel />} />
+            </Route>
 
-                  {/* Redirect root to dashboard if authenticated, otherwise to login */}
-                  <Route
-                    path="/"
-                    element={
-                      isAuthenticated ? (
-                        <Navigate to="/dashboard" />
-                      ) : (
-                        <Navigate to="/login" />
-                      )
-                    }
-                  />
+            {/* Redirect root to dashboard if authenticated, otherwise to login */}
+            <Route
+              path="/"
+              element={
+                isAuthenticated ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
 
-                  {/* 404 route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Router>
-              <Toaster />
-            </EmployeesProvider>
-          </CreatorsProvider>
-        </SettingsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </CreatorProvider>
+    </AuthProvider>
   );
 }
 
