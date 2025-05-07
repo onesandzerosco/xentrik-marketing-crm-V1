@@ -59,8 +59,8 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email,
+        template: "invite", 
         subject: "Welcome to Your Agency",
-        template: "magiclink",
         data: {
           user_display_name: nameToGreet,
           site_url: appUrl,
@@ -73,18 +73,19 @@ serve(async (req) => {
     console.log("Email API status:", response.status);
     
     // Get the response data
-    let responseData;
+    let responseData = null;
     try {
-      if (response.headers.get("content-type")?.includes("application/json")) {
-        responseData = await response.json();
-      } else {
-        const responseText = await response.text();
-        console.log("Raw email API response:", responseText);
-        responseData = { message: responseText };
+      const text = await response.text();
+      console.log("Response text:", text);
+      if (text && text.length > 0) {
+        try {
+          responseData = JSON.parse(text);
+        } catch (e) {
+          responseData = { raw: text };
+        }
       }
     } catch (e) {
-      console.error("Error parsing response:", e);
-      responseData = { error: "Failed to parse response" };
+      console.error("Error getting response text:", e);
     }
     
     console.log("Email API response data:", responseData);
@@ -96,8 +97,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Email sent successfully", 
-        details: responseData 
+        message: "Email sent successfully" 
       }),
       { 
         headers: { 

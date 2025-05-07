@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,14 +71,6 @@ const InviteCreatorCard: React.FC = () => {
       const appUrl = window.location.origin;
       console.log("Sending email with appUrl:", appUrl);
       
-      // Detailed logging for troubleshooting
-      console.log("Sending to email function with payload:", {
-        email: data.email,
-        stageName: data.stageName,
-        token: invitation.token,
-        appUrl,
-      });
-      
       const emailResponse = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
@@ -89,10 +80,10 @@ const InviteCreatorCard: React.FC = () => {
         },
       });
       
-      console.log("Email function complete response:", emailResponse);
+      console.log("Email function response:", emailResponse);
       
-      if (emailResponse.error || !emailResponse.data?.success) {
-        console.error("Edge function error:", emailResponse.error || "Email sending failed");
+      if (emailResponse.error) {
+        console.error("Edge function error:", emailResponse.error);
         
         // Remove the invitation if email sending fails
         await supabase
@@ -100,7 +91,7 @@ const InviteCreatorCard: React.FC = () => {
           .delete()
           .eq("token", invitation.token);
           
-        throw new Error(`Failed to send email: ${emailResponse.error?.message || emailResponse.data?.error || "Unknown error"}`);
+        throw new Error(`Failed to send email: ${emailResponse.error.message || "Edge function error"}`);
       }
       
       toast({
