@@ -65,9 +65,8 @@ serve(async (req) => {
       </html>
     `;
     
-    // Send email using the Supabase built-in send email function
-    // This uses the SQL function we created in the migration
-    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/send_email`, {
+    // Use the Supabase Auth Admin API to send the email
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,9 +74,16 @@ serve(async (req) => {
         "Authorization": `Bearer ${supabaseServiceKey}`
       },
       body: JSON.stringify({
-        to_email: email,
+        email,
         subject: emailSubject,
-        html_content: emailContent
+        template_name: "invite",
+        template_data: {
+          token,
+          invite_url: `${appUrl}/onboard/${token}`,
+          site_name: "Your Agency",
+          name: nameToGreet,
+          email_content: emailContent
+        }
       })
     });
     
