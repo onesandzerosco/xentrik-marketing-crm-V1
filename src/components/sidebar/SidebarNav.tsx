@@ -11,7 +11,8 @@ import {
   FileUp,
   Mic,
   Shield,
-  UserPlus
+  UserPlus,
+  ListCheck
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -70,6 +71,12 @@ const navItems: NavItem[] = [
     path: '/onboard',
     label: 'Creator Onboarding',
     icon: <UserPlus className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    path: '/onboard-queue',
+    label: 'Onboard Queue',
+    icon: <ListCheck className="h-5 w-5" />,
     adminOnly: true,
   },
   {

@@ -33,6 +33,8 @@ import VoiceGeneration from './pages/VoiceGeneration';
 import CreatorUpload from './pages/CreatorUpload';
 import AccessControlPanel from './pages/AccessControlPanel';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
+import CreatorOnboardForm from './pages/CreatorOnboardForm';
+import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -99,8 +101,11 @@ const AppRoutes = () => {
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
       
-      {/* New creator onboarding form - Admin only for now */}
+      {/* New creator onboarding form - Admin only */}
       <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
+      
+      {/* New admin onboard queue - Admin only */}
+      <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
       
       {/* Public route for creator onboarding from invitation */}
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
