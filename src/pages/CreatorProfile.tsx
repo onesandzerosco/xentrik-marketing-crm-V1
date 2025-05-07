@@ -14,10 +14,12 @@ const CreatorProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const {
     creator,
-    formState,
-    formActions,
+    state,
+    actions,
     handleSave,
-    handleAssignTeamMembers
+    isSaving,
+    handleAssignTeamMembers,
+    assignedMembers
   } = useCreatorProfile(id!);
   const { userRole, isCreator, isCreatorSelf } = useAuth();
   const navigate = useNavigate();
@@ -67,7 +69,7 @@ const CreatorProfile = () => {
           gender: creator.gender,
           team: creator.team,
           creatorType: creator.creatorType,
-          needsReview: formState.needsReview
+          needsReview: state.needsReview
         }}
         showAnalytics={false}
       />
@@ -76,48 +78,48 @@ const CreatorProfile = () => {
         {/* Actions Section - As the first row */}
         <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
           <ProfileActions
-            needsReview={formState.needsReview}
-            setNeedsReview={formActions.setNeedsReview}
+            needsReview={state.needsReview}
+            setNeedsReview={actions.setNeedsReview}
             creatorId={creator.id}
             creatorName={creator.name}
-            assignedMembers={formState.assignedMembers}
+            assignedMembers={assignedMembers}
             onAssignMembers={handleAssignTeamMembers}
           />
         </div>
 
         {/* Form Sections - Matching Onboarding Layout */}
         <OnboardingFormSections
-          name={formState.name}
-          setName={formActions.setName}
-          profileImage={formState.profileImage}
-          setProfileImage={formActions.setProfileImage}
-          gender={formState.gender}
-          setGender={formActions.setGender}
-          team={formState.team}
-          setTeam={formActions.setTeam}
-          creatorType={formState.creatorType}
-          setCreatorType={formActions.setCreatorType}
-          telegramUsername={formState.telegramUsername}
-          setTelegramUsername={formActions.setTelegramUsername}
-          whatsappNumber={formState.whatsappNumber}
-          setWhatsappNumber={formActions.setWhatsappNumber}
-          instagram={formState.instagram}
-          setInstagram={formActions.setInstagram}
-          tiktok={formState.tiktok}
-          setTiktok={formActions.setTiktok}
-          twitter={formState.twitter}
-          setTwitter={formActions.setTwitter}
-          reddit={formState.reddit}
-          setReddit={formActions.setReddit}
-          chaturbate={formState.chaturbate}
-          setChaturbate={formActions.setChaturbate}
-          youtube={formState.youtube}
-          setYoutube={formActions.setYoutube}
-          customSocialLinks={formState.customSocialLinks}
-          setCustomSocialLinks={formActions.setCustomSocialLinks}
-          notes={formState.notes}
-          setNotes={formActions.setNotes}
-          errors={formState.errors}
+          name={state.name}
+          setName={actions.setName}
+          profileImage={state.profileImage}
+          setProfileImage={actions.setProfileImage}
+          gender={state.gender}
+          setGender={actions.setGender}
+          team={state.team}
+          setTeam={actions.setTeam}
+          creatorType={state.creatorType}
+          setCreatorType={actions.setCreatorType}
+          telegramUsername={state.telegramUsername}
+          setTelegramUsername={actions.setTelegramUsername}
+          whatsappNumber={state.whatsappNumber}
+          setWhatsappNumber={actions.setWhatsappNumber}
+          instagram={state.instagram}
+          setInstagram={actions.setInstagram}
+          tiktok={state.tiktok}
+          setTiktok={actions.setTiktok}
+          twitter={state.twitter}
+          setTwitter={actions.setTwitter}
+          reddit={state.reddit}
+          setReddit={actions.setReddit}
+          chaturbate={state.chaturbate}
+          setChaturbate={actions.setChaturbate}
+          youtube={state.youtube}
+          setYoutube={actions.setYoutube}
+          customSocialLinks={state.customSocialLinks}
+          setCustomSocialLinks={actions.setCustomSocialLinks}
+          notes={state.notes}
+          setNotes={actions.setNotes}
+          errors={state.errors}
         />
       </div>
     </div>

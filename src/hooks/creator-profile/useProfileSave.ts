@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Creator } from '@/context/creator/types';
+import { Creator } from '@/types';
 import { CreatorProfileState } from './types';
 
 export const useProfileSave = (creator: Creator | null) => {
