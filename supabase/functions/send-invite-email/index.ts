@@ -54,24 +54,21 @@ serve(async (req) => {
       <p>Best regards,<br>Your Agency Team</p>
     `;
 
-    // Create Supabase client
+    // Create Supabase client with service role key for admin operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Send email using the Supabase Auth API
-    const { error } = await supabase.auth.admin.createUser({
-      email: email,
-      email_confirm: false,
-      user_metadata: {
+    // Use the auth.admin APIs to create a user and send an email
+    // This method will send a confirmation email with magic link
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${appUrl}/onboard/${token}`,
+      data: {
         token: token,
         stage_name: stageName || null
-      },
-      password: crypto.randomUUID(), // Random password as this is just for email sending
-      app_metadata: {
-        provider: "email",
-      },
+      }
     });
     
     if (error) {
+      console.error("Email sending error:", error);
       throw new Error(`Failed to send email: ${error.message}`);
     }
     
@@ -81,7 +78,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Email sent successfully" 
+        message: "Email sent successfully",
+        data: data
       }),
       { 
         headers: { 

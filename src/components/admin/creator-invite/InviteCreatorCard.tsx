@@ -58,8 +58,8 @@ const InviteCreatorCard: React.FC = () => {
         },
       });
       
-      if (emailResponse.error || !emailResponse.data?.success) {
-        throw new Error(emailResponse.error?.message || emailResponse.data?.error || "Failed to send invitation email");
+      if (!emailResponse.data?.success) {
+        throw new Error(emailResponse.error?.message || "Failed to send invitation email");
       }
       
       // Only save invitation record if email was sent successfully
@@ -69,6 +69,8 @@ const InviteCreatorCard: React.FC = () => {
           email: data.email,
           stage_name: data.stageName || null,
           token,
+          expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours from now
+          status: "pending"
         });
         
       if (error) {
