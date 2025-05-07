@@ -49,8 +49,19 @@ serve(async (req) => {
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Use Supabase's auth.admin.sendEmail API
-    const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
+    // Create a custom email
+    const htmlContent = `
+      <h2>Welcome to Your Agency!</h2>
+      <p>Hello ${nameToGreet},</p>
+      <p>You have been invited to join our creator platform. To complete your onboarding process, please click the link below:</p>
+      <p><a href="${appUrl}/onboard/${token}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Complete Your Profile</a></p>
+      <p>This link will expire in 72 hours.</p>
+      <p>If you did not request this invitation, please disregard this email.</p>
+      <p>Best regards,<br>Your Agency Team</p>
+    `;
+    
+    // Send email using the supabase auth.email POST API
+    const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/email`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -59,14 +70,13 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         email,
-        template: "invite", 
         subject: "Welcome to Your Agency",
-        data: {
-          user_display_name: nameToGreet,
-          site_url: appUrl,
+        template_data: {
           action_url: `${appUrl}/onboard/${token}`,
-          token
-        }
+          product_url: appUrl,
+          product_name: "Your Agency"
+        },
+        html: htmlContent
       })
     });
     
