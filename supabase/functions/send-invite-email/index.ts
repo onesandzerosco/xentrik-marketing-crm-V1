@@ -1,5 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,7 +61,10 @@ serve(async (req) => {
       <p>Best regards,<br>Your Agency Team</p>
     `;
 
-    // Use Supabase's email API directly with raw fetch for better control
+    // Create Supabase client with admin privileges to delete invitation if needed
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Use Supabase's email API with raw fetch for better control
     const emailApiResponse = await fetch(`${supabaseUrl}/auth/v1/admin/email`, {
       method: "POST",
       headers: {
@@ -110,6 +114,19 @@ serve(async (req) => {
     }
     
     if (!emailApiResponse.ok) {
+      // If email sending fails, delete the invitation record
+      console.log("Email sending failed, deleting invitation record with token:", token);
+      const { error: deleteError } = await supabase
+        .from("creator_invitations")
+        .delete()
+        .eq("token", token);
+        
+      if (deleteError) {
+        console.error("Error deleting invitation record:", deleteError);
+      } else {
+        console.log("Successfully deleted invitation record due to email failure");
+      }
+      
       throw new Error(`Failed to send email: Status ${status}`);
     }
     
