@@ -220,6 +220,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_queue: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          html_content: string
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          sent_at: string | null
+          status: string | null
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          html_content: string
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          html_content?: string
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       file_uploads: {
         Row: {
           bucket_key: string

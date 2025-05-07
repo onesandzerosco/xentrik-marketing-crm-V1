@@ -12,81 +12,61 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
+    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Missing Supabase environment variables");
     }
-    
-    // Create Supabase admin client with service role key
+
+    // Initialize Supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if bucket exists
-    const { data: existingBuckets, error: listError } = await supabase
+    // Try to create the bucket if it doesn't exist
+    // Potential error will be handled in the catch block
+    const { data, error } = await supabase
       .storage
-      .listBuckets();
-    
-    if (listError) {
-      throw listError;
+      .createBucket('onboard_submissions', {
+        public: false,
+        allowedMimeTypes: ['application/json'],
+        fileSizeLimit: 1024 * 1024, // 1MB
+      });
+
+    if (error && error.message !== 'The resource already exists') {
+      throw error;
     }
-    
-    const bucketName = "onboard_submissions";
-    const bucketExists = existingBuckets?.some(bucket => bucket.name === bucketName);
-    
-    if (!bucketExists) {
-      // Create the bucket if it doesn't exist
-      const { error } = await supabase
-        .storage
-        .createBucket(bucketName, {
-          public: false, // Make it private since it contains personal information
-          fileSizeLimit: 1024 * 1024, // 1MB limit for JSON files
-        });
-      
-      if (error) {
-        throw error;
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: `Bucket '${bucketName}' created successfully`
-        }),
-        { 
-          status: 200,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: `Bucket '${bucketName}' already exists`
-        }),
-        { 
-          status: 200,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
-    }
-  } catch (error: any) {
-    console.error("Error creating bucket:", error);
+
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: {
+      JSON.stringify({
+        success: true,
+        message: error ? "Bucket already exists" : "Bucket created successfully",
+        data
+      }),
+      { 
+        headers: { 
           "Content-Type": "application/json",
           ...corsHeaders
-        }
+        },
+        status: 200
+      }
+    );
+  } catch (error: any) {
+    console.error("Error creating bucket:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        },
+        status: 500
       }
     );
   }

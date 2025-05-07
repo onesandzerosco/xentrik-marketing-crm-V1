@@ -1,110 +1,120 @@
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "./components/ui/toaster";
+import { AuthProvider } from "./context/AuthContext";
+import { CreatorsProvider } from "./context/creator";
+import { EmployeesProvider } from "./context/employees";
+import { SettingsProvider } from "./context/settings";
+import { supabase } from "./integrations/supabase/client";
+import { useToast } from "./hooks/use-toast";
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
-import { AuthProvider } from './context/AuthContext';
-import { CreatorProvider } from './context/creator';
-import { ActivityProvider } from './context/ActivityContext';
-import { TeamProvider } from './context/TeamContext';
-import { AnimatePresence } from 'framer-motion';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Creators from './pages/Creators';
-import CreatorProfile from './pages/CreatorProfile';
-import CreatorAnalytics from './pages/CreatorAnalytics';
-import CreatorOnboarding from './pages/CreatorOnboarding';
-import AccountSettings from './pages/AccountSettings';
-import Messages from './pages/Messages';
-import NotFound from './pages/NotFound';
-import UserManagement from './pages/UserManagement';
-import Team from './pages/Team';
-import TeamMemberProfile from './pages/TeamMemberProfile';
-import TeamMemberOnboarding from './pages/TeamMemberOnboarding';
-import SecureLogins from './pages/SecureLogins';
-import Index from './pages/Index';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { ensureStorageBucket } from "./utils/setupStorage";
-import SharedFiles from './pages/SharedFiles';
-import CreatorFiles from './pages/CreatorFiles';
-import TeamMemberEdit from './pages/TeamMemberEdit';
-import VoiceGeneration from './pages/VoiceGeneration';
-import CreatorUpload from './pages/CreatorUpload';
-import AccessControlPanel from './pages/AccessControlPanel';
-import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
+// Pages
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Creators from "./pages/Creators";
+import CreatorProfile from "./pages/CreatorProfile";
+import CreatorOnboarding from "./pages/CreatorOnboarding";
+import AccessControlPanel from "./pages/AccessControlPanel";
+import Settings from "./pages/Settings";
+import NotFound from "./pages/NotFound";
+import CreatorInviteOnboarding from "./pages/CreatorOnboarding/CreatorInviteOnboarding";
 
-// Call the function to ensure our storage bucket exists
-// We're calling it here in a non-blocking way
-ensureStorageBucket().catch(err => {
-  console.error("Error setting up storage bucket:", err);
-});
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+// Components
+import AppLayout from "./components/layout/AppLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setIsAuthenticated(!!data.session);
+      } catch (error) {
+        console.error("Auth check error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session);
+        setIsLoading(false);
+      }
+    );
+
+    checkAuth();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <CreatorProvider>
-        <ActivityProvider>
-          <SupabaseAuthProvider>
-            <AuthProvider>
-              <TeamProvider>
-                <div className="app flex h-screen w-full bg-premium-dark">
-                  <Toaster />
-                  <AnimatePresence mode="wait">
-                    <AppRoutes />
-                  </AnimatePresence>
-                </div>
-              </TeamProvider>
-            </AuthProvider>
-          </SupabaseAuthProvider>
-        </ActivityProvider>
-      </CreatorProvider>
-    </QueryClientProvider>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AuthProvider>
+        <SettingsProvider>
+          <CreatorsProvider>
+            <EmployeesProvider>
+              <Router>
+                <Routes>
+                  {/* Public routes */}
+                  <Route
+                    path="/login"
+                    element={
+                      isAuthenticated ? <Navigate to="/dashboard" /> : <Login />
+                    }
+                  />
+                  <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+
+                  {/* Protected routes */}
+                  <Route element={<ProtectedRoute />}>
+                    <Route element={<AppLayout />}>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/creators" element={<Creators />} />
+                      <Route path="/creators/:id" element={<CreatorProfile />} />
+                      <Route path="/creators/new" element={<CreatorOnboarding />} />
+                      <Route path="/access-control" element={<AccessControlPanel />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Route>
+                  </Route>
+
+                  {/* Redirect root to dashboard if authenticated, otherwise to login */}
+                  <Route
+                    path="/"
+                    element={
+                      isAuthenticated ? (
+                        <Navigate to="/dashboard" />
+                      ) : (
+                        <Navigate to="/login" />
+                      )
+                    }
+                  />
+
+                  {/* 404 route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
+              <Toaster />
+            </EmployeesProvider>
+          </CreatorsProvider>
+        </SettingsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
-
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
-      <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
-      <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-      <Route path="/team/onboard" element={<ProtectedRoute><TeamMemberOnboarding /></ProtectedRoute>} />
-      <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
-      <Route path="/team/:id/edit" element={<ProtectedRoute><TeamMemberEdit /></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-      <Route path="/access-control" element={<ProtectedRoute><AccessControlPanel /></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />
-      <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
-      <Route path="/creators/:id" element={<ProtectedRoute><CreatorProfile /></ProtectedRoute>} />
-      <Route path="/creators/:id/analytics" element={<ProtectedRoute><CreatorAnalytics /></ProtectedRoute>} />
-      <Route path="/secure-logins" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/secure-logins/:id" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
-      <Route path="/shared/:shareCode" element={<SharedFiles />} />
-      <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
-      <Route path="/upload/:id" element={<CreatorUpload />} />
-      
-      {/* Public route for creator onboarding from invitation */}
-      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
 
 export default App;
