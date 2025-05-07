@@ -1,23 +1,21 @@
 
-import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
-// Routes that should not be remembered
-const EXCLUDED_ROUTES = ['/login', '/register', '/auth'];
-
-export function useRouteMemory() {
+export const useRouteMemory = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Only store routes that are not excluded
-    if (!EXCLUDED_ROUTES.some(route => location.pathname.startsWith(route))) {
+    // Store the current route path in localStorage for later restoration
+    // Only store the path if it's a dashboard-related route
+    if (location.pathname.startsWith('/dashboard') || 
+        location.pathname.startsWith('/user-management') || 
+        location.pathname.startsWith('/access-control') || 
+        location.pathname.startsWith('/creators') || 
+        location.pathname.startsWith('/onboarding')) {
       localStorage.setItem('lastVisitedRoute', location.pathname);
     }
   }, [location.pathname]);
-  
-  const getLastVisitedRoute = () => {
-    return localStorage.getItem('lastVisitedRoute') || '/dashboard';
-  };
-  
-  return { getLastVisitedRoute };
-}
+};
+
+export default useRouteMemory;
