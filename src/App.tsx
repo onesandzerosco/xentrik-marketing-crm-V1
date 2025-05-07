@@ -13,8 +13,6 @@ import UserManagement from './pages/UserManagement';
 import AccessControlPanel from './pages/AccessControlPanel';
 import Creators from './pages/Creators';
 import CreatorOnboarding from './pages/CreatorOnboarding';
-
-// Import the new creator onboarding route
 import CreatorInviteOnboarding from "./pages/CreatorOnboarding/CreatorInviteOnboarding";
 
 const App = () => {
