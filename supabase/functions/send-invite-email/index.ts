@@ -43,27 +43,20 @@ serve(async (req) => {
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Create a custom email
-    const htmlContent = `
-      <h2>Welcome to Your Agency!</h2>
-      <p>Hello ${nameToGreet},</p>
-      <p>You have been invited to join our creator platform. To complete your onboarding process, please click the link below:</p>
-      <p><a href="${appUrl}/onboard/${token}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Complete Your Profile</a></p>
-      <p>This link will expire in 72 hours.</p>
-      <p>If you did not request this invitation, please disregard this email.</p>
-      <p>Best regards,<br>Your Agency Team</p>
-    `;
-
-    // Create Supabase client with service role key for admin operations
+    // Initialize supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Use the auth.admin APIs to create a user and send an email
-    // This method will send a confirmation email with magic link
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${appUrl}/onboard/${token}`,
-      data: {
-        token: token,
-        stage_name: stageName || null
+    // Use the most basic approach for sending an email - generating a signup link
+    // This approach doesn't create a user, it just sends an email
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: "signup",
+      email: email,
+      options: {
+        redirectTo: `${appUrl}/onboard/${token}`,
+        data: {
+          token: token,
+          stage_name: stageName || null
+        }
       }
     });
     

@@ -49,7 +49,8 @@ const InviteCreatorCard: React.FC = () => {
       // Send invitation email with token
       const appUrl = window.location.origin;
       
-      const emailResponse = await supabase.functions.invoke("send-invite-email", {
+      // Call the edge function to send the email
+      const { data: emailData, error: emailError } = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
@@ -58,8 +59,12 @@ const InviteCreatorCard: React.FC = () => {
         },
       });
       
-      if (!emailResponse.data?.success) {
-        throw new Error(emailResponse.error?.message || "Failed to send invitation email");
+      if (emailError) {
+        throw new Error(`Email sending failed: ${emailError.message}`);
+      }
+      
+      if (!emailData?.success) {
+        throw new Error("Failed to send invitation email");
       }
       
       // Only save invitation record if email was sent successfully
