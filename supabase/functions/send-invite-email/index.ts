@@ -30,14 +30,7 @@ serve(async (req) => {
     }
     
     // Parse request body
-    let requestBody;
-    try {
-      requestBody = await req.json();
-    } catch (e) {
-      console.error("Error parsing request body:", e);
-      throw new Error("Invalid request body format");
-    }
-    
+    const requestBody = await req.json();
     const { email, stageName, token, appUrl } = requestBody as EmailPayload;
     
     if (!email || !token || !appUrl) {
@@ -61,13 +54,11 @@ serve(async (req) => {
       <p>Best regards,<br>Your Agency Team</p>
     `;
 
-    // Create Supabase client with admin privileges to delete invitation if needed
+    // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Try to send email using Supabase auth.admin.sendEmail
-    let emailSent = false;
     try {
-      // Using the new client method to send email
       const { data: emailData, error: emailError } = await supabase.auth.admin.sendEmail(
         email,
         {
@@ -91,53 +82,51 @@ serve(async (req) => {
         }
       );
       
-      console.log("Email API response:", emailData || emailError);
-      
       if (emailError) {
-        throw new Error(`Failed to send email: ${emailError.message}`);
+        throw new Error(`Email sending failed: ${emailError.message}`);
       }
       
-      emailSent = true;
-    } catch (err) {
-      console.error("Email sending failed:", err.message);
-      emailSent = false;
+      console.log("Email sent successfully", emailData);
       
-      // Delete the invitation record since email sending failed
-      console.log("Deleting invitation record with token:", token);
-      const { error: deleteError } = await supabase
-        .from("creator_invitations")
-        .delete()
-        .eq("token", token);
-        
-      if (deleteError) {
-        console.error("Error deleting invitation record:", deleteError);
-        throw new Error(`Email sending failed and could not delete invitation: ${err.message}`);
-      } else {
-        console.log("Successfully deleted invitation record due to email failure");
-        throw new Error(`Failed to send email: ${err.message}`);
-      }
+      // Email sent successfully
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Email sent successfully" 
+        }),
+        { 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          },
+          status: 200
+        }
+      );
+      
+    } catch (error) {
+      console.error("Email sending error:", error.message);
+      
+      // Email sending failed, return error
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: error.message 
+        }),
+        { 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders 
+          },
+          status: 500
+        }
+      );
     }
     
-    // If we got here, email was sent successfully
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Email sent successfully" 
-      }),
-      { 
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders
-        },
-        status: 200
-      }
-    );
-    
-  } catch (error) {
-    console.error("Email sending error:", error.message);
+  } catch (error: any) {
+    console.error("Request processing error:", error.message);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, error: error.message }),
       { 
         headers: { 
           "Content-Type": "application/json",

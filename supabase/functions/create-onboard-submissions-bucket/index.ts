@@ -22,12 +22,7 @@ serve(async (req) => {
     }
     
     // Create Supabase admin client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Check if bucket exists
     const { data: existingBuckets, error: listError } = await supabase
@@ -35,26 +30,6 @@ serve(async (req) => {
       .listBuckets();
     
     if (listError) {
-      console.error("Error listing buckets:", listError);
-      
-      // Try to determine if this is an RLS error
-      if (listError.message && listError.message.includes("policy")) {
-        return new Response(
-          JSON.stringify({ 
-            success: false,
-            message: "Cannot create bucket due to permissions. Please create the 'onboard_submissions' bucket manually in the Supabase dashboard.",
-            error: listError.message
-          }),
-          { 
-            status: 403,
-            headers: { 
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
-      
       throw listError;
     }
     
@@ -63,7 +38,7 @@ serve(async (req) => {
     
     if (!bucketExists) {
       // Create the bucket if it doesn't exist
-      const { data, error } = await supabase
+      const { error } = await supabase
         .storage
         .createBucket(bucketName, {
           public: false, // Make it private since it contains personal information
@@ -71,29 +46,8 @@ serve(async (req) => {
         });
       
       if (error) {
-        // Check for RLS errors specifically
-        if (error.message && error.message.includes("policy")) {
-          console.log("RLS policy error creating bucket. User may need to create it manually.");
-          return new Response(
-            JSON.stringify({ 
-              success: false,
-              message: "Cannot create bucket due to permissions. Please create the 'onboard_submissions' bucket manually in the Supabase dashboard.",
-              error: error.message
-            }),
-            { 
-              status: 403,
-              headers: { 
-                "Content-Type": "application/json",
-                ...corsHeaders
-              }
-            }
-          );
-        }
-        
         throw error;
       }
-      
-      console.log(`Bucket '${bucketName}' created successfully:`, data);
       
       return new Response(
         JSON.stringify({ 
@@ -109,8 +63,6 @@ serve(async (req) => {
         }
       );
     } else {
-      console.log(`Bucket '${bucketName}' already exists`);
-      
       return new Response(
         JSON.stringify({ 
           success: true,
@@ -128,10 +80,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Error creating bucket:", error);
     return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        hint: "You may need to create the 'onboard_submissions' bucket manually in the Supabase dashboard."
-      }),
+      JSON.stringify({ error: error.message }),
       {
         status: 500,
         headers: {

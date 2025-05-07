@@ -1,276 +1,195 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  creatorOnboardingSchema, 
-  CreatorOnboardingFormValues,
-  defaultCreatorOnboardingValues
-} from "@/components/onboarding/schema/creatorOnboardingSchema";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import OnboardingForm from "@/components/onboarding/OnboardingForm";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { CreatorOnboardingFormValues } from "@/components/onboarding/schema/creatorOnboardingSchema";
 
-const CreatorInviteOnboarding = () => {
-  const { token } = useParams<{ token: string }>();
+const CreatorInviteOnboarding: React.FC = () => {
+  const { token } = useParams<{token: string}>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invitationData, setInvitationData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState("basic");
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+  const [inviteData, setInviteData] = useState<{email?: string, stageName?: string} | null>(null);
 
-  const form = useForm<CreatorOnboardingFormValues>({
-    resolver: zodResolver(creatorOnboardingSchema),
-    defaultValues: {
-      ...defaultCreatorOnboardingValues,
-    },
-  });
-
-  // Fetch invitation data and validate token
   useEffect(() => {
-    const fetchInvitation = async () => {
-      try {
-        if (!token) {
-          throw new Error("Invalid invitation token");
-        }
+    const validateToken = async () => {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
 
+      try {
+        // Check if token exists and is not expired
         const { data, error } = await supabase
           .from("creator_invitations")
-          .select("*")
+          .select("email, stage_name, expires_at, status")
           .eq("token", token)
           .single();
 
         if (error || !data) {
-          throw new Error("Invalid or expired invitation");
+          console.error("Token validation error:", error);
+          setIsValid(false);
+          toast({
+            variant: "destructive",
+            title: "Invalid invitation link",
+            description: "This invitation link is invalid or has been revoked.",
+          });
+          return;
         }
 
-        // Check if invitation has expired
-        const now = new Date();
-        const expiryDate = new Date(data.expires_at);
-        if (now > expiryDate) {
-          throw new Error("This invitation has expired");
+        if (data.status !== "pending") {
+          setIsValid(false);
+          toast({
+            variant: "destructive",
+            title: "Invitation already used",
+            description: "This invitation has already been used or revoked.",
+          });
+          return;
         }
 
-        // Check if already completed
-        if (data.status === "completed") {
-          throw new Error("This invitation has already been used");
+        if (new Date(data.expires_at) < new Date()) {
+          setIsValid(false);
+          toast({
+            variant: "destructive",
+            title: "Invitation expired",
+            description: "This invitation link has expired.",
+          });
+          return;
         }
 
-        setInvitationData(data);
-        
-        // Pre-fill form with invitation data
-        form.setValue("email", data.email);
-        if (data.stage_name) {
-          form.setValue("name", data.stage_name);
-        }
-      } catch (error: any) {
-        console.error("Error fetching invitation:", error);
+        setInviteData({
+          email: data.email,
+          stageName: data.stage_name || undefined
+        });
+        setIsValid(true);
+      } catch (err) {
+        console.error("Error validating token:", err);
+        setIsValid(false);
         toast({
           variant: "destructive",
-          title: "Invalid invitation",
-          description: error.message,
+          title: "Error",
+          description: "An error occurred while validating your invitation.",
         });
-        navigate("/");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchInvitation();
-  }, [token, navigate, toast, form]);
+    validateToken();
+  }, [token, toast]);
 
   const handleSubmit = async (formData: CreatorOnboardingFormValues) => {
-    if (!token || !invitationData) return;
-    
+    if (!token) return;
+
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Store form submission in storage bucket
-      const filePath = `${token}.json`;
-      const { error: uploadError } = await supabase.storage
+      // Add email from the invitation to the form data
+      const completeData = {
+        ...formData,
+        email: inviteData?.email || formData.email,
+        token
+      };
+
+      // Save the form data to the onboard_submissions bucket
+      const { error: uploadError } = await supabase
+        .storage
         .from("onboard_submissions")
-        .upload(filePath, JSON.stringify(formData), {
-          contentType: "application/json",
-          upsert: true,
-        });
+        .upload(`${token}.json`, new Blob([JSON.stringify(completeData)], {
+          type: "application/json",
+        }));
 
       if (uploadError) {
         throw uploadError;
       }
 
-      // Update invitation status
+      // Update the invitation status to completed and add submission path
       const { error: updateError } = await supabase
         .from("creator_invitations")
         .update({
           status: "completed",
-          submission_path: filePath,
+          submission_path: `${token}.json`
         })
-        .eq("id", invitationData.id);
+        .eq("token", token);
 
       if (updateError) {
         throw updateError;
       }
 
-      setIsSubmitted(true);
-      
-      // Redirect after a delay
+      toast({
+        title: "Submission successful",
+        description: "Your profile has been submitted for review.",
+      });
+
+      // Redirect to a thank you page or display a success message
       setTimeout(() => {
         navigate("/");
-      }, 5000);
+      }, 2000);
+
     } catch (error: any) {
-      console.error("Error submitting form:", error);
+      console.error("Submission error:", error);
       toast({
         variant: "destructive",
         title: "Submission failed",
-        description: error.message || "An unexpected error occurred",
+        description: error.message || "An error occurred while submitting your profile.",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Loading</CardTitle>
-            <CardDescription>Please wait while we verify your invitation</CardDescription>
+          <CardHeader>
+            <CardTitle>Loading Invitation...</CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center py-6">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Loader2 className="h-8 w-8 animate-spin text-brand-yellow" />
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Show success message after submission
-  if (isSubmitted) {
+  if (!isValid) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 className="h-12 w-12 text-green-500" />
-            </div>
-            <CardTitle>Thank You!</CardTitle>
+          <CardHeader>
+            <CardTitle>Invalid Invitation</CardTitle>
             <CardDescription>
-              Your profile information has been submitted successfully.
-              Our team will review your submission and get back to you soon.
+              This invitation link is invalid, expired, or has already been used.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center text-muted-foreground">
-            You will be redirected to the homepage in a few seconds...
+          <CardContent className="flex justify-center pt-4">
+            <Button onClick={() => navigate("/")}>Return to Homepage</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // The main onboarding form with tabs for different sections
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <Card className="w-full mb-6">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Complete Your Creator Profile</CardTitle>
-            <CardDescription>
-              Please provide your information to set up your creator account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(handleSubmit)}>
-              <Tabs value={currentStep} onValueChange={setCurrentStep}>
-                <TabsList className="grid grid-cols-3 mb-6">
-                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="social">Social Media</TabsTrigger>
-                  <TabsTrigger value="additional">Additional Info</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="basic">
-                  <div className="space-y-4">
-                    {/* Basic form fields would go here - 
-                    Creating a placeholder for brevity as the full form would be too long */}
-                    <p className="text-center text-muted-foreground py-8">
-                      This is where the Basic Info form fields would be rendered.
-                      For this example, we're keeping it simple.
-                    </p>
-                    
-                    <div className="flex justify-between mt-6">
-                      <div></div>
-                      <Button type="button" onClick={() => setCurrentStep("social")}>
-                        Next: Social Media
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="social">
-                  <div className="space-y-4">
-                    {/* Social media form fields would go here */}
-                    <p className="text-center text-muted-foreground py-8">
-                      This is where the Social Media form fields would be rendered.
-                      For this example, we're keeping it simple.
-                    </p>
-                    
-                    <div className="flex justify-between mt-6">
-                      <Button type="button" variant="outline" onClick={() => setCurrentStep("basic")}>
-                        Back: Basic Info
-                      </Button>
-                      <Button type="button" onClick={() => setCurrentStep("additional")}>
-                        Next: Additional Info
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="additional">
-                  <div className="space-y-4">
-                    {/* Additional form fields would go here */}
-                    <p className="text-center text-muted-foreground py-8">
-                      This is where the Additional Info form fields would be rendered.
-                      For this example, we're keeping it simple.
-                    </p>
-                    
-                    <div className="flex justify-between mt-6">
-                      <Button type="button" variant="outline" onClick={() => setCurrentStep("social")}>
-                        Back: Social Media
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmitting}
-                        className="flex items-center gap-2"
-                      >
-                        {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                        Submit Profile
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </form>
-          </CardContent>
-        </Card>
-        
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Need help? Contact support@example.com</p>
-        </div>
-      </div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+      <Card className="w-full max-w-4xl">
+        <CardHeader>
+          <CardTitle className="text-2xl">Complete Your Creator Profile</CardTitle>
+          <CardDescription>
+            Please provide the following information to complete your profile. This information will be reviewed by our team.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OnboardingForm onCloseModal={() => {}} />
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -35,80 +35,54 @@ const InviteCreatorCard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Initialize onboard_submissions bucket if it doesn't exist
+      // First, try to create the onboard_submissions bucket if needed
       try {
-        console.log("Creating or checking bucket...");
-        const bucketResponse = await supabase.functions.invoke("create-onboard-submissions-bucket");
-        console.log("Bucket response:", bucketResponse);
-        
-        // Check if there's a permissions error
-        if (!bucketResponse.data?.success && bucketResponse.data?.error?.includes('policy')) {
-          console.warn("Permission issue with bucket creation:", bucketResponse);
-          toast({
-            title: "Storage Bucket Issue",
-            description: "Proceeding with invitation, but you may need to create the 'onboard_submissions' bucket manually in Supabase",
-            variant: "default"
-          });
-          // Continue anyway as we'll still create the invitation
-        }
+        await supabase.functions.invoke("create-onboard-submissions-bucket");
       } catch (err) {
         console.warn("Bucket operation warning:", err);
         // Continue anyway as this is just a precautionary step
       }
       
-      console.log("Creating invitation record...");
-      // Insert invitation record to get a token
-      const { data: invitation, error } = await supabase
-        .from("creator_invitations")
-        .insert({
-          email: data.email,
-          stage_name: data.stageName || null,
-        })
-        .select("token")
-        .single();
-        
-      if (error) {
-        console.error("Database error:", error);
-        throw new Error(`Database error: ${error.message}`);
-      }
+      // Generate a token directly - no DB record until onboarding is completed
+      const token = crypto.randomUUID();
       
-      if (!invitation?.token) {
-        console.error("No token generated");
-        throw new Error("Failed to generate invitation token");
-      }
-
-      console.log("Invitation created with token:", invitation.token);
-      
-      // Send invitation email
+      // Send invitation email with token
       const appUrl = window.location.origin;
-      console.log("Sending email with appUrl:", appUrl);
       
       const emailResponse = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
-          token: invitation.token,
+          token,
           appUrl,
         },
       });
       
-      console.log("Email function response:", emailResponse);
-      
-      if (emailResponse.error || emailResponse.data?.error) {
-        console.error("Edge function error:", emailResponse.error || emailResponse.data?.error);
-        
-        // We don't need to delete the invitation record here anymore
-        // as the edge function will handle that if email sending fails
-        
+      if (emailResponse.error || !emailResponse.data?.success) {
         throw new Error(emailResponse.error?.message || emailResponse.data?.error || "Failed to send invitation email");
-      } else {
-        toast({
-          title: "Invitation sent",
-          description: `An invitation has been sent to ${data.email}`,
-        });
       }
       
+      // Only save invitation record if email was sent successfully
+      const { error } = await supabase
+        .from("creator_invitations")
+        .insert({
+          email: data.email,
+          stage_name: data.stageName || null,
+          token,
+        });
+        
+      if (error) {
+        console.error("Database error:", error);
+        throw new Error(`Failed to save invitation: ${error.message}`);
+      }
+      
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${data.email}`,
+      });
+      
       form.reset();
+      
     } catch (error: any) {
       console.error("Error sending invitation:", error);
       toast({
