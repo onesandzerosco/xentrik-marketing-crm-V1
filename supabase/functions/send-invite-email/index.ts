@@ -70,7 +70,7 @@ serve(async (req) => {
     `;
     const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
     
-    // Send email using raw fetch request to Supabase API
+    // Send email using direct API call with proper authentication
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
