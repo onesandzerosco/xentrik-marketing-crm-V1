@@ -67,7 +67,7 @@ serve(async (req) => {
     `;
     const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
     
-    // Use Supabase's built-in mailer with proper API endpoint and authentication
+    // Use the direct /auth/v1/admin/send API endpoint with service role key
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
@@ -83,14 +83,15 @@ serve(async (req) => {
       })
     });
     
-    const responseData = await response.json();
-    
     if (!response.ok) {
+      const responseData = await response.json();
       console.error("Email API error details:", responseData);
       console.error("Email API status code:", response.status);
       console.error("Email API status text:", response.statusText);
       throw new Error(`Failed to send email: ${responseData.message || responseData.error || 'Unknown error'}`);
     }
+    
+    const responseData = await response.json();
     
     return new Response(
       JSON.stringify({ success: true, message: "Email sent successfully" }),
