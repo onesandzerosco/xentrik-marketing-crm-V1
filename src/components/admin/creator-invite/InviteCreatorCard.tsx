@@ -40,6 +40,17 @@ const InviteCreatorCard: React.FC = () => {
         console.log("Creating or checking bucket...");
         const bucketResponse = await supabase.functions.invoke("create-onboard-submissions-bucket");
         console.log("Bucket response:", bucketResponse);
+        
+        // Check if there's a permissions error
+        if (!bucketResponse.data?.success && bucketResponse.data?.error?.includes('policy')) {
+          console.warn("Permission issue with bucket creation:", bucketResponse);
+          toast({
+            title: "Storage Bucket Issue",
+            description: "Proceeding with invitation, but you may need to create the 'onboard_submissions' bucket manually in Supabase",
+            variant: "default"
+          });
+          // Continue anyway as we'll still create the invitation
+        }
       } catch (err) {
         console.warn("Bucket operation warning:", err);
         // Continue anyway as this is just a precautionary step
@@ -86,19 +97,19 @@ const InviteCreatorCard: React.FC = () => {
       if (emailResponse.error) {
         console.error("Edge function error:", emailResponse.error);
         
-        // Remove the invitation if email sending fails
-        await supabase
-          .from("creator_invitations")
-          .delete()
-          .eq("token", invitation.token);
-          
-        throw new Error(`Failed to send email: ${emailResponse.error.message || "Edge function error"}`);
+        // Don't remove the invitation record even if email sending fails
+        // as the admin can still see it in the invitations list
+        toast({
+          variant: "warning",
+          title: "Email notification may have failed",
+          description: "The invitation was created but there might be an issue with the email delivery. The invited creator can still use the link when shared manually.",
+        });
+      } else {
+        toast({
+          title: "Invitation sent",
+          description: `An invitation has been sent to ${data.email}`,
+        });
       }
-      
-      toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${data.email}`,
-      });
       
       form.reset();
     } catch (error: any) {
