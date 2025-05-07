@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Plus } from "lucide-react";
+import { Mail, Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -167,8 +168,17 @@ const InviteCreatorCard: React.FC = () => {
               className="w-full" 
               disabled={isLoading}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Invite Creator
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending Invitation...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Invite Creator
+                </>
+              )}
             </Button>
           </form>
         </Form>

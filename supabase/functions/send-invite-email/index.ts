@@ -59,8 +59,64 @@ serve(async (req) => {
       <p>If you did not request this invitation, please disregard this email.</p>
       <p>Best regards,<br>Your Agency Team</p>
     `;
+
+    // Attempt to send via auth admin API directly
+    console.log("Attempting to send email with auth admin API");
+    const adminResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users/invite`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": supabaseServiceKey,
+        "Authorization": `Bearer ${supabaseServiceKey}`
+      },
+      body: JSON.stringify({
+        email,
+        data: {
+          redirect_to: `${appUrl}/onboard/${token}`,
+          user_display_name: nameToGreet
+        }
+      })
+    });
     
-    // Send email using the supabase auth.email POST API
+    const adminStatus = adminResponse.status;
+    console.log("Admin API status:", adminStatus);
+    
+    let adminData = null;
+    try {
+      const adminText = await adminResponse.text();
+      console.log("Admin API response:", adminText);
+      if (adminText && adminText.length > 0) {
+        try {
+          adminData = JSON.parse(adminText);
+        } catch (e) {
+          console.log("Could not parse admin response as JSON");
+        }
+      }
+    } catch (e) {
+      console.error("Error getting admin response:", e);
+    }
+    
+    if (adminStatus === 200) {
+      console.log("Email sent successfully via admin invite API");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Email sent successfully",
+          method: "admin-invite"
+        }),
+        { 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          },
+          status: 200
+        }
+      );
+    }
+    
+    // If admin invite fails, try the generic email API as fallback
+    console.log("Falling back to generic email API");
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/email`, {
       method: "POST",
       headers: {
