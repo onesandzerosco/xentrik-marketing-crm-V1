@@ -21,76 +21,46 @@ serve(async (req) => {
       throw new Error("Missing Supabase environment variables");
     }
     
-    // Initialize supabase client with service role key
+    // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if bucket exists
-    const { data: buckets, error: listError } = await supabase
-      .storage
-      .listBuckets();
+    // Check if bucket exists first
+    const { data: existingBuckets } = await supabase.storage.listBuckets();
+    const bucketExists = existingBuckets?.some(bucket => bucket.name === 'onboard_submissions');
     
-    const bucketExists = buckets?.some(bucket => bucket.name === 'onboard_submissions');
-    
-    if (bucketExists) {
-      console.log("Bucket onboard_submissions already exists");
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Bucket onboard_submissions already exists",
-          exists: true
-        }),
-        { 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          },
-          status: 200
-        }
-      );
-    }
-    
-    // Create bucket if it doesn't exist
-    const { data, error } = await supabase
-      .storage
-      .createBucket('onboard_submissions', {
+    if (!bucketExists) {
+      // Create the bucket
+      const { error } = await supabase.storage.createBucket('onboard_submissions', {
         public: false,
-        fileSizeLimit: 5242880, // 5MB limit
+        allowedMimeTypes: ['application/json'],
+        fileSizeLimit: 1024 * 1024, // 1MB
       });
-    
-    if (error) {
-      console.error("Error creating bucket:", error);
-      throw error;
+      
+      if (error) {
+        throw error;
+      }
     }
-    
-    console.log("Created onboard_submissions bucket successfully");
     
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Created onboard_submissions bucket successfully",
-        data,
-      }),
+      JSON.stringify({ success: true, message: "Bucket created or already exists" }),
       { 
+        status: 200,
         headers: { 
           "Content-Type": "application/json",
           ...corsHeaders
-        },
-        status: 200
+        }
       }
     );
-    
-  } catch (error: any) {
-    console.error("Request processing error:", error.message);
-    
+  } catch (error) {
+    console.error("Error:", error.message);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { 
-        headers: { 
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: {
           "Content-Type": "application/json",
-          ...corsHeaders 
-        },
-        status: 500
+          ...corsHeaders
+        }
       }
     );
   }

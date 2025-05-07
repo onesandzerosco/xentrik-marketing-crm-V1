@@ -21,7 +21,6 @@ serve(async (req) => {
   }
   
   try {
-    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
@@ -29,9 +28,10 @@ serve(async (req) => {
       throw new Error("Missing Supabase environment variables");
     }
     
-    // Parse request body
-    const requestBody = await req.json();
-    const { email, stageName, token, appUrl } = requestBody as EmailPayload;
+    // Create Supabase admin client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
     
     if (!email || !token || !appUrl) {
       throw new Error("Missing required fields");
@@ -40,56 +40,56 @@ serve(async (req) => {
     // Format name for email greeting
     const nameToGreet = stageName || email.split('@')[0];
     
-    console.log("Sending creator invitation email to:", email);
+    console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Initialize supabase client with service role key
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Use Supabase's built-in email function (which uses the template set in Supabase Dashboard)
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${appUrl}/onboard/${token}`,
-      data: {
-        stage_name: stageName || null,
-        invite_type: 'creator',
-        greeting_name: nameToGreet
-      }
+    // Send email using raw API approach
+    const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        "apikey": supabaseServiceKey
+      },
+      body: JSON.stringify({
+        email,
+        data: {
+          name: nameToGreet,
+          onboard_link: `${appUrl}/onboard/${token}`,
+          agency_name: "Your Agency"
+        }
+      })
     });
     
-    if (error) {
-      console.error("Email sending error:", error);
-      throw error;
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Error sending email via Supabase:", data);
+      throw new Error(`Failed to send invitation email: ${data.msg || data.message || JSON.stringify(data)}`);
     }
     
-    console.log("Email sent successfully to:", email);
+    console.log("Email sent successfully:", data);
     
-    // Email sent successfully
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: "Email sent successfully",
-        data: data
-      }),
+      JSON.stringify({ success: true, data }),
       { 
+        status: 200,
         headers: { 
           "Content-Type": "application/json",
           ...corsHeaders
-        },
-        status: 200
+        }
       }
     );
-    
-  } catch (error: any) {
-    console.error("Request processing error:", error.message);
-    
+  } catch (error) {
+    console.error("Error in send-invite-email function:", error.message);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { 
-        headers: { 
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: {
           "Content-Type": "application/json",
-          ...corsHeaders 
-        },
-        status: 500
+          ...corsHeaders
+        }
       }
     );
   }

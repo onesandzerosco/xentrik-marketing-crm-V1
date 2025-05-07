@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Mail, Plus, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Mail, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -35,57 +36,59 @@ const InviteCreatorCard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // First, try to create the onboard_submissions bucket if needed
+      // Initialize onboard_submissions bucket if it doesn't exist
       try {
         await supabase.functions.invoke("create-onboard-submissions-bucket");
       } catch (err) {
-        console.warn("Bucket operation warning:", err);
+        console.warn("Bucket may already exist:", err);
         // Continue anyway as this is just a precautionary step
       }
       
-      // Generate a token
-      const token = crypto.randomUUID();
+      // Insert invitation record to get a token
+      const { data: invitation, error } = await supabase
+        .from("creator_invitations")
+        .insert({
+          email: data.email,
+          stage_name: data.stageName || null,
+        })
+        .select("token")
+        .single();
+        
+      if (error) {
+        throw error;
+      }
       
-      // Send invitation email with token
+      if (!invitation?.token) {
+        throw new Error("Failed to generate invitation token");
+      }
+
+      // Send invitation email
       const appUrl = window.location.origin;
-      
-      // Call the edge function to send the email
-      const { data: emailData, error: emailError } = await supabase.functions.invoke("send-invite-email", {
+      const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
           stageName: data.stageName || undefined,
-          token,
+          token: invitation.token,
           appUrl,
         },
       });
       
       if (emailError) {
-        throw new Error(`Email sending failed: ${emailError.message}`);
+        console.error("Edge function error:", emailError);
+        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
       }
       
-      // Only save invitation record if email was sent successfully
-      const { error } = await supabase
-        .from("creator_invitations")
-        .insert({
-          email: data.email,
-          stage_name: data.stageName || null,
-          token,
-          expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours from now
-          status: "pending"
-        });
-        
-      if (error) {
-        console.error("Database error:", error);
-        throw new Error(`Failed to save invitation: ${error.message}`);
+      if (emailData?.error) {
+        console.error("Email sending error:", emailData.error);
+        throw new Error(`Email service error: ${emailData.error}`);
       }
-      
+
       toast({
         title: "Invitation sent",
         description: `An invitation has been sent to ${data.email}`,
       });
       
       form.reset();
-      
     } catch (error: any) {
       console.error("Error sending invitation:", error);
       toast({
@@ -153,17 +156,8 @@ const InviteCreatorCard: React.FC = () => {
               className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending Invitation...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Invite Creator
-                </>
-              )}
+              <Plus className="mr-2 h-4 w-4" />
+              Invite Creator
             </Button>
           </form>
         </Form>

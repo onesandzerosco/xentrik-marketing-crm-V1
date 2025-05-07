@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PrimaryRole } from "@/types/employee";
 import { EXCLUSIVE_ROLES } from "./constants";
 import { useToast } from "@/hooks/use-toast";
@@ -9,16 +9,10 @@ export const useRolesManagement = (
   initialAdditionalRoles: string[]
 ) => {
   const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(initialPrimaryRole);
-  const [additionalRoles, setAdditionalRoles] = useState<string[]>(initialAdditionalRoles || []);
+  const [additionalRoles, setAdditionalRoles] = useState<string[]>(initialAdditionalRoles);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<PrimaryRole | null>(null);
   const { toast } = useToast();
-
-  // This effect ensures the state reflects the props when they change
-  useEffect(() => {
-    setPrimaryRole(initialPrimaryRole);
-    setAdditionalRoles(initialAdditionalRoles || []);
-  }, [initialPrimaryRole, initialAdditionalRoles]);
 
   const handlePrimaryRoleChange = (role: PrimaryRole) => {
     // If changing to or from Admin, show confirmation

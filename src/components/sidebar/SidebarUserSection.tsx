@@ -13,26 +13,11 @@ const SidebarUserSection: React.FC = () => {
   const { user, signOut } = useSupabaseAuth();
 
   const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logged out successfully",
-        description: "You have been securely logged out"
-      });
-      
-      // Manually navigate to login page after successful logout
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 300);
-      
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Logout failed",
-        description: "There was an issue logging you out. Please try again."
-      });
-    }
+    await signOut();
+    toast({
+      title: "Logged out successfully",
+      description: "You have been securely logged out"
+    });
   };
 
   const getUserInitials = () => {

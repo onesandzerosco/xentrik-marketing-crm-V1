@@ -25,7 +25,6 @@ const Sidebar = () => {
   useRouteMemory();
 
   if (isMobile) {
-    // For mobile, we'll handle the sidebar differently
     return null;
   }
 

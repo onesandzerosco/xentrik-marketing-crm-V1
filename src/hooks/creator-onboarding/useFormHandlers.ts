@@ -1,12 +1,12 @@
 
 import { useState } from "react";
+import { ValidationErrors, CustomSocialLink } from "./types";
 import { Gender, Team, CreatorType } from "@/types";
-import { CustomSocialLink, ValidationErrors } from "./types";
 
 export function useFormHandlers() {
   const [name, setName] = useState("");
   const [profileImage, setProfileImage] = useState("");
-  const [gender, setGender] = useState<Gender>("Female");
+  const [gender, setGender] = useState<Gender>("Male");
   const [team, setTeam] = useState<Team>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorType>("Real");
   const [telegramUsername, setTelegramUsername] = useState("");
@@ -21,42 +21,42 @@ export function useFormHandlers() {
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
 
-  const formState = {
-    name,
-    profileImage,
-    gender,
-    team,
-    creatorType,
-    telegramUsername,
-    whatsappNumber,
-    instagram,
-    tiktok,
-    twitter,
-    reddit,
-    chaturbate,
-    youtube,
-    customSocialLinks,
-    notes,
-    errors
+  return {
+    formState: {
+      name,
+      profileImage,
+      gender,
+      team,
+      creatorType,
+      telegramUsername,
+      whatsappNumber,
+      instagram,
+      tiktok,
+      twitter,
+      reddit,
+      chaturbate,
+      youtube,
+      customSocialLinks,
+      notes,
+      errors
+    },
+    formActions: {
+      setName,
+      setProfileImage,
+      setGender,
+      setTeam,
+      setCreatorType,
+      setTelegramUsername,
+      setWhatsappNumber,
+      setInstagram,
+      setTiktok,
+      setTwitter,
+      setReddit,
+      setChaturbate,
+      setYoutube,
+      setCustomSocialLinks,
+      setNotes
+    },
+    setErrors
   };
-
-  const formActions = {
-    setName,
-    setProfileImage,
-    setGender,
-    setTeam,
-    setCreatorType,
-    setTelegramUsername,
-    setWhatsappNumber,
-    setInstagram,
-    setTiktok,
-    setTwitter,
-    setReddit,
-    setChaturbate,
-    setYoutube,
-    setCustomSocialLinks,
-    setNotes
-  };
-
-  return { formState, formActions, setErrors };
 }

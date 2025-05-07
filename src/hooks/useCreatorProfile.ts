@@ -1,4 +1,2 @@
 
-import { useCreatorProfile } from "./creator-profile";
-export { useCreatorProfile };
-export default useCreatorProfile;
+export { useCreatorProfile } from "./creator-profile";

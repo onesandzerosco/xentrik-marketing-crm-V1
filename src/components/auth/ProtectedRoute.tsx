@@ -1,18 +1,51 @@
 
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import React, { useEffect, useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
+import PageTransition from '../PageTransition';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarTrigger,
+  SidebarInset
+} from "@/components/ui/sidebar";
+import SidebarLogo from '../sidebar/SidebarLogo';
+import SidebarNav from '../sidebar/SidebarNav';
+import SidebarUserSection from '../sidebar/SidebarUserSection';
+import { useRouteMemory } from '@/hooks/useRouteMemory';
+import { NotificationsDropdown } from '@/components/notifications/NotificationsDropdown';
 
 interface ProtectedRouteProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, isAuthenticated, isLoading } = useSupabaseAuth();
-
+  const { isAuthenticated, isLoading } = useSupabaseAuth();
+  const { user, userRole } = useSupabaseAuth();
+  const location = useLocation();
+  const [pageTitle, setPageTitle] = useState("Dashboard");
+  
+  useRouteMemory();
+  
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/dashboard')) setPageTitle('Dashboard');
+    else if (path.includes('/creators')) setPageTitle('Creators');
+    else if (path.includes('/team')) setPageTitle('Team');
+    else if (path.includes('/users')) setPageTitle('User Management');
+    else if (path.includes('/messages')) setPageTitle('Messages');
+    else if (path.includes('/shared-files')) setPageTitle('Shared Files');
+    else if (path.includes('/creator-files')) setPageTitle('Creator Files');
+    else if (path.includes('/secure-logins')) setPageTitle('Secure Logins');
+    else if (path.includes('/account')) setPageTitle('Account Settings');
+    else if (path.includes('/voice-generation')) setPageTitle('Voice Generation');
+    else setPageTitle('Dashboard');
+  }, [location.pathname]);
+  
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center bg-premium-darker">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-premium-border border-t-brand-yellow"></div>
           <p className="text-muted-foreground">Loading...</p>
@@ -21,11 +54,48 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
-  return children ? <>{children}</> : <Outlet />;
+  // Consider both role property and Admin being in the userRole
+  const isAdmin = user?.user_metadata?.role === "Admin" || userRole === "Admin";
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <Sidebar>
+          <SidebarContent className="pt-8">
+            <SidebarLogo />
+            <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
+              <SidebarNav isAdmin={isAdmin} />
+            </div>
+            <div className="mt-auto p-3 border-t border-premium-border/20">
+              {user && <SidebarUserSection />}
+            </div>
+          </SidebarContent>
+        </Sidebar>
+        
+        <SidebarInset className="bg-premium-dark overflow-y-auto">
+          <div className="flex items-center justify-between border-b border-premium-border/20 bg-premium-darker p-4">
+            <div className="flex items-center">
+              <SidebarTrigger />
+              <h1 className="ml-4 text-lg font-semibold">{pageTitle}</h1>
+            </div>
+            <div className="flex items-center space-x-2">
+              <NotificationsDropdown />
+            </div>
+          </div>
+          
+          <PageTransition>
+            <div className="max-w-full overflow-x-hidden">
+              {children}
+            </div>
+          </PageTransition>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
 };
 
 export default ProtectedRoute;
