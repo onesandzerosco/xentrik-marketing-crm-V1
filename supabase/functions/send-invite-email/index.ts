@@ -46,8 +46,8 @@ serve(async (req) => {
     // Initialize supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Create a simple email using a table row insert with email trigger
-    // This is a workaround to send an email without using auth.generateLink
+    // Insert email into email_queue
+    // Our newly created trigger will handle the actual email sending
     const { data, error } = await supabase
       .from('email_queue')
       .insert({

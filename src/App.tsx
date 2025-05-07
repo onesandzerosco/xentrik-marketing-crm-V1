@@ -74,7 +74,7 @@ function App() {
             <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
 
             {/* Protected routes */}
-            <Route element={<ProtectedRoute children={undefined} />}>
+            <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/creators" element={<Creators />} />
               <Route path="/creators/:id" element={<CreatorProfile />} />
