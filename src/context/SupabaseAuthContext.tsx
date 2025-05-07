@@ -5,5 +5,5 @@ import { SupabaseAuthContextType } from './auth/types';
 export { SupabaseAuthProvider, useSupabaseAuth };
 export type { SupabaseAuthContextType };
 
-// For backward compatibility, export as default
+// Export as default for backward compatibility
 export default SupabaseAuthProvider;

@@ -1,29 +1,21 @@
 
-import { useCreators } from "@/context/creator";
-import { useCreatorProfileState } from "./useCreatorProfileState";
-import { useAssignedMembers } from "./useAssignedMembers";
-import { useProfileSave } from "./useProfileSave";
-import { Employee } from "@/types/employee";
+import { useCreatorProfileState } from './useCreatorProfileState';
+import { useProfileSave } from './useProfileSave';
+import { useAssignedMembers } from './useAssignedMembers';
 
-export function useCreatorProfile(creatorId: string) {
-  const { getCreator } = useCreators();
-  const creator = getCreator(creatorId);
-  
-  const { state, actions } = useCreatorProfileState(creator);
-  const { handleAssignTeamMembers } = useAssignedMembers(creator, actions.setAssignedMembers);
-  const { handleSave } = useProfileSave(creator);
-
-  const saveProfile = () => {
-    handleSave(state, actions.setNameError);
-  };
+export const useCreatorProfile = () => {
+  const profileState = useCreatorProfileState();
+  const { saveProfile, isLoading: isSaving } = useProfileSave();
+  const { assignedMembers, isLoading: membersLoading } = useAssignedMembers();
 
   return {
-    creator,
-    formState: state,
-    formActions: actions,
-    handleSave: saveProfile,
-    handleAssignTeamMembers
+    ...profileState,
+    saveProfile,
+    isSaving,
+    assignedMembers,
+    membersLoading
   };
-}
+};
 
-export * from "./types";
+// Export the hook explicitly
+export default useCreatorProfile;

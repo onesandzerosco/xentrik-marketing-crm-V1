@@ -13,7 +13,7 @@ import UserManagement from './pages/UserManagement';
 import AccessControlPanel from './pages/AccessControlPanel';
 import Creators from './pages/Creators';
 import CreatorOnboarding from './pages/CreatorOnboarding';
-import CreatorInviteOnboarding from "./pages/CreatorOnboarding/CreatorInviteOnboarding";
+import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
 
 const App = () => {
   const isLocalhost = window.location.hostname === 'localhost';
