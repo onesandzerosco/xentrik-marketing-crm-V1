@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { HttpsEnforcer } from 'react-https-redirect';
+import { HttpsRedirect } from 'react-https-redirect';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import DashboardLayout from './layouts/DashboardLayout';
+import DashboardLayout from './components/layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import NotFound from './pages/NotFound';
@@ -21,7 +22,7 @@ const App = () => {
   
   return (
     <BrowserRouter>
-      <HttpsEnforcer enabled={!isLocalhost}>
+      <HttpsRedirect disabled={isLocalhost}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
@@ -45,7 +46,7 @@ const App = () => {
           {/* Not found route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </HttpsEnforcer>
+      </HttpsRedirect>
     </BrowserRouter>
   );
 };
