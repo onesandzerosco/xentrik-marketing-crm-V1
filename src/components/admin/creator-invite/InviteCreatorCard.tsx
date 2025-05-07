@@ -40,11 +40,6 @@ const InviteCreatorCard: React.FC = () => {
         console.log("Creating or checking bucket...");
         const bucketResponse = await supabase.functions.invoke("create-onboard-submissions-bucket");
         console.log("Bucket response:", bucketResponse);
-        
-        if (bucketResponse.error) {
-          console.warn("Bucket creation warning:", bucketResponse.error);
-          // Continue anyway as this is just a precautionary step
-        }
       } catch (err) {
         console.warn("Bucket operation warning:", err);
         // Continue anyway as this is just a precautionary step
@@ -77,6 +72,14 @@ const InviteCreatorCard: React.FC = () => {
       const appUrl = window.location.origin;
       console.log("Sending email with appUrl:", appUrl);
       
+      // Detailed logging for troubleshooting
+      console.log("Sending to email function with payload:", {
+        email: data.email,
+        stageName: data.stageName,
+        token: invitation.token,
+        appUrl,
+      });
+      
       const emailResponse = await supabase.functions.invoke("send-invite-email", {
         body: {
           email: data.email,
@@ -86,18 +89,20 @@ const InviteCreatorCard: React.FC = () => {
         },
       });
       
-      console.log("Email function response:", emailResponse);
+      console.log("Email function complete response:", emailResponse);
       
       if (emailResponse.error) {
         console.error("Edge function error:", emailResponse.error);
+        
+        // Remove the invitation if email sending fails
+        await supabase
+          .from("creator_invitations")
+          .delete()
+          .eq("token", invitation.token);
+          
         throw new Error(`Failed to send email: ${emailResponse.error.message || "Edge function error"}`);
       }
       
-      if (emailResponse.data?.error) {
-        console.error("Email service error:", emailResponse.data.error);
-        throw new Error(`Email service error: ${emailResponse.data.error}`);
-      }
-
       toast({
         title: "Invitation sent",
         description: `An invitation has been sent to ${data.email}`,
