@@ -49,7 +49,7 @@ serve(async (req) => {
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Prepare email content
+    // Prepare email content with simpler HTML
     const subject = "Welcome to Your Agency";
     const htmlContent = `
       <!DOCTYPE html>
@@ -67,7 +67,7 @@ serve(async (req) => {
     `;
     const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
     
-    // Use the direct /auth/v1/admin/send API endpoint with service role key
+    // Use the auth admin API directly with correct content type
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
@@ -83,18 +83,31 @@ serve(async (req) => {
       })
     });
     
-    if (!response.ok) {
-      const responseData = await response.json();
-      console.error("Email API error details:", responseData);
-      console.error("Email API status code:", response.status);
-      console.error("Email API status text:", response.statusText);
-      throw new Error(`Failed to send email: ${responseData.message || responseData.error || 'Unknown error'}`);
+    // Log detailed response information for debugging
+    const responseStatus = response.status;
+    let responseData;
+    
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      console.error("Error parsing response JSON:", e);
+      responseData = { parseError: true };
     }
     
-    const responseData = await response.json();
+    console.log("Email API response status:", responseStatus);
+    console.log("Email API response body:", JSON.stringify(responseData));
+    
+    if (!response.ok) {
+      throw new Error(`Failed to send email: Status ${responseStatus} - ${JSON.stringify(responseData)}`);
+    }
     
     return new Response(
-      JSON.stringify({ success: true, message: "Email sent successfully" }),
+      JSON.stringify({ 
+        success: true, 
+        message: "Email sent successfully",
+        status: responseStatus,
+        responseData
+      }),
       { 
         status: 200,
         headers: { 
