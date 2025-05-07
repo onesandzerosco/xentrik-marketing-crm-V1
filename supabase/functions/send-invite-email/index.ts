@@ -64,18 +64,12 @@ serve(async (req) => {
     // Create Supabase client with admin privileges to delete invitation if needed
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Use Supabase's email API with raw fetch for better control
-    const emailApiResponse = await fetch(`${supabaseUrl}/auth/v1/admin/email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey,
-        "Authorization": `Bearer ${supabaseServiceKey}`
-      },
-      body: JSON.stringify({
-        email,
+    // Instead of using the admin/email endpoint directly, use the Supabase JS client to send email
+    const { data: emailData, error: emailError } = await supabase.auth.admin.sendEmail(
+      email,
+      {
         subject: "Welcome to Your Agency",
-        template: "invite",
+        template_id: "invite",
         template_data: {
           action_url: `${appUrl}/onboard/${token}`,
           email_name: nameToGreet,
@@ -90,30 +84,13 @@ serve(async (req) => {
             stage_name: stageName || null
           }
         },
-        html: htmlContent // Fallback HTML content
-      })
-    });
-    
-    const status = emailApiResponse.status;
-    console.log("Email API status:", status);
-    
-    let responseData = null;
-    try {
-      const text = await emailApiResponse.text();
-      console.log("Response text:", text);
-      if (text && text.length > 0) {
-        try {
-          responseData = JSON.parse(text);
-        } catch (e) {
-          console.log("Could not parse response as JSON");
-          responseData = { raw: text };
-        }
+        html_content: htmlContent // Fallback HTML content
       }
-    } catch (e) {
-      console.error("Error getting response text:", e);
-    }
+    );
     
-    if (!emailApiResponse.ok) {
+    console.log("Email API response:", emailData || emailError);
+    
+    if (emailError) {
       // If email sending fails, delete the invitation record
       console.log("Email sending failed, deleting invitation record with token:", token);
       const { error: deleteError } = await supabase
@@ -127,7 +104,7 @@ serve(async (req) => {
         console.log("Successfully deleted invitation record due to email failure");
       }
       
-      throw new Error(`Failed to send email: Status ${status}`);
+      throw new Error(`Failed to send email: ${emailError.message}`);
     }
     
     return new Response(
