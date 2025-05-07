@@ -31,7 +31,16 @@ serve(async (req) => {
     // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
+    // Parse request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      console.error("Error parsing request body:", e);
+      throw new Error("Invalid request body format");
+    }
+    
+    const { email, stageName, token, appUrl } = requestBody as EmailPayload;
     
     if (!email || !token || !appUrl) {
       throw new Error("Missing required fields");
@@ -61,7 +70,7 @@ serve(async (req) => {
     `;
     const textContent = `Hi ${nameToGreet}, click the link below to complete your profile... ${appUrl}/onboard/${token}`;
     
-    // Send email using Supabase auth.email API
+    // Send email using raw fetch request to Supabase API
     const response = await fetch(`${supabaseUrl}/auth/v1/admin/send`, {
       method: "POST",
       headers: {
