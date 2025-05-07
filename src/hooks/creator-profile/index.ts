@@ -11,7 +11,7 @@ export const useCreatorProfile = (creatorId: string) => {
   
   const { state, actions } = useCreatorProfileState(creator);
   const { handleAssignTeamMembers } = useAssignedMembers(creator, actions.setAssignedMembers);
-  const { handleSave } = useProfileSave(creator);
+  const { handleSave, isSaving } = useProfileSave(creator);
 
   const saveProfile = () => {
     handleSave(state, actions.setNameError);
@@ -19,12 +19,14 @@ export const useCreatorProfile = (creatorId: string) => {
 
   return {
     creator,
-    formState: state,
-    formActions: actions,
+    state,
+    actions,
     handleSave: saveProfile,
-    handleAssignTeamMembers
+    isSaving: isSaving || false,
+    handleAssignTeamMembers,
+    assignedMembers: state.assignedMembers || [],
+    membersLoading: false
   };
 };
 
-// Export the hook explicitly
 export default useCreatorProfile;
