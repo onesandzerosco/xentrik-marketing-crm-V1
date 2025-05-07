@@ -40,38 +40,25 @@ serve(async (req) => {
     // Format name for email greeting
     const nameToGreet = stageName || email.split('@')[0];
     
-    console.log("Sending email to:", email);
+    console.log("Sending creator invitation email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
     // Initialize supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Insert email into email_queue
-    // Our newly created trigger will handle the actual email sending
-    const { data, error } = await supabase
-      .from('email_queue')
-      .insert({
-        recipient_email: email,
-        subject: 'Complete Your Creator Profile',
-        html_content: `
-          <h2>Welcome to Our Creator Platform!</h2>
-          <p>Hello ${nameToGreet},</p>
-          <p>You have been invited to join our creator platform. To complete your onboarding process, please click the link below:</p>
-          <p><a href="${appUrl}/onboard/${token}" style="display: inline-block; background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Complete Your Profile</a></p>
-          <p>This link will expire in 72 hours.</p>
-          <p>If you did not request this invitation, please disregard this email.</p>
-          <p>Best regards,<br>The Team</p>
-        `,
-        metadata: {
-          type: 'creator_invitation',
-          token: token,
-          stage_name: stageName || null
-        }
-      });
+    // Use Supabase's built-in email function (which uses the template set in Supabase Dashboard)
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${appUrl}/onboard/${token}`,
+      data: {
+        stage_name: stageName || null,
+        invite_type: 'creator',
+        greeting_name: nameToGreet
+      }
+    });
     
     if (error) {
       console.error("Email sending error:", error);
-      throw new Error(`Failed to send email: ${error.message}`);
+      throw error;
     }
     
     console.log("Email sent successfully to:", email);

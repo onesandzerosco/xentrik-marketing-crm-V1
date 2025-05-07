@@ -43,7 +43,7 @@ const InviteCreatorCard: React.FC = () => {
         // Continue anyway as this is just a precautionary step
       }
       
-      // Generate a token directly - no DB record until onboarding is completed
+      // Generate a token
       const token = crypto.randomUUID();
       
       // Send invitation email with token
@@ -61,10 +61,6 @@ const InviteCreatorCard: React.FC = () => {
       
       if (emailError) {
         throw new Error(`Email sending failed: ${emailError.message}`);
-      }
-      
-      if (!emailData?.success) {
-        throw new Error("Failed to send invitation email");
       }
       
       // Only save invitation record if email was sent successfully
