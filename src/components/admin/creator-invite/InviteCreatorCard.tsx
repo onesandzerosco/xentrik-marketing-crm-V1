@@ -91,8 +91,8 @@ const InviteCreatorCard: React.FC = () => {
       
       console.log("Email function complete response:", emailResponse);
       
-      if (emailResponse.error) {
-        console.error("Edge function error:", emailResponse.error);
+      if (emailResponse.error || !emailResponse.data?.success) {
+        console.error("Edge function error:", emailResponse.error || "Email sending failed");
         
         // Remove the invitation if email sending fails
         await supabase
@@ -100,7 +100,7 @@ const InviteCreatorCard: React.FC = () => {
           .delete()
           .eq("token", invitation.token);
           
-        throw new Error(`Failed to send email: ${emailResponse.error.message || "Edge function error"}`);
+        throw new Error(`Failed to send email: ${emailResponse.error?.message || emailResponse.data?.error || "Unknown error"}`);
       }
       
       toast({
