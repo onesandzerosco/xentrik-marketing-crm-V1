@@ -7,6 +7,8 @@ import DashboardActivities from "../components/dashboard/DashboardActivities";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Dashboard = () => {
+  console.log("Dashboard component rendering");
+  
   const { getRecentActivities } = useActivities();
   const { dashboardStats, isLoading } = useDashboardData();
   const recentActivities = getRecentActivities(3);

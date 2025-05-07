@@ -10,8 +10,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const CreatorProfile = () => {
+  console.log("CreatorProfile component rendering");
+  
   const { id } = useParams<{ id: string }>();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Ensure we're using the hook correctly
   const {
     creator,
     state,
@@ -21,6 +25,7 @@ const CreatorProfile = () => {
     handleAssignTeamMembers,
     assignedMembers
   } = useCreatorProfile(id!);
+  
   const { userRole, isCreator, isCreatorSelf } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

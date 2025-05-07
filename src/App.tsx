@@ -16,7 +16,7 @@ import CreatorOnboarding from './pages/CreatorOnboarding';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
 import CreatorProfile from './pages/CreatorProfile';
 
-const App = () => {
+const App: React.FC = () => {
   const isLocalhost = window.location.hostname === 'localhost';
   
   return (
