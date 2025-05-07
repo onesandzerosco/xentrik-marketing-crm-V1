@@ -56,71 +56,41 @@ serve(async (req) => {
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Try to send email using Supabase auth.admin.sendEmail
-    try {
-      const { data: emailData, error: emailError } = await supabase.auth.admin.sendEmail(
-        email,
-        {
-          subject: "Welcome to Your Agency",
-          template_id: "invite",
-          template_data: {
-            action_url: `${appUrl}/onboard/${token}`,
-            email_name: nameToGreet,
-            invite_sender_name: "Your Agency Team",
-            invite_site_title: "Creator Management",
-            invite_site_url: appUrl,
-            product_name: "Your Agency"
-          },
-          data: {
-            user_metadata: {
-              token: token,
-              stage_name: stageName || null
-            }
-          },
-          html_content: htmlContent // Fallback HTML content
-        }
-      );
-      
-      if (emailError) {
-        throw new Error(`Email sending failed: ${emailError.message}`);
-      }
-      
-      console.log("Email sent successfully", emailData);
-      
-      // Email sent successfully
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Email sent successfully" 
-        }),
-        { 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          },
-          status: 200
-        }
-      );
-      
-    } catch (error) {
-      console.error("Email sending error:", error.message);
-      
-      // Email sending failed, return error
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: error.message 
-        }),
-        { 
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders 
-          },
-          status: 500
-        }
-      );
+    
+    // Send email using the Supabase Auth API
+    const { error } = await supabase.auth.admin.createUser({
+      email: email,
+      email_confirm: false,
+      user_metadata: {
+        token: token,
+        stage_name: stageName || null
+      },
+      password: crypto.randomUUID(), // Random password as this is just for email sending
+      app_metadata: {
+        provider: "email",
+      },
+    });
+    
+    if (error) {
+      throw new Error(`Failed to send email: ${error.message}`);
     }
+    
+    console.log("Email sent successfully to:", email);
+    
+    // Email sent successfully
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: "Email sent successfully" 
+      }),
+      { 
+        headers: { 
+          "Content-Type": "application/json",
+          ...corsHeaders
+        },
+        status: 200
+      }
+    );
     
   } catch (error: any) {
     console.error("Request processing error:", error.message);
