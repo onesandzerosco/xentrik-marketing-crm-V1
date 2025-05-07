@@ -15,7 +15,8 @@ const Index = () => {
         // Navigate to the last visited route or default to dashboard
         navigate(lastVisitedRoute || '/dashboard');
       } else {
-        navigate('/login');
+        // If not authenticated, immediately redirect to login
+        navigate('/login', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, navigate]);
