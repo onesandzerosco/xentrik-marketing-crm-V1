@@ -99,6 +99,9 @@ const AppRoutes = () => {
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
       
+      {/* New creator onboarding form - Admin only for now */}
+      <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
+      
       {/* Public route for creator onboarding from invitation */}
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       

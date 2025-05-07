@@ -10,7 +10,8 @@ import {
   Lock,
   FileUp,
   Mic,
-  Shield
+  Shield,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -64,6 +65,12 @@ const navItems: NavItem[] = [
     path: '/voice-generation',
     label: 'Voice Generator',
     icon: <Mic className="h-5 w-5" />,
+  },
+  {
+    path: '/onboard',
+    label: 'Creator Onboarding',
+    icon: <UserPlus className="h-5 w-5" />,
+    adminOnly: true,
   },
   {
     path: '/access-control',
