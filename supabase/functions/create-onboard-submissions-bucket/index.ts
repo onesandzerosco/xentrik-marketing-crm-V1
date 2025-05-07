@@ -14,7 +14,6 @@ serve(async (req) => {
   }
   
   try {
-    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
@@ -25,29 +24,53 @@ serve(async (req) => {
     // Initialize supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Check if bucket already exists
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === "onboard_submissions");
+    // Check if bucket exists
+    const { data: buckets, error: listError } = await supabase
+      .storage
+      .listBuckets();
     
-    if (!bucketExists) {
-      // Create bucket
-      const { data, error } = await supabase.storage.createBucket("onboard_submissions", {
-        public: false,
-        fileSizeLimit: 10485760, // 10MB limit
-      });
-      
-      if (error) {
-        throw new Error(`Failed to create bucket: ${error.message}`);
-      }
-      
-      console.log("Created onboard_submissions bucket:", data);
-    } else {
+    const bucketExists = buckets?.some(bucket => bucket.name === 'onboard_submissions');
+    
+    if (bucketExists) {
       console.log("Bucket onboard_submissions already exists");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Bucket onboard_submissions already exists",
+          exists: true
+        }),
+        { 
+          headers: { 
+            "Content-Type": "application/json",
+            ...corsHeaders
+          },
+          status: 200
+        }
+      );
     }
     
-    // Success response
+    // Create bucket if it doesn't exist
+    const { data, error } = await supabase
+      .storage
+      .createBucket('onboard_submissions', {
+        public: false,
+        fileSizeLimit: 5242880, // 5MB limit
+      });
+    
+    if (error) {
+      console.error("Error creating bucket:", error);
+      throw error;
+    }
+    
+    console.log("Created onboard_submissions bucket successfully");
+    
     return new Response(
-      JSON.stringify({ success: true, message: "Bucket setup complete" }),
+      JSON.stringify({
+        success: true,
+        message: "Created onboard_submissions bucket successfully",
+        data,
+      }),
       { 
         headers: { 
           "Content-Type": "application/json",
