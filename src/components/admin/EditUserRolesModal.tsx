@@ -45,10 +45,13 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     user?.roles || defaultAdditionalRoles
   );
 
-  // Reset state when user or open state changes
+  // Reset state when user or open state changes to ensure fresh data
   useEffect(() => {
     if (user && open) {
-      console.log("Setting initial roles from user:", { role: user.role, roles: user.roles });
+      console.log("Modal opened with roles:", { 
+        primaryRole: user.role, 
+        additionalRoles: user.roles || [] 
+      });
     }
   }, [user, open]);
 
@@ -60,7 +63,8 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
         additionalRoles 
       });
       
-      onUpdate(user.id, primaryRole, additionalRoles);
+      await onUpdate(user.id, primaryRole, additionalRoles);
+      onOpenChange(false);
     }
   };
 

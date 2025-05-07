@@ -71,7 +71,7 @@ export const useUserRolesUpdate = (fetchUsers: () => Promise<void>) => {
         description: "User roles updated successfully",
       });
       
-      // Refetch users to ensure UI is in sync with database
+      // Refetch users immediately to ensure UI is in sync with database
       await fetchUsers();
 
       return true;

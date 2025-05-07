@@ -18,7 +18,18 @@ const UserRolesList: React.FC = () => {
     handleEdit
   } = useUserRoles();
 
-  const { handleUpdateUser } = useUserRolesUpdate(fetchUsers);
+  const { loading: updateLoading, handleUpdateUser } = useUserRolesUpdate(fetchUsers);
+
+  const handleUserUpdate = async (userId: string, primaryRole: any, additionalRoles: string[]) => {
+    const success = await handleUpdateUser(userId, primaryRole, additionalRoles);
+    
+    // If update was successful, update the local user data to reflect changes immediately
+    if (success) {
+      setSelectedUser(null);
+    }
+    
+    return success;
+  };
 
   if (loading && users.length === 0) {
     return (
@@ -42,7 +53,7 @@ const UserRolesList: React.FC = () => {
         user={selectedUser}
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onUpdate={handleUpdateUser}
+        onUpdate={handleUserUpdate}
       />
     </>
   );
