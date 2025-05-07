@@ -1,19 +1,28 @@
 
+import { useCreators } from "@/context/creator";
 import { useCreatorProfileState } from './useCreatorProfileState';
-import { useProfileSave } from './useProfileSave';
 import { useAssignedMembers } from './useAssignedMembers';
+import { useProfileSave } from './useProfileSave';
+import { Employee } from "@/types/employee";
 
-export const useCreatorProfile = () => {
-  const profileState = useCreatorProfileState();
-  const { saveProfile, isLoading: isSaving } = useProfileSave();
-  const { assignedMembers, isLoading: membersLoading } = useAssignedMembers();
+export const useCreatorProfile = (creatorId: string) => {
+  const { getCreator } = useCreators();
+  const creator = getCreator(creatorId);
+  
+  const { state, actions } = useCreatorProfileState(creator);
+  const { handleAssignTeamMembers } = useAssignedMembers(creator, actions.setAssignedMembers);
+  const { handleSave } = useProfileSave(creator);
+
+  const saveProfile = () => {
+    handleSave(state, actions.setNameError);
+  };
 
   return {
-    ...profileState,
-    saveProfile,
-    isSaving,
-    assignedMembers,
-    membersLoading
+    creator,
+    formState: state,
+    formActions: actions,
+    handleSave: saveProfile,
+    handleAssignTeamMembers
   };
 };
 

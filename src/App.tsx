@@ -14,6 +14,7 @@ import AccessControlPanel from './pages/AccessControlPanel';
 import Creators from './pages/Creators';
 import CreatorOnboarding from './pages/CreatorOnboarding';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
+import CreatorProfile from './pages/CreatorProfile';
 
 const App = () => {
   const isLocalhost = window.location.hostname === 'localhost';
@@ -36,6 +37,7 @@ const App = () => {
             <Route path="/user-management" element={<UserManagement />} />
             <Route path="/access-control" element={<AccessControlPanel />} />
             <Route path="/creators" element={<Creators />} />
+            <Route path="/creators/:id" element={<CreatorProfile />} />
             <Route path="/onboarding" element={<CreatorOnboarding />} />
           </Route>
         </Route>
