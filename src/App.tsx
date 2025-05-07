@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { HttpsRedirect } from 'react-https-redirect';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -21,33 +21,31 @@ const App = () => {
   const isLocalhost = window.location.hostname === 'localhost';
   
   return (
-    <BrowserRouter>
-      <HttpsRedirect disabled={isLocalhost}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Creator onboarding route - publicly accessible via token */}
-          <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
-          
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/user-management" element={<UserManagement />} />
-              <Route path="/access-control" element={<AccessControlPanel />} />
-              <Route path="/creators" element={<Creators />} />
-              <Route path="/onboarding" element={<CreatorOnboarding />} />
-            </Route>
+    <HttpsRedirect disabled={isLocalhost}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Creator onboarding route - publicly accessible via token */}
+        <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+        
+        {/* Protected routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/user-management" element={<UserManagement />} />
+            <Route path="/access-control" element={<AccessControlPanel />} />
+            <Route path="/creators" element={<Creators />} />
+            <Route path="/onboarding" element={<CreatorOnboarding />} />
           </Route>
-          
-          {/* Not found route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </HttpsRedirect>
-    </BrowserRouter>
+        </Route>
+        
+        {/* Not found route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </HttpsRedirect>
   );
 };
 
