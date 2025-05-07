@@ -1,48 +1,72 @@
 
-import { useCreators } from "@/context/creator";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { FormState } from "./types";
 
 export function useFormSubmission() {
-  const { addCreator } = useCreators();
   const { toast } = useToast();
 
-  const handleSubmit = (formState: FormState) => {
-    const socialLinksObj: Record<string, string | undefined> = {
-      instagram: formState.instagram || undefined,
-      tiktok: formState.tiktok || undefined,
-      twitter: formState.twitter || undefined,
-      reddit: formState.reddit || undefined,
-      chaturbate: formState.chaturbate || undefined,
-      youtube: formState.youtube || undefined,
-    };
-    
-    formState.customSocialLinks.forEach(link => {
-      if (link.url) {
-        socialLinksObj[link.name.toLowerCase()] = link.url;
+  const handleSubmit = async (formState: FormState) => {
+    try {
+      const token = window.location.pathname.split('/').pop();
+      
+      if (!token) {
+        throw new Error("Invalid token");
       }
-    });
-
-    const newCreator = {
-      name: formState.name,
-      profileImage: formState.profileImage,
-      gender: formState.gender,
-      team: formState.team,
-      creatorType: formState.creatorType,
-      socialLinks: socialLinksObj,
-      tags: [formState.gender, formState.team, formState.creatorType],
-      needsReview: false,
-      active: true, // Add active property
-      telegramUsername: formState.telegramUsername || undefined,
-      whatsappNumber: formState.whatsappNumber || undefined,
-      notes: formState.notes || undefined,
-    };
-
-    addCreator(newCreator);
-    toast({
-      title: "Success",
-      description: `${formState.name} onboarded successfully!`,
-    });
+      
+      // Format the data for submission
+      const formData = {
+        name: formState.name,
+        gender: formState.gender,
+        creator_type: formState.creatorType,
+        team: formState.team,
+        profile_image: formState.profileImage,
+        telegram_username: formState.telegramUsername,
+        whatsapp_number: formState.whatsappNumber,
+        social_links: {
+          instagram: formState.instagram,
+          tiktok: formState.tiktok,
+          twitter: formState.twitter,
+          reddit: formState.reddit,
+          chaturbate: formState.chaturbate,
+          youtube: formState.youtube,
+          custom: formState.customSocialLinks
+        },
+        notes: formState.notes,
+        submitted_at: new Date().toISOString()
+      };
+      
+      // Upload form data to Supabase storage
+      const { error } = await supabase.storage
+        .from("onboard_submissions")
+        .upload(`${token}.json`, new Blob([JSON.stringify(formData)], { type: "application/json" }));
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update invitation status
+      await supabase
+        .from("creator_invitations")
+        .update({ status: "completed" })
+        .eq("token", token);
+      
+      toast({
+        title: "Onboarding Complete",
+        description: "Your profile has been submitted successfully!"
+      });
+      
+      return true;
+      
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast({
+        variant: "destructive",
+        title: "Submission Failed",
+        description: error.message || "There was an error submitting your profile"
+      });
+      return false;
+    }
   };
 
   return { handleSubmit };

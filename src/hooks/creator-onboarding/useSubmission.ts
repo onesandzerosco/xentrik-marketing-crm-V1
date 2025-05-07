@@ -1,85 +1,79 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useCreators } from "@/context/creator";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { FormState } from "./types";
+import { useToast } from "@/hooks/use-toast";
 
 export function useSubmission() {
-  const navigate = useNavigate();
-  const { addCreator } = useCreators();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const { toast } = useToast();
+
   const handleSubmit = async (formState: FormState) => {
-    console.log("Starting form submission");
-    setIsSubmitting(true);
-    
     try {
-      // Prepare social links
-      const socialLinks: Record<string, string> = {};
-      if (formState.instagram) socialLinks.instagram = formState.instagram;
-      if (formState.tiktok) socialLinks.tiktok = formState.tiktok;
-      if (formState.twitter) socialLinks.twitter = formState.twitter;
-      if (formState.reddit) socialLinks.reddit = formState.reddit;
-      if (formState.chaturbate) socialLinks.chaturbate = formState.chaturbate;
-      if (formState.youtube) socialLinks.youtube = formState.youtube;
+      setIsSubmitting(true);
       
-      // Add custom social links
-      formState.customSocialLinks.forEach(link => {
-        if (link.url) {
-          socialLinks[link.name.toLowerCase()] = link.url;
-        }
-      });
+      const token = window.location.pathname.split('/').pop();
       
-      // Create new creator object
-      const newCreator = {
+      if (!token) {
+        throw new Error("Invalid token");
+      }
+      
+      // Format the data for submission
+      const formData = {
         name: formState.name,
-        profileImage: formState.profileImage || '',
         gender: formState.gender,
+        creator_type: formState.creatorType,
         team: formState.team,
-        creatorType: formState.creatorType,
-        socialLinks,
-        tags: [formState.gender, formState.team, formState.creatorType], // Default tags
-        needsReview: false, // Explicitly set to false
-        active: true, // Add required active property
-        telegramUsername: formState.telegramUsername,
-        whatsappNumber: formState.whatsappNumber,
-        notes: formState.notes
+        profile_image: formState.profileImage,
+        telegram_username: formState.telegramUsername,
+        whatsapp_number: formState.whatsappNumber,
+        social_links: {
+          instagram: formState.instagram,
+          tiktok: formState.tiktok,
+          twitter: formState.twitter,
+          reddit: formState.reddit,
+          chaturbate: formState.chaturbate,
+          youtube: formState.youtube,
+          custom: formState.customSocialLinks
+        },
+        notes: formState.notes,
+        submitted_at: new Date().toISOString()
       };
       
-      console.log("Submitting new creator:", newCreator);
-      
-      // Submit to context
-      const creatorId = await addCreator(newCreator);
-      
-      console.log("Response from addCreator:", creatorId);
-      
-      if (creatorId) {
-        toast({
-          title: "Creator Added Successfully",
-          description: `${formState.name} was added to your creators with ID: ${creatorId}`,
-        });
+      // Upload form data to Supabase storage
+      const { error } = await supabase.storage
+        .from("onboard_submissions")
+        .upload(`${token}.json`, new Blob([JSON.stringify(formData)], { type: "application/json" }));
         
-        return creatorId;
-      } else {
-        throw new Error("Failed to add creator. No ID was returned.");
+      if (error) {
+        throw error;
       }
-    } catch (error: any) {
-      console.error("Error during creator onboarding:", error);
+      
+      // Update invitation status
+      await supabase
+        .from("creator_invitations")
+        .update({ status: "completed" })
+        .eq("token", token);
+      
       toast({
-        title: "Creator Onboarding Failed",
-        description: error.message || "An error occurred while adding the creator",
-        variant: "destructive",
+        title: "Onboarding Complete",
+        description: "Your profile has been submitted successfully!"
       });
-      throw error;
+      
+      return true;
+      
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast({
+        variant: "destructive",
+        title: "Submission Failed",
+        description: error.message || "There was an error submitting your profile"
+      });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return {
-    isSubmitting,
-    handleSubmit
-  };
+  return { isSubmitting, handleSubmit };
 }

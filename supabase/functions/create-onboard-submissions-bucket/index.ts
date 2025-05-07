@@ -12,7 +12,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
     // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -21,30 +21,33 @@ serve(async (req) => {
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Missing Supabase environment variables");
     }
-
-    // Initialize Supabase client with service role key
+    
+    // Initialize supabase client with service role key
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Try to create the bucket if it doesn't exist
-    // Potential error will be handled in the catch block
-    const { data, error } = await supabase
-      .storage
-      .createBucket('onboard_submissions', {
+    // Check if bucket already exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === "onboard_submissions");
+    
+    if (!bucketExists) {
+      // Create bucket
+      const { data, error } = await supabase.storage.createBucket("onboard_submissions", {
         public: false,
-        allowedMimeTypes: ['application/json'],
-        fileSizeLimit: 1024 * 1024, // 1MB
+        fileSizeLimit: 10485760, // 10MB limit
       });
-
-    if (error && error.message !== 'The resource already exists') {
-      throw error;
+      
+      if (error) {
+        throw new Error(`Failed to create bucket: ${error.message}`);
+      }
+      
+      console.log("Created onboard_submissions bucket:", data);
+    } else {
+      console.log("Bucket onboard_submissions already exists");
     }
-
+    
+    // Success response
     return new Response(
-      JSON.stringify({
-        success: true,
-        message: error ? "Bucket already exists" : "Bucket created successfully",
-        data
-      }),
+      JSON.stringify({ success: true, message: "Bucket setup complete" }),
       { 
         headers: { 
           "Content-Type": "application/json",
@@ -53,18 +56,16 @@ serve(async (req) => {
         status: 200
       }
     );
+    
   } catch (error: any) {
-    console.error("Error creating bucket:", error);
+    console.error("Request processing error:", error.message);
     
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
+      JSON.stringify({ success: false, error: error.message }),
       { 
         headers: { 
           "Content-Type": "application/json",
-          ...corsHeaders
+          ...corsHeaders 
         },
         status: 500
       }
