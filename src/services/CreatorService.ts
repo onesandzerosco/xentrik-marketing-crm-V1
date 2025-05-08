@@ -27,9 +27,10 @@ class CreatorService {
       const creatorId = uuidv4();
       
       // Insert the creator into the database
+      // Note: Supabase expects an array of objects, not a single object
       const { error } = await supabase
         .from('creators')
-        .insert({
+        .insert([{  // Wrap the object in an array
           id: creatorId,
           name: creatorData.name,
           email: creatorData.email,
@@ -43,7 +44,7 @@ class CreatorService {
           sex: creatorData.sex || null,
           needs_review: true,
           active: true
-        });
+        }]);
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -82,10 +83,10 @@ class CreatorService {
         throw new Error("User not found");
       }
       
-      // Create creator record
+      // Create creator record - using array syntax for insert
       const { error } = await supabase
         .from('creators')
-        .insert({
+        .insert([{
           id: userId,
           name: user.user.user_metadata.name || user.user.email,
           email: user.user.email,
@@ -94,7 +95,7 @@ class CreatorService {
           creator_type: "Real", // Default
           needs_review: true,
           active: true
-        });
+        }]);
       
       if (error) {
         throw error;
