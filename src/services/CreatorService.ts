@@ -2,16 +2,17 @@
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
-interface CreatorData {
+export interface CreatorData {
   name: string;
   email: string;
-  gender: "Male" | "Female" | "Trans";
+  gender: "Male" | "Female" | "Trans" | "AI";
   team: string;
   creatorType: string;
   notes?: string;
   telegramUsername?: string;
   whatsappNumber?: string;
   profileImage?: string;
+  sex?: string;
 }
 
 class CreatorService {
@@ -39,6 +40,7 @@ class CreatorService {
           telegram_username: creatorData.telegramUsername || null,
           whatsapp_number: creatorData.whatsappNumber || null,
           profile_image: creatorData.profileImage || null,
+          sex: creatorData.sex || null,
           needs_review: true,
           active: true
         });

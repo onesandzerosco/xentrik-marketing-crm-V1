@@ -181,6 +181,7 @@ export type Database = {
           needs_review: boolean | null
           notes: string | null
           profile_image: string | null
+          sex: string | null
           team: Database["public"]["Enums"]["team"]
           telegram_username: string | null
           updated_at: string | null
@@ -197,6 +198,7 @@ export type Database = {
           needs_review?: boolean | null
           notes?: string | null
           profile_image?: string | null
+          sex?: string | null
           team: Database["public"]["Enums"]["team"]
           telegram_username?: string | null
           updated_at?: string | null
@@ -213,6 +215,7 @@ export type Database = {
           needs_review?: boolean | null
           notes?: string | null
           profile_image?: string | null
+          sex?: string | null
           team?: Database["public"]["Enums"]["team"]
           telegram_username?: string | null
           updated_at?: string | null

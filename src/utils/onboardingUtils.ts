@@ -59,10 +59,12 @@ export const ensureOnboardBucketExists = async (): Promise<boolean> => {
       .from('onboard_submissions')
       .list('', { limit: 1 });
     
-    // If we get a 404 error, the bucket doesn't exist
-    if (error && (error.message.includes('not found') || error.statusCode === 404)) {
-      console.log("Bucket doesn't exist, invoking edge function to create it");
+    // If we get an error that might indicate the bucket doesn't exist
+    if (error) {
+      console.log("Error checking bucket, may not exist:", error.message);
+      
       // Call our edge function to create the bucket
+      console.log("Invoking edge function to create it");
       const { error: funcError } = await supabase.functions.invoke('create-onboard-submissions-bucket');
       
       if (funcError) {
@@ -71,9 +73,6 @@ export const ensureOnboardBucketExists = async (): Promise<boolean> => {
       }
       
       console.log('Successfully created onboard_submissions bucket');
-    } else if (error) {
-      console.error('Unexpected error checking bucket:', error);
-      throw error;
     } else {
       console.log('onboard_submissions bucket already exists');
     }

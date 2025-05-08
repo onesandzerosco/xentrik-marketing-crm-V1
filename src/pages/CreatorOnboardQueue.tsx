@@ -174,13 +174,23 @@ const CreatorOnboardQueue: React.FC = () => {
         throw new Error("Missing required information (email or name)");
       }
       
+      // Map the gender value from the onboarding form to our database enum
+      let genderValue: "Male" | "Female" | "Trans" | "AI" = "Female";
+      
+      if (personalInfo.sex === "Male") {
+        genderValue = "Male";
+      } else if (personalInfo.sex === "Female") {
+        genderValue = "Female";
+      } else if (personalInfo.sex === "Non-binary") {
+        genderValue = "Trans"; 
+      }
+      
       // Create basic creator data
       const creatorData = {
         name: personalInfo.fullName,
         email: personalInfo.email,
-        gender: personalInfo.sex === "Male" ? "Male" : 
-                personalInfo.sex === "Female" ? "Female" : 
-                personalInfo.sex === "Non-binary" ? "Trans" : "Female",
+        gender: genderValue,
+        sex: personalInfo.sex || null,
         team: "A Team", // Default team
         creatorType: "Real", // Default type
         notes: JSON.stringify(formData), // Store full data as notes for now
