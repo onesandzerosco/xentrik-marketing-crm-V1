@@ -1,80 +1,114 @@
 
-import React from "react";
-import { useFormContext } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select,
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import PetsSection from './PetsSection';
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
-import PetsSection from "./PetsSection";
 
-export const PersonalInfoForm: React.FC = () => {
-  const { control } = useFormContext<CreatorOnboardingFormValues>();
+export const PersonalInfoForm = () => {
+  const { control, watch } = useFormContext<CreatorOnboardingFormValues>();
+  const hasPets = watch('personalInfo.hasPets');
+  const hasKids = watch('personalInfo.hasKids');
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={control}
           name="personalInfo.fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name <span className="text-red-500">*</span></FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter full name" />
+                <Input placeholder="Your full name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <FormField
           control={control}
           name="personalInfo.nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nickname</FormLabel>
+              <FormLabel>Nickname (Optional)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter nickname" />
+                <Input placeholder="Preferred name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
+        
+        <FormField
+          control={control}
+          name="personalInfo.email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email Address</FormLabel>
+              <FormControl>
+                <Input type="email" placeholder="Email address" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
+          name="personalInfo.dateOfBirth"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date of Birth</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
+          name="personalInfo.sex"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sex/Gender</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Non-binary">Non-binary</SelectItem>
+                  <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <FormField
-        control={control}
-        name="personalInfo.email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
-            <FormControl>
-              <Input {...field} type="email" placeholder="Enter email address" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="personalInfo.dateOfBirth"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Date of Birth <span className="text-red-500">*</span></FormLabel>
-            <FormControl>
-              <Input {...field} type="date" placeholder="YYYY-MM-DD" />
-            </FormControl>
-            <FormDescription>
-              Age will be calculated automatically
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={control}
           name="personalInfo.location"
@@ -82,13 +116,13 @@ export const PersonalInfoForm: React.FC = () => {
             <FormItem>
               <FormLabel>Location</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="City, Country" />
+                <Input placeholder="City, Country" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <FormField
           control={control}
           name="personalInfo.ethnicity"
@@ -96,23 +130,21 @@ export const PersonalInfoForm: React.FC = () => {
             <FormItem>
               <FormLabel>Ethnicity</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter ethnicity" />
+                <Input placeholder="Ethnicity" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={control}
           name="personalInfo.religion"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Religion</FormLabel>
+              <FormLabel>Religion (Optional)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter religion" />
+                <Input placeholder="Religion" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,63 +157,66 @@ export const PersonalInfoForm: React.FC = () => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Relationship Status</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. Single, Married, etc." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="personalInfo.handedness"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Handedness</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select relationship status" />
+                    <SelectValue placeholder="Left or Right handed" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="in_relationship">In a Relationship</SelectItem>
-                  <SelectItem value="engaged">Engaged</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
-                  <SelectItem value="divorced">Divorced</SelectItem>
-                  <SelectItem value="widowed">Widowed</SelectItem>
-                  <SelectItem value="complicated">It's Complicated</SelectItem>
+                  <SelectItem value="Left">Left</SelectItem>
+                  <SelectItem value="Right">Right</SelectItem>
+                  <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-      </div>
 
-      <FormField
-        control={control}
-        name="personalInfo.handedness"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Lefty or Righty</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+        <FormField
+          control={control}
+          name="personalInfo.hasPets"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select handedness" />
-                </SelectTrigger>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
               </FormControl>
-              <SelectContent>
-                <SelectItem value="Left">Left-handed</SelectItem>
-                <SelectItem value="Right">Right-handed</SelectItem>
-                <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+              <div className="space-y-1 leading-none">
+                <FormLabel>Do you have pets?</FormLabel>
+              </div>
+            </FormItem>
+          )}
+        />
 
-      <PetsSection />
+        {hasPets && <PetsSection />}
 
-      <div className="space-y-4">
         <FormField
           control={control}
           name="personalInfo.hasKids"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
               <FormControl>
-                <Checkbox 
-                  checked={field.value} 
-                  onCheckedChange={field.onChange} 
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
@@ -191,30 +226,29 @@ export const PersonalInfoForm: React.FC = () => {
           )}
         />
 
-        {/* Show number of kids field if hasKids is true */}
-        <FormField
-          control={control}
-          name="personalInfo.numberOfKids"
-          render={({ field }) => (
-            <FormItem className="ml-7">
-              <FormLabel>How many kids?</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  min={0}
-                  {...field} 
-                  value={field.value || ""}
-                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)} 
-                  disabled={!control._formValues.personalInfo.hasKids}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {hasKids && (
+          <FormField
+            control={control}
+            name="personalInfo.numberOfKids"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>How many kids?</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min={1} 
+                    {...field} 
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         <FormField
           control={control}
           name="personalInfo.occupation"
@@ -222,7 +256,7 @@ export const PersonalInfoForm: React.FC = () => {
             <FormItem>
               <FormLabel>What do you do for work?</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter occupation" />
+                <Input placeholder="Occupation" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -234,38 +268,39 @@ export const PersonalInfoForm: React.FC = () => {
           name="personalInfo.workplace"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Where do you work?</FormLabel>
+              <FormLabel>Where do you work? (Optional)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter workplace" />
+                <Input placeholder="Workplace" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="personalInfo.placesVisited"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Places/Countries you've visited (comma separated)</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="E.g. France, Italy, Japan"
+                  {...field}
+                  onChange={(e) => {
+                    const places = e.target.value.split(',').map(place => place.trim()).filter(Boolean);
+                    field.onChange(places);
+                  }}
+                  value={field.value?.join(', ') || ''}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
       </div>
-
-      <FormField
-        control={control}
-        name="personalInfo.placesVisited"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Places/Countries you've visited</FormLabel>
-            <FormControl>
-              <Input 
-                placeholder="Enter places separated by commas" 
-                value={field.value?.join(", ") || ""} 
-                onChange={(e) => {
-                  const value = e.target.value;
-                  field.onChange(
-                    value ? value.split(",").map(item => item.trim()) : []
-                  );
-                }}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
     </div>
   );
 };
+
+export default PersonalInfoForm;

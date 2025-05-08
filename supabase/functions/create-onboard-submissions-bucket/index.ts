@@ -22,10 +22,16 @@ serve(async (req) => {
     );
     
     // Check if the bucket already exists
-    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+    const { data: buckets, error: bucketsError } = await supabaseAdmin.storage.listBuckets();
+    
+    if (bucketsError) {
+      throw bucketsError;
+    }
+    
     const bucketExists = buckets?.some(bucket => bucket.name === 'onboard_submissions');
     
     if (bucketExists) {
+      console.log("Bucket onboard_submissions already exists");
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -39,6 +45,7 @@ serve(async (req) => {
     }
     
     // Create the bucket if it doesn't exist
+    console.log("Creating onboard_submissions bucket...");
     const { data, error } = await supabaseAdmin.storage.createBucket('onboard_submissions', { 
       public: false,
       allowedMimeTypes: ['application/json'],
@@ -49,8 +56,26 @@ serve(async (req) => {
       throw error;
     }
     
-    // Set up RLS policy for the bucket to allow authenticated users to insert files
-    await supabaseAdmin.storage.from('onboard_submissions').createSignedUrl('test.txt', 10);
+    console.log("Bucket created successfully");
+    
+    // Set up storage policy for the bucket
+    const policyName = 'authenticated_can_upload';
+    const { error: policyError } = await supabaseAdmin.rpc('create_storage_policy', {
+      bucket_id: 'onboard_submissions',
+      policy_name: policyName,
+      definition: '(role() = \'authenticated\' OR role() = \'service_role\')',
+      operation: 'INSERT'
+    }).catch(err => {
+      // Policy might already exist, or we failed in some other way
+      console.error("Error setting policy:", err);
+      return { error: err };
+    });
+    
+    if (policyError) {
+      console.warn("Could not set bucket policy, but proceeding:", policyError);
+    } else {
+      console.log("Bucket policy set successfully");
+    }
     
     return new Response(
       JSON.stringify({ 

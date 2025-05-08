@@ -10,29 +10,34 @@ import { v4 as uuidv4 } from "uuid";
  */
 export const saveOnboardingData = async (data: CreatorOnboardingFormValues) => {
   try {
+    console.log("Starting saveOnboardingData...");
     // Generate a unique token for the submission
     const token = uuidv4();
     const fileName = `${token}.json`;
     
+    console.log("Ensuring onboard bucket exists...");
     // Ensure the onboard_submissions bucket exists
     await ensureOnboardBucketExists();
     
+    console.log("Converting data to JSON...");
     // Convert the data to JSON string
     const jsonData = JSON.stringify(data, null, 2);
     
     // Create a Blob from the JSON string
     const blob = new Blob([jsonData], { type: 'application/json' });
     
+    console.log("Uploading to onboard_submissions bucket:", fileName);
     // Upload the JSON file to the bucket
-    const { error } = await supabase.storage
+    const { data: uploadData, error } = await supabase.storage
       .from('onboard_submissions')
-      .upload(fileName, blob, { contentType: 'application/json' });
+      .upload(fileName, blob, { contentType: 'application/json', upsert: true });
     
     if (error) {
       console.error('Error uploading form data:', error);
       return { success: false, error: error.message };
     }
     
+    console.log("Upload successful:", uploadData);
     return { success: true, token };
   } catch (error) {
     console.error('Error in saveOnboardingData:', error);
@@ -47,13 +52,17 @@ export const saveOnboardingData = async (data: CreatorOnboardingFormValues) => {
  * Ensure that the onboard_submissions bucket exists in Supabase Storage
  * Creates it if it doesn't exist using the Edge Function
  */
-export const ensureOnboardBucketExists = async () => {
+export const ensureOnboardBucketExists = async (): Promise<boolean> => {
   try {
-    // Check if bucket exists by trying to get bucket details
-    const { data, error } = await supabase.storage.getBucket('onboard_submissions');
-
-    // If the bucket doesn't exist, create it using our edge function
-    if (error && error.message.includes('The resource was not found')) {
+    // Check if bucket exists by trying to list files in it
+    const { data, error } = await supabase.storage
+      .from('onboard_submissions')
+      .list('', { limit: 1 });
+    
+    // If we get a 404 error, the bucket doesn't exist
+    if (error && (error.message.includes('not found') || error.statusCode === 404)) {
+      console.log("Bucket doesn't exist, invoking edge function to create it");
+      // Call our edge function to create the bucket
       const { error: funcError } = await supabase.functions.invoke('create-onboard-submissions-bucket');
       
       if (funcError) {
@@ -63,8 +72,10 @@ export const ensureOnboardBucketExists = async () => {
       
       console.log('Successfully created onboard_submissions bucket');
     } else if (error) {
-      console.error('Error checking bucket existence:', error);
-      throw new Error(`Error checking bucket existence: ${error.message}`);
+      console.error('Unexpected error checking bucket:', error);
+      throw error;
+    } else {
+      console.log('onboard_submissions bucket already exists');
     }
 
     return true;
