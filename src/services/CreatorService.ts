@@ -28,7 +28,7 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database - use a single object for insert
+      // Insert the creator into the database
       const { error } = await supabase
         .from('creators')
         .insert({
@@ -74,24 +74,19 @@ class CreatorService {
       const teamValue = formData.team || "A Team";
       const creatorTypeValue = formData.creatorType || "Real";
       
-      // Create a partial insert data object without ID
-      // The partial type allows us to omit the 'id' field
-      const insertData = {
-        name,
-        gender,
-        team: teamValue,
-        creator_type: creatorTypeValue,
-        needs_review: true,
-        active: true,
-        model_profile: formData // Store the entire form data as JSON
-      };
-      
-      // Insert the creator into the database with minimal required fields
-      // But store the complete form data in model_profile
-      // Note: We're not specifying an ID - it will only be generated when approved
+      // Create insert data object with all required fields but without ID
+      // ID will be generated upon approval by admin
       const { error } = await supabase
         .from('creators')
-        .insert(insertData as Partial<TablesInsert<'creators'>>);
+        .insert({
+          name,
+          gender,
+          team: teamValue,
+          creator_type: creatorTypeValue,
+          needs_review: true,
+          active: true,
+          model_profile: formData // Store the entire form data as JSON
+        });
       
       if (error) {
         console.error("Error saving onboarding data:", error);
