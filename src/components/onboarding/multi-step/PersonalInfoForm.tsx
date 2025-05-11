@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -101,7 +100,6 @@ export const PersonalInfoForm = () => {
                   <SelectItem value="Female">Female</SelectItem>
                   <SelectItem value="Male">Male</SelectItem>
                   <SelectItem value="Transgender">Transgender</SelectItem>
-                  <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -287,7 +285,7 @@ export const PersonalInfoForm = () => {
                 <Textarea 
                   placeholder="E.g. France, Italy, Japan"
                   onChange={(e) => {
-                    // Allow commas and spaces by using a different splitting approach
+                    // Allow commas and spaces by splitting on commas and trimming
                     const placesText = e.target.value;
                     const places = placesText.split(',').map(place => place.trim()).filter(Boolean);
                     field.onChange(places);

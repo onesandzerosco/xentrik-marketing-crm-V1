@@ -29,9 +29,10 @@ class CreatorService {
       const creatorId = uuidv4();
       
       // Insert the creator into the database - without specifying the id in the insert object
+      // Use array format for insert to fix TypeScript error
       const { error } = await supabase
         .from('creators')
-        .insert({
+        .insert([{
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
@@ -45,7 +46,7 @@ class CreatorService {
           needs_review: true,
           active: true,
           model_profile: creatorData.modelProfile || null // Store the full onboarding form data
-        });
+        }]);
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -74,11 +75,11 @@ class CreatorService {
       const creatorTypeValue = formData.creatorType || "Real";
       
       // Use a temporary ID for the creator that we'll replace later
-      // Use insert without onConflict - we'll handle any conflicts in our approval process
+      // Use array format for insert to fix TypeScript error
       const tempId = `temp_${token}`;
       const { error } = await supabase
         .from('creators')
-        .insert({
+        .insert([{
           id: tempId,
           name,
           gender,
@@ -87,7 +88,7 @@ class CreatorService {
           needs_review: true,
           active: true,
           model_profile: formData // Store the entire form data as JSON
-        });
+        }]);
       
       if (error) {
         console.error("Error saving onboarding data:", error);
