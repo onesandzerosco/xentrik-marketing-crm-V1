@@ -3,23 +3,23 @@
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { DEFAULT_PERMISSIONS, Permission } from './permissionModels';
+import { DEFAULT_PERMISSIONS, RolePermission } from './permissionModels';
 
 /**
  * Checks if a user's role has a specific permission
  */
-export const hasPermission = (permissions: Permission[], userRole: string, userRoles: string[], action: string): boolean => {
+export const hasPermission = (permissions: RolePermission[], userRole: string, userRoles: string[], action: 'preview' | 'edit' | 'upload' | 'download' | 'delete'): boolean => {
   // Admin always has all permissions
   if (userRole === "Admin") return true;
   
   // Check if primary role has the permission
-  const primaryRolePermission = permissions.find(p => p.role === userRole && p.action === action);
-  if (primaryRolePermission && primaryRolePermission.allowed) return true;
+  const primaryRolePermission = permissions.find(p => p.rolename === userRole);
+  if (primaryRolePermission && primaryRolePermission[action]) return true;
 
   // Check if any additional roles have the permission
   return userRoles.some(role => {
-    const rolePermission = permissions.find(p => p.role === role && p.action === action);
-    return rolePermission ? rolePermission.allowed : false;
+    const rolePermission = permissions.find(p => p.rolename === role);
+    return rolePermission ? rolePermission[action] : false;
   });
 };
 
@@ -35,14 +35,13 @@ export const useFilePermissions = () => {
     queryFn: async () => {
       try {
         const { data, error } = await supabase
-          .from('permissions')
-          .select('*')
-          .eq('module', 'SharedFiles');
+          .from('role_permissions')
+          .select('*');
         
         if (error) throw error;
         
         // If we have permissions in the database, use those. Otherwise, use defaults
-        return data && data.length > 0 ? data as Permission[] : DEFAULT_PERMISSIONS;
+        return data && data.length > 0 ? data as RolePermission[] : DEFAULT_PERMISSIONS;
       } catch (error) {
         console.error('Error fetching permissions:', error);
         return DEFAULT_PERMISSIONS;
@@ -51,11 +50,11 @@ export const useFilePermissions = () => {
   });
 
   return {
-    canEdit: hasPermission(permissions, userRole, userRoles, 'canEditDescription'),
-    canDelete: hasPermission(permissions, userRole, userRoles, 'canDelete'),
-    canUpload: hasPermission(permissions, userRole, userRoles, 'canUpload'),
-    canManageFolders: hasPermission(permissions, userRole, userRoles, 'canUpload'), // Using same permission as upload for folder management
-    canDownload: hasPermission(permissions, userRole, userRoles, 'canDownload'),
-    canPreview: hasPermission(permissions, userRole, userRoles, 'canPreview')
+    canEdit: hasPermission(permissions, userRole, userRoles, 'edit'),
+    canDelete: hasPermission(permissions, userRole, userRoles, 'delete'),
+    canUpload: hasPermission(permissions, userRole, userRoles, 'upload'),
+    canManageFolders: hasPermission(permissions, userRole, userRoles, 'upload'), // Using same permission as upload for folder management
+    canDownload: hasPermission(permissions, userRole, userRoles, 'download'),
+    canPreview: hasPermission(permissions, userRole, userRoles, 'preview')
   };
 };

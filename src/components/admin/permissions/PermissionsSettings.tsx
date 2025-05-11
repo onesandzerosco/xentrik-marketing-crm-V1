@@ -6,12 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Shield } from "lucide-react";
-import { PERMISSION_ROLES, Permission } from "@/utils/permissionModels";
+import { PERMISSION_ROLES, RolePermission } from "@/utils/permissionModels";
 import { usePermissions } from "./usePermissions";
 
 const PermissionsSettings = () => {
   const { permissions, isLoading, savePermissions } = usePermissions();
-  const [localPermissions, setLocalPermissions] = useState<Permission[]>(permissions);
+  const [localPermissions, setLocalPermissions] = useState<RolePermission[]>(permissions);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -23,18 +23,14 @@ const PermissionsSettings = () => {
   }, [permissions]);
 
   // Toggle a permission
-  const togglePermission = (roleId: string, action: string, checked: boolean | "indeterminate") => {
+  const togglePermission = (rolename: string, action: keyof RolePermission, checked: boolean | "indeterminate") => {
+    if (action === 'rolename') return; // Don't allow toggling the role name
+
     setLocalPermissions(prev => 
       prev.map(p => 
-        p.id === `${roleId}-${action}` ? { ...p, allowed: checked === true } : p
+        p.rolename === rolename ? { ...p, [action]: checked === true } : p
       )
     );
-  };
-
-  // Check if a permission is allowed
-  const isPermissionAllowed = (role: string, action: string) => {
-    const permission = localPermissions.find(p => p.role === role && p.action === action);
-    return permission ? permission.allowed : false;
   };
 
   // Save permissions
@@ -94,46 +90,57 @@ const PermissionsSettings = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {PERMISSION_ROLES.map((role) => (
-                <TableRow key={role}>
-                  <TableCell className="font-medium">{role}</TableCell>
-                  <TableCell>
-                    <Checkbox 
-                      checked={isPermissionAllowed(role, "canUpload")}
-                      onCheckedChange={(checked) => togglePermission(role, "canUpload", checked)}
-                      disabled={role === "Admin"} // Admin always has all permissions
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox 
-                      checked={isPermissionAllowed(role, "canEditDescription")}
-                      onCheckedChange={(checked) => togglePermission(role, "canEditDescription", checked)}
-                      disabled={role === "Admin"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox 
-                      checked={isPermissionAllowed(role, "canDelete")}
-                      onCheckedChange={(checked) => togglePermission(role, "canDelete", checked)}
-                      disabled={role === "Admin"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox 
-                      checked={isPermissionAllowed(role, "canDownload")}
-                      onCheckedChange={(checked) => togglePermission(role, "canDownload", checked)}
-                      disabled={role === "Admin"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox 
-                      checked={isPermissionAllowed(role, "canPreview")}
-                      onCheckedChange={(checked) => togglePermission(role, "canPreview", checked)}
-                      disabled={role === "Admin"}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
+              {PERMISSION_ROLES.map((role) => {
+                const rolePermission = localPermissions.find(p => p.rolename === role) || {
+                  rolename: role,
+                  upload: false,
+                  edit: false,
+                  delete: false,
+                  download: true,
+                  preview: true
+                };
+                
+                return (
+                  <TableRow key={role}>
+                    <TableCell className="font-medium">{role}</TableCell>
+                    <TableCell>
+                      <Checkbox 
+                        checked={rolePermission.upload}
+                        onCheckedChange={(checked) => togglePermission(role, "upload", checked)}
+                        disabled={role === "Admin"} // Admin always has all permissions
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox 
+                        checked={rolePermission.edit}
+                        onCheckedChange={(checked) => togglePermission(role, "edit", checked)}
+                        disabled={role === "Admin"}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox 
+                        checked={rolePermission.delete}
+                        onCheckedChange={(checked) => togglePermission(role, "delete", checked)}
+                        disabled={role === "Admin"}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox 
+                        checked={rolePermission.download}
+                        onCheckedChange={(checked) => togglePermission(role, "download", checked)}
+                        disabled={role === "Admin"}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox 
+                        checked={rolePermission.preview}
+                        onCheckedChange={(checked) => togglePermission(role, "preview", checked)}
+                        disabled={role === "Admin"}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
