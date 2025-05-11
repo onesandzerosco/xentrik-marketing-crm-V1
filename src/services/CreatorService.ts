@@ -26,24 +26,24 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database
+      // Insert the creator into the database - use a single object for insert
       const { error } = await supabase
         .from('creators')
-        .insert([{ // Note: Using array syntax as expected by Supabase
+        .insert({
           id: creatorId,
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
           team: creatorData.team,
           creator_type: creatorData.creatorType,
-          notes: creatorData.notes,
+          notes: creatorData.notes || null,
           telegram_username: creatorData.telegramUsername || null,
           whatsapp_number: creatorData.whatsappNumber || null,
           profile_image: creatorData.profileImage || null,
           sex: creatorData.sex || null,
           needs_review: true,
           active: true
-        }]);
+        });
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -82,10 +82,10 @@ class CreatorService {
         throw new Error("User not found");
       }
       
-      // Create creator record - using the user's ID
+      // Create creator record - use a single object for insert
       const { error } = await supabase
         .from('creators')
-        .insert([{ // Note: Using array syntax as expected by Supabase
+        .insert({
           id: userId,
           name: user.user.user_metadata.name || user.user.email,
           email: user.user.email,
@@ -94,7 +94,7 @@ class CreatorService {
           creator_type: "Real", // Default
           needs_review: true,
           active: true
-        }]);
+        });
       
       if (error) {
         throw error;
