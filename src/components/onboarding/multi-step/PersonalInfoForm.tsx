@@ -98,9 +98,9 @@ export const PersonalInfoForm = () => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
                   <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Non-binary">Non-binary</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Transgender">Transgender</SelectItem>
                   <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
                 </SelectContent>
               </Select>
@@ -286,9 +286,10 @@ export const PersonalInfoForm = () => {
               <FormControl>
                 <Textarea 
                   placeholder="E.g. France, Italy, Japan"
-                  {...field}
                   onChange={(e) => {
-                    const places = e.target.value.split(',').map(place => place.trim()).filter(Boolean);
+                    // Allow commas and spaces by using a different splitting approach
+                    const placesText = e.target.value;
+                    const places = placesText.split(',').map(place => place.trim()).filter(Boolean);
                     field.onChange(places);
                   }}
                   value={field.value?.join(', ') || ''}

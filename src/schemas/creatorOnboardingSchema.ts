@@ -1,13 +1,12 @@
-
 import { z } from "zod";
 
 export const personalInfoSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   nickname: z.string().optional(),
-  email: z.string().email("Invalid email address"),
-  dateOfBirth: z.string().min(1, "Date of birth is required"),
+  email: z.string().email("Invalid email address").optional(),
+  dateOfBirth: z.string().optional(),
   age: z.number().optional(),
-  sex: z.enum(["Male", "Female", "Non-binary", "Prefer not to say"]).optional(),
+  sex: z.enum(["Female", "Male", "Transgender", "Prefer not to say"]).optional(),
   location: z.string().optional(),
   ethnicity: z.string().optional(),
   religion: z.string().optional(),

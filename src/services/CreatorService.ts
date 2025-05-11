@@ -69,16 +69,18 @@ class CreatorService {
   static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
     try {
       // Extract basic required fields
-      const name = formData.name || formData.personalInfo?.name || "New Creator";
-      const gender = formData.gender || formData.personalInfo?.gender || "Female";
+      const name = formData.name || formData.personalInfo?.name || formData.personalInfo?.fullName || "New Creator";
+      const gender = formData.gender || formData.personalInfo?.gender || formData.personalInfo?.sex || "Female";
       const teamValue = formData.team || "A Team";
       const creatorTypeValue = formData.creatorType || "Real";
       
-      // Create insert data object with all required fields but without ID
-      // ID will be generated upon approval by admin
+      // Important: For tables that have required fields but we want to defer ID generation,
+      // we need to use upsert with onConflict set to 'do nothing'
       const { error } = await supabase
         .from('creators')
         .insert({
+          // Generate a temporary ID that will be replaced upon approval
+          id: `temp_${token}`,
           name,
           gender,
           team: teamValue,
@@ -86,7 +88,9 @@ class CreatorService {
           needs_review: true,
           active: true,
           model_profile: formData // Store the entire form data as JSON
-        });
+        })
+        .onConflict('id')
+        .ignore();
       
       if (error) {
         console.error("Error saving onboarding data:", error);
