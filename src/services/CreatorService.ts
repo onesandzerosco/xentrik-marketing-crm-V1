@@ -26,10 +26,11 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database - without directly specifying id in the insert object
+      // Insert the creator into the database - using our generated UUID
       const { error } = await supabase
         .from('creators')
         .insert({
+          id: creatorId, // Explicitly set the ID to our generated UUID
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
@@ -42,9 +43,7 @@ class CreatorService {
           sex: creatorData.sex || null,
           needs_review: true,
           active: true
-        })
-        .select('id')
-        .single();
+        });
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -83,10 +82,11 @@ class CreatorService {
         throw new Error("User not found");
       }
       
-      // Create creator record - without directly specifying id
+      // Create creator record - using the user's ID
       const { error } = await supabase
         .from('creators')
         .insert({
+          id: userId, // Explicitly set the ID to the user's ID
           name: user.user.user_metadata.name || user.user.email,
           email: user.user.email,
           gender: "Female", // Default
