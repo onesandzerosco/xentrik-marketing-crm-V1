@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
 import { v4 as uuidv4 } from "uuid";
