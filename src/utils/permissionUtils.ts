@@ -1,55 +1,26 @@
 
 // File permission utility functions
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { DEFAULT_PERMISSIONS, Permission } from './permissionModels';
 
 /**
- * Determines if a user can edit file descriptions based on their role
- * - Admins, Creators, and VAs can edit descriptions
- * - Chatters CANNOT edit descriptions
+ * Checks if a user's role has a specific permission
  */
-export const canEditFileDescription = (userRole: string, userRoles: string[]): boolean => {
-  return userRole === "Admin" || 
-         userRole === "Creator" || 
-         userRoles.includes("Creator") ||
-         (userRoles.includes("VA") && !userRoles.includes("Chatters")) || 
-         userRole === "VA";
-};
+export const hasPermission = (permissions: Permission[], userRole: string, userRoles: string[], action: string): boolean => {
+  // Admin always has all permissions
+  if (userRole === "Admin") return true;
+  
+  // Check if primary role has the permission
+  const primaryRolePermission = permissions.find(p => p.role === userRole && p.action === action);
+  if (primaryRolePermission && primaryRolePermission.allowed) return true;
 
-/**
- * Determines if a user can delete files based on their role
- * - Only Admins and Creators can delete files
- * - VAs and Chatters CANNOT delete files
- */
-export const canDeleteFiles = (userRole: string, userRoles: string[]): boolean => {
-  return userRole === "Admin" || 
-         userRole === "Creator" ||
-         userRoles.includes("Creator");
-};
-
-/**
- * Determines if a user can upload files based on their role
- * - Admins, Creators and VAs can upload files
- * - Chatters cannot upload files
- */
-export const canUploadFiles = (userRole: string, userRoles: string[]): boolean => {
-  return userRole === "Admin" || 
-         userRole === "Creator" || 
-         userRoles.includes("Creator") ||
-         userRoles.includes("VA") || 
-         userRole === "VA";
-};
-
-/**
- * Determines if a user can manage folders (add/remove files from folders) based on their role
- * - Admins, Creators, and VAs can manage folders
- * - Chatters CANNOT manage folders
- */
-export const canManageFolders = (userRole: string, userRoles: string[]): boolean => {
-  return userRole === "Admin" || 
-         userRole === "Creator" ||
-         userRoles.includes("Creator") ||
-         userRoles.includes("VA") || 
-         userRole === "VA";
+  // Check if any additional roles have the permission
+  return userRoles.some(role => {
+    const rolePermission = permissions.find(p => p.role === role && p.action === action);
+    return rolePermission ? rolePermission.allowed : false;
+  });
 };
 
 /**
@@ -57,14 +28,34 @@ export const canManageFolders = (userRole: string, userRoles: string[]): boolean
  * @returns Object with permission flags
  */
 export const useFilePermissions = () => {
-  const { userRole, userRoles, isCreator } = useAuth();
+  const { userRole, userRoles } = useAuth();
+  
+  const { data: permissions = DEFAULT_PERMISSIONS } = useQuery({
+    queryKey: ['file-permissions'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('permissions')
+          .select('*')
+          .eq('module', 'SharedFiles');
+        
+        if (error) throw error;
+        
+        // If we have permissions in the database, use those. Otherwise, use defaults
+        return data && data.length > 0 ? data : DEFAULT_PERMISSIONS;
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+        return DEFAULT_PERMISSIONS;
+      }
+    }
+  });
 
   return {
-    canEdit: canEditFileDescription(userRole, userRoles),
-    canDelete: canDeleteFiles(userRole, userRoles),
-    canUpload: canUploadFiles(userRole, userRoles),
-    canManageFolders: canManageFolders(userRole, userRoles),
-    // All authenticated users can download files, including Chatters
-    canDownload: true
+    canEdit: hasPermission(permissions, userRole, userRoles, 'canEditDescription'),
+    canDelete: hasPermission(permissions, userRole, userRoles, 'canDelete'),
+    canUpload: hasPermission(permissions, userRole, userRoles, 'canUpload'),
+    canManageFolders: hasPermission(permissions, userRole, userRoles, 'canUpload'), // Using same permission as upload for folder management
+    canDownload: hasPermission(permissions, userRole, userRoles, 'canDownload'),
+    canPreview: hasPermission(permissions, userRole, userRoles, 'canPreview')
   };
 };

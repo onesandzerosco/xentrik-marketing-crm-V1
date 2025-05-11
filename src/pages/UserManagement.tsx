@@ -4,6 +4,8 @@ import { useAuth } from "../context/AuthContext";
 import PendingUsersList from "../components/admin/PendingUsersList";
 import AddTeamMemberForm from "../components/admin/AddTeamMemberForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import PermissionsSettings from "@/components/admin/permissions/PermissionsSettings";
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -25,7 +27,13 @@ const UserManagement = () => {
         Manage user accounts and approvals
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <PermissionsSettings />
+          </CardContent>
+        </Card>
+        
         <div>
           <Tabs defaultValue="pending">
             <TabsList className="mb-4">

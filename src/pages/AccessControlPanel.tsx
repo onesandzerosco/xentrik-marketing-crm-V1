@@ -14,6 +14,7 @@ import { Shield, Users } from "lucide-react";
 import UserRolesList from "@/components/admin/users/UserRolesList";
 import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
 import InvitationsList from "@/components/admin/creator-invite/InvitationsList";
+import PermissionsSettings from "@/components/admin/permissions/PermissionsSettings";
 
 const AccessControlPanel: React.FC = () => {
   const { userRole } = useAuth();
@@ -46,6 +47,19 @@ const AccessControlPanel: React.FC = () => {
           <span className="text-brand-yellow">Admin Access</span>
         </div>
       </div>
+
+      {/* Add Permissions Settings */}
+      <Card className="mb-6">
+        <CardHeader className="pb-0">
+          <CardTitle>Permissions Settings</CardTitle>
+          <CardDescription>
+            Manage role-based permissions for different modules
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <PermissionsSettings />
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
