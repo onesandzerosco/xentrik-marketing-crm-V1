@@ -88,7 +88,7 @@ export class OnboardingService {
         options: {
           data: {
             name: creatorInfo.name,
-            role: 'Creator',
+            role: 'Employee',
             roles: ['Creator']
           }
         }
