@@ -12,11 +12,12 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Trash, Check, Loader2 } from "lucide-react";
+import { Eye, Trash2, Check, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import CreatorService from "@/services/CreatorService";
 import { format } from "date-fns";
+import AcceptSubmissionModal from "@/components/onboarding/AcceptSubmissionModal";
 
 interface OnboardSubmission {
   token: string;
@@ -33,6 +34,8 @@ const CreatorOnboardQueue: React.FC = () => {
   const [submissions, setSubmissions] = useState<OnboardSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingTokens, setProcessingTokens] = useState<string[]>([]);
+  const [acceptModalOpen, setAcceptModalOpen] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
   
   // Only allow admins to access this page
   if (userRole !== "Admin") {
@@ -163,45 +166,27 @@ const CreatorOnboardQueue: React.FC = () => {
     }
   };
   
-  const approveSubmission = async (submission: OnboardSubmission) => {
+  const openAcceptModal = (submission: OnboardSubmission) => {
+    setSelectedSubmission(submission);
+    setAcceptModalOpen(true);
+  };
+  
+  const handleAcceptSubmission = async (creatorData: {
+    name: string;
+    team: "A" | "B" | "C";
+    creatorType: "AI" | "Real";
+  }) => {
+    if (!selectedSubmission) return;
+    
     try {
-      setProcessingTokens(prev => [...prev, submission.token]);
-      // Extract necessary data for creator
-      const formData = submission.data;
-      const personalInfo = formData.personalInfo;
+      const token = selectedSubmission.token;
+      setProcessingTokens(prev => [...prev, token]);
       
-      if (!personalInfo?.email || !personalInfo?.fullName) {
-        throw new Error("Missing required information (email or name)");
-      }
-      
-      // Map the gender value from the onboarding form to our database enum
-      let genderValue: "Male" | "Female" | "Trans" | "AI" = "Female";
-      
-      if (personalInfo.sex === "Male") {
-        genderValue = "Male";
-      } else if (personalInfo.sex === "Female") {
-        genderValue = "Female";
-      } else if (personalInfo.sex === "Non-binary") {
-        genderValue = "Trans"; 
-      }
-      
-      // Create basic creator data
-      const creatorData = {
-        name: personalInfo.fullName,
-        email: personalInfo.email,
-        gender: genderValue,
-        sex: personalInfo.sex || null,
-        team: "A Team", // Default team
-        creatorType: "Real", // Default type
-        notes: JSON.stringify(formData), // Store full data as notes for now
-        telegramUsername: "", // Can be updated later
-        whatsappNumber: "", // Can be updated later
-      };
-      
-      console.log("Creating creator with data:", creatorData);
-      
-      // Add creator to database
-      const creatorId = await CreatorService.addCreator(creatorData);
+      // Process the submission using the CreatorService
+      const creatorId = await CreatorService.acceptOnboardingSubmission(
+        selectedSubmission.data, 
+        creatorData
+      );
       
       if (!creatorId) {
         throw new Error("Failed to create creator record");
@@ -210,21 +195,27 @@ const CreatorOnboardQueue: React.FC = () => {
       console.log("Creator created with ID:", creatorId);
       
       // Delete the submission file after successful approval
-      await deleteSubmission(submission.token);
+      await deleteSubmission(token);
       
       toast({
         title: "Creator approved",
-        description: `${personalInfo.fullName} has been approved and added as a creator.`,
+        description: `${creatorData.name} has been approved and added as a creator.`,
       });
       
+      // Close the modal
+      setAcceptModalOpen(false);
+      
     } catch (error) {
-      console.error("Error approving submission:", error);
+      console.error("Error accepting submission:", error);
       toast({
         title: "Error approving submission",
         description: error instanceof Error ? error.message : "Failed to approve the creator.",
         variant: "destructive"
       });
-      setProcessingTokens(prev => prev.filter(t => t !== submission.token));
+    } finally {
+      if (selectedSubmission) {
+        setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
+      }
     }
   };
   
@@ -316,13 +307,13 @@ const CreatorOnboardQueue: React.FC = () => {
                             {processingTokens.includes(submission.token) ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Trash className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             )}
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => approveSubmission(submission)}
+                            onClick={() => openAcceptModal(submission)}
                             disabled={processingTokens.includes(submission.token)}
                             title="Approve creator"
                           >
@@ -353,6 +344,17 @@ const CreatorOnboardQueue: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* Acceptance Modal */}
+      {selectedSubmission && (
+        <AcceptSubmissionModal
+          isOpen={acceptModalOpen}
+          onClose={() => setAcceptModalOpen(false)}
+          onAccept={handleAcceptSubmission}
+          defaultName={selectedSubmission.name}
+          isLoading={processingTokens.includes(selectedSubmission.token)}
+        />
+      )}
     </div>
   );
 };

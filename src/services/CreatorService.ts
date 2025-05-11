@@ -5,7 +5,7 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export interface CreatorData {
   name: string;
-  email: string;
+  email?: string;
   gender: "Male" | "Female" | "Trans" | "AI";
   team: string;
   creatorType: string;
@@ -96,6 +96,66 @@ class CreatorService {
       return "pending";
     } catch (error) {
       console.error("Error in saveOnboardingData:", error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Accept a creator onboarding submission
+   * @param formData The onboarding form data 
+   * @param creatorInfo The basic creator information to save
+   * @returns The new creator ID or undefined on error
+   */
+  static async acceptOnboardingSubmission(
+    formData: any, 
+    creatorInfo: {
+      name: string;
+      team: "A" | "B" | "C";
+      creatorType: "AI" | "Real";
+    }
+  ): Promise<string | undefined> {
+    try {
+      // Map personal info from the form data
+      const personalInfo = formData.personalInfo || {};
+      
+      // Map the gender value from the onboarding form to our database enum
+      let genderValue: "Male" | "Female" | "Trans" | "AI" = "Female";
+      
+      if (personalInfo.sex === "Male") {
+        genderValue = "Male";
+      } else if (personalInfo.sex === "Female") {
+        genderValue = "Female";
+      } else if (personalInfo.sex === "Transgender") {
+        genderValue = "Trans";
+      }
+      
+      // Create basic creator data with the admin-specified values
+      const creatorData = {
+        name: creatorInfo.name,
+        email: personalInfo.email || null,
+        gender: genderValue,
+        team: creatorInfo.team,
+        creatorType: creatorInfo.creatorType,
+        sex: personalInfo.sex || null,
+        notes: personalInfo.notes || null,
+        telegramUsername: personalInfo.telegramUsername || null,
+        whatsappNumber: personalInfo.whatsappNumber || null,
+        // Store the full form data as model_profile
+        modelProfile: formData
+      };
+      
+      console.log("Creating creator with data:", creatorData);
+      
+      // Add creator to database
+      const creatorId = await this.addCreator(creatorData);
+      
+      if (!creatorId) {
+        throw new Error("Failed to create creator record");
+      }
+      
+      return creatorId;
+    } catch (error) {
+      console.error("Error accepting submission:", error);
       return undefined;
     }
   }
