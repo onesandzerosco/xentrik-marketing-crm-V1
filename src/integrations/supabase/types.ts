@@ -360,6 +360,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          delete: boolean
+          download: boolean
+          edit: boolean
+          preview: boolean
+          rolename: string
+          upload: boolean
+        }
+        Insert: {
+          delete?: boolean
+          download?: boolean
+          edit?: boolean
+          preview?: boolean
+          rolename: string
+          upload?: boolean
+        }
+        Update: {
+          delete?: boolean
+          download?: boolean
+          edit?: boolean
+          preview?: boolean
+          rolename?: string
+          upload?: boolean
+        }
+        Relationships: []
+      }
       secure_area_passwords: {
         Row: {
           active: boolean | null
