@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 
@@ -67,9 +66,6 @@ class CreatorService {
    */
   static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
     try {
-      // Generate a unique ID for the creator
-      const creatorId = uuidv4();
-      
       // Extract basic required fields
       const name = formData.name || formData.personalInfo?.name || "New Creator";
       const gender = formData.gender || formData.personalInfo?.gender || "Female";
@@ -78,10 +74,10 @@ class CreatorService {
       
       // Insert the creator into the database with minimal required fields
       // But store the complete form data in model_profile
+      // Note: We're not specifying an ID - it will only be generated when approved
       const { error } = await supabase
         .from('creators')
         .insert({
-          id: creatorId,
           name,
           gender,
           team: teamValue,
@@ -96,7 +92,8 @@ class CreatorService {
         throw error;
       }
       
-      return creatorId;
+      // Return a placeholder ID for now - actual ID will be generated upon approval
+      return "pending";
     } catch (error) {
       console.error("Error in saveOnboardingData:", error);
       return undefined;

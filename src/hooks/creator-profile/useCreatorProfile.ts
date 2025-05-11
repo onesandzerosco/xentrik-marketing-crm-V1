@@ -34,11 +34,8 @@ export const useCreatorProfile = () => {
       }
       
       // Also save to creators table with model_profile column
-      const creatorId = await CreatorService.saveOnboardingData(token, formData);
-      
-      if (!creatorId) {
-        throw new Error("Failed to save creator data");
-      }
+      // This will create a record without an ID that needs approval
+      await CreatorService.saveOnboardingData(token, formData);
       
       // Update the invitation status if token exists
       if (token) {
@@ -61,7 +58,7 @@ export const useCreatorProfile = () => {
         navigate("/");
       }, 2000);
       
-      return creatorId;
+      return true;
     } catch (error: any) {
       console.error("Error saving onboarding data:", error);
       toast({
@@ -69,7 +66,7 @@ export const useCreatorProfile = () => {
         description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
-      return undefined;
+      return false;
     } finally {
       setIsLoading(false);
     }

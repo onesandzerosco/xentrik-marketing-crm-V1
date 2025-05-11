@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
 import { v4 as uuidv4 } from "uuid";
@@ -42,17 +41,11 @@ export const saveOnboardingData = async (data: CreatorOnboardingFormValues) => {
     console.log("Upload successful, now saving to creators table");
     
     // Save to creators table with model_profile
-    const creatorId = await CreatorService.saveOnboardingData(token, data);
-    
-    if (!creatorId) {
-      return { 
-        success: false, 
-        error: "Failed to save creator data to database" 
-      };
-    }
+    // Don't expect a valid creator ID back yet - it will be pending approval
+    await CreatorService.saveOnboardingData(token, data);
     
     console.log("Upload successful:", uploadData);
-    return { success: true, token, creatorId };
+    return { success: true, token };
   } catch (error) {
     console.error('Error in saveOnboardingData:', error);
     return { 
