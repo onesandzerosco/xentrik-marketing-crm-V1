@@ -62,7 +62,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
         <DialogHeader>
           <DialogTitle>Accept Creator Submission</DialogTitle>
           <DialogDescription className="text-gray-300">
-            This will create a new creator account with the email from their submission and set their password to "XentrikBananas".
+            This will create a new creator account with the email from their submission and set their password to "XentrikBananas". The creator will be able to login with these credentials.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

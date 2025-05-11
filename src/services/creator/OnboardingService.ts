@@ -80,7 +80,8 @@ export class OnboardingService {
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
-      // First, create a user in the auth system
+      // Create a user in the auth system using the authenticated client
+      // This should include the API key by default
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: defaultPassword,
@@ -94,6 +95,7 @@ export class OnboardingService {
       });
       
       if (authError) {
+        console.error("Auth error details:", authError);
         throw new Error(`Failed to create auth user: ${authError.message}`);
       }
       
@@ -137,7 +139,14 @@ export class OnboardingService {
       
       if (creatorError) {
         // If there was an error creating the creator, try to delete the auth user
-        await supabase.auth.admin.deleteUser(userId);
+        if (userId) {
+          try {
+            // NOTE: Delete functionality is disabled here since it would require admin privileges
+            console.error("Failed to create creator record, but cannot delete auth user due to permissions");
+          } catch (deleteError) {
+            console.error("Error deleting auth user after creator creation failed:", deleteError);
+          }
+        }
         throw creatorError;
       }
       
