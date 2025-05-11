@@ -2,9 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
 import { v4 as uuidv4 } from "uuid";
+import CreatorService from "@/services/CreatorService";
 
 /**
  * Save the creator onboarding data to Supabase storage
+ * and to creators table with model_profile
  * @param data The form data to save
  * @returns Success status and token or error message
  */
@@ -37,8 +39,20 @@ export const saveOnboardingData = async (data: CreatorOnboardingFormValues) => {
       return { success: false, error: error.message };
     }
     
+    console.log("Upload successful, now saving to creators table");
+    
+    // Save to creators table with model_profile
+    const creatorId = await CreatorService.saveOnboardingData(token, data);
+    
+    if (!creatorId) {
+      return { 
+        success: false, 
+        error: "Failed to save creator data to database" 
+      };
+    }
+    
     console.log("Upload successful:", uploadData);
-    return { success: true, token };
+    return { success: true, token, creatorId };
   } catch (error) {
     console.error('Error in saveOnboardingData:', error);
     return { 

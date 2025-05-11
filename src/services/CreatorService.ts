@@ -13,6 +13,7 @@ export interface CreatorData {
   whatsappNumber?: string;
   profileImage?: string;
   sex?: string;
+  modelProfile?: any; // Add model_profile field to store onboarding form data
 }
 
 class CreatorService {
@@ -42,7 +43,8 @@ class CreatorService {
           profile_image: creatorData.profileImage || null,
           sex: creatorData.sex || null,
           needs_review: true,
-          active: true
+          active: true,
+          model_profile: creatorData.modelProfile || null // Store the full onboarding form data
         });
       
       if (error) {
@@ -53,6 +55,50 @@ class CreatorService {
       return creatorId;
     } catch (error) {
       console.error("Error in addCreator:", error);
+      return undefined;
+    }
+  }
+  
+  /**
+   * Save onboarding form data for a creator
+   * @param token The onboarding token
+   * @param formData The complete onboarding form data
+   * @returns The creator ID or undefined on error
+   */
+  static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
+    try {
+      // Generate a unique ID for the creator
+      const creatorId = uuidv4();
+      
+      // Extract basic required fields
+      const name = formData.name || formData.personalInfo?.name || "New Creator";
+      const gender = formData.gender || formData.personalInfo?.gender || "Female";
+      const teamValue = formData.team || "A Team";
+      const creatorTypeValue = formData.creatorType || "Real";
+      
+      // Insert the creator into the database with minimal required fields
+      // But store the complete form data in model_profile
+      const { error } = await supabase
+        .from('creators')
+        .insert({
+          id: creatorId,
+          name,
+          gender,
+          team: teamValue,
+          creator_type: creatorTypeValue,
+          needs_review: true,
+          active: true,
+          model_profile: formData // Store the entire form data as JSON
+        });
+      
+      if (error) {
+        console.error("Error saving onboarding data:", error);
+        throw error;
+      }
+      
+      return creatorId;
+    } catch (error) {
+      console.error("Error in saveOnboardingData:", error);
       return undefined;
     }
   }
@@ -70,7 +116,7 @@ class CreatorService {
         .from('creators')
         .select('id')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
       
       if (existingCreator) {
         return true;
