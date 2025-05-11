@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import CreatorService from "@/services/CreatorService";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
+import CreatorService from "@/services/creator";
 
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
