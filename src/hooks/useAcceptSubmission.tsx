@@ -3,6 +3,11 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
+import type { Database } from "@/integrations/supabase/types";
+
+// Define the enum types from Supabase
+type TeamEnum = Database["public"]["Enums"]["team"];
+type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
@@ -19,8 +24,8 @@ export const useAcceptSubmission = (
 
   const handleAcceptSubmission = async (creatorData: {
     name: string;
-    team: "A" | "B" | "C";
-    creatorType: "AI" | "Real";
+    team: TeamEnum;
+    creatorType: CreatorTypeEnum;
   }) => {
     if (!selectedSubmission) return;
     

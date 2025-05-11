@@ -18,14 +18,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import type { Database } from "@/integrations/supabase/types";
+
+// Define the enum types from Supabase
+type TeamEnum = Database["public"]["Enums"]["team"];
+type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
 interface AcceptSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccept: (creatorData: {
     name: string;
-    team: "A" | "B" | "C";
-    creatorType: "AI" | "Real";
+    team: TeamEnum;
+    creatorType: CreatorTypeEnum;
   }) => Promise<void>;
   defaultName: string;
   isLoading: boolean;
@@ -39,8 +44,8 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   isLoading
 }) => {
   const [name, setName] = useState(defaultName);
-  const [team, setTeam] = useState<"A" | "B" | "C">("A");
-  const [creatorType, setCreatorType] = useState<"AI" | "Real">("Real");
+  const [team, setTeam] = useState<TeamEnum>("A Team");
+  const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
 
   const handleAccept = async () => {
     await onAccept({
@@ -74,15 +79,15 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             </Label>
             <Select 
               value={team} 
-              onValueChange={(value: "A" | "B" | "C") => setTeam(value)}
+              onValueChange={(value: TeamEnum) => setTeam(value)}
             >
               <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent className="bg-[#252538] border-[#383854] text-white">
-                <SelectItem value="A">A Team</SelectItem>
-                <SelectItem value="B">B Team</SelectItem>
-                <SelectItem value="C">C Team</SelectItem>
+                <SelectItem value="A Team">A Team</SelectItem>
+                <SelectItem value="B Team">B Team</SelectItem>
+                <SelectItem value="C Team">C Team</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -92,7 +97,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             </Label>
             <Select 
               value={creatorType} 
-              onValueChange={(value: "AI" | "Real") => setCreatorType(value)}
+              onValueChange={(value: CreatorTypeEnum) => setCreatorType(value)}
             >
               <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
                 <SelectValue placeholder="Select creator type" />

@@ -3,6 +3,11 @@ import { CreatorAddService } from "./CreatorAddService";
 import { OnboardingService } from "./OnboardingService";
 import { UserCreatorService } from "./UserCreatorService";
 import type { CreatorData } from "./types";
+import type { Database } from "@/integrations/supabase/types";
+
+// Define the enum types from Supabase
+type TeamEnum = Database["public"]["Enums"]["team"];
+type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
 /**
  * Unified CreatorService that combines functionality from specialized services
@@ -37,8 +42,8 @@ class CreatorService {
     formData: any, 
     creatorInfo: {
       name: string;
-      team: "A" | "B" | "C";
-      creatorType: "AI" | "Real";
+      team: TeamEnum;
+      creatorType: CreatorTypeEnum;
     }
   ): Promise<string | undefined> {
     return OnboardingService.acceptOnboardingSubmission(formData, creatorInfo);

@@ -1,7 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 import { CreatorAddService } from "./CreatorAddService";
+
+// Define the enum types from Supabase
+type TeamEnum = Database["public"]["Enums"]["team"];
+type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
+type GenderEnum = Database["public"]["Enums"]["gender"];
 
 /**
  * Service for handling creator onboarding
@@ -57,8 +63,8 @@ export class OnboardingService {
     formData: any, 
     creatorInfo: {
       name: string;
-      team: "A" | "B" | "C";
-      creatorType: "AI" | "Real";
+      team: TeamEnum;
+      creatorType: CreatorTypeEnum;
     }
   ): Promise<string | undefined> {
     try {
@@ -66,7 +72,7 @@ export class OnboardingService {
       const personalInfo = formData.personalInfo || {};
       
       // Map the gender value from the onboarding form to our database enum
-      let genderValue: "Male" | "Female" | "Trans" | "AI" = "Female";
+      let genderValue: GenderEnum = "Female";
       
       if (personalInfo.sex === "Male") {
         genderValue = "Male";

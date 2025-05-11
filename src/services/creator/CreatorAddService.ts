@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from "uuid";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 import { CreatorData } from "./types";
 
 /**
