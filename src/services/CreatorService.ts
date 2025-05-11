@@ -26,11 +26,11 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database - using our generated UUID
+      // Insert the creator into the database
       const { error } = await supabase
         .from('creators')
-        .insert({
-          id: creatorId, // Explicitly set the ID to our generated UUID
+        .insert([{ // Note: Using array syntax as expected by Supabase
+          id: creatorId,
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
@@ -43,7 +43,7 @@ class CreatorService {
           sex: creatorData.sex || null,
           needs_review: true,
           active: true
-        });
+        }]);
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -85,8 +85,8 @@ class CreatorService {
       // Create creator record - using the user's ID
       const { error } = await supabase
         .from('creators')
-        .insert({
-          id: userId, // Explicitly set the ID to the user's ID
+        .insert([{ // Note: Using array syntax as expected by Supabase
+          id: userId,
           name: user.user.user_metadata.name || user.user.email,
           email: user.user.email,
           gender: "Female", // Default
@@ -94,7 +94,7 @@ class CreatorService {
           creator_type: "Real", // Default
           needs_review: true,
           active: true
-        });
+        }]);
       
       if (error) {
         throw error;
