@@ -74,7 +74,8 @@ class CreatorService {
       const teamValue = formData.team || "A Team";
       const creatorTypeValue = formData.creatorType || "Real";
       
-      // Use the TablesInsert type for type safety
+      // Create a partial insert data object without ID
+      // The partial type allows us to omit the 'id' field
       const insertData = {
         name,
         gender,
@@ -83,14 +84,14 @@ class CreatorService {
         needs_review: true,
         active: true,
         model_profile: formData // Store the entire form data as JSON
-      } as TablesInsert<'creators'>;
+      };
       
       // Insert the creator into the database with minimal required fields
       // But store the complete form data in model_profile
       // Note: We're not specifying an ID - it will only be generated when approved
       const { error } = await supabase
         .from('creators')
-        .insert(insertData);
+        .insert(insertData as Partial<TablesInsert<'creators'>>);
       
       if (error) {
         console.error("Error saving onboarding data:", error);
@@ -130,22 +131,19 @@ class CreatorService {
         throw new Error("User not found");
       }
       
-      // Use the TablesInsert type for type safety
-      const insertData = {
-        id: userId,
-        name: user.user.user_metadata.name || user.user.email,
-        email: user.user.email,
-        gender: "Female", // Default
-        team: "A Team", // Default
-        creator_type: "Real", // Default
-        needs_review: true,
-        active: true
-      } as TablesInsert<'creators'>;
-      
       // Create creator record
       const { error } = await supabase
         .from('creators')
-        .insert(insertData);
+        .insert({
+          id: userId,
+          name: user.user.user_metadata.name || user.user.email,
+          email: user.user.email,
+          gender: "Female", // Default
+          team: "A Team", // Default
+          creator_type: "Real", // Default
+          needs_review: true,
+          active: true
+        });
       
       if (error) {
         throw error;
