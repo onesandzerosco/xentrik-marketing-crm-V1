@@ -80,9 +80,9 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent className="bg-[#252538] border-[#383854] text-white">
-                <SelectItem value="A">Team A</SelectItem>
-                <SelectItem value="B">Team B</SelectItem>
-                <SelectItem value="C">Team C</SelectItem>
+                <SelectItem value="A">A Team</SelectItem>
+                <SelectItem value="B">B Team</SelectItem>
+                <SelectItem value="C">C Team</SelectItem>
               </SelectContent>
             </Select>
           </div>
