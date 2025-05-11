@@ -42,7 +42,7 @@ export const useFilePermissions = () => {
         if (error) throw error;
         
         // If we have permissions in the database, use those. Otherwise, use defaults
-        return data && data.length > 0 ? data : DEFAULT_PERMISSIONS;
+        return data && data.length > 0 ? data as Permission[] : DEFAULT_PERMISSIONS;
       } catch (error) {
         console.error('Error fetching permissions:', error);
         return DEFAULT_PERMISSIONS;
