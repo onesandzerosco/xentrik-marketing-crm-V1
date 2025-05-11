@@ -28,11 +28,11 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database - without specifying the id in the insert object
-      // Use array format for insert to fix TypeScript error
+      // Insert the creator into the database - without specifying the id
+      // Use TablesInsert to ensure type safety
       const { error } = await supabase
         .from('creators')
-        .insert([{
+        .insert({
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
@@ -45,8 +45,8 @@ class CreatorService {
           sex: creatorData.sex || null,
           needs_review: true,
           active: true,
-          model_profile: creatorData.modelProfile || null // Store the full onboarding form data
-        }]);
+          model_profile: creatorData.modelProfile || null
+        } as TablesInsert<"creators">);
       
       if (error) {
         console.error("Error creating creator:", error);
@@ -74,21 +74,18 @@ class CreatorService {
       const teamValue = formData.team || "A Team";
       const creatorTypeValue = formData.creatorType || "Real";
       
-      // Use a temporary ID for the creator that we'll replace later
-      // Use array format for insert to fix TypeScript error
-      const tempId = `temp_${token}`;
+      // Insert without specifying an ID
       const { error } = await supabase
         .from('creators')
-        .insert([{
-          id: tempId,
+        .insert({
           name,
           gender,
           team: teamValue,
           creator_type: creatorTypeValue,
           needs_review: true,
           active: true,
-          model_profile: formData // Store the entire form data as JSON
-        }]);
+          model_profile: formData 
+        } as TablesInsert<"creators">);
       
       if (error) {
         console.error("Error saving onboarding data:", error);
@@ -128,7 +125,7 @@ class CreatorService {
         throw new Error("User not found");
       }
       
-      // Create creator record
+      // Create creator record with the user's ID
       const { error } = await supabase
         .from('creators')
         .insert({
@@ -140,7 +137,7 @@ class CreatorService {
           creator_type: "Real", // Default
           needs_review: true,
           active: true
-        });
+        } as TablesInsert<"creators">);
       
       if (error) {
         throw error;

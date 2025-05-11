@@ -285,7 +285,7 @@ export const PersonalInfoForm = () => {
                 <Textarea 
                   placeholder="E.g. France, Italy, Japan"
                   onChange={(e) => {
-                    // Allow commas and spaces by splitting on commas and trimming
+                    // Split on commas and trim, allowing spaces and commas
                     const placesText = e.target.value;
                     const places = placesText.split(',').map(place => place.trim()).filter(Boolean);
                     field.onChange(places);
