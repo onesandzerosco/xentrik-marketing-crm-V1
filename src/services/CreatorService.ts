@@ -28,11 +28,10 @@ class CreatorService {
       // Generate a unique ID for the creator
       const creatorId = uuidv4();
       
-      // Insert the creator into the database
+      // Insert the creator into the database - without specifying the id in the insert object
       const { error } = await supabase
         .from('creators')
         .insert({
-          id: creatorId,
           name: creatorData.name,
           email: creatorData.email,
           gender: creatorData.gender,
@@ -69,18 +68,18 @@ class CreatorService {
   static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
     try {
       // Extract basic required fields
-      const name = formData.name || formData.personalInfo?.name || formData.personalInfo?.fullName || "New Creator";
-      const gender = formData.gender || formData.personalInfo?.gender || formData.personalInfo?.sex || "Female";
+      const name = formData.name || formData.personalInfo?.fullName || "New Creator";
+      const gender = formData.gender || formData.personalInfo?.sex || "Female";
       const teamValue = formData.team || "A Team";
       const creatorTypeValue = formData.creatorType || "Real";
       
-      // Important: For tables that have required fields but we want to defer ID generation,
-      // we need to use upsert with onConflict set to 'do nothing'
+      // Use a temporary ID for the creator that we'll replace later
+      // Use insert without onConflict - we'll handle any conflicts in our approval process
+      const tempId = `temp_${token}`;
       const { error } = await supabase
         .from('creators')
         .insert({
-          // Generate a temporary ID that will be replaced upon approval
-          id: `temp_${token}`,
+          id: tempId,
           name,
           gender,
           team: teamValue,
@@ -88,9 +87,7 @@ class CreatorService {
           needs_review: true,
           active: true,
           model_profile: formData // Store the entire form data as JSON
-        })
-        .onConflict('id')
-        .ignore();
+        });
       
       if (error) {
         console.error("Error saving onboarding data:", error);
