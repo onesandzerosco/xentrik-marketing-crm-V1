@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/card";
 import { Shield, Users } from "lucide-react";
 import UserRolesList from "@/components/admin/users/UserRolesList";
-import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
-import InvitationsList from "@/components/admin/creator-invite/InvitationsList";
 import PermissionsSettings from "@/components/admin/permissions/PermissionsSettings";
 
 const AccessControlPanel: React.FC = () => {
@@ -75,11 +73,6 @@ const AccessControlPanel: React.FC = () => {
           <UserRolesList />
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <InviteCreatorCard />
-        <InvitationsList />
-      </div>
     </div>
   );
 };

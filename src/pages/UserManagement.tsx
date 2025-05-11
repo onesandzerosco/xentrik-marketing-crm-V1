@@ -5,7 +5,8 @@ import PendingUsersList from "../components/admin/PendingUsersList";
 import AddTeamMemberForm from "../components/admin/AddTeamMemberForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import PermissionsSettings from "@/components/admin/permissions/PermissionsSettings";
+import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
+import InvitationsList from "@/components/admin/creator-invite/InvitationsList";
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -27,29 +28,26 @@ const UserManagement = () => {
         Manage user accounts and approvals
       </p>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <PermissionsSettings />
-          </CardContent>
-        </Card>
-        
-        <div>
-          <Tabs defaultValue="pending">
-            <TabsList className="mb-4">
-              <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
-              <TabsTrigger value="add">Add Team Member</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="pending">
-              <PendingUsersList />
-            </TabsContent>
-            
-            <TabsContent value="add">
-              <AddTeamMemberForm />
-            </TabsContent>
-          </Tabs>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <InviteCreatorCard />
+        <InvitationsList />
+      </div>
+      
+      <div>
+        <Tabs defaultValue="pending">
+          <TabsList className="mb-4">
+            <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
+            <TabsTrigger value="add">Add Team Member</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="pending">
+            <PendingUsersList />
+          </TabsContent>
+          
+          <TabsContent value="add">
+            <AddTeamMemberForm />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
