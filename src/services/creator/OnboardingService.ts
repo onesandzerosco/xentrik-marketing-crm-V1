@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { CreatorAddService } from "./CreatorAddService";
+import { v4 as uuidv4 } from "uuid";
 
 // Define the enum types from Supabase
 type TeamEnum = Database["public"]["Enums"]["team"];
@@ -70,6 +71,37 @@ export class OnboardingService {
     try {
       // Map personal info from the form data
       const personalInfo = formData.personalInfo || {};
+      const email = personalInfo.email;
+      
+      if (!email) {
+        throw new Error("Email is required for creator registration");
+      }
+      
+      // The default password for all creators
+      const defaultPassword = "XentrikBananas";
+      
+      // First, create a user in the auth system
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password: defaultPassword,
+        options: {
+          data: {
+            name: creatorInfo.name,
+            role: 'Creator',
+            roles: ['Creator']
+          }
+        }
+      });
+      
+      if (authError) {
+        throw new Error(`Failed to create auth user: ${authError.message}`);
+      }
+      
+      if (!authData.user?.id) {
+        throw new Error("Failed to retrieve user ID from authentication");
+      }
+      
+      const userId = authData.user.id;
       
       // Map the gender value from the onboarding form to our database enum
       let genderValue: GenderEnum = "Female";
@@ -82,31 +114,47 @@ export class OnboardingService {
         genderValue = "Trans";
       }
       
-      // Create basic creator data with the admin-specified values
-      const creatorData = {
-        name: creatorInfo.name,
-        email: personalInfo.email || null,
-        gender: genderValue,
-        team: creatorInfo.team,
-        creatorType: creatorInfo.creatorType,
-        sex: personalInfo.sex || null,
-        notes: personalInfo.notes || null,
-        telegramUsername: personalInfo.telegramUsername || null,
-        whatsappNumber: personalInfo.whatsappNumber || null,
-        // Store the full form data as model_profile
-        modelProfile: formData
-      };
+      // Create creator record with the same ID as the auth user
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('creators')
+        .insert({
+          id: userId,
+          name: creatorInfo.name,
+          email: email,
+          gender: genderValue,
+          team: creatorInfo.team,
+          creator_type: creatorInfo.creatorType,
+          sex: personalInfo.sex || null,
+          notes: personalInfo.notes || null,
+          telegram_username: personalInfo.telegramUsername || null,
+          whatsapp_number: personalInfo.whatsappNumber || null,
+          needs_review: false, // Mark as reviewed since it's approved
+          active: true,
+          model_profile: formData
+        } as TablesInsert<"creators">)
+        .select("id")
+        .single();
       
-      console.log("Creating creator with data:", creatorData);
-      
-      // Add creator to database
-      const creatorId = await CreatorAddService.addCreator(creatorData);
-      
-      if (!creatorId) {
-        throw new Error("Failed to create creator record");
+      if (creatorError) {
+        // If there was an error creating the creator, try to delete the auth user
+        await supabase.auth.admin.deleteUser(userId);
+        throw creatorError;
       }
       
-      return creatorId;
+      // Create empty social links record for the creator
+      const { error: socialLinksError } = await supabase
+        .from('creator_social_links')
+        .insert({
+          creator_id: userId
+        });
+      
+      if (socialLinksError) {
+        console.error('Error creating social links:', socialLinksError);
+      }
+      
+      console.log("Successfully created creator with ID:", userId);
+      
+      return userId;
     } catch (error) {
       console.error("Error accepting submission:", error);
       return undefined;

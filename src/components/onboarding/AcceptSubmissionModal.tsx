@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -60,6 +61,9 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
       <DialogContent className="sm:max-w-[425px] bg-[#1a1a33] text-white border-[#252538]">
         <DialogHeader>
           <DialogTitle>Accept Creator Submission</DialogTitle>
+          <DialogDescription className="text-gray-300">
+            This will create a new creator account with the email from their submission and set their password to "XentrikBananas".
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

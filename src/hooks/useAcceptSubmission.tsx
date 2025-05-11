@@ -50,7 +50,7 @@ export const useAcceptSubmission = (
       
       toast({
         title: "Creator approved",
-        description: `${creatorData.name} has been approved and added as a creator.`,
+        description: `${creatorData.name} has been approved and added as a creator with account credentials.`,
       });
       
       // Close the modal
