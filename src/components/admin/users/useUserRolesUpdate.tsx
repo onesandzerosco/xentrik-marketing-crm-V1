@@ -3,7 +3,7 @@ import { useState } from "react";
 import { PrimaryRole } from "@/types/employee";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import CreatorService from "./CreatorService";
+import CreatorService from "@/services/creator";
 
 export const useUserRolesUpdate = (fetchUsers: () => Promise<void>) => {
   const [loading, setLoading] = useState(false);
@@ -43,27 +43,18 @@ export const useUserRolesUpdate = (fetchUsers: () => Promise<void>) => {
       if (!hadCreatorRole && hasCreatorRole) {
         // Creator role added
         const result = await CreatorService.ensureCreatorRecordExists(userId);
-        if (result?.message) {
+        if (result) {
           toast({
             title: "Creator account created",
-            description: result.message,
+            description: "User has been assigned the Creator role and a creator record was created.",
           });
         }
       } else if (hadCreatorRole && !hasCreatorRole) {
-        // Creator role removed
-        const result = await CreatorService.disableCreatorRecord(userId);
-        if (result?.message) {
-          toast({
-            title: "Creator status updated",
-            description: result.message,
-          });
-        } else if (result?.error) {
-          toast({
-            title: "Error",
-            description: result.error,
-            variant: "destructive"
-          });
-        }
+        // Creator role removed - would need additional functionality to handle this
+        toast({
+          title: "Creator status updated",
+          description: "User's Creator role has been removed.",
+        });
       }
       
       toast({

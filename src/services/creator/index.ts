@@ -2,7 +2,7 @@
 import { CreatorAddService } from "./CreatorAddService";
 import { OnboardingService } from "./OnboardingService";
 import { UserCreatorService } from "./UserCreatorService";
-import { CreatorData } from "./types";
+import type { CreatorData } from "./types";
 
 /**
  * Unified CreatorService that combines functionality from specialized services
@@ -56,4 +56,4 @@ class CreatorService {
 }
 
 export default CreatorService;
-export { CreatorData };
+export type { CreatorData };
