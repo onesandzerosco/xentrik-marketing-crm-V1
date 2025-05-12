@@ -12,10 +12,14 @@ export const useFileProgress = (): FileProgress => {
     return totalProgress / uploadingFiles.length;
   }, [uploadingFiles]);
 
-  const updateFileProgress = useCallback((file: File, progress: number) => {
+  const updateFileProgress = useCallback((fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {
     setUploadingFiles(prevFiles => {
       const updatedFiles = prevFiles.map(item => 
-        item.file.name === file.name ? { ...item, progress } : item
+        item.file.name === fileName ? { 
+          ...item, 
+          progress,
+          status: status || item.status 
+        } : item
       );
       
       return updatedFiles;
@@ -28,10 +32,10 @@ export const useFileProgress = (): FileProgress => {
     });
   }, [calculateOverallProgress]);
 
-  const updateFileStatus = useCallback((file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
+  const updateFileStatus = useCallback((fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
     setUploadingFiles(prevFiles => 
       prevFiles.map(item => 
-        item.file.name === file.name ? { ...item, status, error } : item
+        item.file.name === fileName ? { ...item, status, error } : item
       )
     );
   }, []);

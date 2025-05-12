@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { isVideoFile, isFileTooLarge } from '@/utils/fileUtils';
 import { isZipFile } from '@/utils/zipUtils';
 import { useFileUploader, FileUploadStatus } from '@/hooks/useFileUploader';
-import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
+import { useZipProcessor } from '@/hooks/useZipProcessor';
 import { useFileProcessor } from '@/hooks/useFileProcessor';
 import FileUploadProgress from './upload/FileUploadProgress';
 
@@ -41,21 +41,11 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
     currentFolder 
   });
 
-  const { processZipFile } = useZipFileProcessor({
-    creatorId,
-    updateFileProgress,
-    setFileStatuses
-  });
+  // Use useZipProcessor hook with correct parameters
+  const { processZipFile } = useZipProcessor();
 
-  const { processRegularFile } = useFileProcessor({
-    creatorId,
-    currentFolder,
-    updateFileProgress,
-    setFileStatuses,
-    chunkSize: CHUNK_SIZE,
-    maxFileSizeGB: MAX_FILE_SIZE_GB,
-    abortControllersRef
-  });
+  // Use useFileProcessor with correct parameters
+  const { processRegularFile } = useFileProcessor();
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -149,7 +139,26 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
 
       // First handle the ZIP files
       for (const zipFile of zipFiles) {
-        const extractedFileIds = await processZipFile(zipFile);
+        // Pass all required arguments to processZipFile
+        const extractedFileIds = await processZipFile(zipFile, {
+          creatorId,
+          currentFolder,
+          updateFileProgress: (file, progress) => updateFileProgress(file.name, progress),
+          updateFileStatus: (file, status, error) => {
+            const newStatus = status === 'uploading' ? 'uploading' 
+              : status === 'processing' ? 'processing'
+              : status === 'complete' ? 'complete' 
+              : 'error';
+            updateFileProgress(file.name, file.name === zipFile.name ? progress : 0, newStatus);
+            if (error) {
+              setFileStatuses(prev => 
+                prev.map(s => 
+                  s.name === file.name ? { ...s, error } : s
+                )
+              );
+            }
+          }
+        });
         uploadedFileIds.push(...extractedFileIds);
         
         // Add the newly created folder to available folders list (will be picked up on refresh)
@@ -165,7 +174,28 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
         // Skip files that are too large (already warned)
         if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) continue;
         
-        const fileId = await processRegularFile(file);
+        // Pass all required arguments to processRegularFile
+        const fileId = await processRegularFile(
+          file,
+          creatorId,
+          currentFolder,
+          (progress) => updateFileProgress(file.name, progress),
+          (status, error) => {
+            const newStatus = status === 'uploading' ? 'uploading' 
+              : status === 'processing' ? 'processing'
+              : status === 'complete' ? 'complete' 
+              : 'error';
+            updateFileProgress(file.name, 100, newStatus);
+            if (error) {
+              setFileStatuses(prev => 
+                prev.map(s => 
+                  s.name === file.name ? { ...s, error } : s
+                )
+              );
+            }
+          }
+        );
+        
         if (fileId) {
           uploadedFileIds.push(fileId);
         }
