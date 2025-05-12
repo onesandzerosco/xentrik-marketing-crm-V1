@@ -8,8 +8,8 @@ export const useFileProcessor = () => {
     file: File,
     creatorId: string,
     currentFolder: string,
-    updateFileProgress: (progress: number) => void,
-    updateFileStatus: (status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void
+    updateFileProgress: (fileName: string, progress: number) => void,
+    updateFileStatus: (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void
   ): Promise<string | null> => {
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const uniqueSafeName = await getUniqueFileName(
@@ -28,7 +28,7 @@ export const useFileProcessor = () => {
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         const percentComplete = (event.loaded / event.total) * 100;
-        updateFileProgress(percentComplete);
+        updateFileProgress(file.name, percentComplete);
       }
     });
     
@@ -36,8 +36,8 @@ export const useFileProcessor = () => {
     const uploadPromise = new Promise<string | null>((resolve, reject) => {
       xhr.onload = async function() {
         if (xhr.status >= 200 && xhr.status < 300) {
-          updateFileProgress(100);
-          updateFileStatus('complete');
+          updateFileProgress(file.name, 100);
+          updateFileStatus(file.name, 'complete');
           
           // Add folder reference
           let folderArray: string[] = [];
@@ -60,7 +60,7 @@ export const useFileProcessor = () => {
             .select('id');
             
           if (mediaError) {
-            updateFileStatus('error', 'Failed to create media record');
+            updateFileStatus(file.name, 'error', 'Failed to create media record');
             reject(mediaError);
             return null;
           } else if (mediaRecord && mediaRecord[0]) {
@@ -71,14 +71,14 @@ export const useFileProcessor = () => {
             return null;
           }
         } else {
-          updateFileStatus('error', `Upload failed: ${xhr.statusText}`);
+          updateFileStatus(file.name, 'error', `Upload failed: ${xhr.statusText}`);
           reject(new Error(`Upload failed: ${xhr.statusText}`));
           return null;
         }
       };
       
       xhr.onerror = function() {
-        updateFileStatus('error', 'Network error during upload');
+        updateFileStatus(file.name, 'error', 'Network error during upload');
         reject(new Error('Network error during upload'));
       };
     });

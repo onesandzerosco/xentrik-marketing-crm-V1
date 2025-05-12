@@ -19,12 +19,21 @@ export const useDragDropUploader = ({
     uploadingFiles,
     overallProgress,
     setUploadingFiles,
-    updateFileProgress,
-    updateFileStatus
+    updateFileProgress: updateProgress,
+    updateFileStatus: updateStatus
   } = useFileProgress();
   
   const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
+  
+  // Wrapper functions to adapt to the new API
+  const updateFileProgress = (fileName: string, progress: number) => {
+    updateProgress(fileName, progress);
+  };
+  
+  const updateFileStatus = (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
+    updateStatus(fileName, status, error);
+  };
 
   const handleUpload = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;

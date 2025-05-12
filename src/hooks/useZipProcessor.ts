@@ -11,8 +11,8 @@ export const useZipProcessor = () => {
     file: File, 
     { creatorId, currentFolder, updateFileProgress, updateFileStatus }: ZipProcessingOptions
   ): Promise<string[]> => {
-    updateFileStatus(file, 'processing');
-    updateFileProgress(file, 10);
+    updateFileStatus(file.name, 'processing');
+    updateFileProgress(file.name, 10);
     
     // Get the base name for folder creation (without .zip extension)
     const folderName = file.name.replace(/\.zip$/i, '');
@@ -20,7 +20,7 @@ export const useZipProcessor = () => {
     
     try {
       // Call the Edge Function to extract the ZIP file
-      updateFileProgress(file, 30);
+      updateFileProgress(file.name, 30);
       
       // Get signed URL for the zip file upload
       const { data: signedUrlData } = await supabase.storage
@@ -44,7 +44,7 @@ export const useZipProcessor = () => {
         throw new Error('Failed to upload ZIP file');
       }
       
-      updateFileProgress(file, 50);
+      updateFileProgress(file.name, 50);
       
       // Call the unzip-files Edge Function
       const { data: extractionData, error: extractionError } = await supabase.functions.invoke('unzip-files', {
@@ -60,7 +60,7 @@ export const useZipProcessor = () => {
         throw new Error(`ZIP extraction failed: ${extractionError.message}`);
       }
       
-      updateFileProgress(file, 90);
+      updateFileProgress(file.name, 90);
       
       // Add extracted file IDs to the result
       if (extractionData?.fileIds && Array.isArray(extractionData.fileIds)) {
@@ -73,12 +73,12 @@ export const useZipProcessor = () => {
         });
       }
       
-      updateFileProgress(file, 100);
-      updateFileStatus(file, 'complete');
+      updateFileProgress(file.name, 100);
+      updateFileStatus(file.name, 'complete');
       return uploadedFileIds;
     } catch (zipError) {
       console.error("Error processing ZIP file:", zipError);
-      updateFileStatus(file, 'error', zipError instanceof Error ? zipError.message : 'Failed to process ZIP file');
+      updateFileStatus(file.name, 'error', zipError instanceof Error ? zipError.message : 'Failed to process ZIP file');
       return [];
     }
   }, [toast]);

@@ -12,6 +12,7 @@ export const useFileProgress = (): FileProgress => {
     return totalProgress / uploadingFiles.length;
   }, [uploadingFiles]);
 
+  // Updated to accept fileName (string) instead of File object
   const updateFileProgress = useCallback((fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {
     setUploadingFiles(prevFiles => {
       const updatedFiles = prevFiles.map(item => 

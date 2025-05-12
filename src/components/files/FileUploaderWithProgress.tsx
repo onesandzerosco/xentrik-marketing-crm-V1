@@ -1,12 +1,7 @@
 
-import React, { useState, ChangeEvent } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { isVideoFile, isFileTooLarge } from '@/utils/fileUtils';
-import { isZipFile } from '@/utils/zipUtils';
-import { useFileUploader, FileUploadStatus } from '@/hooks/useFileUploader';
-import { useZipProcessor } from '@/hooks/useZipProcessor';
-import { useFileProcessor } from '@/hooks/useFileProcessor';
+import React from 'react';
 import FileUploadProgress from './upload/FileUploadProgress';
+import { useFileUploadHandler } from './upload/FileUploadHandler';
 
 interface FileUploaderProps {
   id: string;
@@ -21,221 +16,19 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
   onUploadComplete,
   currentFolder
 }) => {
-  const { toast } = useToast();
   const {
     isUploading,
-    setIsUploading,
     fileStatuses,
-    setFileStatuses,
     overallProgress,
     showProgress,
     setShowProgress,
-    abortControllersRef,
-    updateFileProgress,
-    handleCancelUpload,
-    MAX_FILE_SIZE_GB,
-    CHUNK_SIZE
-  } = useFileUploader({ 
+    handleFileChange,
+    handleCancelUpload
+  } = useFileUploadHandler({ 
     creatorId, 
     onUploadComplete, 
     currentFolder 
   });
-
-  // Use useZipProcessor hook with correct parameters
-  const { processZipFile } = useZipProcessor();
-
-  // Use useFileProcessor with correct parameters
-  const { processRegularFile } = useFileProcessor();
-
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploading(true);
-    setShowProgress(true);
-    setFileStatuses([]);
-    abortControllersRef.current.clear();
-    
-    try {
-      // Initialize file statuses and check for large files
-      const initialStatuses: FileUploadStatus[] = [];
-      let hasLargeFiles = false;
-      let hasTooLargeFiles = false;
-      let hasZipFiles = false;
-      const zipFiles: File[] = [];
-      const regularFiles: File[] = [];
-      
-      // First pass: prepare file statuses and check sizes and types
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        // Check if file is a ZIP file
-        if (isZipFile(file.name)) {
-          hasZipFiles = true;
-          zipFiles.push(file);
-          initialStatuses.push({
-            name: file.name,
-            progress: 0,
-            status: 'processing'
-          });
-          continue;
-        }
-        
-        regularFiles.push(file);
-        
-        // Check if file is too large (over 1GB)
-        if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) {
-          toast({
-            title: "File too large",
-            description: `${file.name} is over ${MAX_FILE_SIZE_GB}GB which exceeds the maximum file size limit.`,
-            variant: "destructive",
-          });
-          hasTooLargeFiles = true;
-          continue;
-        }
-        
-        if (file.size > CHUNK_SIZE) {
-          hasLargeFiles = true;
-        }
-        
-        initialStatuses.push({
-          name: file.name,
-          progress: 0,
-          status: 'uploading'
-        });
-      }
-      
-      setFileStatuses(initialStatuses);
-      
-      if (initialStatuses.length === 0) {
-        setIsUploading(false);
-        e.target.value = '';
-        return;
-      }
-      
-      // Show toasts for special file types
-      if (hasLargeFiles) {
-        toast({
-          title: "Large files detected",
-          description: "Some files are large and will be uploaded in chunks. This may take a while.",
-        });
-      }
-      
-      if (hasTooLargeFiles && initialStatuses.length > 0) {
-        toast({
-          title: "Some files were skipped",
-          description: `Files larger than ${MAX_FILE_SIZE_GB}GB were skipped.`,
-        });
-      }
-      
-      if (hasZipFiles) {
-        toast({
-          title: "ZIP files detected",
-          description: "ZIP files will be unpacked automatically into a new folder.",
-        });
-      }
-      
-      const uploadedFileIds: string[] = [];
-
-      // First handle the ZIP files
-      for (const zipFile of zipFiles) {
-        // Pass all required arguments to processZipFile
-        const extractedFileIds = await processZipFile(zipFile, {
-          creatorId,
-          currentFolder,
-          updateFileProgress: (file, progress) => updateFileProgress(file.name, progress),
-          updateFileStatus: (file, status, error) => {
-            const newStatus = status === 'uploading' ? 'uploading' 
-              : status === 'processing' ? 'processing'
-              : status === 'complete' ? 'complete' 
-              : 'error';
-            updateFileProgress(file.name, file.name === zipFile.name ? progress : 0, newStatus);
-            if (error) {
-              setFileStatuses(prev => 
-                prev.map(s => 
-                  s.name === file.name ? { ...s, error } : s
-                )
-              );
-            }
-          }
-        });
-        uploadedFileIds.push(...extractedFileIds);
-        
-        // Add the newly created folder to available folders list (will be picked up on refresh)
-        const folderName = zipFile.name.split('.')[0];
-        toast({
-          title: "ZIP file processed",
-          description: `Created folder "${folderName}" with ${extractedFileIds.length} files`,
-        });
-      }
-      
-      // Process regular files sequentially to avoid overwhelming the API
-      for (const file of regularFiles) {
-        // Skip files that are too large (already warned)
-        if (isFileTooLarge(file, MAX_FILE_SIZE_GB)) continue;
-        
-        // Pass all required arguments to processRegularFile
-        const fileId = await processRegularFile(
-          file,
-          creatorId,
-          currentFolder,
-          (progress) => updateFileProgress(file.name, progress),
-          (status, error) => {
-            const newStatus = status === 'uploading' ? 'uploading' 
-              : status === 'processing' ? 'processing'
-              : status === 'complete' ? 'complete' 
-              : 'error';
-            updateFileProgress(file.name, 100, newStatus);
-            if (error) {
-              setFileStatuses(prev => 
-                prev.map(s => 
-                  s.name === file.name ? { ...s, error } : s
-                )
-              );
-            }
-          }
-        );
-        
-        if (fileId) {
-          uploadedFileIds.push(fileId);
-        }
-      }
-      
-      // Show success message only for successful uploads
-      const successfulUploads = fileStatuses.filter(f => f.status === 'complete').length;
-      if (successfulUploads > 0) {
-        toast({
-          title: successfulUploads > 1 
-            ? `${successfulUploads} files uploaded` 
-            : '1 file uploaded',
-          description: `Successfully uploaded ${successfulUploads} files`,
-        });
-      }
-      
-      // Reset the input
-      e.target.value = '';
-      
-      // Call the callback if it exists
-      if (onUploadComplete && uploadedFileIds.length > 0) {
-        onUploadComplete(uploadedFileIds);
-        
-        // Hide progress after a delay
-        setTimeout(() => {
-          setShowProgress(false);
-        }, 3000);
-      }
-      
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload the file(s)',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   return (
     <>
