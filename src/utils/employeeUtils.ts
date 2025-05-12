@@ -61,7 +61,7 @@ export const filterAndSortEmployees = (
           "Admin": 0, 
           "Manager": 1, 
           "Employee": 2,
-          "Chatters": 3,
+          "Chatter": 3,
           "VA": 4,
           "Developer": 5,
           "Creator": 6

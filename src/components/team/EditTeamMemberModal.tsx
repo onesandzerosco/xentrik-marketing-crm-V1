@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -119,7 +118,7 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
   };
   
   const roleOptions: TeamMemberRole[] = [
-    "Chatters", 
+    "Chatter", 
     "VA", 
     "Manager", 
     "Developer", 
@@ -383,4 +382,3 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
 };
 
 export default EditTeamMemberModal;
-
