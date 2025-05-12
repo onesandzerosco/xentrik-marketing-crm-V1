@@ -69,7 +69,7 @@ export const getUniqueFileName = async (
       // Try to list files that match the current folder
       const { data: existingFiles, error } = await supabase.storage
         .from(bucket)
-        .list(`${creatorId}/${folderPath}`, {
+        .list(`${creatorId}`, {
           limit: 100
         });
       

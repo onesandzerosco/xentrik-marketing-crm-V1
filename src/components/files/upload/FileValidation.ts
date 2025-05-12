@@ -42,7 +42,7 @@ export const useFileValidation = (maxFileSizeGB: number = 1) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
-      // Check for duplicate file names
+      // Check for duplicate file names within the current batch
       if (duplicateNames.has(file.name)) {
         duplicateFiles.push(file.name);
         continue;
