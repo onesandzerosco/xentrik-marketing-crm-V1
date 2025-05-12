@@ -102,88 +102,86 @@ serve(async (req) => {
     
     // Upload each extracted file and create media records
     const fileIds: string[] = [];
+    
+    // First, list all files in the target folder to check for name conflicts
+    const { data: existingFilesInFolder } = await supabaseClient.storage
+      .from('raw_uploads')
+      .list(folderPath);
+      
+    const existingFileNames = existingFilesInFolder ? 
+      existingFilesInFolder.map(file => file.name) : [];
+    
+    console.log(`Found ${existingFileNames.length} existing files in target folder`);
+    
     for (const file of extractedFiles) {
-      // Handle file name collisions by creating a unique filename
+      // Generate a unique filename to avoid collisions
       let uniqueFileName = file.name;
       let counter = 0;
-      let isUnique = false;
       
-      while (!isUnique) {
-        // Check if file exists
-        const { data: existingFiles } = await supabaseClient.storage
-          .from('raw_uploads')
-          .list(folderPath, {
-            search: uniqueFileName
-          });
-        
-        const exactMatch = existingFiles?.some(existingFile => existingFile.name === uniqueFileName);
-        
-        if (!exactMatch) {
-          isUnique = true;
+      // Check for name collisions and rename if needed
+      while (existingFileNames.includes(uniqueFileName)) {
+        counter++;
+        const lastDotIndex = file.name.lastIndexOf('.');
+        if (lastDotIndex !== -1) {
+          // File has extension
+          const baseName = file.name.substring(0, lastDotIndex);
+          const extension = file.name.substring(lastDotIndex);
+          uniqueFileName = `${baseName} (${counter})${extension}`;
         } else {
-          // File exists, create a new name with counter
-          counter++;
-          const lastDotIndex = file.name.lastIndexOf('.');
-          if (lastDotIndex !== -1) {
-            // File has extension
-            const baseName = file.name.substring(0, lastDotIndex);
-            const extension = file.name.substring(lastDotIndex);
-            uniqueFileName = `${baseName} (${counter})${extension}`;
-          } else {
-            // File has no extension
-            uniqueFileName = `${file.name} (${counter})`;
-          }
-        }
-        
-        // Safety check to avoid infinite loops
-        if (counter > 100) {
-          uniqueFileName = `${Date.now()}_${file.name}`;
-          isUnique = true;
+          // File has no extension
+          uniqueFileName = `${file.name} (${counter})`;
         }
       }
+      
+      // Add the new filename to our list to check against for subsequent files
+      existingFileNames.push(uniqueFileName);
       
       const filePath = `${folderPath}/${uniqueFileName}`;
       console.log(`Uploading: ${filePath}`);
       
-      // Upload the file to storage
-      const { error: uploadError } = await supabaseClient.storage
-        .from('raw_uploads')
-        .upload(filePath, file.content, {
-          contentType: file.type,
-          upsert: true
-        });
+      try {
+        // Upload the file to storage with upsert: true to overwrite if needed
+        const { error: uploadError } = await supabaseClient.storage
+          .from('raw_uploads')
+          .upload(filePath, file.content, {
+            contentType: file.type,
+            upsert: true
+          });
+          
+        if (uploadError) {
+          console.error(`Error uploading ${uniqueFileName}:`, uploadError);
+          continue;
+        }
         
-      if (uploadError) {
-        console.error(`Error uploading ${uniqueFileName}:`, uploadError);
-        continue;
-      }
-      
-      // Create a media record
-      const folderArray = [targetFolder];
-      if (currentFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-        folderArray.push(currentFolder);
-      }
-      
-      const { data: mediaRecord, error: mediaError } = await supabaseClient
-        .from('media')
-        .insert({
-          creator_id: creatorId,
-          bucket_key: filePath,
-          filename: uniqueFileName,
-          mime: file.type,
-          file_size: file.content.size,
-          status: 'complete',
-          folders: folderArray
-        })
-        .select('id');
+        // Create a media record
+        const folderArray = [targetFolder];
+        if (currentFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+          folderArray.push(currentFolder);
+        }
         
-      if (mediaError) {
-        console.error(`Error creating media record for ${uniqueFileName}:`, mediaError);
-        continue;
-      }
-      
-      if (mediaRecord && mediaRecord[0]) {
-        fileIds.push(mediaRecord[0].id);
+        const { data: mediaRecord, error: mediaError } = await supabaseClient
+          .from('media')
+          .insert({
+            creator_id: creatorId,
+            bucket_key: filePath,
+            filename: uniqueFileName,
+            mime: file.type,
+            file_size: file.content.size,
+            status: 'complete',
+            folders: folderArray
+          })
+          .select('id');
+          
+        if (mediaError) {
+          console.error(`Error creating media record for ${uniqueFileName}:`, mediaError);
+          continue;
+        }
+        
+        if (mediaRecord && mediaRecord[0]) {
+          fileIds.push(mediaRecord[0].id);
+        }
+      } catch (err) {
+        console.error(`Unexpected error processing file ${uniqueFileName}:`, err);
       }
     }
     
