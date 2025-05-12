@@ -15,12 +15,221 @@ interface ExtractZipRequest {
   currentFolder: string | null;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+/**
+ * Determine MIME type based on file extension
+ */
+function determineMimeType(filename: string): string {
+  const lowerName = filename.toLowerCase();
+  
+  if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg';
+  else if (lowerName.endsWith('.png')) return 'image/png';
+  else if (lowerName.endsWith('.gif')) return 'image/gif';
+  else if (lowerName.endsWith('.mp4')) return 'video/mp4';
+  else if (lowerName.endsWith('.mp3')) return 'audio/mpeg';
+  else if (lowerName.endsWith('.pdf')) return 'application/pdf';
+  else if (lowerName.endsWith('.txt')) return 'text/plain';
+  
+  return 'application/octet-stream';
+}
 
+/**
+ * Create a unique filename to avoid collisions
+ */
+async function createUniqueFilename(
+  originalName: string, 
+  existingFileNames: string[]
+): Promise<string> {
+  let uniqueFileName = originalName;
+  let counter = 0;
+  
+  // Check for name collisions and rename if needed
+  while (existingFileNames.includes(uniqueFileName)) {
+    counter++;
+    const lastDotIndex = originalName.lastIndexOf('.');
+    if (lastDotIndex !== -1) {
+      // File has extension
+      const baseName = originalName.substring(0, lastDotIndex);
+      const extension = originalName.substring(lastDotIndex);
+      uniqueFileName = `${baseName} (${counter})${extension}`;
+    } else {
+      // File has no extension
+      uniqueFileName = `${originalName} (${counter})`;
+    }
+  }
+  
+  return uniqueFileName;
+}
+
+/**
+ * Extract files from a ZIP archive and prepare them for processing
+ */
+async function extractFilesFromZip(zipContent: JSZip): Promise<{ name: string, content: Blob, type: string }[]> {
+  const extractedFiles: { name: string, content: Blob, type: string }[] = [];
+    
+  const promises = Object.keys(zipContent.files).map(async (filename) => {
+    const zipEntry = zipContent.files[filename];
+    
+    // Skip directories
+    if (zipEntry.dir) {
+      return;
+    }
+    
+    const content = await zipEntry.async('blob');
+    const extractedFileName = filename.split('/').pop() || filename;
+    const mimeType = determineMimeType(extractedFileName);
+    
+    extractedFiles.push({
+      name: extractedFileName,
+      content,
+      type: mimeType
+    });
+  });
+  
+  await Promise.all(promises);
+  return extractedFiles;
+}
+
+/**
+ * Create a folder in storage
+ */
+async function createStorageFolder(
+  supabaseClient: any, 
+  creatorId: string, 
+  targetFolder: string
+): Promise<void> {
+  const folderPath = `${creatorId}/${targetFolder}`;
+  await supabaseClient.storage
+    .from('raw_uploads')
+    .upload(`${folderPath}/.folder`, new Blob([''], { type: 'text/plain' }), { upsert: true });
+    
+  console.log(`Created folder: ${folderPath}`);
+}
+
+/**
+ * Get existing files in a folder to check for name conflicts
+ */
+async function listExistingFiles(
+  supabaseClient: any, 
+  creatorId: string, 
+  targetFolder: string
+): Promise<string[]> {
+  const folderPath = `${creatorId}/${targetFolder}`;
+  
+  const { data: existingFilesInFolder, error } = await supabaseClient.storage
+    .from('raw_uploads')
+    .list(folderPath);
+    
+  if (error) {
+    console.error('Error listing files:', error);
+    return [];
+  }
+  
+  return existingFilesInFolder ? 
+    existingFilesInFolder.map(file => file.name) : [];
+}
+
+/**
+ * Upload a file to storage and create a media record
+ */
+async function uploadFileAndCreateRecord(
+  supabaseClient: any,
+  creatorId: string,
+  folderPath: string,
+  file: { name: string, content: Blob, type: string },
+  uniqueFileName: string,
+  currentFolder: string | null
+): Promise<string | null> {
+  const filePath = `${folderPath}/${uniqueFileName}`;
+  
+  try {
+    // Upload the file to storage with upsert: true to overwrite if needed
+    const { error: uploadError } = await supabaseClient.storage
+      .from('raw_uploads')
+      .upload(filePath, file.content, {
+        contentType: file.type,
+        upsert: true
+      });
+      
+    if (uploadError) {
+      console.error(`Error uploading ${uniqueFileName}:`, uploadError);
+      return null;
+    }
+    
+    // Create a media record
+    const folderArray = [folderPath.split('/').pop()]; // targetFolder
+    if (currentFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+      folderArray.push(currentFolder);
+    }
+    
+    const { data: mediaRecord, error: mediaError } = await supabaseClient
+      .from('media')
+      .insert({
+        creator_id: creatorId,
+        bucket_key: filePath,
+        filename: uniqueFileName,
+        mime: file.type,
+        file_size: file.content.size,
+        status: 'complete',
+        folders: folderArray
+      })
+      .select('id');
+      
+    if (mediaError) {
+      console.error(`Error creating media record for ${uniqueFileName}:`, mediaError);
+      return null;
+    }
+    
+    return mediaRecord && mediaRecord[0] ? mediaRecord[0].id : null;
+  } catch (err) {
+    console.error(`Unexpected error processing file ${uniqueFileName}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Process extracted files - upload and create media records
+ */
+async function processExtractedFiles(
+  supabaseClient: any,
+  creatorId: string,
+  targetFolder: string,
+  currentFolder: string | null,
+  extractedFiles: { name: string, content: Blob, type: string }[],
+  existingFileNames: string[]
+): Promise<string[]> {
+  const fileIds: string[] = [];
+  const folderPath = `${creatorId}/${targetFolder}`;
+  
+  for (const file of extractedFiles) {
+    // Generate a unique filename to avoid collisions
+    const uniqueFileName = await createUniqueFilename(file.name, existingFileNames);
+    
+    // Add the new filename to our list to check against for subsequent files
+    existingFileNames.push(uniqueFileName);
+    
+    console.log(`Uploading: ${folderPath}/${uniqueFileName}`);
+    
+    const fileId = await uploadFileAndCreateRecord(
+      supabaseClient,
+      creatorId,
+      folderPath,
+      file,
+      uniqueFileName,
+      currentFolder
+    );
+    
+    if (fileId) {
+      fileIds.push(fileId);
+    }
+  }
+  
+  return fileIds;
+}
+
+/**
+ * Main handler function for the unzip-files Edge Function
+ */
+async function handleUnzipRequest(req: Request): Promise<Response> {
   try {
     // Get the request body
     const body = await req.json() as ExtractZipRequest;
@@ -57,133 +266,27 @@ serve(async (req) => {
     console.log('Extracting ZIP file...');
     const zip = new JSZip();
     const zipContent = await zip.loadAsync(await fileData.arrayBuffer());
-    const extractedFiles: { name: string, content: Blob, type: string }[] = [];
     
     // Extract all files from the ZIP
-    const promises = Object.keys(zipContent.files).map(async (filename) => {
-      const zipEntry = zipContent.files[filename];
-      
-      // Skip directories
-      if (zipEntry.dir) {
-        return;
-      }
-      
-      const content = await zipEntry.async('blob');
-      const extractedFileName = filename.split('/').pop() || filename;
-      
-      // Try to determine the file mime type
-      let mimeType = 'application/octet-stream';
-      const lowerName = extractedFileName.toLowerCase();
-      if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) mimeType = 'image/jpeg';
-      else if (lowerName.endsWith('.png')) mimeType = 'image/png';
-      else if (lowerName.endsWith('.gif')) mimeType = 'image/gif';
-      else if (lowerName.endsWith('.mp4')) mimeType = 'video/mp4';
-      else if (lowerName.endsWith('.mp3')) mimeType = 'audio/mpeg';
-      else if (lowerName.endsWith('.pdf')) mimeType = 'application/pdf';
-      else if (lowerName.endsWith('.txt')) mimeType = 'text/plain';
-      
-      extractedFiles.push({
-        name: extractedFileName,
-        content,
-        type: mimeType
-      });
-    });
-    
-    await Promise.all(promises);
+    const extractedFiles = await extractFilesFromZip(zipContent);
     console.log(`Extracted ${extractedFiles.length} files from ZIP`);
     
-    // Ensure the target folder exists (create a dummy file)
-    const folderPath = `${creatorId}/${targetFolder}`;
-    await supabaseClient.storage
-      .from('raw_uploads')
-      .upload(`${folderPath}/.folder`, new Blob([''], { type: 'text/plain' }), { upsert: true });
-
-    console.log(`Created folder: ${folderPath}`);
+    // Ensure the target folder exists
+    await createStorageFolder(supabaseClient, creatorId, targetFolder);
     
-    // Upload each extracted file and create media records
-    const fileIds: string[] = [];
-    
-    // First, list all files in the target folder to check for name conflicts
-    const { data: existingFilesInFolder } = await supabaseClient.storage
-      .from('raw_uploads')
-      .list(folderPath);
-      
-    const existingFileNames = existingFilesInFolder ? 
-      existingFilesInFolder.map(file => file.name) : [];
-    
+    // List existing files to check for name conflicts
+    const existingFileNames = await listExistingFiles(supabaseClient, creatorId, targetFolder);
     console.log(`Found ${existingFileNames.length} existing files in target folder`);
     
-    for (const file of extractedFiles) {
-      // Generate a unique filename to avoid collisions
-      let uniqueFileName = file.name;
-      let counter = 0;
-      
-      // Check for name collisions and rename if needed
-      while (existingFileNames.includes(uniqueFileName)) {
-        counter++;
-        const lastDotIndex = file.name.lastIndexOf('.');
-        if (lastDotIndex !== -1) {
-          // File has extension
-          const baseName = file.name.substring(0, lastDotIndex);
-          const extension = file.name.substring(lastDotIndex);
-          uniqueFileName = `${baseName} (${counter})${extension}`;
-        } else {
-          // File has no extension
-          uniqueFileName = `${file.name} (${counter})`;
-        }
-      }
-      
-      // Add the new filename to our list to check against for subsequent files
-      existingFileNames.push(uniqueFileName);
-      
-      const filePath = `${folderPath}/${uniqueFileName}`;
-      console.log(`Uploading: ${filePath}`);
-      
-      try {
-        // Upload the file to storage with upsert: true to overwrite if needed
-        const { error: uploadError } = await supabaseClient.storage
-          .from('raw_uploads')
-          .upload(filePath, file.content, {
-            contentType: file.type,
-            upsert: true
-          });
-          
-        if (uploadError) {
-          console.error(`Error uploading ${uniqueFileName}:`, uploadError);
-          continue;
-        }
-        
-        // Create a media record
-        const folderArray = [targetFolder];
-        if (currentFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-          folderArray.push(currentFolder);
-        }
-        
-        const { data: mediaRecord, error: mediaError } = await supabaseClient
-          .from('media')
-          .insert({
-            creator_id: creatorId,
-            bucket_key: filePath,
-            filename: uniqueFileName,
-            mime: file.type,
-            file_size: file.content.size,
-            status: 'complete',
-            folders: folderArray
-          })
-          .select('id');
-          
-        if (mediaError) {
-          console.error(`Error creating media record for ${uniqueFileName}:`, mediaError);
-          continue;
-        }
-        
-        if (mediaRecord && mediaRecord[0]) {
-          fileIds.push(mediaRecord[0].id);
-        }
-      } catch (err) {
-        console.error(`Unexpected error processing file ${uniqueFileName}:`, err);
-      }
-    }
+    // Process all extracted files
+    const fileIds = await processExtractedFiles(
+      supabaseClient, 
+      creatorId, 
+      targetFolder, 
+      currentFolder, 
+      extractedFiles,
+      existingFileNames
+    );
     
     // Clean up the original ZIP file
     await supabaseClient.storage
@@ -218,4 +321,14 @@ serve(async (req) => {
       }
     );
   }
+}
+
+// Main serve handler
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+  
+  return handleUnzipRequest(req);
 })
