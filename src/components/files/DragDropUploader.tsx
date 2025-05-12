@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { getUniqueFileName } from '@/utils/fileUtils';
 import { X } from 'lucide-react';
+import { isZipFile } from '@/utils/zipUtils';
+import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
 
 interface UploadingFile {
   file: File;
   progress: number;
-  status: 'uploading' | 'complete' | 'error';
+  status: 'uploading' | 'processing' | 'complete' | 'error';
   error?: string;
 }
 
@@ -52,13 +55,45 @@ const DragDropUploader = ({
     });
   }, [calculateOverallProgress]);
 
-  const updateFileStatus = useCallback((file: File, status: 'uploading' | 'complete' | 'error', error?: string) => {
+  const updateFileStatus = useCallback((file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
     setUploadingFiles(prevFiles => 
       prevFiles.map(item => 
         item.file.name === file.name ? { ...item, status, error } : item
       )
     );
   }, []);
+
+  // Initialize the ZIP processor
+  const { processZipFile } = useZipFileProcessor({
+    creatorId,
+    updateFileProgress: (fileName, progress, status) => {
+      const fileObj = uploadingFiles.find(f => f.file.name === fileName);
+      if (fileObj) {
+        updateFileProgress(fileObj.file, progress);
+        if (status) {
+          updateFileStatus(fileObj.file, status);
+        }
+      }
+    },
+    setFileStatuses: (stateFn) => {
+      // Adapt the FileUploadStatus format to our UploadingFile format
+      setUploadingFiles(currentFiles => {
+        const newState = stateFn([] as any);
+        return currentFiles.map(file => {
+          const updatedStatus = newState.find((s: any) => s.name === file.file.name);
+          if (updatedStatus) {
+            return {
+              ...file,
+              progress: updatedStatus.progress,
+              status: updatedStatus.status,
+              error: updatedStatus.error
+            };
+          }
+          return file;
+        });
+      });
+    }
+  });
 
   const handleUpload = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -76,7 +111,18 @@ const DragDropUploader = ({
     const uploadedFileIds: string[] = [];
 
     try {
+      // Process files by type (ZIP vs regular)
       for (const file of acceptedFiles) {
+        if (isZipFile(file.name)) {
+          // Process ZIP file - extract and create folder
+          const zipFileIds = await processZipFile(file);
+          uploadedFileIds.push(...zipFileIds);
+          
+          // ZIP processing is handled by the hook, no need for additional code here
+          continue;
+        }
+        
+        // Regular file upload (non-ZIP)
         const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const uniqueSafeName = await getUniqueFileName(
           safeName, 
@@ -239,6 +285,9 @@ const DragDropUploader = ({
                     <span>{Math.round(item.progress)}%</span>
                   </div>
                   <Progress value={item.progress} className="h-1.5" />
+                  {item.status === 'processing' && (
+                    <p className="text-xs text-amber-500 mt-1">Processing ZIP file...</p>
+                  )}
                   {item.error && (
                     <p className="text-xs text-destructive mt-1">{item.error}</p>
                   )}
