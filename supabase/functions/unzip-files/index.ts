@@ -103,7 +103,46 @@ serve(async (req) => {
     // Upload each extracted file and create media records
     const fileIds: string[] = [];
     for (const file of extractedFiles) {
-      const filePath = `${folderPath}/${file.name}`;
+      // Handle file name collisions by creating a unique filename
+      let uniqueFileName = file.name;
+      let counter = 0;
+      let isUnique = false;
+      
+      while (!isUnique) {
+        // Check if file exists
+        const { data: existingFiles } = await supabaseClient.storage
+          .from('raw_uploads')
+          .list(folderPath, {
+            search: uniqueFileName
+          });
+        
+        const exactMatch = existingFiles?.some(existingFile => existingFile.name === uniqueFileName);
+        
+        if (!exactMatch) {
+          isUnique = true;
+        } else {
+          // File exists, create a new name with counter
+          counter++;
+          const lastDotIndex = file.name.lastIndexOf('.');
+          if (lastDotIndex !== -1) {
+            // File has extension
+            const baseName = file.name.substring(0, lastDotIndex);
+            const extension = file.name.substring(lastDotIndex);
+            uniqueFileName = `${baseName} (${counter})${extension}`;
+          } else {
+            // File has no extension
+            uniqueFileName = `${file.name} (${counter})`;
+          }
+        }
+        
+        // Safety check to avoid infinite loops
+        if (counter > 100) {
+          uniqueFileName = `${Date.now()}_${file.name}`;
+          isUnique = true;
+        }
+      }
+      
+      const filePath = `${folderPath}/${uniqueFileName}`;
       console.log(`Uploading: ${filePath}`);
       
       // Upload the file to storage
@@ -115,7 +154,7 @@ serve(async (req) => {
         });
         
       if (uploadError) {
-        console.error(`Error uploading ${file.name}:`, uploadError);
+        console.error(`Error uploading ${uniqueFileName}:`, uploadError);
         continue;
       }
       
@@ -130,7 +169,7 @@ serve(async (req) => {
         .insert({
           creator_id: creatorId,
           bucket_key: filePath,
-          filename: file.name,
+          filename: uniqueFileName,
           mime: file.type,
           file_size: file.content.size,
           status: 'complete',
@@ -139,7 +178,7 @@ serve(async (req) => {
         .select('id');
         
       if (mediaError) {
-        console.error(`Error creating media record for ${file.name}:`, mediaError);
+        console.error(`Error creating media record for ${uniqueFileName}:`, mediaError);
         continue;
       }
       
