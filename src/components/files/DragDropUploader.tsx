@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { getUniqueFileName } from '@/utils/fileUtils';
 import { X } from 'lucide-react';
 import { isZipFile } from '@/utils/zipUtils';
-import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
 
 interface UploadingFile {
   file: File;
@@ -63,38 +62,6 @@ const DragDropUploader = ({
     );
   }, []);
 
-  // Initialize the ZIP processor
-  const { processZipFile } = useZipFileProcessor({
-    creatorId,
-    updateFileProgress: (fileName, progress, status) => {
-      const fileObj = uploadingFiles.find(f => f.file.name === fileName);
-      if (fileObj) {
-        updateFileProgress(fileObj.file, progress);
-        if (status) {
-          updateFileStatus(fileObj.file, status);
-        }
-      }
-    },
-    setFileStatuses: (stateFn) => {
-      // Adapt the FileUploadStatus format to our UploadingFile format
-      setUploadingFiles(currentFiles => {
-        const newState = stateFn([] as any);
-        return currentFiles.map(file => {
-          const updatedStatus = newState.find((s: any) => s.name === file.file.name);
-          if (updatedStatus) {
-            return {
-              ...file,
-              progress: updatedStatus.progress,
-              status: updatedStatus.status,
-              error: updatedStatus.error
-            };
-          }
-          return file;
-        });
-      });
-    }
-  });
-
   const handleUpload = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
     
@@ -114,11 +81,75 @@ const DragDropUploader = ({
       // Process files by type (ZIP vs regular)
       for (const file of acceptedFiles) {
         if (isZipFile(file.name)) {
-          // Process ZIP file - extract and create folder
-          const zipFileIds = await processZipFile(file);
-          uploadedFileIds.push(...zipFileIds);
+          // Update status to processing for ZIP files
+          updateFileStatus(file, 'processing');
+          updateFileProgress(file, 10);
           
-          // ZIP processing is handled by the hook, no need for additional code here
+          // Get the base name for folder creation (without .zip extension)
+          const folderName = file.name.replace(/\.zip$/i, '');
+          
+          try {
+            // Call the Edge Function to extract the ZIP file
+            updateFileProgress(file, 30);
+            
+            // Get signed URL for the zip file upload
+            const { data: signedUrlData } = await supabase.storage
+              .from('raw_uploads')
+              .createSignedUploadUrl(`${creatorId}/${file.name}`);
+              
+            if (!signedUrlData) {
+              throw new Error('Failed to get signed URL for ZIP upload');
+            }
+
+            // Upload ZIP file to temporary storage
+            const uploadResponse = await fetch(signedUrlData.signedUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': file.type,
+              },
+              body: file,
+            });
+
+            if (!uploadResponse.ok) {
+              throw new Error('Failed to upload ZIP file');
+            }
+            
+            updateFileProgress(file, 50);
+            
+            // Call the unzip-files Edge Function
+            const { data: extractionData, error: extractionError } = await supabase.functions.invoke('unzip-files', {
+              body: {
+                creatorId,
+                fileName: file.name,
+                targetFolder: folderName,
+                currentFolder: currentFolder === 'all' || currentFolder === 'unsorted' ? null : currentFolder
+              }
+            });
+            
+            if (extractionError) {
+              throw new Error(`ZIP extraction failed: ${extractionError.message}`);
+            }
+            
+            updateFileProgress(file, 90);
+            
+            // Add extracted file IDs to the result
+            if (extractionData?.fileIds && Array.isArray(extractionData.fileIds)) {
+              uploadedFileIds.push(...extractionData.fileIds);
+              
+              // Show success message for ZIP extraction
+              toast({
+                title: "ZIP file processed",
+                description: `Created folder "${folderName}" with ${extractionData.fileIds.length} files`,
+              });
+            }
+            
+            updateFileProgress(file, 100);
+            updateFileStatus(file, 'complete');
+          } catch (zipError) {
+            console.error("Error processing ZIP file:", zipError);
+            updateFileStatus(file, 'error', zipError instanceof Error ? zipError.message : 'Failed to process ZIP file');
+          }
+          
           continue;
         }
         
