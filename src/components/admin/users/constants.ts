@@ -5,7 +5,7 @@ export const PRIMARY_ROLES: PrimaryRole[] = ["Admin", "Manager", "Employee"];
 
 // Additional roles options
 export const ADDITIONAL_ROLES: string[] = [
-  "Chatters", 
+  "Chatter", 
   "VA", 
   "Admin", 
   "Developer",

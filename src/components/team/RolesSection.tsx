@@ -8,7 +8,7 @@ interface Props {
 }
 
 // Update to use the new role options
-const AVAILABLE_ROLES = ["Chatters", "VA", "Admin", "Developer", "Creator"];
+const AVAILABLE_ROLES = ["Chatter", "VA", "Admin", "Developer", "Creator"];
 
 const RolesSection: React.FC<Props> = ({ selected, onChange }) => {
   // Check if a role should be disabled
