@@ -22,6 +22,7 @@ export interface FileUploadStatus {
   status: 'uploading' | 'processing' | 'complete' | 'error';
   error?: string;
   thumbnail?: string; // For video files
+  weight?: number; // Weight factor for progress calculation
 }
 
 interface UseFileUploaderProps {
@@ -41,24 +42,31 @@ export const useFileUploader = ({ creatorId, onUploadComplete, currentFolder }: 
   const calculateOverallProgress = (statuses: FileUploadStatus[]) => {
     if (statuses.length === 0) return 0;
     
-    // Filter out completed and error files
-    const activeFiles = statuses.filter(file => 
-      file.status !== 'complete' && file.status !== 'error'
-    );
+    // Calculate total weighted progress
+    let totalWeight = 0;
+    let weightedProgress = 0;
     
-    // If no active files but we have completed files, return 100%
-    if (activeFiles.length === 0) {
-      if (statuses.some(file => file.status === 'complete')) {
-        return 100;
+    statuses.forEach(file => {
+      // Default weight is 1 if not specified
+      const weight = file.weight || 1;
+      totalWeight += weight;
+      
+      // For completed files, count full progress
+      if (file.status === 'complete') {
+        weightedProgress += weight * 100;
+      } 
+      // For error files, don't count in progress
+      else if (file.status === 'error') {
+        // We still count the weight but not the progress
+      } 
+      // For active files, count their current progress
+      else {
+        weightedProgress += weight * file.progress;
       }
-      return 0;
-    }
+    });
     
-    // Calculate the sum of progress for active files
-    const totalProgress = activeFiles.reduce((sum, file) => sum + file.progress, 0);
-    
-    // Return the average progress
-    return Math.round(totalProgress / activeFiles.length);
+    // Calculate weighted average
+    return totalWeight > 0 ? Math.round(weightedProgress / totalWeight) : 0;
   };
 
   const updateFileProgress = (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => {

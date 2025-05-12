@@ -3,117 +3,131 @@ import { useToast } from "@/components/ui/use-toast";
 import { isZipFile } from "@/utils/zipUtils";
 import { isFileTooLarge } from "@/utils/fileUtils";
 
-export interface FileValidationResult {
-  initialStatuses: Array<{
-    name: string;
-    progress: number;
-    status: 'uploading' | 'processing';
-  }>;
-  validFiles: {
-    zipFiles: File[];
-    regularFiles: File[];
-  };
-  hasLargeFiles: boolean;
-  hasTooLargeFiles: boolean;
-  hasZipFiles: boolean;
+// File validation types
+export interface ValidFiles {
+  zipFiles: File[];
+  regularFiles: File[];
 }
 
+export interface FileValidationResult {
+  initialStatuses: {
+    name: string;
+    progress: number;
+    status: 'uploading' | 'processing' | 'complete' | 'error';
+    error?: string;
+    weight?: number; // Add weight property
+  }[];
+  validFiles: ValidFiles;
+  skippedFiles: {
+    tooLarge: string[];
+    unsupported: string[];
+    duplicate: string[];
+  };
+}
+
+// Helper for validating files before upload
 export const useFileValidation = (maxFileSizeGB: number = 1) => {
   const { toast } = useToast();
-
+  
   const validateFiles = (files: FileList): FileValidationResult => {
-    const initialStatuses: Array<{
-      name: string;
-      progress: number;
-      status: 'uploading' | 'processing';
-    }> = [];
+    const validZipFiles: File[] = [];
+    const validRegularFiles: File[] = [];
+    const tooLargeFiles: string[] = [];
+    const unsupportedFiles: string[] = [];
+    const duplicateNames = new Set<string>();
+    const duplicateFiles: string[] = [];
+    const initialStatuses: any[] = [];
     
-    let hasLargeFiles = false;
-    let hasTooLargeFiles = false;
-    let hasZipFiles = false;
-    const zipFiles: File[] = [];
-    const regularFiles: File[] = [];
-    const chunkSize = 5 * 1024 * 1024; // 5MB
-    
-    // Process each file for validation
+    // Check each file
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       
-      // Check if file is a ZIP file
-      if (isZipFile(file.name)) {
-        hasZipFiles = true;
-        zipFiles.push(file);
+      // Check for duplicate file names
+      if (duplicateNames.has(file.name)) {
+        duplicateFiles.push(file.name);
+        continue;
+      }
+      duplicateNames.add(file.name);
+      
+      // Check file size
+      if (isFileTooLarge(file, maxFileSizeGB)) {
+        tooLargeFiles.push(file.name);
         initialStatuses.push({
           name: file.name,
           progress: 0,
-          status: 'processing'
+          status: 'error',
+          error: `File exceeds the maximum allowed size of ${maxFileSizeGB}GB`,
+          weight: Math.max(1, Math.ceil(file.size / (100 * 1024 * 1024))) // Weight based on size
         });
         continue;
       }
       
-      regularFiles.push(file);
-      
-      // Check if file is too large (over maxFileSizeGB)
-      if (isFileTooLarge(file, maxFileSizeGB)) {
-        toast({
-          title: "File too large",
-          description: `${file.name} is over ${maxFileSizeGB}GB which exceeds the maximum file size limit.`,
-          variant: "destructive",
+      // Check if it's a ZIP file
+      if (isZipFile(file.name)) {
+        validZipFiles.push(file);
+        initialStatuses.push({
+          name: file.name,
+          progress: 0,
+          status: 'processing',
+          weight: Math.max(5, Math.ceil(file.size / (20 * 1024 * 1024))) // ZIP files get higher weight
         });
-        hasTooLargeFiles = true;
-        continue;
+      } else {
+        // Regular file
+        validRegularFiles.push(file);
+        initialStatuses.push({
+          name: file.name,
+          progress: 0,
+          status: 'uploading',
+          weight: Math.max(1, Math.ceil(file.size / (100 * 1024 * 1024))) // Weight based on size
+        });
       }
-      
-      if (file.size > chunkSize) {
-        hasLargeFiles = true;
-      }
-      
-      initialStatuses.push({
-        name: file.name,
-        progress: 0,
-        status: 'uploading'
-      });
     }
-
+    
     return {
       initialStatuses,
       validFiles: {
-        zipFiles,
-        regularFiles: regularFiles.filter(file => !isFileTooLarge(file, maxFileSizeGB))
+        zipFiles: validZipFiles,
+        regularFiles: validRegularFiles
       },
-      hasLargeFiles,
-      hasTooLargeFiles,
-      hasZipFiles
+      skippedFiles: {
+        tooLarge: tooLargeFiles,
+        unsupported: unsupportedFiles,
+        duplicate: duplicateFiles
+      }
     };
   };
-
+  
+  // Show toasts based on validation results
   const showValidationToasts = (result: FileValidationResult) => {
-    const { hasLargeFiles, hasTooLargeFiles, hasZipFiles } = result;
+    const { skippedFiles, validFiles } = result;
     
-    if (hasLargeFiles) {
+    // Show warning for files that are too large
+    if (skippedFiles.tooLarge.length > 0) {
       toast({
-        title: "Large files detected",
-        description: "Some files are large and will be uploaded in chunks. This may take a while.",
+        title: 'Files too large',
+        description: `${skippedFiles.tooLarge.length} ${skippedFiles.tooLarge.length === 1 ? 'file exceeds' : 'files exceed'} the size limit of ${maxFileSizeGB}GB`,
+        variant: 'destructive',
       });
     }
     
-    if (hasTooLargeFiles) {
+    // Show warning for duplicate files
+    if (skippedFiles.duplicate.length > 0) {
       toast({
-        title: "Some files were skipped",
-        description: `Files larger than ${maxFileSizeGB}GB were skipped.`,
+        title: 'Duplicate file names',
+        description: `${skippedFiles.duplicate.length} ${skippedFiles.duplicate.length === 1 ? 'file was' : 'files were'} skipped due to duplicate names`,
+        variant: 'warning',
       });
     }
     
-    if (hasZipFiles) {
+    // If no valid files, show error
+    if (validFiles.zipFiles.length === 0 && validFiles.regularFiles.length === 0) {
       toast({
-        title: "ZIP files detected",
-        description: "ZIP files will be unpacked automatically into a new folder.",
+        title: 'No valid files',
+        description: 'No valid files were found to upload',
+        variant: 'destructive',
       });
     }
   };
-
-  return {
-    validateFiles,
-    showValidationToasts
-  };
+  
+  return { validateFiles, showValidationToasts };
 };

@@ -36,7 +36,6 @@ export const useFileProcessor = () => {
     const uploadPromise = new Promise<string | null>((resolve, reject) => {
       xhr.onload = async function() {
         if (xhr.status >= 200 && xhr.status < 300) {
-          updateFileProgress(file.name, 100);
           updateFileStatus(file.name, 'complete');
           
           // Add folder reference
