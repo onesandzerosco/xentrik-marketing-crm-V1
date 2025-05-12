@@ -125,7 +125,7 @@ export const useFileUploadHandler = ({
             : status === 'processing' ? 'processing'
             : status === 'complete' ? 'complete' 
             : 'error';
-          updateFileProgress(fileName, fileName === zipFile.name ? progress : 0, newStatus);
+          updateFileProgress(fileName, 100, newStatus);
           if (error) {
             setFileStatuses(prev => 
               prev.map(s => 
