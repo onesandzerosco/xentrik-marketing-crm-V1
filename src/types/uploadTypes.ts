@@ -12,3 +12,20 @@ export interface FileUploadOptions {
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   currentFolder: string;
 }
+
+export interface FileProgress {
+  uploadingFiles: UploadingFile[];
+  overallProgress: number;
+  setUploadingFiles: React.Dispatch<React.SetStateAction<UploadingFile[]>>;
+  setOverallProgress: React.Dispatch<React.SetStateAction<number>>;
+  updateFileProgress: (file: File, progress: number) => void;
+  updateFileStatus: (file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void;
+  calculateOverallProgress: () => number;
+}
+
+export interface ZipProcessingOptions {
+  creatorId: string;
+  currentFolder: string;
+  updateFileProgress: (file: File, progress: number) => void;
+  updateFileStatus: (file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void;
+}

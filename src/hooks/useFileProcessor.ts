@@ -1,207 +1,108 @@
 
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  isVideoFile, 
-  generateVideoThumbnail, 
-  getUniqueFileName,
-  uploadFileInChunks,
-  isFileTooLarge
-} from '@/utils/fileUtils';
-import { FileUploadStatus } from './useFileUploader';
+import { getUniqueFileName } from '@/utils/fileUtils';
 
-interface UseFileProcessorProps {
-  creatorId: string;
-  currentFolder: string;
-  updateFileProgress: (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => void;
-  setFileStatuses: React.Dispatch<React.SetStateAction<FileUploadStatus[]>>;
-  chunkSize: number;
-  maxFileSizeGB: number;
-  abortControllersRef: React.MutableRefObject<Map<string, AbortController>>;
-}
-
-export const useFileProcessor = ({
-  creatorId,
-  currentFolder,
-  updateFileProgress,
-  setFileStatuses,
-  chunkSize,
-  maxFileSizeGB,
-  abortControllersRef
-}: UseFileProcessorProps) => {
-
-  const processRegularFile = async (file: File): Promise<string | null> => {
-    // Skip files that are too large
-    if (isFileTooLarge(file, maxFileSizeGB)) return null;
-    
+export const useFileProcessor = () => {
+  const processRegularFile = useCallback(async (
+    file: File,
+    creatorId: string,
+    currentFolder: string,
+    updateFileProgress: (file: File, progress: number) => void,
+    updateFileStatus: (file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void
+  ): Promise<string | null> => {
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const uniqueSafeName = await getUniqueFileName(
+      safeName, 
+      currentFolder, 
+      creatorId, 
+      'raw_uploads',
+      supabase
+    );
     
-    try {
-      // Generate thumbnail for videos
-      let thumbnailUrl = null;
-      if (isVideoFile(file.name)) {
-        updateFileProgress(file.name, 0, 'processing');
-        try {
-          thumbnailUrl = await generateVideoThumbnail(file);
-          console.log(`Generated thumbnail for ${file.name}:`, thumbnailUrl ? 'Success' : 'Failed');
+    const filePath = `${creatorId}/${uniqueSafeName}`;
+    
+    // Custom upload with progress tracking
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = (event.loaded / event.total) * 100;
+        updateFileProgress(file, percentComplete);
+      }
+    });
+    
+    // Create a promise to track the XHR request
+    const uploadPromise = new Promise<string | null>((resolve, reject) => {
+      xhr.onload = async function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          updateFileProgress(file, 100);
+          updateFileStatus(file, 'complete');
           
-          // Update the UI with the thumbnail
-          setFileStatuses(prev => 
-            prev.map(status => 
-              status.name === file.name 
-                ? { ...status, thumbnail: thumbnailUrl, status: 'uploading' } 
-                : status
-            )
-          );
-        } catch (err) {
-          console.error('Error generating video thumbnail:', err);
-          // Continue without thumbnail
+          // Add folder reference
+          let folderArray: string[] = [];
+          if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
+            folderArray = [currentFolder];
+          }
+          
+          // Store metadata in media table
+          const { data: mediaRecord, error: mediaError } = await supabase
+            .from('media')
+            .insert({
+              creator_id: creatorId,
+              bucket_key: filePath,
+              filename: uniqueSafeName,
+              mime: file.type,
+              file_size: file.size,
+              status: 'complete',
+              folders: folderArray
+            })
+            .select('id');
+            
+          if (mediaError) {
+            updateFileStatus(file, 'error', 'Failed to create media record');
+            reject(mediaError);
+            return null;
+          } else if (mediaRecord && mediaRecord[0]) {
+            resolve(mediaRecord[0].id);
+            return mediaRecord[0].id;
+          } else {
+            resolve(null);
+            return null;
+          }
+        } else {
+          updateFileStatus(file, 'error', `Upload failed: ${xhr.statusText}`);
+          reject(new Error(`Upload failed: ${xhr.statusText}`));
+          return null;
         }
-      }
+      };
       
-      // Create a unique file name
-      const uniqueSafeName = await getUniqueFileName(
-        safeName, 
-        currentFolder === 'all' ? 'unsorted' : currentFolder, // Use unsorted if all files is selected
-        creatorId, 
-        'raw_uploads',
-        supabase
-      );
-
-      // Create an AbortController for this file
-      const abortController = new AbortController();
-      abortControllersRef.current.set(file.name, abortController);
+      xhr.onerror = function() {
+        updateFileStatus(file, 'error', 'Network error during upload');
+        reject(new Error('Network error during upload'));
+      };
+    });
+    
+    // Get signed URL and upload
+    const { data: signedUrlData } = await supabase.storage
+      .from('raw_uploads')
+      .createSignedUploadUrl(filePath);
       
-      const filePath = `${creatorId}/${currentFolder === 'all' ? 'unsorted' : currentFolder}/${uniqueSafeName}`;
-      
-      // Determine folder array based on current folder
-      let folderArray: string[] = [];
-      if (currentFolder !== 'all') {
-        folderArray = [currentFolder];
-      }
-      
-      // Store metadata in the media table first
-      const { data: mediaRecord, error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          creator_id: creatorId,
-          bucket_key: filePath,
-          filename: uniqueSafeName,
-          mime: file.type,
-          file_size: file.size,
-          status: 'uploading', // Mark as uploading initially
-          folders: folderArray,
-          thumbnail_url: thumbnailUrl // Store the thumbnail URL
-        })
-        .select('id');
-      
-      if (mediaError) {
-        console.error('Media record creation error:', mediaError);
-        updateFileProgress(file.name, 0, 'error');
-        return null;
-      }
-      
-      if (!mediaRecord || mediaRecord.length === 0) {
-        console.error('Failed to create media record');
-        updateFileProgress(file.name, 0, 'error');
-        return null;
-      }
-      
-      const fileId = mediaRecord[0].id;
-      console.log(`Created media record for ${file.name} with ID ${fileId}, thumbnail:`, thumbnailUrl);
+    if (signedUrlData) {
+      xhr.open('PUT', signedUrlData.signedUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file);
       
       try {
-        if (file.size > chunkSize) {
-          // Handle large file upload using custom chunked upload
-          await uploadFileInChunks(
-            file, 
-            'raw_uploads', 
-            filePath,
-            (progress) => updateFileProgress(file.name, progress),
-            supabase
-          );
-        } else {
-          // For small files, we'll manually track progress
-          // Start the upload
-          const { error: uploadError } = await supabase.storage
-            .from('raw_uploads')
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true
-            });
-            
-          if (uploadError) {
-            throw uploadError;
-          }
-          
-          // Since we can't track progress directly, we'll simulate progress
-          // with incremental updates
-          for (let percent = 0; percent <= 100; percent += 10) {
-            updateFileProgress(file.name, percent);
-            // Only add a small delay for the last few percents to appear smooth
-            if (percent > 70) {
-              await new Promise(resolve => setTimeout(resolve, 50));
-            }
-          }
-        }
-        
-        // Update the media record to mark as complete
-        const { error: updateError } = await supabase
-          .from('media')
-          .update({ 
-            status: 'complete', 
-            thumbnail_url: thumbnailUrl // Save the thumbnail URL if it exists
-          })
-          .eq('id', fileId);
-          
-        if (updateError) {
-          console.error('Error updating media record:', updateError);
-        }
-        
-        updateFileProgress(file.name, 100, 'complete');
-        return fileId;
+        return await uploadPromise;
       } catch (error) {
-        console.error(`Upload error for ${file.name}:`, error);
-        
-        // Update the media record to mark as failed
-        await supabase
-          .from('media')
-          .update({ status: 'error' })
-          .eq('id', fileId);
-          
-        updateFileProgress(file.name, 0, 'error');
-        
-        setFileStatuses(prev => 
-          prev.map(status => 
-            status.name === file.name 
-              ? { 
-                  ...status, 
-                  error: error instanceof Error ? error.message : 'Upload failed',
-                  status: 'error'
-                } 
-              : status
-          )
-        );
-        
+        console.error(`Error uploading ${file.name}:`, error);
         return null;
       }
-      
-    } catch (error) {
-      console.error(`Error uploading ${file.name}:`, error);
-      updateFileProgress(
-        file.name, 
-        0, 
-        'error'
-      );
-      setFileStatuses(prev => 
-        prev.map(status => 
-          status.name === file.name 
-            ? { ...status, error: error instanceof Error ? error.message : 'Upload failed' } 
-            : status
-        )
-      );
-      return null;
     }
-  };
+    
+    return null;
+  }, []);
 
   return { processRegularFile };
 };
