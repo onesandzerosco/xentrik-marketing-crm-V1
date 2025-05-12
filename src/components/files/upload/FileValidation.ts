@@ -115,7 +115,7 @@ export const useFileValidation = (maxFileSizeGB: number = 1) => {
       toast({
         title: 'Duplicate file names',
         description: `${skippedFiles.duplicate.length} ${skippedFiles.duplicate.length === 1 ? 'file was' : 'files were'} skipped due to duplicate names`,
-        variant: 'warning',
+        variant: 'default', // Changed from 'warning' to 'default' to match allowed variants
       });
     }
     
