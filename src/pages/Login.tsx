@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,21 +16,30 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signInWithEmail } = useSupabaseAuth();
+  const { signInWithEmail, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Check if user is already logged in
+  // Check if user is already logged in and redirect if so
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAuth = async () => {
+      // First check if we have isAuthenticated flag from context
+      if (isAuthenticated) {
+        console.log("User already authenticated via context, redirecting to dashboard");
+        navigate('/dashboard');
+        return;
+      }
+      
+      // Double-check with Supabase directly as a fallback
       const { data } = await supabase.auth.getSession();
       if (data.session) {
+        console.log("Active session found, redirecting to dashboard");
         navigate('/dashboard');
       }
     };
     
-    checkSession();
-  }, [navigate]);
+    checkAuth();
+  }, [navigate, isAuthenticated]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -13,11 +12,19 @@ const SidebarUserSection: React.FC = () => {
   const { user, signOut } = useSupabaseAuth();
 
   const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: "Logged out successfully",
-      description: "You have been securely logged out"
-    });
+    try {
+      console.log("Logout initiated from sidebar");
+      await signOut();
+      // No need to add toast here as it's already in the signOut function
+      // No need to navigate here as it's already in the signOut function
+    } catch (error) {
+      console.error("Error in handleLogout:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: "There was an error logging out. Please try again."
+      });
+    }
   };
 
   const getUserInitials = () => {

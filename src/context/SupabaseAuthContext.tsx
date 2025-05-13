@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -266,6 +265,56 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const signOut = async () => {
+    try {
+      console.log("Starting signOut process");
+      
+      // Clear local state first before API call to ensure UI updates immediately
+      localStorage.removeItem('isCreator');
+      localStorage.removeItem('creatorId');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userRoles');
+      localStorage.removeItem('lastVisitedRoute');
+      setIsCreator(false);
+      setCreatorId(null);
+      setUserRole('Employee');
+      setUserRoles([]);
+      setIsAuthenticated(false);
+      setUser(null);
+      setSession(null);
+      
+      console.log("Local state cleared, now calling Supabase signOut");
+      
+      // Force signOut which will invalidate all sessions
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      
+      if (error) {
+        console.error("Supabase signOut error:", error);
+        throw error;
+      }
+      
+      console.log("Supabase signOut successful, redirecting to login");
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been securely logged out",
+      });
+      
+      // Force navigation to login page
+      navigate('/login', { replace: true });
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error.message,
+      });
+      
+      // Even if there's an error, redirect to login
+      navigate('/login', { replace: true });
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
@@ -384,56 +433,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: error.message,
       });
       throw error;
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      // Check if we have a session before attempting to sign out
-      const { data } = await supabase.auth.getSession();
-      
-      if (!data.session) {
-        console.log("No active session found, skipping signOut API call");
-        // Even without an active session, we should clear local state
-        localStorage.removeItem('isCreator');
-        localStorage.removeItem('creatorId');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userRoles');
-        setIsCreator(false);
-        setCreatorId(null);
-        setUserRole('Employee');
-        setUserRoles([]);
-        setIsAuthenticated(false);
-        setUser(null);
-        setSession(null);
-        
-        toast({
-          title: "Already logged out",
-          description: "There was no active session",
-        });
-        
-        navigate('/login');
-        return;
-      }
-      
-      // If we have a session, proceed with normal logout
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Logged out successfully",
-        description: "You have been securely logged out",
-      });
-      
-      navigate('/login');
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Logout failed",
-        description: error.message,
-      });
     }
   };
 
