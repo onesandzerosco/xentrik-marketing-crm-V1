@@ -58,6 +58,7 @@ export class OnboardingService {
    * Accept a creator onboarding submission
    * @param formData The onboarding form data 
    * @param creatorInfo The basic creator information to save
+   * @param userId Optional UUID to use for the new creator account
    * @returns The new creator ID or undefined on error
    */
   static async acceptOnboardingSubmission(
@@ -66,7 +67,8 @@ export class OnboardingService {
       name: string;
       team: TeamEnum;
       creatorType: CreatorTypeEnum;
-    }
+    },
+    userId?: string
   ): Promise<string | undefined> {
     try {
       // Map personal info from the form data
@@ -77,20 +79,23 @@ export class OnboardingService {
         throw new Error("Email is required for creator registration");
       }
       
+      // Use provided UUID or generate a new one
+      const creatorId = userId || uuidv4();
+      
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
       // Create a user in the auth system using the authenticated client
       // This should include the API key by default
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.admin.createUser({
+        uuid: creatorId,
         email,
         password: defaultPassword,
-        options: {
-          data: {
-            name: creatorInfo.name,
-            role: 'Employee',
-            roles: ['Creator']
-          }
+        email_confirm: true,
+        user_metadata: {
+          name: creatorInfo.name,
+          role: 'Employee',
+          roles: ['Creator']
         }
       });
       
@@ -98,12 +103,6 @@ export class OnboardingService {
         console.error("Auth error details:", authError);
         throw new Error(`Failed to create auth user: ${authError.message}`);
       }
-      
-      if (!authData.user?.id) {
-        throw new Error("Failed to retrieve user ID from authentication");
-      }
-      
-      const userId = authData.user.id;
       
       // Map the gender value from the onboarding form to our database enum
       let genderValue: GenderEnum = "Female";
@@ -120,7 +119,7 @@ export class OnboardingService {
       const { data: creatorData, error: creatorError } = await supabase
         .from('creators')
         .insert({
-          id: userId,
+          id: creatorId,
           name: creatorInfo.name,
           email: email,
           gender: genderValue,
@@ -138,15 +137,6 @@ export class OnboardingService {
         .single();
       
       if (creatorError) {
-        // If there was an error creating the creator, try to delete the auth user
-        if (userId) {
-          try {
-            // NOTE: Delete functionality is disabled here since it would require admin privileges
-            console.error("Failed to create creator record, but cannot delete auth user due to permissions");
-          } catch (deleteError) {
-            console.error("Error deleting auth user after creator creation failed:", deleteError);
-          }
-        }
         throw creatorError;
       }
       
@@ -154,16 +144,16 @@ export class OnboardingService {
       const { error: socialLinksError } = await supabase
         .from('creator_social_links')
         .insert({
-          creator_id: userId
+          creator_id: creatorId
         });
       
       if (socialLinksError) {
         console.error('Error creating social links:', socialLinksError);
       }
       
-      console.log("Successfully created creator with ID:", userId);
+      console.log("Successfully created creator with ID:", creatorId);
       
-      return userId;
+      return creatorId;
     } catch (error) {
       console.error("Error accepting submission:", error);
       return undefined;

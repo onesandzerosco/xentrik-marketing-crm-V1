@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
@@ -35,6 +34,7 @@ import AccessControlPanel from './pages/AccessControlPanel';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
 import CreatorOnboardForm from './pages/CreatorOnboardForm';
 import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
+import { setupDatabaseFunctions } from './utils/db-helpers';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -53,6 +53,13 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Setup database functions once when the app loads
+  useEffect(() => {
+    setupDatabaseFunctions().catch(err => {
+      console.error("Error setting up database functions:", err);
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <CreatorProvider>

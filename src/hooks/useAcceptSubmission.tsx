@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
 import type { Database } from "@/integrations/supabase/types";
+import { v4 as uuidv4 } from "uuid";
 
 // Define the enum types from Supabase
 type TeamEnum = Database["public"]["Enums"]["team"];
@@ -33,10 +34,14 @@ export const useAcceptSubmission = (
       const token = selectedSubmission.token;
       setProcessingTokens(prev => [...prev, token]);
       
-      // Process the submission using the CreatorService
+      // Generate a UUID for the new creator
+      const userId = uuidv4();
+      
+      // Process the submission using the CreatorService, passing the generated UUID
       const creatorId = await CreatorService.acceptOnboardingSubmission(
         selectedSubmission.data, 
-        creatorData
+        creatorData,
+        userId
       );
       
       if (!creatorId) {
