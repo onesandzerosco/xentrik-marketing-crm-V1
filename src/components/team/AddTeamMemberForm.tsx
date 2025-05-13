@@ -1,53 +1,31 @@
+
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import ProfileImageUploader from "@/components/team/ProfileImageUploader";
-import BasicInfoSection from "./BasicInfoSection";
-import RolesSection from "./RolesSection";
-import TeamsSection from "./TeamsSection";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseAuth } from "@/context/SupabaseAuthContext";
 import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const ROLES = [
-  "Chatters",
-  "VA",
-  "Admin", 
-  "Developer",
-  "Creator"
-];
-
-const TEAMS = [
-  { label: "Team A", value: "A" },
-  { label: "Team B", value: "B" },
-  { label: "Team C", value: "C" },
-];
+// Define available role types
+const PRIMARY_ROLES = ["Admin", "Manager", "Employee"];
+const ADDITIONAL_ROLES = ["Admin", "VA", "Chatter", "Developer"];
 
 interface FormState {
   name: string;
   email: string;
-  password: string;
-  confirmPassword: string;
-  telegram: string;
-  phoneNumber: string;
-  department: string;
-  profileImage: string;
-  roles: string[];
-  teams: string[];
+  primaryRole: string;
+  additionalRoles: string[];
 }
 
 const defaultForm: FormState = {
   name: "",
   email: "",
-  password: "",
-  confirmPassword: "",
-  telegram: "",
-  phoneNumber: "",
-  department: "",
-  profileImage: "",
-  roles: [],
-  teams: [],
+  primaryRole: "Employee",
+  additionalRoles: [],
 };
 
 const AddTeamMemberForm = () => {
@@ -55,22 +33,59 @@ const AddTeamMemberForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { createTeamMember } = useSupabaseAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleProfileImageChange = (url: string) => {
-    setForm((prev) => ({ ...prev, profileImage: url }));
+  const handlePrimaryRoleChange = (value: string) => {
+    // If Admin is selected as primary role, clear additional roles
+    if (value === "Admin") {
+      setForm((prev) => ({
+        ...prev,
+        primaryRole: value,
+        additionalRoles: [],
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        primaryRole: value,
+      }));
+    }
   };
 
-  const handleMultiSelect = (key: "roles" | "teams", value: string) => {
+  const handleAdditionalRoleToggle = (role: string) => {
     setForm((prev) => {
-      const arr = prev[key];
-      if (arr.includes(value)) {
-        return { ...prev, [key]: arr.filter((v) => v !== value) };
+      // If Admin is selected, clear all other roles
+      if (role === "Admin") {
+        return {
+          ...prev,
+          additionalRoles: prev.additionalRoles.includes("Admin") ? [] : ["Admin"],
+          // Also set primary role to Admin for consistency
+          primaryRole: prev.additionalRoles.includes("Admin") ? "Employee" : "Admin",
+        };
       }
-      return { ...prev, [key]: [...arr, value] };
+      
+      // If trying to add a non-Admin role but Admin is already selected, don't allow it
+      if (prev.additionalRoles.includes("Admin")) {
+        toast({
+          title: "Cannot combine roles",
+          description: "Admin cannot be combined with other roles",
+          variant: "destructive",
+        });
+        return prev;
+      }
+      
+      // Toggle the role normally
+      const updatedRoles = prev.additionalRoles.includes(role)
+        ? prev.additionalRoles.filter(r => r !== role)
+        : [...prev.additionalRoles, role];
+        
+      return {
+        ...prev,
+        additionalRoles: updatedRoles,
+      };
     });
   };
 
@@ -82,58 +97,154 @@ const AddTeamMemberForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (form.password !== form.confirmPassword) {
+    try {
+      if (!form.name || !form.email) {
+        toast({
+          title: "Missing information",
+          description: "Please provide name and email address.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Get the final roles to use
+      const rolesToUse = form.additionalRoles.includes("Admin") 
+        ? ["Admin"] 
+        : form.additionalRoles;
+      
+      // Create the team member with default password
+      const result = await createTeamMember({
+        username: form.name,
+        email: form.email,
+        role: form.primaryRole,
+      });
+
+      if (result) {
+        toast({
+          title: "Team member added",
+          description: `${form.name} has been added to the team with the default password.`,
+        });
+        setForm(defaultForm);
+        navigate("/team");
+      } else {
+        throw new Error("Failed to create team member");
+      }
+    } catch (error) {
+      console.error("Error creating team member:", error);
       toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match.",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // TODO: Integration with team add endpoint here
-
-    toast({
-      title: "Team member added",
-      description: `${form.name} has been added to the team.`,
-    });
-    setIsSubmitting(false);
-    navigate("/team");
   };
+
+  // Check if Admin is selected (either as primary role or in additional roles)
+  const isAdminSelected = form.primaryRole === "Admin" || form.additionalRoles.includes("Admin");
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Left: Basic information */}
-        <BasicInfoSection form={form} onInputChange={handleInputChange} />
-
-        {/* Right: Profile Image, Roles, Teams */}
+      <div className="grid grid-cols-1 gap-8">
         <div className="space-y-6">
           <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
-            <h2 className="text-xl font-bold mb-4 text-white">Profile Image</h2>
-            <ProfileImageUploader
-              value={form.profileImage}
-              onChange={handleProfileImageChange}
-              name={form.name}
-            />
+            <h2 className="text-xl font-semibold mb-4">Basic Information</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={form.name}
+                  onChange={handleInputChange}
+                  placeholder="John Doe"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleInputChange}
+                  placeholder="john.doe@example.com"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label>Default Password</Label>
+                <Input
+                  value="XentrikBananas"
+                  readOnly
+                  disabled
+                  className="mt-1 bg-gray-800/50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This is the default password that will be assigned to the new team member
+                </p>
+              </div>
+            </div>
           </div>
-          <RolesSection
-            selected={form.roles}
-            onChange={(role) => handleMultiSelect("roles", role)}
-          />
-          <TeamsSection
-            teams={TEAMS}
-            selected={form.teams}
-            onChange={(team) => handleMultiSelect("teams", team)}
-          />
+
+          <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
+            <h2 className="text-xl font-semibold mb-4">Primary Role</h2>
+            
+            <RadioGroup 
+              value={form.primaryRole}
+              onValueChange={handlePrimaryRoleChange}
+              className="space-y-3"
+            >
+              {PRIMARY_ROLES.map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <RadioGroupItem value={role} id={`role-${role}`} />
+                  <Label htmlFor={`role-${role}`}>{role}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+          
+          <div className="bg-[#1a1a33]/50 p-6 rounded-xl border border-[#252538]/50">
+            <h2 className="text-xl font-semibold mb-4">Additional Roles</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Admin is an exclusive role and cannot be combined with other roles
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {ADDITIONAL_ROLES.map((role) => (
+                <div 
+                  key={role} 
+                  className="flex items-center space-x-2 rounded-md border p-3"
+                >
+                  <Checkbox
+                    id={`role-additional-${role}`}
+                    checked={form.additionalRoles.includes(role)}
+                    onCheckedChange={() => handleAdditionalRoleToggle(role)}
+                    disabled={isAdminSelected && role !== "Admin"}
+                  />
+                  <Label 
+                    htmlFor={`role-additional-${role}`}
+                    className="font-normal cursor-pointer"
+                  >
+                    {role}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+      
       <div className="flex justify-end gap-3 mt-8">
         <Button
           type="button"
           variant="outline"
-          className="rounded-full px-6 py-2 text-white border border-[#35355f] bg-transparent hover:bg-[#24244a]"
           onClick={handleCancel}
           disabled={isSubmitting}
         >
@@ -141,12 +252,10 @@ const AddTeamMemberForm = () => {
         </Button>
         <Button
           type="submit"
-          className="rounded-full px-8 py-2 text-black font-semibold bg-gradient-to-r from-yellow-400 to-yellow-300 shadow-lg hover:opacity-90"
+          className="text-black rounded-[15px] px-6 py-2 transition-all hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5 hover:shadow-premium-yellow hover:opacity-90 bg-gradient-premium-yellow shadow-premium-yellow"
           disabled={isSubmitting}
         >
-          {isSubmitting ? (
-            <>Adding...</>
-          ) : (
+          {isSubmitting ? "Creating..." : (
             <>
               <Save className="h-4 w-4 mr-2" />
               Add Team Member

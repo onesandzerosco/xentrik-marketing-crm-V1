@@ -226,22 +226,22 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // This is a placeholder - implement if needed
   };
 
-  // Helper function to create team members - Updated to return Promise<boolean>
+  // Helper function to create team members - Updated to use default password
   const createTeamMember = async (data: { 
     username: string; 
     email: string; 
     role: string;
   }): Promise<boolean> => {
     try {
-      // Create a random temporary password
-      const tempPassword = Math.random().toString(36).slice(-10);
+      // Use the default password "XentrikBananas"
+      const defaultPassword = "XentrikBananas";
       
       // Call the create_team_member function
       const { data: newUser, error } = await supabase.rpc(
         'create_team_member',
         { 
           email: data.email, 
-          password: tempPassword,
+          password: defaultPassword,
           name: data.username,
           roles: [data.role]
         }
