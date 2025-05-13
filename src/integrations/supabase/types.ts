@@ -506,10 +506,7 @@ export type Database = {
           email: string
           password: string
           name: string
-          phone?: string
-          telegram?: string
           roles?: string[]
-          teams?: string[]
         }
         Returns: string
       }
