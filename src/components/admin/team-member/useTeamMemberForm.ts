@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { teamMemberFormSchema, TeamMemberFormData } from "./schema";
-import { ADDITIONAL_ROLES } from "../users/constants";
+import { ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../users/constants";
 
 export const useTeamMemberForm = () => {
   const { toast } = useToast();
