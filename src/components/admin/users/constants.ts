@@ -3,14 +3,14 @@ import { PrimaryRole } from "@/types/employee";
 
 export const PRIMARY_ROLES: PrimaryRole[] = ["Admin", "Manager", "Employee"];
 
-// Additional roles options
+// Additional roles options - removing "Creator" from this array
 export const ADDITIONAL_ROLES: string[] = [
   "Chatter", 
   "VA", 
   "Admin", 
-  "Developer",
-  "Creator"
+  "Developer"
 ];
 
 // Define exclusive roles that cannot be combined with other roles
-export const EXCLUSIVE_ROLES = ["Creator", "Admin"];
+export const EXCLUSIVE_ROLES = ["Admin"];
+

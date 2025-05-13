@@ -29,7 +29,7 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
         Select all roles that apply to this user
       </p>
       <p className="text-xs text-amber-500">
-        Note: Creator and Admin are exclusive roles and cannot be combined with other roles
+        Note: Admin is an exclusive role and cannot be combined with other roles
       </p>
       
       <CheckboxGroup className="grid grid-cols-2 gap-2 pt-2">
