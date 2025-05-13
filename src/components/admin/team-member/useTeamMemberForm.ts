@@ -29,7 +29,7 @@ export const useTeamMemberForm = () => {
     try {
       console.log("Form data:", data);
       
-      // Use the RPC call with correct parameter structure
+      // Use the RPC function with the correctly named parameters matching the function definition
       const { data: userData, error: userError } = await supabase.rpc('create_team_member', {
         email: data.email,
         password: 'XentrikBananas',

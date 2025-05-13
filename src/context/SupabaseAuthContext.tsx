@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -268,6 +269,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log("Auth state changed:", event, !!currentSession);
       setIsAuthenticated(!!currentSession);
       setUser(currentSession?.user ?? null);
       setSession(currentSession);
@@ -309,8 +311,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }, 0);
       }
       
-      setIsLoading(false);
-      
       if (event === 'SIGNED_OUT') {
         navigate('/login');
         // Clear stored values on sign out
@@ -328,10 +328,13 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Navigate to the last visited route or default to dashboard
         navigate(lastVisitedRoute || '/dashboard');
       }
+      
+      setIsLoading(false);
     });
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", !!currentSession);
       setIsAuthenticated(!!currentSession);
       setUser(currentSession?.user ?? null);
       setSession(currentSession);
@@ -386,25 +389,46 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const signOut = async () => {
     try {
+      // Check if we have a session before attempting to sign out
+      const { data } = await supabase.auth.getSession();
+      
+      if (!data.session) {
+        console.log("No active session found, skipping signOut API call");
+        // Even without an active session, we should clear local state
+        localStorage.removeItem('isCreator');
+        localStorage.removeItem('creatorId');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userRoles');
+        setIsCreator(false);
+        setCreatorId(null);
+        setUserRole('Employee');
+        setUserRoles([]);
+        setIsAuthenticated(false);
+        setUser(null);
+        setSession(null);
+        
+        toast({
+          title: "Already logged out",
+          description: "There was no active session",
+        });
+        
+        navigate('/login');
+        return;
+      }
+      
+      // If we have a session, proceed with normal logout
       const { error } = await supabase.auth.signOut();
+      
       if (error) throw error;
       
       toast({
         title: "Logged out successfully",
         description: "You have been securely logged out",
       });
-      navigate('/login');
       
-      // Clear stored values
-      localStorage.removeItem('isCreator');
-      localStorage.removeItem('creatorId');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('userRoles');
-      setIsCreator(false);
-      setCreatorId(null);
-      setUserRole('Employee');
-      setUserRoles([]);
+      navigate('/login');
     } catch (error: any) {
+      console.error("Logout error:", error);
       toast({
         variant: "destructive",
         title: "Logout failed",

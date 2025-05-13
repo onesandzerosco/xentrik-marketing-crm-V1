@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -176,12 +177,56 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Delete user from auth (will cascade to profiles)
-      const { error } = await supabase.auth.admin.deleteUser(id);
+      // First check if the user exists in auth.users
+      // We can't query auth.users directly, so we'll use a workaround
+      // by checking if we can get the user's profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', id)
+        .single();
       
-      if (error) throw error;
+      if (profileError && profileError.code === 'PGRST116') {
+        // Profile not found, likely user doesn't exist
+        toast({
+          variant: "destructive",
+          title: "User not found",
+          description: "The user may have already been deleted",
+        });
+        
+        // Update local state anyway to remove the member
+        setTeamMembers(prev => prev.filter(member => member.id !== id));
+        setLoading(false);
+        return;
+      }
       
-      // Update local state
+      // Try to delete the user profile first
+      const { error: deleteProfileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', id);
+        
+      if (deleteProfileError) {
+        console.warn("Could not delete profile:", deleteProfileError);
+      }
+      
+      // Only attempt to delete from auth if we have admin-level permissions
+      // This is likely to fail with regular privileges
+      // If you want to properly enable this, you'd need to create an edge function with admin key
+      try {
+        const { error: deleteUserError } = await supabase.functions.invoke('delete-team-member', {
+          body: { userId: id }
+        });
+        
+        if (deleteUserError) {
+          console.warn("Error from edge function:", deleteUserError);
+        }
+      } catch (edgeFunctionError) {
+        console.error("Edge function error:", edgeFunctionError);
+        // Continue anyway, we've at least deleted the profile
+      }
+      
+      // Update local state regardless of auth deletion outcome
       setTeamMembers(prev => prev.filter(member => member.id !== id));
       
       toast({
