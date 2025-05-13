@@ -1,9 +1,36 @@
 
+# This file determines how your Supabase instance will be configured.
+# For more information on these values, please see:
+# https://supabase.com/docs/guides/platform/functions/project-config
+
 project_id = "rdzwpiokpyssqhnfiqrt"
 
 [api]
 enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
 
-[functions]
-[functions.create-function-helper]
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+
+[realtime]
+enabled = true
+
+# Outline the Edge Functions that should be available locally
+[functions.unzip-files]
 verify_jwt = true

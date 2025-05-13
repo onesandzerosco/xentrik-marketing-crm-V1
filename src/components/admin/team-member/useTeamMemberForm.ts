@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { teamMemberFormSchema, TeamMemberFormData } from "./schema";
 import { ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../users/constants";
-import { v4 as uuidv4 } from "uuid";
 
 export const useTeamMemberForm = () => {
   const { toast } = useToast();
@@ -28,13 +27,8 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Generate a UUID for the new team member
-      const userId = uuidv4();
-      
       // Call the stored procedure to create a team member with default password
-      // @ts-ignore - Supabase types don't recognize our custom functions
-      const { error } = await supabase.rpc('create_team_member', {
-        user_id: userId,
+      const { data: newUser, error } = await supabase.rpc('create_team_member', {
         email: data.email,
         password: 'XentrikBananas', // Set default password as requested
         name: data.email.split('@')[0], // Use first part of email as name
@@ -48,9 +42,8 @@ export const useTeamMemberForm = () => {
       }
 
       // Update the primary role
-      // @ts-ignore - Supabase types don't recognize our custom functions
       const { error: updateError } = await supabase.rpc('admin_update_user_roles', {
-        user_id: userId,
+        user_id: newUser,
         new_primary_role: data.primaryRole,
         new_additional_roles: data.additionalRoles
       });
