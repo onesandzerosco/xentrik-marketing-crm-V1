@@ -226,7 +226,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // This is a placeholder - implement if needed
   };
 
-  // Helper function to create team members - Updated to use primary_role and additional_roles parameters
+  // Helper function to create team members - Updated to use default password
   const createTeamMember = async (data: { 
     username: string; 
     email: string; 
@@ -236,15 +236,14 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Use the default password "XentrikBananas"
       const defaultPassword = "XentrikBananas";
       
-      // Call the create_team_member function with proper parameter names
+      // Call the create_team_member function
       const { data: newUser, error } = await supabase.rpc(
         'create_team_member',
         { 
           email: data.email, 
           password: defaultPassword,
           name: data.username,
-          primary_role: data.role,
-          additional_roles: []
+          roles: [data.role]
         }
       );
       

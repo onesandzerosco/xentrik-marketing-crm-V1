@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,13 +28,13 @@ export const useTeamMemberForm = () => {
     try {
       console.log("Form data:", data);
       
-      // Use the RPC call with correct parameter structure
+      // The primary role should be the 'role' column in profiles
+      // The additional roles should be in the 'roles' array
       const { data: userData, error: userError } = await supabase.rpc('create_team_member', {
         email: data.email,
         password: 'XentrikBananas',
         name: data.email.split('@')[0],
-        primary_role: data.primaryRole,
-        additional_roles: data.additionalRoles
+        roles: [data.primaryRole, ...data.additionalRoles] // Include all roles so the function can sort it out
       });
 
       if (userError) {
