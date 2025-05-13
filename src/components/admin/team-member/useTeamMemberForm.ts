@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { teamMemberFormSchema, TeamMemberFormData } from "./schema";
 import { ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../users/constants";
-import { v4 as uuidv4 } from "uuid";
 
 export const useTeamMemberForm = () => {
   const { toast } = useToast();
@@ -36,7 +35,7 @@ export const useTeamMemberForm = () => {
           email: data.email, 
           password: 'XentrikBananas',
           name: data.email.split('@')[0],
-          // Change "role" to "roles" and include the primary role as the first element
+          // Include the primary role as the first element in roles array
           roles: [data.primaryRole, ...data.additionalRoles]
         }
       );
