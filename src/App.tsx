@@ -1,7 +1,8 @@
 
 import { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Routes, Route } from "react-router-dom";
+// Fix the import path for ThemeProvider
+import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from "./context/SupabaseAuthContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -29,26 +30,24 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
-        <SupabaseAuthProvider>
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/user-management" element={<UserManagement />} />
-              <Route path="/creator/profile/:id" element={<CreatorProfile />} />
-              <Route path="/creators" element={<Creators />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/team" element={<Team />} />
-              <Route path="/team/edit/:id" element={<TeamMemberEdit />} />
-              <Route path="/team/profile/:id" element={<TeamMemberProfile />} />
-              <Route path="/team/onboard" element={<TeamMemberOnboarding />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-          </AuthProvider>
-        </SupabaseAuthProvider>
-      </Router>
+      <SupabaseAuthProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/user-management" element={<UserManagement />} />
+            <Route path="/creator/profile/:id" element={<CreatorProfile />} />
+            <Route path="/creators" element={<Creators />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/team/edit/:id" element={<TeamMemberEdit />} />
+            <Route path="/team/profile/:id" element={<TeamMemberProfile />} />
+            <Route path="/team/onboard" element={<TeamMemberOnboarding />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </SupabaseAuthProvider>
     </ThemeProvider>
   );
 }
