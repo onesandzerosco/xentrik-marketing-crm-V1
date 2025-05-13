@@ -28,13 +28,15 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the user in Supabase Auth using RPC function
+      // According to the error, it seems the function doesn't accept a 'role' parameter
+      // Let's adjust how we pass the primary role - we'll add it to the roles array
+      const allRoles = [...data.additionalRoles];
+      
       const { data: userData, error: userError } = await supabase.rpc('create_team_member', {
         email: data.email,
         password: 'XentrikBananas',
         name: data.email.split('@')[0],
-        role: data.primaryRole, // Pass primary role as the role parameter
-        roles: data.additionalRoles, // Pass additional roles as the roles parameter
+        roles: [...allRoles, data.primaryRole], // Include primary role in the roles array
       });
 
       if (userError) {
