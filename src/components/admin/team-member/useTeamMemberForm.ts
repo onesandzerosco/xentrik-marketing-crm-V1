@@ -36,8 +36,8 @@ export const useTeamMemberForm = () => {
           email: data.email, 
           password: 'XentrikBananas',
           name: data.email.split('@')[0],
-          role: data.primaryRole,
-          roles: data.additionalRoles
+          // Change "role" to "roles" and include the primary role as the first element
+          roles: [data.primaryRole, ...data.additionalRoles]
         }
       );
 
