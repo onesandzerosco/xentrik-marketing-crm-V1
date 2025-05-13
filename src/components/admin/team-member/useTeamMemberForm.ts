@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { teamMemberFormSchema, TeamMemberFormData } from "./schema";
 import { ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../users/constants";
+import { v4 as uuidv4 } from 'uuid';
 
 export const useTeamMemberForm = () => {
   const { toast } = useToast();
@@ -27,8 +28,12 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Call the stored procedure to create a team member with default password
-      const { data: newUser, error } = await supabase.rpc('create_team_member', {
+      // Generate a UUID for the new user
+      const userId = uuidv4();
+      
+      // Call the stored procedure to create a team member with default password and explicit ID
+      const { error } = await supabase.rpc('create_team_member_with_id', {
+        user_id: userId,
         email: data.email,
         password: 'XentrikBananas', // Set default password as requested
         name: data.email.split('@')[0], // Use first part of email as name
@@ -43,7 +48,7 @@ export const useTeamMemberForm = () => {
 
       // Update the primary role
       const { error: updateError } = await supabase.rpc('admin_update_user_roles', {
-        user_id: newUser,
+        user_id: userId,
         new_primary_role: data.primaryRole,
         new_additional_roles: data.additionalRoles
       });
