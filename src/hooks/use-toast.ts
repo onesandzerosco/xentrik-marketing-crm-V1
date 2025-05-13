@@ -1,7 +1,12 @@
-import * as React from "react";
-import { type ToastActionElement, type ToastProps } from "@/components/ui/toast";
 
-const TOAST_LIMIT = 5;
+import * as React from "react";
+import {
+  Toast,
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast";
+
+const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
 type ToasterToast = ToastProps & {
@@ -70,6 +75,15 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // Don't add duplicate toasts with the same title and description
+      if (state.toasts.find(
+        toast => 
+          toast.title === action.toast.title && 
+          toast.description === action.toast.description
+      )) {
+        return state;
+      }
+
       return {
         ...state,
         toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
@@ -138,7 +152,7 @@ type Toast = Omit<ToasterToast, "id">;
 function toast({ ...props }: Toast) {
   const id = genId();
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Toast) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },

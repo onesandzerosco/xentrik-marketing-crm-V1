@@ -54,13 +54,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Add a more explicit authentication check
   if (!isAuthenticated) {
     console.log("User is not authenticated, redirecting to login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // Consider both role property and Admin being in the userRole
   const isAdmin = user?.user_metadata?.role === "Admin" || userRole === "Admin";
 
   return (

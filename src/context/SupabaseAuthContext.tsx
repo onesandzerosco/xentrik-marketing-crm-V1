@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -286,32 +287,41 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log("Local state cleared, now calling Supabase signOut");
       
       // Force signOut which will invalidate all sessions
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      
-      if (error) {
-        console.error("Supabase signOut error:", error);
-        throw error;
+      try {
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        
+        if (error) {
+          console.error("Supabase signOut error:", error);
+        }
+      } catch (error) {
+        console.error("Error during signOut API call:", error);
+        // Continue with logout flow even if the API call fails
       }
       
-      console.log("Supabase signOut successful, redirecting to login");
+      console.log("Supabase signOut completed, redirecting to login");
       
       toast({
         title: "Logged out successfully",
         description: "You have been securely logged out",
       });
       
-      // Force navigation to login page
-      navigate('/login', { replace: true });
+      // Always force navigation to login page regardless of API call success
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
+      
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
         variant: "destructive",
         title: "Logout failed",
-        description: error.message,
+        description: error.message || "Auth session missing!",
       });
       
-      // Even if there's an error, redirect to login
-      navigate('/login', { replace: true });
+      // Even with an error, redirect to login
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
     }
   };
 

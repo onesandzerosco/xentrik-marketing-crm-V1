@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -15,8 +16,7 @@ const SidebarUserSection: React.FC = () => {
     try {
       console.log("Logout initiated from sidebar");
       await signOut();
-      // No need to add toast here as it's already in the signOut function
-      // No need to navigate here as it's already in the signOut function
+      // No need to add navigation here as it's already in the signOut function
     } catch (error) {
       console.error("Error in handleLogout:", error);
       toast({
@@ -24,6 +24,9 @@ const SidebarUserSection: React.FC = () => {
         title: "Logout failed",
         description: "There was an error logging out. Please try again."
       });
+      
+      // Force navigation to login page even if there's an error
+      navigate('/login', { replace: true });
     }
   };
 
