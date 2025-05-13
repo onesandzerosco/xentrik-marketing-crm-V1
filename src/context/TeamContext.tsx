@@ -89,12 +89,13 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Call the stored procedure to create a team member
+      // Call the stored procedure to create a team member with correct parameter names
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
-        roles: newMember.roles
+        primary_role: newMember.roles[0] || 'Employee', // Take first role as primary
+        additional_roles: newMember.roles.slice(1) // Rest as additional roles
       });
       
       if (error) throw error;

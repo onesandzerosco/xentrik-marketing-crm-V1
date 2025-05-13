@@ -506,7 +506,8 @@ export type Database = {
           email: string
           password: string
           name: string
-          roles?: string[]
+          primary_role?: string
+          additional_roles?: string[]
         }
         Returns: string
       }
