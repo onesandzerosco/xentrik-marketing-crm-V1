@@ -34,7 +34,8 @@ const CreatorFiles = () => {
     handleCreateFolder, 
     handleDeleteFolder, 
     handleAddFilesToFolder, 
-    handleRemoveFromFolder 
+    handleRemoveFromFolder,
+    handleRenameFolder
   } = useFileOperations({
     creatorId: creator?.id,
     onFilesChanged: () => refetch(),
@@ -159,6 +160,7 @@ const CreatorFiles = () => {
       onAddFilesToFolder={handleAddFilesToFolder}
       onDeleteFolder={handleDeleteFolder}
       onRemoveFromFolder={handleRemoveFromFolder}
+      onRenameFolder={handleRenameFolder}
     />
   );
 };

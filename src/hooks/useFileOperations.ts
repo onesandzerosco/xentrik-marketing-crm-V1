@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -279,10 +278,123 @@ export const useFileOperations = ({
     }
   };
 
+  // New function to rename a folder
+  const handleRenameFolder = async (folderId: string, newFolderName: string): Promise<void> => {
+    if (!creatorId || !folderId || !newFolderName) {
+      return Promise.reject("Missing required parameters");
+    }
+
+    try {
+      console.log(`Renaming folder ${folderId} to ${newFolderName}`);
+      
+      // Create a new folder ID based on the new name
+      const newFolderId = newFolderName.toLowerCase().replace(/\s+/g, '-');
+      
+      // Skip if the folder ID would remain the same
+      if (folderId === newFolderId) {
+        toast({
+          title: "No changes made",
+          description: "The new folder name would result in the same folder ID."
+        });
+        return Promise.resolve();
+      }
+      
+      // Get all files in the old folder
+      const { data: filesInFolder, error: filesError } = await supabase
+        .from('media')
+        .select('id, folders')
+        .filter('creator_id', 'eq', creatorId)
+        .filter('folders', 'cs', `{"${folderId}"}`);
+        
+      if (filesError) {
+        console.error("Error fetching files in folder:", filesError);
+        throw filesError;
+      }
+      
+      console.log(`Found ${filesInFolder?.length || 0} files in folder ${folderId} to update`);
+      
+      // For each file in the old folder, replace the old folder ID with the new one
+      for (const file of filesInFolder || []) {
+        const updatedFolders = (file.folders || []).map(f => f === folderId ? newFolderId : f);
+        
+        console.log(`Updating file ${file.id}: replacing folder ${folderId} with ${newFolderId}, new folders:`, updatedFolders);
+        
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', file.id);
+          
+        if (updateError) {
+          console.error(`Error updating file ${file.id}:`, updateError);
+          // Continue with other files even if one update fails
+        }
+      }
+
+      // Create a new folder marker file using the new ID
+      const { error: storageError } = await supabase.storage
+        .from('creator_files')
+        .copy(
+          `${creatorId}/${folderId}/.folder`,
+          `${creatorId}/${newFolderId}/.folder`
+        );
+      
+      if (storageError && !storageError.message.includes('Object not found')) {
+        console.error("Error copying folder marker:", storageError);
+        // Don't throw here, continue with UI update even if storage operation fails
+        // We'll create a new marker file instead
+        const { error: createError } = await supabase.storage
+          .from('creator_files')
+          .upload(`${creatorId}/${newFolderId}/.folder`, new Blob(['']));
+          
+        if (createError) {
+          console.error("Error creating new folder marker:", createError);
+        }
+      }
+      
+      // Delete the old folder marker file
+      await supabase.storage
+        .from('creator_files')
+        .remove([`${creatorId}/${folderId}/.folder`]);
+      
+      // Update the UI by replacing the folder in availableFolders
+      setAvailableFolders(prevFolders => 
+        prevFolders.map(folder => 
+          folder.id === folderId ? { id: newFolderId, name: newFolderName } : folder
+        )
+      );
+      
+      // If the current folder is the one being renamed, switch to the new folder
+      if (folderId === folderId) {
+        setCurrentFolder(newFolderId);
+      }
+      
+      // Refresh the files list to reflect the changes
+      onFilesChanged();
+      
+      // Show success message
+      toast({
+        title: "Folder renamed",
+        description: `Successfully renamed folder to "${newFolderName}"`,
+      });
+      
+      return Promise.resolve();
+      
+    } catch (err) {
+      console.error("Error in handleRenameFolder:", err);
+      toast({
+        variant: "destructive",
+        title: "Error renaming folder",
+        description: err instanceof Error ? err.message : "Failed to rename folder"
+      });
+      return Promise.reject(err);
+    }
+  };
+
   return {
     handleCreateFolder,
     handleDeleteFolder,
     handleAddFilesToFolder,
-    handleRemoveFromFolder
+    handleRemoveFromFolder,
+    handleRenameFolder
   };
 };

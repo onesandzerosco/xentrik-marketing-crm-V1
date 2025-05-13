@@ -25,4 +25,5 @@ export interface FileOperationsHandlers {
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
 }

@@ -21,6 +21,7 @@ interface UseFileExplorerProps {
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
 }
 
 export const useFileExplorer = ({
@@ -31,7 +32,8 @@ export const useFileExplorer = ({
   onCreateFolder,
   onAddFilesToFolder,
   onDeleteFolder,
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  onRenameFolder
 }: UseFileExplorerProps) => {
   // Use all the sub-hooks
   const { 
@@ -53,7 +55,14 @@ export const useFileExplorer = ({
     setIsDeleteFolderModalOpen,
     folderToDelete,
     setFolderToDelete,
-    handleDeleteFolderClick
+    handleDeleteFolderClick,
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderToRename,
+    setFolderToRename,
+    folderCurrentName,
+    setFolderCurrentName,
+    handleRenameFolderClick
   } = useFolderModals();
   
   const {
@@ -84,11 +93,13 @@ export const useFileExplorer = ({
   const {
     handleCreateFolderSubmit: createFolderBase,
     handleAddToFolderSubmit: addToFolderBase,
-    handleDeleteFolder: deleteFolderBase
+    handleDeleteFolder: deleteFolderBase,
+    handleRenameFolder: renameFolderBase
   } = useFolderOperations({
     onCreateFolder,
     onAddFilesToFolder,
     onDeleteFolder,
+    onRenameFolder,
     onRefresh
   });
   
@@ -127,6 +138,17 @@ export const useFileExplorer = ({
     deleteFolderBase(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
   };
   
+  // Add handler for renaming folders
+  const handleRenameFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newFolderName.trim() || !folderToRename) {
+      return;
+    }
+    
+    renameFolderBase(folderToRename, newFolderName, setIsRenameFolderModalOpen, setFolderToRename);
+  };
+  
   // Custom folders (excluding 'all' and 'unsorted')
   const customFolders = availableFolders.filter(
     folder => folder.id !== 'all' && folder.id !== 'unsorted'
@@ -151,6 +173,11 @@ export const useFileExplorer = ({
     setIsDeleteFolderModalOpen,
     folderToDelete,
     handleDeleteFolderClick,
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderToRename,
+    folderCurrentName,
+    handleRenameFolderClick,
     
     // File notes
     isEditNoteModalOpen,
@@ -178,6 +205,7 @@ export const useFileExplorer = ({
     handleCreateFolderSubmit,
     handleAddToFolderSubmit,
     handleDeleteFolder,
+    handleRenameFolder,
     
     // Custom folders
     customFolders

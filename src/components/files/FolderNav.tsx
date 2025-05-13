@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Folder, FolderPlus, X, Check, Trash2 } from 'lucide-react';
+import { Folder, FolderPlus, X, Check, Trash2, Pencil } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -36,9 +36,10 @@ interface FolderNavProps {
   activeFolder?: string | null;
   onInitiateNewFolder?: () => void; // Prop for initiating folder creation
   onDeleteFolder?: (folderId: string) => Promise<void>; // Updated to Promise<void>
+  onRenameFolder?: (folderId: string, currentName: string) => Promise<void>; // New prop for renaming a folder
 }
 
-// These are the default folder IDs that should not be deleted
+// These are the default folder IDs that should not be deleted or renamed
 const DEFAULT_FOLDERS = ['all', 'unsorted'];
 
 export const FolderNav: React.FC<FolderNavProps> = ({ 
@@ -47,13 +48,14 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   onFolderChange,
   activeFolder = null,
   onInitiateNewFolder,
-  onDeleteFolder
+  onDeleteFolder,
+  onRenameFolder
 }) => {
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const { toast } = useToast();
-  // Add permission check for showing delete folder button
+  // Add permission check for showing folder management buttons
   const { canManageFolders } = useFilePermissions();
 
   const handleDeleteFolder = async () => {
@@ -136,19 +138,39 @@ export const FolderNav: React.FC<FolderNavProps> = ({
                 {folder.name}
               </Button>
               
-              {/* Only show delete button if user has permission */}
-              {onDeleteFolder && canManageFolders && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 -ml-8 h-7 w-7 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFolderToDelete(folder.id);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                </Button>
+              {/* Only show management buttons if user has permission */}
+              {canManageFolders && (
+                <div className="opacity-0 group-hover:opacity-100 flex -ml-16 space-x-1">
+                  {/* Rename button */}
+                  {onRenameFolder && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRenameFolder(folder.id, folder.name);
+                      }}
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                    </Button>
+                  )}
+                  
+                  {/* Delete button */}
+                  {onDeleteFolder && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFolderToDelete(folder.id);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           ))}

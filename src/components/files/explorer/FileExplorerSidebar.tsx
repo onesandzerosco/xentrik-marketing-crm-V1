@@ -14,6 +14,7 @@ interface FileExplorerSidebarProps {
   onFolderChange: (folderId: string) => void;
   onInitiateNewFolder: () => void;
   onDeleteFolder: (folderId: string) => Promise<void>;
+  onRenameFolder: (folderId: string, currentName: string) => Promise<void>;
   selectedFileIds: string[];
 }
 
@@ -23,6 +24,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   onFolderChange,
   onInitiateNewFolder,
   onDeleteFolder,
+  onRenameFolder,
   selectedFileIds
 }) => {
   const { toast } = useToast();
@@ -46,6 +48,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewFolder={handleInitiateNewFolder}
         onDeleteFolder={onDeleteFolder}
+        onRenameFolder={onRenameFolder}
       />
     </div>
   );

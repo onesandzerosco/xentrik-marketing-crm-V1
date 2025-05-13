@@ -10,6 +10,7 @@ interface UseFolderOperationsProps {
   onCreateFolder: (folderName: string, fileIds: string[]) => Promise<void>;
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRefresh: () => void;
 }
 
@@ -17,6 +18,7 @@ export const useFolderOperations = ({
   onCreateFolder,
   onAddFilesToFolder,
   onDeleteFolder,
+  onRenameFolder,
   onRefresh
 }: UseFolderOperationsProps) => {
   const { toast } = useToast();
@@ -116,9 +118,32 @@ export const useFolderOperations = ({
     }
   };
 
+  // Handle the actual folder renaming
+  const handleRenameFolder = async (
+    folderToRename: string | null, 
+    newFolderName: string,
+    setIsRenameFolderModalOpen: (open: boolean) => void, 
+    setFolderToRename: (id: string | null) => void
+  ) => {
+    if (!folderToRename || !newFolderName.trim() || !onRenameFolder) return;
+    
+    try {
+      await onRenameFolder(folderToRename, newFolderName);
+      setFolderToRename(null);
+      setIsRenameFolderModalOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error renaming folder",
+        description: "Failed to rename folder",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     handleCreateFolderSubmit,
     handleAddToFolderSubmit,
-    handleDeleteFolder
+    handleDeleteFolder,
+    handleRenameFolder
   };
 };

@@ -49,11 +49,16 @@ export const useFilePermissions = () => {
     }
   });
 
+  // Allow certain roles to manage folders directly
+  const allowedRoles = ["Admin", "VA", "Creator"];
+  const canManageFoldersByRole = userRole && allowedRoles.includes(userRole) || 
+                               userRoles.some(role => allowedRoles.includes(role));
+
   return {
     canEdit: hasPermission(permissions, userRole, userRoles, 'edit'),
     canDelete: hasPermission(permissions, userRole, userRoles, 'delete'),
     canUpload: hasPermission(permissions, userRole, userRoles, 'upload'),
-    canManageFolders: hasPermission(permissions, userRole, userRoles, 'upload'), // Using same permission as upload for folder management
+    canManageFolders: canManageFoldersByRole || hasPermission(permissions, userRole, userRoles, 'upload'),
     canDownload: hasPermission(permissions, userRole, userRoles, 'download'),
     canPreview: hasPermission(permissions, userRole, userRoles, 'preview')
   };

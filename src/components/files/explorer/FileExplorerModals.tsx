@@ -6,6 +6,7 @@ import { CreateFolderModal } from './CreateFolderModal';
 import { AddToFolderModal } from './AddToFolderModal';
 import { DeleteFolderModal } from './DeleteFolderModal';
 import { EditNoteModal } from './EditNoteModal';
+import { RenameFolderModal } from './RenameFolderModal';
 
 interface Folder {
   id: string;
@@ -23,11 +24,14 @@ interface FileExplorerModalsProps {
   setIsDeleteFolderModalOpen: (open: boolean) => void;
   isEditNoteModalOpen: boolean;
   setIsEditNoteModalOpen: (open: boolean) => void;
+  isRenameFolderModalOpen: boolean;
+  setIsRenameFolderModalOpen: (open: boolean) => void;
   creatorId: string;
   creatorName: string;
   currentFolder: string;
   newFolderName: string;
   setNewFolderName: (name: string) => void;
+  folderCurrentName: string;
   selectedFileIds: string[];
   targetFolderId: string;
   setTargetFolderId: (id: string) => void;
@@ -39,6 +43,7 @@ interface FileExplorerModalsProps {
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
   handleDeleteFolder: () => void;
+  handleRenameFolder: (e: React.FormEvent) => void;
   handleSaveNote: () => void;
 }
 
@@ -53,11 +58,14 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   setIsDeleteFolderModalOpen,
   isEditNoteModalOpen,
   setIsEditNoteModalOpen,
+  isRenameFolderModalOpen,
+  setIsRenameFolderModalOpen,
   creatorId,
   creatorName,
   currentFolder,
   newFolderName,
   setNewFolderName,
+  folderCurrentName,
   selectedFileIds,
   targetFolderId,
   setTargetFolderId,
@@ -69,6 +77,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   handleCreateFolderSubmit,
   handleAddToFolderSubmit,
   handleDeleteFolder,
+  handleRenameFolder,
   handleSaveNote
 }) => {
   return (
@@ -111,6 +120,16 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={isDeleteFolderModalOpen}
         onOpenChange={setIsDeleteFolderModalOpen}
         onConfirm={handleDeleteFolder}
+      />
+      
+      {/* Rename Folder Modal */}
+      <RenameFolderModal
+        isOpen={isRenameFolderModalOpen}
+        onOpenChange={setIsRenameFolderModalOpen}
+        folderCurrentName={folderCurrentName}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        onSubmit={handleRenameFolder}
       />
       
       {/* Edit Note Modal */}

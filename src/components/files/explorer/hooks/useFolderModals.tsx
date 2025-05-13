@@ -6,7 +6,10 @@ export const useFolderModals = () => {
   const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
   const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
   const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
+  const [isRenameFolderModalOpen, setIsRenameFolderModalOpen] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  const [folderToRename, setFolderToRename] = useState<string | null>(null);
+  const [folderCurrentName, setFolderCurrentName] = useState<string>('');
   const [newFolderName, setNewFolderName] = useState('');
   const [targetFolderId, setTargetFolderId] = useState<string>('');
 
@@ -15,6 +18,15 @@ export const useFolderModals = () => {
     setFolderToDelete(folderId);
     setIsDeleteFolderModalOpen(true);
     return Promise.resolve(); // Return a resolved promise
+  };
+  
+  // Handler for renaming a folder
+  const handleRenameFolderClick = async (folderId: string, currentName: string): Promise<void> => {
+    setFolderToRename(folderId);
+    setFolderCurrentName(currentName);
+    setNewFolderName(currentName); // Pre-fill with current name
+    setIsRenameFolderModalOpen(true);
+    return Promise.resolve();
   };
 
   return {
@@ -35,6 +47,15 @@ export const useFolderModals = () => {
     setIsDeleteFolderModalOpen,
     folderToDelete,
     setFolderToDelete,
-    handleDeleteFolderClick
+    handleDeleteFolderClick,
+    
+    // Rename folder modal
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderToRename,
+    setFolderToRename,
+    folderCurrentName,
+    setFolderCurrentName,
+    handleRenameFolderClick
   };
 };
