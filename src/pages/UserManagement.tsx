@@ -1,10 +1,8 @@
 
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import PendingUsersList from "../components/admin/PendingUsersList";
 import AddTeamMemberForm from "../components/admin/AddTeamMemberForm";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
 import InvitationsList from "@/components/admin/creator-invite/InvitationsList";
 
@@ -25,7 +23,7 @@ const UserManagement = () => {
     <div className="p-8">
       <h1 className="text-3xl font-bold mb-2">User Management</h1>
       <p className="text-muted-foreground mb-6">
-        Manage user accounts and approvals
+        Manage team members and creator invitations
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -34,20 +32,9 @@ const UserManagement = () => {
       </div>
       
       <div>
-        <Tabs defaultValue="pending">
-          <TabsList className="mb-4">
-            <TabsTrigger value="pending">Pending Approvals</TabsTrigger>
-            <TabsTrigger value="add">Add Team Member</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="pending">
-            <PendingUsersList />
-          </TabsContent>
-          
-          <TabsContent value="add">
-            <AddTeamMemberForm />
-          </TabsContent>
-        </Tabs>
+        <Card className="p-6">
+          <AddTeamMemberForm />
+        </Card>
       </div>
     </div>
   );

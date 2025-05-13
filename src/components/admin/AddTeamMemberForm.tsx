@@ -1,17 +1,19 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -19,116 +21,221 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmployeeRole } from "@/types/employee";
-import { UserPlus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { PrimaryRole } from "@/types/employee";
+import { PRIMARY_ROLES, ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../admin/users/constants";
 import { useToast } from "@/hooks/use-toast";
+import { CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  primaryRole: z.enum(["Admin", "Manager", "Employee"] as [PrimaryRole, ...PrimaryRole[]]),
+  additionalRoles: z.array(z.string())
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const AddTeamMemberForm: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<EmployeeRole>("Employee");
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { createTeamMember } = useAuth();
-  const { toast } = useToast();
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      primaryRole: "Employee",
+      additionalRoles: []
+    }
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
-    // Fix: Pass a single data object to createTeamMember instead of 3 separate arguments
-    const success = createTeamMember({ 
-      username, 
-      email, 
-      role 
-    });
-    
-    if (success) {
-      // Reset form
-      setUsername("");
-      setEmail("");
-      setRole("Employee");
-      
-      toast({
-        title: "Team member added",
-        description: `${username} has been added to the team.`
+    try {
+      // Call the stored procedure to create a team member with default password
+      const { data: newUser, error } = await supabase.rpc('create_team_member', {
+        email: data.email,
+        password: 'XentrikBananas', // Set default password as requested
+        name: data.email.split('@')[0], // Use first part of email as name
+        phone: '', // Empty optional fields
+        telegram: '',
+        roles: data.additionalRoles,
       });
-    } else {
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Update the primary role
+      const { error: updateError } = await supabase.rpc('admin_update_user_roles', {
+        user_id: newUser,
+        new_primary_role: data.primaryRole,
+        new_additional_roles: data.additionalRoles
+      });
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      toast({
+        title: "Success",
+        description: `New team member created with email ${data.email}`,
+      });
+
+      // Reset form
+      form.reset({
+        email: "",
+        primaryRole: "Employee",
+        additionalRoles: []
+      });
+    } catch (error: any) {
+      console.error("Error creating team member:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add team member."
+        description: error.message || "Failed to create team member",
       });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // Check if an additional role should be disabled based on selected roles
+  const isRoleDisabled = (role: string): boolean => {
+    const selectedRoles = form.watch("additionalRoles");
+    // If current roles include any exclusive role and this isn't that role
+    return selectedRoles.some(r => 
+      EXCLUSIVE_ROLES.includes(r) && r !== role
+    );
+  };
+
+  // Handle checkbox change for additional roles
+  const handleAdditionalRoleChange = (checked: boolean | string, role: string) => {
+    const currentRoles = form.getValues("additionalRoles");
     
-    setIsSubmitting(false);
+    if (checked) {
+      // If adding an exclusive role, clear all other roles
+      if (EXCLUSIVE_ROLES.includes(role)) {
+        form.setValue("additionalRoles", [role]);
+      } else {
+        // If adding a non-exclusive role, remove any exclusive roles first
+        const filteredRoles = currentRoles.filter(r => !EXCLUSIVE_ROLES.includes(r));
+        form.setValue("additionalRoles", [...filteredRoles, role]);
+      }
+    } else {
+      // If removing a role, just filter it out
+      form.setValue(
+        "additionalRoles", 
+        currentRoles.filter(r => r !== role)
+      );
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">Add Team Member</CardTitle>
-        <CardDescription>Create a new account for your team</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="johndoe"
-              required
-            />
+    <div>
+      <CardTitle className="text-xl mb-2">Add Team Member</CardTitle>
+      <CardDescription className="mb-6">
+        Create a new authenticated account for a team member
+      </CardDescription>
+      
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="name@example.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="primaryRole"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Primary Role</FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select primary role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRIMARY_ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {role}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="space-y-3">
+            <FormLabel>Additional Roles</FormLabel>
+            <p className="text-sm text-muted-foreground">
+              Select all roles that apply to this user
+            </p>
+            <p className="text-xs text-amber-500">
+              Note: Admin is an exclusive role and cannot be combined with other roles
+            </p>
+            
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              {ADDITIONAL_ROLES.map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`role-${role}`}
+                    checked={form.watch("additionalRoles").includes(role)}
+                    onCheckedChange={(checked) => handleAdditionalRoleChange(checked, role)}
+                    disabled={isRoleDisabled(role)}
+                    className={isRoleDisabled(role) ? "opacity-50" : ""}
+                  />
+                  <label 
+                    htmlFor={`role-${role}`}
+                    className={`text-sm cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
+                  >
+                    {role}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="john.doe@example.com"
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select 
-              value={role} 
-              onValueChange={(value: EmployeeRole) => setRole(value)}
-            >
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="Manager">Manager</SelectItem>
-                <SelectItem value="Employee">Employee</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             className="w-full"
             disabled={isSubmitting}
           >
-            <UserPlus className="h-4 w-4 mr-2" />
-            {isSubmitting ? "Creating..." : "Create Team Member"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Team Member"
+            )}
           </Button>
+          
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            New account will be created with default password: XentrikBananas
+          </p>
         </form>
-      </CardContent>
-      <CardFooter>
-        <p className="text-xs text-muted-foreground">
-          Team members will have a default password that they can change after first login.
-        </p>
-      </CardFooter>
-    </Card>
+      </Form>
+    </div>
   );
 };
 
