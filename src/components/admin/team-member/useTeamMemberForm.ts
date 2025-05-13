@@ -29,13 +29,15 @@ export const useTeamMemberForm = () => {
     try {
       console.log("Form data:", data);
       
-      // Use the RPC function with the correctly named parameters matching the function definition
-      const { data: userData, error: userError } = await supabase.rpc('create_team_member', {
-        email: data.email,
-        password: 'XentrikBananas',
-        name: data.email.split('@')[0],
-        primary_role: data.primaryRole,
-        additional_roles: data.additionalRoles
+      // Call the edge function instead of the RPC function
+      const { data: userData, error: userError } = await supabase.functions.invoke('create_team_member', {
+        body: {
+          email: data.email,
+          password: 'XentrikBananas',
+          name: data.email.split('@')[0],
+          primary_role: data.primaryRole,
+          additional_roles: data.additionalRoles
+        }
       });
 
       if (userError) {
