@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,12 +27,8 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Generate a UUID for the new user
-      const userId = uuidv4();
-      
-      // Insert directly into auth.users table with the generated UUID
-      const { error: authError } = await supabase.auth.admin.createUser({
-        uuid: userId,
+      // Create the user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
         password: 'XentrikBananas',
         email_confirm: true,
@@ -48,12 +43,15 @@ export const useTeamMemberForm = () => {
         throw new Error(authError.message);
       }
 
-      // Create profile in profiles table (this should happen automatically via trigger,
-      // but we'll ensure it's there with correct data)
+      if (!authData?.user) {
+        throw new Error("Failed to create user account");
+      }
+
+      // Create profile in profiles table using the user ID returned from auth
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
-          id: userId,
+          id: authData.user.id,
           name: data.email.split('@')[0],
           email: data.email,
           role: data.primaryRole,
