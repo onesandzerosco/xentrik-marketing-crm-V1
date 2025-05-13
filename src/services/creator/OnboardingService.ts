@@ -85,10 +85,9 @@ export class OnboardingService {
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
-      // Create a user in the auth system using the authenticated client
-      // This should include the API key by default
+      // Create a user in the auth system
       const { error: authError } = await supabase.auth.admin.createUser({
-        uuid: creatorId,
+        id: creatorId, // Use the 'id' field instead of 'uuid'
         email,
         password: defaultPassword,
         email_confirm: true,

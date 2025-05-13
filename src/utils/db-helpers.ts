@@ -10,11 +10,12 @@ export async function setupDatabaseFunctions() {
     
     // Create the function to create a team member with a specified ID
     // @ts-ignore - Supabase types don't recognize our custom functions
-    const { error: createTeamMemberError } = await supabase.rpc(
-      'create_function_if_not_exists',
+    const { error: createTeamMemberError } = await supabase.functions.invoke(
+      'create-function-helper',
       {
-        function_name: 'create_team_member',
-        function_definition: `
+        body: {
+          function_name: 'create_team_member',
+          function_definition: `
 CREATE OR REPLACE FUNCTION public.create_team_member(
   user_id uuid,
   email text,
@@ -80,11 +81,12 @@ $$;
 
     // Creating admin_update_user_roles function
     // @ts-ignore - Supabase types don't recognize our custom functions
-    const { error: updateRolesError } = await supabase.rpc(
-      'create_function_if_not_exists',
+    const { error: updateRolesError } = await supabase.functions.invoke(
+      'create-function-helper',
       {
-        function_name: 'admin_update_user_roles',
-        function_definition: `
+        body: {
+          function_name: 'admin_update_user_roles',
+          function_definition: `
 CREATE OR REPLACE FUNCTION public.admin_update_user_roles(
   user_id uuid,
   new_primary_role text,
@@ -116,8 +118,8 @@ $$;
       console.log("admin_update_user_roles function created successfully");
     }
 
-    // Creating the helper function to create other functions if they don't exist
-    const { error: helperFunctionError } = await supabase.functions.invoke(
+    // Create an edge function to handle function creation
+    const { error: createFunctionHelperError } = await supabase.functions.invoke(
       'create-function-helper',
       {
         body: {
@@ -126,10 +128,10 @@ $$;
       }
     );
 
-    if (helperFunctionError) {
-      console.error("Error creating helper function:", helperFunctionError);
+    if (createFunctionHelperError) {
+      console.error("Error with create-function-helper:", createFunctionHelperError);
     } else {
-      console.log("Helper function created successfully");
+      console.log("create-function-helper invoked successfully");
     }
 
     return true;

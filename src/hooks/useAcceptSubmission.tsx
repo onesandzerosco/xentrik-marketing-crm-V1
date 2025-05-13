@@ -37,7 +37,7 @@ export const useAcceptSubmission = (
       // Generate a UUID for the new creator
       const userId = uuidv4();
       
-      // Process the submission using the CreatorService, passing the generated UUID
+      // Process the submission using the CreatorService
       const creatorId = await CreatorService.acceptOnboardingSubmission(
         selectedSubmission.data, 
         creatorData,
