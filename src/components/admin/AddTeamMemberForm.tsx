@@ -42,6 +42,9 @@ const AddTeamMemberForm: React.FC = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Filter out "Creator" from the displayed options
+  const availableAdditionalRoles = ADDITIONAL_ROLES.filter(role => role !== "Creator");
+  
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -195,7 +198,7 @@ const AddTeamMemberForm: React.FC = () => {
             </p>
             
             <div className="grid grid-cols-2 gap-2 pt-2">
-              {ADDITIONAL_ROLES.map((role) => (
+              {availableAdditionalRoles.map((role) => (
                 <div key={role} className="flex items-center space-x-2">
                   <Checkbox 
                     id={`role-${role}`}

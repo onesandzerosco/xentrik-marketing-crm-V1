@@ -8,9 +8,9 @@ export const ADDITIONAL_ROLES: string[] = [
   "Chatter", 
   "VA", 
   "Admin", 
-  "Developer"
+  "Developer",
+  "Creator"
 ];
 
 // Define exclusive roles that cannot be combined with other roles
 export const EXCLUSIVE_ROLES = ["Admin"];
-
