@@ -32,26 +32,35 @@ export const useTeamMemberForm = () => {
       const userId = uuidv4();
       
       // Call the stored procedure to create a team member with default password and explicit ID
-      const { error } = await supabase.rpc('create_team_member_with_id', {
-        user_id: userId,
-        email: data.email,
-        password: 'XentrikBananas', // Set default password as requested
-        name: data.email.split('@')[0], // Use first part of email as name
-        phone: '', // Empty optional fields
-        telegram: '',
-        roles: data.additionalRoles,
-      });
+      // Use a custom function call since the RPC name might not be in the TypeScript type definition yet
+      const { error } = await supabase.rpc(
+        // @ts-ignore - Ignore type error until types are updated
+        'create_team_member_with_id',
+        {
+          user_id: userId,
+          email: data.email,
+          password: 'XentrikBananas', // Set default password as requested
+          name: data.email.split('@')[0], // Use first part of email as name
+          phone: '', // Empty optional fields
+          telegram: '',
+          roles: data.additionalRoles,
+        }
+      );
 
       if (error) {
         throw new Error(error.message);
       }
 
       // Update the primary role
-      const { error: updateError } = await supabase.rpc('admin_update_user_roles', {
-        user_id: userId,
-        new_primary_role: data.primaryRole,
-        new_additional_roles: data.additionalRoles
-      });
+      const { error: updateError } = await supabase.rpc(
+        // @ts-ignore - Ignore type error until types are updated
+        'admin_update_user_roles',
+        {
+          user_id: userId,
+          new_primary_role: data.primaryRole,
+          new_additional_roles: data.additionalRoles
+        }
+      );
 
       if (updateError) {
         throw new Error(updateError.message);
