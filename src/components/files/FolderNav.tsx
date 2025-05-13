@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { Folder, FolderPlus, X, Check, Trash2, Pencil } from 'lucide-react';
+import { Folder, FolderPlus, Trash2, Pencil } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   AlertDialog,
@@ -55,6 +54,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const { toast } = useToast();
+  
   // Add permission check for showing folder management buttons
   const { canManageFolders } = useFilePermissions();
 
@@ -151,6 +151,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
                         e.stopPropagation();
                         onRenameFolder(folder.id, folder.name);
                       }}
+                      title="Rename folder"
                     >
                       <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
                     </Button>
@@ -166,6 +167,7 @@ export const FolderNav: React.FC<FolderNavProps> = ({
                         e.stopPropagation();
                         setFolderToDelete(folder.id);
                       }}
+                      title="Delete folder"
                     >
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
                     </Button>

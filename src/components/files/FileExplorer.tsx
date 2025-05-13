@@ -31,6 +31,7 @@ interface FileExplorerProps {
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -49,7 +50,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onCreateFolder,
   onAddFilesToFolder,
   onDeleteFolder,
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  onRenameFolder
 }) => {
   const permissions = useFilePermissions();
   const { toast } = useToast();
@@ -87,7 +89,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleDeleteFolder,
     handleEditNote,
     handleSaveNote,
-    handleFileDeleted
+    handleFileDeleted,
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderCurrentName,
+    handleRenameFolderClick,
+    handleRenameFolder
   } = useFileExplorer({
     files,
     availableFolders,
@@ -96,7 +103,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onCreateFolder,
     onAddFilesToFolder,
     onDeleteFolder,
-    onRemoveFromFolder
+    onRemoveFromFolder,
+    onRenameFolder
   });
 
   // Helper function to handle "Add to Folder" button click
@@ -132,6 +140,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onFolderChange={onFolderChange}
           onInitiateNewFolder={() => setIsAddFolderModalOpen(true)}
           onDeleteFolder={handleDeleteFolderClick}
+          onRenameFolder={handleRenameFolderClick}
           selectedFileIds={selectedFileIds}
         />
         
@@ -167,6 +176,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
         isEditNoteModalOpen={isEditNoteModalOpen}
         setIsEditNoteModalOpen={setIsEditNoteModalOpen}
+        isRenameFolderModalOpen={isRenameFolderModalOpen}
+        setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
+        folderCurrentName={folderCurrentName}
         creatorId={creatorId}
         creatorName={creatorName}
         currentFolder={currentFolder}
@@ -183,6 +195,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleCreateFolderSubmit={handleCreateFolderSubmit}
         handleAddToFolderSubmit={handleAddToFolderSubmit}
         handleDeleteFolder={handleDeleteFolder}
+        handleRenameFolder={handleRenameFolder}
         handleSaveNote={handleSaveNote}
       />
     </div>
