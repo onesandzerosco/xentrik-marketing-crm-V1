@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,41 +28,21 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create the user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: data.email,
-        password: 'XentrikBananas',
-        email_confirm: true,
-        user_metadata: {
+      // Use the create_team_member RPC function instead of directly calling auth.admin
+      // This function should be defined in Supabase with service_role permissions
+      const { data: userData, error } = await supabase.rpc(
+        'create_team_member',
+        { 
+          email: data.email, 
+          password: 'XentrikBananas',
           name: data.email.split('@')[0],
-          primary_role: data.primaryRole,
-          additional_roles: data.additionalRoles
-        }
-      });
-
-      if (authError) {
-        throw new Error(authError.message);
-      }
-
-      if (!authData?.user) {
-        throw new Error("Failed to create user account");
-      }
-
-      // Create profile in profiles table using the user ID returned from auth
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          name: data.email.split('@')[0],
-          email: data.email,
           role: data.primaryRole,
-          roles: data.additionalRoles,
-          status: 'Active',
-          created_at: new Date().toISOString()
-        });
+          roles: data.additionalRoles
+        }
+      );
 
-      if (profileError) {
-        throw new Error(profileError.message);
+      if (error) {
+        throw new Error(error.message);
       }
 
       toast({
