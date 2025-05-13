@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +35,8 @@ export const useTeamMemberForm = () => {
         email: data.email,
         password: 'XentrikBananas',
         name: data.email.split('@')[0],
-        roles: [data.primaryRole, ...data.additionalRoles] // Include all roles so the function can sort it out
+        primary_role: data.primaryRole, // Primary role for the role column
+        additional_roles: data.additionalRoles // Additional roles for the roles array
       });
 
       if (userError) {
