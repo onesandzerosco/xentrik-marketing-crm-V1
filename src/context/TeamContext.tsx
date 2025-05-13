@@ -94,10 +94,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: newMember.email,
         password: password,
         name: newMember.name,
-        phone: newMember.phoneNumber,
-        telegram: newMember.telegram,
-        roles: newMember.roles,
-        teams: newMember.teams
+        roles: newMember.roles
       });
       
       if (error) throw error;

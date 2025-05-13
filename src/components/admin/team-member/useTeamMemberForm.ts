@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { teamMemberFormSchema, TeamMemberFormData } from "./schema";
 import { ADDITIONAL_ROLES, EXCLUSIVE_ROLES } from "../users/constants";
-import { v4 as uuidv4 } from "uuid";
 
 export const useTeamMemberForm = () => {
   const { toast } = useToast();
@@ -28,15 +26,15 @@ export const useTeamMemberForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Create an array of all roles, with primary role as the first element
-      // This ensures the primary role will be set correctly in the database function
-      const allRoles = [data.primaryRole, ...data.additionalRoles];
+      console.log("Form data:", data);
       
+      // The primary role should be the 'role' column in profiles
+      // The additional roles should be in the 'roles' array
       const { data: userData, error: userError } = await supabase.rpc('create_team_member', {
         email: data.email,
         password: 'XentrikBananas',
         name: data.email.split('@')[0],
-        roles: allRoles
+        roles: [data.primaryRole, ...data.additionalRoles] // Include all roles so the function can sort it out
       });
 
       if (userError) {
