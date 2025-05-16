@@ -82,7 +82,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
             <div className="grid gap-2">
               <Label htmlFor="categorySelect">Select Category</Label>
               <div className="flex gap-2 items-center">
-                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId} className="flex-1">
+                <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
                   <SelectTrigger id="categorySelect">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -111,7 +111,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
               <div className="grid gap-2">
                 <Label htmlFor="folderSelect">Select Folder</Label>
                 <div className="flex gap-2 items-center">
-                  <Select value={targetFolderId} onValueChange={setTargetFolderId} className="flex-1">
+                  <Select value={targetFolderId} onValueChange={setTargetFolderId}>
                     <SelectTrigger id="folderSelect" disabled={!selectedCategoryId}>
                       <SelectValue placeholder="Select a folder" />
                     </SelectTrigger>

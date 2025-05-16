@@ -1,3 +1,4 @@
+
 export interface CreatorFileType {
   id: string;
   name: string;
@@ -18,7 +19,7 @@ export interface CreatorFileType {
 export interface Folder {
   id: string;
   name: string;
-  categoryId?: string; // ID of the parent category
+  categoryId: string; // Making this required to fix type inconsistencies
 }
 
 export interface Category {

@@ -84,8 +84,6 @@ export const useFileOperations = ({
       // Refetch the files
       onFilesChanged();
       
-      return categoryId;
-      
     } catch (err) {
       console.error("Error in handleCreateCategory:", err);
       toast({
@@ -206,9 +204,7 @@ export const useFileOperations = ({
     
     try {
       // Get all folders in this category
-      const foldersInCategory = setAvailableFolders(prevFolders => 
-        prevFolders.filter(folder => folder.categoryId === categoryId)
-      );
+      const foldersInCategory = availableFolders.filter(folder => folder.categoryId === categoryId);
       
       // First, remove this category from all files that reference it
       const { data: filesInCategory, error: filesError } = await supabase
@@ -229,9 +225,7 @@ export const useFileOperations = ({
         const updatedCategories = (file.categories || []).filter(c => c !== categoryId);
         // Remove folders that belong to this category
         const updatedFolders = (file.folders || []).filter(f => {
-          const folder = setAvailableFolders(prevFolders => 
-            prevFolders.find(prevF => prevF.id === f)
-          );
+          const folder = availableFolders.find(prevF => prevF.id === f);
           return !folder || folder.categoryId !== categoryId;
         });
         
@@ -336,9 +330,7 @@ export const useFileOperations = ({
       }
       
       // Get the categoryId of the folder being deleted
-      const folderToDelete = setAvailableFolders(prevFolders => 
-        prevFolders.find(folder => folder.id === folderId)
-      );
+      const folderToDelete = availableFolders.find(folder => folder.id === folderId);
       
       // Update the UI by removing the folder from availableFolders
       setAvailableFolders(prevFolders => 
@@ -346,7 +338,7 @@ export const useFileOperations = ({
       );
       
       // If the current folder is the one being deleted, switch to 'all' or the parent category
-      if (folderId === folderId) {
+      if (folderId === currentFolder) {
         if (folderToDelete?.categoryId) {
           setCurrentCategory(folderToDelete.categoryId);
         } else {
@@ -444,9 +436,7 @@ export const useFileOperations = ({
       
       // Find the category ID for this folder
       let categoryId = null;
-      const folder = setAvailableFolders(prevFolders => 
-        prevFolders.find(folder => folder.id === folderId)
-      );
+      const folder = availableFolders.find(folder => folder.id === folderId);
       if (folder) {
         categoryId = folder.categoryId;
       }
@@ -476,9 +466,7 @@ export const useFileOperations = ({
         if (categoryId) {
           // Check if this file is in any other folder of this category
           const hasOtherFoldersInCategory = updatedFolders.some(fId => {
-            const f = setAvailableFolders(prevFolders => 
-              prevFolders.find(folder => folder.id === fId)
-            );
+            const f = availableFolders.find(folder => folder.id === fId);
             return f && f.categoryId === categoryId;
           });
           
@@ -536,9 +524,7 @@ export const useFileOperations = ({
       }
       
       // Get the categoryId for this folder
-      const folder = setAvailableFolders(prevFolders => 
-        prevFolders.find(folder => folder.id === folderId)
-      );
+      const folder = availableFolders.find(folder => folder.id === folderId);
       const categoryId = folder?.categoryId;
       
       // Get all files in the old folder
@@ -599,7 +585,7 @@ export const useFileOperations = ({
       // Update the UI by replacing the folder in availableFolders
       setAvailableFolders(prevFolders => 
         prevFolders.map(folder => 
-          folder.id === folderId ? { id: newFolderId, name: newFolderName, categoryId } : folder
+          folder.id === folderId ? { id: newFolderId, name: newFolderName, categoryId: categoryId || '' } : folder
         )
       );
       

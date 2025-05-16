@@ -146,6 +146,15 @@ const CreatorFiles = () => {
     }
   };
 
+  // Wrapper to make the return type of these functions match the expected Promise<void>
+  const createFolderWrapper = async (folderName: string, fileIds: string[], categoryId: string): Promise<void> => {
+    await handleCreateFolder(folderName, fileIds, categoryId);
+  };
+  
+  const createCategoryWrapper = async (categoryName: string): Promise<void> => {
+    await handleCreateCategory(categoryName);
+  };
+
   useEffect(() => {
     if (error) {
       toast({
@@ -184,8 +193,8 @@ const CreatorFiles = () => {
       onUploadComplete={handleFilesUploaded}
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}
-      onCreateFolder={handleCreateFolder}
-      onCreateCategory={handleCreateCategory}
+      onCreateFolder={createFolderWrapper}
+      onCreateCategory={createCategoryWrapper}
       onAddFilesToFolder={handleAddFilesToFolder}
       onDeleteFolder={handleDeleteFolder}
       onDeleteCategory={handleDeleteCategory}
