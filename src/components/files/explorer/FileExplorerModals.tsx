@@ -1,17 +1,11 @@
-
 import React from 'react';
-import { CreatorFileType } from '@/types/fileTypes';
+import { CreatorFileType, Folder } from '@/types/fileTypes';
 import { FileUploadModal } from './FileUploadModal';
 import { CreateFolderModal } from './CreateFolderModal';
 import { AddToFolderModal } from './AddToFolderModal';
 import { DeleteFolderModal } from './DeleteFolderModal';
 import { EditNoteModal } from './EditNoteModal';
 import { RenameFolderModal } from './RenameFolderModal';
-
-interface Folder {
-  id: string;
-  name: string;
-}
 
 interface FileExplorerModalsProps {
   isUploadModalOpen: boolean;
@@ -26,6 +20,16 @@ interface FileExplorerModalsProps {
   setIsEditNoteModalOpen: (open: boolean) => void;
   isRenameFolderModalOpen: boolean;
   setIsRenameFolderModalOpen: (open: boolean) => void;
+  // Nested folder modals
+  isCategoryModalOpen?: boolean;
+  setIsCategoryModalOpen?: (open: boolean) => void;
+  isSubfolderModalOpen?: boolean;
+  setIsSubfolderModalOpen?: (open: boolean) => void;
+  isCategory?: boolean;
+  setIsCategory?: (isCategory: boolean) => void;
+  parentFolderId?: string | null;
+  setParentFolderId?: (parentId: string | null) => void;
+  categories?: Folder[];
   creatorId: string;
   creatorName: string;
   currentFolder: string;
@@ -41,6 +45,7 @@ interface FileExplorerModalsProps {
   setEditingNote: (note: string) => void;
   onUploadComplete?: (fileIds?: string[]) => void;
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
+  handleCreateFolderWithParams?: (folderName: string, fileIds: string[], isCategory: boolean, parentId: string | null) => Promise<void>;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
   handleDeleteFolder: () => void;
   handleRenameFolder: (e: React.FormEvent) => void;
@@ -60,6 +65,17 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   setIsEditNoteModalOpen,
   isRenameFolderModalOpen,
   setIsRenameFolderModalOpen,
+  // Nested folder props
+  isCategoryModalOpen = false,
+  setIsCategoryModalOpen = () => {},
+  isSubfolderModalOpen = false,
+  setIsSubfolderModalOpen = () => {},
+  isCategory = false,
+  setIsCategory = () => {},
+  parentFolderId = null,
+  setParentFolderId = () => {},
+  categories = [],
+  // Other standard props
   creatorId,
   creatorName,
   currentFolder,
@@ -75,11 +91,38 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   setEditingNote,
   onUploadComplete,
   handleCreateFolderSubmit,
+  handleCreateFolderWithParams,
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
   handleSaveNote
 }) => {
+  // Helper function for category creation
+  const handleCreateCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (handleCreateFolderWithParams && newFolderName) {
+      handleCreateFolderWithParams(newFolderName, selectedFileIds, true, null)
+        .then(() => {
+          setIsCategoryModalOpen(false);
+          setNewFolderName('');
+        })
+        .catch(err => console.error("Error creating category:", err));
+    }
+  };
+
+  // Helper function for subfolder creation
+  const handleCreateSubfolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (handleCreateFolderWithParams && newFolderName && parentFolderId) {
+      handleCreateFolderWithParams(newFolderName, selectedFileIds, false, parentFolderId)
+        .then(() => {
+          setIsSubfolderModalOpen(false);
+          setNewFolderName('');
+        })
+        .catch(err => console.error("Error creating subfolder:", err));
+    }
+  };
+
   return (
     <>
       {/* Upload Modal */}
@@ -102,6 +145,33 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         setNewFolderName={setNewFolderName}
         selectedFileIds={selectedFileIds}
         onSubmit={handleCreateFolderSubmit}
+        title="Create New Folder"
+      />
+      
+      {/* Create Category Modal */}
+      <CreateFolderModal
+        isOpen={isCategoryModalOpen}
+        onOpenChange={setIsCategoryModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        selectedFileIds={selectedFileIds}
+        onSubmit={handleCreateCategorySubmit}
+        title="Create New Category"
+        isCategory={true}
+      />
+      
+      {/* Create Subfolder Modal */}
+      <CreateFolderModal
+        isOpen={isSubfolderModalOpen}
+        onOpenChange={setIsSubfolderModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        selectedFileIds={selectedFileIds}
+        onSubmit={handleCreateSubfolderSubmit}
+        parentId={parentFolderId}
+        setParentId={setParentFolderId}
+        categories={categories}
+        title="Create New Subfolder"
       />
       
       {/* Add to Folder Modal */}

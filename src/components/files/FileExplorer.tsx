@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -12,6 +11,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface Folder {
   id: string;
   name: string;
+  parentId?: string | null;
+  isCategory?: boolean;
 }
 
 interface FileExplorerProps {
@@ -27,7 +28,7 @@ interface FileExplorerProps {
   onUploadComplete?: (fileIds?: string[]) => void;
   onUploadStart?: () => void;
   recentlyUploadedIds?: string[];
-  onCreateFolder: (folderName: string, fileIds: string[]) => Promise<void>;
+  onCreateFolder: (folderName: string, fileIds: string[], parentId?: string | null, isCategory?: boolean) => Promise<void>;
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
@@ -94,7 +95,18 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsRenameFolderModalOpen,
     folderCurrentName,
     handleRenameFolderClick,
-    handleRenameFolder
+    handleRenameFolder,
+    isCategory,
+    setIsCategory,
+    parentFolderId,
+    setParentFolderId,
+    isCategoryModalOpen,
+    setIsCategoryModalOpen, 
+    isSubfolderModalOpen,
+    setIsSubfolderModalOpen,
+    handleCreateCategoryClick,
+    handleCreateSubfolderClick,
+    handleCreateFolderWithParams
   } = useFileExplorer({
     files,
     availableFolders,
@@ -125,6 +137,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  // Get all categories for dropdowns
+  const categories = availableFolders.filter(folder => 
+    folder.id !== 'all' && 
+    folder.id !== 'unsorted' && 
+    folder.isCategory === true
+  );
+
   return (
     <div className="w-full max-w-[1400px] mx-auto pb-10">
       <FileExplorerHeader 
@@ -142,6 +161,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onDeleteFolder={handleDeleteFolderClick}
           onRenameFolder={handleRenameFolderClick}
           selectedFileIds={selectedFileIds}
+          onCreateCategory={handleCreateCategoryClick}
+          onCreateSubfolder={handleCreateSubfolderClick}
         />
         
         <FileExplorerContent
@@ -197,6 +218,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleDeleteFolder={handleDeleteFolder}
         handleRenameFolder={handleRenameFolder}
         handleSaveNote={handleSaveNote}
+        isCategoryModalOpen={isCategoryModalOpen}
+        setIsCategoryModalOpen={setIsCategoryModalOpen}
+        isCategory={isCategory}
+        setIsCategory={setIsCategory}
+        isSubfolderModalOpen={isSubfolderModalOpen}
+        setIsSubfolderModalOpen={setIsSubfolderModalOpen}
+        parentFolderId={parentFolderId}
+        setParentFolderId={setParentFolderId}
+        categories={categories}
+        handleCreateFolderWithParams={handleCreateFolderWithParams}
       />
     </div>
   );

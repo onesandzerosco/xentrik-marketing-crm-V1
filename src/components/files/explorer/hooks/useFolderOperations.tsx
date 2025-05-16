@@ -1,13 +1,9 @@
 
 import { useToast } from "@/components/ui/use-toast";
-
-interface Folder {
-  id: string;
-  name: string;
-}
+import { Folder } from '@/types/fileTypes';
 
 interface UseFolderOperationsProps {
-  onCreateFolder: (folderName: string, fileIds: string[]) => Promise<void>;
+  onCreateFolder: (folderName: string, fileIds: string[], parentId?: string | null, isCategory?: boolean) => Promise<void>;
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
@@ -28,13 +24,23 @@ export const useFolderOperations = ({
     e.preventDefault();
     
     // These values will need to be passed in from the parent component
-    const { newFolderName, selectedFileIds, setIsAddFolderModalOpen, setNewFolderName, setSelectedFileIds } = 
+    const { 
+      newFolderName, 
+      selectedFileIds, 
+      setIsAddFolderModalOpen, 
+      setNewFolderName, 
+      setSelectedFileIds,
+      isCategory = false,
+      parentId = null
+    } = 
       e.currentTarget as unknown as {
         newFolderName: string;
         selectedFileIds: string[];
         setIsAddFolderModalOpen: (open: boolean) => void;
         setNewFolderName: (name: string) => void;
         setSelectedFileIds: (ids: string[]) => void;
+        isCategory?: boolean;
+        parentId?: string | null;
       };
     
     if (!newFolderName.trim()) {
@@ -47,13 +53,13 @@ export const useFolderOperations = ({
     }
     
     try {
-      await onCreateFolder(newFolderName, selectedFileIds);
+      await onCreateFolder(newFolderName, selectedFileIds, parentId, isCategory);
       setIsAddFolderModalOpen(false);
       setNewFolderName('');
       setSelectedFileIds([]);
     } catch (error) {
       toast({
-        title: "Error creating folder",
+        title: isCategory ? "Error creating category" : "Error creating folder",
         description: "Failed to create folder",
         variant: "destructive"
       });
@@ -102,7 +108,11 @@ export const useFolderOperations = ({
   };
 
   // Handle the actual folder deletion
-  const handleDeleteFolder = async (folderToDelete: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => {
+  const handleDeleteFolder = async (
+    folderToDelete: string | null, 
+    setIsDeleteFolderModalOpen: (open: boolean) => void, 
+    setFolderToDelete: (id: string | null) => void
+  ) => {
     if (!folderToDelete) return;
     
     try {

@@ -1,19 +1,28 @@
 
 import { useState } from 'react';
-import { CreatorFileType } from '@/types/fileTypes';
+import { Folder } from '@/types/fileTypes';
 
 export const useFolderModals = () => {
+  // Standard folder modals
   const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
   const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
   const [isDeleteFolderModalOpen, setIsDeleteFolderModalOpen] = useState(false);
   const [isRenameFolderModalOpen, setIsRenameFolderModalOpen] = useState(false);
+
+  // Folder modal state
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [folderToRename, setFolderToRename] = useState<string | null>(null);
   const [folderCurrentName, setFolderCurrentName] = useState<string>('');
   const [newFolderName, setNewFolderName] = useState('');
   const [targetFolderId, setTargetFolderId] = useState<string>('');
 
-  // Handler for deleting a folder - Modified to return a Promise
+  // Nested folder state
+  const [isCategory, setIsCategory] = useState(false);
+  const [parentFolderId, setParentFolderId] = useState<string | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isSubfolderModalOpen, setIsSubfolderModalOpen] = useState(false);
+
+  // Handler for deleting a folder
   const handleDeleteFolderClick = async (folderId: string): Promise<void> => {
     setFolderToDelete(folderId);
     setIsDeleteFolderModalOpen(true);
@@ -29,8 +38,24 @@ export const useFolderModals = () => {
     return Promise.resolve();
   };
 
+  // Handler for creating a category
+  const handleCreateCategoryClick = () => {
+    setIsCategory(true);
+    setParentFolderId(null);
+    setNewFolderName('');
+    setIsCategoryModalOpen(true);
+  };
+
+  // Handler for creating a subfolder
+  const handleCreateSubfolderClick = (parentId: string) => {
+    setIsCategory(false);
+    setParentFolderId(parentId);
+    setNewFolderName('');
+    setIsSubfolderModalOpen(true);
+  };
+
   return {
-    // Folder creation modal
+    // Standard folder modals
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -56,6 +81,18 @@ export const useFolderModals = () => {
     setFolderToRename,
     folderCurrentName,
     setFolderCurrentName,
-    handleRenameFolderClick
+    handleRenameFolderClick,
+    
+    // Nested folder state
+    isCategory,
+    setIsCategory,
+    parentFolderId,
+    setParentFolderId,
+    isCategoryModalOpen,
+    setIsCategoryModalOpen,
+    isSubfolderModalOpen,
+    setIsSubfolderModalOpen,
+    handleCreateCategoryClick,
+    handleCreateSubfolderClick
   };
 };
