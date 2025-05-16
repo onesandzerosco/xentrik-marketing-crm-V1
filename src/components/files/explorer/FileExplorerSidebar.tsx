@@ -6,8 +6,6 @@ import { useToast } from "@/components/ui/use-toast";
 interface Folder {
   id: string;
   name: string;
-  parentId?: string | null;
-  isCategory?: boolean;
 }
 
 interface FileExplorerSidebarProps {
@@ -18,8 +16,6 @@ interface FileExplorerSidebarProps {
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRenameFolder: (folderId: string, currentName: string) => Promise<void>;
   selectedFileIds: string[];
-  onCreateCategory?: () => void;
-  onCreateSubfolder?: (parentId: string) => void;
 }
 
 export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
@@ -29,9 +25,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   onInitiateNewFolder,
   onDeleteFolder,
   onRenameFolder,
-  selectedFileIds,
-  onCreateCategory,
-  onCreateSubfolder
+  selectedFileIds
 }) => {
   const { toast } = useToast();
   
@@ -55,8 +49,6 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onInitiateNewFolder={handleInitiateNewFolder}
         onDeleteFolder={onDeleteFolder}
         onRenameFolder={onRenameFolder}
-        onCreateCategory={onCreateCategory}
-        onCreateSubfolder={onCreateSubfolder}
       />
     </div>
   );

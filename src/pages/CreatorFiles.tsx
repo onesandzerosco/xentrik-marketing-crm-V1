@@ -11,7 +11,7 @@ import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/useFileOperations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
-import { CreatorFileType, Folder } from '@/types/fileTypes';
+import { CreatorFileType } from '@/types/fileTypes';
 
 const CreatorFiles = () => {
   const { id } = useParams();

@@ -18,12 +18,10 @@ export interface CreatorFileType {
 export interface Folder {
   id: string;
   name: string;
-  parentId?: string | null; // ID of parent folder, null for root folders
-  isCategory?: boolean; // Flag to indicate if this is a category folder
 }
 
 export interface FileOperationsHandlers {
-  onCreateFolder: (folderName: string, fileIds: string[], parentId?: string | null, isCategory?: boolean) => Promise<void>;
+  onCreateFolder: (folderName: string, fileIds: string[]) => Promise<void>;
   onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;

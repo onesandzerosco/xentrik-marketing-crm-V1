@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -20,14 +19,8 @@ export const useFileOperations = ({
   const { toast } = useToast();
 
   // Updated to accept fileIds for creating a folder with files already in it
-  // Added parentId and isCategory parameters for nested folders
-  const handleCreateFolder = async (
-    folderName: string, 
-    fileIds: string[], 
-    parentId: string | null = null, 
-    isCategory: boolean = false
-  ) => {
-    if (!creatorId || !folderName) {
+  const handleCreateFolder = async (folderName: string, fileIds: string[]) => {
+    if (!creatorId || !folderName || fileIds.length === 0) {
       return;
     }
     
@@ -49,64 +42,54 @@ export const useFileOperations = ({
         // Continue anyway as we're now primarily using the database for folder tracking
       }
       
-      // Add files to the folder if any are selected
-      if (fileIds && fileIds.length > 0) {
-        // Add the selected files to the new folder by updating their folders array
-        for (const fileId of fileIds) {
-          // Get the current file to access its folders array
-          const { data: fileData, error: fetchError } = await supabase
-            .from('media')
-            .select('folders')
-            .eq('id', fileId)
-            .single();
-            
-          if (fetchError) {
-            console.error(`Error fetching file ${fileId}:`, fetchError);
-            continue;
-          }
+      // Add the selected files to the new folder by updating their folders array
+      for (const fileId of fileIds) {
+        // Get the current file to access its folders array
+        const { data: fileData, error: fetchError } = await supabase
+          .from('media')
+          .select('folders')
+          .eq('id', fileId)
+          .single();
           
-          // Create a new folders array with the new folder ID
-          const currentFolders = fileData?.folders || [];
+        if (fetchError) {
+          console.error(`Error fetching file ${fileId}:`, fetchError);
+          continue;
+        }
+        
+        // Create a new folders array with the new folder ID
+        const currentFolders = fileData?.folders || [];
+        
+        // Skip if folder ID is already in the array
+        if (currentFolders.includes(folderId)) {
+          console.log(`File ${fileId} is already in folder ${folderId}`);
+          continue;
+        }
+        
+        const updatedFolders = [...currentFolders, folderId];
+        
+        // Update the file with the new folders array
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ folders: updatedFolders })
+          .eq('id', fileId);
           
-          // Skip if folder ID is already in the array
-          if (currentFolders.includes(folderId)) {
-            console.log(`File ${fileId} is already in folder ${folderId}`);
-            continue;
-          }
-          
-          const updatedFolders = [...currentFolders, folderId];
-          
-          // Update the file with the new folders array
-          const { error: updateError } = await supabase
-            .from('media')
-            .update({ folders: updatedFolders })
-            .eq('id', fileId);
-            
-          if (updateError) {
-            console.error(`Error adding file ${fileId} to folder:`, updateError);
-          }
+        if (updateError) {
+          console.error(`Error adding file ${fileId} to folder:`, updateError);
         }
       }
       
-      // Add the new folder to the available folders with parent info if applicable
+      // Add the new folder to the available folders
       setAvailableFolders(prevFolders => [
         ...prevFolders, 
-        { 
-          id: folderId, 
-          name: folderName, 
-          parentId: parentId,
-          isCategory: isCategory
-        }
+        { id: folderId, name: folderName }
       ]);
       
-      // Switch to the new folder if it's not a category
-      if (!isCategory) {
-        setCurrentFolder(folderId);
-      }
+      // Switch to the new folder
+      setCurrentFolder(folderId);
       
       toast({
-        title: isCategory ? "Category created" : "Folder created",
-        description: `Created ${isCategory ? 'category' : 'folder'}: ${folderName}`,
+        title: "Folder created",
+        description: `Created folder: ${folderName}`,
       });
       
       // Refetch the files
@@ -115,7 +98,7 @@ export const useFileOperations = ({
     } catch (err) {
       console.error("Error in handleCreateFolder:", err);
       toast({
-        title: isCategory ? "Error creating category" : "Error creating folder",
+        title: "Error creating folder",
         description: "Failed to create folder",
         variant: "destructive"
       });
@@ -123,23 +106,10 @@ export const useFileOperations = ({
     }
   };
   
-  // Updated for nested folders: check for child folders before deleting
   const handleDeleteFolder = async (folderId: string): Promise<void> => {
     if (!creatorId || !folderId) return Promise.reject("Missing creator or folder ID");
     
     try {
-      // Check if this folder has child folders
-      const hasChildFolders = await checkForChildFolders(folderId);
-      
-      if (hasChildFolders) {
-        toast({
-          title: "Cannot delete folder",
-          description: "This folder contains subfolders. Please delete all subfolders first.",
-          variant: "destructive"
-        });
-        return Promise.reject("Folder contains subfolders");
-      }
-      
       // First, remove this folder from all files that reference it
       const { data: filesInFolder, error: filesError } = await supabase
         .from('media')
@@ -186,7 +156,7 @@ export const useFileOperations = ({
         prevFolders.filter(folder => folder.id !== folderId)
       );
       
-      // If the current folder is the one being deleted, switch to 'all'
+      // If the current folder is the one being deleted, switch to 'all' instead of 'shared'
       if (folderId === folderId) {
         setCurrentFolder('all');
       }
@@ -205,24 +175,6 @@ export const useFileOperations = ({
     } catch (err) {
       console.error("Error in handleDeleteFolder:", err);
       return Promise.reject(err);
-    }
-  };
-  
-  // Helper function to check if a folder has child folders
-  const checkForChildFolders = async (folderId: string): Promise<boolean> => {
-    try {
-      const hasChildren = await new Promise<boolean>(resolve => {
-        setAvailableFolders(prevFolders => {
-          const childFolders = prevFolders.filter(folder => folder.parentId === folderId);
-          resolve(childFolders.length > 0);
-          return prevFolders;
-        });
-      });
-      
-      return hasChildren;
-    } catch (error) {
-      console.error("Error checking for child folders:", error);
-      return false;
     }
   };
   
@@ -326,7 +278,7 @@ export const useFileOperations = ({
     }
   };
 
-  // Updated rename folder function to preserve parent relationship
+  // New function to rename a folder
   const handleRenameFolder = async (folderId: string, newFolderName: string): Promise<void> => {
     if (!creatorId || !folderId || !newFolderName) {
       return Promise.reject("Missing required parameters");
@@ -346,36 +298,6 @@ export const useFileOperations = ({
         });
         return Promise.resolve();
       }
-      
-      // Get the current folder to preserve parentId and isCategory
-      let parentId = null;
-      let isCategory = false;
-      
-      await new Promise<void>(resolve => {
-        setAvailableFolders(prevFolders => {
-          const folderToRename = prevFolders.find(f => f.id === folderId);
-          if (folderToRename) {
-            parentId = folderToRename.parentId || null;
-            isCategory = folderToRename.isCategory || false;
-          }
-          resolve();
-          return prevFolders;
-        });
-      });
-      
-      // Also update any folders that have this folder as parent
-      await new Promise<void>(resolve => {
-        setAvailableFolders(prevFolders => {
-          const updatedFolders = prevFolders.map(folder => {
-            if (folder.parentId === folderId) {
-              return { ...folder, parentId: newFolderId };
-            }
-            return folder;
-          });
-          resolve();
-          return updatedFolders;
-        });
-      });
       
       // Get all files in the old folder
       const { data: filesInFolder, error: filesError } = await supabase
@@ -437,9 +359,7 @@ export const useFileOperations = ({
       // Update the UI by replacing the folder in availableFolders
       setAvailableFolders(prevFolders => 
         prevFolders.map(folder => 
-          folder.id === folderId ? 
-            { id: newFolderId, name: newFolderName, parentId, isCategory } : 
-            folder
+          folder.id === folderId ? { id: newFolderId, name: newFolderName } : folder
         )
       );
       
