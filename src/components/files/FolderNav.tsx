@@ -254,21 +254,11 @@ export const FolderNav: React.FC<FolderNavProps> = ({
         </Button>
       ))}
       
-      {/* Categories section */}
+      {/* Categories section with their subfolders */}
       {categories.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
           <h3 className="px-3 text-xs font-medium text-muted-foreground mb-2">Categories</h3>
           {categories.map(category => renderFolderItem(category))}
-        </div>
-      )}
-      
-      {/* Orphaned subfolders (those without a parent category) */}
-      {subfolders.filter(folder => !folder.parentId).length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-          <h3 className="px-3 text-xs font-medium text-muted-foreground mb-2">Custom Folders</h3>
-          {subfolders
-            .filter(folder => !folder.parentId)
-            .map(folder => renderFolderItem(folder))}
         </div>
       )}
 
