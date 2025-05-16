@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Folder } from '@/types/fileTypes';
 import { useToast } from '@/components/ui/use-toast';
+import { Folder, Category } from '@/types/fileTypes';
 
 interface UseFolderOperationsProps {
   creatorId?: string;
@@ -11,47 +11,77 @@ interface UseFolderOperationsProps {
 export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => {
   const { toast } = useToast();
   const [availableFolders, setAvailableFolders] = useState<Folder[]>([
-    { id: 'all', name: 'All Files' },
-    { id: 'unsorted', name: 'Unsorted Uploads' }
+    { id: 'all', name: 'All Files', categoryId: 'system' },
+    { id: 'unsorted', name: 'Unsorted Uploads', categoryId: 'system' }
   ]);
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
 
-  // Updated to use a more reliable approach for loading folders
-  const loadCustomFolders = async () => {
+  // Load custom categories and folders
+  const loadCustomCategoriesAndFolders = async () => {
     if (!creatorId) return;
     
     try {
-      // First try to get custom folders from the database
-      const { data: folderData, error: folderError } = await supabase
+      // First, load categories from the file_categories table
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('file_categories')
+        .select('*')
+        .eq('creator_id', creatorId)
+        .order('name', { ascending: true });
+      
+      if (categoriesError) {
+        console.error("Error loading categories:", categoriesError);
+        // Continue anyway to try loading folders
+      } else {
+        // Map the categories to the expected format
+        const customCategories = categoriesData?.map(category => ({
+          id: category.id,
+          name: category.name
+        })) || [];
+        
+        // Set the available categories
+        setAvailableCategories(customCategories);
+      }
+      
+      // Next, try to get folder information from the media table
+      // This approach relies on the folders array in the media table
+      const { data: mediaData, error: mediaError } = await supabase
         .from('media')
-        .select('folders')
+        .select('folders, categories')
         .filter('creator_id', 'eq', creatorId);
       
-      if (folderError) {
-        console.error("Error loading folders from media table:", folderError);
+      if (mediaError) {
+        console.error("Error loading folders from media table:", mediaError);
         // Fall back to listing storage directories
         loadFoldersFromStorage();
         return;
       }
       
-      // Extract unique folder IDs from all files
-      const uniqueFolders = new Set<string>();
-      folderData?.forEach(item => {
+      // Extract unique folder IDs and their associated categories from all files
+      const folderMap = new Map<string, string>(); // Map of folderId -> categoryId
+      
+      mediaData?.forEach(item => {
         if (item.folders && Array.isArray(item.folders)) {
-          item.folders.forEach(folder => {
-            if (folder !== 'all' && folder !== 'unsorted') {
-              uniqueFolders.add(folder);
+          item.folders.forEach(folderId => {
+            if (folderId !== 'all' && folderId !== 'unsorted') {
+              // Find a category for this folder
+              const categoryId = item.categories?.find(cat => 
+                categoriesData?.some(c => c.id === cat)
+              ) || 'uncategorized';
+              
+              folderMap.set(folderId, categoryId);
             }
           });
         }
       });
       
-      // Convert folder IDs to folder objects with proper naming
-      const customFolders = Array.from(uniqueFolders).map(folderId => ({
+      // Convert folder map to folder objects with proper naming and category association
+      const customFolders = Array.from(folderMap.entries()).map(([folderId, categoryId]) => ({
         id: folderId,
-        name: folderId.charAt(0).toUpperCase() + folderId.slice(1).replace(/-/g, ' ')
+        name: folderId.charAt(0).toUpperCase() + folderId.slice(1).replace(/-/g, ' '),
+        categoryId
       }));
       
-      // Set the available folders
+      // Merge with the default folders
       setAvailableFolders(prevFolders => {
         const defaultFolders = prevFolders.filter(f => f.id === 'all' || f.id === 'unsorted');
         return [...defaultFolders, ...customFolders];
@@ -63,7 +93,7 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
       }
       
     } catch (err) {
-      console.error("Error in loadCustomFolders:", err);
+      console.error("Error in loadCustomCategoriesAndFolders:", err);
       // Fall back to listing storage directories
       loadFoldersFromStorage();
     }
@@ -93,7 +123,8 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
         ?.filter(item => item.name !== 'all' && item.name !== 'unsorted')
         ?.map(folder => ({
           id: folder.name,
-          name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1).replace(/-/g, ' ') // Capitalize and format
+          name: folder.name.charAt(0).toUpperCase() + folder.name.slice(1).replace(/-/g, ' '), // Capitalize and format
+          categoryId: 'uncategorized' // Default category for folders found in storage
         })) || [];
       
       // Add the custom folders to the available folders
@@ -102,6 +133,11 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
         return [...defaultFolders, ...customFolders];
       });
       
+      // If we found folders but have no categories, create a default "uncategorized" category
+      if (customFolders.length > 0 && availableCategories.length === 0) {
+        setAvailableCategories([{ id: 'uncategorized', name: 'Uncategorized' }]);
+      }
+      
     } catch (err) {
       console.error("Error in loadFoldersFromStorage:", err);
     }
@@ -109,13 +145,15 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
 
   useEffect(() => {
     if (creatorId) {
-      loadCustomFolders();
+      loadCustomCategoriesAndFolders();
     }
   }, [creatorId]);
 
   return {
     availableFolders,
     setAvailableFolders,
-    loadCustomFolders
+    availableCategories,
+    setAvailableCategories,
+    loadCustomCategoriesAndFolders
   };
 };

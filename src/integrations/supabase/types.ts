@@ -226,6 +226,27 @@ export type Database = {
         }
         Relationships: []
       }
+      file_categories: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       file_uploads: {
         Row: {
           bucket_key: string
@@ -270,6 +291,7 @@ export type Database = {
       media: {
         Row: {
           bucket_key: string
+          categories: string[] | null
           created_at: string
           creator_id: string
           description: string | null
@@ -283,6 +305,7 @@ export type Database = {
         }
         Insert: {
           bucket_key: string
+          categories?: string[] | null
           created_at?: string
           creator_id: string
           description?: string | null
@@ -296,6 +319,7 @@ export type Database = {
         }
         Update: {
           bucket_key?: string
+          categories?: string[] | null
           created_at?: string
           creator_id?: string
           description?: string | null

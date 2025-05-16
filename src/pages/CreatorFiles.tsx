@@ -11,7 +11,7 @@ import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/useFileOperations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
-import { CreatorFileType } from '@/types/fileTypes';
+import { CreatorFileType, Category } from '@/types/fileTypes';
 
 const CreatorFiles = () => {
   const { id } = useParams();
@@ -22,25 +22,37 @@ const CreatorFiles = () => {
   const permissions = useFilePermissions();
   
   const [currentFolder, setCurrentFolder] = useState('all');
+  const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
   
   // Custom hooks
-  const { availableFolders, setAvailableFolders, loadCustomFolders } = useFolderOperations({ 
+  const { 
+    availableFolders, 
+    setAvailableFolders, 
+    availableCategories, 
+    setAvailableCategories,
+    loadCustomCategoriesAndFolders 
+  } = useFolderOperations({ 
     creatorId: creator?.id 
   });
   
   const { 
     handleCreateFolder, 
+    handleCreateCategory,
     handleDeleteFolder, 
+    handleDeleteCategory,
     handleAddFilesToFolder, 
     handleRemoveFromFolder,
-    handleRenameFolder
+    handleRenameFolder,
+    handleRenameCategory
   } = useFileOperations({
     creatorId: creator?.id,
     onFilesChanged: () => refetch(),
     setAvailableFolders,
-    setCurrentFolder
+    setAvailableCategories,
+    setCurrentFolder,
+    setCurrentCategory
   });
   
   // Files fetching hook
@@ -74,18 +86,23 @@ const CreatorFiles = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['creator-files', creator?.id, currentFolder, recentlyUploadedIds, availableFolders],
+    queryKey: ['creator-files', creator?.id, currentFolder, currentCategory, recentlyUploadedIds, availableFolders, availableCategories],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false
   });
 
-  // Filter files based on the current folder
+  // Filter files based on the current folder and category
   const filteredFiles = (() => {
     if (currentFolder === 'all') {
-      // Show all files when 'all' is selected
-      return files;
+      if (currentCategory) {
+        // Show all files in the selected category
+        return files.filter(file => file.categoryRefs?.includes(currentCategory));
+      } else {
+        // Show all files when 'all' is selected and no category filter
+        return files;
+      }
     } else if (currentFolder === 'unsorted') {
       // Show files that aren't in any custom folders (improved logic)
       return files.filter(file => {
@@ -111,14 +128,22 @@ const CreatorFiles = () => {
       // Set the recently uploaded file IDs
       setRecentlyUploadedIds(uploadedFileIds);
     }
-    // Refresh the custom folders list in case any were created during upload
-    loadCustomFolders();
+    // Refresh the custom folders and categories list in case any were created during upload
+    loadCustomCategoriesAndFolders();
     refetch();
   };
   
   // Clear the recently uploaded IDs when a new upload occurs
   const handleNewUploadStart = () => {
     setRecentlyUploadedIds([]);
+  };
+  
+  // Handle category change
+  const handleCategoryChange = (categoryId: string | null) => {
+    setCurrentCategory(categoryId);
+    if (!categoryId) {
+      setCurrentFolder('all'); // Reset to all files when no category is selected
+    }
   };
 
   useEffect(() => {
@@ -151,16 +176,22 @@ const CreatorFiles = () => {
       onRefresh={refetch}
       onFolderChange={setCurrentFolder}
       currentFolder={currentFolder}
+      onCategoryChange={handleCategoryChange}
+      currentCategory={currentCategory}
       availableFolders={availableFolders}
+      availableCategories={availableCategories}
       isCreatorView={isCurrentUserCreator || permissions.canEdit || permissions.canDelete}
       onUploadComplete={handleFilesUploaded}
       onUploadStart={handleNewUploadStart}
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={handleCreateFolder}
+      onCreateCategory={handleCreateCategory}
       onAddFilesToFolder={handleAddFilesToFolder}
       onDeleteFolder={handleDeleteFolder}
+      onDeleteCategory={handleDeleteCategory}
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
+      onRenameCategory={handleRenameCategory}
     />
   );
 };

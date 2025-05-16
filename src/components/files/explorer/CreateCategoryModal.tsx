@@ -5,28 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface CreateFolderModalProps {
+interface CreateCategoryModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  newFolderName: string;
-  setNewFolderName: (name: string) => void;
-  selectedFileIds: string[];
-  categoryId: string;
+  newCategoryName: string;
+  setNewCategoryName: (name: string) => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
-export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
+export const CreateCategoryModal: React.FC<CreateCategoryModalProps> = ({
   isOpen,
   onOpenChange,
-  newFolderName,
-  setNewFolderName,
-  selectedFileIds,
-  categoryId,
+  newCategoryName,
+  setNewCategoryName,
   onSubmit
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,23 +29,21 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogTitle>Create New Category</DialogTitle>
           <DialogDescription>
-            {selectedFileIds.length > 0 
-              ? `Create a new folder and add ${selectedFileIds.length} selected files` 
-              : 'Create a new folder for organizing your files'}
+            Create a new category for organizing your folders and files
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="py-4">
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="folderName">Folder Name</Label>
+              <Label htmlFor="categoryName">Category Name</Label>
               <Input
-                id="folderName"
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
+                id="categoryName"
+                placeholder="Enter category name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
                 autoFocus
               />
             </div>
@@ -64,8 +53,8 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!newFolderName.trim()}>
-              Create Folder
+            <Button type="submit" disabled={!newCategoryName.trim()}>
+              Create Category
             </Button>
           </DialogFooter>
         </form>

@@ -1,37 +1,86 @@
 
 import { useToast } from "@/components/ui/use-toast";
+import { Category } from '@/types/fileTypes';
 
 interface Folder {
   id: string;
   name: string;
+  categoryId?: string;
 }
 
 interface UseFolderOperationsProps {
-  onCreateFolder: (folderName: string, fileIds: string[]) => Promise<void>;
-  onAddFilesToFolder: (fileIds: string[], targetFolderId: string) => Promise<void>;
+  onCreateFolder: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
+  onCreateCategory: (categoryName: string) => Promise<void>;
+  onAddFilesToFolder: (fileIds: string[], targetFolderId: string, categoryId: string) => Promise<void>;
   onDeleteFolder: (folderId: string) => Promise<void>;
+  onDeleteCategory: (categoryId: string) => Promise<void>;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
+  onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
   onRefresh: () => void;
 }
 
 export const useFolderOperations = ({
   onCreateFolder,
+  onCreateCategory,
   onAddFilesToFolder,
   onDeleteFolder,
+  onDeleteCategory,
+  onRemoveFromFolder,
   onRenameFolder,
+  onRenameCategory,
   onRefresh
 }: UseFolderOperationsProps) => {
   const { toast } = useToast();
+
+  // Handler for creating a new category
+  const handleCreateCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // These values will need to be passed in from the parent component
+    const { newCategoryName, setIsAddCategoryModalOpen, setNewCategoryName } = 
+      e.currentTarget as unknown as {
+        newCategoryName: string;
+        setIsAddCategoryModalOpen: (open: boolean) => void;
+        setNewCategoryName: (name: string) => void;
+      };
+    
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Category name required",
+        description: "Please enter a valid category name",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await onCreateCategory(newCategoryName);
+      setIsAddCategoryModalOpen(false);
+      setNewCategoryName('');
+      toast({
+        title: "Category created",
+        description: `Successfully created category: ${newCategoryName}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error creating category",
+        description: "Failed to create category",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Handler for creating a new folder
   const handleCreateFolderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // These values will need to be passed in from the parent component
-    const { newFolderName, selectedFileIds, setIsAddFolderModalOpen, setNewFolderName, setSelectedFileIds } = 
+    const { newFolderName, selectedFileIds, categoryId, setIsAddFolderModalOpen, setNewFolderName, setSelectedFileIds } = 
       e.currentTarget as unknown as {
         newFolderName: string;
         selectedFileIds: string[];
+        categoryId: string;
         setIsAddFolderModalOpen: (open: boolean) => void;
         setNewFolderName: (name: string) => void;
         setSelectedFileIds: (ids: string[]) => void;
@@ -46,11 +95,24 @@ export const useFolderOperations = ({
       return;
     }
     
+    if (!categoryId) {
+      toast({
+        title: "Category required",
+        description: "Please select a category for the new folder",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
-      await onCreateFolder(newFolderName, selectedFileIds);
+      await onCreateFolder(newFolderName, selectedFileIds, categoryId);
       setIsAddFolderModalOpen(false);
       setNewFolderName('');
       setSelectedFileIds([]);
+      toast({
+        title: "Folder created",
+        description: `Successfully created folder: ${newFolderName}`,
+      });
     } catch (error) {
       toast({
         title: "Error creating folder",
@@ -65,26 +127,27 @@ export const useFolderOperations = ({
     e.preventDefault();
     
     // These values will need to be passed in from the parent component
-    const { targetFolderId, selectedFileIds, setIsAddToFolderModalOpen, setTargetFolderId, setSelectedFileIds } = 
+    const { targetFolderId, targetCategoryId, selectedFileIds, setIsAddToFolderModalOpen, setTargetFolderId, setSelectedFileIds } = 
       e.currentTarget as unknown as {
         targetFolderId: string;
+        targetCategoryId: string;
         selectedFileIds: string[];
         setIsAddToFolderModalOpen: (open: boolean) => void;
         setTargetFolderId: (id: string) => void;
         setSelectedFileIds: (ids: string[]) => void;
       };
     
-    if (!targetFolderId || selectedFileIds.length === 0) {
+    if (!targetFolderId || !targetCategoryId || selectedFileIds.length === 0) {
       toast({
         title: "Selection required",
-        description: "Please select a folder and at least one file",
+        description: "Please select a category, folder, and at least one file",
         variant: "destructive"
       });
       return;
     }
     
     try {
-      await onAddFilesToFolder(selectedFileIds, targetFolderId);
+      await onAddFilesToFolder(selectedFileIds, targetFolderId, targetCategoryId);
       setIsAddToFolderModalOpen(false);
       setTargetFolderId('');
       toast({
@@ -109,10 +172,35 @@ export const useFolderOperations = ({
       await onDeleteFolder(folderToDelete);
       setFolderToDelete(null);
       setIsDeleteFolderModalOpen(false);
+      toast({
+        title: "Folder deleted",
+        description: "Folder has been deleted successfully",
+      });
     } catch (error) {
       toast({
         title: "Error deleting folder",
         description: "Failed to delete folder",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle the actual category deletion
+  const handleDeleteCategory = async (categoryToDelete: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => {
+    if (!categoryToDelete) return;
+    
+    try {
+      await onDeleteCategory(categoryToDelete);
+      setCategoryToDelete(null);
+      setIsDeleteCategoryModalOpen(false);
+      toast({
+        title: "Category deleted",
+        description: "Category and its folders have been deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error deleting category",
+        description: "Failed to delete category",
         variant: "destructive"
       });
     }
@@ -131,6 +219,10 @@ export const useFolderOperations = ({
       await onRenameFolder(folderToRename, newFolderName);
       setFolderToRename(null);
       setIsRenameFolderModalOpen(false);
+      toast({
+        title: "Folder renamed",
+        description: `Folder renamed to "${newFolderName}" successfully`,
+      });
     } catch (error) {
       toast({
         title: "Error renaming folder",
@@ -140,10 +232,39 @@ export const useFolderOperations = ({
     }
   };
 
+  // Handle the actual category renaming
+  const handleRenameCategory = async (
+    categoryToRename: string | null, 
+    newCategoryName: string,
+    setIsRenameCategoryModalOpen: (open: boolean) => void, 
+    setCategoryToRename: (id: string | null) => void
+  ) => {
+    if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) return;
+    
+    try {
+      await onRenameCategory(categoryToRename, newCategoryName);
+      setCategoryToRename(null);
+      setIsRenameCategoryModalOpen(false);
+      toast({
+        title: "Category renamed",
+        description: `Category renamed to "${newCategoryName}" successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error renaming category",
+        description: "Failed to rename category",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
+    handleCreateCategorySubmit,
     handleCreateFolderSubmit,
     handleAddToFolderSubmit,
     handleDeleteFolder,
-    handleRenameFolder
+    handleDeleteCategory,
+    handleRenameFolder,
+    handleRenameCategory
   };
 };
