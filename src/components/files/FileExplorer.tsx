@@ -2,10 +2,9 @@
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
-import { FileExplorerHeader } from './explorer/FileExplorerHeader';
-import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
-import { FileExplorerContent } from './explorer/FileExplorerContent';
+import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { FileExplorerModals } from './explorer/FileExplorerModals';
+import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -175,135 +174,118 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsUploadModalOpen(true);
   };
 
-  // Fix the function signature mismatch by wrapping the original function
+  // Create a wrapper function to fix the signature mismatch
   const handleCreateNewCategoryWrapper = () => {
     handleCreateNewCategory();
   };
   
-  // Fix the function signature mismatch for onInitiateNewFolder
-  // Create a wrapper that ignores the categoryId parameter
+  // Create a wrapper function that doesn't need parameters
   const handleInitiateNewFolderWrapper = () => {
     handleInitiateNewFolder(selectedCategoryForNewFolder);
   };
 
+  // Context value
+  const contextValue = {
+    selectedFileIds,
+    setSelectedFileIds,
+    currentFolder,
+    currentCategory,
+    handleAddToFolderClick,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder: handleInitiateNewFolderWrapper,
+    creatorName,
+    creatorId,
+    isCreatorView,
+    availableFolders,
+    availableCategories,
+    onRemoveFromFolder,
+    viewMode,
+    isLoading
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <FileExplorerHeader 
-        creatorName={creatorName}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        onUploadClick={handleUploadClick}
-        isCreatorView={isCreatorView}
-        onRefresh={onRefresh}
-        selectedFileIds={selectedFileIds}
-        onAddToFolderClick={handleAddToFolderClick}
-      />
-      
-      <div className="flex flex-1 overflow-hidden">
-        <FileExplorerSidebar 
-          categories={availableCategories}
-          folders={availableFolders}
-          currentCategory={currentCategory}
-          currentFolder={currentFolder}
-          onCategoryChange={onCategoryChange}
-          onFolderChange={onFolderChange}
-          onInitiateNewCategory={handleInitiateNewCategory}
-          onInitiateNewFolder={handleInitiateNewFolder}
-          onDeleteCategory={handleDeleteCategoryClick}
-          onRenameCategory={handleRenameCategoryClick}
-          onDeleteFolder={handleDeleteFolderClick}
-          onRenameFolder={handleRenameFolderClick}
-          selectedFileIds={selectedFileIds}
-        />
-        
-        <FileExplorerContent 
-          isLoading={isLoading}
+    <FileExplorerProvider value={contextValue}>
+      <div className="flex flex-col h-[calc(100vh-4rem)]">
+        <FileExplorerLayout 
+          filteredFiles={filteredFiles}
           viewMode={viewMode}
+          setViewMode={setViewMode}
+          onUploadClick={handleUploadClick}
+          onRefresh={onRefresh}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
-          filteredFiles={filteredFiles}
-          isCreatorView={isCreatorView}
-          onFilesChanged={onRefresh}
-          onFileDeleted={onRefresh}
-          recentlyUploadedIds={recentlyUploadedIds}
-          selectedFileIds={selectedFileIds}
-          setSelectedFileIds={setSelectedFileIds}
-          onAddToFolderClick={handleAddToFolderClick}
-          currentFolder={currentFolder}
-          currentCategory={currentCategory}
-          onCreateFolder={handleInitiateNewFolder}
-          availableFolders={availableFolders}
-          onRemoveFromFolder={onRemoveFromFolder}
+          onFolderChange={onFolderChange}
           onEditNote={handleEditNote}
+          onCreateFolder={handleInitiateNewFolderWrapper}
+        />
+        
+        <FileExplorerModals 
+          // Upload modal
+          isUploadModalOpen={isUploadModalOpen}
+          setIsUploadModalOpen={setIsUploadModalOpen}
+          
+          // Category modals
+          isAddCategoryModalOpen={isAddCategoryModalOpen}
+          setIsAddCategoryModalOpen={setIsAddCategoryModalOpen}
+          isDeleteCategoryModalOpen={isDeleteCategoryModalOpen}
+          setIsDeleteCategoryModalOpen={setIsDeleteCategoryModalOpen}
+          isRenameCategoryModalOpen={isRenameCategoryModalOpen}
+          setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
+          newCategoryName={newCategoryName}
+          setNewCategoryName={setNewCategoryName}
+          categoryCurrentName={categoryCurrentName || ''}
+          
+          // Folder modals
+          isAddFolderModalOpen={isAddFolderModalOpen}
+          setIsAddFolderModalOpen={setIsAddFolderModalOpen}
+          isAddToFolderModalOpen={isAddToFolderModalOpen}
+          setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
+          isDeleteFolderModalOpen={isDeleteFolderModalOpen}
+          setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
+          isRenameFolderModalOpen={isRenameFolderModalOpen}
+          setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
+          isEditNoteModalOpen={isEditNoteModalOpen}
+          setIsEditNoteModalOpen={setIsEditNoteModalOpen}
+          
+          // Common props
+          creatorId={creatorId}
+          creatorName={creatorName}
+          currentFolder={currentFolder}
+          newFolderName={newFolderName}
+          setNewFolderName={setNewFolderName}
+          folderCurrentName={folderCurrentName || ''}
+          selectedFileIds={selectedFileIds}
+          
+          // Selection state
+          targetFolderId={targetFolderId}
+          setTargetFolderId={setTargetFolderId}
+          targetCategoryId={targetCategoryId}
+          setTargetCategoryId={setTargetCategoryId}
+          selectedCategoryForNewFolder={selectedCategoryForNewFolder}
+          
+          // Data
+          customFolders={customFolders}
+          categories={availableCategories}
+          editingFile={editingFile}
+          editingNote={editingNote}
+          setEditingNote={setEditingNote}
+          
+          // Callbacks
+          onUploadComplete={onUploadComplete}
+          handleCreateCategorySubmit={handleCreateCategorySubmit}
+          handleCreateFolderSubmit={handleCreateFolderSubmit}
+          handleAddToFolderSubmit={handleAddToFolderSubmit}
+          handleDeleteCategory={handleDeleteCategory}
+          handleDeleteFolder={handleDeleteFolder}
+          handleRenameCategory={handleRenameCategory}
+          handleRenameFolder={handleRenameFolder}
+          handleSaveNote={handleSaveNote}
+          onCreateNewCategory={handleCreateNewCategoryWrapper}
+          onCreateNewFolder={handleCreateNewFolder}
         />
       </div>
-      
-      <FileExplorerModals 
-        // Upload modal
-        isUploadModalOpen={isUploadModalOpen}
-        setIsUploadModalOpen={setIsUploadModalOpen}
-        
-        // Category modals
-        isAddCategoryModalOpen={isAddCategoryModalOpen}
-        setIsAddCategoryModalOpen={setIsAddCategoryModalOpen}
-        isDeleteCategoryModalOpen={isDeleteCategoryModalOpen}
-        setIsDeleteCategoryModalOpen={setIsDeleteCategoryModalOpen}
-        isRenameCategoryModalOpen={isRenameCategoryModalOpen}
-        setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        categoryCurrentName={categoryCurrentName || ''}
-        
-        // Folder modals
-        isAddFolderModalOpen={isAddFolderModalOpen}
-        setIsAddFolderModalOpen={setIsAddFolderModalOpen}
-        isAddToFolderModalOpen={isAddToFolderModalOpen}
-        setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
-        isDeleteFolderModalOpen={isDeleteFolderModalOpen}
-        setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
-        isRenameFolderModalOpen={isRenameFolderModalOpen}
-        setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
-        isEditNoteModalOpen={isEditNoteModalOpen}
-        setIsEditNoteModalOpen={setIsEditNoteModalOpen}
-        
-        // Common props
-        creatorId={creatorId}
-        creatorName={creatorName}
-        currentFolder={currentFolder}
-        newFolderName={newFolderName}
-        setNewFolderName={setNewFolderName}
-        folderCurrentName={folderCurrentName || ''}
-        selectedFileIds={selectedFileIds}
-        
-        // Selection state
-        targetFolderId={targetFolderId}
-        setTargetFolderId={setTargetFolderId}
-        targetCategoryId={targetCategoryId}
-        setTargetCategoryId={setTargetCategoryId}
-        selectedCategoryForNewFolder={selectedCategoryForNewFolder}
-        
-        // Data
-        customFolders={customFolders}
-        categories={availableCategories}
-        editingFile={editingFile}
-        editingNote={editingNote}
-        setEditingNote={setEditingNote}
-        
-        // Callbacks
-        onUploadComplete={onUploadComplete}
-        handleCreateCategorySubmit={handleCreateCategorySubmit}
-        handleCreateFolderSubmit={handleCreateFolderSubmit}
-        handleAddToFolderSubmit={handleAddToFolderSubmit}
-        handleDeleteCategory={handleDeleteCategory}
-        handleDeleteFolder={handleDeleteFolder}
-        handleRenameCategory={handleRenameCategory}
-        handleRenameFolder={handleRenameFolder}
-        handleSaveNote={handleSaveNote}
-        onCreateNewCategory={handleCreateNewCategoryWrapper}
-        onCreateNewFolder={handleCreateNewFolder}
-      />
-    </div>
+    </FileExplorerProvider>
   );
 };

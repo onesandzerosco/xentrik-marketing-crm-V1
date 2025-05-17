@@ -8,7 +8,7 @@ import { CreatorFileType } from '@/types/fileTypes';
 interface EditNoteModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  file?: CreatorFileType | null; // Changed from editingFile to file and made it optional
+  file: CreatorFileType | null; // Changed to match expected prop type
   note: string;
   setNote: (note: string) => void;
   onSave: () => void;
