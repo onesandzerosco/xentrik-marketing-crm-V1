@@ -53,11 +53,9 @@ export const FileExplorerWrapper: React.FC<FileExplorerWrapperProps> = (props) =
     onRenameCategory
   });
 
-  // Get actions from the wrapper
-  const { handleUploadClick } = ExplorerActionsWrapper({
-    explorerState,
-    onUploadStart
-  });
+  // Get actions from the wrapper component
+  const actionWrapper = ExplorerActionsWrapper({ explorerState, onUploadStart }) as any;
+  const handleUploadClick = actionWrapper.handleUploadClick;
 
   // Context value for the provider
   const contextValue = {

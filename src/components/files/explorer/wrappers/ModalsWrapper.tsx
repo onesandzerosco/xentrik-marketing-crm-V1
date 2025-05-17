@@ -47,6 +47,8 @@ export const ModalsWrapper: React.FC<ModalWrapperProps> = ({
     setIsRenameFolderModalOpen,
     folderCurrentName,
     setFolderCurrentName,
+    folderToRename,
+    setFolderToRename,
     
     // File notes
     isEditNoteModalOpen,
@@ -133,6 +135,8 @@ export const ModalsWrapper: React.FC<ModalWrapperProps> = ({
       isRenameFolderModalOpen={isRenameFolderModalOpen}
       setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
       folderCurrentName={folderCurrentName || ''}
+      folderToRename={folderToRename}
+      setFolderToRename={setFolderToRename}
       
       // File notes
       isEditNoteModalOpen={isEditNoteModalOpen}

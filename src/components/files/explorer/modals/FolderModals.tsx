@@ -31,6 +31,8 @@ interface FolderModalsProps {
   isRenameFolderModalOpen: boolean;
   setIsRenameFolderModalOpen: (open: boolean) => void;
   folderCurrentName: string;
+  folderToRename: string | null; // Added missing prop
+  setFolderToRename: (id: string | null) => void; // Added missing prop
   
   // Data
   selectedFileIds: string[];
@@ -45,7 +47,7 @@ interface FolderModalsProps {
   
   // Callbacks
   onCreateNewCategory?: () => void;
-  onCreateNewFolder?: () => void;  // Added this prop
+  onCreateNewFolder?: () => void;
 }
 
 export const FolderModals: React.FC<FolderModalsProps> = ({
@@ -66,6 +68,8 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   isRenameFolderModalOpen,
   setIsRenameFolderModalOpen,
   folderCurrentName,
+  folderToRename, // Added missing prop
+  setFolderToRename, // Added missing prop
   selectedFileIds,
   customFolders,
   categories,
@@ -76,8 +80,6 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   onCreateNewCategory,
   onCreateNewFolder
 }) => {
-  const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
-  const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
   const [newFolderNameForRename, setNewFolderNameForRename] = React.useState<string>('');
   
   useEffect(() => {
@@ -121,7 +123,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         isOpen={isDeleteFolderModalOpen}
         onOpenChange={(open) => {
           setIsDeleteFolderModalOpen(open);
-          if (!open) setFolderToDelete(null);
+          if (!open) setFolderToRename(null);
         }}
         title="Delete Folder"
         description="Are you sure you want to delete this folder? Files will be moved to Unsorted Uploads."

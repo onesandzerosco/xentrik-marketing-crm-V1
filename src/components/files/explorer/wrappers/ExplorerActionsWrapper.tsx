@@ -18,7 +18,9 @@ export const ExplorerActionsWrapper: React.FC<ExplorerActionsWrapperProps> = ({
     explorerState.setIsUploadModalOpen(true);
   };
 
+  // Return the functions wrapped in a context object
+  // This component doesn't render anything visual
   return {
     handleUploadClick
-  };
+  } as unknown as React.ReactElement;
 };

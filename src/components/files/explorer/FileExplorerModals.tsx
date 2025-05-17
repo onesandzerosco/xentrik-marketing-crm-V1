@@ -120,6 +120,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = (props) => 
         isRenameFolderModalOpen={props.isRenameFolderModalOpen}
         setIsRenameFolderModalOpen={props.setIsRenameFolderModalOpen}
         folderCurrentName={props.folderCurrentName || ''}
+        folderToRename={props.folderToRename}
+        setFolderToRename={props.setFolderToRename}
         selectedFileIds={props.selectedFileIds}
         customFolders={props.availableFolders.filter(f => f.id !== 'all' && f.id !== 'unsorted')}
         categories={props.availableCategories}
