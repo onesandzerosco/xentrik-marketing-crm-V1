@@ -2,19 +2,22 @@
 import React from 'react';
 import FileUploadProgress from './upload/FileUploadProgress';
 import { useFileUploadHandler } from './upload/FileUploadHandler';
+import { Category } from '@/types/fileTypes';
 
 interface FileUploaderProps {
   id: string;
   creatorId: string;
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
   currentFolder: string;
+  availableCategories?: Category[];
 }
 
 const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({ 
   id, 
   creatorId, 
   onUploadComplete,
-  currentFolder
+  currentFolder,
+  availableCategories = []
 }) => {
   const {
     isUploading,
@@ -27,7 +30,8 @@ const FileUploaderWithProgress: React.FC<FileUploaderProps> = ({
   } = useFileUploadHandler({ 
     creatorId, 
     onUploadComplete, 
-    currentFolder 
+    currentFolder,
+    availableCategories
   });
 
   return (

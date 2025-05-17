@@ -2,7 +2,7 @@
 import { useFileUploader } from "@/hooks/useFileUploader";
 import { useZipProcessor } from "@/hooks/useZipProcessor";
 import { useFileProcessor } from "@/hooks/useFileProcessor";
-import { useFileValidation, FileValidationResult } from "./FileValidation";
+import { useFileValidation } from "./FileValidation";
 import { useToast } from "@/components/ui/use-toast";
 import { FileUploadStatus } from "@/hooks/useFileUploader";
 import { Category } from "@/types/fileTypes";
@@ -92,7 +92,9 @@ export const useFileUploadHandler = ({
       }
       
       // Reset the input
-      e.target.value = '';
+      if (e.target.value) {
+        e.target.value = '';
+      }
       
       // Call the callback if it exists
       if (onUploadComplete && uploadedFileIds.length > 0) {
@@ -160,6 +162,8 @@ export const useFileUploadHandler = ({
     for (const file of regularFiles) {
       // Skip files that are too large (already warned)
       if (file.size > MAX_FILE_SIZE_GB * 1024 * 1024 * 1024) continue;
+      
+      console.log(`Processing file ${file.name} for folder: ${currentFolder}`);
       
       const fileId = await processRegularFile(
         file,

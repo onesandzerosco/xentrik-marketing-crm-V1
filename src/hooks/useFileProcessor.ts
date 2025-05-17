@@ -1,107 +1,111 @@
 
-import { useCallback } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getUniqueFileName } from '@/utils/fileUtils';
+import { 
+  getUniqueFileName,
+  isVideoFile,
+  generateVideoThumbnail,
+  uploadFileInChunks,
+} from '@/utils/fileUtils';
 
 export const useFileProcessor = () => {
-  const processRegularFile = useCallback(async (
+  // Process a regular (non-zip) file upload
+  const processRegularFile = async (
     file: File,
     creatorId: string,
     currentFolder: string,
-    updateFileProgress: (fileName: string, progress: number) => void,
-    updateFileStatus: (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void
+    onComplete: (fileName: string) => void,
+    onStatus: (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void,
   ): Promise<string | null> => {
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const uniqueSafeName = await getUniqueFileName(
-      safeName, 
-      currentFolder, 
-      creatorId, 
-      'raw_uploads',
-      supabase
-    );
-    
-    const filePath = `${creatorId}/${uniqueSafeName}`;
-    
-    // Custom upload with progress tracking
-    const xhr = new XMLHttpRequest();
-    
-    xhr.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = (event.loaded / event.total) * 100;
-        updateFileProgress(file.name, percentComplete);
-      }
-    });
-    
-    // Create a promise to track the XHR request
-    const uploadPromise = new Promise<string | null>((resolve, reject) => {
-      xhr.onload = async function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          updateFileStatus(file.name, 'complete');
-          
-          // Add folder reference
-          let folderArray: string[] = [];
-          if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
-            folderArray = [currentFolder];
-          }
-          
-          // Store metadata in media table
-          const { data: mediaRecord, error: mediaError } = await supabase
-            .from('media')
-            .insert({
-              creator_id: creatorId,
-              bucket_key: filePath,
-              filename: uniqueSafeName,
-              mime: file.type,
-              file_size: file.size,
-              status: 'complete',
-              folders: folderArray
-            })
-            .select('id');
-            
-          if (mediaError) {
-            updateFileStatus(file.name, 'error', 'Failed to create media record');
-            reject(mediaError);
-            return null;
-          } else if (mediaRecord && mediaRecord[0]) {
-            resolve(mediaRecord[0].id);
-            return mediaRecord[0].id;
-          } else {
-            resolve(null);
-            return null;
-          }
-        } else {
-          updateFileStatus(file.name, 'error', `Upload failed: ${xhr.statusText}`);
-          reject(new Error(`Upload failed: ${xhr.statusText}`));
-          return null;
+    try {
+      onStatus(file.name, 'uploading');
+
+      // Generate a thumbnail for video files
+      let thumbnailUrl: string | null = null;
+      if (isVideoFile(file.name)) {
+        try {
+          thumbnailUrl = await generateVideoThumbnail(file);
+        } catch (error) {
+          console.error('Error generating video thumbnail:', error);
         }
-      };
+      }
+
+      // Get a unique file name to prevent collisions
+      const uniqueFileName = await getUniqueFileName(
+        file.name, 
+        `${creatorId}/${currentFolder || 'unsorted'}`, 
+        creatorId,
+        'raw_uploads',
+        supabase
+      );
       
-      xhr.onerror = function() {
-        updateFileStatus(file.name, 'error', 'Network error during upload');
-        reject(new Error('Network error during upload'));
-      };
-    });
-    
-    // Get signed URL and upload
-    const { data: signedUrlData } = await supabase.storage
-      .from('raw_uploads')
-      .createSignedUploadUrl(filePath);
+      // Construct the file path for storage
+      const filePath = `${creatorId}/${currentFolder || 'unsorted'}/${uniqueFileName}`;
       
-    if (signedUrlData) {
-      xhr.open('PUT', signedUrlData.signedUrl);
-      xhr.setRequestHeader('Content-Type', file.type);
-      xhr.send(file);
-      
-      try {
-        return await uploadPromise;
-      } catch (error) {
-        console.error(`Error uploading ${file.name}:`, error);
+      // Upload the file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('raw_uploads')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError);
+        onStatus(file.name, 'error', `Upload failed: ${uploadError.message}`);
         return null;
       }
-    }
-    
-    return null;
-  }, []);
 
-  return { processRegularFile };
+      // Create a public URL for the uploaded file
+      const { data: publicUrlData } = await supabase.storage
+        .from('raw_uploads')
+        .getPublicUrl(filePath);
+      
+      if (!publicUrlData?.publicUrl) {
+        console.error('Error getting public URL for file');
+        onStatus(file.name, 'error', 'Failed to get public URL for uploaded file');
+        return null;
+      }
+
+      // Save the file metadata to the database
+      const folderList = currentFolder === 'all' || currentFolder === 'unsorted' 
+        ? [currentFolder]
+        : ['all', currentFolder];
+      
+      console.log(`Saving file to database with folders: ${folderList} and current folder: ${currentFolder}`);
+      
+      const { data: fileData, error: fileError } = await supabase
+        .from('media')
+        .insert({
+          creator_id: creatorId,
+          filename: uniqueFileName,
+          file_size: file.size,
+          mime: file.type,
+          bucket_key: filePath,
+          folders: folderList,
+          thumbnail_url: thumbnailUrl
+        })
+        .select('id')
+        .single();
+
+      if (fileError) {
+        console.error('Error saving file metadata:', fileError);
+        onStatus(file.name, 'error', `Database error: ${fileError.message}`);
+        return null;
+      }
+
+      onStatus(file.name, 'complete');
+      onComplete(file.name);
+      
+      return fileData.id;
+    } catch (error) {
+      console.error('Error processing file:', error);
+      onStatus(file.name, 'error', error instanceof Error ? error.message : 'Unknown error');
+      return null;
+    }
+  };
+
+  return {
+    processRegularFile
+  };
 };
