@@ -1,18 +1,7 @@
-
 import React from 'react';
 import { CategorySidebar } from './CategorySidebar';
 import { useToast } from "@/components/ui/use-toast";
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface Folder {
-  id: string;
-  name: string;
-  categoryId: string;
-}
+import { Folder, Category } from '@/types/fileTypes';
 
 interface FileExplorerSidebarProps {
   categories: Category[];

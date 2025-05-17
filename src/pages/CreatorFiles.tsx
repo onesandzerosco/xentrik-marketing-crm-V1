@@ -11,7 +11,7 @@ import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/useFileOperations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
-import { CreatorFileType, Category } from '@/types/fileTypes';
+import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 
 const CreatorFiles = () => {
   const { id } = useParams();
@@ -149,10 +149,12 @@ const CreatorFiles = () => {
   // Wrapper to make the return type of these functions match the expected Promise<void>
   const createFolderWrapper = async (folderName: string, fileIds: string[], categoryId: string): Promise<void> => {
     await handleCreateFolder(folderName, fileIds, categoryId);
+    return Promise.resolve();
   };
   
   const createCategoryWrapper = async (categoryName: string): Promise<void> => {
     await handleCreateCategory(categoryName);
+    return Promise.resolve();
   };
 
   useEffect(() => {

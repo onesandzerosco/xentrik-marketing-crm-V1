@@ -7,17 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Plus } from 'lucide-react';
-
-interface Folder {
-  id: string;
-  name: string;
-  categoryId: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { Folder, Category } from '@/types/fileTypes';
 
 interface AddToFolderModalProps {
   isOpen: boolean;

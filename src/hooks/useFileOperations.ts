@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,6 +22,44 @@ export const useFileOperations = ({
   setCurrentCategory
 }: UseFileOperationsProps) => {
   const { toast } = useToast();
+  
+  // State to track local copies of folder and category data
+  const [localFolders, setLocalFolders] = useState<Folder[]>([]);
+  const [localCurrentFolder, setLocalCurrentFolder] = useState<string>('all');
+
+  // Initialize local state when component mounts
+  useEffect(() => {
+    // This will be called whenever we need to fetch the current folders
+    const fetchFoldersAndCategories = async () => {
+      if (!creatorId) return;
+      
+      try {
+        // Fetch folders from the database
+        const { data: folderData, error: folderError } = await supabase
+          .from('file_categories')
+          .select('*')
+          .eq('creator_id', creatorId);
+          
+        if (folderError) {
+          console.error("Error fetching folders:", folderError);
+          return;
+        }
+        
+        // Convert to Folder type and save locally
+        const folders: Folder[] = (folderData || []).map(folder => ({
+          id: folder.id,
+          name: folder.name,
+          categoryId: folder.creator_id || ''
+        }));
+        
+        setLocalFolders(folders);
+      } catch (err) {
+        console.error("Error in fetchFoldersAndCategories:", err);
+      }
+    };
+    
+    fetchFoldersAndCategories();
+  }, [creatorId]);
 
   // Create a new category
   const handleCreateCategory = async (categoryName: string) => {
@@ -176,8 +215,19 @@ export const useFileOperations = ({
         }
       ]);
       
+      // Update local state
+      setLocalFolders(prevFolders => [
+        ...prevFolders,
+        {
+          id: folderId, 
+          name: folderName,
+          categoryId: categoryId
+        }
+      ]);
+      
       // Switch to the new folder
       setCurrentFolder(folderId);
+      setLocalCurrentFolder(folderId);
       setCurrentCategory(categoryId);
       
       toast({
@@ -204,7 +254,7 @@ export const useFileOperations = ({
     
     try {
       // Get all folders in this category
-      const foldersInCategory = availableFolders.filter(folder => folder.categoryId === categoryId);
+      const foldersInCategory = localFolders.filter(folder => folder.categoryId === categoryId);
       
       // First, remove this category from all files that reference it
       const { data: filesInCategory, error: filesError } = await supabase
@@ -225,7 +275,7 @@ export const useFileOperations = ({
         const updatedCategories = (file.categories || []).filter(c => c !== categoryId);
         // Remove folders that belong to this category
         const updatedFolders = (file.folders || []).filter(f => {
-          const folder = availableFolders.find(prevF => prevF.id === f);
+          const folder = localFolders.find(prevF => prevF.id === f);
           return !folder || folder.categoryId !== categoryId;
         });
         
@@ -265,9 +315,15 @@ export const useFileOperations = ({
         prevFolders.filter(folder => folder.categoryId !== categoryId)
       );
       
+      // Update local state
+      setLocalFolders(prevFolders => 
+        prevFolders.filter(folder => folder.categoryId !== categoryId)
+      );
+      
       // If the current category is the one being deleted, switch to 'all'
       setCurrentCategory(prevCategory => prevCategory === categoryId ? null : prevCategory);
       setCurrentFolder('all');
+      setLocalCurrentFolder('all');
       
       // Refresh the files list to reflect the changes
       onFilesChanged();
@@ -330,21 +386,27 @@ export const useFileOperations = ({
       }
       
       // Get the categoryId of the folder being deleted
-      const folderToDelete = availableFolders.find(folder => folder.id === folderId);
+      const folderToDelete = localFolders.find(folder => folder.id === folderId);
       
       // Update the UI by removing the folder from availableFolders
       setAvailableFolders(prevFolders => 
         prevFolders.filter(folder => folder.id !== folderId)
       );
       
+      // Update local state
+      setLocalFolders(prevFolders => 
+        prevFolders.filter(folder => folder.id !== folderId)
+      );
+      
       // If the current folder is the one being deleted, switch to 'all' or the parent category
-      if (folderId === currentFolder) {
+      if (folderId === localCurrentFolder) {
         if (folderToDelete?.categoryId) {
           setCurrentCategory(folderToDelete.categoryId);
         } else {
           setCurrentCategory(null);
         }
         setCurrentFolder('all');
+        setLocalCurrentFolder('all');
       }
       
       // Refresh the files list to reflect the changes
@@ -436,7 +498,7 @@ export const useFileOperations = ({
       
       // Find the category ID for this folder
       let categoryId = null;
-      const folder = availableFolders.find(folder => folder.id === folderId);
+      const folder = localFolders.find(folder => folder.id === folderId);
       if (folder) {
         categoryId = folder.categoryId;
       }
@@ -466,7 +528,7 @@ export const useFileOperations = ({
         if (categoryId) {
           // Check if this file is in any other folder of this category
           const hasOtherFoldersInCategory = updatedFolders.some(fId => {
-            const f = availableFolders.find(folder => folder.id === fId);
+            const f = localFolders.find(folder => folder.id === fId);
             return f && f.categoryId === categoryId;
           });
           
@@ -524,7 +586,7 @@ export const useFileOperations = ({
       }
       
       // Get the categoryId for this folder
-      const folder = availableFolders.find(folder => folder.id === folderId);
+      const folder = localFolders.find(folder => folder.id === folderId);
       const categoryId = folder?.categoryId;
       
       // Get all files in the old folder
@@ -589,8 +651,16 @@ export const useFileOperations = ({
         )
       );
       
+      // Update local state
+      setLocalFolders(prevFolders => 
+        prevFolders.map(folder => 
+          folder.id === folderId ? { id: newFolderId, name: newFolderName, categoryId: categoryId || '' } : folder
+        )
+      );
+      
       // If the current folder is the one being renamed, switch to the new folder
       setCurrentFolder(prevFolder => prevFolder === folderId ? newFolderId : prevFolder);
+      setLocalCurrentFolder(prevFolder => prevFolder === folderId ? newFolderId : prevFolder);
       
       // Refresh the files list to reflect the changes
       onFilesChanged();
@@ -756,6 +826,13 @@ export const useFileOperations = ({
           });
         
         return updatedFolders;
+      });
+      
+      // Update local state
+      setLocalFolders(prevFolders => {
+        return prevFolders.map(folder => 
+          folder.categoryId === categoryId ? { ...folder, categoryId: newCategoryId } : folder
+        );
       });
       
       // Update the UI by replacing the category in availableCategories
