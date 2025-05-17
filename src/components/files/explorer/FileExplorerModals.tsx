@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileUploadModal } from './FileUploadModal';
 import { CreateCategoryModal } from './CreateCategoryModal';
@@ -171,6 +172,11 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
     handleRenameFolder(folderToRename, newFolderNameForRename, setIsRenameFolderModalOpen, setFolderToRename);
   };
 
+  // Function to handle saving notes
+  const onSaveNote = () => {
+    handleSaveNote(editingNote);
+  };
+
   return (
     <>
       {/* File Upload Modal */}
@@ -277,7 +283,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         file={editingFile}
         note={editingNote}
         setNote={setEditingNote}
-        onSave={handleSaveNote}
+        onSave={onSaveNote}
       />
     </>
   );

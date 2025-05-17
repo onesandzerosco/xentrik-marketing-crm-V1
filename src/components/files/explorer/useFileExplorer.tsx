@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -249,26 +250,15 @@ export const useFileExplorer = ({
     deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Add handler for renaming folders
-  const handleRenameFolder = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newFolderName.trim() || !folderToRename) {
-      return;
-    }
-    
-    renameFolderBase(folderToRename, newFolderName, setIsRenameFolderModalOpen, setFolderToRename);
+  // Fix rename handlers to match the expected function signatures
+  const handleRenameCategory = (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!categoryId || !newName.trim()) return;
+    renameCategoryBase(categoryId, newName, setIsOpen, setIdToRename);
   };
   
-  // Add handler for renaming categories
-  const handleRenameCategory = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newCategoryName.trim() || !categoryToRename) {
-      return;
-    }
-    
-    renameCategoryBase(categoryToRename, newCategoryName, setIsRenameCategoryModalOpen, setCategoryToRename);
+  const handleRenameFolder = (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!folderId || !newName.trim()) return;
+    renameFolderBase(folderId, newName, setIsOpen, setIdToRename);
   };
 
   return {
@@ -285,11 +275,14 @@ export const useFileExplorer = ({
     isDeleteCategoryModalOpen,
     setIsDeleteCategoryModalOpen,
     categoryToDelete,
+    setCategoryToDelete,
     handleDeleteCategoryClick,
     isRenameCategoryModalOpen,
     setIsRenameCategoryModalOpen,
     categoryToRename,
+    setCategoryToRename,
     categoryCurrentName,
+    setCategoryCurrentName,
     handleRenameCategoryClick,
     
     // Folder modals
@@ -308,11 +301,14 @@ export const useFileExplorer = ({
     isDeleteFolderModalOpen,
     setIsDeleteFolderModalOpen,
     folderToDelete,
+    setFolderToDelete,
     handleDeleteFolderClick,
     isRenameFolderModalOpen,
     setIsRenameFolderModalOpen,
     folderToRename,
+    setFolderToRename,
     folderCurrentName,
+    setFolderCurrentName,
     handleRenameFolderClick,
     
     // File notes
