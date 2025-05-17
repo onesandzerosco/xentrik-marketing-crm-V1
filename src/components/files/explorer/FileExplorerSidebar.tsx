@@ -23,27 +23,27 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     handleInitiateNewFolder
   } = useFileExplorerContext();
   
-  // Create wrapper functions that return promises
-  const handleDeleteCategoryWrapper = async (categoryId: string): Promise<void> => {
+  // Create wrapper functions that handle folder operations
+  const handleDeleteCategoryWrapper = (categoryId: string) => {
     return Promise.resolve();
   };
   
-  const handleRenameCategoryWrapper = async (categoryId: string, currentName: string): Promise<void> => {
+  const handleRenameCategoryWrapper = (categoryId: string, currentName: string) => {
     return Promise.resolve();
   };
   
-  const handleDeleteFolderWrapper = async (folderId: string): Promise<void> => {
+  const handleDeleteFolderWrapper = (folderId: string) => {
     return Promise.resolve();
   };
   
-  const handleRenameFolderWrapper = async (folderId: string, currentName: string): Promise<void> => {
+  const handleRenameFolderWrapper = (folderId: string, currentName: string) => {
     return Promise.resolve();
   };
   
   // Check if there are selected files for creating a new folder
-  const handleInitiateNewFolderWithCheck = (categoryId: string) => {
+  const handleInitiateNewFolderWithCheck = () => {
     if (selectedFileIds.length > 0) {
-      handleInitiateNewFolder();
+      handleInitiateNewFolder(currentCategory || '');
     } else {
       toast({
         title: "Select files first",

@@ -14,7 +14,7 @@ interface FileExplorerContextProps {
   // Modal controls
   handleAddToFolderClick: () => void;
   handleInitiateNewCategory: () => void;
-  handleInitiateNewFolder: () => void;
+  handleInitiateNewFolder: (categoryId?: string) => void;
   
   // Creator information
   creatorName: string;

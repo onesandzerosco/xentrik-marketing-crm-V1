@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -58,11 +57,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameCategory
 }) => {
   const {
-    // File selection
     selectedFileIds,
     setSelectedFileIds,
     
-    // Categories
     isAddCategoryModalOpen,
     setIsAddCategoryModalOpen,
     newCategoryName,
@@ -80,7 +77,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setCategoryCurrentName,
     handleRenameCategoryClick,
     
-    // Folders
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -106,7 +102,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setFolderCurrentName,
     handleRenameFolderClick,
     
-    // Notes
     isEditNoteModalOpen,
     setIsEditNoteModalOpen,
     editingFile,
@@ -115,7 +110,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleEditNote,
     handleSaveNote,
     
-    // Filtering
     searchQuery,
     setSearchQuery,
     selectedTypes,
@@ -124,23 +118,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setViewMode,
     filteredFiles,
     
-    // Upload
     isUploadModalOpen,
     setIsUploadModalOpen,
     
-    // Category operations
     handleInitiateNewCategory,
     handleInitiateNewFolder,
     
-    // Operations
     handleAddToFolderClick,
     handleCreateNewCategory,
     handleCreateNewFolder,
     handleCreateCategorySubmit,
     handleCreateFolderSubmit,
     handleAddToFolderSubmit,
-    handleDeleteCategory,
     handleDeleteFolder,
+    handleDeleteCategory,
     handleRenameFolder,
     handleRenameCategory,
   } = useFileExplorer({
@@ -174,14 +165,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsUploadModalOpen(true);
   };
 
-  // Create a wrapper function to fix the signature mismatch
+  // Create wrapper function for handleCreateNewCategory that doesn't need parameters
   const handleCreateNewCategoryWrapper = () => {
     handleCreateNewCategory();
   };
   
-  // Create a wrapper function that doesn't need parameters
+  // Create wrapper function for handleInitiateNewFolder that doesn't need parameters
   const handleInitiateNewFolderWrapper = () => {
-    handleInitiateNewFolder(selectedCategoryForNewFolder);
+    handleInitiateNewFolder(currentCategory || '');
   };
 
   // Context value
@@ -192,7 +183,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     currentCategory,
     handleAddToFolderClick,
     handleInitiateNewCategory,
-    handleInitiateNewFolder: handleInitiateNewFolderWrapper,
+    handleInitiateNewFolder,
     creatorName,
     creatorId,
     isCreatorView,

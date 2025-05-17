@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { CreatorFileType } from '@/types/fileTypes';
 
 export const useFolderModals = () => {
   // Category modals
@@ -26,35 +25,31 @@ export const useFolderModals = () => {
   const [selectedCategoryForNewFolder, setSelectedCategoryForNewFolder] = useState<string>('');
   
   // Handler for deleting a folder
-  const handleDeleteFolderClick = async (folderId: string): Promise<void> => {
+  const handleDeleteFolderClick = (folderId: string) => {
     setFolderToDelete(folderId);
     setIsDeleteFolderModalOpen(true);
-    return Promise.resolve(); // Return a resolved promise
   };
   
   // Handler for renaming a folder
-  const handleRenameFolderClick = async (folderId: string, currentName: string): Promise<void> => {
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
     setFolderToRename(folderId);
     setFolderCurrentName(currentName);
     setNewFolderName(currentName); // Pre-fill with current name
     setIsRenameFolderModalOpen(true);
-    return Promise.resolve();
   };
   
   // Handler for deleting a category
-  const handleDeleteCategoryClick = async (categoryId: string): Promise<void> => {
+  const handleDeleteCategoryClick = (categoryId: string) => {
     setCategoryToDelete(categoryId);
     setIsDeleteCategoryModalOpen(true);
-    return Promise.resolve(); // Return a resolved promise
   };
   
   // Handler for renaming a category
-  const handleRenameCategoryClick = async (categoryId: string, currentName: string): Promise<void> => {
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
     setCategoryToRename(categoryId);
     setCategoryCurrentName(currentName);
     setNewCategoryName(currentName); // Pre-fill with current name
     setIsRenameCategoryModalOpen(true);
-    return Promise.resolve();
   };
 
   return {

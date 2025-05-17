@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -147,8 +146,8 @@ export const useFileExplorer = ({
   };
   
   // Handle initiating a new folder in a specific category
-  const handleInitiateNewFolder = (categoryId: string) => {
-    setSelectedCategoryForNewFolder(categoryId);
+  const handleInitiateNewFolder = (categoryId: string = '') => {
+    setSelectedCategoryForNewFolder(categoryId || (currentCategory || ''));
     setIsAddFolderModalOpen(true);
   };
   
