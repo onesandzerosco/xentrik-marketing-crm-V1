@@ -23,6 +23,23 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     handleInitiateNewFolder
   } = useFileExplorerContext();
   
+  // Create wrapper functions that return promises
+  const handleDeleteCategoryWrapper = async (categoryId: string): Promise<void> => {
+    return Promise.resolve();
+  };
+  
+  const handleRenameCategoryWrapper = async (categoryId: string, currentName: string): Promise<void> => {
+    return Promise.resolve();
+  };
+  
+  const handleDeleteFolderWrapper = async (folderId: string): Promise<void> => {
+    return Promise.resolve();
+  };
+  
+  const handleRenameFolderWrapper = async (folderId: string, currentName: string): Promise<void> => {
+    return Promise.resolve();
+  };
+  
   // Check if there are selected files for creating a new folder
   const handleInitiateNewFolderWithCheck = (categoryId: string) => {
     if (selectedFileIds.length > 0) {
@@ -46,10 +63,10 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolderWithCheck}
-        onDeleteCategory={() => {}} // This will be updated in a later refactoring
-        onRenameCategory={() => {}} // This will be updated in a later refactoring
-        onDeleteFolder={() => {}} // This will be updated in a later refactoring
-        onRenameFolder={() => {}} // This will be updated in a later refactoring
+        onDeleteCategory={handleDeleteCategoryWrapper}
+        onRenameCategory={handleRenameCategoryWrapper}
+        onDeleteFolder={handleDeleteFolderWrapper}
+        onRenameFolder={handleRenameFolderWrapper}
       />
     </div>
   );
