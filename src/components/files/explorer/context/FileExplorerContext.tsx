@@ -26,7 +26,7 @@ interface FileExplorerContextProps {
   availableCategories: Category[];
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   
-  // Updated function signatures - made consistent for both contexts and implementations
+  // Function signatures that match how they're used in the components
   handleDeleteCategory: (categoryId: string, setModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => Promise<void>;
   handleRenameCategory: (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => Promise<void>;
   handleDeleteFolder: (folderId: string, setModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => Promise<void>;

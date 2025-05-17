@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -176,6 +175,23 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
+  // Create wrapper functions that match the expected signatures for the context
+  const handleDeleteCategoryWrapper = (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
+    return handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
+  };
+
+  const handleRenameCategoryWrapper = (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    return handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
+  };
+
+  const handleDeleteFolderWrapper = (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
+    return handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
+  };
+
+  const handleRenameFolderWrapper = (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    return handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
+  };
+
   // Context value with properly matching function signatures
   const contextValue = {
     selectedFileIds,
@@ -191,30 +207,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     availableFolders,
     availableCategories,
     onRemoveFromFolder,
-    handleDeleteCategory: async (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
-      if (handleDeleteCategory) {
-        return handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
-      }
-      return Promise.resolve();
-    },
-    handleRenameCategory: async (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-      if (handleRenameCategory) {
-        return handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
-      }
-      return Promise.resolve();
-    },
-    handleDeleteFolder: async (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
-      if (handleDeleteFolder) {
-        return handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
-      }
-      return Promise.resolve();
-    },
-    handleRenameFolder: async (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-      if (handleRenameFolder) {
-        return handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
-      }
-      return Promise.resolve();
-    },
+    // Use the wrapper functions that match the expected signatures
+    handleDeleteCategory: handleDeleteCategoryWrapper,
+    handleRenameCategory: handleRenameCategoryWrapper,
+    handleDeleteFolder: handleDeleteFolderWrapper,
+    handleRenameFolder: handleRenameFolderWrapper,
     viewMode,
     isLoading
   };
