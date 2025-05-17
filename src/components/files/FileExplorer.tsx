@@ -165,31 +165,30 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsUploadModalOpen(true);
   };
 
-  // Create wrapper function for handleCreateNewCategory that doesn't need parameters
+  // Create wrapper functions for handleCreateNewCategory and handleInitiateNewFolder
   const handleCreateNewCategoryWrapper = () => {
     handleCreateNewCategory();
   };
   
-  // Create wrapper function for handleInitiateNewFolder that doesn't need parameters
   const handleInitiateNewFolderWrapper = () => {
     handleInitiateNewFolder(currentCategory || '');
   };
 
   // Create wrapper functions that match the expected signatures for the context
-  const handleDeleteCategoryWrapper = (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
-    return handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
+  const handleDeleteCategoryWrapper = async (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
+    return await handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
   };
 
-  const handleRenameCategoryWrapper = (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    return handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
+  const handleRenameCategoryWrapper = async (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
+    return await handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
   };
 
-  const handleDeleteFolderWrapper = (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
-    return handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
+  const handleDeleteFolderWrapper = async (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
+    return await handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
   };
 
-  const handleRenameFolderWrapper = (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    return handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
+  const handleRenameFolderWrapper = async (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
+    return await handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
   };
 
   // Context value with properly matching function signatures
