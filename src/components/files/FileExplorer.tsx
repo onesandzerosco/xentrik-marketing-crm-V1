@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
-import { FileExplorerModalsContainer } from './explorer/modals/FileExplorerModalsContainer';
+import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 
 interface FileExplorerProps {
@@ -166,41 +165,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsUploadModalOpen(true);
   };
 
-  // Create wrapper functions for handleCreateNewCategory and handleInitiateNewFolder
+  // Create wrapper function for handleCreateNewCategory that doesn't need parameters
   const handleCreateNewCategoryWrapper = () => {
     handleCreateNewCategory();
   };
   
+  // Create wrapper function for handleInitiateNewFolder that doesn't need parameters
   const handleInitiateNewFolderWrapper = () => {
     handleInitiateNewFolder(currentCategory || '');
   };
 
-  // Create wrapper functions that match the expected signatures for the context
-  const handleDeleteCategoryWrapper = async (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
-    // Call the internal function with the proper arguments
-    handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
-    return Promise.resolve();
-  };
-
-  const handleRenameCategoryWrapper = async (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
-    // Call the internal function with the proper arguments
-    handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
-    return Promise.resolve();
-  };
-
-  const handleDeleteFolderWrapper = async (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
-    // Call the internal function with the proper arguments
-    handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
-    return Promise.resolve();
-  };
-
-  const handleRenameFolderWrapper = async (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
-    // Call the internal function with the proper arguments
-    handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
-    return Promise.resolve();
-  };
-
-  // Context value with properly matching function signatures
+  // Context value
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
@@ -215,11 +190,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     availableFolders,
     availableCategories,
     onRemoveFromFolder,
-    // Use the wrapper functions that match the expected signatures
-    handleDeleteCategory: handleDeleteCategoryWrapper,
-    handleRenameCategory: handleRenameCategoryWrapper,
-    handleDeleteFolder: handleDeleteFolderWrapper,
-    handleRenameFolder: handleRenameFolderWrapper,
     viewMode,
     isLoading
   };
@@ -242,7 +212,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onCreateFolder={handleInitiateNewFolderWrapper}
         />
         
-        <FileExplorerModalsContainer 
+        <FileExplorerModals 
           // Upload modal
           isUploadModalOpen={isUploadModalOpen}
           setIsUploadModalOpen={setIsUploadModalOpen}
@@ -278,16 +248,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           setNewFolderName={setNewFolderName}
           folderCurrentName={folderCurrentName || ''}
           selectedFileIds={selectedFileIds}
-          
-          // Add the missing properties
-          folderToDelete={folderToDelete}
-          setFolderToDelete={setFolderToDelete}
-          folderToRename={folderToRename}
-          setFolderToRename={setFolderToRename}
-          categoryToDelete={categoryToDelete}
-          setCategoryToDelete={setCategoryToDelete}
-          categoryToRename={categoryToRename}
-          setCategoryToRename={setCategoryToRename}
           
           // Selection state
           targetFolderId={targetFolderId}
