@@ -179,6 +179,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleCreateNewCategoryWrapper = () => {
     handleCreateNewCategory();
   };
+  
+  // Fix the function signature mismatch for onInitiateNewFolder
+  // Create a wrapper that ignores the categoryId parameter
+  const handleInitiateNewFolderWrapper = () => {
+    handleInitiateNewFolder(selectedCategoryForNewFolder);
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
