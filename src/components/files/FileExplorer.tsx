@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -175,7 +176,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
-  // Context value with fixed Promise<void> return types and correct function signatures
+  // Context value with correctly adapted function signatures
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
@@ -190,25 +191,25 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     availableFolders,
     availableCategories,
     onRemoveFromFolder,
-    handleDeleteCategory: (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
+    handleDeleteCategory: async (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
       if (handleDeleteCategory) {
         return handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
       }
       return Promise.resolve();
     },
-    handleRenameCategory: (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    handleRenameCategory: async (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
       if (handleRenameCategory) {
         return handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
       }
       return Promise.resolve();
     },
-    handleDeleteFolder: (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
+    handleDeleteFolder: async (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void) => {
       if (handleDeleteFolder) {
         return handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
       }
       return Promise.resolve();
     },
-    handleRenameFolder: (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    handleRenameFolder: async (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
       if (handleRenameFolder) {
         return handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
       }

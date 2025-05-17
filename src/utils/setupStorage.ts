@@ -26,15 +26,14 @@ export const ensureStorageBucket = async () => {
           .createBucket('creator_files', { public: false });
         
         if (createError) {
+          // Log error but don't throw - this is likely an RLS policy error that we can't fix from the client
           console.error("Error creating creator_files bucket:", createError);
-          // Continue execution even if bucket creation fails
-          // It might already exist or be created by another process
         } else {
           console.log('Created creator_files bucket');
         }
       } catch (err) {
+        // Just log the error without crashing
         console.error("Failed to create creator_files bucket:", err);
-        // Continue execution
       }
     }
     
@@ -48,14 +47,13 @@ export const ensureStorageBucket = async () => {
           .createBucket('raw_uploads', { public: false });
         
         if (createError) {
+          // Log error but don't throw
           console.error("Error creating raw_uploads bucket:", createError);
-          // Continue execution even if bucket creation fails
         } else {
           console.log('Created raw_uploads bucket');
         }
       } catch (err) {
         console.error("Failed to create raw_uploads bucket:", err);
-        // Continue execution
       }
     }
     
@@ -69,17 +67,18 @@ export const ensureStorageBucket = async () => {
           .createBucket('team', { public: true });
         
         if (createTeamError) {
+          // Log error but don't throw
           console.error("Error creating team bucket:", createTeamError);
-          // Continue execution even if bucket creation fails
         } else {
           console.log('Created team bucket');
         }
       } catch (err) {
         console.error("Failed to create team bucket:", err);
-        // Continue execution
       }
     }
     
+    // Even if we couldn't create the buckets (due to permissions), return true
+    // so the app can continue functioning with existing buckets
     return true;
   } catch (err) {
     console.error('Error in ensureStorageBucket:', err);

@@ -39,6 +39,51 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     }
   };
 
+  // Create wrapper functions with the correct signatures
+  const deleteCategory = async (categoryId: string) => {
+    return new Promise<void>((resolve) => {
+      // Call the context function with dummy setters that we don't use here
+      // The actual implementation will be handled by the modals
+      handleDeleteCategory(
+        categoryId, 
+        () => {}, 
+        () => {}
+      ).then(resolve);
+    });
+  };
+  
+  const renameCategory = async (categoryId: string, newName: string) => {
+    return new Promise<void>((resolve) => {
+      handleRenameCategory(
+        categoryId, 
+        newName,
+        () => {}, 
+        () => {}
+      ).then(resolve);
+    });
+  };
+  
+  const deleteFolder = async (folderId: string) => {
+    return new Promise<void>((resolve) => {
+      handleDeleteFolder(
+        folderId, 
+        () => {}, 
+        () => {}
+      ).then(resolve);
+    });
+  };
+  
+  const renameFolder = async (folderId: string, newName: string) => {
+    return new Promise<void>((resolve) => {
+      handleRenameFolder(
+        folderId, 
+        newName,
+        () => {}, 
+        () => {}
+      ).then(resolve);
+    });
+  };
+
   return (
     <div className="lg:w-64 shrink-0 mt-1">
       <CategorySidebar 
@@ -50,10 +95,10 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolderWithCheck}
-        onDeleteCategory={handleDeleteCategory}
-        onRenameCategory={handleRenameCategory}
-        onDeleteFolder={handleDeleteFolder}
-        onRenameFolder={handleRenameFolder}
+        onDeleteCategory={deleteCategory}
+        onRenameCategory={renameCategory}
+        onDeleteFolder={deleteFolder}
+        onRenameFolder={renameFolder}
       />
     </div>
   );

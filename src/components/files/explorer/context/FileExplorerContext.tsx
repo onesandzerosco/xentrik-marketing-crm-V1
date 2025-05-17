@@ -25,10 +25,12 @@ interface FileExplorerContextProps {
   availableFolders: Folder[];
   availableCategories: Category[];
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  handleDeleteCategory: (categoryId: string) => Promise<void>;
-  handleRenameCategory: (categoryId: string, currentName: string) => Promise<void>;
-  handleDeleteFolder: (folderId: string) => Promise<void>;
-  handleRenameFolder: (folderId: string, currentName: string) => Promise<void>;
+  
+  // Updated function signatures with all required parameters
+  handleDeleteCategory: (categoryId: string, setModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => Promise<void>;
+  handleRenameCategory: (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => Promise<void>;
+  handleDeleteFolder: (folderId: string, setModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => Promise<void>;
+  handleRenameFolder: (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setFolderToRename: (id: string | null) => void) => Promise<void>;
   
   // UI state
   viewMode: 'grid' | 'list';
