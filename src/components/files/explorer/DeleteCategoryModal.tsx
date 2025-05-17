@@ -6,24 +6,21 @@ interface DeleteCategoryModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
-  categoryName?: string;
 }
 
 export const DeleteCategoryModal: React.FC<DeleteCategoryModalProps> = ({
   isOpen,
   onOpenChange,
-  onConfirm,
-  categoryName
+  onConfirm
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete {categoryName || 'Category'}?</AlertDialogTitle>
+          <AlertDialogTitle>Delete Category?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete the category and all folders within it. 
             Files within these folders will not be deleted, but they will no longer be associated with this category or its folders.
-            Files will be moved to Unsorted Uploads.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

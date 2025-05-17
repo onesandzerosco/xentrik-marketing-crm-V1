@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,49 +39,22 @@ export const useCategoryOperations = ({
       // Get all files that are in this category
       const { data: filesInCategory, error: fetchFilesError } = await supabase
         .from('media')
-        .select('id, categories, folders')
+        .select('id, categories')
         .contains('categories', [categoryId]);
       
       if (fetchFilesError) {
         throw new Error(`Failed to fetch files in category: ${fetchFilesError.message}`);
       }
       
-      // Get all folders in this category
-      const { data: foldersInCategory } = await supabase
-        .from('media')
-        .select('folders')
-        .contains('categories', [categoryId]);
-      
-      // Extract unique folder IDs from all files in the category
-      const folderIds = new Set<string>();
-      if (foldersInCategory) {
-        foldersInCategory.forEach(file => {
-          if (file.folders && Array.isArray(file.folders)) {
-            file.folders.forEach(folderId => folderIds.add(folderId));
-          }
-        });
-      }
-      
-      // For each file, update it to remove the category reference and folder references
+      // For each file, update it to remove the category reference
       for (const file of filesInCategory || []) {
         const updatedCategories = (file.categories || []).filter(
           (category: string) => category !== categoryId
         );
         
-        // Remove any folder references that belong to the category being deleted
-        const updatedFolders = (file.folders || []).filter(
-          (folder: string) => {
-            // Keep folders that are 'all' or 'unsorted', or not part of this category
-            return folder === 'all' || folder === 'unsorted';
-          }
-        );
-        
         const { error: updateError } = await supabase
           .from('media')
-          .update({ 
-            categories: updatedCategories,
-            folders: updatedFolders
-          })
+          .update({ categories: updatedCategories })
           .eq('id', file.id);
         
         if (updateError) {
@@ -89,8 +63,13 @@ export const useCategoryOperations = ({
       }
       
       // Update folders that belong to this category
+      let foldersToUpdate: Folder[] = [];
       if (setAvailableFolders) {
         setAvailableFolders((prevFolders) => {
+          // Get the list of folders in this category
+          const foldersInCategory = prevFolders.filter(folder => folder.categoryId === categoryId);
+          foldersToUpdate = foldersInCategory;
+          
           // Return folders not in this category
           return prevFolders.filter(folder => folder.categoryId !== categoryId);
         });

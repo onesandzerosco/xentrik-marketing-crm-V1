@@ -18,7 +18,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 interface CreateFolderModalProps {
@@ -27,11 +26,9 @@ interface CreateFolderModalProps {
   newFolderName: string;
   setNewFolderName: (name: string) => void;
   selectedCategoryId: string;
-  setSelectedCategoryId: (id: string) => void;
   availableCategories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
   onCreate?: () => void;
-  onCreateNewCategory?: () => void;
 }
 
 export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
@@ -40,11 +37,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   newFolderName,
   setNewFolderName,
   selectedCategoryId,
-  setSelectedCategoryId,
   availableCategories,
   handleSubmit,
-  onCreate,
-  onCreateNewCategory
+  onCreate
 }) => {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +74,7 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
               <Label htmlFor="category">Category</Label>
               <Select
                 value={selectedCategoryId}
-                onValueChange={setSelectedCategoryId}
+                disabled={true}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
@@ -90,22 +85,6 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
                       {category.name}
                     </SelectItem>
                   ))}
-                  
-                  {onCreateNewCategory && (
-                    <div className="px-2 py-1.5">
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onCreateNewCategory();
-                        }}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New Category
-                      </Button>
-                    </div>
-                  )}
                 </SelectContent>
               </Select>
             </div>

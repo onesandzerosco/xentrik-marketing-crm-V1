@@ -5,7 +5,7 @@ import { UploadActions } from './UploadActions';
 import { CategorySelector } from './CategorySelector';
 import FileUploadProgress from './FileUploadProgress';
 import { Category } from '@/types/fileTypes';
-import { useFileUploadHandler } from './hooks/useFileUploadHandler';
+import { useFileUploadHandler } from './FileUploadHandler';
 
 interface StandaloneDropUploaderProps {
   creatorId: string;

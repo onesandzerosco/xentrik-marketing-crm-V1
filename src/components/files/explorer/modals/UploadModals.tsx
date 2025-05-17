@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { FileUploadModal } from '../FileUploadModal';
-import { Category, Folder } from '@/types/fileTypes';
+import { Category } from '@/types/fileTypes';
 
 interface UploadModalsProps {
   isUploadModalOpen: boolean;
@@ -9,7 +9,6 @@ interface UploadModalsProps {
   creatorId: string;
   creatorName: string;
   currentFolder: string;
-  availableFolders: Folder[];  // Added this prop
   availableCategories: Category[];
   onUploadComplete?: (fileIds?: string[]) => void;
 }
@@ -20,7 +19,6 @@ export const UploadModals: React.FC<UploadModalsProps> = ({
   creatorId,
   creatorName,
   currentFolder,
-  availableFolders,  // Added this prop
   availableCategories,
   onUploadComplete,
 }) => {

@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { CreateCategoryModal } from '../CreateCategoryModal';
-import { DeleteCategoryModal } from '../DeleteCategoryModal';
+import { DeleteModal } from '../DeleteModal';
 import { RenameModal } from '../RenameModal';
 import { Category } from '@/types/fileTypes';
 
@@ -15,20 +15,15 @@ interface CategoryModalsProps {
   // Category deletion modal
   isDeleteCategoryModalOpen: boolean;
   setIsDeleteCategoryModalOpen: (open: boolean) => void;
-  categoryToDelete: string | null;
-  setCategoryToDelete: (id: string | null) => void;
   
   // Category rename modal
   isRenameCategoryModalOpen: boolean;
   setIsRenameCategoryModalOpen: (open: boolean) => void;
-  categoryCurrentName: string | null;
-  
-  // Available categories
-  categories: Category[];
+  categoryCurrentName: string;
   
   // Handlers
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
-  handleDeleteCategory: () => void;
+  handleDeleteCategory: (categoryId: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => void;
   handleRenameCategory: (categoryId: string | null, newName: string, setIsRenameCategoryModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => void;
   
   // Callbacks
@@ -42,31 +37,27 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
   setNewCategoryName,
   isDeleteCategoryModalOpen,
   setIsDeleteCategoryModalOpen,
-  categoryToDelete,
-  setCategoryToDelete,
   isRenameCategoryModalOpen,
   setIsRenameCategoryModalOpen,
   categoryCurrentName,
-  categories,
   handleCreateCategorySubmit,
   handleDeleteCategory,
   handleRenameCategory,
   onCreateNewCategory,
 }) => {
+  const [categoryToDelete, setCategoryToDelete] = React.useState<string | null>(null);
   const [categoryToRename, setCategoryToRename] = React.useState<string | null>(null);
   const [newCategoryNameForRename, setNewCategoryNameForRename] = React.useState<string>('');
   
-  // Get the category name for the deletion dialog
-  const categoryToDeleteName = React.useMemo(() => {
-    if (!categoryToDelete) return '';
-    return categories.find(c => c.id === categoryToDelete)?.name || '';
-  }, [categoryToDelete, categories]);
-  
   useEffect(() => {
-    if (isRenameCategoryModalOpen && categoryCurrentName) {
+    if (isRenameCategoryModalOpen) {
       setNewCategoryNameForRename(categoryCurrentName);
     }
   }, [isRenameCategoryModalOpen, categoryCurrentName]);
+  
+  const onDeleteCategory = () => {
+    handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
+  };
   
   const onRenameCategory = () => {
     handleRenameCategory(categoryToRename, newCategoryNameForRename, setIsRenameCategoryModalOpen, setCategoryToRename);
@@ -85,14 +76,15 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
       />
       
       {/* Delete Category Modal */}
-      <DeleteCategoryModal 
+      <DeleteModal 
         isOpen={isDeleteCategoryModalOpen}
         onOpenChange={(open) => {
           setIsDeleteCategoryModalOpen(open);
           if (!open) setCategoryToDelete(null);
         }}
-        onConfirm={handleDeleteCategory}
-        categoryName={categoryToDeleteName}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? All folders within the category will also be deleted. Files will be moved to Unsorted Uploads."
+        onConfirm={onDeleteCategory}
       />
       
       {/* Rename Category Modal */}
