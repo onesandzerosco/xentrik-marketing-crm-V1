@@ -184,13 +184,23 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   // Create wrapper functions for rename handlers
   const handleRenameCategoryWrapper = () => {
     if (categoryToRename && categoryCurrentName) {
-      handleRenameCategory();
+      handleRenameCategory(
+        categoryToRename, 
+        categoryCurrentName, 
+        setIsRenameCategoryModalOpen, 
+        setCategoryToRename
+      );
     }
   };
   
   const handleRenameFolderWrapper = () => {
     if (folderToRename && folderCurrentName) {
-      handleRenameFolder();
+      handleRenameFolder(
+        folderToRename, 
+        folderCurrentName, 
+        setIsRenameFolderModalOpen, 
+        setFolderToRename
+      );
     }
   };
 

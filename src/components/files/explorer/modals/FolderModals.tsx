@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { CreateFolderModal } from '../CreateFolderModal';
 import { AddToFolderModal } from '../AddToFolderModal';
@@ -45,7 +44,6 @@ interface FolderModalsProps {
   
   // Callbacks
   onCreateNewCategory?: () => void;
-  onCreateNewFolder?: () => void;
 }
 
 export const FolderModals: React.FC<FolderModalsProps> = ({
@@ -73,8 +71,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
-  onCreateNewCategory,
-  onCreateNewFolder
+  onCreateNewCategory
 }) => {
   const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
   const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
