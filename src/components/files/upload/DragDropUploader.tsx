@@ -6,7 +6,7 @@ import { FileUploadStatus } from '@/hooks/useFileUploader';
 import FileUploadProgress from './FileUploadProgress';
 import { Category } from '@/types/fileTypes';
 import { useFileUploadHandler } from './FileUploadHandler';
-import CategorySelector from './CategorySelector';
+import { CategorySelector } from './CategorySelector'; // Fixed import to use named import
 
 interface DragDropUploaderProps {
   creatorId: string;
@@ -101,7 +101,7 @@ const DragDropUploader: React.FC<DragDropUploaderProps> = ({
             overallProgress={overallProgress}
             onClose={() => {}}
             onCancelUpload={handleCancelUpload}
-            embedded={true}
+            embedded={true} // This prop is now defined in the component interface
           />
         </div>
       )}

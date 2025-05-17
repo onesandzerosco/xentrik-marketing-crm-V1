@@ -63,12 +63,12 @@ export const useDragDropUploader = ({
           continue;
         }
         
-        // Regular file upload (non-ZIP)
+        // Fixed the function signature to match what processRegularFile expects
         const fileId = await processRegularFile(
           file,
           creatorId,
           currentFolder,
-          updateFileProgress,
+          (fileName) => updateFileProgress(fileName, 100),
           updateFileStatus
         );
         

@@ -11,20 +11,23 @@ interface FileUploadProgressProps {
   overallProgress: number;
   onClose: () => void;
   onCancelUpload: (fileName: string) => void;
+  embedded?: boolean; // Added embedded prop as optional
 }
 
 const FileUploadProgress: React.FC<FileUploadProgressProps> = ({
   fileStatuses,
   overallProgress,
   onClose,
-  onCancelUpload
+  onCancelUpload,
+  embedded = false // Default to false
 }) => {
   if (fileStatuses.length === 0) {
     return null;
   }
 
+  // If embedded is true, render a simpler version without the fixed positioning
   return (
-    <div className="fixed bottom-5 right-5 bg-background border border-border rounded-md shadow-lg p-4 w-80 z-50 flex flex-col">
+    <div className={`${embedded ? '' : 'fixed bottom-5 right-5'} bg-background border border-border rounded-md shadow-lg p-4 ${embedded ? 'w-full' : 'w-80'} z-50 flex flex-col`}>
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-medium">Uploading Files</h3>
         <button 
