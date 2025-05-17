@@ -1,10 +1,9 @@
-
 import React from 'react';
-import { FileUploadModal } from './modals/FileUploadModal';
-import { FileNotesModal } from './modals/FileNotesModal';
+import { FileUploadModal } from './FileUploadModal';
+import { FileNotesModal } from './FileNotesModal';
 import { FolderModals } from './modals/FolderModals';
 import { CategoryModals } from './modals/CategoryModals';
-import { CreatorFileType, Category } from '@/types/fileTypes';
+import { Category, CreatorFileType } from '@/types/fileTypes';
 
 // Import any missing interfaces and types
 interface FileExplorerModalsProps {
@@ -147,6 +146,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={isUploadModalOpen}
         onOpenChange={setIsUploadModalOpen}
         creatorId={creatorId}
+        creatorName={creatorName}
         currentFolder={currentFolder}
         availableCategories={categories}
         onUploadComplete={onUploadComplete}
@@ -195,6 +195,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         handleDeleteFolder={handleDeleteFolder}
         handleRenameFolder={handleRenameFolder}
         onCreateNewCategory={onCreateNewCategory}
+        onCreateNewFolder={onCreateNewFolder}
       />
       
       {/* File Note Modal */}

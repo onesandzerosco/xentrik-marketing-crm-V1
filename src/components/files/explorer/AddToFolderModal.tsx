@@ -31,7 +31,6 @@ interface AddToFolderModalProps {
   categories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
   onCreateNewCategory?: () => void;
-  onCreateNewFolder?: () => void;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -45,8 +44,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   customFolders,
   categories,
   handleSubmit,
-  onCreateNewCategory,
-  onCreateNewFolder
+  onCreateNewCategory
 }) => {
   // Filter folders based on selected category
   const filteredFolders = targetCategoryId
@@ -120,22 +118,6 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                       {folder.name}
                     </SelectItem>
                   ))}
-                  
-                  {onCreateNewFolder && targetCategoryId && (
-                    <div className="px-2 py-1.5">
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-sm" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          onCreateNewFolder();
-                        }}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Create New Folder
-                      </Button>
-                    </div>
-                  )}
                 </SelectContent>
               </Select>
             </div>

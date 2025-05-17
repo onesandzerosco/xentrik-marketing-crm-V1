@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -175,6 +176,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
+  // Create wrapper function for onCreateNewFolder that has the correct signature
+  const handleCreateNewFolderWrapper = () => {
+    handleCreateNewFolder();
+  };
+
   // Context value
   const contextValue = {
     selectedFileIds,
@@ -274,7 +280,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           handleRenameFolder={handleRenameFolder}
           handleSaveNote={handleSaveNote}
           onCreateNewCategory={handleCreateNewCategoryWrapper}
-          onCreateNewFolder={handleCreateNewFolder}
+          onCreateNewFolder={handleCreateNewFolderWrapper}
         />
       </div>
     </FileExplorerProvider>
