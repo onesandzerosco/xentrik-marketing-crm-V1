@@ -20,30 +20,17 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     availableCategories: categories,
     availableFolders: folders,
     handleInitiateNewCategory,
-    handleInitiateNewFolder
+    handleInitiateNewFolder,
+    handleDeleteCategory,
+    handleRenameCategory,
+    handleDeleteFolder,
+    handleRenameFolder
   } = useFileExplorerContext();
   
-  // Create wrapper functions that handle folder operations
-  const handleDeleteCategoryWrapper = (categoryId: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleRenameCategoryWrapper = (categoryId: string, currentName: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleDeleteFolderWrapper = (folderId: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleRenameFolderWrapper = (folderId: string, currentName: string) => {
-    return Promise.resolve();
-  };
-  
   // Check if there are selected files for creating a new folder
-  const handleInitiateNewFolderWithCheck = () => {
+  const handleInitiateNewFolderWithCheck = (categoryId: string) => {
     if (selectedFileIds.length > 0) {
-      handleInitiateNewFolder(currentCategory || '');
+      handleInitiateNewFolder(categoryId);
     } else {
       toast({
         title: "Select files first",
@@ -63,10 +50,10 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolderWithCheck}
-        onDeleteCategory={handleDeleteCategoryWrapper}
-        onRenameCategory={handleRenameCategoryWrapper}
-        onDeleteFolder={handleDeleteFolderWrapper}
-        onRenameFolder={handleRenameFolderWrapper}
+        onDeleteCategory={handleDeleteCategory}
+        onRenameCategory={handleRenameCategory}
+        onDeleteFolder={handleDeleteFolder}
+        onRenameFolder={handleRenameFolder}
       />
     </div>
   );

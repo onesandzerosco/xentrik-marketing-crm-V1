@@ -44,6 +44,12 @@ interface FolderModalsProps {
   
   // Callbacks
   onCreateNewFolder?: () => void;
+  
+  // Folder IDs to delete and rename
+  folderToDelete: string | null;
+  setFolderToDelete: (id: string | null) => void;
+  folderToRename: string | null;
+  setFolderToRename: (id: string | null) => void;
 }
 
 export const FolderModals: React.FC<FolderModalsProps> = ({
@@ -70,10 +76,12 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
-  onCreateNewFolder
+  onCreateNewFolder,
+  folderToDelete,
+  setFolderToDelete,
+  folderToRename,
+  setFolderToRename
 }) => {
-  const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
-  const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
   const [newFolderNameForRename, setNewFolderNameForRename] = React.useState<string>('');
   
   useEffect(() => {
@@ -116,6 +124,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         customFolders={customFolders}
         categories={categories}
         handleSubmit={handleAddToFolderSubmit}
+        onCreateNewFolder={onCreateNewFolder}
       />
       
       {/* Delete Folder Modal */}
