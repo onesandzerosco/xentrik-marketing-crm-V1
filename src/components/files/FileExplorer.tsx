@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -176,19 +177,27 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   // Create wrapper functions that match the expected signatures for the context
   const handleDeleteCategoryWrapper = async (categoryId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
-    return await handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
+    // Call the internal function with the proper arguments
+    handleDeleteCategory(categoryId, setModalOpen, setIdToDelete);
+    return Promise.resolve();
   };
 
   const handleRenameCategoryWrapper = async (categoryId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
-    return await handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
+    // Call the internal function with the proper arguments
+    handleRenameCategory(categoryId, newName, setModalOpen, setIdToRename);
+    return Promise.resolve();
   };
 
   const handleDeleteFolderWrapper = async (folderId: string, setModalOpen: (open: boolean) => void, setIdToDelete: (id: string | null) => void): Promise<void> => {
-    return await handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
+    // Call the internal function with the proper arguments
+    handleDeleteFolder(folderId, setModalOpen, setIdToDelete);
+    return Promise.resolve();
   };
 
   const handleRenameFolderWrapper = async (folderId: string, newName: string, setModalOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void): Promise<void> => {
-    return await handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
+    // Call the internal function with the proper arguments
+    handleRenameFolder(folderId, newName, setModalOpen, setIdToRename);
+    return Promise.resolve();
   };
 
   // Context value with properly matching function signatures
