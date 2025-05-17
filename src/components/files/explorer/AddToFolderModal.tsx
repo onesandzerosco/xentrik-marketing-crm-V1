@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -9,7 +9,6 @@ import {
   DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { 
   Select, 
   SelectContent, 
@@ -17,6 +16,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { PlusCircle } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 interface AddToFolderModalProps {
@@ -24,12 +24,14 @@ interface AddToFolderModalProps {
   onOpenChange: (open: boolean) => void;
   targetFolderId: string;
   setTargetFolderId: (id: string) => void;
-  targetCategoryId: string;  // Added this prop
-  setTargetCategoryId: (id: string) => void;  // Added this prop
+  targetCategoryId: string;
+  setTargetCategoryId: (id: string) => void;
   numSelectedFiles: number;
   customFolders: Array<{ id: string; name: string; categoryId: string }>;
   categories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
+  onCreateNewCategory?: () => void;
+  onCreateNewFolder?: () => void;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -43,70 +45,97 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   customFolders,
   categories,
   handleSubmit,
+  onCreateNewCategory,
+  onCreateNewFolder
 }) => {
-  // Filter folders by selected category
+  // Filter folders based on selected category
   const filteredFolders = targetCategoryId
     ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
     : [];
-    
-  // Reset target folder when category changes
-  useEffect(() => {
-    setTargetFolderId('');
-  }, [targetCategoryId, setTargetFolderId]);
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] w-full">
         <DialogHeader>
           <DialogTitle>Add to Folder</DialogTitle>
           <DialogDescription>
-            Move {numSelectedFiles} selected {numSelectedFiles === 1 ? 'file' : 'files'} to a folder
+            Move {numSelectedFiles} file{numSelectedFiles !== 1 ? 's' : ''} to a folder
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="py-4">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
+              <label htmlFor="category-select" className="text-sm font-medium">
+                Category
+              </label>
               <Select
                 value={targetCategoryId}
                 onValueChange={setTargetCategoryId}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                <SelectTrigger id="category-select">
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map(category => (
+                  {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
                   ))}
+                  
+                  {onCreateNewCategory && (
+                    <div className="px-2 py-1.5">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onCreateNewCategory();
+                        }}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create New Category
+                      </Button>
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="folder">Folder</Label>
+              <label htmlFor="folder-select" className="text-sm font-medium">
+                Folder
+              </label>
               <Select
                 value={targetFolderId}
                 onValueChange={setTargetFolderId}
                 disabled={!targetCategoryId || filteredFolders.length === 0}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={
-                    !targetCategoryId 
-                      ? "Select a category first" 
-                      : filteredFolders.length === 0 
-                        ? "No folders in this category" 
-                        : "Select folder"
-                  } />
+                <SelectTrigger id="folder-select">
+                  <SelectValue placeholder="Select a folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredFolders.map(folder => (
+                  {filteredFolders.map((folder) => (
                     <SelectItem key={folder.id} value={folder.id}>
                       {folder.name}
                     </SelectItem>
                   ))}
+                  
+                  {onCreateNewFolder && targetCategoryId && (
+                    <div className="px-2 py-1.5">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onCreateNewFolder();
+                        }}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create New Folder
+                      </Button>
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -117,8 +146,8 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
               Cancel
             </Button>
             <Button 
-              type="submit"
-              disabled={!targetFolderId || !targetCategoryId}
+              type="submit" 
+              disabled={!targetCategoryId || !targetFolderId || numSelectedFiles === 0}
             >
               Add to Folder
             </Button>

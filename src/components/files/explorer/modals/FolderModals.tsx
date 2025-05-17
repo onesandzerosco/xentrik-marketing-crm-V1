@@ -13,6 +13,7 @@ interface FolderModalsProps {
   newFolderName: string;
   setNewFolderName: (name: string) => void;
   selectedCategoryForNewFolder: string;
+  setSelectedCategoryId: (id: string) => void;
   
   // Add to folder modal
   isAddToFolderModalOpen: boolean;
@@ -39,10 +40,11 @@ interface FolderModalsProps {
   // Handlers
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
-  handleDeleteFolder: (folderId: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => void;
-  handleRenameFolder: (folderId: string | null, newName: string, setIsRenameFolderModalOpen: (open: boolean) => void, setFolderToRename: (id: string | null) => void) => void;
+  handleDeleteFolder: () => void;
+  handleRenameFolder: () => void;
   
   // Callbacks
+  onCreateNewCategory?: () => void;
   onCreateNewFolder?: () => void;
 }
 
@@ -52,6 +54,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   newFolderName,
   setNewFolderName,
   selectedCategoryForNewFolder,
+  setSelectedCategoryId,
   isAddToFolderModalOpen,
   setIsAddToFolderModalOpen,
   targetFolderId,
@@ -70,6 +73,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
+  onCreateNewCategory,
   onCreateNewFolder
 }) => {
   const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
@@ -81,14 +85,6 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
       setNewFolderNameForRename(folderCurrentName);
     }
   }, [isRenameFolderModalOpen, folderCurrentName]);
-  
-  const onDeleteFolder = () => {
-    handleDeleteFolder(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
-  };
-  
-  const onRenameFolder = () => {
-    handleRenameFolder(folderToRename, newFolderNameForRename, setIsRenameFolderModalOpen, setFolderToRename);
-  };
 
   return (
     <>
@@ -99,9 +95,10 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}
         selectedCategoryId={selectedCategoryForNewFolder}
+        setSelectedCategoryId={setSelectedCategoryId}
         availableCategories={categories}
         handleSubmit={handleCreateFolderSubmit}
-        onCreate={onCreateNewFolder}
+        onCreateNewCategory={onCreateNewCategory}
       />
       
       {/* Add to Folder Modal */}
@@ -116,6 +113,8 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         customFolders={customFolders}
         categories={categories}
         handleSubmit={handleAddToFolderSubmit}
+        onCreateNewCategory={onCreateNewCategory}
+        onCreateNewFolder={onCreateNewFolder}
       />
       
       {/* Delete Folder Modal */}
@@ -127,7 +126,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         }}
         title="Delete Folder"
         description="Are you sure you want to delete this folder? Files will be moved to Unsorted Uploads."
-        onConfirm={onDeleteFolder}
+        onConfirm={handleDeleteFolder}
       />
       
       {/* Rename Folder Modal */}
@@ -140,7 +139,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         title="Rename Folder"
         currentName={newFolderNameForRename}
         setNewName={setNewFolderNameForRename}
-        onConfirm={onRenameFolder}
+        onConfirm={handleRenameFolder}
       />
     </>
   );
