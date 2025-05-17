@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Category } from '@/types/fileTypes';
+import { useToast } from '@/components/ui/use-toast';
 
 interface UseCategoryOperationsProps {
   onCreateCategory: (categoryName: string) => Promise<void>;
@@ -21,6 +22,7 @@ export const useCategoryOperations = ({
   currentCategory,
   onCategoryChange
 }: UseCategoryOperationsProps) => {
+  const toast = useToast();
   // Category modal states
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -63,11 +65,21 @@ export const useCategoryOperations = ({
       (form.setIsAddCategoryModalOpen || setIsAddCategoryModalOpen)(false);
       (form.setNewCategoryName || setNewCategoryName)('');
       
+      toast.toast({
+        title: "Category created",
+        description: `Created category: ${categoryName}`
+      });
+      
       // If we're creating a category from the AddToFolder flow,
       // continue with folder creation after the category is created
       return true;
     } catch (error) {
       console.error('Error creating category:', error);
+      toast.toast({
+        title: "Error creating category",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -87,8 +99,18 @@ export const useCategoryOperations = ({
       onRefresh();
       setIsDeleteCategoryModalOpen(false);
       setCategoryToDelete(null);
+      
+      toast.toast({
+        title: "Category deleted",
+        description: "Category and its folders have been deleted successfully."
+      });
     } catch (error) {
       console.error('Error deleting category:', error);
+      toast.toast({
+        title: "Error deleting category",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -106,8 +128,18 @@ export const useCategoryOperations = ({
       onRefresh();
       setIsOpen(false);
       setIdToRename(null);
+      
+      toast.toast({
+        title: "Category renamed",
+        description: `Category renamed to "${newName}" successfully.`
+      });
     } catch (error) {
       console.error('Error renaming category:', error);
+      toast.toast({
+        title: "Error renaming category",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 

@@ -181,6 +181,22 @@ export const useFileExplorer = ({
     );
   };
 
+  // Handle category deletion
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      await onDeleteCategory(categoryId);
+      
+      // If we're in the deleted category, reset to 'all'
+      if (currentCategory === categoryId) {
+        onCategoryChange(null);
+      }
+      
+      onRefresh();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
+
   return {
     // File selection
     selectedFileIds,
@@ -221,6 +237,7 @@ export const useFileExplorer = ({
     handleAddToFolderSubmit,
     handleCreateNewCategory,
     handleCreateNewFolder,
+    handleDeleteCategory,
     
     // Available data
     availableFolders,

@@ -16,7 +16,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, FolderPlus } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 interface AddToFolderModalProps {
@@ -31,6 +31,7 @@ interface AddToFolderModalProps {
   categories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
   onCreateNewCategory?: () => void;
+  onCreateNewFolder?: () => void;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -44,12 +45,22 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   customFolders,
   categories,
   handleSubmit,
-  onCreateNewCategory
+  onCreateNewCategory,
+  onCreateNewFolder
 }) => {
   // Filter folders based on selected category
   const filteredFolders = targetCategoryId
     ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
     : [];
+  
+  // Reset folder selection when category changes
+  React.useEffect(() => {
+    if (filteredFolders.length > 0) {
+      setTargetFolderId(filteredFolders[0].id);
+    } else {
+      setTargetFolderId('');
+    }
+  }, [targetCategoryId, filteredFolders, setTargetFolderId]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -107,10 +118,11 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
               <Select
                 value={targetFolderId}
                 onValueChange={setTargetFolderId}
-                disabled={!targetCategoryId || filteredFolders.length === 0}
+                disabled={!targetCategoryId}
               >
                 <SelectTrigger id="folder-select">
-                  <SelectValue placeholder="Select a folder" />
+                  <SelectValue placeholder={!targetCategoryId ? "Select a category first" : 
+                    filteredFolders.length === 0 ? "No folders in this category" : "Select a folder"} />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredFolders.map((folder) => (
@@ -118,6 +130,22 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                       {folder.name}
                     </SelectItem>
                   ))}
+                  
+                  {onCreateNewFolder && targetCategoryId && (
+                    <div className="px-2 py-1.5">
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-sm" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onCreateNewFolder();
+                        }}
+                      >
+                        <FolderPlus className="mr-2 h-4 w-4" />
+                        Create New Folder in This Category
+                      </Button>
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
