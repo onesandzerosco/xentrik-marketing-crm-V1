@@ -137,6 +137,19 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   onCreateNewCategory,
   onCreateNewFolder,
 }) => {
+  // Create wrapper functions that don't take parameters to match CategoryModals interface
+  const handleDeleteCategoryWrapper = () => {
+    // We'll use null as the categoryId since the actual ID will be managed elsewhere
+    // State setters are also provided as empty functions since they'll be handled by the modal
+    handleDeleteCategory(null, setIsDeleteCategoryModalOpen, () => {});
+  };
+  
+  const handleRenameCategoryWrapper = () => {
+    // We'll use null as the categoryId and an empty string as newName
+    // since the actual values will be managed elsewhere
+    handleRenameCategory(null, "", setIsRenameCategoryModalOpen, () => {});
+  };
+
   return (
     <>
       {/* File Upload Modal */}
@@ -162,8 +175,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
         categoryCurrentName={categoryCurrentName}
         handleCreateCategorySubmit={handleCreateCategorySubmit}
-        handleDeleteCategory={handleDeleteCategory}
-        handleRenameCategory={handleRenameCategory}
+        handleDeleteCategory={handleDeleteCategoryWrapper}
+        handleRenameCategory={handleRenameCategoryWrapper}
         onCreateNewCategory={onCreateNewCategory}
       />
       
