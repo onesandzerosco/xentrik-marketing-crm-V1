@@ -1,7 +1,7 @@
 
 import React from 'react';
 import FileUploadProgress from './upload/FileUploadProgress';
-import { useFileUploadHandler } from './upload/FileUploadHandler';
+import { useFileUploadHandler } from './upload/hooks/useFileUploadHandler';
 import { Category } from '@/types/fileTypes';
 
 interface FileUploaderProps {
