@@ -59,10 +59,10 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   }, [targetCategoryId, setTargetFolderId]);
 
   const handleCreateNewFolderClick = () => {
-    if (onCreateNewFolder) {
+    if (onCreateNewFolder && targetCategoryId) {
       // Close this modal
       onOpenChange(false);
-      // Open the create folder modal
+      // Open the create folder modal with the selected category
       onCreateNewFolder();
     }
   };

@@ -1,187 +1,176 @@
 
 import React from 'react';
-import { 
-  UploadModals, 
-  CategoryModals, 
-  FolderModals, 
-  NoteModals 
-} from './modals';
-import { Category, CreatorFileType } from '@/types/fileTypes';
+import { FolderModals } from './modals/FolderModals';
+import { CategoryModals } from './modals/CategoryModals';
+import { NoteModals } from './modals/NoteModals';
+import { UploadModals } from './modals/UploadModals';
 
 interface FileExplorerModalsProps {
-  // Upload modal
-  isUploadModalOpen: boolean;
-  setIsUploadModalOpen: (open: boolean) => void;
-  
-  // Category modals
+  // Category modals state
   isAddCategoryModalOpen: boolean;
   setIsAddCategoryModalOpen: (open: boolean) => void;
-  isDeleteCategoryModalOpen: boolean;
-  setIsDeleteCategoryModalOpen: (open: boolean) => void;
-  isRenameCategoryModalOpen: boolean;
-  setIsRenameCategoryModalOpen: (open: boolean) => void;
   newCategoryName: string;
   setNewCategoryName: (name: string) => void;
+  isDeleteCategoryModalOpen: boolean;
+  setIsDeleteCategoryModalOpen: (open: boolean) => void;
+  categoryToDelete: string | null;
+  setCategoryToDelete: (id: string | null) => void;
+  isRenameCategoryModalOpen: boolean;
+  setIsRenameCategoryModalOpen: (open: boolean) => void;
+  categoryToRename: string | null;
+  setCategoryToRename: (id: string | null) => void;
   categoryCurrentName: string;
   
-  // Folder modals
+  // Folder modals state
   isAddFolderModalOpen: boolean;
   setIsAddFolderModalOpen: (open: boolean) => void;
-  isAddToFolderModalOpen: boolean;
-  setIsAddToFolderModalOpen: (open: boolean) => void;
-  isDeleteFolderModalOpen: boolean;
-  setIsDeleteFolderModalOpen: (open: boolean) => void;
-  isRenameFolderModalOpen: boolean;
-  setIsRenameFolderModalOpen: (open: boolean) => void;
-  isEditNoteModalOpen: boolean;
-  setIsEditNoteModalOpen: (open: boolean) => void;
-  
-  // Common props
-  creatorId: string;
-  creatorName: string;
-  currentFolder: string;
   newFolderName: string;
   setNewFolderName: (name: string) => void;
-  folderCurrentName: string;
-  selectedFileIds: string[];
-  
-  // Selection state
+  selectedCategoryForNewFolder: string;
+  isAddToFolderModalOpen: boolean;
+  setIsAddToFolderModalOpen: (open: boolean) => void;
   targetFolderId: string;
   setTargetFolderId: (id: string) => void;
   targetCategoryId: string;
   setTargetCategoryId: (id: string) => void;
-  selectedCategoryForNewFolder: string;
+  isDeleteFolderModalOpen: boolean;
+  setIsDeleteFolderModalOpen: (open: boolean) => void;
+  folderToDelete: string | null;
+  setFolderToDelete: (id: string | null) => void;
+  isRenameFolderModalOpen: boolean;
+  setIsRenameFolderModalOpen: (open: boolean) => void;
+  folderToRename: string | null;
+  setFolderToRename: (id: string | null) => void;
+  folderCurrentName: string;
   
-  // Data
-  customFolders: Array<{ id: string; name: string; categoryId: string }>;
-  categories: Category[];
-  editingFile?: CreatorFileType;
+  // Upload modals state
+  isUploadModalOpen: boolean;
+  setIsUploadModalOpen: (open: boolean) => void;
+  
+  // Note modals state
+  isEditNoteModalOpen: boolean;
+  setIsEditNoteModalOpen: (open: boolean) => void;
+  editingFile: any;
   editingNote: string;
   setEditingNote: (note: string) => void;
   
-  // Callbacks
-  onUploadComplete?: (fileIds?: string[]) => void;
-  handleCreateCategorySubmit: (e: React.FormEvent) => void;
+  // Data
+  selectedFileIds: string[];
+  availableCategories: any[];
+  availableFolders: any[];
+  
+  // Handlers for folder operations
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
-  handleDeleteCategory: (categoryId: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => void;
   handleDeleteFolder: (folderId: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => void;
-  handleRenameCategory: (categoryId: string | null, newName: string, setIsRenameCategoryModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => void;
   handleRenameFolder: (folderId: string | null, newName: string, setIsRenameFolderModalOpen: (open: boolean) => void, setFolderToRename: (id: string | null) => void) => void;
+  
+  // Handlers for category operations
+  handleCreateCategorySubmit: (e: React.FormEvent) => void;
+  handleDeleteCategory: (categoryId: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => void;
+  handleRenameCategory: (categoryId: string | null, newName: string, setIsRenameCategoryModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => void;
+  
+  // Handlers for note operations
   handleSaveNote: (note: string) => void;
-  onCreateNewCategory?: () => void;
-  onCreateNewFolder?: () => void;
+
+  // Advanced handlers for modal interactions
+  handleCreateNewFolder: () => void;
+  
+  // Creator info
+  creatorId?: string;
+  onFilesChanged?: () => void;
+  onUploadComplete?: (fileIds: string[]) => void;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
-  // Upload modal
-  isUploadModalOpen,
-  setIsUploadModalOpen,
-  
-  // Category modals
+  // Category modals state
   isAddCategoryModalOpen,
   setIsAddCategoryModalOpen,
-  isDeleteCategoryModalOpen,
-  setIsDeleteCategoryModalOpen,
-  isRenameCategoryModalOpen,
-  setIsRenameCategoryModalOpen,
   newCategoryName,
   setNewCategoryName,
+  isDeleteCategoryModalOpen,
+  setIsDeleteCategoryModalOpen,
+  categoryToDelete,
+  setCategoryToDelete,
+  isRenameCategoryModalOpen,
+  setIsRenameCategoryModalOpen,
+  categoryToRename,
+  setCategoryToRename,
   categoryCurrentName,
   
-  // Folder modals
+  // Folder modals state
   isAddFolderModalOpen,
   setIsAddFolderModalOpen,
-  isAddToFolderModalOpen,
-  setIsAddToFolderModalOpen,
-  isDeleteFolderModalOpen,
-  setIsDeleteFolderModalOpen,
-  isRenameFolderModalOpen,
-  setIsRenameFolderModalOpen,
-  isEditNoteModalOpen,
-  setIsEditNoteModalOpen,
-  
-  // Common props
-  creatorId,
-  creatorName,
-  currentFolder,
   newFolderName,
   setNewFolderName,
-  folderCurrentName,
-  selectedFileIds,
-  
-  // Selection state
+  selectedCategoryForNewFolder,
+  isAddToFolderModalOpen,
+  setIsAddToFolderModalOpen,
   targetFolderId,
   setTargetFolderId,
   targetCategoryId,
   setTargetCategoryId,
-  selectedCategoryForNewFolder,
+  isDeleteFolderModalOpen,
+  setIsDeleteFolderModalOpen,
+  folderToDelete,
+  setFolderToDelete,
+  isRenameFolderModalOpen,
+  setIsRenameFolderModalOpen,
+  folderToRename,
+  setFolderToRename,
+  folderCurrentName,
   
-  // Data
-  customFolders,
-  categories,
+  // Upload modals state
+  isUploadModalOpen,
+  setIsUploadModalOpen,
+  
+  // Note modals state
+  isEditNoteModalOpen,
+  setIsEditNoteModalOpen,
   editingFile,
   editingNote,
   setEditingNote,
   
-  // Callbacks
-  onUploadComplete,
-  handleCreateCategorySubmit,
+  // Data
+  selectedFileIds,
+  availableCategories,
+  availableFolders,
+  
+  // Handlers for folder operations
   handleCreateFolderSubmit,
   handleAddToFolderSubmit,
-  handleDeleteCategory,
   handleDeleteFolder,
-  handleRenameCategory,
   handleRenameFolder,
+  
+  // Handlers for category operations
+  handleCreateCategorySubmit,
+  handleDeleteCategory,
+  handleRenameCategory,
+  
+  // Handlers for note operations
   handleSaveNote,
-  onCreateNewCategory,
-  onCreateNewFolder,
+  
+  // Advanced handlers for modal interactions
+  handleCreateNewFolder,
+  
+  // Creator info
+  creatorId,
+  onFilesChanged,
+  onUploadComplete
 }) => {
-  // Create wrapper functions that don't take parameters to match CategoryModals interface
+  // Wrapper functions to ensure correct argument passing
   const handleDeleteCategoryWrapper = () => {
-    // We'll use null as the categoryId since the actual ID will be managed elsewhere
-    // State setters are also provided as empty functions since they'll be handled by the modal
-    handleDeleteCategory(null, setIsDeleteCategoryModalOpen, () => {});
+    handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
   const handleRenameCategoryWrapper = () => {
-    // We'll use null as the categoryId and an empty string as newName
-    // since the actual values will be managed elsewhere
-    handleRenameCategory(null, "", setIsRenameCategoryModalOpen, () => {});
+    handleRenameCategory(categoryToRename, newCategoryName, setIsRenameCategoryModalOpen, setCategoryToRename);
   };
-
+  
   return (
     <>
-      {/* File Upload Modal */}
-      <UploadModals
-        isUploadModalOpen={isUploadModalOpen}
-        setIsUploadModalOpen={setIsUploadModalOpen}
-        creatorId={creatorId}
-        creatorName={creatorName}
-        currentFolder={currentFolder}
-        availableCategories={categories}
-        onUploadComplete={onUploadComplete}
-      />
-      
-      {/* Category Modals */}
-      <CategoryModals
-        isAddCategoryModalOpen={isAddCategoryModalOpen}
-        setIsAddCategoryModalOpen={setIsAddCategoryModalOpen}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        isDeleteCategoryModalOpen={isDeleteCategoryModalOpen}
-        setIsDeleteCategoryModalOpen={setIsDeleteCategoryModalOpen}
-        isRenameCategoryModalOpen={isRenameCategoryModalOpen}
-        setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
-        categoryCurrentName={categoryCurrentName}
-        handleCreateCategorySubmit={handleCreateCategorySubmit}
-        handleDeleteCategory={handleDeleteCategoryWrapper}
-        handleRenameCategory={handleRenameCategoryWrapper}
-        onCreateNewCategory={onCreateNewCategory}
-      />
-      
-      {/* Folder Modals */}
-      <FolderModals
+      {/* Folder Modals (Add, Delete, Rename) */}
+      <FolderModals 
         isAddFolderModalOpen={isAddFolderModalOpen}
         setIsAddFolderModalOpen={setIsAddFolderModalOpen}
         newFolderName={newFolderName}
@@ -199,23 +188,48 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
         folderCurrentName={folderCurrentName}
         selectedFileIds={selectedFileIds}
-        customFolders={customFolders}
-        categories={categories}
+        customFolders={availableFolders}
+        categories={availableCategories}
         handleCreateFolderSubmit={handleCreateFolderSubmit}
         handleAddToFolderSubmit={handleAddToFolderSubmit}
         handleDeleteFolder={handleDeleteFolder}
         handleRenameFolder={handleRenameFolder}
-        onCreateNewFolder={onCreateNewFolder}
+        handleCreateNewFolder={handleCreateNewFolder}
+      />
+      
+      {/* Category Modals (Add, Delete, Rename) */}
+      <CategoryModals 
+        isAddCategoryModalOpen={isAddCategoryModalOpen}
+        setIsAddCategoryModalOpen={setIsAddCategoryModalOpen}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        isDeleteCategoryModalOpen={isDeleteCategoryModalOpen}
+        setIsDeleteCategoryModalOpen={setIsDeleteCategoryModalOpen}
+        isRenameCategoryModalOpen={isRenameCategoryModalOpen}
+        setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
+        categoryCurrentName={categoryCurrentName}
+        handleCreateCategorySubmit={handleCreateCategorySubmit}
+        handleDeleteCategory={handleDeleteCategoryWrapper}
+        handleRenameCategory={handleRenameCategoryWrapper}
       />
       
       {/* Note Modals */}
-      <NoteModals
+      <NoteModals 
         isEditNoteModalOpen={isEditNoteModalOpen}
         setIsEditNoteModalOpen={setIsEditNoteModalOpen}
-        editingFile={editingFile || null}
+        editingFile={editingFile}
         editingNote={editingNote}
         setEditingNote={setEditingNote}
         handleSaveNote={handleSaveNote}
+      />
+      
+      {/* Upload Modals */}
+      <UploadModals 
+        isUploadModalOpen={isUploadModalOpen}
+        setIsUploadModalOpen={setIsUploadModalOpen}
+        creatorId={creatorId}
+        onFilesChanged={onFilesChanged}
+        onUploadComplete={onUploadComplete}
       />
     </>
   );
