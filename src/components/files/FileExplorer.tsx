@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -184,6 +185,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleAddToFolderClick,
     handleInitiateNewCategory,
     handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick,
     creatorName,
     creatorId,
     isCreatorView,

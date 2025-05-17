@@ -165,49 +165,51 @@ export const useFolderOperations = ({
   };
 
   // Handle the actual folder deletion
-  const handleDeleteFolder = async (folderToDelete: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => {
+  const handleDeleteFolder = (folderToDelete: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => {
     if (!folderToDelete) return;
     
-    try {
-      await onDeleteFolder(folderToDelete);
-      setFolderToDelete(null);
-      setIsDeleteFolderModalOpen(false);
-      toast({
-        title: "Folder deleted",
-        description: "Folder has been deleted successfully",
+    return onDeleteFolder(folderToDelete)
+      .then(() => {
+        setFolderToDelete(null);
+        setIsDeleteFolderModalOpen(false);
+        toast({
+          title: "Folder deleted",
+          description: "Folder has been deleted successfully",
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Error deleting folder",
+          description: "Failed to delete folder",
+          variant: "destructive"
+        });
       });
-    } catch (error) {
-      toast({
-        title: "Error deleting folder",
-        description: "Failed to delete folder",
-        variant: "destructive"
-      });
-    }
   };
 
   // Handle the actual category deletion
-  const handleDeleteCategory = async (categoryToDelete: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => {
+  const handleDeleteCategory = (categoryToDelete: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => {
     if (!categoryToDelete) return;
     
-    try {
-      await onDeleteCategory(categoryToDelete);
-      setCategoryToDelete(null);
-      setIsDeleteCategoryModalOpen(false);
-      toast({
-        title: "Category deleted",
-        description: "Category and its folders have been deleted successfully",
+    return onDeleteCategory(categoryToDelete)
+      .then(() => {
+        setCategoryToDelete(null);
+        setIsDeleteCategoryModalOpen(false);
+        toast({
+          title: "Category deleted",
+          description: "Category and its folders have been deleted successfully",
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Error deleting category",
+          description: "Failed to delete category",
+          variant: "destructive"
+        });
       });
-    } catch (error) {
-      toast({
-        title: "Error deleting category",
-        description: "Failed to delete category",
-        variant: "destructive"
-      });
-    }
   };
 
   // Handle the actual folder renaming
-  const handleRenameFolder = async (
+  const handleRenameFolder = (
     folderToRename: string | null, 
     newFolderName: string,
     setIsRenameFolderModalOpen: (open: boolean) => void, 
@@ -215,25 +217,26 @@ export const useFolderOperations = ({
   ) => {
     if (!folderToRename || !newFolderName.trim() || !onRenameFolder) return;
     
-    try {
-      await onRenameFolder(folderToRename, newFolderName);
-      setFolderToRename(null);
-      setIsRenameFolderModalOpen(false);
-      toast({
-        title: "Folder renamed",
-        description: `Folder renamed to "${newFolderName}" successfully`,
+    return onRenameFolder(folderToRename, newFolderName)
+      .then(() => {
+        setFolderToRename(null);
+        setIsRenameFolderModalOpen(false);
+        toast({
+          title: "Folder renamed",
+          description: `Folder renamed to "${newFolderName}" successfully`,
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Error renaming folder",
+          description: "Failed to rename folder",
+          variant: "destructive"
+        });
       });
-    } catch (error) {
-      toast({
-        title: "Error renaming folder",
-        description: "Failed to rename folder",
-        variant: "destructive"
-      });
-    }
   };
 
   // Handle the actual category renaming
-  const handleRenameCategory = async (
+  const handleRenameCategory = (
     categoryToRename: string | null, 
     newCategoryName: string,
     setIsRenameCategoryModalOpen: (open: boolean) => void, 
@@ -241,21 +244,22 @@ export const useFolderOperations = ({
   ) => {
     if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) return;
     
-    try {
-      await onRenameCategory(categoryToRename, newCategoryName);
-      setCategoryToRename(null);
-      setIsRenameCategoryModalOpen(false);
-      toast({
-        title: "Category renamed",
-        description: `Category renamed to "${newCategoryName}" successfully`,
+    return onRenameCategory(categoryToRename, newCategoryName)
+      .then(() => {
+        setCategoryToRename(null);
+        setIsRenameCategoryModalOpen(false);
+        toast({
+          title: "Category renamed",
+          description: `Category renamed to "${newCategoryName}" successfully`,
+        });
+      })
+      .catch(error => {
+        toast({
+          title: "Error renaming category",
+          description: "Failed to rename category",
+          variant: "destructive"
+        });
       });
-    } catch (error) {
-      toast({
-        title: "Error renaming category",
-        description: "Failed to rename category",
-        variant: "destructive"
-      });
-    }
   };
 
   return {

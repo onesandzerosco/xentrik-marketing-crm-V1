@@ -20,25 +20,12 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     availableCategories: categories,
     availableFolders: folders,
     handleInitiateNewCategory,
-    handleInitiateNewFolder
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick
   } = useFileExplorerContext();
-  
-  // Create wrapper functions that handle folder operations
-  const handleDeleteCategoryWrapper = (categoryId: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleRenameCategoryWrapper = (categoryId: string, currentName: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleDeleteFolderWrapper = (folderId: string) => {
-    return Promise.resolve();
-  };
-  
-  const handleRenameFolderWrapper = (folderId: string, currentName: string) => {
-    return Promise.resolve();
-  };
   
   // Check if there are selected files for creating a new folder
   const handleInitiateNewFolderWithCheck = () => {
@@ -63,10 +50,10 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolderWithCheck}
-        onDeleteCategory={handleDeleteCategoryWrapper}
-        onRenameCategory={handleRenameCategoryWrapper}
-        onDeleteFolder={handleDeleteFolderWrapper}
-        onRenameFolder={handleRenameFolderWrapper}
+        onDeleteCategory={handleDeleteCategoryClick}
+        onRenameCategory={handleRenameCategoryClick}
+        onDeleteFolder={handleDeleteFolderClick}
+        onRenameFolder={handleRenameFolderClick}
       />
     </div>
   );

@@ -1,103 +1,95 @@
 
 import React, { useEffect } from 'react';
-import { CreateCategoryModal } from '../CreateCategoryModal';
-import { DeleteModal } from '../DeleteModal';
+import { CreateFolderModal } from '../CreateFolderModal';
 import { RenameModal } from '../RenameModal';
+import { DeleteModal } from '../DeleteModal';
 import { Category } from '@/types/fileTypes';
 
 interface CategoryModalsProps {
-  // Category creation modal
-  isAddCategoryModalOpen: boolean;
-  setIsAddCategoryModalOpen: (open: boolean) => void;
-  newCategoryName: string;
-  setNewCategoryName: (name: string) => void;
+  // Category folder creation modal
+  isAddFolderModalOpen: boolean;
+  setIsAddFolderModalOpen: (open: boolean) => void;
+  newFolderName: string;
+  setNewFolderName: (name: string) => void;
+  selectedCategoryForNewFolder: string;
   
-  // Category deletion modal
-  isDeleteCategoryModalOpen: boolean;
-  setIsDeleteCategoryModalOpen: (open: boolean) => void;
+  // Category folder rename modal
+  isRenameFolderModalOpen: boolean;
+  setIsRenameFolderModalOpen: (open: boolean) => void;
+  folderCurrentName: string;
   
-  // Category rename modal
-  isRenameCategoryModalOpen: boolean;
-  setIsRenameCategoryModalOpen: (open: boolean) => void;
-  categoryCurrentName: string;
+  // Category folder deletion modal
+  isDeleteFolderModalOpen: boolean;
+  setIsDeleteFolderModalOpen: (open: boolean) => void;
+  
+  // Data
+  categories: Category[];
   
   // Handlers
-  handleCreateCategorySubmit: (e: React.FormEvent) => void;
-  handleDeleteCategory: (categoryId: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => void;
-  handleRenameCategory: (categoryId: string | null, newName: string, setIsRenameCategoryModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => void;
+  handleCreateFolderSubmit: (e: React.FormEvent) => void;
+  handleDeleteFolder: () => void;
+  handleRenameFolder: () => void;
   
-  // Callbacks
-  onCreateNewCategory?: () => void;
+  // Optional callbacks
+  onCreateNewFolder?: () => void;
 }
 
 export const CategoryModals: React.FC<CategoryModalsProps> = ({
-  isAddCategoryModalOpen,
-  setIsAddCategoryModalOpen,
-  newCategoryName,
-  setNewCategoryName,
-  isDeleteCategoryModalOpen,
-  setIsDeleteCategoryModalOpen,
-  isRenameCategoryModalOpen,
-  setIsRenameCategoryModalOpen,
-  categoryCurrentName,
-  handleCreateCategorySubmit,
-  handleDeleteCategory,
-  handleRenameCategory,
-  onCreateNewCategory,
+  isAddFolderModalOpen,
+  setIsAddFolderModalOpen,
+  newFolderName,
+  setNewFolderName,
+  selectedCategoryForNewFolder,
+  isRenameFolderModalOpen,
+  setIsRenameFolderModalOpen,
+  folderCurrentName,
+  isDeleteFolderModalOpen,
+  setIsDeleteFolderModalOpen,
+  categories,
+  handleCreateFolderSubmit,
+  handleDeleteFolder,
+  handleRenameFolder,
+  onCreateNewFolder
 }) => {
-  const [categoryToDelete, setCategoryToDelete] = React.useState<string | null>(null);
-  const [categoryToRename, setCategoryToRename] = React.useState<string | null>(null);
-  const [newCategoryNameForRename, setNewCategoryNameForRename] = React.useState<string>('');
+  const [newFolderNameForRename, setNewFolderNameForRename] = React.useState<string>('');
   
   useEffect(() => {
-    if (isRenameCategoryModalOpen) {
-      setNewCategoryNameForRename(categoryCurrentName);
+    if (isRenameFolderModalOpen) {
+      setNewFolderNameForRename(folderCurrentName);
     }
-  }, [isRenameCategoryModalOpen, categoryCurrentName]);
-  
-  const onDeleteCategory = () => {
-    handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
-  };
-  
-  const onRenameCategory = () => {
-    handleRenameCategory(categoryToRename, newCategoryNameForRename, setIsRenameCategoryModalOpen, setCategoryToRename);
-  };
+  }, [isRenameFolderModalOpen, folderCurrentName]);
 
   return (
     <>
-      {/* Create Category Modal */}
-      <CreateCategoryModal
-        isOpen={isAddCategoryModalOpen}
-        onOpenChange={setIsAddCategoryModalOpen}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        handleSubmit={handleCreateCategorySubmit}
-        onCreate={onCreateNewCategory}
+      {/* Create Folder Modal */}
+      <CreateFolderModal 
+        isOpen={isAddFolderModalOpen}
+        onOpenChange={setIsAddFolderModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        selectedCategoryId={selectedCategoryForNewFolder}
+        availableCategories={categories}
+        handleSubmit={handleCreateFolderSubmit}
+        onCreate={onCreateNewFolder}
       />
       
-      {/* Delete Category Modal */}
+      {/* Delete Folder Modal */}
       <DeleteModal 
-        isOpen={isDeleteCategoryModalOpen}
-        onOpenChange={(open) => {
-          setIsDeleteCategoryModalOpen(open);
-          if (!open) setCategoryToDelete(null);
-        }}
-        title="Delete Category"
-        description="Are you sure you want to delete this category? All folders within the category will also be deleted. Files will be moved to Unsorted Uploads."
-        onConfirm={onDeleteCategory}
+        isOpen={isDeleteFolderModalOpen}
+        onOpenChange={setIsDeleteFolderModalOpen}
+        title="Delete Folder"
+        description="Are you sure you want to delete this folder? Files will be moved to Unsorted Uploads."
+        onConfirm={handleDeleteFolder}
       />
       
-      {/* Rename Category Modal */}
-      <RenameModal
-        isOpen={isRenameCategoryModalOpen}
-        onOpenChange={(open) => {
-          setIsRenameCategoryModalOpen(open);
-          if (!open) setCategoryToRename(null);
-        }}
-        title="Rename Category"
-        currentName={newCategoryNameForRename}
-        setNewName={setNewCategoryNameForRename}
-        onConfirm={onRenameCategory}
+      {/* Rename Folder Modal */}
+      <RenameModal 
+        isOpen={isRenameFolderModalOpen}
+        onOpenChange={setIsRenameFolderModalOpen}
+        title="Rename Folder"
+        currentName={newFolderNameForRename}
+        setNewName={setNewFolderNameForRename}
+        onConfirm={handleRenameFolder}
       />
     </>
   );

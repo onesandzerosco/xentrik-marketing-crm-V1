@@ -15,6 +15,10 @@ interface FileExplorerContextProps {
   handleAddToFolderClick: () => void;
   handleInitiateNewCategory: () => void;
   handleInitiateNewFolder: (categoryId?: string) => void;
+  handleDeleteCategoryClick: (categoryId: string) => void;
+  handleRenameCategoryClick: (categoryId: string, currentName: string) => void;
+  handleDeleteFolderClick: (folderId: string) => void;
+  handleRenameFolderClick: (folderId: string, currentName: string) => void;
   
   // Creator information
   creatorName: string;
