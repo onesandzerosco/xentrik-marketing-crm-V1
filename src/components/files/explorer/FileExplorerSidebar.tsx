@@ -38,6 +38,23 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
       });
     }
   };
+  
+  // Wrap the handler functions to return Promises to match the expected types
+  const handleDeleteCategoryWrapper = async (categoryId: string): Promise<void> => {
+    return Promise.resolve(handleDeleteCategoryClick(categoryId));
+  };
+  
+  const handleRenameCategoryWrapper = async (categoryId: string, currentName: string): Promise<void> => {
+    return Promise.resolve(handleRenameCategoryClick(categoryId, currentName));
+  };
+  
+  const handleDeleteFolderWrapper = async (folderId: string): Promise<void> => {
+    return Promise.resolve(handleDeleteFolderClick(folderId));
+  };
+  
+  const handleRenameFolderWrapper = async (folderId: string, currentName: string): Promise<void> => {
+    return Promise.resolve(handleRenameFolderClick(folderId, currentName));
+  };
 
   return (
     <div className="lg:w-64 shrink-0 mt-1">
@@ -50,10 +67,10 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolderWithCheck}
-        onDeleteCategory={handleDeleteCategoryClick}
-        onRenameCategory={handleRenameCategoryClick}
-        onDeleteFolder={handleDeleteFolderClick}
-        onRenameFolder={handleRenameFolderClick}
+        onDeleteCategory={handleDeleteCategoryWrapper}
+        onRenameCategory={handleRenameCategoryWrapper}
+        onDeleteFolder={handleDeleteFolderWrapper}
+        onRenameFolder={handleRenameFolderWrapper}
       />
     </div>
   );
