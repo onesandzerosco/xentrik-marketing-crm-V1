@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
-import { FileExplorerModals } from './explorer/FileExplorerModals';
+import { FileExplorerModalsContainer } from './explorer/modals/FileExplorerModalsContainer';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 
 interface FileExplorerProps {
@@ -236,7 +237,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onCreateFolder={handleInitiateNewFolderWrapper}
         />
         
-        <FileExplorerModals 
+        <FileExplorerModalsContainer 
           // Upload modal
           isUploadModalOpen={isUploadModalOpen}
           setIsUploadModalOpen={setIsUploadModalOpen}

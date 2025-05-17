@@ -5,7 +5,7 @@ import {
   CategoryModals, 
   FolderModals, 
   NoteModals 
-} from './modals';
+} from './index';
 import { Category, CreatorFileType } from '@/types/fileTypes';
 
 interface FileExplorerModalsProps {
@@ -81,7 +81,7 @@ interface FileExplorerModalsProps {
   onCreateNewFolder?: () => void;
 }
 
-export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
+export const FileExplorerModalsContainer: React.FC<FileExplorerModalsProps> = ({
   // Upload modal
   isUploadModalOpen,
   setIsUploadModalOpen,
