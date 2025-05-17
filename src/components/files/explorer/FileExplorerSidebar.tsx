@@ -40,9 +40,16 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     return Promise.resolve();
   };
   
-  // Pass the category ID directly to handleInitiateNewFolder
-  const handleInitiateNewFolderWithCategory = (categoryId: string) => {
-    handleInitiateNewFolder(categoryId);
+  // Check if there are selected files for creating a new folder
+  const handleInitiateNewFolderWithCheck = () => {
+    if (selectedFileIds.length > 0) {
+      handleInitiateNewFolder(currentCategory || '');
+    } else {
+      toast({
+        title: "Select files first",
+        description: "Please select at least one file to add to a new folder",
+      });
+    }
   };
 
   return (
@@ -55,7 +62,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onCategoryChange={(categoryId) => {}} // This will be updated in a later refactoring
         onFolderChange={onFolderChange}
         onInitiateNewCategory={handleInitiateNewCategory}
-        onInitiateNewFolder={handleInitiateNewFolderWithCategory}
+        onInitiateNewFolder={handleInitiateNewFolderWithCheck}
         onDeleteCategory={handleDeleteCategoryWrapper}
         onRenameCategory={handleRenameCategoryWrapper}
         onDeleteFolder={handleDeleteFolderWrapper}
