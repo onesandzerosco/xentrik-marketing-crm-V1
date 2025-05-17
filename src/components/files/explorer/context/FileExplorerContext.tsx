@@ -1,37 +1,37 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
+import React, { createContext, useContext } from 'react';
+import { Category, Folder } from '@/types/fileTypes';
 
-interface FileExplorerContextProps {
-  // File selection
+interface FileExplorerContextType {
   selectedFileIds: string[];
-  setSelectedFileIds: (fileIds: string[]) => void;
-  
-  // Current navigation state
+  setSelectedFileIds: (ids: string[]) => void;
   currentFolder: string;
   currentCategory: string | null;
-  
-  // Modal controls
   handleAddToFolderClick: () => void;
   handleInitiateNewCategory: () => void;
-  handleInitiateNewFolder: (categoryId?: string) => void;
-  
-  // Creator information
+  handleInitiateNewFolder: (categoryId: string) => void;
   creatorName: string;
   creatorId: string;
   isCreatorView: boolean;
-  
-  // Folder operations
   availableFolders: Folder[];
   availableCategories: Category[];
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  
-  // UI state
   viewMode: 'grid' | 'list';
   isLoading: boolean;
 }
 
-const FileExplorerContext = createContext<FileExplorerContextProps | undefined>(undefined);
+const FileExplorerContext = createContext<FileExplorerContextType | undefined>(undefined);
+
+export const FileExplorerProvider: React.FC<{ value: FileExplorerContextType; children: React.ReactNode }> = ({
+  value,
+  children,
+}) => {
+  return (
+    <FileExplorerContext.Provider value={value}>
+      {children}
+    </FileExplorerContext.Provider>
+  );
+};
 
 export const useFileExplorerContext = () => {
   const context = useContext(FileExplorerContext);
@@ -39,15 +39,4 @@ export const useFileExplorerContext = () => {
     throw new Error('useFileExplorerContext must be used within a FileExplorerProvider');
   }
   return context;
-};
-
-export const FileExplorerProvider: React.FC<{
-  children: ReactNode;
-  value: FileExplorerContextProps;
-}> = ({ children, value }) => {
-  return (
-    <FileExplorerContext.Provider value={value}>
-      {children}
-    </FileExplorerContext.Provider>
-  );
 };
