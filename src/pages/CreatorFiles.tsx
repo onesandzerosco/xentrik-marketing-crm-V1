@@ -9,7 +9,7 @@ import { FileExplorer } from '@/components/files/FileExplorer';
 import { ensureStorageBucket } from '@/utils/setupStorage';
 import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFolderOperations } from '@/hooks/useFolderOperations';
-import { useFileOperations } from '@/hooks/useFileOperations';
+import { useFileOperations } from '@/hooks/file-operations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 
