@@ -45,6 +45,21 @@ export const useCreateOperations = ({
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '') + '-' + uuidv4().slice(0, 8);
       
+      // First, store the folder information in the database
+      const { error: folderError } = await supabase
+        .from('folders')
+        .insert({
+          id: folderId,
+          name: folderName,
+          category_id: categoryId,
+          creator_id: creatorId
+        });
+        
+      if (folderError) {
+        console.error("Error creating folder in database:", folderError);
+        throw new Error(`Failed to create folder: ${folderError.message}`);
+      }
+      
       // Update all selected files to add them to this folder
       if (fileIds.length > 0) {
         // Get existing folders for each file first then append the new folder
