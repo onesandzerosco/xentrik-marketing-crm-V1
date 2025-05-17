@@ -1,18 +1,11 @@
-
 import { useState } from 'react';
-import { CreatorFileType, Category } from '@/types/fileTypes';
+import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
 import { useFolderModals } from './hooks/useFolderModals';
 import { useFileNotes } from './hooks/useFileNotes';
 import { useFileFilters } from './hooks/useFileFilters';
 import { useUploadModal } from './hooks/useUploadModal';
 import { useFolderOperations } from './hooks/useFolderOperations';
-
-interface Folder {
-  id: string;
-  name: string;
-  categoryId?: string;
-}
 
 interface UseFileExplorerProps {
   files: CreatorFileType[];

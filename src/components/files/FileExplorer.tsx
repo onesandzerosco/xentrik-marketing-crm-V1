@@ -1,17 +1,10 @@
-
 import React from 'react';
-import { CreatorFileType, Category } from '@/types/fileTypes';
+import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
 import { FileExplorerHeader } from './explorer/FileExplorerHeader';
 import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
 import { FileExplorerContent } from './explorer/FileExplorerContent';
 import { FileExplorerModals } from './explorer/FileExplorerModals';
-
-interface Folder {
-  id: string;
-  name: string;
-  categoryId?: string;
-}
 
 interface FileExplorerProps {
   files: CreatorFileType[];
