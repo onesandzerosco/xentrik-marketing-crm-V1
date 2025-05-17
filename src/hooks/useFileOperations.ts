@@ -70,20 +70,20 @@ export const useFileOperations = ({
     try {
       const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
       
-      // Check if category already exists
+      // Check if category already exists - FIXED: using .select() instead of .single()
       const { data: existingCategory, error: checkError } = await supabase
         .from('file_categories')
         .select('*')
         .eq('id', categoryId)
-        .eq('creator_id', creatorId)
-        .single();
+        .eq('creator_id', creatorId);
       
-      if (checkError && !checkError.message.includes('No rows found')) {
+      if (checkError) {
         console.error("Error checking category existence:", checkError);
         throw new Error("Failed to check if category exists");
       }
       
-      if (existingCategory) {
+      // Check if any rows were returned
+      if (existingCategory && existingCategory.length > 0) {
         toast({
           title: "Category already exists",
           description: "A category with that name already exists",
