@@ -42,7 +42,47 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
         setAvailableCategories(customCategories);
       }
       
-      // Next, try to get folder information from the media table
+      // Load folders from the folders table
+      const { data: foldersData, error: foldersError } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('creator_id', creatorId);
+      
+      if (foldersError) {
+        console.error("Error loading folders:", foldersError);
+        // Fall back to trying to extract folders from media
+        fallbackToMediaFolders();
+        return;
+      }
+      
+      if (foldersData && foldersData.length > 0) {
+        // Map the folders to the expected format
+        const customFolders = foldersData.map(folder => ({
+          id: folder.id,
+          name: folder.name,
+          categoryId: folder.category_id
+        }));
+        
+        // Merge with the default folders
+        setAvailableFolders(prevFolders => {
+          const defaultFolders = prevFolders.filter(f => f.id === 'all' || f.id === 'unsorted');
+          return [...defaultFolders, ...customFolders];
+        });
+      } else {
+        // If no folders found in the database, try to extract from media
+        fallbackToMediaFolders();
+      }
+      
+    } catch (err) {
+      console.error("Error in loadCustomCategoriesAndFolders:", err);
+      fallbackToMediaFolders();
+    }
+  };
+  
+  // Fallback method to extract folders from media table
+  const fallbackToMediaFolders = async () => {
+    try {
+      // Try to get folder information from the media table
       // This approach relies on the folders array in the media table
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
@@ -65,7 +105,7 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
             if (folderId !== 'all' && folderId !== 'unsorted') {
               // Find a category for this folder
               const categoryId = item.categories?.find(cat => 
-                categoriesData?.some(c => c.id === cat)
+                availableCategories.some(c => c.id === cat)
               ) || 'uncategorized';
               
               folderMap.set(folderId, categoryId);
@@ -93,13 +133,13 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
       }
       
     } catch (err) {
-      console.error("Error in loadCustomCategoriesAndFolders:", err);
+      console.error("Error in fallbackToMediaFolders:", err);
       // Fall back to listing storage directories
       loadFoldersFromStorage();
     }
   };
   
-  // Fallback method to load folders from storage
+  // Last resort fallback method to load folders from storage
   const loadFoldersFromStorage = async () => {
     if (!creatorId) return;
     
