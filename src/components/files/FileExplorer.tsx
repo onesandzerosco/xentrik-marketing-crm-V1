@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -176,7 +175,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
-  // Context value with correctly adapted function signatures
+  // Context value with properly matching function signatures
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,

@@ -39,47 +39,59 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     }
   };
 
-  // Create wrapper functions with the correct signatures
+  // Create wrapper functions with the correct signatures that match what CategorySidebar expects
   const deleteCategory = async (categoryId: string) => {
     return new Promise<void>((resolve) => {
-      // Call the context function with dummy setters that we don't use here
-      // The actual implementation will be handled by the modals
+      // Using dummy state setters since we're just creating a wrapper
+      const dummySetModal = () => {};
+      const dummySetId = () => {};
+      
+      // Call the context function with the right parameters
       handleDeleteCategory(
         categoryId, 
-        () => {}, 
-        () => {}
+        dummySetModal, 
+        dummySetId
       ).then(resolve);
     });
   };
   
   const renameCategory = async (categoryId: string, newName: string) => {
     return new Promise<void>((resolve) => {
+      const dummySetModal = () => {};
+      const dummySetId = () => {};
+      
       handleRenameCategory(
         categoryId, 
         newName,
-        () => {}, 
-        () => {}
+        dummySetModal, 
+        dummySetId
       ).then(resolve);
     });
   };
   
   const deleteFolder = async (folderId: string) => {
     return new Promise<void>((resolve) => {
+      const dummySetModal = () => {};
+      const dummySetId = () => {};
+      
       handleDeleteFolder(
         folderId, 
-        () => {}, 
-        () => {}
+        dummySetModal, 
+        dummySetId
       ).then(resolve);
     });
   };
   
   const renameFolder = async (folderId: string, newName: string) => {
     return new Promise<void>((resolve) => {
+      const dummySetModal = () => {};
+      const dummySetId = () => {};
+      
       handleRenameFolder(
         folderId, 
         newName,
-        () => {}, 
-        () => {}
+        dummySetModal, 
+        dummySetId
       ).then(resolve);
     });
   };

@@ -26,7 +26,7 @@ export const ensureStorageBucket = async () => {
           .createBucket('creator_files', { public: false });
         
         if (createError) {
-          // Log error but don't throw - this is likely an RLS policy error that we can't fix from the client
+          // Just log the error without throwing - this is likely an RLS policy error that we can't fix from the client
           console.error("Error creating creator_files bucket:", createError);
         } else {
           console.log('Created creator_files bucket');
@@ -47,7 +47,7 @@ export const ensureStorageBucket = async () => {
           .createBucket('raw_uploads', { public: false });
         
         if (createError) {
-          // Log error but don't throw
+          // Just log the error without throwing
           console.error("Error creating raw_uploads bucket:", createError);
         } else {
           console.log('Created raw_uploads bucket');
@@ -67,7 +67,7 @@ export const ensureStorageBucket = async () => {
           .createBucket('team', { public: true });
         
         if (createTeamError) {
-          // Log error but don't throw
+          // Just log the error without throwing
           console.error("Error creating team bucket:", createTeamError);
         } else {
           console.log('Created team bucket');
