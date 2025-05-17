@@ -38,7 +38,7 @@ interface FileExplorerModalsProps {
   folderToDelete: string | null;
   setFolderToDelete: (id: string | null) => void;
   isRenameFolderModalOpen: boolean;
-  setIsRenameFolderModalOpen: (open: boolean) => void;
+  setIsRenameFolderModalOpen: (open: boolean) => void; // Fixed prop name
   folderToRename: string | null;
   setFolderToRename: (id: string | null) => void;
   folderCurrentName: string;
@@ -78,6 +78,7 @@ interface FileExplorerModalsProps {
   
   // Creator info
   creatorId?: string;
+  creatorName?: string; // Added this prop
   onFilesChanged?: () => void;
   onUploadComplete?: (fileIds: string[]) => void;
 }
@@ -115,7 +116,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   folderToDelete,
   setFolderToDelete,
   isRenameFolderModalOpen,
-  setIsRenameFolderModalOpen,
+  setIsRenameFolderModalOpen, // Fixed prop name
   folderToRename,
   setFolderToRename,
   folderCurrentName,
@@ -155,6 +156,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   
   // Creator info
   creatorId,
+  creatorName,
   onFilesChanged,
   onUploadComplete
 }) => {
@@ -228,6 +230,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isUploadModalOpen={isUploadModalOpen}
         setIsUploadModalOpen={setIsUploadModalOpen}
         creatorId={creatorId}
+        creatorName={creatorName}
+        onFilesChanged={onFilesChanged}
         onUploadComplete={onUploadComplete}
       />
     </>

@@ -7,6 +7,7 @@ interface UploadModalsProps {
   isUploadModalOpen: boolean;
   setIsUploadModalOpen: (open: boolean) => void;
   creatorId?: string;
+  creatorName?: string;
   onFilesChanged?: () => void;
   onUploadComplete?: (fileIds: string[]) => void;
 }
@@ -15,6 +16,7 @@ export const UploadModals: React.FC<UploadModalsProps> = ({
   isUploadModalOpen,
   setIsUploadModalOpen,
   creatorId,
+  creatorName,
   onFilesChanged,
   onUploadComplete
 }) => {
@@ -24,10 +26,14 @@ export const UploadModals: React.FC<UploadModalsProps> = ({
       <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
         <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <FileUploadModal 
+            isOpen={isUploadModalOpen}
+            onOpenChange={setIsUploadModalOpen}
             creatorId={creatorId || ''}
-            onClose={() => setIsUploadModalOpen(false)}
+            creatorName={creatorName || ''}
             onFilesChanged={onFilesChanged}
             onUploadComplete={onUploadComplete}
+            currentFolder=""
+            availableCategories={[]}
           />
         </DialogContent>
       </Dialog>

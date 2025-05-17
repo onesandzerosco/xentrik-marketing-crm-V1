@@ -10,6 +10,7 @@ interface FileUploadModalProps {
   creatorId: string;
   creatorName: string;
   onUploadComplete?: (fileIds?: string[]) => void;
+  onFilesChanged?: () => void;
   currentFolder: string;
   availableCategories: Category[];
 }
@@ -20,6 +21,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   creatorId,
   creatorName,
   onUploadComplete,
+  onFilesChanged,
   currentFolder,
   availableCategories
 }) => {
@@ -32,6 +34,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const handleUploadComplete = (fileIds?: string[]) => {
     if (onUploadComplete) {
       onUploadComplete(fileIds);
+    }
+    if (onFilesChanged) {
+      onFilesChanged();
     }
     // Only close the modal after the upload is complete
     onOpenChange(false);

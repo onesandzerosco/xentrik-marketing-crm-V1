@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -95,7 +96,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setFolderToDelete,
     handleDeleteFolderClick,
     isRenameFolderModalOpen,
-    setIsRenameCategoryModalOpen,
+    setIsRenameFolderModalOpen, // Fixed variable name here
     folderToRename,
     setFolderToRename,
     folderCurrentName, 
@@ -244,12 +245,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           isDeleteFolderModalOpen={isDeleteFolderModalOpen}
           setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
           isRenameFolderModalOpen={isRenameFolderModalOpen}
-          setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
+          setIsRenameFolderModalOpen={setIsRenameFolderModalOpen} // Fixed prop name here
           isEditNoteModalOpen={isEditNoteModalOpen}
           setIsEditNoteModalOpen={setIsEditNoteModalOpen}
           
           // Common props
           creatorId={creatorId}
+          creatorName={creatorName} // Added the creatorName prop
           newFolderName={newFolderName}
           setNewFolderName={setNewFolderName}
           folderCurrentName={folderCurrentName || ''}
