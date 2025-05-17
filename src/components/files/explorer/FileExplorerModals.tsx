@@ -53,6 +53,9 @@ interface FileExplorerModalsProps {
   // Upload operations
   isUploadModalOpen: boolean;
   setIsUploadModalOpen: (open: boolean) => void;
+  creatorId: string;
+  creatorName: string;
+  currentFolder: string;
   
   // Folder and category data
   availableFolders: Folder[];
@@ -66,8 +69,8 @@ interface FileExplorerModalsProps {
   handleSaveNote: () => void;
   handleDeleteCategory: () => void;
   handleDeleteFolder: () => void;
-  handleRenameCategory: (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => void;
-  handleRenameFolder: (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => void;
+  handleRenameCategory: () => void;
+  handleRenameFolder: () => void;
   
   // Callbacks
   onCreateNewCategory?: () => void;
@@ -123,14 +126,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = (props) => 
         handleCreateFolderSubmit={props.handleCreateFolderSubmit}
         handleAddToFolderSubmit={props.handleAddToFolderSubmit}
         handleDeleteFolder={props.handleDeleteFolder}
-        handleRenameFolder={() => 
-          props.handleRenameFolder(
-            props.folderToRename, 
-            props.folderCurrentName || '', 
-            props.setIsRenameFolderModalOpen, 
-            props.setFolderToRename
-          )
-        }
+        handleRenameFolder={props.handleRenameFolder}
         onCreateNewCategory={props.onCreateNewCategory}
         onCreateNewFolder={props.onCreateNewFolder}
       />
@@ -149,6 +145,9 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = (props) => 
       <UploadModals 
         isUploadModalOpen={props.isUploadModalOpen}
         setIsUploadModalOpen={props.setIsUploadModalOpen}
+        creatorId={props.creatorId}
+        creatorName={props.creatorName}
+        currentFolder={props.currentFolder}
         availableFolders={props.availableFolders}
         availableCategories={props.availableCategories}
         onUploadComplete={props.onUploadComplete}

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { CreateFolderModal } from '../CreateFolderModal';
 import { AddToFolderModal } from '../AddToFolderModal';
@@ -44,6 +45,7 @@ interface FolderModalsProps {
   
   // Callbacks
   onCreateNewCategory?: () => void;
+  onCreateNewFolder?: () => void;  // Added this prop
 }
 
 export const FolderModals: React.FC<FolderModalsProps> = ({
