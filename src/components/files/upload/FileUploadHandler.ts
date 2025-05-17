@@ -5,17 +5,20 @@ import { useFileProcessor } from "@/hooks/useFileProcessor";
 import { useFileValidation, FileValidationResult } from "./FileValidation";
 import { useToast } from "@/components/ui/use-toast";
 import { FileUploadStatus } from "@/hooks/useFileUploader";
+import { Category } from "@/types/fileTypes";
 
 interface FileUploadHandlerProps {
   creatorId: string;
   currentFolder: string;
   onUploadComplete?: (uploadedFileIds?: string[]) => void;
+  availableCategories?: Category[];
 }
 
 export const useFileUploadHandler = ({
   creatorId,
   currentFolder,
-  onUploadComplete
+  onUploadComplete,
+  availableCategories = []
 }: FileUploadHandlerProps) => {
   const { toast } = useToast();
   const {
@@ -45,7 +48,7 @@ export const useFileUploadHandler = ({
   const { processRegularFile } = useFileProcessor();
 
   // Main file change handler
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> & { zipCategoryId?: string }) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -55,6 +58,9 @@ export const useFileUploadHandler = ({
     abortControllersRef.current.clear();
     
     try {
+      // Get the category ID for zip files
+      const zipCategoryId = e.zipCategoryId;
+      
       // Validate files and get results
       const validationResult = validateFiles(files);
       const { initialStatuses, validFiles } = validationResult;
@@ -72,7 +78,7 @@ export const useFileUploadHandler = ({
       }
       
       // Process the files
-      const uploadedFileIds = await processFiles(validFiles.zipFiles, validFiles.regularFiles);
+      const uploadedFileIds = await processFiles(validFiles.zipFiles, validFiles.regularFiles, zipCategoryId);
       
       // Show success message for successful uploads
       const successfulUploads = fileStatuses.filter(f => f.status === 'complete').length;
@@ -111,7 +117,11 @@ export const useFileUploadHandler = ({
   };
 
   // Process both zip and regular files
-  const processFiles = async (zipFiles: File[], regularFiles: File[]): Promise<string[]> => {
+  const processFiles = async (
+    zipFiles: File[], 
+    regularFiles: File[], 
+    zipCategoryId?: string
+  ): Promise<string[]> => {
     const uploadedFileIds: string[] = [];
 
     // First handle the ZIP files
@@ -119,6 +129,7 @@ export const useFileUploadHandler = ({
       const extractedFileIds = await processZipFile(zipFile, {
         creatorId,
         currentFolder,
+        categoryId: zipCategoryId, // Pass the selected category ID for ZIP files
         updateFileProgress: (fileName, progress) => updateFileProgress(fileName, progress),
         updateFileStatus: (fileName, status, error) => {
           const newStatus = status === 'uploading' ? 'uploading' 

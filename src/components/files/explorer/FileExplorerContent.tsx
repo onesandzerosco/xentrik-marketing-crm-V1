@@ -5,6 +5,8 @@ import { FilterBar } from '../FilterBar';
 import { FileGrid } from '../FileGrid';
 import { FileList } from '../FileList';
 import { FileViewSkeleton } from '../FileViewSkeleton';
+import { EmptyState } from '../EmptyState';
+import { EmptyFoldersState } from './EmptyFoldersState';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -22,6 +24,9 @@ interface FileExplorerContentProps {
   setSelectedFileIds: (fileIds: string[]) => void;
   onAddToFolderClick: () => void;
   currentFolder: string;
+  currentCategory: string | null;
+  onCreateFolder?: () => void;
+  availableFolders: { id: string; name: string; categoryId: string }[];
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote?: (file: CreatorFileType) => void;
 }
@@ -42,9 +47,26 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   setSelectedFileIds,
   onAddToFolderClick,
   currentFolder,
+  currentCategory,
+  onCreateFolder,
+  availableFolders,
   onRemoveFromFolder,
   onEditNote
 }) => {
+  // Check if we're viewing a category and there are no folders in it
+  const isViewingEmptyCategory = () => {
+    if (!currentCategory || currentCategory === 'all') return false;
+    
+    // Count folders that belong to this category
+    const foldersInCategory = availableFolders.filter(
+      folder => folder.categoryId === currentCategory && 
+      folder.id !== 'all' && 
+      folder.id !== 'unsorted'
+    );
+    
+    return foldersInCategory.length === 0;
+  };
+
   return (
     <div className="flex-1 min-w-0">
       <FilterBar 
@@ -58,6 +80,15 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
       
       {isLoading ? (
         <FileViewSkeleton view={viewMode} />
+      ) : isViewingEmptyCategory() && onCreateFolder ? (
+        <EmptyFoldersState onCreateFolder={onCreateFolder} />
+      ) : filteredFiles.length === 0 ? (
+        <EmptyState 
+          isFiltered={searchQuery !== '' || selectedTypes.length > 0}
+          isCreatorView={isCreatorView}
+          onUploadClick={() => {}} // We'll handle uploads elsewhere
+          currentFolder={currentFolder}
+        />
       ) : viewMode === 'grid' ? (
         <FileGrid 
           files={filteredFiles}

@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DragDropUploader from '../upload/DragDropUploader';
+import { Category } from '@/types/fileTypes';
 
 interface FileUploadModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface FileUploadModalProps {
   creatorName: string;
   onUploadComplete?: (fileIds?: string[]) => void;
   currentFolder: string;
+  availableCategories: Category[];
 }
 
 export const FileUploadModal: React.FC<FileUploadModalProps> = ({
@@ -18,7 +20,8 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   creatorId,
   creatorName,
   onUploadComplete,
-  currentFolder
+  currentFolder,
+  availableCategories
 }) => {
   // Prevent modal from rendering if it's not open
   if (!isOpen) {
@@ -50,6 +53,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             onUploadComplete={handleUploadComplete}
             onCancel={() => onOpenChange(false)}
             currentFolder={currentFolder}
+            availableCategories={availableCategories}
           />
         </div>
       </DialogContent>

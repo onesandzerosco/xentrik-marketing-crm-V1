@@ -1,26 +1,12 @@
-
 import React from 'react';
-import { CreatorFileType } from '@/types/fileTypes';
 import { FileUploadModal } from './FileUploadModal';
-import { CreateFolderModal } from './CreateFolderModal';
 import { CreateCategoryModal } from './CreateCategoryModal';
+import { CreateFolderModal } from './CreateFolderModal';
 import { AddToFolderModal } from './AddToFolderModal';
-import { DeleteFolderModal } from './DeleteFolderModal';
-import { DeleteCategoryModal } from './DeleteCategoryModal';
+import { DeleteModal } from './DeleteModal';
 import { EditNoteModal } from './EditNoteModal';
-import { RenameFolderModal } from './RenameFolderModal';
-import { RenameCategoryModal } from './RenameCategoryModal';
-
-interface Folder {
-  id: string;
-  name: string;
-  categoryId: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { RenameModal } from './RenameModal';
+import { Category, CreatorFileType } from '@/types/fileTypes';
 
 interface FileExplorerModalsProps {
   // Upload modal
@@ -67,9 +53,9 @@ interface FileExplorerModalsProps {
   selectedCategoryForNewFolder: string;
   
   // Data
-  customFolders: Folder[];
+  customFolders: Array<{ id: string; name: string; categoryId: string }>;
   categories: Category[];
-  editingFile: CreatorFileType | null;
+  editingFile?: CreatorFileType;
   editingNote: string;
   setEditingNote: (note: string) => void;
   
@@ -78,17 +64,16 @@ interface FileExplorerModalsProps {
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
-  handleDeleteCategory: () => void;
-  handleDeleteFolder: () => void;
-  handleRenameCategory: (e: React.FormEvent) => void;
-  handleRenameFolder: (e: React.FormEvent) => void;
-  handleSaveNote: () => void;
-  onCreateNewCategory: () => void;
-  onCreateNewFolder: () => void;
+  handleDeleteCategory: (categoryId: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => void;
+  handleDeleteFolder: (folderId: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => void;
+  handleRenameCategory: (categoryId: string | null, newName: string, setIsRenameCategoryModalOpen: (open: boolean) => void, setCategoryToRename: (id: string | null) => void) => void;
+  handleRenameFolder: (folderId: string | null, newName: string, setIsRenameFolderModalOpen: (open: boolean) => void, setFolderToRename: (id: string | null) => void) => void;
+  handleSaveNote: (note: string) => void;
+  onCreateNewCategory?: () => void;
+  onCreateNewFolder?: () => void;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
-  // Upload modal
   isUploadModalOpen,
   setIsUploadModalOpen,
   
@@ -149,40 +134,76 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   handleRenameFolder,
   handleSaveNote,
   onCreateNewCategory,
-  onCreateNewFolder
+  onCreateNewFolder,
 }) => {
+  const [categoryToDelete, setCategoryToDelete] = React.useState<string | null>(null);
+  const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
+  const [categoryToRename, setCategoryToRename] = React.useState<string | null>(null);
+  const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
+  const [newCategoryNameForRename, setNewCategoryNameForRename] = React.useState<string>('');
+  const [newFolderNameForRename, setNewFolderNameForRename] = React.useState<string>('');
+  
+  React.useEffect(() => {
+    if (isRenameCategoryModalOpen) {
+      setNewCategoryNameForRename(categoryCurrentName);
+    }
+  }, [isRenameCategoryModalOpen, categoryCurrentName]);
+
+  React.useEffect(() => {
+    if (isRenameFolderModalOpen) {
+      setNewFolderNameForRename(folderCurrentName);
+    }
+  }, [isRenameFolderModalOpen, folderCurrentName]);
+  
+  const onDeleteCategory = () => {
+    handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
+  };
+  
+  const onDeleteFolder = () => {
+    handleDeleteFolder(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
+  };
+  
+  const onRenameCategory = () => {
+    handleRenameCategory(categoryToRename, newCategoryNameForRename, setIsRenameCategoryModalOpen, setCategoryToRename);
+  };
+  
+  const onRenameFolder = () => {
+    handleRenameFolder(folderToRename, newFolderNameForRename, setIsRenameFolderModalOpen, setFolderToRename);
+  };
+
   return (
     <>
-      {/* Upload Modal */}
-      <FileUploadModal
-        isOpen={isUploadModalOpen}
-        onOpenChange={setIsUploadModalOpen}
+      {/* File Upload Modal */}
+      <FileUploadModal 
+        isOpen={isUploadModalOpen} 
+        onOpenChange={setIsUploadModalOpen} 
         creatorId={creatorId}
         creatorName={creatorName}
-        onUploadComplete={(fileIds) => {
-          onUploadComplete?.(fileIds);
-        }}
+        onUploadComplete={onUploadComplete}
         currentFolder={currentFolder}
+        availableCategories={categories}
       />
       
       {/* Create Category Modal */}
       <CreateCategoryModal
         isOpen={isAddCategoryModalOpen}
         onOpenChange={setIsAddCategoryModalOpen}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        onSubmit={handleCreateCategorySubmit}
+        categoryName={newCategoryName}
+        setCategoryName={setNewCategoryName}
+        handleSubmit={handleCreateCategorySubmit}
+        onCreate={onCreateNewCategory}
       />
       
       {/* Create Folder Modal */}
-      <CreateFolderModal
+      <CreateFolderModal 
         isOpen={isAddFolderModalOpen}
         onOpenChange={setIsAddFolderModalOpen}
-        newFolderName={newFolderName}
-        setNewFolderName={setNewFolderName}
-        selectedFileIds={selectedFileIds}
-        categoryId={selectedCategoryForNewFolder}
-        onSubmit={handleCreateFolderSubmit}
+        folderName={newFolderName}
+        setFolderName={setNewFolderName}
+        selectedCategoryId={selectedCategoryForNewFolder}
+        availableCategories={categories}
+        handleSubmit={handleCreateFolderSubmit}
+        onCreate={onCreateNewFolder}
       />
       
       {/* Add to Folder Modal */}
@@ -191,57 +212,71 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onOpenChange={setIsAddToFolderModalOpen}
         targetFolderId={targetFolderId}
         setTargetFolderId={setTargetFolderId}
-        selectedFileIds={selectedFileIds}
+        targetCategoryId={targetCategoryId}
+        setTargetCategoryId={setTargetCategoryId}
+        numSelectedFiles={selectedFileIds.length}
         customFolders={customFolders}
         categories={categories}
-        selectedCategoryId={targetCategoryId}
-        setSelectedCategoryId={setTargetCategoryId}
-        onSubmit={handleAddToFolderSubmit}
-        onCreateNewCategory={onCreateNewCategory}
-        onCreateNewFolder={onCreateNewFolder}
+        handleSubmit={handleAddToFolderSubmit}
       />
       
-      {/* Delete Category Confirmation Modal */}
-      <DeleteCategoryModal
+      {/* Delete Category Modal */}
+      <DeleteModal 
         isOpen={isDeleteCategoryModalOpen}
-        onOpenChange={setIsDeleteCategoryModalOpen}
-        onConfirm={handleDeleteCategory}
+        onOpenChange={(open) => {
+          setIsDeleteCategoryModalOpen(open);
+          if (!open) setCategoryToDelete(null);
+        }}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? All folders within the category will also be deleted. Files will be moved to Unsorted Uploads."
+        onConfirm={onDeleteCategory}
       />
       
-      {/* Delete Folder Confirmation Modal */}
-      <DeleteFolderModal
+      {/* Delete Folder Modal */}
+      <DeleteModal 
         isOpen={isDeleteFolderModalOpen}
-        onOpenChange={setIsDeleteFolderModalOpen}
-        onConfirm={handleDeleteFolder}
+        onOpenChange={(open) => {
+          setIsDeleteFolderModalOpen(open);
+          if (!open) setFolderToDelete(null);
+        }}
+        title="Delete Folder"
+        description="Are you sure you want to delete this folder? Files will be moved to Unsorted Uploads."
+        onConfirm={onDeleteFolder}
       />
       
       {/* Rename Category Modal */}
-      <RenameCategoryModal
+      <RenameModal
         isOpen={isRenameCategoryModalOpen}
-        onOpenChange={setIsRenameCategoryModalOpen}
-        categoryCurrentName={categoryCurrentName}
-        newCategoryName={newCategoryName}
-        setNewCategoryName={setNewCategoryName}
-        onSubmit={handleRenameCategory}
+        onOpenChange={(open) => {
+          setIsRenameCategoryModalOpen(open);
+          if (!open) setCategoryToRename(null);
+        }}
+        title="Rename Category"
+        currentName={newCategoryNameForRename}
+        setNewName={setNewCategoryNameForRename}
+        onConfirm={onRenameCategory}
       />
       
       {/* Rename Folder Modal */}
-      <RenameFolderModal
+      <RenameModal
         isOpen={isRenameFolderModalOpen}
-        onOpenChange={setIsRenameFolderModalOpen}
-        folderCurrentName={folderCurrentName}
-        newFolderName={newFolderName}
-        setNewFolderName={setNewFolderName}
-        onSubmit={handleRenameFolder}
+        onOpenChange={(open) => {
+          setIsRenameFolderModalOpen(open);
+          if (!open) setFolderToRename(null);
+        }}
+        title="Rename Folder"
+        currentName={newFolderNameForRename}
+        setNewName={setNewFolderNameForRename}
+        onConfirm={onRenameFolder}
       />
       
       {/* Edit Note Modal */}
       <EditNoteModal
         isOpen={isEditNoteModalOpen}
         onOpenChange={setIsEditNoteModalOpen}
-        editingFile={editingFile}
-        editingNote={editingNote}
-        setEditingNote={setEditingNote}
+        file={editingFile}
+        note={editingNote}
+        setNote={setEditingNote}
         onSave={handleSaveNote}
       />
     </>

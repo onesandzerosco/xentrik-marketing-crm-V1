@@ -9,7 +9,7 @@ export const useZipProcessor = () => {
 
   const processZipFile = useCallback(async (
     file: File, 
-    { creatorId, currentFolder, updateFileProgress, updateFileStatus }: ZipProcessingOptions
+    { creatorId, currentFolder, categoryId, updateFileProgress, updateFileStatus }: ZipProcessingOptions
   ): Promise<string[]> => {
     updateFileStatus(file.name, 'processing');
     updateFileProgress(file.name, 10);
@@ -19,6 +19,17 @@ export const useZipProcessor = () => {
     const uploadedFileIds: string[] = [];
     
     try {
+      // Check if category is provided for ZIP files
+      if (!categoryId) {
+        toast({
+          title: "Category required",
+          description: "Please select a category for the ZIP file",
+          variant: "destructive"
+        });
+        updateFileStatus(file.name, 'error', 'Category required for ZIP files');
+        return [];
+      }
+      
       // Call the Edge Function to extract the ZIP file
       updateFileProgress(file.name, 30);
       
@@ -46,13 +57,14 @@ export const useZipProcessor = () => {
       
       updateFileProgress(file.name, 50);
       
-      // Call the unzip-files Edge Function
+      // Call the unzip-files Edge Function with the category ID
       const { data: extractionData, error: extractionError } = await supabase.functions.invoke('unzip-files', {
         body: {
           creatorId,
           fileName: file.name,
           targetFolder: folderName,
-          currentFolder: currentFolder === 'all' || currentFolder === 'unsorted' ? null : currentFolder
+          currentFolder: currentFolder === 'all' || currentFolder === 'unsorted' ? null : currentFolder,
+          categoryId: categoryId // Pass the category ID to the edge function
         }
       });
       
