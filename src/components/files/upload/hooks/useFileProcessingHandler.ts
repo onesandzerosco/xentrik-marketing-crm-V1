@@ -9,7 +9,7 @@ interface UseFileProcessingHandlerProps {
   creatorId: string;
   currentFolder: string;
   updateFileProgress: (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => void;
-  setFileStatuses: (status: FileUploadStatus[]) => void;
+  setFileStatuses: (status: FileUploadStatus[] | ((prev: FileUploadStatus[]) => FileUploadStatus[])) => void;
 }
 
 export const useFileProcessingHandler = ({
@@ -44,7 +44,7 @@ export const useFileProcessingHandler = ({
             : 'error';
           updateFileProgress(fileName, 100, newStatus);
           if (error) {
-            setFileStatuses(prev => 
+            setFileStatuses((prev: FileUploadStatus[]) => 
               prev.map(s => 
                 s.name === fileName ? { ...s, error } : s
               )
@@ -81,7 +81,7 @@ export const useFileProcessingHandler = ({
             : 'error';
           updateFileProgress(fileName, 100, newStatus);
           if (error) {
-            setFileStatuses(prev => 
+            setFileStatuses((prev: FileUploadStatus[]) => 
               prev.map(s => 
                 s.name === fileName ? { ...s, error } : s
               )
