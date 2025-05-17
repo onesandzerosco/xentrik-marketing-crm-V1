@@ -73,7 +73,8 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
-  onCreateNewCategory
+  onCreateNewCategory,
+  onCreateNewFolder
 }) => {
   const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
   const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
