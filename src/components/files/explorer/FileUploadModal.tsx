@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import DragDropUploader from '../upload/DragDropUploader';
 import { Category } from '@/types/fileTypes';
+import DragDropUploader from '../upload/DragDropUploader';
 
 interface FileUploadModalProps {
   isOpen: boolean;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -70,9 +69,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setNewCategoryName,
     isDeleteCategoryModalOpen,
     setIsDeleteCategoryModalOpen,
+    categoryToDelete,
+    setCategoryToDelete,
     handleDeleteCategoryClick,
     isRenameCategoryModalOpen,
     setIsRenameCategoryModalOpen,
+    categoryToRename,
+    setCategoryToRename,
+    categoryCurrentName, 
+    setCategoryCurrentName,
     handleRenameCategoryClick,
     
     // Folders
@@ -90,10 +95,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setTargetCategoryId,
     isDeleteFolderModalOpen,
     setIsDeleteFolderModalOpen,
+    folderToDelete,
+    setFolderToDelete,
     handleDeleteFolderClick,
     isRenameFolderModalOpen,
     setIsRenameFolderModalOpen,
-    folderCurrentName,
+    folderToRename,
+    setFolderToRename,
+    folderCurrentName, 
+    setFolderCurrentName,
     handleRenameFolderClick,
     
     // Notes
@@ -232,7 +242,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
         newCategoryName={newCategoryName}
         setNewCategoryName={setNewCategoryName}
-        categoryCurrentName={newCategoryName}
+        categoryCurrentName={categoryCurrentName || ''}
         
         // Folder modals
         isAddFolderModalOpen={isAddFolderModalOpen}
@@ -252,7 +262,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         currentFolder={currentFolder}
         newFolderName={newFolderName}
         setNewFolderName={setNewFolderName}
-        folderCurrentName={folderCurrentName}
+        folderCurrentName={folderCurrentName || ''}
         selectedFileIds={selectedFileIds}
         
         // Selection state

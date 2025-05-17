@@ -188,8 +188,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <CreateCategoryModal
         isOpen={isAddCategoryModalOpen}
         onOpenChange={setIsAddCategoryModalOpen}
-        categoryName={newCategoryName}
-        setCategoryName={setNewCategoryName}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
         handleSubmit={handleCreateCategorySubmit}
         onCreate={onCreateNewCategory}
       />
@@ -198,8 +198,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <CreateFolderModal 
         isOpen={isAddFolderModalOpen}
         onOpenChange={setIsAddFolderModalOpen}
-        folderName={newFolderName}
-        setFolderName={setNewFolderName}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
         selectedCategoryId={selectedCategoryForNewFolder}
         availableCategories={categories}
         handleSubmit={handleCreateFolderSubmit}

@@ -1,290 +1,456 @@
 
-import React, { useRef, useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
-import { Button } from "@/components/ui/button";
-import { UploadCloud, X, FileArchive } from "lucide-react";
-import { useFileUploadHandler } from "./FileUploadHandler";
-import { UploadProgressDisplay } from "./UploadProgressDisplay";
-import { CategorySelector } from './CategorySelector';
+import React, { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { getUniqueFileName } from '@/utils/fileUtils';
+import { X, Upload } from 'lucide-react';
 import { isZipFile } from '@/utils/zipUtils';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Category } from '@/types/fileTypes';
 
+interface UploadingFile {
+  file: File;
+  progress: number;
+  status: 'uploading' | 'processing' | 'complete' | 'error';
+  error?: string;
+}
+
 interface DragDropUploaderProps {
-  creatorId: string;
-  onUploadComplete?: (fileIds?: string[]) => void;
-  onCancel?: () => void;
+  creatorId: string; 
+  onUploadComplete: (uploadedFileIds?: string[]) => void;
+  onCancel: () => void;
   currentFolder: string;
-  availableCategories?: Category[];
+  availableCategories: Category[];
 }
 
-interface FormValues {
-  zipCategory: string;
-}
-
-const DragDropUploader: React.FC<DragDropUploaderProps> = ({
-  creatorId,
-  onUploadComplete,
+const DragDropUploader: React.FC<DragDropUploaderProps> = ({ 
+  creatorId, 
+  onUploadComplete, 
   onCancel,
   currentFolder,
-  availableCategories = []
+  availableCategories
 }) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [hasZipFile, setHasZipFile] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const form = useForm<FormValues>({
-    defaultValues: {
-      zipCategory: "",
+  const { toast } = useToast();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const [overallProgress, setOverallProgress] = useState(0);
+  const [selectedZipFiles, setSelectedZipFiles] = useState<File[]>([]);
+  const [selectedZipCategory, setSelectedZipCategory] = useState<string>('');
+  const [showZipCategorySelector, setShowZipCategorySelector] = useState(false);
+
+  const calculateOverallProgress = useCallback(() => {
+    if (uploadingFiles.length === 0) return 0;
+    const totalProgress = uploadingFiles.reduce((sum, file) => sum + file.progress, 0);
+    return totalProgress / uploadingFiles.length;
+  }, [uploadingFiles]);
+
+  const updateFileProgress = useCallback((file: File, progress: number) => {
+    setUploadingFiles(prevFiles => {
+      const updatedFiles = prevFiles.map(item => 
+        item.file.name === file.name ? { ...item, progress } : item
+      );
+      
+      return updatedFiles;
+    });
+
+    // Calculate overall progress
+    setUploadingFiles(prevFiles => {
+      setOverallProgress(calculateOverallProgress());
+      return prevFiles;
+    });
+  }, [calculateOverallProgress]);
+
+  const updateFileStatus = useCallback((file: File, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
+    setUploadingFiles(prevFiles => 
+      prevFiles.map(item => 
+        item.file.name === file.name ? { ...item, status, error } : item
+      )
+    );
+  }, []);
+
+  // Check if there are any ZIP files in the selection
+  const checkForZipFiles = (files: File[]): boolean => {
+    return files.some(file => isZipFile(file.name));
+  };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Check if there are ZIP files in the selection
+    const hasZipFiles = checkForZipFiles(acceptedFiles);
+    
+    if (hasZipFiles) {
+      // Filter out ZIP files
+      const zipFiles = acceptedFiles.filter(file => isZipFile(file.name));
+      setSelectedZipFiles(zipFiles);
+      setShowZipCategorySelector(true);
+    } else {
+      // No ZIP files, proceed with regular upload
+      handleUpload(acceptedFiles);
     }
+  }, []);
+
+  const handleUpload = async (acceptedFiles: File[], zipCategoryId?: string) => {
+    if (acceptedFiles.length === 0) return;
+    
+    setIsUploading(true);
+    setUploadingFiles(
+      acceptedFiles.map(file => ({
+        file,
+        progress: 0,
+        status: 'uploading'
+      }))
+    );
+    setOverallProgress(0);
+    
+    const uploadedFileIds: string[] = [];
+
+    try {
+      // Process files by type (ZIP vs regular)
+      for (const file of acceptedFiles) {
+        if (isZipFile(file.name)) {
+          // Update status to processing for ZIP files
+          updateFileStatus(file, 'processing');
+          updateFileProgress(file, 10);
+          
+          // Get the base name for folder creation (without .zip extension)
+          const folderName = file.name.replace(/\.zip$/i, '');
+          
+          try {
+            // Check if category is provided for ZIP files
+            if (!zipCategoryId) {
+              toast({
+                title: "Category required",
+                description: "Please select a category for the ZIP file",
+                variant: "destructive"
+              });
+              updateFileStatus(file, 'error', 'Category required for ZIP files');
+              continue;
+            }
+            
+            // Call the Edge Function to extract the ZIP file
+            updateFileProgress(file, 30);
+            
+            // Get signed URL for the zip file upload
+            const { data: signedUrlData } = await supabase.storage
+              .from('raw_uploads')
+              .createSignedUploadUrl(`${creatorId}/${file.name}`);
+              
+            if (!signedUrlData) {
+              throw new Error('Failed to get signed URL for ZIP upload');
+            }
+
+            // Upload ZIP file to temporary storage
+            const uploadResponse = await fetch(signedUrlData.signedUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': file.type,
+              },
+              body: file,
+            });
+
+            if (!uploadResponse.ok) {
+              throw new Error('Failed to upload ZIP file');
+            }
+            
+            updateFileProgress(file, 50);
+            
+            // Call the unzip-files Edge Function with the category ID
+            const { data: extractionData, error: extractionError } = await supabase.functions.invoke('unzip-files', {
+              body: {
+                creatorId,
+                fileName: file.name,
+                targetFolder: folderName,
+                currentFolder: currentFolder === 'all' || currentFolder === 'unsorted' ? null : currentFolder,
+                categoryId: zipCategoryId // Pass the category ID
+              }
+            });
+            
+            if (extractionError) {
+              throw new Error(`ZIP extraction failed: ${extractionError.message}`);
+            }
+            
+            updateFileProgress(file, 90);
+            
+            // Add extracted file IDs to the result
+            if (extractionData?.fileIds && Array.isArray(extractionData.fileIds)) {
+              uploadedFileIds.push(...extractionData.fileIds);
+              
+              // Show success message for ZIP extraction
+              toast({
+                title: "ZIP file processed",
+                description: `Created folder "${folderName}" with ${extractionData.fileIds.length} files`,
+              });
+            }
+            
+            updateFileProgress(file, 100);
+            updateFileStatus(file, 'complete');
+          } catch (zipError) {
+            console.error("Error processing ZIP file:", zipError);
+            updateFileStatus(file, 'error', zipError instanceof Error ? zipError.message : 'Failed to process ZIP file');
+          }
+          
+          continue;
+        }
+        
+        // Regular file upload (non-ZIP)
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const uniqueSafeName = await getUniqueFileName(
+          safeName, 
+          currentFolder, 
+          creatorId, 
+          'raw_uploads',
+          supabase
+        );
+        
+        const filePath = `${creatorId}/${uniqueSafeName}`;
+        
+        // Custom upload with progress tracking
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            updateFileProgress(file, percentComplete);
+          }
+        });
+        
+        // Create a promise to track the XHR request
+        const uploadPromise = new Promise<void>((resolve, reject) => {
+          xhr.onload = async function() {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              updateFileProgress(file, 100);
+              updateFileStatus(file, 'complete');
+              
+              // Add folder reference
+              let folderArray: string[] = [];
+              if (currentFolder && currentFolder !== 'shared' && currentFolder !== 'unsorted') {
+                folderArray = [currentFolder];
+              }
+              
+              // Store metadata in media table
+              const { data: mediaRecord, error: mediaError } = await supabase
+                .from('media')
+                .insert({
+                  creator_id: creatorId,
+                  bucket_key: filePath,
+                  filename: uniqueSafeName,
+                  mime: file.type,
+                  file_size: file.size,
+                  status: 'complete',
+                  folders: folderArray
+                })
+                .select('id');
+                
+              if (mediaError) {
+                updateFileStatus(file, 'error', 'Failed to create media record');
+                reject(mediaError);
+              } else if (mediaRecord && mediaRecord[0]) {
+                uploadedFileIds.push(mediaRecord[0].id);
+                resolve();
+              } else {
+                resolve();
+              }
+            } else {
+              updateFileStatus(file, 'error', `Upload failed: ${xhr.statusText}`);
+              reject(new Error(`Upload failed: ${xhr.statusText}`));
+            }
+          };
+          
+          xhr.onerror = function() {
+            updateFileStatus(file, 'error', 'Network error during upload');
+            reject(new Error('Network error during upload'));
+          };
+        });
+        
+        // Get signed URL and upload
+        const { data: signedUrlData } = await supabase.storage
+          .from('raw_uploads')
+          .createSignedUploadUrl(filePath);
+          
+        if (signedUrlData) {
+          xhr.open('PUT', signedUrlData.signedUrl);
+          xhr.setRequestHeader('Content-Type', file.type);
+          xhr.send(file);
+          
+          try {
+            await uploadPromise;
+          } catch (error) {
+            console.error(`Error uploading ${file.name}:`, error);
+          }
+        }
+      }
+
+      const successfulUploads = uploadingFiles.filter(f => f.status === 'complete').length;
+      if (successfulUploads > 0) {
+        toast({
+          title: successfulUploads > 1 
+            ? `${successfulUploads} files uploaded` 
+            : '1 file uploaded',
+          description: `Successfully uploaded ${successfulUploads} files`,
+        });
+      }
+      
+      onUploadComplete(uploadedFileIds.length > 0 ? uploadedFileIds : undefined);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Failed to upload the file(s)',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      setShowZipCategorySelector(false);
+      setSelectedZipFiles([]);
+    }
+  };
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': [],
+      'video/*': [],
+      'audio/*': [],
+      'application/pdf': [],
+      'application/msword': [],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
+      'application/vnd.ms-excel': [],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [],
+      'application/zip': [],
+    },
+    disabled: isUploading || showZipCategorySelector,
   });
-  
-  const {
-    isUploading,
-    fileStatuses,
-    overallProgress,
-    showProgress,
-    setShowProgress,
-    handleCancelUpload,
-    MAX_FILE_SIZE_GB
-  } = useFileUploadHandler({
-    creatorId,
-    currentFolder,
-    onUploadComplete
-  });
 
-  // Process the selected files
-  const processSelectedFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    
-    const fileArray = Array.from(files);
-    setSelectedFiles(fileArray);
-    
-    // Check if there's at least one ZIP file
-    const containsZipFile = fileArray.some(file => isZipFile(file.name));
-    setHasZipFile(containsZipFile);
-  };
-
-  // Handle file input change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    processSelectedFiles(e.target.files);
-  };
-
-  // Handle drag events
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    processSelectedFiles(e.dataTransfer.files);
-  };
-
-  // Handle clicking on the drop area
-  const handleAreaClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+  const handleContinueWithZip = () => {
+    if (!selectedZipCategory) {
+      toast({
+        title: "Category selection required",
+        description: "Please select a category for the ZIP file folder",
+        variant: "destructive"
+      });
+      return;
     }
+    
+    handleUpload(selectedZipFiles, selectedZipCategory);
   };
 
-  // Clear selected files
-  const clearSelectedFiles = () => {
-    setSelectedFiles([]);
-    setHasZipFile(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  // Start the upload process
-  const handleUpload = async (values: FormValues) => {
-    if (!selectedFiles.length) return;
-    
-    // Create a custom event with the selected files
-    const customEvent = {
-      target: {
-        files: selectedFiles,
-        value: '',  // This will be reset after upload
-      },
-      currentTarget: {
-        files: selectedFiles,
-        value: '',
-      },
-      zipCategoryId: hasZipFile ? values.zipCategory : undefined
-    } as unknown as React.ChangeEvent<HTMLInputElement> & { zipCategoryId?: string };
-    
-    // Pass to the upload handler
-    await handleFileUploadWithCategory(customEvent);
-    
-    // Clear selected files after upload
-    clearSelectedFiles();
-  };
-  
-  // Custom handler that wraps the original handler to include category info
-  const handleFileUploadWithCategory = async (
-    e: React.ChangeEvent<HTMLInputElement> & { zipCategoryId?: string }
-  ) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const customEvent = {
-      ...e,
-      // Add any custom properties needed for ZIP file processing
-      zipCategoryId: e.zipCategoryId
-    };
-    
-    // This would need to be implemented in your FileUploadHandler.ts
-    if (typeof handleFileUpload === 'function') {
-      await handleFileUpload(customEvent);
-    }
-  };
-  
-  // We need to implement a stub here
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement> & { zipCategoryId?: string }
-  ) => {
-    console.log("Would upload files with category:", e.zipCategoryId);
-    // This is just a placeholder - the actual implementation would be in your FileUploadHandler
-    if (onUploadComplete) {
-      onUploadComplete([]);
-    }
-  };
+  // If showing ZIP category selector
+  if (showZipCategorySelector) {
+    return (
+      <div className="flex flex-col p-4 space-y-4">
+        <div className="space-y-4">
+          <h3 className="font-medium">Select Category for ZIP Folder</h3>
+          <p className="text-sm text-muted-foreground">
+            ZIP files must be assigned to a category. The extracted files will be placed in a folder within this category.
+          </p>
+          
+          <div className="space-y-2">
+            <Label htmlFor="zipCategory">Select a Category</Label>
+            <Select
+              value={selectedZipCategory}
+              onValueChange={setSelectedZipCategory}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category for ZIP folder" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCategories.map(category => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="text-sm text-muted-foreground">
+            {selectedZipFiles.length} ZIP {selectedZipFiles.length === 1 ? 'file' : 'files'} selected:
+            <ul className="mt-1 ml-4 list-disc">
+              {selectedZipFiles.map(file => (
+                <li key={file.name}>{file.name}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-2 mt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setSelectedZipFiles([]);
+              setShowZipCategorySelector(false);
+              setSelectedZipCategory('');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleContinueWithZip} 
+            disabled={!selectedZipCategory}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
-      {showProgress && fileStatuses.length > 0 ? (
-        <UploadProgressDisplay 
-          fileStatuses={fileStatuses}
-          overallProgress={overallProgress}
-          onCancel={handleCancelUpload}
-        />
-      ) : (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleUpload)} className="space-y-4 flex-1 flex flex-col">
-            <div 
-              className={`
-                border-2 border-dashed rounded-lg p-6 flex-1
-                flex flex-col items-center justify-center space-y-4
-                cursor-pointer transition-colors
-                ${isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/25 hover:border-muted-foreground/50'}
-              `}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              onClick={handleAreaClick}
-            >
-              {selectedFiles.length > 0 ? (
-                <div className="w-full">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium">Selected Files</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        clearSelectedFiles();
-                      }}
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Clear
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center p-2 rounded-md bg-muted">
-                        {isZipFile(file.name) ? (
-                          <FileArchive className="h-4 w-4 mr-2 text-amber-600" />
-                        ) : (
-                          <div className="w-4 h-4 mr-2 rounded-full bg-primary/20" />
-                        )}
-                        <span className="text-sm truncate flex-1">
-                          {file.name} <span className="text-xs text-muted-foreground">({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {hasZipFile && availableCategories.length > 0 && (
-                    <div className="mt-4 p-3 bg-muted rounded-md">
-                      <div className="flex items-center mb-2">
-                        <FileArchive className="h-4 w-4 mr-2 text-amber-600" />
-                        <span className="text-sm font-medium">ZIP File Detected</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Please select a category where the folder extracted from the ZIP file will be created.
-                      </p>
-                      <CategorySelector
-                        categories={availableCategories}
-                        control={form.control}
-                        name="zipCategory"
-                        label="Category for ZIP folder"
-                        placeholder="Select a category"
-                        required={hasZipFile}
-                      />
-                    </div>
-                  )}
+      <div {...getRootProps()} className="border-dashed border-2 border-gray-300 p-8 m-4 text-center bg-muted/30 rounded-lg">
+        <input {...getInputProps()} />
+        {!isUploading ? (
+          <p>Drag & drop some files here, or click to select files</p>
+        ) : (
+          <p>Uploading... please wait</p>
+        )}
+      </div>
+      
+      {uploadingFiles.length > 0 && (
+        <div className="px-4 pb-4">
+          <div className="mb-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span>Overall progress</span>
+              <span>{Math.round(overallProgress)}%</span>
+            </div>
+            <Progress value={overallProgress} className="h-2" />
+          </div>
+          
+          <div className="max-h-40 overflow-y-auto space-y-3">
+            {uploadingFiles.map((item) => (
+              <div key={item.file.name} className="text-sm">
+                <div className="flex justify-between mb-1">
+                  <span className="truncate max-w-[250px]" title={item.file.name}>
+                    {item.file.name}
+                  </span>
+                  <span>{Math.round(item.progress)}%</span>
                 </div>
-              ) : (
-                <>
-                  <UploadCloud className="h-12 w-12 text-muted-foreground" />
-                  <div className="space-y-2 text-center">
-                    <h3 className="text-lg font-medium">Drag and drop your files</h3>
-                    <p className="text-sm text-muted-foreground max-w-xs">
-                      Drop your files here or click to browse. Maximum file size: {MAX_FILE_SIZE_GB}GB.
-                    </p>
-                    <Button variant="secondary" type="button" size="sm" className="mt-2">
-                      <UploadCloud className="h-4 w-4 mr-2" />
-                      Browse files
-                    </Button>
-                  </div>
-                </>
-              )}
-              
-              <input 
-                ref={fileInputRef}
-                type="file" 
-                multiple
-                onChange={handleFileChange}
-                className="hidden" 
-              />
-            </div>
-            
-            <div className="flex items-center justify-end space-x-2 pt-2">
-              {onCancel && (
-                <Button variant="outline" type="button" onClick={onCancel}>
-                  Cancel
-                </Button>
-              )}
-              
-              <Button 
-                type="submit" 
-                disabled={selectedFiles.length === 0 || (hasZipFile && !form.watch('zipCategory'))}
-              >
-                <UploadCloud className="h-4 w-4 mr-2" />
-                Upload {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}
-              </Button>
-            </div>
-          </form>
-        </Form>
+                <Progress value={item.progress} className="h-1.5" />
+                {item.status === 'processing' && (
+                  <p className="text-xs text-amber-500 mt-1">Processing ZIP file...</p>
+                )}
+                {item.error && (
+                  <p className="text-xs text-destructive mt-1">{item.error}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
+      
+      <div className="p-4 mt-auto border-t flex justify-end">
+        <Button 
+          onClick={onCancel} 
+          variant="outline" 
+          disabled={isUploading}
+        >
+          {isUploading ? "Uploading..." : "Cancel"}
+        </Button>
+      </div>
     </div>
   );
 };
