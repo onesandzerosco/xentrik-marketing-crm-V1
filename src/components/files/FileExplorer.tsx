@@ -175,7 +175,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
-  // Context value
+  // Context value - add the missing properties
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
@@ -190,6 +190,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     availableFolders,
     availableCategories,
     onRemoveFromFolder,
+    handleDeleteCategory,
+    handleRenameCategory,
+    handleDeleteFolder,
+    handleRenameFolder,
     viewMode,
     isLoading
   };
@@ -248,6 +252,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           setNewFolderName={setNewFolderName}
           folderCurrentName={folderCurrentName || ''}
           selectedFileIds={selectedFileIds}
+          
+          // Add the missing properties
+          folderToDelete={folderToDelete}
+          setFolderToDelete={setFolderToDelete}
+          folderToRename={folderToRename}
+          setFolderToRename={setFolderToRename}
           
           // Selection state
           targetFolderId={targetFolderId}
