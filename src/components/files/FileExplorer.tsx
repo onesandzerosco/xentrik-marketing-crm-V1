@@ -180,6 +180,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleCreateNewFolderWrapper = () => {
     handleCreateNewFolder();
   };
+  
+  // Create wrapper functions for rename handlers
+  const handleRenameCategoryWrapper = () => {
+    if (categoryToRename && categoryCurrentName) {
+      handleRenameCategory();
+    }
+  };
+  
+  const handleRenameFolderWrapper = () => {
+    if (folderToRename && folderCurrentName) {
+      handleRenameFolder();
+    }
+  };
 
   // Context value
   const contextValue = {
@@ -276,8 +289,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           handleAddToFolderSubmit={handleAddToFolderSubmit}
           handleDeleteCategory={handleDeleteCategory}
           handleDeleteFolder={handleDeleteFolder}
-          handleRenameCategory={handleRenameCategory}
-          handleRenameFolder={handleRenameFolder}
+          handleRenameCategory={handleRenameCategoryWrapper}
+          handleRenameFolder={handleRenameFolderWrapper}
           handleSaveNote={handleSaveNote}
           onCreateNewCategory={handleCreateNewCategoryWrapper}
           onCreateNewFolder={handleCreateNewFolderWrapper}

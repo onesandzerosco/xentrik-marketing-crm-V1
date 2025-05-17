@@ -114,7 +114,6 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         categories={categories}
         handleSubmit={handleAddToFolderSubmit}
         onCreateNewCategory={onCreateNewCategory}
-        onCreateNewFolder={onCreateNewFolder}
       />
       
       {/* Delete Folder Modal */}

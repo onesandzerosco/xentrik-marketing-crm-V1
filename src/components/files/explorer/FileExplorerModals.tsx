@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { FileUploadModal } from './FileUploadModal';
-import { FileNotesModal } from './FileNotesModal';
+import { EditNoteModal } from './EditNoteModal';
 import { FolderModals } from './modals/FolderModals';
 import { CategoryModals } from './modals/CategoryModals';
 import { Category, CreatorFileType } from '@/types/fileTypes';
@@ -195,11 +196,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         handleDeleteFolder={handleDeleteFolder}
         handleRenameFolder={handleRenameFolder}
         onCreateNewCategory={onCreateNewCategory}
-        onCreateNewFolder={onCreateNewFolder}
       />
       
       {/* File Note Modal */}
-      <FileNotesModal 
+      <EditNoteModal 
         isOpen={isEditNoteModalOpen}
         onOpenChange={setIsEditNoteModalOpen}
         file={editingFile}
