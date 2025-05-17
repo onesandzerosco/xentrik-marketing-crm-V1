@@ -175,7 +175,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleInitiateNewFolder(currentCategory || '');
   };
 
-  // Context value - add the missing properties
+  // Context value with fixed Promise<void> return types
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
@@ -190,10 +190,30 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     availableFolders,
     availableCategories,
     onRemoveFromFolder,
-    handleDeleteCategory,
-    handleRenameCategory,
-    handleDeleteFolder,
-    handleRenameFolder,
+    handleDeleteCategory: async (categoryId: string) => {
+      if (handleDeleteCategory) {
+        return handleDeleteCategory(categoryId);
+      }
+      return Promise.resolve();
+    },
+    handleRenameCategory: async (categoryId: string, currentName: string) => {
+      if (handleRenameCategory) {
+        return handleRenameCategory(categoryId, currentName);
+      }
+      return Promise.resolve();
+    },
+    handleDeleteFolder: async (folderId: string) => {
+      if (handleDeleteFolder) {
+        return handleDeleteFolder(folderId);
+      }
+      return Promise.resolve();
+    },
+    handleRenameFolder: async (folderId: string, currentName: string) => {
+      if (handleRenameFolder) {
+        return handleRenameFolder(folderId, currentName);
+      }
+      return Promise.resolve();
+    },
     viewMode,
     isLoading
   };
@@ -258,6 +278,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           setFolderToDelete={setFolderToDelete}
           folderToRename={folderToRename}
           setFolderToRename={setFolderToRename}
+          categoryToDelete={categoryToDelete}
+          setCategoryToDelete={setCategoryToDelete}
+          categoryToRename={categoryToRename}
+          setCategoryToRename={setCategoryToRename}
           
           // Selection state
           targetFolderId={targetFolderId}

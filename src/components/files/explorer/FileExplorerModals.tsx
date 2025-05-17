@@ -23,6 +23,10 @@ interface FileExplorerModalsProps {
   newCategoryName: string;
   setNewCategoryName: (name: string) => void;
   categoryCurrentName: string;
+  categoryToDelete: string | null;
+  setCategoryToDelete: (id: string | null) => void;
+  categoryToRename: string | null;
+  setCategoryToRename: (id: string | null) => void;
   
   // Folder modals
   isAddFolderModalOpen: boolean;
@@ -35,6 +39,10 @@ interface FileExplorerModalsProps {
   setIsRenameFolderModalOpen: (open: boolean) => void;
   isEditNoteModalOpen: boolean;
   setIsEditNoteModalOpen: (open: boolean) => void;
+  folderToDelete: string | null;
+  setFolderToDelete: (id: string | null) => void;
+  folderToRename: string | null;
+  setFolderToRename: (id: string | null) => void;
   
   // Common props
   creatorId: string;
@@ -88,6 +96,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   newCategoryName,
   setNewCategoryName,
   categoryCurrentName,
+  categoryToDelete,
+  setCategoryToDelete,
+  categoryToRename,
+  setCategoryToRename,
   
   // Folder modals
   isAddFolderModalOpen,
@@ -100,6 +112,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   setIsRenameFolderModalOpen,
   isEditNoteModalOpen,
   setIsEditNoteModalOpen,
+  folderToDelete,
+  setFolderToDelete,
+  folderToRename,
+  setFolderToRename,
   
   // Common props
   creatorId,
@@ -161,6 +177,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isRenameCategoryModalOpen={isRenameCategoryModalOpen}
         setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
         categoryCurrentName={categoryCurrentName}
+        categoryToDelete={categoryToDelete}
+        setCategoryToDelete={setCategoryToDelete}
+        categoryToRename={categoryToRename}
+        setCategoryToRename={setCategoryToRename}
         handleCreateCategorySubmit={handleCreateCategorySubmit}
         handleDeleteCategory={handleDeleteCategory}
         handleRenameCategory={handleRenameCategory}
@@ -185,6 +205,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isRenameFolderModalOpen={isRenameFolderModalOpen}
         setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
         folderCurrentName={folderCurrentName}
+        folderToDelete={folderToDelete}
+        setFolderToDelete={setFolderToDelete}
+        folderToRename={folderToRename}
+        setFolderToRename={setFolderToRename}
         selectedFileIds={selectedFileIds}
         customFolders={customFolders}
         categories={categories}

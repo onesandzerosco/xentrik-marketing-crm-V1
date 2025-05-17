@@ -11,50 +11,78 @@ export const ensureStorageBucket = async () => {
       .storage
       .listBuckets();
     
-    if (bucketsError) throw bucketsError;
+    if (bucketsError) {
+      console.error("Error listing buckets:", bucketsError);
+      return false;
+    }
     
     // Create creator_files bucket if it doesn't exist
     const creatorFilesBucketExists = buckets?.some(bucket => bucket.name === 'creator_files');
     
     if (!creatorFilesBucketExists) {
-      const { error: createError } = await supabase
-        .storage
-        .createBucket('creator_files', { public: false });
-      
-      if (createError) throw createError;
-      
-      console.log('Created creator_files bucket');
+      try {
+        const { error: createError } = await supabase
+          .storage
+          .createBucket('creator_files', { public: false });
+        
+        if (createError) {
+          console.error("Error creating creator_files bucket:", createError);
+          // Continue execution even if bucket creation fails
+          // It might already exist or be created by another process
+        } else {
+          console.log('Created creator_files bucket');
+        }
+      } catch (err) {
+        console.error("Failed to create creator_files bucket:", err);
+        // Continue execution
+      }
     }
     
     // Create raw_uploads bucket if it doesn't exist
     const rawUploadsBucketExists = buckets?.some(bucket => bucket.name === 'raw_uploads');
     
     if (!rawUploadsBucketExists) {
-      const { error: createError } = await supabase
-        .storage
-        .createBucket('raw_uploads', { public: false });
-      
-      if (createError) throw createError;
-      
-      console.log('Created raw_uploads bucket');
+      try {
+        const { error: createError } = await supabase
+          .storage
+          .createBucket('raw_uploads', { public: false });
+        
+        if (createError) {
+          console.error("Error creating raw_uploads bucket:", createError);
+          // Continue execution even if bucket creation fails
+        } else {
+          console.log('Created raw_uploads bucket');
+        }
+      } catch (err) {
+        console.error("Failed to create raw_uploads bucket:", err);
+        // Continue execution
+      }
     }
     
     // Check if team bucket exists
     const teamBucketExists = buckets?.some(bucket => bucket.name === 'team');
     
     if (!teamBucketExists) {
-      const { error: createTeamError } = await supabase
-        .storage
-        .createBucket('team', { public: true });
-      
-      if (createTeamError) throw createTeamError;
-      
-      console.log('Created team bucket');
+      try {
+        const { error: createTeamError } = await supabase
+          .storage
+          .createBucket('team', { public: true });
+        
+        if (createTeamError) {
+          console.error("Error creating team bucket:", createTeamError);
+          // Continue execution even if bucket creation fails
+        } else {
+          console.log('Created team bucket');
+        }
+      } catch (err) {
+        console.error("Failed to create team bucket:", err);
+        // Continue execution
+      }
     }
     
     return true;
   } catch (err) {
-    console.error('Error ensuring storage buckets:', err);
+    console.error('Error in ensureStorageBucket:', err);
     return false;
   }
 };
