@@ -8,21 +8,21 @@ import { CreatorFileType } from '@/types/fileTypes';
 interface EditNoteModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  editingFile: CreatorFileType | null;
-  editingNote: string;
-  setEditingNote: (note: string) => void;
+  file?: CreatorFileType | null; // Changed from editingFile to file and made it optional
+  note: string;
+  setNote: (note: string) => void;
   onSave: () => void;
 }
 
 export const EditNoteModal: React.FC<EditNoteModalProps> = ({
   isOpen,
   onOpenChange,
-  editingFile,
-  editingNote,
-  setEditingNote,
+  file,
+  note,
+  setNote,
   onSave,
 }) => {
-  if (!editingFile) {
+  if (!file) {
     return null;
   }
 
@@ -30,14 +30,14 @@ export const EditNoteModal: React.FC<EditNoteModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Edit Note for {editingFile.name}</DialogTitle>
+          <DialogTitle>Edit Note for {file.name}</DialogTitle>
         </DialogHeader>
         
         <div className="py-4">
           <Textarea
             placeholder="Add a note about this file..."
-            value={editingNote}
-            onChange={(e) => setEditingNote(e.target.value)}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
             className="min-h-[150px]"
             autoFocus
           />

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -139,8 +140,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     handleCreateCategorySubmit,
     handleCreateFolderSubmit,
     handleAddToFolderSubmit,
-    handleDeleteFolder,
     handleDeleteCategory,
+    handleDeleteFolder,
     handleRenameFolder,
     handleRenameCategory,
   } = useFileExplorer({
@@ -172,6 +173,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       onUploadStart();
     }
     setIsUploadModalOpen(true);
+  };
+
+  // Fix the function signature mismatch by wrapping the original function
+  const handleCreateNewCategoryWrapper = () => {
+    handleCreateNewCategory();
   };
 
   return (
@@ -289,7 +295,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleRenameCategory={handleRenameCategory}
         handleRenameFolder={handleRenameFolder}
         handleSaveNote={handleSaveNote}
-        onCreateNewCategory={handleCreateNewCategory}
+        onCreateNewCategory={handleCreateNewCategoryWrapper}
         onCreateNewFolder={handleCreateNewFolder}
       />
     </div>
