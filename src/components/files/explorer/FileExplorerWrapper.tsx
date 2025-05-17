@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './useFileExplorer';
@@ -210,11 +211,10 @@ export const FileExplorerWrapper: React.FC<FileExplorerWrapperProps> = (props) =
   };
 
   // Fix for the TypeScript error - create a wrapper function for handleDeleteCategory
-  // that matches the expected function signature (no parameters)
   const handleDeleteCategoryWrapper = () => {
-    // This wrapper doesn't actually call the delete function directly
-    // It's just a placeholder to match the expected type signature
-    // The actual delete functionality will be triggered by the modals
+    if (categoryToDelete) {
+      handleDeleteCategory(categoryToDelete);
+    }
   };
 
   // Context value
@@ -285,7 +285,7 @@ export const FileExplorerWrapper: React.FC<FileExplorerWrapperProps> = (props) =
           isDeleteFolderModalOpen={isDeleteFolderModalOpen}
           setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
           isRenameFolderModalOpen={isRenameFolderModalOpen}
-          setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
+          setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
           isEditNoteModalOpen={isEditNoteModalOpen}
           setIsEditNoteModalOpen={setIsEditNoteModalOpen}
           
@@ -317,7 +317,7 @@ export const FileExplorerWrapper: React.FC<FileExplorerWrapperProps> = (props) =
           handleCreateCategorySubmit={handleCreateCategorySubmit}
           handleCreateFolderSubmit={handleCreateFolderSubmit}
           handleAddToFolderSubmit={handleAddToFolderSubmit}
-          handleDeleteCategory={handleDeleteCategory}
+          handleDeleteCategory={handleDeleteCategoryWrapper}
           handleDeleteFolder={handleDeleteFolder}
           handleRenameCategory={handleRenameCategoryWrapper}
           handleRenameFolder={handleRenameFolderWrapper}
