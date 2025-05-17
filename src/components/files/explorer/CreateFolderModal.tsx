@@ -47,6 +47,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
     if (onCreate) onCreate();
   };
   
+  // Find the selected category name to display in the dropdown
+  const selectedCategory = availableCategories.find(cat => cat.id === selectedCategoryId);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] w-full">
@@ -77,7 +80,9 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
                 disabled={true}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select category">
+                    {selectedCategory ? selectedCategory.name : 'Select category'}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {availableCategories.map(category => (
