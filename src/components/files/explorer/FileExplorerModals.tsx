@@ -228,7 +228,6 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isUploadModalOpen={isUploadModalOpen}
         setIsUploadModalOpen={setIsUploadModalOpen}
         creatorId={creatorId}
-        onFilesChanged={onFilesChanged}
         onUploadComplete={onUploadComplete}
       />
     </>

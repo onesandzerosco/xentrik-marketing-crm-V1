@@ -1,36 +1,36 @@
 
 import React from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { FileUploadModal } from '../FileUploadModal';
-import { Category } from '@/types/fileTypes';
 
 interface UploadModalsProps {
   isUploadModalOpen: boolean;
   setIsUploadModalOpen: (open: boolean) => void;
-  creatorId: string;
-  creatorName: string;
-  currentFolder: string;
-  availableCategories: Category[];
-  onUploadComplete?: (fileIds?: string[]) => void;
+  creatorId?: string;
+  onFilesChanged?: () => void;
+  onUploadComplete?: (fileIds: string[]) => void;
 }
 
 export const UploadModals: React.FC<UploadModalsProps> = ({
   isUploadModalOpen,
   setIsUploadModalOpen,
   creatorId,
-  creatorName,
-  currentFolder,
-  availableCategories,
-  onUploadComplete,
+  onFilesChanged,
+  onUploadComplete
 }) => {
   return (
-    <FileUploadModal 
-      isOpen={isUploadModalOpen} 
-      onOpenChange={setIsUploadModalOpen} 
-      creatorId={creatorId}
-      creatorName={creatorName}
-      onUploadComplete={onUploadComplete}
-      currentFolder={currentFolder}
-      availableCategories={availableCategories}
-    />
+    <>
+      {/* File Upload Modal */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <FileUploadModal 
+            creatorId={creatorId || ''}
+            onClose={() => setIsUploadModalOpen(false)}
+            onFilesChanged={onFilesChanged}
+            onUploadComplete={onUploadComplete}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

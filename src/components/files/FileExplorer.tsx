@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -96,7 +95,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setFolderToDelete,
     handleDeleteFolderClick,
     isRenameFolderModalOpen,
-    setIsRenameFolderModalOpen,
+    setIsRenameCategoryModalOpen,
     folderToRename,
     setFolderToRename,
     folderCurrentName, 
@@ -232,6 +231,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           newCategoryName={newCategoryName}
           setNewCategoryName={setNewCategoryName}
           categoryCurrentName={categoryCurrentName || ''}
+          categoryToDelete={categoryToDelete}
+          setCategoryToDelete={setCategoryToDelete}
+          categoryToRename={categoryToRename}
+          setCategoryToRename={setCategoryToRename}
           
           // Folder modals
           isAddFolderModalOpen={isAddFolderModalOpen}
@@ -241,18 +244,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           isDeleteFolderModalOpen={isDeleteFolderModalOpen}
           setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
           isRenameFolderModalOpen={isRenameFolderModalOpen}
-          setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
+          setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
           isEditNoteModalOpen={isEditNoteModalOpen}
           setIsEditNoteModalOpen={setIsEditNoteModalOpen}
           
           // Common props
           creatorId={creatorId}
-          creatorName={creatorName}
-          currentFolder={currentFolder}
           newFolderName={newFolderName}
           setNewFolderName={setNewFolderName}
           folderCurrentName={folderCurrentName || ''}
           selectedFileIds={selectedFileIds}
+          folderToDelete={folderToDelete}
+          setFolderToDelete={setFolderToDelete}
+          folderToRename={folderToRename}
+          setFolderToRename={setFolderToRename}
           
           // Selection state
           targetFolderId={targetFolderId}
@@ -262,14 +267,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           selectedCategoryForNewFolder={selectedCategoryForNewFolder}
           
           // Data
-          customFolders={customFolders}
-          categories={availableCategories}
+          availableCategories={availableCategories}
+          availableFolders={availableFolders}
           editingFile={editingFile}
           editingNote={editingNote}
           setEditingNote={setEditingNote}
           
           // Callbacks
           onUploadComplete={onUploadComplete}
+          onFilesChanged={onRefresh}
           handleCreateCategorySubmit={handleCreateCategorySubmit}
           handleCreateFolderSubmit={handleCreateFolderSubmit}
           handleAddToFolderSubmit={handleAddToFolderSubmit}
@@ -278,8 +284,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           handleRenameCategory={handleRenameCategory}
           handleRenameFolder={handleRenameFolder}
           handleSaveNote={handleSaveNote}
-          onCreateNewCategory={handleCreateNewCategoryWrapper}
-          onCreateNewFolder={handleCreateNewFolder}
+          handleCreateNewFolder={handleCreateNewFolder}
         />
       </div>
     </FileExplorerProvider>
