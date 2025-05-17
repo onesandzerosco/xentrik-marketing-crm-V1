@@ -26,7 +26,7 @@ export const useDragDropUploader = ({
   const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
   
-  // Wrapper functions to adapt to the new API
+  // Wrapper functions that match the expected signatures
   const updateFileProgress = (fileName: string, progress: number) => {
     updateProgress(fileName, progress);
   };
@@ -63,12 +63,16 @@ export const useDragDropUploader = ({
           continue;
         }
         
-        // Fixed the function signature to match what processRegularFile expects
+        // Fix: Use a wrapper function that calls updateFileProgress correctly
+        const completeCallback = (fileName: string) => {
+          updateFileProgress(fileName, 100);
+        };
+        
         const fileId = await processRegularFile(
           file,
           creatorId,
           currentFolder,
-          (fileName) => updateFileProgress(fileName, 100),
+          completeCallback,
           updateFileStatus
         );
         
