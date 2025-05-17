@@ -47,21 +47,35 @@ export const useFileOperations = ({
       
       // Update all selected files to add them to this folder
       if (fileIds.length > 0) {
-        const { error: filesError } = await supabase
-          .from('media')
-          .update({ 
-            folders: supabase.rpc('array_append_unique', { arr: 'folders', item: folderId })
-          })
-          .in('id', fileIds);
-        
-        if (filesError) {
-          throw new Error(`Failed to add files to folder: ${filesError.message}`);
+        // Get existing folders for each file first then append the new folder
+        for (const fileId of fileIds) {
+          const { data: fileData, error: fetchError } = await supabase
+            .from('media')
+            .select('folders')
+            .eq('id', fileId)
+            .single();
+            
+          if (fetchError) {
+            console.error(`Error fetching file ${fileId}:`, fetchError);
+            continue;
+          }
+          
+          const updatedFolders = [...(fileData.folders || []), folderId];
+          
+          const { error: updateError } = await supabase
+            .from('media')
+            .update({ folders: updatedFolders })
+            .eq('id', fileId);
+          
+          if (updateError) {
+            console.error(`Error updating file ${fileId}:`, updateError);
+          }
         }
       }
       
       // Add the new folder to the available folders
       if (setAvailableFolders) {
-        setAvailableFolders(prevFolders => [
+        setAvailableFolders((prevFolders: Folder[]) => [
           ...prevFolders,
           { id: folderId, name: folderName, categoryId }
         ]);
@@ -128,7 +142,7 @@ export const useFileOperations = ({
       
       // Add the new category to the available categories
       if (setAvailableCategories) {
-        setAvailableCategories(prevCategories => [
+        setAvailableCategories((prevCategories: Category[]) => [
           ...prevCategories,
           { id: categoryId, name: categoryName }
         ]);
@@ -172,16 +186,32 @@ export const useFileOperations = ({
     try {
       setIsProcessing(true);
       
-      // Update files to add them to the selected folder
-      const { error } = await supabase
-        .from('media')
-        .update({ 
-          folders: supabase.rpc('array_append_unique', { arr: 'folders', item: folderId })
-        })
-        .in('id', fileIds);
-      
-      if (error) {
-        throw new Error(`Failed to add files to folder: ${error.message}`);
+      // For each file, update it to add the folder if not already in the folders array
+      for (const fileId of fileIds) {
+        const { data: fileData, error: fetchError } = await supabase
+          .from('media')
+          .select('folders')
+          .eq('id', fileId)
+          .single();
+        
+        if (fetchError) {
+          console.error(`Error fetching file ${fileId}:`, fetchError);
+          continue;
+        }
+        
+        const currentFolders = fileData.folders || [];
+        if (!currentFolders.includes(folderId)) {
+          const updatedFolders = [...currentFolders, folderId];
+          
+          const { error: updateError } = await supabase
+            .from('media')
+            .update({ folders: updatedFolders })
+            .eq('id', fileId);
+          
+          if (updateError) {
+            console.error(`Error updating file ${fileId}:`, updateError);
+          }
+        }
       }
       
       onFilesChanged();
@@ -312,7 +342,9 @@ export const useFileOperations = ({
       
       // Update the available folders list
       if (setAvailableFolders) {
-        setAvailableFolders(prevFolders => prevFolders.filter(folder => folder.id !== folderId));
+        setAvailableFolders((prevFolders: Folder[]) => 
+          prevFolders.filter(folder => folder.id !== folderId)
+        );
       }
       
       // If we're currently viewing this folder, switch to 'all' view
@@ -357,7 +389,7 @@ export const useFileOperations = ({
       
       // Update the available folders list with the new name
       if (setAvailableFolders) {
-        setAvailableFolders(prevFolders => 
+        setAvailableFolders((prevFolders: Folder[]) => 
           prevFolders.map(folder => 
             folder.id === folderId ? { ...folder, name: newFolderName } : folder
           )
@@ -425,14 +457,15 @@ export const useFileOperations = ({
         }
       }
       
-      // Get all folders in this category
-      let foldersToUpdate = [];
+      // Update folders that belong to this category
+      let foldersToUpdate: Folder[] = [];
       if (setAvailableFolders) {
-        foldersToUpdate = setAvailableFolders(prevFolders => {
-          // First, get the list of folders in this category
+        setAvailableFolders((prevFolders: Folder[]) => {
+          // Get the list of folders in this category
           const foldersInCategory = prevFolders.filter(folder => folder.categoryId === categoryId);
+          foldersToUpdate = foldersInCategory;
           
-          // Then filter out folders in this category and return the rest
+          // Return folders not in this category
           return prevFolders.filter(folder => folder.categoryId !== categoryId);
         });
       }
@@ -449,7 +482,7 @@ export const useFileOperations = ({
       
       // Update the available categories list
       if (setAvailableCategories) {
-        setAvailableCategories(prevCategories => 
+        setAvailableCategories((prevCategories: Category[]) => 
           prevCategories.filter(category => category.id !== categoryId)
         );
       }
@@ -507,7 +540,7 @@ export const useFileOperations = ({
       
       // Update the available categories list with the new name
       if (setAvailableCategories) {
-        setAvailableCategories(prevCategories => 
+        setAvailableCategories((prevCategories: Category[]) => 
           prevCategories.map(category => 
             category.id === categoryId ? { ...category, name: newCategoryName } : category
           )
