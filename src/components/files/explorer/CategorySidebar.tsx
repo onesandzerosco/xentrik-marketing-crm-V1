@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, FolderPlus, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Pencil, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -55,11 +56,6 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
     }));
   };
   
-  const handleNewFolderInCategory = (e: React.MouseEvent, categoryId: string) => {
-    e.stopPropagation();
-    onInitiateNewFolder(categoryId);
-  };
-  
   const handleDeleteCategory = async (e: React.MouseEvent, categoryId: string) => {
     e.stopPropagation();
     try {
@@ -102,7 +98,7 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
     }
   };
   
-  const handleRenameFolder = async (e: React.MouseEvent, folderId: string, currentName: string) => {
+  const handleRenameFolderClick = async (e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
     try {
       await onRenameFolder(folderId, currentName);
@@ -114,6 +110,11 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleNewFolderClick = (e: React.MouseEvent, categoryId: string) => {
+    e.stopPropagation();
+    onInitiateNewFolder(categoryId);
   };
   
   return (
@@ -186,18 +187,9 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
                 )}
                 <span className="text-sm flex-1 truncate">{category.name}</span>
                 
-                {/* Category actions */}
+                {/* Category actions - now only Rename and Delete */}
                 {canManageFolders && (
                   <div className="opacity-0 group-hover:opacity-100 flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={(e) => handleNewFolderInCategory(e, category.id)}
-                      title="New folder in this category"
-                    >
-                      <FolderPlus className="h-3.5 w-3.5" />
-                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -240,7 +232,7 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={(e) => handleRenameFolder(e, folder.id, folder.name)}
+                            onClick={(e) => handleRenameFolderClick(e, folder.id, folder.name)}
                             title="Rename folder"
                           >
                             <Pencil className="h-3.5 w-3.5" />

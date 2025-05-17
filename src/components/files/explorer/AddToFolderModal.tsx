@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -17,6 +18,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { PlusCircle } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 interface AddToFolderModalProps {
@@ -24,12 +26,13 @@ interface AddToFolderModalProps {
   onOpenChange: (open: boolean) => void;
   targetFolderId: string;
   setTargetFolderId: (id: string) => void;
-  targetCategoryId: string;  // Added this prop
-  setTargetCategoryId: (id: string) => void;  // Added this prop
+  targetCategoryId: string;  
+  setTargetCategoryId: (id: string) => void;
   numSelectedFiles: number;
   customFolders: Array<{ id: string; name: string; categoryId: string }>;
   categories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
+  onCreateNewFolder?: () => void;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -43,6 +46,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   customFolders,
   categories,
   handleSubmit,
+  onCreateNewFolder,
 }) => {
   // Filter folders by selected category
   const filteredFolders = targetCategoryId
@@ -53,6 +57,15 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   useEffect(() => {
     setTargetFolderId('');
   }, [targetCategoryId, setTargetFolderId]);
+
+  const handleCreateNewFolderClick = () => {
+    if (onCreateNewFolder) {
+      // Close this modal
+      onOpenChange(false);
+      // Open the create folder modal
+      onCreateNewFolder();
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -109,6 +122,19 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Add Create New Folder button */}
+              {targetCategoryId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-2 w-full"
+                  onClick={handleCreateNewFolderClick}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create New Folder
+                </Button>
+              )}
             </div>
           </div>
           
