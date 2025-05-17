@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -50,17 +50,6 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   const filteredFolders = targetCategoryId
     ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
     : [];
-  
-  // Reset folder selection when category changes
-  useEffect(() => {
-    if (targetCategoryId && filteredFolders.length > 0) {
-      // Auto-select the first folder if available
-      setTargetFolderId(filteredFolders[0].id);
-    } else {
-      // Clear the selected folder if no folders are available
-      setTargetFolderId('');
-    }
-  }, [targetCategoryId, filteredFolders, setTargetFolderId]);
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -120,8 +109,8 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 onValueChange={setTargetFolderId}
                 disabled={!targetCategoryId || filteredFolders.length === 0}
               >
-                <SelectTrigger id="folder-select" className={filteredFolders.length === 0 ? "text-muted-foreground" : ""}>
-                  <SelectValue placeholder={filteredFolders.length === 0 ? (targetCategoryId ? "No folders in this category" : "Select a category first") : "Select a folder"} />
+                <SelectTrigger id="folder-select">
+                  <SelectValue placeholder="Select a folder" />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredFolders.map((folder) => (
@@ -129,11 +118,6 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                       {folder.name}
                     </SelectItem>
                   ))}
-                  {filteredFolders.length === 0 && targetCategoryId && (
-                    <div className="px-4 py-2 text-sm text-muted-foreground">
-                      No folders available in this category
-                    </div>
-                  )}
                 </SelectContent>
               </Select>
             </div>

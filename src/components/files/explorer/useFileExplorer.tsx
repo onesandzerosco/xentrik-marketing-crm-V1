@@ -98,7 +98,7 @@ export const useFileExplorer = ({
     onRefresh,
     availableFolders,
     currentFolder,
-    selectedFileIds: useFileSelection().selectedFileIds
+    selectedFileIds
   });
   
   // New folder flow hook
@@ -155,11 +155,11 @@ export const useFileExplorer = ({
     
     // Attach the required values to the event so that the handler can use them
     (e.currentTarget as any).targetFolderId = folderOps.targetFolderId;
-    (e.currentTarget as any).targetCategoryId = folderOps.targetCategoryId; // Use folderOps.targetCategoryId instead of folderFlow.targetCategoryId
-    (e.currentTarget as any).selectedFileIds = useFileSelection().selectedFileIds;
+    (e.currentTarget as any).targetCategoryId = folderFlow.targetCategoryId;
+    (e.currentTarget as any).selectedFileIds = selectedFileIds;
     (e.currentTarget as any).setIsAddToFolderModalOpen = folderOps.setIsAddToFolderModalOpen;
     (e.currentTarget as any).setTargetFolderId = folderOps.setTargetFolderId;
-    (e.currentTarget as any).setSelectedFileIds = useFileSelection().setSelectedFileIds;
+    (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
     
     folderOps.handleAddToFolderSubmit(e);
   };
@@ -183,9 +183,9 @@ export const useFileExplorer = ({
 
   return {
     // File selection
-    selectedFileIds: useFileSelection().selectedFileIds,
-    setSelectedFileIds: useFileSelection().setSelectedFileIds,
-    handleFileDeleted: useFileSelection().handleFileDeleted,
+    selectedFileIds,
+    setSelectedFileIds,
+    handleFileDeleted,
     
     // Category operations - from categoryOps
     ...categoryOps,
@@ -194,26 +194,26 @@ export const useFileExplorer = ({
     ...folderOps,
     
     // File notes
-    isEditNoteModalOpen: useFileNotes({ onRefresh }).isEditNoteModalOpen,
-    setIsEditNoteModalOpen: useFileNotes({ onRefresh }).setIsEditNoteModalOpen,
-    editingFile: useFileNotes({ onRefresh }).editingFile,
-    editingNote: useFileNotes({ onRefresh }).editingNote, 
-    setEditingNote: useFileNotes({ onRefresh }).setEditingNote,
-    handleEditNote: useFileNotes({ onRefresh }).handleEditNote,
-    handleSaveNote: useFileNotes({ onRefresh }).handleSaveNote,
+    isEditNoteModalOpen,
+    setIsEditNoteModalOpen,
+    editingFile,
+    editingNote, 
+    setEditingNote,
+    handleEditNote,
+    handleSaveNote,
     
     // File filtering
-    searchQuery: useFileFilters({ files }).searchQuery,
-    setSearchQuery: useFileFilters({ files }).setSearchQuery,
-    selectedTypes: useFileFilters({ files }).selectedTypes,
-    setSelectedTypes: useFileFilters({ files }).setSelectedTypes,
-    viewMode: useFileFilters({ files }).viewMode,
-    setViewMode: useFileFilters({ files }).setViewMode,
-    filteredFiles: useFileFilters({ files }).filteredFiles,
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles,
     
     // Upload modal
-    isUploadModalOpen: useUploadModal().isUploadModalOpen,
-    setIsUploadModalOpen: useUploadModal().setIsUploadModalOpen,
+    isUploadModalOpen,
+    setIsUploadModalOpen,
     
     // Connected handlers
     handleCreateCategorySubmit,

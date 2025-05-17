@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Category } from '@/types/fileTypes';
 
 interface UseNewFolderFlowProps {
@@ -50,7 +50,6 @@ export const useNewFolderFlow = ({
   ) => {
     if (showNewFolderInCategory) {
       onRefresh(); // Refresh to get the new category
-      
       // Wait for state update before opening folder modal
       setTimeout(() => {
         const newCategoryId = availableCategories.find(c => c.name === categoryName)?.id;
