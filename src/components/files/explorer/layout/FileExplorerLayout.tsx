@@ -1,13 +1,14 @@
 
 import React from 'react';
-import { UploadCloud, RefreshCw, ViewGrid, ViewList, Plus } from 'lucide-react';
+import { UploadCloud, RefreshCw, LayoutGrid, List, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FilterBar } from '@/components/files/FilterBar';
 import { FileGridContainer } from '@/components/files/grid/FileGridContainer';
 import { FileExplorerSidebar } from '@/components/files/explorer/FileExplorerSidebar';
 import { FileExplorerHeader } from '@/components/files/explorer/FileExplorerHeader';
-import { CreatorFileType, Folder, Category, FileTag } from '@/types/fileTypes';
+import { CreatorFileType, Folder, Category } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerHeaderProps {
   creatorName: string;
@@ -23,8 +24,8 @@ interface FileExplorerHeaderProps {
 interface FileExplorerSidebarProps {
   onFolderChange: (folderId: string) => void;
   currentFolder: string;
-  onCategoryChange: (categoryId: string) => void;
-  currentCategory: string;
+  onCategoryChange: (categoryId: string | null) => void;
+  currentCategory: string | null;
   availableFolders: Folder[];
   availableCategories: Category[];
   onCreateFolder: () => void;
@@ -75,7 +76,7 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
     handleAddToFolderClick,
     creatorName = 'Creator',
     currentFolder = 'all',
-    currentCategory = '',
+    currentCategory = null,
     availableFolders = [],
     availableCategories = [],
     onCategoryChange = () => {},

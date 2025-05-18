@@ -7,7 +7,7 @@ interface FileGridContainerProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged: () => void;
-  onFileDeleted?: (fileId: string) => void; 
+  onFileDeleted?: (fileId: string) => Promise<void>; 
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
   onAddToFolderClick?: () => void;

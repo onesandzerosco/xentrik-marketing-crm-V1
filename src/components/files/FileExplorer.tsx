@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
+import { Plus, Upload, FolderPlus } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/components/ui/use-toast';
@@ -309,6 +308,43 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setShowAddToFolderModal(true);
   };
   
+  // Additional handlers for context
+  const handleInitiateNewCategory = () => {
+    // Placeholder for initializing new category modal
+    console.log("Initialize new category");
+  };
+  
+  const handleInitiateNewFolder = (categoryId?: string) => {
+    // Placeholder for initializing new folder modal
+    console.log("Initialize new folder in category", categoryId);
+  };
+  
+  const handleDeleteCategoryClick = (categoryId: string) => {
+    // Placeholder for delete category action
+    console.log("Delete category", categoryId);
+    if (onDeleteCategory) {
+      onDeleteCategory(categoryId);
+    }
+  };
+  
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    // Placeholder for rename category action
+    console.log("Rename category", categoryId, currentName);
+  };
+  
+  const handleDeleteFolderClick = (folderId: string) => {
+    // Placeholder for delete folder action
+    console.log("Delete folder", folderId);
+    if (onDeleteFolder) {
+      onDeleteFolder(folderId);
+    }
+  };
+  
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    // Placeholder for rename folder action
+    console.log("Rename folder", folderId, currentName);
+  };
+  
   // File filtering and view
   const {
     searchQuery,
@@ -329,12 +365,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     currentFolder,
     currentCategory,
     handleAddToFolderClick,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick,
     creatorName,
     creatorId,
     isCreatorView,
     availableFolders,
     availableCategories,
     onCategoryChange,
+    onDeleteFolder,
+    onDeleteCategory,
+    onRemoveFromFolder,
     viewMode,
     isLoading
   };
@@ -425,7 +470,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
+          setSelectedTypes={(type) => setSelectedTypes(type ? [type] : [])}
           onFolderChange={onFolderChange}
           selectedTags={selectedTags}
           setSelectedTags={setSelectedTags}
