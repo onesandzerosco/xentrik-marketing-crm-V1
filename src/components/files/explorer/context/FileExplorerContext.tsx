@@ -13,12 +13,12 @@ interface FileExplorerContextProps {
   
   // Modal controls
   handleAddToFolderClick: () => void;
-  handleInitiateNewCategory?: () => void;
-  handleInitiateNewFolder?: (categoryId?: string) => void;
-  handleDeleteCategoryClick?: (categoryId: string) => void;
-  handleRenameCategoryClick?: (categoryId: string, currentName: string) => void;
-  handleDeleteFolderClick?: (folderId: string) => void;
-  handleRenameFolderClick?: (folderId: string, currentName: string) => void;
+  handleInitiateNewCategory: () => void;
+  handleInitiateNewFolder: (categoryId?: string) => void;
+  handleDeleteCategoryClick: (categoryId: string) => void;
+  handleRenameCategoryClick: (categoryId: string, currentName: string) => void;
+  handleDeleteFolderClick: (folderId: string) => void;
+  handleRenameFolderClick: (folderId: string, currentName: string) => void;
   
   // Creator information
   creatorName: string;
@@ -29,8 +29,8 @@ interface FileExplorerContextProps {
   availableFolders: Folder[];
   availableCategories: Category[];
   onCategoryChange: (categoryId: string | null) => void;
-  onDeleteFolder?: (folderId: string) => Promise<void>;
-  onDeleteCategory?: (categoryId: string) => Promise<void>;
+  onDeleteFolder: (folderId: string) => Promise<void>;
+  onDeleteCategory: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   
   // UI state

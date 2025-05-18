@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -160,16 +161,6 @@ const CreatorFiles = () => {
   const createCategoryWrapper = async (categoryName: string): Promise<void> => {
     await handleCreateCategory(categoryName);
     return Promise.resolve();
-  };
-
-  const handleFileDeleted = async (fileId: string): Promise<void> => {
-    try {
-      // Logic for file deletion can go here if needed
-      // This is now returning a Promise<void> as required
-      return Promise.resolve();
-    } catch (error) {
-      return Promise.reject(error);
-    }
   };
 
   useEffect(() => {
