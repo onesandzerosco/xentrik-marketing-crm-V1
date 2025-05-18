@@ -26,8 +26,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface FileListItemProps {
   file: CreatorFileType;
   isCreatorView: boolean;
-  isSelected: boolean;
-  toggleSelection: (fileId: string) => void;
+  isFileSelected: (fileId: string) => boolean;
+  toggleFileSelection: (fileId: string) => void;
   handleFileClick: (file: CreatorFileType) => void;
   handleDeleteFile: (fileId: string) => void;
   showRemoveFromFolder: boolean;
@@ -36,15 +36,13 @@ interface FileListItemProps {
   onEditNote?: (file: CreatorFileType) => void;
   onFileDeleted?: (fileId: string) => void;
   onFilesChanged: () => void;
-  isNewlyUploaded?: boolean;
-  onAddTag?: (file: CreatorFileType) => void;
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
   file,
   isCreatorView,
-  isSelected,
-  toggleSelection,
+  isFileSelected,
+  toggleFileSelection,
   handleFileClick,
   handleDeleteFile,
   showRemoveFromFolder,
@@ -52,9 +50,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   currentFolder,
   onEditNote,
   onFileDeleted,
-  onFilesChanged,
-  isNewlyUploaded = false,
-  onAddTag,
+  onFilesChanged
 }) => {
   const { toast } = useToast();
   const { canDelete, canEdit, canManageFolders } = useFilePermissions();
@@ -115,8 +111,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
         {isCreatorView && (
           <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => toggleSelection(file.id)}
+            checked={isFileSelected(file.id)}
+            onCheckedChange={() => toggleFileSelection(file.id)}
           />
         )}
       </TableCell>

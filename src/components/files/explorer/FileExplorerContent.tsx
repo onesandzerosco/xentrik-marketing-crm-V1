@@ -19,11 +19,11 @@ interface FileExplorerContentProps {
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   availableTags?: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
+  onTagCreate?: (name: string) => Promise<FileTag>;
   filteredFiles: CreatorFileType[];
   isCreatorView: boolean;
   onFilesChanged: () => void;
-  onFileDeleted: (fileId: string) => Promise<void>;
+  onFileDeleted: (fileId: string) => void;
   recentlyUploadedIds: string[];
   selectedFileIds: string[];
   setSelectedFileIds: (fileIds: string[]) => void;
@@ -78,12 +78,11 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
 
   const handleTagSelect = (tagId: string) => {
     if (setSelectedTags) {
-      // Create a new array to update the state
-      if (selectedTags.includes(tagId)) {
-        setSelectedTags(selectedTags.filter(id => id !== tagId));
-      } else {
-        setSelectedTags([...selectedTags, tagId]);
-      }
+      setSelectedTags(prevTags => 
+        prevTags.includes(tagId) 
+          ? prevTags.filter(id => id !== tagId)
+          : [...prevTags, tagId]
+      );
     }
   };
 
@@ -104,11 +103,13 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
       
       {isLoading ? (
         <FileViewSkeleton view={viewMode} />
+      ) : isViewingEmptyCategory() && onCreateFolder ? (
+        <EmptyFoldersState onCreateFolder={onCreateFolder} />
       ) : filteredFiles.length === 0 ? (
         <EmptyState 
           isFiltered={searchQuery !== '' || selectedTypes.length > 0 || selectedTags.length > 0}
           isCreatorView={isCreatorView}
-          onUploadClick={() => {}}
+          onUploadClick={() => {}} // We'll handle uploads elsewhere
           currentFolder={currentFolder}
         />
       ) : viewMode === 'grid' ? (

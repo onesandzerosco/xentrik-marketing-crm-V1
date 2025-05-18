@@ -1,11 +1,10 @@
 
 import React from 'react';
+import { CreatorFileType } from '@/types/fileTypes';
 import { FileExplorerHeader } from '../FileExplorerHeader';
 import { FileExplorerSidebar } from '../FileExplorerSidebar';
 import { FileExplorerContent } from '../FileExplorerContent';
 import { useFileExplorerContext } from '../context/FileExplorerContext';
-import { CreatorFileType } from '@/types/fileTypes';
-import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerLayoutProps {
   filteredFiles: CreatorFileType[];
@@ -18,10 +17,6 @@ interface FileExplorerLayoutProps {
   selectedTypes: string[];
   setSelectedTypes: (types: string[]) => void;
   onFolderChange: (folderId: string) => void;
-  selectedTags?: string[];
-  setSelectedTags?: (tags: string[]) => void;
-  availableTags?: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
   onEditNote: (file: CreatorFileType) => void;
   onCreateFolder: () => void;
 }
@@ -37,93 +32,63 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
   selectedTypes,
   setSelectedTypes,
   onFolderChange,
-  selectedTags = [],
-  setSelectedTags,
-  availableTags = [],
-  onTagCreate,
   onEditNote,
   onCreateFolder,
 }) => {
   const {
+    creatorName,
+    isCreatorView,
     selectedFileIds,
     setSelectedFileIds,
-    isCreatorView,
     currentFolder,
     currentCategory,
-    onCategoryChange,
-    availableFolders,
-    availableCategories,
-    onDeleteFolder,
-    onDeleteCategory,
-    onRemoveFromFolder,
     handleAddToFolderClick,
-    creatorName,
+    availableFolders,
+    onRemoveFromFolder,
     isLoading
   } = useFileExplorerContext();
 
   return (
-    <div className="flex flex-col h-full">
-      <FileExplorerHeader
+    <>
+      <FileExplorerHeader 
         creatorName={creatorName}
         viewMode={viewMode}
         setViewMode={setViewMode}
-        onUploadClick={isCreatorView ? onUploadClick : undefined}
+        onUploadClick={onUploadClick}
+        isCreatorView={isCreatorView}
         onRefresh={onRefresh}
         selectedFileIds={selectedFileIds}
-        onAddToFolderClick={
-          selectedFileIds.length > 0 && isCreatorView
-            ? handleAddToFolderClick
-            : undefined
-        }
-        isCreatorView={isCreatorView}
+        onAddToFolderClick={handleAddToFolderClick}
       />
+      
       <div className="flex flex-1 overflow-hidden">
-        <FileExplorerSidebar
+        <FileExplorerSidebar 
           onFolderChange={onFolderChange}
-          currentFolder={currentFolder}
-          onCategoryChange={onCategoryChange}
-          currentCategory={currentCategory}
-          availableFolders={availableFolders}
-          availableCategories={availableCategories}
-          onCreateFolder={isCreatorView ? onCreateFolder : undefined}
         />
-        <FileExplorerContent
+        
+        <FileExplorerContent 
           isLoading={isLoading}
           viewMode={viewMode}
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          availableTags={availableTags}
-          onTagCreate={onTagCreate}
           filteredFiles={filteredFiles}
           isCreatorView={isCreatorView}
           onFilesChanged={onRefresh}
-          onFileDeleted={(fileId) => {
-            // Return a Promise to match the expected type
-            return new Promise<void>((resolve, reject) => {
-              try {
-                console.log(`Delete file ${fileId}`);
-                resolve();
-              } catch (error) {
-                reject(error);
-              }
-            });
-          }}
+          onFileDeleted={onRefresh}
           recentlyUploadedIds={[]}
           selectedFileIds={selectedFileIds}
           setSelectedFileIds={setSelectedFileIds}
           onAddToFolderClick={handleAddToFolderClick}
           currentFolder={currentFolder}
           currentCategory={currentCategory}
-          onCreateFolder={isCreatorView ? onCreateFolder : undefined}
+          onCreateFolder={onCreateFolder}
           availableFolders={availableFolders}
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
         />
       </div>
-    </div>
+    </>
   );
 };

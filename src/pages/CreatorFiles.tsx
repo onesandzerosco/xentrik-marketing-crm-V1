@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +12,6 @@ import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/file-operations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { useFileTags } from '@/hooks/useFileTags';
 
 const CreatorFiles = () => {
   const { id } = useParams();
@@ -146,11 +146,6 @@ const CreatorFiles = () => {
     }
   };
 
-  // Wrapper function to bridge interface differences
-  const handleAddFilesToFolderWrapper = (fileIds: string[], folderId: string) => {
-    return handleAddFilesToFolder(fileIds, folderId, currentCategory || 'all');
-  };
-  
   // Wrapper to make the return type of these functions match the expected Promise<void>
   const createFolderWrapper = async (folderName: string, fileIds: string[], categoryId: string): Promise<void> => {
     await handleCreateFolder(folderName, fileIds, categoryId);
@@ -183,86 +178,11 @@ const CreatorFiles = () => {
     );
   }
 
-  // Get tags from hook
-  const { 
-    availableTags, 
-    selectedTags: tagFilters, 
-    setSelectedTags: setTagFilters, 
-    createTag, 
-    filterFilesByTags 
-  } = useFileTags();
-
-  // Apply tag filtering on top of the basic filtering
-  const tagFilteredFiles = tagFilters.length > 0
-    ? filterFilesByTags(filteredFiles, tagFilters)
-    : filteredFiles;
-
-    // Handle file deletion
-  const handleFileDeleted = async (fileId: string): Promise<void> => {
-    try {
-      // Get the file from the database
-      const { data: file, error: fetchError } = await supabase
-        .from('media')
-        .select('*')
-        .eq('id', fileId)
-        .single();
-      
-      if (fetchError) {
-        throw new Error(`Failed to fetch file: ${fetchError.message}`);
-      }
-      
-      // Delete the file from Supabase storage
-      if (file?.bucket_key) {
-        const { error: storageError } = await supabase.storage
-          .from('raw_uploads')
-          .remove([file.bucket_key]);
-        
-        if (storageError) {
-          console.error('Error deleting file from storage:', storageError);
-          toast({
-            title: 'Error Deleting File',
-            description: 'Failed to delete file from storage. Please try again.',
-            variant: 'destructive',
-          });
-          return Promise.reject(storageError);
-        }
-      }
-      
-      // Delete the file record from the database
-      const { error: deleteError } = await supabase
-        .from('media')
-        .delete()
-        .eq('id', fileId);
-      
-      if (deleteError) {
-        throw new Error(`Failed to delete file from database: ${deleteError.message}`);
-      }
-      
-      toast({
-        title: 'File Deleted',
-        description: 'File was successfully deleted.',
-      });
-      
-      // Refresh files
-      refetch();
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      toast({
-        title: 'Error',
-        description: 'An error occurred while deleting the file.',
-        variant: 'destructive',
-      });
-      return Promise.reject(error);
-    }
-  };
-
   return (
     <FileExplorer 
-      files={tagFilteredFiles}
-      creatorName={creator?.name || ''}
-      creatorId={creator?.id || ''}
+      files={filteredFiles}
+      creatorName={creator.name}
+      creatorId={creator.id}
       isLoading={isLoading}
       onRefresh={refetch}
       onFolderChange={setCurrentFolder}
@@ -277,17 +197,12 @@ const CreatorFiles = () => {
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={createFolderWrapper}
       onCreateCategory={createCategoryWrapper}
-      onAddFilesToFolder={handleAddFilesToFolderWrapper}
+      onAddFilesToFolder={handleAddFilesToFolder}
       onDeleteFolder={handleDeleteFolder}
       onDeleteCategory={handleDeleteCategory}
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
       onRenameCategory={handleRenameCategory}
-      selectedTags={tagFilters}
-      setSelectedTags={setTagFilters}
-      availableTags={availableTags}
-      onTagCreate={createTag}
-      onFileDeleted={handleFileDeleted}
     />
   );
 };

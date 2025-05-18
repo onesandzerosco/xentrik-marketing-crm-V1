@@ -4,26 +4,16 @@ export interface CreatorFileType {
   name: string;
   size: number;
   created_at: string;
-  url?: string;
-  type?: string;
-  folder?: string;
-  status?: "uploading" | "complete" | "available";
-  bucket_key?: string; // Changed from bucketPath to match DB schema
+  url: string;
+  type: string;
+  folder: string;
+  status?: "uploading" | "complete";
+  bucketPath?: string;
   isNewlyUploaded?: boolean;
   folderRefs?: string[]; // Array of folder IDs this file is associated with
   categoryRefs?: string[]; // Array of category IDs this file is associated with
   description?: string; // Field for file descriptions
   thumbnail_url?: string; // New field for video thumbnails
-  tags?: string[]; // Added tags field for file tagging
-  
-  // Database fields
-  filename?: string;
-  file_size?: number;
-  mime?: string;
-  folders?: string[];
-  categories?: string[];
-  creator_id?: string;
-  bucketPath?: string; // Keeping for backward compatibility
 }
 
 export interface Folder {
@@ -46,10 +36,4 @@ export interface FileOperationsHandlers {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
-}
-
-export interface FileTag {
-  id: string;
-  name: string;
-  color?: string;
 }

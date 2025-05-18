@@ -32,7 +32,7 @@ interface TagSelectorProps {
   tags: FileTag[];
   selectedTags: string[];
   onTagSelect: (tagId: string) => void;
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
+  onTagCreate?: (name: string) => Promise<FileTag>;
   disabled?: boolean;
   variant?: 'default' | 'compact';
 }
@@ -97,7 +97,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <Badge className={tagColors[tag.color || 'gray']}>
+                    <Badge className={tagColors[tag.color] || tagColors.gray}>
                       {tag.name}
                     </Badge>
                   </div>

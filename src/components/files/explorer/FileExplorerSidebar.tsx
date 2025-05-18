@@ -1,89 +1,77 @@
 
 import React from 'react';
-import { Category, Folder } from '@/types/fileTypes';
+import { CategorySidebar } from './CategorySidebar';
+import { useToast } from "@/components/ui/use-toast";
+import { useFileExplorerContext } from './context/FileExplorerContext';
 
 interface FileExplorerSidebarProps {
   onFolderChange: (folderId: string) => void;
-  currentFolder: string;
-  onCategoryChange: (categoryId: string | null) => void;
-  currentCategory: string | null;
-  availableFolders: Folder[];
-  availableCategories: Category[];
-  onCreateFolder?: () => void;
 }
 
 export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   onFolderChange,
-  currentFolder,
-  onCategoryChange,
-  currentCategory,
-  availableFolders,
-  availableCategories,
-  onCreateFolder,
 }) => {
-  return (
-    <div className="w-64 border-r p-4">
-      <h3 className="font-semibold mb-2">Categories</h3>
-      <ul>
-        <li
-          className={`cursor-pointer hover:bg-gray-100 p-2 rounded-md ${
-            currentCategory === null ? 'bg-gray-200' : ''
-          }`}
-          onClick={() => onCategoryChange(null)}
-        >
-          All Categories
-        </li>
-        {availableCategories.map((category) => (
-          <li
-            key={category.id}
-            className={`cursor-pointer hover:bg-gray-100 p-2 rounded-md ${
-              currentCategory === category.id ? 'bg-gray-200' : ''
-            }`}
-            onClick={() => onCategoryChange(category.id)}
-          >
-            {category.name}
-          </li>
-        ))}
-      </ul>
+  const { toast } = useToast();
+  
+  const {
+    currentCategory,
+    currentFolder,
+    selectedFileIds,
+    availableCategories: categories,
+    availableFolders: folders,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick
+  } = useFileExplorerContext();
+  
+  // Check if there are selected files for creating a new folder
+  const handleInitiateNewFolderWithCheck = () => {
+    if (selectedFileIds.length > 0) {
+      handleInitiateNewFolder(currentCategory || '');
+    } else {
+      toast({
+        title: "Select files first",
+        description: "Please select at least one file to add to a new folder",
+      });
+    }
+  };
+  
+  // Wrap the handler functions to return Promises to match the expected types
+  const handleDeleteCategoryWrapper = async (categoryId: string): Promise<void> => {
+    return Promise.resolve(handleDeleteCategoryClick(categoryId));
+  };
+  
+  const handleRenameCategoryWrapper = async (categoryId: string, currentName: string): Promise<void> => {
+    return Promise.resolve(handleRenameCategoryClick(categoryId, currentName));
+  };
+  
+  const handleDeleteFolderWrapper = async (folderId: string): Promise<void> => {
+    return Promise.resolve(handleDeleteFolderClick(folderId));
+  };
+  
+  const handleRenameFolderWrapper = async (folderId: string, currentName: string): Promise<void> => {
+    return Promise.resolve(handleRenameFolderClick(folderId, currentName));
+  };
 
-      <h3 className="font-semibold mt-4 mb-2">Folders</h3>
-      <ul>
-        <li
-          className={`cursor-pointer hover:bg-gray-100 p-2 rounded-md ${
-            currentFolder === 'all' ? 'bg-gray-200' : ''
-          }`}
-          onClick={() => onFolderChange('all')}
-        >
-          All Files
-        </li>
-        <li
-          className={`cursor-pointer hover:bg-gray-100 p-2 rounded-md ${
-            currentFolder === 'unsorted' ? 'bg-gray-200' : ''
-          }`}
-          onClick={() => onFolderChange('unsorted')}
-        >
-          Unsorted
-        </li>
-        {availableFolders.map((folder) => (
-          <li
-            key={folder.id}
-            className={`cursor-pointer hover:bg-gray-100 p-2 rounded-md ${
-              currentFolder === folder.id ? 'bg-gray-200' : ''
-            }`}
-            onClick={() => onFolderChange(folder.id)}
-          >
-            {folder.name}
-          </li>
-        ))}
-      </ul>
-      {onCreateFolder && (
-        <button
-          onClick={onCreateFolder}
-          className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Create Folder
-        </button>
-      )}
+  return (
+    <div className="lg:w-64 shrink-0 mt-1">
+      <CategorySidebar 
+        categories={categories}
+        folders={folders}
+        currentCategory={currentCategory}
+        currentFolder={currentFolder}
+        onCategoryChange={(categoryId) => {}} // This will be updated in a later refactoring
+        onFolderChange={onFolderChange}
+        onInitiateNewCategory={handleInitiateNewCategory}
+        onInitiateNewFolder={handleInitiateNewFolderWithCheck}
+        onDeleteCategory={handleDeleteCategoryWrapper}
+        onRenameCategory={handleRenameCategoryWrapper}
+        onDeleteFolder={handleDeleteFolderWrapper}
+        onRenameFolder={handleRenameFolderWrapper}
+      />
     </div>
   );
 };

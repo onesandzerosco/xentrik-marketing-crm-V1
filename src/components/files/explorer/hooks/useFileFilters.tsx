@@ -2,17 +2,13 @@
 import { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 
-interface UseFileFiltersProps {
-  files: CreatorFileType[];
-  selectedTags?: string[];
-}
-
-export const useFileFilters = ({ files, selectedTags = [] }: UseFileFiltersProps) => {
+export const useFileFilters = ({ files }: { files: CreatorFileType[] }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  // Filter files based on search, type filters
+  // Filter files based on search, type filters, and tags
   const filteredFiles = files.filter(file => {
     // Search filter
     const matchesSearch = searchQuery === '' || 
@@ -20,10 +16,13 @@ export const useFileFilters = ({ files, selectedTags = [] }: UseFileFiltersProps
       (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
     // Type filter  
-    const matchesType = selectedTypes.length === 0 || 
-      (file.type && selectedTypes.some(type => file.type.startsWith(type)));
+    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
     
-    return matchesSearch && matchesType;
+    // Tag filter
+    const matchesTags = selectedTags.length === 0 || 
+      (file.tags && selectedTags.some(tag => file.tags?.includes(tag)));
+    
+    return matchesSearch && matchesType && matchesTags;
   });
 
   return {
@@ -32,6 +31,7 @@ export const useFileFilters = ({ files, selectedTags = [] }: UseFileFiltersProps
     selectedTypes,
     setSelectedTypes,
     selectedTags,
+    setSelectedTags,
     viewMode,
     setViewMode,
     filteredFiles

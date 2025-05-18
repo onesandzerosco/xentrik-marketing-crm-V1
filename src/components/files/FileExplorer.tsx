@@ -1,13 +1,35 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from '@/components/ui/use-toast';
+
+import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
+import { FileExplorerContent } from './explorer/FileExplorerContent';
+import { useFileFilters } from './explorer/hooks/useFileFilters';
+import { supabase } from '@/integrations/supabase/client';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
-import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
-import { FileTag } from '@/hooks/useFileTags';
-import { FileExplorerModals } from './explorer/FileExplorerModals';
-import { useFileExplorer } from './explorer/useFileExplorer';
-import { SelectionProvider } from '@/context/selection-context';
-import { ContextMenuProvider } from '@/context/context-menu';
+import { useFileTags } from '@/hooks/useFileTags';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -19,7 +41,7 @@ interface FileExplorerProps {
   currentFolder: string;
   onCategoryChange: (categoryId: string | null) => void;
   currentCategory: string | null;
-  availableFolders: Folder[];
+  availableFolders: { id: string; name: string; categoryId: string }[];
   availableCategories: Category[];
   isCreatorView: boolean;
   onUploadComplete: (uploadedFileIds?: string[]) => void;
@@ -27,17 +49,12 @@ interface FileExplorerProps {
   recentlyUploadedIds: string[];
   onCreateFolder?: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
   onCreateCategory?: (categoryName: string) => Promise<void>;
-  onAddFilesToFolder?: (fileIds: string[], targetFolderId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
   onDeleteCategory?: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
-  selectedTags: string[];
-  setSelectedTags: (tags: string[]) => void;
-  availableTags: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
-  onFileDeleted?: (fileId: string) => Promise<void>;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -63,217 +80,464 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onDeleteCategory,
   onRemoveFromFolder,
   onRenameFolder,
-  onRenameCategory,
-  selectedTags,
-  setSelectedTags,
-  availableTags,
-  onTagCreate,
-  onFileDeleted
+  onRenameCategory
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isUploading, setIsUploading] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-  const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState<boolean>(false);
-  const [folderIdToAddTo, setFolderIdToAddTo] = useState<string>('');
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
-  const [fileIdToDelete, setFileIdToDelete] = useState<string>('');
+  const [showAddToFolderModal, setShowAddToFolderModal] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [showEditNoteModal, setShowEditNoteModal] = useState(false);
   const [fileToEdit, setFileToEdit] = useState<CreatorFileType | null>(null);
-  const [isEditNoteModalOpen, setIsEditNoteModalOpen] = useState<boolean>(false);
-  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState<boolean>(false);
-  const [newFolderName, setNewFolderName] = useState<string>('');
-
-  const handleAddToFolderClick = () => {
-    if (selectedFileIds.length > 0) {
-      setIsAddToFolderModalOpen(true);
-    }
-  };
-
-  const handleFileDeleted = async (fileId: string): Promise<void> => {
-    if (onFileDeleted) {
-      return onFileDeleted(fileId);
-    }
-    return Promise.resolve();
-  };
-
-  const handleEditNoteWrap = (file: CreatorFileType) => {
-    setFileToEdit(file);
-    setIsEditNoteModalOpen(true);
-  };
-
-  const handleUploadClick = () => {
-    onUploadStart();
-    setIsUploadModalOpen(true);
-  };
-
-  const handleCreateFolderClick = () => {
-    setIsCreateFolderModalOpen(true);
-  };
-
-  const explorerState = useFileExplorer({
-    files,
-    availableFolders,
-    availableCategories,
-    currentFolder,
-    currentCategory,
-    onRefresh,
-    onCreateFolder,
-    onAddFilesToFolder,
-    onDeleteFolder,
-    onCreateCategory,
-    onDeleteCategory,
-    onRenameFolder,
-    onRenameCategory,
-    onCategoryChange
+  const [editedNote, setEditedNote] = useState('');
+  
+  const { 
+    availableTags, 
+    selectedTags, 
+    setSelectedTags, 
+    createTag, 
+    filterFilesByTags 
+  } = useFileTags();
+  
+  const {
+    getRootProps,
+    getInputProps,
+    open,
+    isDragActive
+  } = useDropzone({
+    noClick: true,
+    noKeyboard: true,
+    multiple: true,
+    onDrop: async (acceptedFiles) => {
+      if (!creatorId) {
+        toast({
+          title: 'Creator not found',
+          description: 'Please select a creator before uploading files.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      onUploadStart();
+      setIsUploading(true);
+      
+      // Upload files to Supabase
+      const uploadedFileIds: string[] = [];
+      
+      for (const file of acceptedFiles) {
+        // Generate a unique file ID
+        const fileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        
+        // Get file extension
+        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
+        
+        // Set the storage path
+        const filePath = `${creatorId}/all/${fileId}.${fileExt}`;
+        
+        try {
+          // Upload the file to Supabase storage
+          const { error } = await supabase.storage
+            .from('creator_files')
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (error) {
+            console.error('Error uploading file:', error);
+            toast({
+              title: 'Upload error',
+              description: `Failed to upload ${file.name}: ${error.message}`,
+              variant: 'destructive',
+            });
+          } else {
+            // File uploaded successfully
+            uploadedFileIds.push(fileId);
+            
+            // Log the file upload in the media table
+            const { error: mediaError } = await supabase
+              .from('media')
+              .insert([
+                {
+                  id: fileId,
+                  creator_id: creatorId,
+                  filename: file.name,
+                  file_size: file.size,
+                  file_type: file.type,
+                  bucket_key: filePath,
+                  status: 'complete',
+                  folders: ['all'] // Add to the 'all' folder by default
+                }
+              ]);
+            
+            if (mediaError) {
+              console.error('Error logging file upload:', mediaError);
+              toast({
+                title: 'Upload error',
+                description: `Failed to log ${file.name} in media table: ${mediaError.message}`,
+                variant: 'destructive',
+              });
+            } else {
+              console.log(`${file.name} uploaded and logged successfully`);
+            }
+          }
+        } catch (err: any) {
+          console.error('Error during upload:', err);
+          toast({
+            title: 'Upload error',
+            description: `Failed to upload ${file.name}: ${err.message}`,
+            variant: 'destructive',
+          });
+        }
+      }
+      
+      setIsUploading(false);
+      onUploadComplete(uploadedFileIds);
+      
+      if (uploadedFileIds.length > 0) {
+        toast({
+          title: 'Files uploaded',
+          description: `Successfully uploaded ${acceptedFiles.length} files.`,
+        });
+      }
+    },
   });
-
-  // Create stub functions for the required context properties
-  const handleInitiateNewCategory = () => {
-    explorerState.setIsAddCategoryModalOpen(true);
+  
+  const handleCreateFolderClick = () => {
+    setShowCreateFolderModal(true);
   };
-
-  const handleInitiateNewFolder = (categoryId?: string) => {
-    if (categoryId) {
-      explorerState.setSelectedCategoryForNewFolder(categoryId);
+  
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Folder name cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
     }
-    explorerState.setIsAddFolderModalOpen(true);
+    
+    if (!onCreateFolder) {
+      toast({
+        title: 'Error',
+        description: 'Folder creation is not enabled for this view.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      await onCreateFolder(newFolderName, [], currentCategory || 'all');
+      toast({
+        title: 'Folder created',
+        description: `Folder "${newFolderName}" created successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to create folder: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setShowCreateFolderModal(false);
+      setNewFolderName('');
+    }
+  };
+  
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      // Delete from media table
+      const { error: mediaError } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', fileId);
+      
+      if (mediaError) {
+        console.error('Error deleting file from media table:', mediaError);
+        toast({
+          title: 'Error',
+          description: `Failed to delete file: ${mediaError.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
+        return old?.filter((file: any) => file.id !== fileId) || [];
+      });
+      
+      toast({
+        title: 'File deleted',
+        description: 'File deleted successfully.',
+      });
+      
+      onRefresh();
+    } catch (error: any) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete file: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const onRemoveFromFolder = async (fileIds: string[], folderId: string) => {
+    if (!onRemoveFromFolder) {
+      toast({
+        title: 'Error',
+        description: 'Removing from folder is not enabled for this view.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      await onRemoveFromFolder(fileIds, folderId);
+      toast({
+        title: 'Files removed',
+        description: `Files removed from folder successfully.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to remove files from folder: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeleteCategoryClick = (categoryId: string) => {
-    explorerState.setCategoryToDelete(categoryId);
-    explorerState.setIsDeleteCategoryModalOpen(true);
-  };
-
-  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
-    explorerState.setCategoryToRename(categoryId);
-    explorerState.setCategoryCurrentName(currentName);
-    explorerState.setIsRenameCategoryModalOpen(true);
-  };
-
-  const handleDeleteFolderClick = (folderId: string) => {
-    explorerState.setFolderToDelete(folderId);
-    explorerState.setIsDeleteFolderModalOpen(true);
-  };
-
-  const handleRenameFolderClick = (folderId: string, currentName: string) => {
-    explorerState.setFolderToRename(folderId);
-    explorerState.setFolderCurrentName(currentName);
-    explorerState.setIsRenameFolderModalOpen(true);
-  };
-
-  const contextValue = {
-    selectedFileIds,
-    setSelectedFileIds,
-    isCreatorView,
-    currentFolder,
-    currentCategory,
-    onCategoryChange,
-    availableFolders,
-    availableCategories,
-    onDeleteFolder,
-    onDeleteCategory,
-    onRemoveFromFolder,
-    handleAddToFolderClick,
-    creatorName,
-    isLoading,
-    creatorId: creatorId,
+  // Use the useFileFilters hook to filter the files
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
     viewMode,
-    handleInitiateNewCategory,
-    handleInitiateNewFolder,
-    handleDeleteCategoryClick,
-    handleRenameCategoryClick,
-    handleDeleteFolderClick,
-    handleRenameFolderClick
+    setViewMode,
+    filteredFiles: basicFilteredFiles
+  } = useFileFilters({ files });
+  
+  // Apply tag filtering on top of the basic filtered files
+  const finalFilteredFiles = filterFilesByTags(basicFilteredFiles, selectedTags);
+  
+  const handleEditNoteClick = (file: CreatorFileType) => {
+    setFileToEdit(file);
+    setEditedNote(file.description || '');
+    setShowEditNoteModal(true);
+  };
+  
+  const handleSaveNote = async () => {
+    if (!fileToEdit) return;
+    
+    try {
+      // Update the file description in the media table
+      const { error: mediaError } = await supabase
+        .from('media')
+        .update({ description: editedNote })
+        .eq('id', fileToEdit.id);
+      
+      if (mediaError) {
+        console.error('Error updating file description:', mediaError);
+        toast({
+          title: 'Error',
+          description: `Failed to update file description: ${mediaError.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
+        return (old as CreatorFileType[])?.map((file: CreatorFileType) => {
+          if (file.id === fileToEdit.id) {
+            return { ...file, description: editedNote };
+          }
+          return file;
+        }) || [];
+      });
+      
+      toast({
+        title: 'Note saved',
+        description: 'File note saved successfully.',
+      });
+      
+      setShowEditNoteModal(false);
+      onRefresh();
+    } catch (error: any) {
+      console.error('Error saving note:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to save note: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
-    <ContextMenuProvider>
-      <SelectionProvider>
-        <FileExplorerProvider value={contextValue}>
-          <FileExplorerLayout
-            filteredFiles={files}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onUploadClick={handleUploadClick}
-            onRefresh={onRefresh}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedTypes={selectedTypes}
-            setSelectedTypes={setSelectedTypes}
-            onFolderChange={onFolderChange}
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
-            availableTags={availableTags}
-            onTagCreate={onTagCreate}
-            onEditNote={handleEditNoteWrap}
-            onCreateFolder={handleCreateFolderClick}
-          />
-          <FileExplorerModals
-            isUploadModalOpen={isUploadModalOpen}
-            setIsUploadModalOpen={setIsUploadModalOpen}
-            creatorId={creatorId}
-            onUploadComplete={onUploadComplete}
-            isAddToFolderModalOpen={isAddToFolderModalOpen}
-            setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
-            selectedFileIds={selectedFileIds}
-            availableFolders={availableFolders}
-            targetFolderId={folderIdToAddTo}
-            setTargetFolderId={setFolderIdToAddTo}
-            targetCategoryId={currentCategory || ''}
-            setTargetCategoryId={(id: string) => onCategoryChange(id || null)}
-            handleAddToFolderSubmit={explorerState.handleAddToFolderSubmit}
-            onAddFilesToFolder={onAddFilesToFolder}
-            isAddCategoryModalOpen={explorerState.isAddCategoryModalOpen}
-            setIsAddCategoryModalOpen={explorerState.setIsAddCategoryModalOpen}
-            newCategoryName={explorerState.newCategoryName}
-            setNewCategoryName={explorerState.setNewCategoryName}
-            isDeleteCategoryModalOpen={explorerState.isDeleteCategoryModalOpen}
-            setIsDeleteCategoryModalOpen={explorerState.setIsDeleteCategoryModalOpen}
-            categoryToDelete={explorerState.categoryToDelete}
-            setCategoryToDelete={explorerState.setCategoryToDelete}
-            isRenameCategoryModalOpen={explorerState.isRenameCategoryModalOpen}
-            setIsRenameCategoryModalOpen={explorerState.setIsRenameCategoryModalOpen}
-            categoryToRename={explorerState.categoryToRename}
-            setCategoryToRename={explorerState.setCategoryToRename}
-            categoryCurrentName={explorerState.categoryCurrentName}
-            isAddFolderModalOpen={explorerState.isAddFolderModalOpen}
-            setIsAddFolderModalOpen={explorerState.setIsAddFolderModalOpen}
-            newFolderName={explorerState.newFolderName}
-            setNewFolderName={explorerState.setNewFolderName}
-            selectedCategoryForNewFolder={explorerState.selectedCategoryForNewFolder}
-            isDeleteFolderModalOpen={explorerState.isDeleteFolderModalOpen}
-            setIsDeleteFolderModalOpen={explorerState.setIsDeleteFolderModalOpen}
-            folderToDelete={explorerState.folderToDelete}
-            setFolderToDelete={explorerState.setFolderToDelete}
-            isRenameFolderModalOpen={explorerState.isRenameFolderModalOpen}
-            setIsRenameFolderModalOpen={explorerState.setIsRenameFolderModalOpen}
-            folderToRename={explorerState.folderToRename}
-            setFolderToRename={explorerState.setFolderToRename}
-            folderCurrentName={explorerState.folderCurrentName}
-            isEditNoteModalOpen={isEditNoteModalOpen}
-            setIsEditNoteModalOpen={setIsEditNoteModalOpen}
-            editingFile={fileToEdit}
-            editingNote={fileToEdit?.description || ''}
-            setEditingNote={(note: string) => {
-              if (fileToEdit) {
-                setFileToEdit({ ...fileToEdit, description: note });
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">{creatorName}'s Files</h1>
+        <div className="flex items-center space-x-4">
+          {isCreatorView && (
+            <Button onClick={open} disabled={isUploading} {...getRootProps()} >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Files
+              <input {...getInputProps()} />
+            </Button>
+          )}
+          
+          {isCreatorView && (
+            <Button variant="outline" onClick={handleCreateFolderClick}>
+              <FolderPlus className="w-4 h-4 mr-2" />
+              Create Folder
+            </Button>
+          )}
+          
+          <Button variant="ghost" onClick={onRefresh} disabled={isLoading}>
+            Refresh
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex flex-col md:flex-row gap-4 mt-4">
+        <FileExplorerSidebar
+          onFolderChange={onFolderChange}
+          currentFolder={currentFolder}
+          onCategoryChange={onCategoryChange}
+          currentCategory={currentCategory}
+          availableFolders={availableFolders}
+          availableCategories={availableCategories}
+          onCreateCategory={onCreateCategory}
+          onDeleteFolder={onDeleteFolder}
+          onDeleteCategory={onDeleteCategory}
+          isCreatorView={isCreatorView}
+        />
+        
+        <FileExplorerContent
+          isLoading={isLoading}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+          availableTags={availableTags}
+          onTagCreate={createTag}
+          filteredFiles={finalFilteredFiles}
+          isCreatorView={isCreatorView}
+          onFilesChanged={onRefresh}
+          onFileDeleted={handleDeleteFile}
+          recentlyUploadedIds={recentlyUploadedIds}
+          selectedFileIds={selectedFileIds}
+          setSelectedFileIds={setSelectedFileIds}
+          onAddToFolderClick={() => setShowAddToFolderModal(true)}
+          currentFolder={currentFolder}
+          currentCategory={currentCategory}
+          onCreateFolder={currentCategory ? handleCreateFolderClick : undefined}
+          availableFolders={availableFolders}
+          onRemoveFromFolder={onRemoveFromFolder}
+          onEditNote={handleEditNoteClick}
+        />
+      </div>
+      
+      {/* Add to Folder Modal */}
+      <Dialog open={showAddToFolderModal} onOpenChange={setShowAddToFolderModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add to Folder</DialogTitle>
+            <DialogDescription>
+              Select a folder to add the selected files to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Label htmlFor="folder">Select Folder</Label>
+            <select
+              id="folder"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {availableFolders.map((folder) => (
+                <option key={folder.id} value={folder.id}>{folder.name}</option>
+              ))}
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddToFolderModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowAddToFolderModal(false);
+              if (onAddFilesToFolder) {
+                onAddFilesToFolder(selectedFileIds, currentFolder);
               }
-            }}
-            handleCreateFolderSubmit={explorerState.handleCreateFolderSubmit}
-            handleDeleteFolder={explorerState.handleDeleteFolder}
-            handleRenameFolder={explorerState.handleRenameFolder}
-            handleCreateCategorySubmit={explorerState.handleCreateCategorySubmit}
-            handleDeleteCategory={explorerState.handleDeleteCategory}
-            handleRenameCategory={explorerState.handleRenameCategory}
-            handleSaveNote={explorerState.handleSaveNote}
-            handleCreateNewFolder={handleCreateFolderClick}
-            onEditNote={explorerState.handleSaveNote}
-            availableCategories={availableCategories}
-            onFileDeleted={handleFileDeleted}
-          />
-        </FileExplorerProvider>
-      </SelectionProvider>
-    </ContextMenuProvider>
+            }}>
+              Add to Folder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Create Folder Modal */}
+      <Dialog open={showCreateFolderModal} onOpenChange={setShowCreateFolderModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogDescription>
+              Enter a name for the new folder.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Label htmlFor="folderName">Folder Name</Label>
+            <Input
+              id="folderName"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Enter folder name"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateFolderModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateFolder}>
+              Create Folder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Note Modal */}
+      <Dialog open={showEditNoteModal} onOpenChange={() => setShowEditNoteModal(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Note</DialogTitle>
+            <DialogDescription>
+              Edit the note for this file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Label htmlFor="note">Note</Label>
+            <Input
+              id="note"
+              value={editedNote}
+              onChange={(e) => setEditedNote(e.target.value)}
+              placeholder="Enter note"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditNoteModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveNote}>
+              Save Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };

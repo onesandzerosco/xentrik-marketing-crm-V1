@@ -28,9 +28,6 @@ interface FileExplorerContextProps {
   // Folder operations
   availableFolders: Folder[];
   availableCategories: Category[];
-  onCategoryChange: (categoryId: string | null) => void;
-  onDeleteFolder: (folderId: string) => Promise<void>;
-  onDeleteCategory: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   
   // UI state

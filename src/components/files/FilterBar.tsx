@@ -14,7 +14,7 @@ interface FilterBarProps {
   availableTags?: FileTag[];
   selectedTags?: string[];
   onTagSelect?: (tagId: string) => void;
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
+  onTagCreate?: (name: string) => Promise<FileTag>;
 }
 
 export const FilterBar: React.FC<FilterBarProps> = ({
