@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -236,7 +235,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
   
-  // File deletion handler
+  // File deletion handler - updated to return a Promise
   const handleFileDeleted = async (fileId: string): Promise<void> => {
     try {
       // Get the file from the database

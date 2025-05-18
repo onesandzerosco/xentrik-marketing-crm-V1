@@ -1,33 +1,35 @@
 
 import React from 'react';
-import { FileCard } from './FileCard';
 import { CreatorFileType } from '@/types/fileTypes';
+import { FileCard } from './FileCard';
+import { FileSelection } from './FileSelection';
 
 interface FileGridContainerProps {
   files: CreatorFileType[];
-  isCreatorView?: boolean;
+  isCreatorView: boolean;
   onFilesChanged: () => void;
-  onFileDeleted?: (fileId: string) => Promise<void>; 
+  onFileDeleted?: (fileId: string) => Promise<void>;
   recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
-  onAddToFolderClick?: () => void;
-  onEditNote?: (file: CreatorFileType) => void;
-  onAddTag?: (file: CreatorFileType) => void;
+  selectedFileIds?: string[];
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote?: (file: CreatorFileType) => void;
+  onAddTag?: (file: CreatorFileType) => void;
 }
 
-export function FileGridContainer({ 
-  files, 
-  isCreatorView = false,
+export function FileGridContainer({
+  files,
+  isCreatorView,
   onFilesChanged,
   onFileDeleted,
   recentlyUploadedIds = [],
   onSelectFiles,
-  onEditNote,
-  onAddTag,
+  selectedFileIds = [],
   currentFolder = 'all',
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  onEditNote,
+  onAddTag
 }: FileGridContainerProps) {
   return (
     <>
@@ -35,15 +37,24 @@ export function FileGridContainer({
         <FileCard
           key={file.id}
           file={file}
-          isSelectable={!!onSelectFiles}
-          isEditable={isCreatorView}
-          isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
-          onDelete={onFileDeleted}
+          isCreatorView={isCreatorView}
           onFilesChanged={onFilesChanged}
-          onEditNote={onEditNote}
-          onAddTag={onAddTag}
+          onFileDeleted={onFileDeleted}
+          isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
+          isSelected={selectedFileIds.includes(file.id)}
+          onSelectFile={onSelectFiles ? (id, selected) => {
+            if (!onSelectFiles) return;
+            
+            if (selected) {
+              onSelectFiles([...selectedFileIds, id]);
+            } else {
+              onSelectFiles(selectedFileIds.filter(fileId => fileId !== id));
+            }
+          } : undefined}
           currentFolder={currentFolder}
           onRemoveFromFolder={onRemoveFromFolder}
+          onEditNote={onEditNote}
+          onAddTag={onAddTag}
         />
       ))}
     </>

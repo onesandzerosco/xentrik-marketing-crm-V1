@@ -16,6 +16,23 @@ export function useFileTags() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { toast } = useToast();
 
+  // Generate a random color for tags
+  const generateRandomColorHex = (): string => {
+    // Generate pastel colors for better visibility
+    const baseColors = [
+      '#FFD1DC', // Pink
+      '#FFB347', // Orange
+      '#FFDF80', // Yellow
+      '#98FB98', // Green
+      '#87CEFA', // Blue
+      '#D8BFD8', // Purple
+      '#FFA07A', // Coral
+      '#B0E0E6', // Powder Blue
+    ];
+    
+    return baseColors[Math.floor(Math.random() * baseColors.length)];
+  };
+
   // Fetch available tags on mount
   useEffect(() => {
     const fetchTags = async () => {
@@ -129,23 +146,6 @@ export function useFileTags() {
       return tagIds.some(tagId => file.tags?.includes(tagId));
     });
   };
-  
-  // Generate a random color for tags
-  const generateRandomColorHex = (): string => {
-    // Generate pastel colors for better visibility
-    const baseColors = [
-      '#FFD1DC', // Pink
-      '#FFB347', // Orange
-      '#FFDF80', // Yellow
-      '#98FB98', // Green
-      '#87CEFA', // Blue
-      '#D8BFD8', // Purple
-      '#FFA07A', // Coral
-      '#B0E0E6', // Powder Blue
-    ];
-    
-    return baseColors[Math.floor(Math.random() * baseColors.length)];
-  };
 
   return {
     availableTags,
@@ -153,6 +153,7 @@ export function useFileTags() {
     setSelectedTags,
     isLoading,
     createTag,
-    filterFilesByTags
+    filterFilesByTags,
+    generateRandomColorHex
   };
 }
