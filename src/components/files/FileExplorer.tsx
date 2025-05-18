@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useFileFilters } from './explorer/hooks/useFileFilters';
-import { useFileTags } from '@/hooks/useFileTags';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import TagSelector from './TagSelector';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -39,16 +39,10 @@ interface FileExplorerProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
-  selectedTags?: string[];
-  setSelectedTags?: (tags: string[]) => void;
-  availableTags?: FileTag[];
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
+  availableTags: FileTag[];
   onTagCreate?: (name: string) => Promise<FileTag | null>;
-}
-
-interface FileTag {
-  id: string;
-  name: string;
-  color?: string;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -75,9 +69,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRemoveFromFolder,
   onRenameFolder,
   onRenameCategory,
-  selectedTags = [],
-  setSelectedTags = () => {},
-  availableTags = [],
+  selectedTags,
+  setSelectedTags,
+  availableTags,
   onTagCreate
 }) => {
   const { toast } = useToast();
@@ -87,14 +81,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   // State for managing modals
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false);
-  const [showEditNoteModal, setShowEditNoteModal] = useState(false);
-
+  
   // State for file editing
   const [fileToEdit, setFileToEdit] = useState<CreatorFileType | null>(null);
   const [editedNote, setEditedNote] = useState('');
-
+  const [showEditNoteModal, setShowEditNoteModal] = useState(false);
+  
   // State for file selection
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  
+  // State for tag dialog
+  const [showTagDialog, setShowTagDialog] = useState(false);
+  const [fileToTag, setFileToTag] = useState<CreatorFileType | null>(null);
+  const [selectedFileTag, setSelectedFileTag] = useState<string>('');
 
   // File upload handlers
   const onDrop = useCallback(
@@ -323,27 +322,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     selectedTags
   });
 
-  const contextValue = {
-    selectedFileIds,
-    setSelectedFileIds,
-    currentFolder,
-    currentCategory,
-    handleAddToFolderClick,
-    creatorName,
-    creatorId,
-    isCreatorView,
-    availableFolders,
-    availableCategories,
-    onCategoryChange,
-    viewMode,
-    isLoading
-  };
-  
-  // Add state for tag dialog
-  const [showTagDialog, setShowTagDialog] = useState(false);
-  const [fileToTag, setFileToTag] = useState<CreatorFileType | null>(null);
-  const [selectedFileTag, setSelectedFileTag] = useState<string>('');
-
   // Add handler function for adding tags
   const handleAddTag = (file: CreatorFileType) => {
     setFileToTag(file);
@@ -413,6 +391,31 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setSelectedFileTag(tagId);
   };
   
+  const contextValue = {
+    selectedFileIds,
+    setSelectedFileIds,
+    currentFolder,
+    currentCategory,
+    handleAddToFolderClick,
+    creatorName,
+    creatorId,
+    isCreatorView,
+    availableFolders,
+    availableCategories,
+    onCategoryChange,
+    viewMode,
+    isLoading,
+    handleInitiateNewCategory: () => {},
+    handleInitiateNewFolder: () => {},
+    handleDeleteCategoryClick: () => {},
+    handleRenameCategoryClick: () => {},
+    handleDeleteFolderClick: () => {},
+    handleRenameFolderClick: () => {},
+    onDeleteFolder: onDeleteFolder || (async () => {}),
+    onDeleteCategory: onDeleteCategory || (async () => {}),
+    onRemoveFromFolder
+  };
+
   return (
     <div className="flex flex-col h-full w-full">
       <FileExplorerProvider value={contextValue}>
@@ -473,46 +476,66 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </Dialog>
       )}
 
-      {/* Modals */}
-      {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white p-6 rounded-md shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Upload Files</h2>
-            <p>Drag 'n' drop some files here, or click to select files</p>
-            <div {...getRootProps()} className="border-2 border-dashed rounded-md p-4 mt-2">
-              <input {...getInputProps()} />
-              {isDragActive ? (
-                <p>Drop the files here ...</p>
-              ) : (
-                <p>Drag 'n' drop some files here, or click to select files</p>
-              )}
-            </div>
-            <Button onClick={() => setShowUploadModal(false)} className="mt-4">
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-      
+      {/* Note Edit Modal */}
       {showEditNoteModal && fileToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white p-6 rounded-md shadow-lg w-96">
-            <h2 className="text-lg font-semibold mb-4">Edit Note</h2>
-            <textarea
-              value={editedNote}
-              onChange={(e) => setEditedNote(e.target.value)}
-              className="w-full h-32 border rounded-md p-2"
-            />
-            <div className="flex justify-end mt-4 space-x-2">
-              <Button variant="outline" onClick={() => setShowEditNoteModal(false)}>
+        <Dialog open={showEditNoteModal} onOpenChange={(open) => !open && setShowEditNoteModal(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Note</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Add or edit a note for "{fileToEdit.filename || fileToEdit.name}"
+              </p>
+              <textarea
+                value={editedNote}
+                onChange={(e) => setEditedNote(e.target.value)}
+                className="w-full h-32 border rounded-md p-2"
+                placeholder="Enter a note for this file..."
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowEditNoteModal(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleUpdateNote}>
                 Save
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <Dialog open={showUploadModal} onOpenChange={(open) => !open && setShowUploadModal(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Files</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <div {...getRootProps()} className="border-2 border-dashed rounded-md p-8 text-center cursor-pointer">
+                <input {...getInputProps()} />
+                {isDragActive ? (
+                  <p>Drop the files here ...</p>
+                ) : (
+                  <div>
+                    <p className="mb-2">Drag 'n' drop some files here, or click to select files</p>
+                    <Button onClick={open}>Select Files</Button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowUploadModal(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

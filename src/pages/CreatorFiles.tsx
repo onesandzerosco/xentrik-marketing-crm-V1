@@ -184,18 +184,18 @@ const CreatorFiles = () => {
     );
   }
 
-  // Get tags from hook
+  // Initialize tag handling hooks - IMPORTANT: Always create this regardless of condition
   const { 
     availableTags, 
-    selectedTags: tagFilters, 
-    setSelectedTags: setTagFilters, 
+    selectedTags, 
+    setSelectedTags, 
     createTag, 
     filterFilesByTags 
   } = useFileTags();
 
   // Apply tag filtering on top of the basic filtering
-  const tagFilteredFiles = tagFilters.length > 0
-    ? filterFilesByTags(filteredFiles, tagFilters)
+  const tagFilteredFiles = selectedTags.length > 0
+    ? filterFilesByTags(filteredFiles, selectedTags)
     : filteredFiles;
 
   return (
@@ -223,8 +223,8 @@ const CreatorFiles = () => {
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
       onRenameCategory={handleRenameCategory}
-      selectedTags={tagFilters}
-      setSelectedTags={setTagFilters}
+      selectedTags={selectedTags}
+      setSelectedTags={setSelectedTags}
       availableTags={availableTags}
       onTagCreate={createTag}
     />
