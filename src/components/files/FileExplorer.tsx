@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -78,11 +79,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   // State for file selection
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
 
-  // Get tags from hook (rename the variables to avoid conflicts)
+  // Get tags from hook
   const { 
     availableTags, 
-    selectedTags: tagFilterValues, 
-    setSelectedTags: setTagFilterValues, 
+    selectedTags: tagFilters, 
+    setSelectedTags: setTagFilters, 
     createTag, 
     filterFilesByTags 
   } = useFileTags();
@@ -120,7 +121,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           }
           
           // Get the public URL for the uploaded file
-          const fileUrl = supabase.storage.from('media').getPublicUrl(data.path).data.publicUrl;
+          const fileUrl = `${supabase.storage.url}/object/media/${data.path}`;
           
           // Create a new media record in the database
           const { data: mediaData, error: mediaError } = await supabase
@@ -329,7 +330,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     console.log(`Rename folder clicked: ${folderId}, current name: ${currentName}`);
   };
   
-  // File filtering and view - using renamed tag variables to avoid conflicts
+  // File filtering and view
   const {
     searchQuery,
     setSearchQuery,
@@ -340,12 +341,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     filteredFiles
   } = useFileFilters({ 
     files,
-    selectedTags: tagFilterValues 
+    selectedTags: tagFilters 
   });
   
   // Apply tag filtering on top of the basic filtering
-  const tagFilteredFiles = tagFilterValues.length > 0
-    ? filterFilesByTags(filteredFiles, tagFilterValues)
+  const tagFilteredFiles = tagFilters.length > 0
+    ? filterFilesByTags(filteredFiles, tagFilters)
     : filteredFiles;
 
   const contextValue = {
@@ -387,8 +388,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           onFolderChange={onFolderChange}
-          selectedTags={tagFilterValues}
-          setSelectedTags={setTagFilterValues}
+          selectedTags={tagFilters}
+          setSelectedTags={setTagFilters}
           availableTags={availableTags}
           onTagCreate={createTag}
           onEditNote={(file) => {
@@ -397,7 +398,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             setShowEditNoteModal(true);
           }}
           onCreateFolder={handleCreateFolderClick}
-          isCreatorView={isCreatorView}
         />
       </FileExplorerProvider>
       

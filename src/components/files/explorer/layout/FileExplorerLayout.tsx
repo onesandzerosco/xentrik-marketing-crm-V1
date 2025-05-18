@@ -24,7 +24,6 @@ interface FileExplorerLayoutProps {
   onTagCreate?: (name: string) => Promise<FileTag | null>;
   onEditNote: (file: CreatorFileType) => void;
   onCreateFolder: () => void;
-  isCreatorView: boolean; // Added this prop
 }
 
 export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
@@ -44,11 +43,11 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
   onTagCreate,
   onEditNote,
   onCreateFolder,
-  isCreatorView, // Added this prop
 }) => {
   const {
     selectedFileIds,
     setSelectedFileIds,
+    isCreatorView,
     currentFolder,
     currentCategory,
     onCategoryChange,
@@ -76,7 +75,6 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
             ? handleAddToFolderClick
             : undefined
         }
-        isCreatorView={isCreatorView} // Pass isCreatorView prop
       />
       <div className="flex flex-1 overflow-hidden">
         <FileExplorerSidebar
