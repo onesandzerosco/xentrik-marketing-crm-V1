@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -78,8 +79,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   // State for file selection
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
 
-  // State for managing tags
-  const { availableTags, selectedTags, setSelectedTags, createTag, filterFilesByTags } = useFileTags();
+  // Get tags from hook
+  const { 
+    availableTags, 
+    selectedTags: tagFilters, 
+    setSelectedTags: setTagFilters, 
+    createTag, 
+    filterFilesByTags 
+  } = useFileTags();
 
   // File upload handlers
   const onDrop = useCallback(
@@ -114,24 +121,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           }
           
           // Get the public URL for the uploaded file
-          const fileUrl = `${supabase.storageUrl}/media/${data.path}`;
+          const fileUrl = `${supabase.storage.url}/object/media/${data.path}`;
           
           // Create a new media record in the database
           const { data: mediaData, error: mediaError } = await supabase
             .from('media')
-            .insert([
-              {
-                creator_id: creatorId,
-                name: file.name,
-                size: file.size,
-                url: fileUrl,
-                type: file.type,
-                folder: currentFolder,
-                bucketPath: data.path,
-                folders: currentFolder !== 'all' ? [currentFolder] : [],
-                categories: currentCategory ? [currentCategory] : [],
-              },
-            ])
+            .insert({
+              creator_id: creatorId,
+              file_size: file.size,
+              filename: file.name,
+              mime: file.type,
+              bucket_key: data.path,
+              folders: currentFolder !== 'all' ? [currentFolder] : [],
+              categories: currentCategory ? [currentCategory] : [],
+              status: 'available'
+            })
             .select()
             .single();
           
@@ -237,10 +241,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
       
       // Delete the file from Supabase storage
-      if (file?.bucketPath) {
+      if (file?.bucket_key) {
         const { error: storageError } = await supabase.storage
           .from('media')
-          .remove([file.bucketPath]);
+          .remove([file.bucket_key]);
         
         if (storageError) {
           console.error('Error deleting file from storage:', storageError);
@@ -305,7 +309,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleDeleteCategoryClick = (categoryId: string) => {
-    // Placeholder for category deletion click handler
     console.log(`Delete category clicked: ${categoryId}`);
     if (onDeleteCategory) {
       onDeleteCategory(categoryId);
@@ -313,12 +316,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
-    // Placeholder for category rename click handler
     console.log(`Rename category clicked: ${categoryId}, current name: ${currentName}`);
   };
   
   const handleDeleteFolderClick = (folderId: string) => {
-    // Placeholder for folder deletion click handler
     console.log(`Delete folder clicked: ${folderId}`);
     if (onDeleteFolder) {
       onDeleteFolder(folderId);
@@ -326,28 +327,26 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleRenameFolderClick = (folderId: string, currentName: string) => {
-    // Placeholder for folder rename click handler
     console.log(`Rename folder clicked: ${folderId}, current name: ${currentName}`);
   };
   
+  // File filtering and view
   const {
     searchQuery,
     setSearchQuery,
     selectedTypes,
     setSelectedTypes,
-    selectedTags,
-    setSelectedTags,
     viewMode,
     setViewMode,
     filteredFiles
-  } = useFileFilters({
+  } = useFileFilters({ 
     files,
-    selectedTags: selectedTags || []
+    selectedTags: tagFilters 
   });
   
   // Apply tag filtering on top of the basic filtering
-  const tagFilteredFiles = selectedTags.length > 0
-    ? filterFilesByTags(filteredFiles, selectedTags)
+  const tagFilteredFiles = tagFilters.length > 0
+    ? filterFilesByTags(filteredFiles, tagFilters)
     : filteredFiles;
 
   const contextValue = {
@@ -389,6 +388,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           onFolderChange={onFolderChange}
+          selectedTags={tagFilters}
+          setSelectedTags={setTagFilters}
+          availableTags={availableTags}
+          onTagCreate={createTag}
           onEditNote={(file) => {
             setFileToEdit(file);
             setEditedNote(file.description || '');
@@ -419,7 +422,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </div>
       )}
       
-      {showEditNoteModal && (
+      {showEditNoteModal && fileToEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white p-6 rounded-md shadow-lg w-96">
             <h2 className="text-lg font-semibold mb-4">Edit Note</h2>

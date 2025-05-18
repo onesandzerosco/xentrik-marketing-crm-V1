@@ -97,7 +97,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <Badge className={tagColors[tag.color] || tagColors.gray}>
+                    <Badge className={tagColors[tag.color || 'gray']}>
                       {tag.name}
                     </Badge>
                   </div>

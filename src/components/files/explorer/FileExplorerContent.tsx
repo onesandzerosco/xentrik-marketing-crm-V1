@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FilterBar } from '../FilterBar';
@@ -18,7 +19,7 @@ interface FileExplorerContentProps {
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   availableTags?: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag>;
+  onTagCreate?: (name: string) => Promise<FileTag | null>;
   filteredFiles: CreatorFileType[];
   isCreatorView: boolean;
   onFilesChanged: () => void;
@@ -77,7 +78,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
 
   const handleTagSelect = (tagId: string) => {
     if (setSelectedTags) {
-      // Create a new array instead of using a function to modify the state
+      // Create a new array to update the state
       if (selectedTags.includes(tagId)) {
         setSelectedTags(selectedTags.filter(id => id !== tagId));
       } else {
