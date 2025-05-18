@@ -1,268 +1,293 @@
 
-import React, { useState, useMemo } from 'react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { FileText, MoreVertical, Download, Trash2, Tag as TagIcon } from 'lucide-react';
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { CreatorFileType } from '@/types/fileTypes';
+import { 
+  FileText, 
+  FileImage, 
+  FileVideo, 
+  FileAudio, 
+  File,
+  MoreHorizontal,
+  Download,
+  Trash2,
+  Pencil,
+  FolderMinus,
+  Tag,
+  Eye
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useFilePermissions } from '@/utils/permissionUtils';
-import { CreatorFileType } from '@/types/fileTypes';
 import { useContextMenu } from '@/context/context-menu';
 import { useSelection } from '@/context/selection-context';
 import { Badge } from '@/components/ui/badge';
+import { formatFileSize } from '@/utils/fileUtils';
 
 interface FileCardProps {
   file: CreatorFileType;
-  isSelectable?: boolean;
-  isEditable?: boolean;
-  isNewlyUploaded?: boolean;
-  onDelete?: (fileId: string) => Promise<void>;
+  isCreatorView: boolean;
   onFilesChanged: () => void;
-  onEditNote?: (file: CreatorFileType) => void;
-  onAddTag?: (file: CreatorFileType) => void;
+  onFileDeleted?: (fileId: string) => Promise<void>;
+  isNewlyUploaded?: boolean;
+  onSelectFiles?: (fileIds: string[]) => void;
+  index: number;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  isCreatorView?: boolean;
+  onEditNote?: (file: CreatorFileType) => void;
+  onAddTag?: (file: CreatorFileType) => void;
 }
 
-export function FileCard({ 
-  file, 
-  isSelectable = false,
-  isEditable = false,
-  isNewlyUploaded = false,
-  onDelete,
+const FileCard: React.FC<FileCardProps> = ({
+  file,
+  isCreatorView,
   onFilesChanged,
-  onEditNote,
-  onAddTag,
+  onFileDeleted,
+  isNewlyUploaded = false,
+  onSelectFiles,
+  index,
   currentFolder = 'all',
   onRemoveFromFolder,
-  isCreatorView = false
-}: FileCardProps) {
+  onEditNote,
+  onAddTag
+}) => {
   const { toast } = useToast();
-  const { canDownload } = useFilePermissions();
-  const { openContextMenu } = useContextMenu();
-  const { isSelected, toggleSelection } = useSelection();
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDownload = () => {
-    if (!file.url) {
-      toast({
-        title: "Error",
-        description: "File URL not available",
-        variant: "destructive",
-      });
-      return;
+  const { canDelete, canEdit, canManageFolders } = useFilePermissions();
+  const { selected, toggle, isSelected } = useSelection();
+  const [isRemoving, setIsRemoving] = useState(false);
+  const { showContextMenu } = useContextMenu();
+  
+  // Handle file selection - used for bulk operations
+  const handleCardClick = () => {
+    if (isCreatorView && onSelectFiles) {
+      toggle(file.id);
     }
-
-    const link = document.createElement('a');
-    link.href = file.url;
-    link.download = file.filename || file.name || 'file';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
-
-  const handleFileClick = (e: React.MouseEvent) => {
+  
+  // Get the right icon based on file type
+  let Icon = File;
+  if (file.type === 'image') Icon = FileImage;
+  if (file.type === 'video') Icon = FileVideo;
+  if (file.type === 'audio') Icon = FileAudio;
+  if (file.type === 'document') Icon = FileText;
+  
+  // Determine file thumbnail
+  const thumbUrl = file.thumbnail_url || file.url;
+  const isImage = file.type === 'image';
+  const isVideo = file.type === 'video';
+  
+  // Handle context menu (right-click)
+  const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isSelectable) {
-      toggleSelection(file.id);
-    }
-  };
-
-  // Create the context menu items
-  const menuItems = useMemo(() => {
-    const items = [
-      canDownload && {
+    
+    const menuItems = [
+      {
+        label: 'Preview',
+        onClick: () => window.open(file.url, '_blank', 'noopener,noreferrer'),
+        icon: <Eye className="mr-2 h-4 w-4" />
+      },
+      {
         label: 'Download',
-        icon: <Download className="mr-2 h-4 w-4" />,
-        onClick: handleDownload,
-      },
-      isEditable && onEditNote && {
-        label: 'Edit Note',
-        icon: <FileText className="mr-2 h-4 w-4" />,
-        onClick: () => onEditNote(file)
-      },
-      isEditable && onAddTag && {
-        label: 'Add Tag',
-        icon: <TagIcon className="mr-2 h-4 w-4" />,
-        onClick: () => onAddTag(file)
-      },
-      isEditable && onDelete && {
-        label: 'Delete',
-        icon: <Trash2 className="mr-2 h-4 w-4" />,
         onClick: () => {
-          if (onDelete) {
-            setIsDeleting(true);
-            onDelete(file.id)
-              .then(() => {
-                toast({
-                  title: "File Deleted",
-                  description: "File deleted successfully.",
-                });
-                onFilesChanged();
-              })
-              .catch((error) => {
-                console.error("Error deleting file:", error);
-                toast({
-                  title: "Error",
-                  description: "There was an error deleting the file",
-                  variant: "destructive",
-                });
-              })
-              .finally(() => setIsDeleting(false));
-          }
+          const link = document.createElement('a');
+          link.href = file.url;
+          link.download = file.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         },
-        disabled: isDeleting,
-      },
-      isEditable && currentFolder !== 'all' && onRemoveFromFolder && {
-        label: 'Remove from folder',
-        icon: <Trash2 className="mr-2 h-4 w-4" />,
-        onClick: () => {
-          if (onRemoveFromFolder) {
-            setIsDeleting(true);
-            onRemoveFromFolder([file.id], currentFolder)
-              .then(() => {
-                toast({
-                  title: "File Removed",
-                  description: "File removed from folder successfully.",
-                });
-                onFilesChanged();
-              })
-              .catch((error) => {
-                console.error("Error removing file:", error);
-                toast({
-                  title: "Error",
-                  description: "There was an error removing the file from the folder",
-                  variant: "destructive",
-                });
-              })
-              .finally(() => setIsDeleting(false));
-          }
-        },
-        disabled: isDeleting,
+        icon: <Download className="mr-2 h-4 w-4" />
       }
-    ].filter(Boolean);
-
-    return items;
-  }, [file, onDelete, onEditNote, onAddTag, onRemoveFromFolder, currentFolder, isDeleting, canDownload, isEditable]);
-
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-    openContextMenu({
-      event,
-      items: menuItems as any[]
-    });
+    ];
+    
+    // Add conditional menu items based on permissions
+    if (canEdit && onEditNote) {
+      menuItems.push({
+        label: 'Edit Note',
+        onClick: () => onEditNote(file),
+        icon: <Pencil className="mr-2 h-4 w-4" />
+      });
+    }
+    
+    if (canDelete) {
+      menuItems.push({
+        label: 'Delete',
+        onClick: async () => {
+          try {
+            if (onFileDeleted) {
+              await onFileDeleted(file.id);
+            }
+            toast({ 
+              title: "File deleted", 
+              description: `${file.name} has been deleted.`
+            });
+            onFilesChanged();
+          } catch (error) {
+            console.error('Error deleting file:', error);
+            toast({ 
+              title: "Error", 
+              description: "Failed to delete file.", 
+              variant: "destructive"
+            });
+          }
+        },
+        icon: <Trash2 className="mr-2 h-4 w-4" />,
+        variant: 'destructive'
+      });
+    }
+    
+    if (canManageFolders && onRemoveFromFolder && 
+        currentFolder !== 'all' && currentFolder !== 'unsorted') {
+      menuItems.push({
+        label: 'Remove from folder',
+        onClick: async () => {
+          try {
+            setIsRemoving(true);
+            await onRemoveFromFolder([file.id], currentFolder);
+            toast({ 
+              title: "File removed", 
+              description: `Removed ${file.name} from folder.`
+            });
+            onFilesChanged();
+          } catch (error) {
+            console.error('Error removing file from folder:', error);
+            toast({ 
+              title: "Error", 
+              description: "Failed to remove file from folder.", 
+              variant: "destructive"
+            });
+            setIsRemoving(false);
+          }
+        },
+        icon: <FolderMinus className="mr-2 h-4 w-4" />
+      });
+    }
+    
+    if (canEdit && onAddTag) {
+      menuItems.push({
+        label: 'Add tag',
+        onClick: () => onAddTag(file),
+        icon: <Tag className="mr-2 h-4 w-4" />
+      });
+    }
+    
+    showContextMenu(e, menuItems);
   };
-
-  return (
-    <div
-      className="group relative border bg-background rounded-lg overflow-hidden"
-      onClick={handleFileClick}
-      onContextMenu={handleContextMenu}
-    >
-      <div className="relative aspect-square overflow-hidden">
-        {file.type?.startsWith('image/') ? (
-          <img
-            src={file.url}
-            alt={file.name}
-            className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
-          />
-        ) : file.type?.startsWith('video/') ? (
-          <video
-            src={file.url}
-            className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
-            muted
-            loop
-            autoPlay
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">
-            {file.type}
-          </div>
-        )}
-        {isNewlyUploaded && (
-          <div className="absolute top-0 left-0 w-full h-full bg-green-500/20 flex items-center justify-center text-green-500 text-2xl font-bold">
-            New!
-          </div>
-        )}
-        {isSelectable && (
-          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50 transition-opacity duration-200'}`}>
-            ✓
-          </div>
-        )}
-      </div>
-      <div className="absolute top-2 right-2 flex space-x-1">
-        {canDownload && (
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        )}
-        {isEditable && onAddTag && (
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddTag(file);
-            }}
-          >
-            <TagIcon className="h-4 w-4" />
-          </Button>
-        )}
-        {isEditable && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {menuItems.map((item: any, index: number) => (
-                <DropdownMenuItem key={index} onClick={(e) => {
-                  e.stopPropagation();
-                  item.onClick(e);
-                }} disabled={item.disabled}>
-                  {item.icon}
-                  {item.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
-      <div className="p-2">
-        <h3 className="text-sm font-medium truncate">{file.filename || file.name}</h3>
-        <p className="text-xs text-muted-foreground">
-          {file.file_size ? (file.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
-        </p>
-        {file.tags && file.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {file.tags.map(tag => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
+  
+  // Skip rendering if the file is being removed from a folder
+  if (isRemoving) return null;
+  
+  // Determine if the card should be selected
+  const fileIsSelected = isSelected(file.id);
+  const cardClasses = `cursor-pointer ${fileIsSelected ? 'ring-2 ring-primary' : ''}`;
+  
+  // Show placeholder if no thumbnail available
+  const showPlaceholder = !thumbUrl || (!isImage && !isVideo);
+  
+  // Video preview component
+  const VideoPreview = ({ src, poster }: { src: string, poster?: string }) => (
+    <div className="relative h-32 bg-muted flex items-center justify-center overflow-hidden">
+      <video 
+        className="h-full w-full object-contain"
+        src={src} 
+        poster={poster}
+        preload="metadata"
+      />
+      <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+        <FileVideo className="h-12 w-12 text-white opacity-70" />
       </div>
     </div>
   );
-}
+  
+  // Audio preview component
+  const AudioPreview = () => (
+    <div className="flex items-center justify-center h-32 bg-muted">
+      <FileAudio className="h-16 w-16 text-muted-foreground" />
+    </div>
+  );
+  
+  // Document/other preview component
+  const DocumentPreview = () => (
+    <div className="flex items-center justify-center h-32 bg-muted">
+      <Icon className="h-16 w-16 text-muted-foreground" />
+    </div>
+  );
+  
+  return (
+    <Card 
+      className={cardClasses}
+      onClick={handleCardClick}
+      onContextMenu={handleContextMenu}
+    >
+      {/* Thumbnail preview */}
+      {isImage && thumbUrl ? (
+        <div className="h-32 bg-muted flex items-center justify-center overflow-hidden">
+          <img 
+            src={thumbUrl} 
+            alt={file.name} 
+            className="h-full w-full object-contain"
+            loading="lazy"
+          />
+        </div>
+      ) : isVideo ? (
+        <VideoPreview src={file.url} poster={file.thumbnail_url} />
+      ) : file.type === 'audio' ? (
+        <AudioPreview />
+      ) : (
+        <DocumentPreview />
+      )}
+      
+      <CardContent className="p-3">
+        <div className="flex flex-col space-y-1">
+          {/* File name with truncation */}
+          <div className="flex justify-between items-start gap-1">
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-medium truncate" title={file.name}>
+                {file.name}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatFileSize(file.size)}
+              </p>
+            </div>
+            
+            {/* More actions button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContextMenu(e);
+              }}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Description preview if available */}
+          {file.description && (
+            <p className="text-xs text-muted-foreground italic line-clamp-2" title={file.description}>
+              "{file.description}"
+            </p>
+          )}
+          
+          {/* Tags & badges */}
+          <div className="flex flex-wrap gap-1 pt-1">
+            {file.type && (
+              <Badge variant="outline" className="text-xs px-1 py-0">
+                {file.type}
+              </Badge>
+            )}
+            {isNewlyUploaded && (
+              <Badge variant="secondary" className="text-xs px-1 py-0">
+                New
+              </Badge>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default FileCard;

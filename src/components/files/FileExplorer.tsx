@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
@@ -125,7 +125,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onDeleteCategory,
     onRenameFolder,
     onRenameCategory,
-    onCategoryChange,
+    onCategoryChange
   });
 
   // Create stub functions for the required context properties
@@ -162,15 +162,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     explorerState.setIsRenameFolderModalOpen(true);
   };
 
-  const handleCreateFolder = explorerState.handleCreateFolderSubmit;
-  const handleAddFilesToFolder = explorerState.handleAddToFolderSubmit;
-  const handleDeleteFolder = explorerState.handleDeleteFolder;
-  const handleCreateCategory = explorerState.handleCreateCategorySubmit;
-  const handleDeleteCategory = explorerState.handleDeleteCategory;
-  const handleRenameFolder = explorerState.handleRenameFolder;
-  const handleRenameCategory = explorerState.handleRenameCategory;
-  const handleEditNote = explorerState.handleSaveNote;
-
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
@@ -187,7 +178,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     creatorName,
     isLoading,
     creatorId: creatorId,
-    viewMode: viewMode,
+    viewMode,
     handleInitiateNewCategory,
     handleInitiateNewFolder,
     handleDeleteCategoryClick,

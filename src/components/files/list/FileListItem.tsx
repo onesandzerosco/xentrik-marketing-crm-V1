@@ -37,7 +37,7 @@ interface FileListItemProps {
   onFileDeleted?: (fileId: string) => void;
   onFilesChanged: () => void;
   isNewlyUploaded?: boolean;
-  onAddTag?: (file: CreatorFileType) => void; // Added missing property
+  onAddTag?: (file: CreatorFileType) => void;
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
