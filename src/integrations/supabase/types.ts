@@ -247,6 +247,27 @@ export type Database = {
         }
         Relationships: []
       }
+      file_tags: {
+        Row: {
+          created_at: string
+          creator: string
+          id: string
+          tag_name: string
+        }
+        Insert: {
+          created_at?: string
+          creator: string
+          id?: string
+          tag_name: string
+        }
+        Update: {
+          created_at?: string
+          creator?: string
+          id?: string
+          tag_name?: string
+        }
+        Relationships: []
+      }
       file_uploads: {
         Row: {
           bucket_key: string
@@ -301,6 +322,7 @@ export type Database = {
           id: string
           mime: string
           status: string
+          tags: string[] | null
           thumbnail_url: string | null
         }
         Insert: {
@@ -315,6 +337,7 @@ export type Database = {
           id?: string
           mime: string
           status?: string
+          tags?: string[] | null
           thumbnail_url?: string | null
         }
         Update: {
@@ -329,6 +352,7 @@ export type Database = {
           id?: string
           mime?: string
           status?: string
+          tags?: string[] | null
           thumbnail_url?: string | null
         }
         Relationships: []

@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -85,7 +84,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 value={targetCategoryId}
                 onValueChange={setTargetCategoryId}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -105,7 +104,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 onValueChange={setTargetFolderId}
                 disabled={!targetCategoryId || filteredFolders.length === 0}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder={
                     !targetCategoryId 
                       ? "Select a category first" 

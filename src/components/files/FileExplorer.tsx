@@ -26,6 +26,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
 import { FileExplorerContent } from './explorer/FileExplorerContent';
+import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { useFileFilters } from './explorer/hooks/useFileFilters';
 import { supabase } from '@/integrations/supabase/client';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
@@ -203,6 +204,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     },
   });
   
+  const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
+  const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
+  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
+  const [targetFolderId, setTargetFolderId] = useState<string>('');
+  const [targetCategoryId, setTargetCategoryId] = useState<string>('');
+  const [newFolderName, setNewFolderName] = useState('');
+  const [selectedCategoryForNewFolder, setSelectedCategoryForNewFolder] = useState<string>('');
+  
   const handleCreateFolderClick = () => {
     setShowCreateFolderModal(true);
   };
@@ -308,7 +317,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
-  // Use the useFileFilters hook to filter the files
   const {
     searchQuery,
     setSearchQuery,
@@ -319,7 +327,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     filteredFiles: basicFilteredFiles
   } = useFileFilters({ files });
   
-  // Apply tag filtering on top of the basic filtered files
   const finalFilteredFiles = filterFilesByTags(basicFilteredFiles, selectedTags);
   
   const handleEditNoteClick = (file: CreatorFileType) => {
@@ -371,6 +378,151 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         title: 'Error',
         description: `Failed to save note: ${error.message}`,
         variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAddToFolderClick = () => {
+    if (selectedFileIds.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file to add to a folder",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsAddToFolderModalOpen(true);
+  };
+  
+  const handleCreateFolderClick = () => {
+    if (currentCategory) {
+      setSelectedCategoryForNewFolder(currentCategory);
+    }
+    
+    setIsAddFolderModalOpen(true);
+  };
+  
+  const handleCreateNewFolderFromModal = () => {
+    if (targetCategoryId) {
+      setSelectedCategoryForNewFolder(targetCategoryId);
+    }
+    
+    setIsAddFolderModalOpen(true);
+  };
+  
+  const handleCreateFolderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newFolderName.trim()) {
+      toast({
+        title: "Folder name required",
+        description: "Please enter a valid folder name",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!selectedCategoryForNewFolder) {
+      toast({
+        title: "Category required",
+        description: "Please select a category for the new folder",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      if (onCreateFolder) {
+        await onCreateFolder(newFolderName, selectedFileIds, selectedCategoryForNewFolder);
+      }
+      
+      setIsAddFolderModalOpen(false);
+      setNewFolderName('');
+      setSelectedFileIds([]);
+      
+      toast({
+        title: "Folder created",
+        description: `Successfully created folder: ${newFolderName}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error creating folder",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleAddToFolderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!targetFolderId || !targetCategoryId) {
+      toast({
+        title: "Selection required",
+        description: "Please select both a category and a folder",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (selectedFileIds.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file to add to the folder",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      if (onAddFilesToFolder) {
+        await onAddFilesToFolder(selectedFileIds, targetFolderId, targetCategoryId);
+      }
+      
+      setIsAddToFolderModalOpen(false);
+      setTargetFolderId('');
+      setTargetCategoryId('');
+      setSelectedFileIds([]);
+      
+      toast({
+        title: "Files added to folder",
+        description: `${selectedFileIds.length} files added to folder successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error adding files to folder",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddTagClick = () => {
+    if (selectedFileIds.length === 0) {
+      toast({
+        title: "No files selected",
+        description: "Please select at least one file to add tags",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsAddTagModalOpen(true);
+  };
+  
+  const handleAddTagToFiles = async (tagId: string) => {
+    try {
+      await addTagToFiles(selectedFileIds, tagId);
+      toast({
+        title: "Tag added",
+        description: `Tag added to ${selectedFileIds.length} files successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error adding tag",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive"
       });
     }
   };
@@ -433,7 +585,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           recentlyUploadedIds={recentlyUploadedIds}
           selectedFileIds={selectedFileIds}
           setSelectedFileIds={setSelectedFileIds}
-          onAddToFolderClick={() => setShowAddToFolderModal(true)}
+          onAddToFolderClick={handleAddToFolderClick}
+          onAddTagClick={handleAddTagClick}
           currentFolder={currentFolder}
           currentCategory={currentCategory}
           onCreateFolder={currentCategory ? handleCreateFolderClick : undefined}
@@ -443,72 +596,33 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
       </div>
       
-      {/* Add to Folder Modal */}
-      <Dialog open={showAddToFolderModal} onOpenChange={setShowAddToFolderModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add to Folder</DialogTitle>
-            <DialogDescription>
-              Select a folder to add the selected files to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="folder">Select Folder</Label>
-            <select
-              id="folder"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {availableFolders.map((folder) => (
-                <option key={folder.id} value={folder.id}>{folder.name}</option>
-              ))}
-            </select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddToFolderModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              setShowAddToFolderModal(false);
-              if (onAddFilesToFolder) {
-                onAddFilesToFolder(selectedFileIds, currentFolder, currentCategory || 'all');
-              }
-            }}>
-              Add to Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FileExplorerModals
+        selectedFileIds={selectedFileIds}
+        customFolders={availableFolders.filter(folder => folder.id !== 'all' && folder.id !== 'unsorted')}
+        categories={availableCategories}
+        availableTags={availableTags}
+        isAddToFolderModalOpen={isAddToFolderModalOpen}
+        setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
+        targetFolderId={targetFolderId}
+        setTargetFolderId={setTargetFolderId}
+        targetCategoryId={targetCategoryId}
+        setTargetCategoryId={setTargetCategoryId}
+        isAddTagModalOpen={isAddTagModalOpen}
+        setIsAddTagModalOpen={setIsAddTagModalOpen}
+        onTagSelect={handleAddTagToFiles}
+        onTagCreate={createTag}
+        isAddFolderModalOpen={isAddFolderModalOpen}
+        setIsAddFolderModalOpen={setIsAddFolderModalOpen}
+        newFolderName={newFolderName}
+        setNewFolderName={setNewFolderName}
+        selectedCategoryForNewFolder={selectedCategoryForNewFolder}
+        setSelectedCategoryForNewFolder={setSelectedCategoryForNewFolder}
+        handleCreateFolderSubmit={handleCreateFolderSubmit}
+        handleAddToFolderSubmit={handleAddToFolderSubmit}
+        onAddFilesToFolder={onAddFilesToFolder}
+        handleCreateNewFolder={handleCreateNewFolderFromModal}
+      />
       
-      {/* Create Folder Modal */}
-      <Dialog open={showCreateFolderModal} onOpenChange={setShowCreateFolderModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>
-              Enter a name for the new folder.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="folderName">Folder Name</Label>
-            <Input
-              id="folderName"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateFolderModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder}>
-              Create Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Note Modal */}
       <Dialog open={showEditNoteModal} onOpenChange={() => setShowEditNoteModal(false)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
