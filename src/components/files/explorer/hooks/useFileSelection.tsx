@@ -7,9 +7,10 @@ export const useFileSelection = () => {
   const { toast } = useToast();
 
   // Handler for file deletion
-  const handleFileDeleted = (fileId: string) => {
+  const handleFileDeleted = async (fileId: string): Promise<void> => {
     // Remove the file from selectedFileIds if it's selected
     setSelectedFileIds(prev => prev.filter(id => id !== fileId));
+    return Promise.resolve();
   };
 
   // Toggle file selection

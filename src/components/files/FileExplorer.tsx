@@ -344,27 +344,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     // Placeholder for rename folder action
     console.log("Rename folder", folderId, currentName);
   };
-  
-  // File filtering and view
-  const {
-    searchQuery,
-    setSearchQuery,
-    selectedTypes,
-    setSelectedTypes,
-    viewMode,
-    setViewMode,
-    filteredFiles
-  } = useFileFilters({ 
-    files,
-    selectedTags
-  });
 
   const contextValue = {
     selectedFileIds,
     setSelectedFileIds,
     currentFolder,
     currentCategory,
-    handleAddToFolderClick,
+    handleAddToFolderClick: () => setShowAddToFolderModal(true),
     handleInitiateNewCategory,
     handleInitiateNewFolder,
     handleDeleteCategoryClick,
@@ -469,7 +455,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onRefresh={onRefresh}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          selectedTypes={selectedTypes}
+          selectedTypes={selectedTypes[0] || null}
           setSelectedTypes={(type) => setSelectedTypes(type ? [type] : [])}
           onFolderChange={onFolderChange}
           selectedTags={selectedTags}
