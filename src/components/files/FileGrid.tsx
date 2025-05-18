@@ -38,6 +38,7 @@ export const FileGrid: React.FC<FileGridProps> = ({
         onFilesChanged={onFilesChanged}
         onFileDeleted={onFileDeleted}
         recentlyUploadedIds={recentlyUploadedIds}
+        onSelectFiles={onSelectFiles}
         onEditNote={onEditNote}
         onAddTag={onAddTag}
         currentFolder={currentFolder}

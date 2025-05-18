@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
-import { FileCard } from './FileCard';
+import { FileCard } from './grid/FileCard';
 
 interface FileGridContainerProps {
   files: CreatorFileType[];

@@ -2,7 +2,7 @@
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 
-interface FileCardProps {
+export interface FileCardProps {
   file: CreatorFileType;
   isCreatorView: boolean;
   onFilesChanged: () => void;
@@ -12,6 +12,9 @@ interface FileCardProps {
   onAddTag?: (file: CreatorFileType) => void;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  isSelectable?: boolean;
+  isEditable?: boolean;
+  onDelete?: (fileId: string) => Promise<void>;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -23,16 +26,27 @@ export const FileCard: React.FC<FileCardProps> = ({
   onEditNote,
   onAddTag,
   currentFolder,
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  isSelectable,
+  isEditable,
+  onDelete
 }) => {
-  // This is a placeholder component since the original wasn't provided
-  // but we need to ensure it has proper type definitions
+  // Use onDelete if provided, otherwise fall back to onFileDeleted
+  const handleDelete = async (fileId: string): Promise<void> => {
+    if (onDelete) {
+      return onDelete(fileId);
+    } else if (onFileDeleted) {
+      return onFileDeleted(fileId);
+    }
+    return Promise.resolve();
+  };
+
   return (
     <div className="border rounded-md p-4">
       <h3>{file.name || file.filename}</h3>
       {isNewlyUploaded && <span className="text-green-500">New</span>}
       <div className="mt-2 flex space-x-2">
-        {isCreatorView && (
+        {(isCreatorView || isEditable) && (
           <>
             {onEditNote && (
               <button 
@@ -60,11 +74,21 @@ export const FileCard: React.FC<FileCardProps> = ({
             )}
             <button 
               className="text-red-500"
-              onClick={() => onFileDeleted(file.id)}
+              onClick={() => handleDelete(file.id)}
             >
               Delete
             </button>
           </>
+        )}
+        {isSelectable && (
+          <div className="flex items-center">
+            <input 
+              type="checkbox" 
+              className="mr-2"
+              onChange={() => console.log('File selected:', file.id)}
+            />
+            <span>Select</span>
+          </div>
         )}
       </div>
     </div>

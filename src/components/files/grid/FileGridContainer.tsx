@@ -29,16 +29,25 @@ export function FileGridContainer({
   currentFolder = 'all',
   onRemoveFromFolder
 }: FileGridContainerProps) {
+  const handleFileDelete = async (fileId: string): Promise<void> => {
+    if (onFileDeleted) {
+      return onFileDeleted(fileId);
+    }
+    return Promise.resolve();
+  };
+
   return (
     <>
       {files.map((file) => (
         <FileCard
           key={file.id}
           file={file}
+          isCreatorView={isCreatorView}
           isSelectable={!!onSelectFiles}
           isEditable={isCreatorView}
           isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
-          onDelete={onFileDeleted}
+          onFileDeleted={handleFileDelete}
+          onDelete={handleFileDelete}
           onFilesChanged={onFilesChanged}
           onEditNote={onEditNote}
           onAddTag={onAddTag}
