@@ -21,8 +21,6 @@ export const NoteDialog: React.FC<NoteDialogProps> = ({
   setEditedNote,
   handleUpdateNote
 }) => {
-  if (!fileToEdit) return null;
-  
   return (
     <Dialog open={showEditNoteModal} onOpenChange={(open) => !open && setShowEditNoteModal(false)}>
       <DialogContent>

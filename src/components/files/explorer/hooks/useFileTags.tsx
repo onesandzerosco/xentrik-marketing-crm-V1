@@ -6,7 +6,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const useFileTags = (creatorId: string, onRefresh: () => void) => {
-  // State for tag dialog
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [fileToTag, setFileToTag] = useState<CreatorFileType | null>(null);
   const [selectedFileTag, setSelectedFileTag] = useState<string>('');
@@ -60,8 +59,8 @@ export const useFileTags = (creatorId: string, onRefresh: () => void) => {
       });
       
       // Close dialog and refresh
-      setFileToTag(null);
       setShowTagDialog(false);
+      setFileToTag(null);
       toast({
         title: 'Tag Added',
         description: 'File tag added successfully.',

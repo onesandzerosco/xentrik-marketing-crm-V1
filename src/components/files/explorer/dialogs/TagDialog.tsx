@@ -27,8 +27,6 @@ export const TagDialog: React.FC<TagDialogProps> = ({
   availableTags,
   onTagCreate
 }) => {
-  if (!fileToTag) return null;
-  
   return (
     <Dialog open={showTagDialog} onOpenChange={(open) => !open && setShowTagDialog(false)}>
       <DialogContent>
@@ -37,7 +35,7 @@ export const TagDialog: React.FC<TagDialogProps> = ({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Select a tag to add to "{fileToTag.filename || fileToTag.name}"
+            {fileToTag && `Select a tag to add to "${fileToTag.filename || fileToTag.name}"`}
           </p>
           <TagSelector
             tags={availableTags || []}

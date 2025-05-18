@@ -43,8 +43,8 @@ export const useFileNotesDialog = (creatorId: string, onRefresh: () => void) => 
         return updatedFiles;
       });
       
-      setFileToEdit(null);
       setShowEditNoteModal(false);
+      setFileToEdit(null);
       toast({
         title: 'Note Updated',
         description: 'File note updated successfully.',

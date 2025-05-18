@@ -13,6 +13,7 @@ import { useFileDelete } from './explorer/hooks/useFileDelete';
 import { useFileTags } from './explorer/hooks/useFileTags';
 import { useFileNotesDialog } from './explorer/hooks/useFileNotesDialog';
 import { useFileUpload } from './explorer/hooks/useFileUpload';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -44,12 +45,6 @@ interface FileExplorerProps {
   onTagCreate?: (name: string) => Promise<FileTag | null>;
 }
 
-interface FileTag {
-  id: string;
-  name: string;
-  color?: string;
-}
-
 export const FileExplorer: React.FC<FileExplorerProps> = ({
   files,
   creatorName,
@@ -79,7 +74,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   availableTags = [],
   onTagCreate
 }) => {
-  const { id } = useParams();
   const queryClient = useQueryClient();
   
   // State for file selection
@@ -150,12 +144,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   
   // Additional handlers for context
   const handleInitiateNewCategory = () => {
-    // Placeholder for initializing new category modal
     console.log("Initialize new category");
   };
   
   const handleInitiateNewFolder = (categoryId?: string) => {
-    // Placeholder for initializing new folder modal
     console.log("Initialize new folder in category", categoryId);
   };
   
@@ -166,7 +158,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
-    // Placeholder for rename category action
     console.log("Rename category", categoryId, currentName);
   };
   
@@ -177,7 +168,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   const handleRenameFolderClick = (folderId: string, currentName: string) => {
-    // Placeholder for rename folder action
     console.log("Rename folder", folderId, currentName);
   };
 
