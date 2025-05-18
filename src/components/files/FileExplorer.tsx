@@ -95,6 +95,20 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   // State for file selection
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
 
+  // File filtering and view mode state
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles
+  } = useFileFilters({ 
+    files,
+    selectedTags
+  });
+
   // File upload handlers
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
