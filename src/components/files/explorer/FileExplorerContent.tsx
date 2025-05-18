@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FilterBar } from '../FilterBar';
@@ -78,11 +77,12 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
 
   const handleTagSelect = (tagId: string) => {
     if (setSelectedTags) {
-      setSelectedTags(prevTags => 
-        prevTags.includes(tagId) 
-          ? prevTags.filter(id => id !== tagId)
-          : [...prevTags, tagId]
-      );
+      // Create a new array instead of using a function to modify the state
+      if (selectedTags.includes(tagId)) {
+        setSelectedTags(selectedTags.filter(id => id !== tagId));
+      } else {
+        setSelectedTags([...selectedTags, tagId]);
+      }
     }
   };
 
