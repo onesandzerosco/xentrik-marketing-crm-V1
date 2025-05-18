@@ -1,53 +1,29 @@
 
 import React from 'react';
-import { UploadCloud, RefreshCw, ViewGrid, ViewList, Plus } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { FilterBar } from '@/components/files/FilterBar';
-import { FileGridContainer } from '@/components/files/grid/FileGridContainer';
-import { FileExplorerSidebar } from '@/components/files/explorer/FileExplorerSidebar';
-import { FileExplorerHeader } from '@/components/files/explorer/FileExplorerHeader';
-import { CreatorFileType, Folder, Category, FileTag } from '@/types/fileTypes';
-
-interface FileExplorerHeaderProps {
-  creatorName: string;
-  viewMode: 'list' | 'grid';
-  setViewMode: (mode: 'list' | 'grid') => void;
-  onUploadClick: () => void;
-  onRefresh: () => void;
-  selectedFileIds: string[];
-  onAddToFolderClick: () => void;
-  isCreatorView: boolean;
-}
-
-interface FileExplorerSidebarProps {
-  onFolderChange: (folderId: string) => void;
-  currentFolder: string;
-  onCategoryChange: (categoryId: string) => void;
-  currentCategory: string;
-  availableFolders: Folder[];
-  availableCategories: Category[];
-  onCreateFolder: () => void;
-}
+import { FileExplorerHeader } from '../FileExplorerHeader';
+import { FileExplorerSidebar } from '../FileExplorerSidebar';
+import { FileExplorerContent } from '../FileExplorerContent';
+import { useFileExplorerContext } from '../context/FileExplorerContext';
+import { CreatorFileType } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerLayoutProps {
   filteredFiles: CreatorFileType[];
-  viewMode: 'list' | 'grid';
-  setViewMode: (viewMode: 'list' | 'grid') => void;
+  viewMode: 'grid' | 'list';
+  setViewMode: (mode: 'grid' | 'list') => void;
   onUploadClick: () => void;
   onRefresh: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  selectedTypes: string | null;
-  setSelectedTypes: (type: string | null) => void;
+  selectedTypes: string[];
+  setSelectedTypes: (types: string[]) => void;
   onFolderChange: (folderId: string) => void;
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   availableTags?: FileTag[];
   onTagCreate?: (name: string) => Promise<FileTag | null>;
-  onEditNote?: (file: CreatorFileType) => void;
+  onEditNote: (file: CreatorFileType) => void;
   onCreateFolder: () => void;
-  onAddTag?: (file: CreatorFileType) => void;
 }
 
 export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
@@ -62,47 +38,44 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
   setSelectedTypes,
   onFolderChange,
   selectedTags = [],
-  setSelectedTags = () => {},
+  setSelectedTags,
   availableTags = [],
   onTagCreate,
   onEditNote,
   onCreateFolder,
-  onAddTag
 }) => {
-  // Get these values from context
-  const { 
-    selectedFileIds = [], 
+  const {
+    selectedFileIds,
+    setSelectedFileIds,
+    isCreatorView,
+    currentFolder,
+    currentCategory,
+    onCategoryChange,
+    availableFolders,
+    availableCategories,
+    onDeleteFolder,
+    onDeleteCategory,
+    onRemoveFromFolder,
     handleAddToFolderClick,
-    creatorName = 'Creator',
-    currentFolder = 'all',
-    currentCategory = '',
-    availableFolders = [],
-    availableCategories = [],
-    onCategoryChange = () => {},
-    isCreatorView = false
-  } = React.useContext(React.createContext({} as any));
-
-  const handleTagSelect = (tagId: string) => {
-    setSelectedTags(
-      selectedTags.includes(tagId)
-        ? selectedTags.filter(id => id !== tagId)
-        : [...selectedTags, tagId]
-    );
-  };
+    creatorName,
+    isLoading
+  } = useFileExplorerContext();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full">
       <FileExplorerHeader
         creatorName={creatorName}
         viewMode={viewMode}
         setViewMode={setViewMode}
-        onUploadClick={onUploadClick}
+        onUploadClick={isCreatorView ? onUploadClick : undefined}
         onRefresh={onRefresh}
         selectedFileIds={selectedFileIds}
-        onAddToFolderClick={handleAddToFolderClick}
-        isCreatorView={isCreatorView}
+        onAddToFolderClick={
+          selectedFileIds.length > 0 && isCreatorView
+            ? handleAddToFolderClick
+            : undefined
+        }
       />
-      
       <div className="flex flex-1 overflow-hidden">
         <FileExplorerSidebar
           onFolderChange={onFolderChange}
@@ -111,33 +84,37 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
           currentCategory={currentCategory}
           availableFolders={availableFolders}
           availableCategories={availableCategories}
-          onCreateFolder={onCreateFolder}
+          onCreateFolder={isCreatorView ? onCreateFolder : undefined}
         />
-        
-        <div className="flex-1 overflow-auto p-4">
-          <FilterBar
-            activeFilter={selectedTypes}
-            onFilterChange={setSelectedTypes}
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            availableTags={availableTags}
-            selectedTags={selectedTags}
-            onTagSelect={handleTagSelect}
-            onTagCreate={onTagCreate}
-          />
-          
-          <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' : 'grid-cols-1'} gap-4 mt-4`}>
-            <FileGridContainer
-              files={filteredFiles}
-              isCreatorView={isCreatorView}
-              onFilesChanged={onRefresh}
-              recentlyUploadedIds={[]}
-              onEditNote={onEditNote}
-              onAddTag={onAddTag}
-              currentFolder={currentFolder}
-            />
-          </div>
-        </div>
+        <FileExplorerContent
+          isLoading={isLoading}
+          viewMode={viewMode}
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          selectedTypes={selectedTypes}
+          setSelectedTypes={setSelectedTypes}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+          availableTags={availableTags}
+          onTagCreate={onTagCreate}
+          filteredFiles={filteredFiles}
+          isCreatorView={isCreatorView}
+          onFilesChanged={onRefresh}
+          onFileDeleted={(fileId) => {
+            // TODO: Implement file deletion
+            console.log(`Delete file ${fileId}`);
+          }}
+          recentlyUploadedIds={[]}
+          selectedFileIds={selectedFileIds}
+          setSelectedFileIds={setSelectedFileIds}
+          onAddToFolderClick={handleAddToFolderClick}
+          currentFolder={currentFolder}
+          currentCategory={currentCategory}
+          onCreateFolder={isCreatorView ? onCreateFolder : undefined}
+          availableFolders={availableFolders}
+          onRemoveFromFolder={onRemoveFromFolder}
+          onEditNote={onEditNote}
+        />
       </div>
     </div>
   );

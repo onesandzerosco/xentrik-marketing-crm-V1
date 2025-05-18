@@ -1,12 +1,11 @@
-
 import React, { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import { FileText, MoreVertical, Download, Trash2, Tag as TagIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -20,7 +19,7 @@ interface FileCardProps {
   isSelectable?: boolean;
   isEditable?: boolean;
   isNewlyUploaded?: boolean;
-  onDelete?: (fileId: string) => Promise<void>;
+  onDelete?: (fileId: string) => void;
   onFilesChanged: () => void;
   onEditNote?: (file: CreatorFileType) => void;
   onAddTag?: (file: CreatorFileType) => void;
@@ -148,84 +147,9 @@ export function FileCard({
 
     openContextMenu({
       event,
-      items: menuItems as any[]
+      items: menuItems
     });
   };
-
-  // Prepare menu items for dropdown menu
-  const menuItems = [
-    canDownload && {
-      label: 'Download',
-      icon: <Download className="mr-2 h-4 w-4" />,
-      onClick: handleDownload,
-    },
-    isEditable && onEditNote && {
-      label: 'Edit Note',
-      icon: <FileText className="mr-2 h-4 w-4" />,
-      onClick: () => onEditNote(file)
-    },
-    isEditable && onAddTag && {
-      label: 'Add Tag',
-      icon: <TagIcon className="mr-2 h-4 w-4" />,
-      onClick: () => onAddTag(file)
-    },
-    isEditable && onDelete && {
-      label: 'Delete',
-      icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (onDelete) {
-          setIsDeleting(true);
-          onDelete(file.id)
-            .then(() => {
-              toast({
-                title: "File Deleted",
-                description: "File deleted successfully.",
-              });
-              onFilesChanged();
-            })
-            .catch((error) => {
-              console.error("Error deleting file:", error);
-              toast({
-                title: "Error",
-                description: "There was an error deleting the file",
-                variant: "destructive",
-              });
-            })
-            .finally(() => setIsDeleting(false));
-        }
-      },
-      disabled: isDeleting,
-    },
-    isEditable && currentFolder !== 'all' && onRemoveFromFolder && {
-      label: 'Remove from folder',
-      icon: <Trash2 className="mr-2 h-4 w-4" />,
-      onClick: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (onRemoveFromFolder) {
-          setIsDeleting(true);
-          onRemoveFromFolder([file.id], currentFolder)
-            .then(() => {
-              toast({
-                title: "File Removed",
-                description: "File removed from folder successfully.",
-              });
-              onFilesChanged();
-            })
-            .catch((error) => {
-              console.error("Error removing file:", error);
-              toast({
-                title: "Error",
-                description: "There was an error removing the file from the folder",
-                variant: "destructive",
-              });
-            })
-            .finally(() => setIsDeleting(false));
-        }
-      },
-      disabled: isDeleting,
-    }
-  ].filter(Boolean);
 
   return (
     <div
@@ -243,6 +167,7 @@ export function FileCard({
         ) : file.type?.startsWith('video/') ? (
           <video
             src={file.url}
+            alt={file.name}
             className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
             muted
             loop
@@ -250,7 +175,7 @@ export function FileCard({
           />
         ) : (
           <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">
-            {file.type || 'Unknown file type'}
+            {file.type}
           </div>
         )}
         {isNewlyUploaded && (
@@ -259,7 +184,7 @@ export function FileCard({
           </div>
         )}
         {isSelectable && (
-          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'} transition-opacity duration-200`}>
+          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50 transition-opacity duration-200`}>
             ✓
           </div>
         )}
@@ -304,8 +229,11 @@ export function FileCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {menuItems.map((item: any, index: number) => (
-                <DropdownMenuItem key={index} onClick={item.onClick} disabled={item.disabled}>
+              {menuItems.map((item, index) => (
+                <DropdownMenuItem key={index} onClick={(e) => {
+                  e.stopPropagation();
+                  item.onClick(e);
+                }} disabled={item.disabled}>
                   {item.icon}
                   {item.label}
                 </DropdownMenuItem>
@@ -321,7 +249,7 @@ export function FileCard({
         </p>
         {file.tags && file.tags.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
-            {file.tags.map((tag: string) => (
+            {file.tags.map(tag => (
               <Badge key={tag} variant="secondary" className="text-xs">
                 {tag}
               </Badge>

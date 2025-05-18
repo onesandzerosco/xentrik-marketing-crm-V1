@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
 import { useToast } from '@/components/ui/use-toast';
-import { Button } from "@/components/ui/button";
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useFileFilters } from './explorer/hooks/useFileFilters';
@@ -39,16 +37,6 @@ interface FileExplorerProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
-  selectedTags?: string[];
-  setSelectedTags?: (tags: string[]) => void;
-  availableTags?: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag | null>;
-}
-
-interface FileTag {
-  id: string;
-  name: string;
-  color?: string;
 }
 
 export const FileExplorer: React.FC<FileExplorerProps> = ({
@@ -74,11 +62,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onDeleteCategory,
   onRemoveFromFolder,
   onRenameFolder,
-  onRenameCategory,
-  selectedTags = [],
-  setSelectedTags = () => {},
-  availableTags = [],
-  onTagCreate
+  onRenameCategory
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -95,6 +79,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 
   // State for file selection
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+
+  // Get tags from hook
+  const { 
+    availableTags, 
+    selectedTags: tagFilters, 
+    setSelectedTags: setTagFilters, 
+    createTag, 
+    filterFilesByTags 
+  } = useFileTags();
 
   // File upload handlers
   const onDrop = useCallback(
@@ -129,9 +122,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           }
           
           // Get the public URL for the uploaded file
-          const { data: urlData } = supabase.storage
-            .from('media')
-            .getPublicUrl(data.path);
+          const fileUrl = `${supabase.storage.url}/object/media/${data.path}`;
           
           // Create a new media record in the database
           const { data: mediaData, error: mediaError } = await supabase
@@ -144,8 +135,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               bucket_key: data.path,
               folders: currentFolder !== 'all' ? [currentFolder] : [],
               categories: currentCategory ? [currentCategory] : [],
-              status: 'available',
-              tags: []  // Initialize with empty tags array
+              status: 'available'
             })
             .select()
             .single();
@@ -238,7 +228,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
   
   // File deletion handler
-  const handleFileDeleted = async (fileId: string): Promise<void> => {
+  const handleFileDeleted = async (fileId: string) => {
     try {
       // Get the file from the database
       const { data: file, error: fetchError } = await supabase
@@ -309,6 +299,38 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setShowAddToFolderModal(true);
   };
   
+  const handleInitiateNewCategory = () => {
+    // Placeholder for initiating new category creation
+    console.log("Initiating new category creation");
+  };
+  
+  const handleInitiateNewFolder = (categoryId?: string) => {
+    // Placeholder for initiating new folder creation with optional category
+    console.log(`Initiating new folder creation in category: ${categoryId || 'default'}`);
+  };
+  
+  const handleDeleteCategoryClick = (categoryId: string) => {
+    console.log(`Delete category clicked: ${categoryId}`);
+    if (onDeleteCategory) {
+      onDeleteCategory(categoryId);
+    }
+  };
+  
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    console.log(`Rename category clicked: ${categoryId}, current name: ${currentName}`);
+  };
+  
+  const handleDeleteFolderClick = (folderId: string) => {
+    console.log(`Delete folder clicked: ${folderId}`);
+    if (onDeleteFolder) {
+      onDeleteFolder(folderId);
+    }
+  };
+  
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    console.log(`Rename folder clicked: ${folderId}, current name: ${currentName}`);
+  };
+  
   // File filtering and view
   const {
     searchQuery,
@@ -320,8 +342,13 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     filteredFiles
   } = useFileFilters({ 
     files,
-    selectedTags
+    selectedTags: tagFilters 
   });
+  
+  // Apply tag filtering on top of the basic filtering
+  const tagFilteredFiles = tagFilters.length > 0
+    ? filterFilesByTags(filteredFiles, tagFilters)
+    : filteredFiles;
 
   const contextValue = {
     selectedFileIds,
@@ -329,12 +356,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     currentFolder,
     currentCategory,
     handleAddToFolderClick,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick,
     creatorName,
     creatorId,
     isCreatorView,
     availableFolders,
     availableCategories,
     onCategoryChange,
+    onDeleteFolder: onDeleteFolder || (async () => { console.log('Delete folder not implemented'); }),
+    onDeleteCategory: onDeleteCategory || (async () => { console.log('Delete category not implemented'); }),
+    onRemoveFromFolder,
     viewMode,
     isLoading
   };
@@ -417,7 +453,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     <div className="flex flex-col h-full w-full">
       <FileExplorerProvider value={contextValue}>
         <FileExplorerLayout
-          filteredFiles={filteredFiles}
+          filteredFiles={tagFilteredFiles}
           viewMode={viewMode}
           setViewMode={setViewMode}
           onUploadClick={open}
@@ -427,11 +463,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           onFolderChange={onFolderChange}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
+          selectedTags={tagFilters}
+          setSelectedTags={setTagFilters}
           availableTags={availableTags}
-          onTagCreate={onTagCreate}
-          onEditNote={handleEditNote}
+          onTagCreate={createTag}
+          onEditNote={(file) => {
+            setFileToEdit(file);
+            setEditedNote(file.description || '');
+            setShowEditNoteModal(true);
+          }}
           onCreateFolder={handleCreateFolderClick}
           onAddTag={handleAddTag}
         />
@@ -449,10 +489,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 Select a tag to add to "{fileToTag.filename || fileToTag.name}"
               </p>
               <TagSelector
-                tags={availableTags || []}
+                tags={availableTags}
                 selectedTags={[selectedFileTag]}
                 onTagSelect={handleTagSelect}
-                onTagCreate={onTagCreate}
+                onTagCreate={createTag}
               />
             </div>
             <DialogFooter>
@@ -487,9 +527,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 <p>Drag 'n' drop some files here, or click to select files</p>
               )}
             </div>
-            <Button onClick={() => setShowUploadModal(false)} className="mt-4">
+            <button onClick={() => setShowUploadModal(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">
               Cancel
-            </Button>
+            </button>
           </div>
         </div>
       )}
@@ -504,12 +544,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
               className="w-full h-32 border rounded-md p-2"
             />
             <div className="flex justify-end mt-4 space-x-2">
-              <Button variant="outline" onClick={() => setShowEditNoteModal(false)}>
+              <button onClick={() => setShowEditNoteModal(false)} className="px-4 py-2 bg-gray-200 rounded">
                 Cancel
-              </Button>
-              <Button onClick={handleUpdateNote}>
+              </button>
+              <button onClick={handleUpdateNote} className="px-4 py-2 bg-blue-500 text-white rounded">
                 Save
-              </Button>
+              </button>
             </div>
           </div>
         </div>
