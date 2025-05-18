@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -437,6 +438,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onCreateFolder={handleCreateFolderClick}
           onAddTag={handleAddTag}
         />
+      </FileExplorerProvider>
       
       {showTagDialog && fileToTag && (
         <Dialog open={showTagDialog} onOpenChange={(open) => !open && setShowTagDialog(false)}>
