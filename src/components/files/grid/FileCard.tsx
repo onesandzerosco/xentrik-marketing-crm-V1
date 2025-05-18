@@ -76,7 +76,7 @@ export function FileCard({
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
 
-    const menuItems = [
+    const contextMenuItems = [
       canDownload && {
         label: 'Download',
         icon: <Download className="mr-2 h-4 w-4" />,
@@ -150,7 +150,7 @@ export function FileCard({
 
     openContextMenu({
       event,
-      items: menuItems
+      items: contextMenuItems
     });
   };
 
@@ -170,7 +170,6 @@ export function FileCard({
         ) : file.type?.startsWith('video/') ? (
           <video
             src={file.url}
-            alt={file.name}
             className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
             muted
             loop
@@ -232,7 +231,7 @@ export function FileCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {menuItems && menuItems.map((item: any, index: number) => (
+              {contextMenuItems && contextMenuItems.map((item: any, index: number) => (
                 <DropdownMenuItem key={index} onClick={(e) => {
                   e.stopPropagation();
                   item.onClick(e);

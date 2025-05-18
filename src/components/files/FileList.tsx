@@ -235,6 +235,31 @@ export const FileList: React.FC<FileListProps> = ({
     return true;
   });
 
+  // Function for checking if a file is selected
+  const isSelected = (fileId: string) => selectedFileIds.includes(fileId);
+
+  // Function to handle deletion of multiple files
+  const handleDeleteFiles = async () => {
+    if (selectedFileIds.length === 0) return Promise.resolve();
+    
+    try {
+      // Delete each file
+      for (const fileId of selectedFileIds) {
+        if (onFileDeleted) {
+          await onFileDeleted(fileId);
+        }
+      }
+      
+      setSelectedFileIds([]);
+      onFilesChanged();
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error deleting files:", error);
+      return Promise.reject(error);
+    }
+  };
+
   return (
     <div className="w-full relative overflow-x-auto">
       <FileListBatchActions
@@ -244,7 +269,7 @@ export const FileList: React.FC<FileListProps> = ({
         onRemoveFromFolder={onRemoveFromFolder}
         currentFolder={currentFolder}
         handleRemoveFromFolder={handleRemoveFromFolder}
-        onDeleteFiles={canDelete ? () => Promise.resolve() : undefined}
+        onDeleteFiles={canDelete ? handleDeleteFiles : undefined}
       />
       
       <Table>
@@ -263,8 +288,8 @@ export const FileList: React.FC<FileListProps> = ({
                   key={file.id}
                   file={file}
                   isCreatorView={isCreatorView}
-                  isFileSelected={isFileSelected(file.id)}
-                  toggleFileSelection={toggleFileSelection}
+                  isSelected={isSelected(file.id)}
+                  toggleSelection={toggleFileSelection}
                   handleFileClick={handleFileClick}
                   handleDeleteFile={handleDeleteFile}
                   showRemoveFromFolder={showRemoveFromFolder}
@@ -274,6 +299,7 @@ export const FileList: React.FC<FileListProps> = ({
                   onFileDeleted={onFileDeleted}
                   onFilesChanged={onFilesChanged}
                   onAddTag={onAddTag}
+                  isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
                 />
               )
             ))

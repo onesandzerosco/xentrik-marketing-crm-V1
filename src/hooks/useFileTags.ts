@@ -48,7 +48,7 @@ export const useFileTags = () => {
         }
       });
 
-      // Convert to FileTag objects
+      // Convert to FileTag objects with default colors
       const tagObjects = Array.from(uniqueTags).map(id => ({ 
         id, 
         name: id, // Use tag ID as name for now
@@ -84,7 +84,12 @@ export const useFileTags = () => {
       }
       
       // For now, since there is no tag table, we'll create a tag locally
-      const newTag = { id: name, name, color: 'gray' };
+      const newTag = { 
+        id: name, 
+        name, 
+        color: 'gray' // Default color
+      };
+      
       setAvailableTags(prev => [...prev, newTag]);
       return newTag;
     } catch (error: any) {

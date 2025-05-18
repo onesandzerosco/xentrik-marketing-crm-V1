@@ -75,6 +75,7 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
             ? handleAddToFolderClick
             : undefined
         }
+        isCreatorView={isCreatorView}
       />
       <div className="flex flex-1 overflow-hidden">
         <FileExplorerSidebar
@@ -101,8 +102,15 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
           isCreatorView={isCreatorView}
           onFilesChanged={onRefresh}
           onFileDeleted={(fileId) => {
-            // TODO: Implement file deletion
-            console.log(`Delete file ${fileId}`);
+            // Return a Promise to match the expected type
+            return new Promise<void>((resolve, reject) => {
+              try {
+                console.log(`Delete file ${fileId}`);
+                resolve();
+              } catch (error) {
+                reject(error);
+              }
+            });
           }}
           recentlyUploadedIds={[]}
           selectedFileIds={selectedFileIds}

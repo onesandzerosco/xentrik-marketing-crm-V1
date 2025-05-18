@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FilterBar } from '../FilterBar';
@@ -97,15 +98,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         onSearchChange={onSearchChange}
         availableTags={availableTags}
         selectedTags={selectedTags}
-        onTagSelect={(tagId) => {
-          if (setSelectedTags) {
-            if (selectedTags.includes(tagId)) {
-              setSelectedTags(selectedTags.filter(id => id !== tagId));
-            } else {
-              setSelectedTags([...selectedTags, tagId]);
-            }
-          }
-        }}
+        onTagSelect={handleTagSelect}
         onTagCreate={onTagCreate}
       />
       
