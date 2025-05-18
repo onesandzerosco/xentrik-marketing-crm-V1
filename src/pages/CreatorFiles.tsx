@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -183,37 +184,18 @@ const CreatorFiles = () => {
     );
   }
 
-  const handleFileDeleted = async (fileId: string): Promise<void> => {
-    try {
-      // Delete the file logic here
-      console.log("Deleting file:", fileId);
-      
-      // You can add actual deletion logic if needed
-      // await supabase.from('media').delete().eq('id', fileId);
-      
-      // Refetch files after deletion
-      refetch();
-      
-      // Return resolved promise
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      return Promise.reject(error);
-    }
-  };
-
-  // Initialize tag handling hooks
+  // Get tags from hook
   const { 
     availableTags, 
-    selectedTags, 
-    setSelectedTags, 
+    selectedTags: tagFilters, 
+    setSelectedTags: setTagFilters, 
     createTag, 
     filterFilesByTags 
   } = useFileTags();
 
   // Apply tag filtering on top of the basic filtering
-  const tagFilteredFiles = selectedTags.length > 0
-    ? filterFilesByTags(filteredFiles, selectedTags)
+  const tagFilteredFiles = tagFilters.length > 0
+    ? filterFilesByTags(filteredFiles, tagFilters)
     : filteredFiles;
 
   return (
@@ -241,11 +223,10 @@ const CreatorFiles = () => {
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
       onRenameCategory={handleRenameCategory}
-      selectedTags={selectedTags}
-      setSelectedTags={setSelectedTags}
+      selectedTags={tagFilters}
+      setSelectedTags={setTagFilters}
       availableTags={availableTags}
       onTagCreate={createTag}
-      onFileDeleted={handleFileDeleted}
     />
   );
 };

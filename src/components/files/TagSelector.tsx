@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { PlusCircle, X, Tag, Check, Palette } from 'lucide-react';
+import { PlusCircle, X, Tag, Check } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -27,7 +27,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { FileTag } from '@/hooks/useFileTags';
-import { ColorPicker } from './ColorPicker';
 
 interface TagSelectorProps {
   tags: FileTag[];
@@ -58,32 +57,6 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
-  const [selectedColor, setSelectedColor] = useState('#87CEFA'); // Default blue color
-
-  const getBadgeStyle = (color?: string): React.CSSProperties => {
-    if (!color) return {};
-    
-    // Simple color style logic based on hex value
-    return { 
-      backgroundColor: color, 
-      color: isLightColor(color) ? '#333333' : '#ffffff' 
-    };
-  };
-  
-  // Helper function to determine if a color is light (needs dark text) or dark (needs light text)
-  const isLightColor = (hexColor: string) => {
-    // Convert hex to RGB
-    const r = parseInt(hexColor.slice(1, 3), 16);
-    const g = parseInt(hexColor.slice(3, 5), 16);
-    const b = parseInt(hexColor.slice(5, 7), 16);
-    
-    // Calculate perceived brightness using the formula
-    // (0.299*R + 0.587*G + 0.114*B)
-    const brightness = (r * 0.299 + g * 0.587 + b * 0.114);
-    
-    // If brightness > 150, it's a light color
-    return brightness > 150;
-  };
 
   const handleCreateTag = async () => {
     if (newTagName.trim() && onTagCreate) {
@@ -124,7 +97,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <Badge style={getBadgeStyle(tag.color)}>
+                    <Badge className={tagColors[tag.color || 'gray']}>
                       {tag.name}
                     </Badge>
                   </div>
@@ -160,22 +133,6 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                           value={newTagName}
                           onChange={(e) => setNewTagName(e.target.value)}
                         />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <div className="flex items-center gap-2">
-                          <Label htmlFor="color">Color</Label>
-                          <Palette className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <ColorPicker 
-                          selectedColor={selectedColor} 
-                          onColorSelect={setSelectedColor} 
-                        />
-                        <div className="mt-2">
-                          <Badge className="text-sm" style={getBadgeStyle(selectedColor)}>
-                            Preview: {newTagName || 'Tag Name'}
-                          </Badge>
-                        </div>
                       </div>
                     </div>
                     <DialogFooter>

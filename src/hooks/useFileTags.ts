@@ -1,148 +1,125 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { CreatorFileType } from '@/types/fileTypes';
 import { useToast } from '@/components/ui/use-toast';
+import { CreatorFileType } from '@/types/fileTypes';
 
 export interface FileTag {
   id: string;
-  name: string;  // We'll map from tag_name
+  name: string;
   color?: string;
 }
 
-export function useFileTags() {
+export const useFileTags = () => {
   const [availableTags, setAvailableTags] = useState<FileTag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Generate a random color for tags
-  const generateRandomColorHex = (): string => {
-    // Generate pastel colors for better visibility
-    const baseColors = [
-      '#FFD1DC', // Pink
-      '#FFB347', // Orange
-      '#FFDF80', // Yellow
-      '#98FB98', // Green
-      '#87CEFA', // Blue
-      '#D8BFD8', // Purple
-      '#FFA07A', // Coral
-      '#B0E0E6', // Powder Blue
-    ];
-    
-    return baseColors[Math.floor(Math.random() * baseColors.length)];
-  };
-
-  // Fetch available tags on mount
-  useEffect(() => {
-    const fetchTags = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('file_tags')
-          .select('*');
+  const fetchTags = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch tags from the file_tags table
+      const { data: tagData, error: tagError } = await supabase
+        .from('file_tags')
+        .select('id, tag_name');
+      
+      if (tagError) {
+        console.error('Error fetching tags from file_tags table:', tagError);
+        // Fallback to collecting unique tags from media table
+        const { data: mediaWithTags, error: mediaError } = await supabase
+          .from('media')
+          .select('tags');
         
-        if (error) {
-          throw error;
+        if (mediaError) {
+          console.error('Error fetching tags from media:', mediaError);
+          setAvailableTags([]);
+          return;
         }
-        
-        const formattedTags = data.map((tag: any) => ({
-          id: tag.id,
-          name: tag.tag_name, // Map from tag_name to name
-          color: tag.color || generateRandomColorHex() // Use existing color or generate one
+
+        // Extract unique tags
+        const uniqueTags = new Set<string>();
+        mediaWithTags?.forEach(item => {
+          if (item.tags && Array.isArray(item.tags)) {
+            item.tags.forEach((tag: string) => uniqueTags.add(tag));
+          }
+        });
+
+        // Convert to FileTag objects
+        const tagObjects = Array.from(uniqueTags).map(id => ({ 
+          id, 
+          name: id, 
+          color: 'gray' 
         }));
         
-        setAvailableTags(formattedTags);
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-      } finally {
-        setIsLoading(false);
+        setAvailableTags(tagObjects);
+      } else {
+        // Convert the file_tags data to our FileTag format
+        const tags = tagData?.map(tag => ({
+          id: tag.tag_name, // Use tag_name as id for easier reference
+          name: tag.tag_name,
+          color: 'gray' // Default color
+        })) || [];
+        
+        setAvailableTags(tags);
       }
-    };
-    
-    fetchTags();
-  }, []);
-  
-  // Create a new tag
-  const createTag = async (name: string): Promise<FileTag | null> => {
-    if (!name.trim()) {
+    } catch (error: any) {
+      console.error('Error fetching tags:', error);
       toast({
-        title: 'Tag name required',
-        description: 'Please enter a tag name',
+        title: 'Error fetching tags',
+        description: error.message,
         variant: 'destructive',
       });
-      return null;
+    } finally {
+      setIsLoading(false);
     }
-    
+  }, [toast]);
+
+  useEffect(() => {
+    fetchTags();
+  }, [fetchTags]);
+
+  const createTag = async (name: string): Promise<FileTag | null> => {
     try {
-      // Check if tag already exists with case-insensitive comparison
-      const existingTag = availableTags.find(
-        tag => tag.name.toLowerCase() === name.toLowerCase()
+      // Check if tag already exists
+      const existingTag = availableTags.find(tag => 
+        tag.name.toLowerCase() === name.toLowerCase()
       );
       
       if (existingTag) {
-        toast({
-          title: 'Tag already exists',
-          description: `The tag "${name}" already exists`,
-        });
         return existingTag;
       }
       
-      const color = generateRandomColorHex();
-      
-      // Insert the new tag with proper field names
+      // Create a new tag in the file_tags table
       const { data, error } = await supabase
         .from('file_tags')
-        .insert({ 
-          tag_name: name, // Use tag_name field
-          color: color,
-          creator: 'system' // This field is required according to the schema
+        .insert({
+          tag_name: name,
+          creator: 'system' // Default value, ideally would be current user id
         })
-        .select()
-        .single();
+        .select();
       
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
       
-      // Format the new tag
-      const newTag: FileTag = {
-        id: data.id,
-        name: data.tag_name, // Map from tag_name
-        color: data.color
-      };
-      
-      // Update the local state
-      setAvailableTags([...availableTags, newTag]);
-      
-      toast({
-        title: 'Tag created',
-        description: `Created tag "${name}"`,
-      });
-      
+      const newTag = { id: name, name, color: 'gray' };
+      setAvailableTags(prev => [...prev, newTag]);
       return newTag;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating tag:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to create tag',
+        title: 'Error creating tag',
+        description: error.message,
         variant: 'destructive',
       });
       return null;
     }
   };
-  
-  // Filter files by selected tags
+
   const filterFilesByTags = (files: CreatorFileType[], tagIds: string[]): CreatorFileType[] => {
-    if (tagIds.length === 0) {
-      return files;
-    }
+    if (tagIds.length === 0) return files;
     
     return files.filter(file => {
-      if (!file.tags || file.tags.length === 0) {
-        return false;
-      }
-      
+      if (!file.tags) return false;
       return tagIds.some(tagId => file.tags?.includes(tagId));
     });
   };
@@ -153,7 +130,6 @@ export function useFileTags() {
     setSelectedTags,
     isLoading,
     createTag,
-    filterFilesByTags,
-    generateRandomColorHex
+    filterFilesByTags
   };
-}
+};

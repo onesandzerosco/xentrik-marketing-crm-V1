@@ -34,7 +34,6 @@ interface FileExplorerContentProps {
   availableFolders: { id: string; name: string; categoryId: string }[];
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote?: (file: CreatorFileType) => void;
-  onAddTag?: (file: CreatorFileType) => void;
 }
 
 export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
@@ -45,7 +44,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   selectedTypes,
   setSelectedTypes,
   selectedTags = [],
-  setSelectedTags = () => {},
+  setSelectedTags,
   availableTags = [],
   onTagCreate,
   filteredFiles,
@@ -61,8 +60,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   onCreateFolder,
   availableFolders,
   onRemoveFromFolder,
-  onEditNote,
-  onAddTag
+  onEditNote
 }) => {
   // Check if we're viewing a category and there are no folders in it
   const isViewingEmptyCategory = () => {
@@ -127,7 +125,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
           currentFolder={currentFolder}
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
-          onAddTag={onAddTag}
         />
       ) : (
         <FileList 
@@ -141,7 +138,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
           currentFolder={currentFolder}
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
-          onAddTag={onAddTag}
         />
       )}
     </div>
