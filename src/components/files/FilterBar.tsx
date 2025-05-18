@@ -27,13 +27,12 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onTagSelect,
   onTagCreate
 }) => {
+  // Simplified filter options to only include images, videos, audio, and others
   const filterOptions = [
     { value: 'image', label: 'Images' },
     { value: 'video', label: 'Videos' },
     { value: 'audio', label: 'Audio' },
-    { value: 'document', label: 'Documents' },
-    { value: 'archive', label: 'Archives' },
-    { value: 'other', label: 'Other' },
+    { value: 'other', label: 'Others' },
   ];
 
   return (

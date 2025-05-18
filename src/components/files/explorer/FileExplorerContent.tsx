@@ -6,6 +6,7 @@ import { FileList } from '../FileList';
 import { FilterBar } from '../FilterBar';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FileTag } from '@/hooks/useFileTags';
+import { FileGridContainer } from '../grid/FileGridContainer';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -124,21 +125,36 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             )}
           </div>
         ) : (
-          <FileList
-            files={filteredFiles}
-            isCreatorView={isCreatorView}
-            onFileDeleted={onFileDeleted}
-            recentlyUploadedIds={recentlyUploadedIds}
-            selectedFileIds={selectedFileIds}
-            setSelectedFileIds={setSelectedFileIds}
-            onAddToFolderClick={onAddToFolderClick}
-            currentFolder={currentFolder}
-            availableFolders={availableFolders}
-            onRemoveFromFolder={onRemoveFromFolder}
-            onEditNote={onEditNote}
-            onAddTagClick={onAddTagClick}
-            viewMode={viewMode}
-          />
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <FileGridContainer 
+                files={filteredFiles}
+                isCreatorView={isCreatorView}
+                onFilesChanged={onFilesChanged}
+                onFileDeleted={onFileDeleted}
+                recentlyUploadedIds={recentlyUploadedIds}
+                onSelectFiles={setSelectedFileIds}
+                onEditNote={onEditNote}
+                currentFolder={currentFolder}
+                onRemoveFromFolder={onRemoveFromFolder}
+              />
+            </div>
+          ) : (
+            <FileList
+              files={filteredFiles}
+              isCreatorView={isCreatorView}
+              onFileDeleted={onFileDeleted}
+              recentlyUploadedIds={recentlyUploadedIds}
+              onSelectFiles={setSelectedFileIds} 
+              onAddToFolderClick={onAddToFolderClick}
+              currentFolder={currentFolder}
+              availableFolders={availableFolders}
+              onRemoveFromFolder={onRemoveFromFolder}
+              onEditNote={onEditNote}
+              onAddTagClick={onAddTagClick}
+              viewMode={viewMode}
+            />
+          )
         )}
       </div>
     </div>

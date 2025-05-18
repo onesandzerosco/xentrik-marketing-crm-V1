@@ -14,13 +14,10 @@ export const useFileTags = () => {
   
   // In a real implementation, these would be fetched from the database
   useEffect(() => {
-    // Mock tags for now - in a real app, fetch these from Supabase
+    // Simplified tags to just NSFW and SFW
     const defaultTags: FileTag[] = [
-      { id: 'important', name: 'Important', color: 'red' },
-      { id: 'review', name: 'Review', color: 'amber' },
-      { id: 'approved', name: 'Approved', color: 'green' },
-      { id: 'draft', name: 'Draft', color: 'blue' },
-      { id: 'archive', name: 'Archive', color: 'gray' },
+      { id: 'nsfw', name: 'NSFW', color: 'red' },
+      { id: 'sfw', name: 'SFW', color: 'green' },
     ];
     
     setAvailableTags(defaultTags);
