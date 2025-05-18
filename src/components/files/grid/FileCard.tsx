@@ -1,11 +1,12 @@
+
 import React, { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { FileText, MoreVertical, Download, Trash2, Tag as TagIcon } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -19,12 +20,13 @@ interface FileCardProps {
   isSelectable?: boolean;
   isEditable?: boolean;
   isNewlyUploaded?: boolean;
-  onDelete?: (fileId: string) => void;
+  onDelete?: (fileId: string) => Promise<void>;
   onFilesChanged: () => void;
   onEditNote?: (file: CreatorFileType) => void;
   onAddTag?: (file: CreatorFileType) => void;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  isCreatorView?: boolean;
 }
 
 export function FileCard({ 
@@ -37,7 +39,8 @@ export function FileCard({
   onEditNote,
   onAddTag,
   currentFolder = 'all',
-  onRemoveFromFolder
+  onRemoveFromFolder,
+  isCreatorView = false
 }: FileCardProps) {
   const { toast } = useToast();
   const { canDownload } = useFilePermissions();
@@ -184,7 +187,7 @@ export function FileCard({
           </div>
         )}
         {isSelectable && (
-          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50 transition-opacity duration-200`}>
+          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50 transition-opacity duration-200'}`}>
             ✓
           </div>
         )}
@@ -229,7 +232,7 @@ export function FileCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {menuItems.map((item, index) => (
+              {menuItems && menuItems.map((item: any, index: number) => (
                 <DropdownMenuItem key={index} onClick={(e) => {
                   e.stopPropagation();
                   item.onClick(e);

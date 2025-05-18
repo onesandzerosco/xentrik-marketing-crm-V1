@@ -197,11 +197,72 @@ const CreatorFiles = () => {
     ? filterFilesByTags(filteredFiles, tagFilters)
     : filteredFiles;
 
+    // Handle file deletion
+  const handleFileDeleted = async (fileId: string): Promise<void> => {
+    try {
+      // Get the file from the database
+      const { data: file, error: fetchError } = await supabase
+        .from('media')
+        .select('*')
+        .eq('id', fileId)
+        .single();
+      
+      if (fetchError) {
+        throw new Error(`Failed to fetch file: ${fetchError.message}`);
+      }
+      
+      // Delete the file from Supabase storage
+      if (file?.bucket_key) {
+        const { error: storageError } = await supabase.storage
+          .from('raw_uploads')
+          .remove([file.bucket_key]);
+        
+        if (storageError) {
+          console.error('Error deleting file from storage:', storageError);
+          toast({
+            title: 'Error Deleting File',
+            description: 'Failed to delete file from storage. Please try again.',
+            variant: 'destructive',
+          });
+          return Promise.reject(storageError);
+        }
+      }
+      
+      // Delete the file record from the database
+      const { error: deleteError } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', fileId);
+      
+      if (deleteError) {
+        throw new Error(`Failed to delete file from database: ${deleteError.message}`);
+      }
+      
+      toast({
+        title: 'File Deleted',
+        description: 'File was successfully deleted.',
+      });
+      
+      // Refresh files
+      refetch();
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while deleting the file.',
+        variant: 'destructive',
+      });
+      return Promise.reject(error);
+    }
+  };
+
   return (
     <FileExplorer 
       files={tagFilteredFiles}
-      creatorName={creator.name}
-      creatorId={creator.id}
+      creatorName={creator?.name || ''}
+      creatorId={creator?.id || ''}
       isLoading={isLoading}
       onRefresh={refetch}
       onFolderChange={setCurrentFolder}
@@ -226,6 +287,7 @@ const CreatorFiles = () => {
       setSelectedTags={setTagFilters}
       availableTags={availableTags}
       onTagCreate={createTag}
+      onFileDeleted={handleFileDeleted}
     />
   );
 };

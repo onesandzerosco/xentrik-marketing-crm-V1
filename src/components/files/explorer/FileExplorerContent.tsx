@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FilterBar } from '../FilterBar';
@@ -23,7 +22,7 @@ interface FileExplorerContentProps {
   filteredFiles: CreatorFileType[];
   isCreatorView: boolean;
   onFilesChanged: () => void;
-  onFileDeleted: (fileId: string) => void;
+  onFileDeleted: (fileId: string) => Promise<void>;
   recentlyUploadedIds: string[];
   selectedFileIds: string[];
   setSelectedFileIds: (fileIds: string[]) => void;
@@ -98,19 +97,25 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         onSearchChange={onSearchChange}
         availableTags={availableTags}
         selectedTags={selectedTags}
-        onTagSelect={handleTagSelect}
+        onTagSelect={(tagId) => {
+          if (setSelectedTags) {
+            if (selectedTags.includes(tagId)) {
+              setSelectedTags(selectedTags.filter(id => id !== tagId));
+            } else {
+              setSelectedTags([...selectedTags, tagId]);
+            }
+          }
+        }}
         onTagCreate={onTagCreate}
       />
       
       {isLoading ? (
         <FileViewSkeleton view={viewMode} />
-      ) : isViewingEmptyCategory() && onCreateFolder ? (
-        <EmptyFoldersState onCreateFolder={onCreateFolder} />
       ) : filteredFiles.length === 0 ? (
         <EmptyState 
           isFiltered={searchQuery !== '' || selectedTypes.length > 0 || selectedTags.length > 0}
           isCreatorView={isCreatorView}
-          onUploadClick={() => {}} // We'll handle uploads elsewhere
+          onUploadClick={() => {}}
           currentFolder={currentFolder}
         />
       ) : viewMode === 'grid' ? (
