@@ -4,6 +4,20 @@ import { CreatorFileType } from '@/types/fileTypes';
 import { FileCard } from './FileCard';
 import { FileSelection } from './FileSelection';
 
+interface FileCardProps {
+  file: CreatorFileType;
+  isCreatorView?: boolean;
+  onFilesChanged: () => void;
+  onFileDeleted?: (fileId: string) => Promise<void>;
+  isNewlyUploaded?: boolean;
+  isSelected?: boolean;
+  onSelectFile?: (id: string, selected: boolean) => void;
+  currentFolder?: string;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote?: (file: CreatorFileType) => void;
+  onAddTag?: (file: CreatorFileType) => void;
+}
+
 interface FileGridContainerProps {
   files: CreatorFileType[];
   isCreatorView: boolean;

@@ -13,7 +13,7 @@ interface FileGridProps {
   files: CreatorFileType[];
   isCreatorView?: boolean;
   onFilesChanged: () => void;
-  onFileDeleted?: (fileId: string) => void; 
+  onFileDeleted?: (fileId: string) => Promise<void>; 
   recentlyUploadedIds?: string[];
   onUploadClick?: () => void;
   onSelectFiles?: (fileIds: string[]) => void;
@@ -92,7 +92,7 @@ export function FileGrid({
           
         // Notify parent component if callback exists
         if (onFileDeleted) {
-          onFileDeleted(file.id);
+          await onFileDeleted(file.id);
         }
       }
       
@@ -139,6 +139,7 @@ export function FileGrid({
         onFileDeleted={onFileDeleted}
         recentlyUploadedIds={recentlyUploadedIds}
         onSelectFiles={setSelectedFileIds}
+        selectedFileIds={selectedFileIds}
         onEditNote={onEditNote}
         onAddTag={onAddTag}
         currentFolder={currentFolder}

@@ -60,16 +60,14 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [newTagName, setNewTagName] = useState('');
   const [selectedColor, setSelectedColor] = useState('#87CEFA'); // Default blue color
 
-  const getBadgeStyle = (color?: string) => {
-    if (!color) return '';
+  const getBadgeStyle = (color?: string): React.CSSProperties => {
+    if (!color) return {};
     
     // Simple color style logic based on hex value
-    const style = { 
+    return { 
       backgroundColor: color, 
       color: isLightColor(color) ? '#333333' : '#ffffff' 
     };
-    
-    return style;
   };
   
   // Helper function to determine if a color is light (needs dark text) or dark (needs light text)

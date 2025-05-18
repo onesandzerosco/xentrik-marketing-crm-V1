@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -184,7 +183,26 @@ const CreatorFiles = () => {
     );
   }
 
-  // Initialize tag handling hooks - IMPORTANT: Always create this regardless of condition
+  const handleFileDeleted = async (fileId: string): Promise<void> => {
+    try {
+      // Delete the file logic here
+      console.log("Deleting file:", fileId);
+      
+      // You can add actual deletion logic if needed
+      // await supabase.from('media').delete().eq('id', fileId);
+      
+      // Refetch files after deletion
+      refetch();
+      
+      // Return resolved promise
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      return Promise.reject(error);
+    }
+  };
+
+  // Initialize tag handling hooks
   const { 
     availableTags, 
     selectedTags, 
@@ -227,6 +245,7 @@ const CreatorFiles = () => {
       setSelectedTags={setSelectedTags}
       availableTags={availableTags}
       onTagCreate={createTag}
+      onFileDeleted={handleFileDeleted}
     />
   );
 };
