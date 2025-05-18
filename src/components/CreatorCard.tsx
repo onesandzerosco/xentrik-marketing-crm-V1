@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Edit, Share2, Files, Loader2 } from 'lucide-react';
+import { LineChart, FileText, LogIn, Files, Share2, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -97,28 +97,52 @@ const CreatorCard = ({
           
           <div className="flex items-center justify-end gap-2 ml-4">
             {variant === 'default' ? (
-              // Default view for Creators page - Analytics and Edit buttons
+              // Default view for Creators page - Updated admin buttons for Analytics, Invoices, and Login
               <>
-                <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                  <Button 
-                    variant="ghost" 
-                    className="px-8 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
-                  >
-                    <LineChart className="h-4 w-4 mr-2" />
-                    Analytics
-                  </Button>
-                </Link>
-                
-                {/* Only show Edit button for Admin users */}
                 {isAdmin && (
-                  <Link to={`/creator-profile/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-2">
+                    <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="ghost" 
+                        className="px-3 h-9 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
+                      >
+                        <LineChart className="h-4 w-4 mr-2" />
+                        Analytics
+                      </Button>
+                    </Link>
+                    
+                    <Link to={`/creator-invoices/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="ghost" 
+                        className="px-3 h-9 bg-green-600/80 text-white hover:opacity-90 transition-all"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Invoices
+                      </Button>
+                    </Link>
+                    
+                    <Link to={`/secure-logins/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="secondary" 
+                        size="sm"
+                        className="h-9"
+                      >
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Login
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+                
+                {/* For non-admin users, just show Analytics */}
+                {!isAdmin && (
+                  <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                     <Button 
-                      variant="secondary" 
-                      size="sm"
-                      className="h-9"
+                      variant="ghost" 
+                      className="px-8 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
                     >
-                      <Edit className="h-4 w-4" />
-                      Edit
+                      <LineChart className="h-4 w-4 mr-2" />
+                      Analytics
                     </Button>
                   </Link>
                 )}
