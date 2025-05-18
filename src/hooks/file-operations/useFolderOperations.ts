@@ -162,18 +162,6 @@ export const useFolderOperations = ({
     try {
       setIsProcessing(true);
       
-      // First, delete the folder from the folders table
-      const { error: deleteError } = await supabase
-        .from('folders')
-        .delete()
-        .eq('id', folderId)
-        .eq('creator_id', creatorId);
-      
-      if (deleteError) {
-        console.error("Error deleting folder:", deleteError);
-        throw new Error(`Failed to delete folder: ${deleteError.message}`);
-      }
-      
       // Get all files that are in this folder
       const { data: filesInFolder, error: fetchError } = await supabase
         .from('media')
@@ -246,18 +234,6 @@ export const useFolderOperations = ({
     
     try {
       setIsProcessing(true);
-      
-      // Update the folder name in the folders table
-      const { error: updateError } = await supabase
-        .from('folders')
-        .update({ name: newFolderName })
-        .eq('id', folderId)
-        .eq('creator_id', creatorId);
-      
-      if (updateError) {
-        console.error("Error renaming folder:", updateError);
-        throw new Error(`Failed to rename folder: ${updateError.message}`);
-      }
       
       // Update the available folders list with the new name
       if (setAvailableFolders) {
