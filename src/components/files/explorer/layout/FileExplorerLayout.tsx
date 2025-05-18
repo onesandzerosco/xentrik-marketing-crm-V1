@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UploadCloud, RefreshCw, ViewGrid, ViewList, Plus } from 'lucide-react';
+import { UploadCloud, RefreshCw, LayoutGrid, List, Plus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FilterBar } from '@/components/files/FilterBar';

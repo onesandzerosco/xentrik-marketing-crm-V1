@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -427,8 +426,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onRefresh={onRefresh}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
+          selectedTypes={selectedTypes.length > 0 ? selectedTypes[0] : null}
+          setSelectedTypes={(type) => setSelectedTypes(type ? [type] : [])}
           onFolderChange={onFolderChange}
           selectedTags={selectedTags}
           setSelectedTags={setSelectedTags}
@@ -438,9 +437,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onCreateFolder={handleCreateFolderClick}
           onAddTag={handleAddTag}
         />
-      </FileExplorerProvider>
       
-      {/* Tag Dialog */}
       {showTagDialog && fileToTag && (
         <Dialog open={showTagDialog} onOpenChange={(open) => !open && setShowTagDialog(false)}>
           <DialogContent>
@@ -476,7 +473,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </Dialog>
       )}
 
-      {/* Note Edit Modal */}
       {showEditNoteModal && fileToEdit && (
         <Dialog open={showEditNoteModal} onOpenChange={(open) => !open && setShowEditNoteModal(false)}>
           <DialogContent>
@@ -509,7 +505,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </Dialog>
       )}
 
-      {/* Upload Modal */}
       {showUploadModal && (
         <Dialog open={showUploadModal} onOpenChange={(open) => !open && setShowUploadModal(false)}>
           <DialogContent>

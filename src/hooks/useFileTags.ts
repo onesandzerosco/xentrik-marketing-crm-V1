@@ -6,7 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 export interface FileTag {
   id: string;
-  name: string;
+  name: string;  // We'll map from tag_name
   color?: string;
 }
 
@@ -31,8 +31,8 @@ export function useFileTags() {
         
         const formattedTags = data.map((tag: any) => ({
           id: tag.id,
-          name: tag.name,
-          color: tag.color
+          name: tag.tag_name, // Map from tag_name to name
+          color: tag.color || generateRandomColorHex() // Use existing color or generate one
         }));
         
         setAvailableTags(formattedTags);
@@ -73,10 +73,14 @@ export function useFileTags() {
       
       const color = generateRandomColorHex();
       
-      // Insert the new tag
+      // Insert the new tag with proper field names
       const { data, error } = await supabase
         .from('file_tags')
-        .insert({ name, color })
+        .insert({ 
+          tag_name: name, // Use tag_name field
+          color: color,
+          creator: 'system' // This field is required according to the schema
+        })
         .select()
         .single();
       
@@ -87,7 +91,7 @@ export function useFileTags() {
       // Format the new tag
       const newTag: FileTag = {
         id: data.id,
-        name: data.name,
+        name: data.tag_name, // Map from tag_name
         color: data.color
       };
       
@@ -122,7 +126,7 @@ export function useFileTags() {
         return false;
       }
       
-      return tagIds.some(tagId => file.tags.includes(tagId));
+      return tagIds.some(tagId => file.tags?.includes(tagId));
     });
   };
   

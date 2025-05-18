@@ -16,12 +16,13 @@ export const useFileFilters = ({ files, selectedTags = [] }: UseFileFiltersProps
   const filteredFiles = files.filter(file => {
     // Search filter
     const matchesSearch = searchQuery === '' || 
-      file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      file.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      file.filename?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
     // Type filter  
     const matchesType = selectedTypes.length === 0 || 
-      (file.type && selectedTypes.some(type => file.type.startsWith(type)));
+      (file.type && selectedTypes.some(type => file.type?.startsWith(type)));
     
     return matchesSearch && matchesType;
   });
