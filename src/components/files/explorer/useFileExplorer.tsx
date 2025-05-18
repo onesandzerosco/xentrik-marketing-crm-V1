@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -15,11 +16,11 @@ interface UseFileExplorerProps {
   currentCategory: string | null;
   onRefresh: () => void;
   onCategoryChange: (categoryId: string | null) => void;
-  onCreateFolder: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
-  onCreateCategory: (categoryName: string) => Promise<void>;
-  onAddFilesToFolder: (fileIds: string[], targetFolderId: string, categoryId: string) => Promise<void>;
-  onDeleteFolder: (folderId: string) => Promise<void>;
-  onDeleteCategory: (categoryId: string) => Promise<void>;
+  onCreateFolder?: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
+  onCreateCategory?: (categoryName: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], targetFolderId: string, categoryId: string) => Promise<void>;
+  onDeleteFolder?: (folderId: string) => Promise<void>;
+  onDeleteCategory?: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;

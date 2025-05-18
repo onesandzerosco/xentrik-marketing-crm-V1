@@ -26,8 +26,8 @@ import { useToast } from "@/components/ui/use-toast";
 interface FileListItemProps {
   file: CreatorFileType;
   isCreatorView: boolean;
-  isFileSelected: (fileId: string) => boolean;
-  toggleFileSelection: (fileId: string) => void;
+  isSelected: boolean;
+  toggleSelection: (fileId: string) => void;
   handleFileClick: (file: CreatorFileType) => void;
   handleDeleteFile: (fileId: string) => void;
   showRemoveFromFolder: boolean;
@@ -36,13 +36,14 @@ interface FileListItemProps {
   onEditNote?: (file: CreatorFileType) => void;
   onFileDeleted?: (fileId: string) => void;
   onFilesChanged: () => void;
+  isNewlyUploaded?: boolean;
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
   file,
   isCreatorView,
-  isFileSelected,
-  toggleFileSelection,
+  isSelected,
+  toggleSelection,
   handleFileClick,
   handleDeleteFile,
   showRemoveFromFolder,
@@ -50,7 +51,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   currentFolder,
   onEditNote,
   onFileDeleted,
-  onFilesChanged
+  onFilesChanged,
+  isNewlyUploaded = false,
 }) => {
   const { toast } = useToast();
   const { canDelete, canEdit, canManageFolders } = useFilePermissions();

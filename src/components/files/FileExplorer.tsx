@@ -81,6 +81,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [fileIdToDelete, setFileIdToDelete] = useState<string>('');
   const [fileToEdit, setFileToEdit] = useState<CreatorFileType | null>(null);
   const [isEditNoteModalOpen, setIsEditNoteModalOpen] = useState<boolean>(false);
+  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState<boolean>(false);
+  const [newFolderName, setNewFolderName] = useState<string>('');
 
   const handleAddToFolderClick = () => {
     if (selectedFileIds.length > 0) {
@@ -123,43 +125,51 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onDeleteCategory,
     onRenameFolder,
     onRenameCategory,
+    onCategoryChange,
   });
 
-  const {
-    // Extract values from explorerState
-    isCreateFolderModalOpen,
-    setIsCreateFolderModalOpen,
-    newFolderName,
-    setNewFolderName,
-    folderToDelete,
-    setFolderToDelete,
-    isDeleteFolderModalOpen,
-    setIsDeleteFolderModalOpen,
-    isCreateCategoryModalOpen,
-    setIsCreateCategoryModalOpen,
-    newCategoryName,
-    setNewCategoryName,
-    categoryToDelete,
-    setCategoryToDelete,
-    isDeleteCategoryModalOpen,
-    setIsDeleteCategoryModalOpen,
-    folderToRename,
-    setFolderToRename,
-    isRenameFolderModalOpen,
-    setIsRenameFolderModalOpen,
-    categoryToRename,
-    setCategoryToRename,
-    isRenameCategoryModalOpen,
-    setIsRenameCategoryModalOpen,
-    handleCreateFolder,
-    handleAddFilesToFolder,
-    handleDeleteFolder,
-    handleCreateCategory,
-    handleDeleteCategory,
-    handleRenameFolder,
-    handleRenameCategory,
-    handleEditNote,
-  } = explorerState;
+  // Create stub functions for the required context properties
+  const handleInitiateNewCategory = () => {
+    explorerState.setIsAddCategoryModalOpen(true);
+  };
+
+  const handleInitiateNewFolder = (categoryId?: string) => {
+    if (categoryId) {
+      explorerState.setSelectedCategoryForNewFolder(categoryId);
+    }
+    explorerState.setIsAddFolderModalOpen(true);
+  };
+
+  const handleDeleteCategoryClick = (categoryId: string) => {
+    explorerState.setCategoryToDelete(categoryId);
+    explorerState.setIsDeleteCategoryModalOpen(true);
+  };
+
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    explorerState.setCategoryToRename(categoryId);
+    explorerState.setCategoryCurrentName(currentName);
+    explorerState.setIsRenameCategoryModalOpen(true);
+  };
+
+  const handleDeleteFolderClick = (folderId: string) => {
+    explorerState.setFolderToDelete(folderId);
+    explorerState.setIsDeleteFolderModalOpen(true);
+  };
+
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    explorerState.setFolderToRename(folderId);
+    explorerState.setFolderCurrentName(currentName);
+    explorerState.setIsRenameFolderModalOpen(true);
+  };
+
+  const handleCreateFolder = explorerState.handleCreateFolderSubmit;
+  const handleAddFilesToFolder = explorerState.handleAddToFolderSubmit;
+  const handleDeleteFolder = explorerState.handleDeleteFolder;
+  const handleCreateCategory = explorerState.handleCreateCategorySubmit;
+  const handleDeleteCategory = explorerState.handleDeleteCategory;
+  const handleRenameFolder = explorerState.handleRenameFolder;
+  const handleRenameCategory = explorerState.handleRenameCategory;
+  const handleEditNote = explorerState.handleSaveNote;
 
   const contextValue = {
     selectedFileIds,
@@ -175,7 +185,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRemoveFromFolder,
     handleAddToFolderClick,
     creatorName,
-    isLoading
+    isLoading,
+    creatorId: creatorId,
+    viewMode: viewMode,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick
   };
 
   return (
@@ -209,39 +227,59 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             setIsAddToFolderModalOpen={setIsAddToFolderModalOpen}
             selectedFileIds={selectedFileIds}
             availableFolders={availableFolders}
-            selectedFolderId={folderIdToAddTo}
-            setSelectedFolderId={setFolderIdToAddTo}
+            targetFolderId={folderIdToAddTo}
+            setTargetFolderId={setFolderIdToAddTo}
+            targetCategoryId={currentCategory || ''}
+            setTargetCategoryId={(id: string) => onCategoryChange(id || null)}
             onAddFilesToFolder={handleAddFilesToFolder}
-            isCreateFolderModalOpen={isCreateFolderModalOpen}
-            setIsCreateFolderModalOpen={setIsCreateFolderModalOpen}
-            newFolderName={newFolderName}
-            setNewFolderName={setNewFolderName}
-            onCreateFolder={handleCreateFolder}
-            currentCategory={currentCategory}
-            isDeleteFolderModalOpen={isDeleteFolderModalOpen}
-            setIsDeleteFolderModalOpen={setIsDeleteFolderModalOpen}
-            folderToDelete={folderToDelete}
-            isCreateCategoryModalOpen={isCreateCategoryModalOpen}
-            setIsCreateCategoryModalOpen={setIsCreateCategoryModalOpen}
-            newCategoryName={newCategoryName}
-            setNewCategoryName={setNewCategoryName}
-            onCreateCategory={handleCreateCategory}
-            isDeleteCategoryModalOpen={isDeleteCategoryModalOpen}
-            setIsDeleteCategoryModalOpen={setIsDeleteCategoryModalOpen}
-            categoryToDelete={categoryToDelete}
-            isRenameFolderModalOpen={isRenameFolderModalOpen}
-            setIsRenameFolderModalOpen={setIsRenameFolderModalOpen}
-            folderToRename={folderToRename}
-            onRenameFolder={handleRenameFolder}
-            isRenameCategoryModalOpen={isRenameCategoryModalOpen}
-            setIsRenameCategoryModalOpen={setIsRenameCategoryModalOpen}
-            categoryToRename={categoryToRename}
-            onRenameCategory={handleRenameCategory}
+            isAddCategoryModalOpen={explorerState.isAddCategoryModalOpen}
+            setIsAddCategoryModalOpen={explorerState.setIsAddCategoryModalOpen}
+            newCategoryName={explorerState.newCategoryName}
+            setNewCategoryName={explorerState.setNewCategoryName}
+            isDeleteCategoryModalOpen={explorerState.isDeleteCategoryModalOpen}
+            setIsDeleteCategoryModalOpen={explorerState.setIsDeleteCategoryModalOpen}
+            categoryToDelete={explorerState.categoryToDelete}
+            setCategoryToDelete={explorerState.setCategoryToDelete}
+            isRenameCategoryModalOpen={explorerState.isRenameCategoryModalOpen}
+            setIsRenameCategoryModalOpen={explorerState.setIsRenameCategoryModalOpen}
+            categoryToRename={explorerState.categoryToRename}
+            setCategoryToRename={explorerState.setCategoryToRename}
+            categoryCurrentName={explorerState.categoryCurrentName}
+            isAddFolderModalOpen={explorerState.isAddFolderModalOpen}
+            setIsAddFolderModalOpen={explorerState.setIsAddFolderModalOpen}
+            newFolderName={explorerState.newFolderName}
+            setNewFolderName={explorerState.setNewFolderName}
+            selectedCategoryForNewFolder={explorerState.selectedCategoryForNewFolder}
+            isDeleteFolderModalOpen={explorerState.isDeleteFolderModalOpen}
+            setIsDeleteFolderModalOpen={explorerState.setIsDeleteFolderModalOpen}
+            folderToDelete={explorerState.folderToDelete}
+            setFolderToDelete={explorerState.setFolderToDelete}
+            isRenameFolderModalOpen={explorerState.isRenameFolderModalOpen}
+            setIsRenameFolderModalOpen={explorerState.setIsRenameFolderModalOpen}
+            folderToRename={explorerState.folderToRename}
+            setFolderToRename={explorerState.setFolderToRename}
+            folderCurrentName={explorerState.folderCurrentName}
             fileToEdit={fileToEdit}
             isEditNoteModalOpen={isEditNoteModalOpen}
             setIsEditNoteModalOpen={setIsEditNoteModalOpen}
-            onEditNote={handleEditNote}
+            editingFile={fileToEdit}
+            editingNote={fileToEdit?.description || ''}
+            setEditingNote={(note: string) => {
+              if (fileToEdit) {
+                setFileToEdit({ ...fileToEdit, description: note });
+              }
+            }}
+            handleCreateCategorySubmit={handleCreateCategory}
+            handleDeleteCategory={handleDeleteCategory}
+            handleRenameCategory={handleRenameCategory}
+            handleCreateFolderSubmit={handleCreateFolder}
+            handleDeleteFolder={handleDeleteFolder}
+            handleRenameFolder={handleRenameFolder}
+            handleSaveNote={handleEditNote}
+            handleCreateNewFolder={() => {}} 
+            availableCategories={availableCategories}
             onFileDeleted={handleFileDeleted}
+            onEditNote={handleEditNote}
           />
         </FileExplorerProvider>
       </SelectionProvider>

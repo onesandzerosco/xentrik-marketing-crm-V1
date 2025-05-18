@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,10 +73,9 @@ export function FileCard({
     }
   };
 
-  const handleContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-
-    const contextMenuItems = [
+  // Create the context menu items
+  const menuItems = useMemo(() => {
+    const items = [
       canDownload && {
         label: 'Download',
         icon: <Download className="mr-2 h-4 w-4" />,
@@ -148,9 +147,14 @@ export function FileCard({
       }
     ].filter(Boolean);
 
+    return items;
+  }, [file, onDelete, onEditNote, onAddTag, onRemoveFromFolder, currentFolder, isDeleting, canDownload, isEditable]);
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
     openContextMenu({
       event,
-      items: contextMenuItems
+      items: menuItems as any[]
     });
   };
 
@@ -231,7 +235,7 @@ export function FileCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {contextMenuItems && contextMenuItems.map((item: any, index: number) => (
+              {menuItems.map((item: any, index: number) => (
                 <DropdownMenuItem key={index} onClick={(e) => {
                   e.stopPropagation();
                   item.onClick(e);

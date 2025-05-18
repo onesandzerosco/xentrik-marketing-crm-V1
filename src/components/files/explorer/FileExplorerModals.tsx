@@ -38,7 +38,7 @@ interface FileExplorerModalsProps {
   folderToDelete: string | null;
   setFolderToDelete: (id: string | null) => void;
   isRenameFolderModalOpen: boolean;
-  setIsRenameFolderModalOpen: (open: boolean) => void; // Fixed prop name
+  setIsRenameFolderModalOpen: (open: boolean) => void; 
   folderToRename: string | null;
   setFolderToRename: (id: string | null) => void;
   folderCurrentName: string;
@@ -72,15 +72,17 @@ interface FileExplorerModalsProps {
   
   // Handlers for note operations
   handleSaveNote: (note: string) => void;
+  onEditNote?: (note: string) => void;
 
   // Advanced handlers for modal interactions
   handleCreateNewFolder: () => void;
   
   // Creator info
   creatorId?: string;
-  creatorName?: string; // Added this prop
+  creatorName?: string;
   onFilesChanged?: () => void;
   onUploadComplete?: (fileIds: string[]) => void;
+  onFileDeleted?: (fileId: string) => Promise<void>;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
