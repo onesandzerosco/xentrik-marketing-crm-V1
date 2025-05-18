@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +11,7 @@ import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/file-operations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
+import { useFileTags } from '@/hooks/useFileTags';
 
 const CreatorFiles = () => {
   const { id } = useParams();
@@ -183,9 +183,23 @@ const CreatorFiles = () => {
     );
   }
 
+  // Get tags from hook
+  const { 
+    availableTags, 
+    selectedTags: tagFilters, 
+    setSelectedTags: setTagFilters, 
+    createTag, 
+    filterFilesByTags 
+  } = useFileTags();
+
+  // Apply tag filtering on top of the basic filtering
+  const tagFilteredFiles = tagFilters.length > 0
+    ? filterFilesByTags(filteredFiles, tagFilters)
+    : filteredFiles;
+
   return (
     <FileExplorer 
-      files={filteredFiles}
+      files={tagFilteredFiles}
       creatorName={creator.name}
       creatorId={creator.id}
       isLoading={isLoading}
@@ -208,6 +222,10 @@ const CreatorFiles = () => {
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
       onRenameCategory={handleRenameCategory}
+      selectedTags={tagFilters}
+      setSelectedTags={setTagFilters}
+      availableTags={availableTags}
+      onTagCreate={createTag}
     />
   );
 };

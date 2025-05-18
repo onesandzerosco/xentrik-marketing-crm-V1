@@ -21,6 +21,7 @@ interface FileGridProps {
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote?: (file: CreatorFileType) => void;
+  onAddTag?: (file: CreatorFileType) => void;
 }
 
 export function FileGrid({ 
@@ -33,7 +34,8 @@ export function FileGrid({
   onAddToFolderClick,
   currentFolder = 'all',
   onRemoveFromFolder,
-  onEditNote
+  onEditNote,
+  onAddTag
 }: FileGridProps) {
   const {
     selectedFileIds,
@@ -138,6 +140,7 @@ export function FileGrid({
         recentlyUploadedIds={recentlyUploadedIds}
         onSelectFiles={setSelectedFileIds}
         onEditNote={onEditNote}
+        onAddTag={onAddTag}
         currentFolder={currentFolder}
         onRemoveFromFolder={onRemoveFromFolder}
       />

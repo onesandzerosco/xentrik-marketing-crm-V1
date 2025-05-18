@@ -7,7 +7,7 @@ import { CreatorFileType } from '@/types/fileTypes';
 export interface FileTag {
   id: string;
   name: string;
-  color?: string; // Make color optional to match the actual data structure
+  color?: string;
 }
 
 export const useFileTags = () => {

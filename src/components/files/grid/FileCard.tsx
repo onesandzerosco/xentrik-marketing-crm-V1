@@ -1,191 +1,262 @@
-
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { FileText, MoreVertical, Download, Trash2, Tag as TagIcon } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useFilePermissions } from '@/utils/permissionUtils';
 import { CreatorFileType } from '@/types/fileTypes';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { 
-  FileText, 
-  FileImage, 
-  FileVideo, 
-  FileAudio, 
-  File, 
-  Download,
-  Trash2,
-  FolderMinus,
-  Pencil,
-  Eye
-} from 'lucide-react';
-import { formatFileSize, formatDate } from '@/utils/fileUtils';
+import { useContextMenu } from '@/context/context-menu';
+import { useSelection } from '@/context/selection-context';
+import { Badge } from '@/components/ui/badge';
 
 interface FileCardProps {
   file: CreatorFileType;
-  isCreatorView: boolean;
-  onFileClick: (file: CreatorFileType) => void;
-  onDeleteFile: (fileId: string) => void;
+  isSelectable?: boolean;
+  isEditable?: boolean;
+  isNewlyUploaded?: boolean;
+  onDelete?: (fileId: string) => void;
+  onFilesChanged: () => void;
   onEditNote?: (file: CreatorFileType) => void;
-  onRemoveFromFolder?: (fileId: string) => void;
-  isDeleting: boolean;
-  isRemoving: boolean;
-  isSelected: boolean;
-  isNew: boolean;
-  showRemoveFromFolder: boolean;
-  canDelete: boolean;
-  canEdit: boolean;
+  onAddTag?: (file: CreatorFileType) => void;
+  currentFolder?: string;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
-export const FileCard: React.FC<FileCardProps> = ({
-  file,
-  isCreatorView,
-  onFileClick,
-  onDeleteFile,
+export function FileCard({ 
+  file, 
+  isSelectable = false,
+  isEditable = false,
+  isNewlyUploaded = false,
+  onDelete,
+  onFilesChanged,
   onEditNote,
-  onRemoveFromFolder,
-  isDeleting,
-  isRemoving,
-  isSelected,
-  isNew,
-  showRemoveFromFolder,
-  canDelete,
-  canEdit
-}) => {
-  let Icon = File;
-  if (file.type === 'image') Icon = FileImage;
-  if (file.type === 'video') Icon = FileVideo;
-  if (file.type === 'audio') Icon = FileAudio;
-  if (file.type === 'document') Icon = FileText;
+  onAddTag,
+  currentFolder = 'all',
+  onRemoveFromFolder
+}: FileCardProps) {
+  const { toast } = useToast();
+  const { canDownload } = useFilePermissions();
+  const { openContextMenu } = useContextMenu();
+  const { isSelected, toggleSelection } = useSelection();
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Ensure thumbnail URLs are being used if they exist
-  const hasThumbnail = file.type === 'video' && file.thumbnail_url;
+  const handleDownload = () => {
+    if (!file.url) {
+      toast({
+        title: "Error",
+        description: "File URL not available",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.filename || file.name || 'file';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isSelectable) {
+      toggleSelection(file.id);
+    }
+  };
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+
+    const menuItems = [
+      canDownload && {
+        label: 'Download',
+        icon: <Download className="mr-2 h-4 w-4" />,
+        onClick: handleDownload,
+      },
+      isEditable && onEditNote && {
+        label: 'Edit Note',
+        icon: <FileText className="mr-2 h-4 w-4" />,
+        onClick: () => onEditNote(file)
+      },
+      isEditable && onAddTag && {
+        label: 'Add Tag',
+        icon: <TagIcon className="mr-2 h-4 w-4" />,
+        onClick: () => onAddTag(file)
+      },
+      isEditable && onDelete && {
+        label: 'Delete',
+        icon: <Trash2 className="mr-2 h-4 w-4" />,
+        onClick: () => {
+          if (onDelete) {
+            setIsDeleting(true);
+            onDelete(file.id)
+              .then(() => {
+                toast({
+                  title: "File Deleted",
+                  description: "File deleted successfully.",
+                });
+                onFilesChanged();
+              })
+              .catch((error) => {
+                console.error("Error deleting file:", error);
+                toast({
+                  title: "Error",
+                  description: "There was an error deleting the file",
+                  variant: "destructive",
+                });
+              })
+              .finally(() => setIsDeleting(false));
+          }
+        },
+        disabled: isDeleting,
+      },
+      isEditable && currentFolder !== 'all' && onRemoveFromFolder && {
+        label: 'Remove from folder',
+        icon: <Trash2 className="mr-2 h-4 w-4" />,
+        onClick: () => {
+          if (onRemoveFromFolder) {
+            setIsDeleting(true);
+            onRemoveFromFolder([file.id], currentFolder)
+              .then(() => {
+                toast({
+                  title: "File Removed",
+                  description: "File removed from folder successfully.",
+                });
+                onFilesChanged();
+              })
+              .catch((error) => {
+                console.error("Error removing file:", error);
+                toast({
+                  title: "Error",
+                  description: "There was an error removing the file from the folder",
+                  variant: "destructive",
+                });
+              })
+              .finally(() => setIsDeleting(false));
+          }
+        },
+        disabled: isDeleting,
+      }
+    ].filter(Boolean);
+
+    openContextMenu({
+      event,
+      items: menuItems
+    });
+  };
 
   return (
-    <Card className={`overflow-hidden h-full flex flex-col ${isNew ? 'border-2 border-green-500' : ''}`}>
-      <div className="relative">
-        {/* Thumbnail container that fills the available space */}
-        <div 
-          className="relative h-40 w-full"
-        >
-          {/* Default icon shown when no thumbnail */}
-          <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-            <Icon className="h-12 w-12 text-muted-foreground" />
-          </div>
-          
-          {/* Actual image or video thumbnail overlay */}
-          {file.type === 'image' && file.url && (
-            <img
-              src={file.url}
-              alt={file.name}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-          {hasThumbnail && (
-            <img
-              src={file.thumbnail_url}
-              alt={file.name}
-              className="absolute inset-0 w-full h-full object-cover"
-              onError={(e) => {
-                console.error("Error loading thumbnail:", file.thumbnail_url);
-                // Hide the broken image on error
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          )}
-          
-          {/* Action buttons overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
-            {/* Preview button - available for all users */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(file.url, '_blank', 'noopener,noreferrer');
-              }}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            
-            {/* Download button - available for all users */}
-            <a href={file.url} download={file.name}>
-              <Button 
-                variant="secondary" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </a>
-            
-            {/* Edit description button - available for creators and VAs */}
-            {canEdit && onEditNote && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditNote(file);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Delete button - only for creators */}
-            {canDelete && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteFile(file.id);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Remove from folder button - for users with canManageFolders permission */}
-            {showRemoveFromFolder && onRemoveFromFolder && canEdit && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveFromFolder(file.id);
-                }}
-              >
-                <FolderMinus className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <CardContent className="p-4 flex-grow">
-        <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
-        <div className="text-xs text-muted-foreground">
-          {formatFileSize(file.size)} - {formatDate(file.created_at)}
-        </div>
-        {file.description && (
-          <div className="mt-1 text-xs text-muted-foreground italic truncate">
-            "{file.description}"
+    <div
+      className="group relative border bg-background rounded-lg overflow-hidden"
+      onClick={handleFileClick}
+      onContextMenu={handleContextMenu}
+    >
+      <div className="relative aspect-square overflow-hidden">
+        {file.type?.startsWith('image/') ? (
+          <img
+            src={file.url}
+            alt={file.name}
+            className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
+          />
+        ) : file.type?.startsWith('video/') ? (
+          <video
+            src={file.url}
+            alt={file.name}
+            className="object-cover w-full h-full transition-transform duration-200 group-hover:scale-110"
+            muted
+            loop
+            autoPlay
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-muted text-muted-foreground">
+            {file.type}
           </div>
         )}
-      </CardContent>
-      
-      {isCreatorView && (
-        <CardFooter className="p-3 pt-0 mt-auto">
-          {isDeleting && <span className="text-xs text-muted-foreground">Deleting...</span>}
-          {isRemoving && <span className="text-xs text-muted-foreground">Removing...</span>}
-          {!isDeleting && !isRemoving && isSelected && (
-            <span className="text-xs text-brand-yellow font-medium">Selected</span>
-          )}
-        </CardFooter>
-      )}
-    </Card>
+        {isNewlyUploaded && (
+          <div className="absolute top-0 left-0 w-full h-full bg-green-500/20 flex items-center justify-center text-green-500 text-2xl font-bold">
+            New!
+          </div>
+        )}
+        {isSelectable && (
+          <div className={`absolute top-2 left-2 rounded-full bg-secondary text-secondary-foreground h-6 w-6 flex items-center justify-center ${isSelected(file.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-50 transition-opacity duration-200`}>
+            ✓
+          </div>
+        )}
+      </div>
+      <div className="absolute top-2 right-2 flex space-x-1">
+        {canDownload && (
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDownload();
+            }}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+        )}
+        {isEditable && onAddTag && (
+          <Button
+            size="icon"
+            variant="secondary"
+            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddTag(file);
+            }}
+          >
+            <TagIcon className="h-4 w-4" />
+          </Button>
+        )}
+        {isEditable && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {menuItems.map((item, index) => (
+                <DropdownMenuItem key={index} onClick={(e) => {
+                  e.stopPropagation();
+                  item.onClick(e);
+                }} disabled={item.disabled}>
+                  {item.icon}
+                  {item.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+      <div className="p-2">
+        <h3 className="text-sm font-medium truncate">{file.filename || file.name}</h3>
+        <p className="text-xs text-muted-foreground">
+          {file.file_size ? (file.file_size / 1024).toFixed(2) + ' KB' : 'N/A'}
+        </p>
+        {file.tags && file.tags.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {file.tags.map(tag => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
-};
+}

@@ -23,6 +23,7 @@ export interface CreatorFileType {
   folders?: string[];
   categories?: string[];
   creator_id?: string;
+  bucketPath?: string; // Keeping for backward compatibility
 }
 
 export interface Folder {

@@ -32,7 +32,7 @@ interface TagSelectorProps {
   tags: FileTag[];
   selectedTags: string[];
   onTagSelect: (tagId: string) => void;
-  onTagCreate?: (name: string) => Promise<FileTag>;
+  onTagCreate?: (name: string) => Promise<FileTag | null>;
   disabled?: boolean;
   variant?: 'default' | 'compact';
 }

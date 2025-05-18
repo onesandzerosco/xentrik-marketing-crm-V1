@@ -1,96 +1,51 @@
 
 import React from 'react';
-import { CreatorFileType } from '@/types/fileTypes';
-import { useFilePermissions } from '@/utils/permissionUtils';
 import { FileCard } from './FileCard';
-import { FileSelection } from './FileSelection';
-import { useFileGrid } from './useFileGrid';
+import { CreatorFileType } from '@/types/fileTypes';
 
 interface FileGridContainerProps {
   files: CreatorFileType[];
-  isCreatorView: boolean;
+  isCreatorView?: boolean;
   onFilesChanged: () => void;
-  onFileDeleted?: (fileId: string) => void;
-  recentlyUploadedIds: string[];
+  onFileDeleted?: (fileId: string) => void; 
+  recentlyUploadedIds?: string[];
   onSelectFiles?: (fileIds: string[]) => void;
+  onAddToFolderClick?: () => void;
   onEditNote?: (file: CreatorFileType) => void;
-  currentFolder: string;
+  onAddTag?: (file: CreatorFileType) => void;
+  currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
-export const FileGridContainer: React.FC<FileGridContainerProps> = ({
-  files,
-  isCreatorView,
+export function FileGridContainer({ 
+  files, 
+  isCreatorView = false,
   onFilesChanged,
   onFileDeleted,
-  recentlyUploadedIds,
+  recentlyUploadedIds = [],
   onSelectFiles,
   onEditNote,
-  currentFolder,
+  onAddTag,
+  currentFolder = 'all',
   onRemoveFromFolder
-}) => {
-  const { canDelete, canEdit, canManageFolders } = useFilePermissions();
-  const {
-    isFileSelected,
-    toggleFileSelection,
-    isFileDeleting,
-    isFileRemovingFromFolder,
-    showRemoveFromFolder,
-    handleDeleteFile,
-    handleRemoveFromFolder
-  } = useFileGrid({
-    files,
-    onFilesChanged,
-    onFileDeleted,
-    onSelectFiles,
-    currentFolder,
-    onRemoveFromFolder
-  });
-
-  // Handle file click (placeholder function)
-  const handleFileClick = (file: CreatorFileType) => {
-    // This is just a stub to satisfy the interface - we have dedicated action buttons now
-  };
-
+}: FileGridContainerProps) {
   return (
     <>
-      {files.map((file) => {
-        const isNew = recentlyUploadedIds?.includes(file.id);
-        const isDeleting = isFileDeleting(file.id);
-        const isRemoving = isFileRemovingFromFolder(file.id);
-        const isSelected = isFileSelected(file.id);
-
-        // Skip rendering files being deleted or removed from folder when in folder view
-        if (isDeleting || (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted')) return null;
-
-        return (
-          <div key={file.id} className="relative">
-            {isCreatorView && (
-              <FileSelection 
-                fileId={file.id}
-                isSelected={isSelected}
-                onToggleSelection={toggleFileSelection}
-              />
-            )}
-            
-            <FileCard
-              file={file}
-              isCreatorView={isCreatorView}
-              onFileClick={handleFileClick}
-              onDeleteFile={() => handleDeleteFile(file.id, canDelete)}
-              onEditNote={onEditNote}
-              onRemoveFromFolder={() => handleRemoveFromFolder(file.id)}
-              isDeleting={isDeleting}
-              isRemoving={isRemoving}
-              isSelected={isSelected}
-              isNew={isNew}
-              showRemoveFromFolder={showRemoveFromFolder}
-              canDelete={canDelete}
-              canEdit={canEdit}
-            />
-          </div>
-        );
-      })}
+      {files.map((file) => (
+        <FileCard
+          key={file.id}
+          file={file}
+          isSelectable={!!onSelectFiles}
+          isEditable={isCreatorView}
+          isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
+          onDelete={onFileDeleted}
+          onFilesChanged={onFilesChanged}
+          onEditNote={onEditNote}
+          onAddTag={onAddTag}
+          currentFolder={currentFolder}
+          onRemoveFromFolder={onRemoveFromFolder}
+        />
+      ))}
     </>
   );
-};
+}

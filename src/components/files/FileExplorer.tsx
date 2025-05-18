@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -11,6 +10,8 @@ import { useFileFilters } from './explorer/hooks/useFileFilters';
 import { useFileTags } from '@/hooks/useFileTags';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import TagSelector from './TagSelector';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -374,6 +375,80 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     isLoading
   };
   
+  // Add state for tag dialog
+  const [showTagDialog, setShowTagDialog] = useState(false);
+  const [fileToTag, setFileToTag] = useState<CreatorFileType | null>(null);
+  const [selectedFileTag, setSelectedFileTag] = useState<string>('');
+
+  // Add handler function for adding tags
+  const handleAddTag = (file: CreatorFileType) => {
+    setFileToTag(file);
+    setSelectedFileTag('');
+    setShowTagDialog(true);
+  };
+
+  // Add handler function for saving tags
+  const handleSaveTag = async () => {
+    if (!fileToTag || !selectedFileTag) return;
+    
+    try {
+      // Get current tags or empty array
+      const currentTags = fileToTag.tags || [];
+      
+      // Check if tag already exists
+      if (currentTags.includes(selectedFileTag)) {
+        toast({
+          title: 'Tag already exists',
+          description: 'This file already has this tag.',
+        });
+        return;
+      }
+      
+      // Add the new tag
+      const updatedTags = [...currentTags, selectedFileTag];
+      
+      // Update the file in Supabase
+      const { error } = await supabase
+        .from('media')
+        .update({ tags: updatedTags })
+        .eq('id', fileToTag.id);
+      
+      if (error) throw error;
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
+        if (!old) return old;
+        
+        const updatedFiles = old.map((file: CreatorFileType) =>
+          file.id === fileToTag.id ? { ...file, tags: updatedTags } : file
+        );
+        
+        return updatedFiles;
+      });
+      
+      // Close dialog and refresh
+      setFileToTag(null);
+      setShowTagDialog(false);
+      toast({
+        title: 'Tag Added',
+        description: 'File tag added successfully.',
+      });
+      onRefresh();
+    } catch (error: any) {
+      console.error('Error adding tag:', error);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Add handler for tag selection
+  const handleTagSelect = (tagId: string) => {
+    setSelectedFileTag(tagId);
+  };
+  
   return (
     <div className="flex flex-col h-full w-full">
       <FileExplorerProvider value={contextValue}>
@@ -398,9 +473,46 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             setShowEditNoteModal(true);
           }}
           onCreateFolder={handleCreateFolderClick}
+          onAddTag={handleAddTag}
         />
       </FileExplorerProvider>
       
+      {/* Tag Dialog */}
+      {showTagDialog && fileToTag && (
+        <Dialog open={showTagDialog} onOpenChange={(open) => !open && setShowTagDialog(false)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Tag to File</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Select a tag to add to "{fileToTag.filename || fileToTag.name}"
+              </p>
+              <TagSelector
+                tags={availableTags}
+                selectedTags={[selectedFileTag]}
+                onTagSelect={handleTagSelect}
+                onTagCreate={createTag}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowTagDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveTag}
+                disabled={!selectedFileTag}
+              >
+                Add Tag
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Modals */}
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

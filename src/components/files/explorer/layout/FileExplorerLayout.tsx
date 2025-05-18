@@ -4,8 +4,8 @@ import { FileExplorerHeader } from '../FileExplorerHeader';
 import { FileExplorerSidebar } from '../FileExplorerSidebar';
 import { FileExplorerContent } from '../FileExplorerContent';
 import { useFileExplorerContext } from '../context/FileExplorerContext';
-import { FileTag } from '@/hooks/useFileTags';
 import { CreatorFileType } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerLayoutProps {
   filteredFiles: CreatorFileType[];
