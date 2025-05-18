@@ -22,49 +22,64 @@ const SecureLoginModal: React.FC<SecureLoginModalProps> = ({
   creatorName 
 }) => {
   const { getLoginDetailsForCreator, updateLoginDetail, saveLoginDetails } = useSecureLogins();
+  const [platform, setPlatform] = useState<string>('instagram');
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [loginDetails, setLoginDetails] = useState<LoginDetail>({
-    platform: 'default',
-    username: '',
-    password: '',
-    notes: '',
-    lastUpdated: new Date().toISOString()
-  });
+  const [loginDetails, setLoginDetails] = useState<{[key: string]: LoginDetail}>({});
   const { toast } = useToast();
 
   // Load creator login details when the modal opens
   useEffect(() => {
     if (open && creatorId) {
       const details = getLoginDetailsForCreator(creatorId);
-      const defaultDetails = details['default'] || {
-        platform: 'default',
-        username: '',
-        password: '',
-        notes: '',
-        lastUpdated: ''
-      };
-      setLoginDetails(defaultDetails);
+      setLoginDetails(details);
     }
   }, [open, creatorId, getLoginDetailsForCreator]);
   
-  const handleUpdateDetail = (field: string, value: string) => {
-    updateLoginDetail(creatorId, 'default', field, value);
+  const handleUpdateDetail = (platform: string, field: string, value: string) => {
+    updateLoginDetail(creatorId, platform, field, value);
     
     // Also update our local state
     setLoginDetails(prev => ({
       ...prev,
-      [field]: value,
-      lastUpdated: new Date().toISOString()
+      [platform]: {
+        ...(prev[platform] || {
+          platform,
+          username: '',
+          password: '',
+          notes: '',
+          lastUpdated: new Date().toISOString()
+        }),
+        [field]: value,
+        lastUpdated: new Date().toISOString()
+      }
     }));
   };
   
   const handleSave = () => {
-    saveLoginDetails(creatorId, 'default');
+    saveLoginDetails(creatorId, platform);
     toast({
       title: "Credentials saved",
-      description: `Login details for ${creatorName} have been securely saved.`
+      description: `Login details for ${creatorName}'s ${platform} account have been securely saved.`
     });
-    onOpenChange(false);
+  };
+  
+  const platforms = [
+    { id: 'instagram', name: 'Instagram' },
+    { id: 'tiktok', name: 'TikTok' },
+    { id: 'twitter', name: 'Twitter/X' },
+    { id: 'onlyfans', name: 'OnlyFans' },
+    { id: 'snapchat', name: 'Snapchat' },
+    { id: 'youtube', name: 'YouTube' },
+    { id: 'website', name: 'Website' },
+    { id: 'other', name: 'Other' }
+  ];
+  
+  const currentDetail = loginDetails[platform] || {
+    platform,
+    username: '',
+    password: '',
+    notes: '',
+    lastUpdated: ''
   };
 
   return (
@@ -79,13 +94,29 @@ const SecureLoginModal: React.FC<SecureLoginModalProps> = ({
         
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="platform" className="text-right">
+              Platform
+            </Label>
+            <select 
+              id="platform"
+              className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+            >
+              {platforms.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="username" className="text-right">
               Username
             </Label>
             <Input
               id="username"
-              value={loginDetails.username}
-              onChange={(e) => handleUpdateDetail('username', e.target.value)}
+              value={currentDetail.username}
+              onChange={(e) => handleUpdateDetail(platform, 'username', e.target.value)}
               className="col-span-3"
             />
           </div>
@@ -98,8 +129,8 @@ const SecureLoginModal: React.FC<SecureLoginModalProps> = ({
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                value={loginDetails.password}
-                onChange={(e) => handleUpdateDetail('password', e.target.value)}
+                value={currentDetail.password}
+                onChange={(e) => handleUpdateDetail(platform, 'password', e.target.value)}
                 className="pr-10"
               />
               <Button
@@ -114,11 +145,23 @@ const SecureLoginModal: React.FC<SecureLoginModalProps> = ({
             </div>
           </div>
           
-          {loginDetails.lastUpdated && (
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="notes" className="text-right">
+              Notes
+            </Label>
+            <textarea
+              id="notes"
+              value={currentDetail.notes}
+              onChange={(e) => handleUpdateDetail(platform, 'notes', e.target.value)}
+              className="col-span-3 flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+          
+          {currentDetail.lastUpdated && (
             <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-right text-sm text-muted-foreground">Last updated</span>
               <span className="col-span-3 text-sm text-muted-foreground">
-                {new Date(loginDetails.lastUpdated).toLocaleString()}
+                {new Date(currentDetail.lastUpdated).toLocaleString()}
               </span>
             </div>
           )}

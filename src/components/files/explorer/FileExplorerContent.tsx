@@ -7,7 +7,6 @@ import { FileList } from '../FileList';
 import { FileViewSkeleton } from '../FileViewSkeleton';
 import { EmptyState } from '../EmptyState';
 import { EmptyFoldersState } from './EmptyFoldersState';
-import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -16,10 +15,6 @@ interface FileExplorerContentProps {
   onSearchChange: (query: string) => void;
   selectedTypes: string[];
   setSelectedTypes: (types: string[]) => void;
-  selectedTags?: string[];
-  setSelectedTags?: (tags: string[]) => void;
-  availableTags?: FileTag[];
-  onTagCreate?: (name: string) => Promise<FileTag>;
   filteredFiles: CreatorFileType[];
   isCreatorView: boolean;
   onFilesChanged: () => void;
@@ -43,10 +38,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   onSearchChange,
   selectedTypes,
   setSelectedTypes,
-  selectedTags = [],
-  setSelectedTags,
-  availableTags = [],
-  onTagCreate,
   filteredFiles,
   isCreatorView,
   onFilesChanged,
@@ -76,16 +67,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
     return foldersInCategory.length === 0;
   };
 
-  const handleTagSelect = (tagId: string) => {
-    if (setSelectedTags) {
-      setSelectedTags(prevTags => 
-        prevTags.includes(tagId) 
-          ? prevTags.filter(id => id !== tagId)
-          : [...prevTags, tagId]
-      );
-    }
-  };
-
   return (
     <div className="flex-1 min-w-0">
       <FilterBar 
@@ -95,10 +76,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         }}
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
-        availableTags={availableTags}
-        selectedTags={selectedTags}
-        onTagSelect={handleTagSelect}
-        onTagCreate={onTagCreate}
       />
       
       {isLoading ? (
@@ -107,7 +84,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         <EmptyFoldersState onCreateFolder={onCreateFolder} />
       ) : filteredFiles.length === 0 ? (
         <EmptyState 
-          isFiltered={searchQuery !== '' || selectedTypes.length > 0 || selectedTags.length > 0}
+          isFiltered={searchQuery !== '' || selectedTypes.length > 0}
           isCreatorView={isCreatorView}
           onUploadClick={() => {}} // We'll handle uploads elsewhere
           currentFolder={currentFolder}

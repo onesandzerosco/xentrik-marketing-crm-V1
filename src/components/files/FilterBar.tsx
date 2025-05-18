@@ -1,89 +1,77 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Filter, Search } from "lucide-react";
-import TagSelector from './TagSelector';
-import { FileTag } from '@/hooks/useFileTags';
+import { Image, Video, AudioLines, X, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface FilterBarProps {
-  activeFilter: string | null;
-  onFilterChange: (filter: string | null) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  availableTags?: FileTag[];
-  selectedTags?: string[];
-  onTagSelect?: (tagId: string) => void;
-  onTagCreate?: (name: string) => Promise<FileTag>;
+  activeFilter?: string | null;
+  onFilterChange?: (filter: string | null) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
-export const FilterBar: React.FC<FilterBarProps> = ({
-  activeFilter,
+export const FilterBar: React.FC<FilterBarProps> = ({ 
+  activeFilter = null, 
   onFilterChange,
-  searchQuery,
-  onSearchChange,
-  availableTags = [],
-  selectedTags = [],
-  onTagSelect,
-  onTagCreate
+  searchQuery = "",
+  onSearchChange
 }) => {
-  const filterOptions = [
-    { value: 'image', label: 'Images' },
-    { value: 'video', label: 'Videos' },
-    { value: 'audio', label: 'Audio' },
-    { value: 'document', label: 'Documents' },
-    { value: 'archive', label: 'Archives' },
-    { value: 'other', label: 'Other' },
+  const filters = [
+    { id: 'image', label: 'Images', icon: Image },
+    { id: 'video', label: 'Videos', icon: Video },
+    { id: 'audio', label: 'Audio', icon: AudioLines },
   ];
 
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search files..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        {onTagSelect && (
-          <TagSelector 
-            tags={availableTags}
-            selectedTags={selectedTags}
-            onTagSelect={onTagSelect}
-            onTagCreate={onTagCreate}
-            variant="compact"
+    <div className="flex flex-wrap items-center gap-3">
+      {onSearchChange && (
+        <div className="relative flex-grow max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input 
+            placeholder="Search files..." 
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
           />
-        )}
-        
-        <div className="flex space-x-1">
-          {filterOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={activeFilter === option.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => onFilterChange(activeFilter === option.value ? null : option.value)}
-              className="whitespace-nowrap"
-            >
-              {option.label}
-            </Button>
-          ))}
         </div>
-        
-        {activeFilter && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onFilterChange(null)}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Clear filters
-          </Button>
-        )}
-      </div>
+      )}
+      
+      {onFilterChange && (
+        <div className="flex gap-2">
+          {activeFilter && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 bg-accent/10 hover:bg-accent/20"
+              onClick={() => onFilterChange(null)}
+            >
+              <X className="h-3 w-3" />
+              <span>Clear</span>
+            </Button>
+          )}
+
+          {filters.map((filter) => {
+            const isActive = activeFilter === filter.id;
+            return (
+              <Button
+                key={filter.id}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                className={`flex items-center gap-1.5 ${
+                  isActive 
+                    ? 'bg-gradient-premium-yellow text-black' 
+                    : 'bg-accent/10 hover:bg-accent/20'
+                }`}
+                onClick={() => onFilterChange(isActive ? null : filter.id)}
+              >
+                <filter.icon className="h-3.5 w-3.5" />
+                <span>{filter.label}</span>
+              </Button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
