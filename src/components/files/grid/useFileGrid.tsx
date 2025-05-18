@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,7 +88,7 @@ export function useFileGrid({
       // Delete in background
       const { error } = await supabase.storage
         .from('raw_uploads')
-        .remove([fileToDelete.bucketPath || '']);
+        .remove([fileToDelete.bucket_key || '']);
 
       if (error) {
         console.error("Error deleting file:", error);

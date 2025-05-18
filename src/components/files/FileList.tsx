@@ -106,7 +106,7 @@ export const FileList: React.FC<FileListProps> = ({
       // Delete in background
       const { error } = await supabase.storage
         .from('raw_uploads')
-        .remove([fileToDelete.bucketPath || '']);
+        .remove([fileToDelete.bucket_key || '']);
 
       if (error) {
         console.error("Error deleting file:", error);
@@ -200,11 +200,11 @@ export const FileList: React.FC<FileListProps> = ({
       
       // Delete each file
       for (const file of filesToDelete) {
-        // Delete the file from storage if it has a bucketPath
-        if (file.bucketPath) {
+        // Delete the file from storage if it has a bucket_key
+        if (file.bucket_key) {
           await supabase.storage
             .from('raw_uploads')
-            .remove([file.bucketPath]);
+            .remove([file.bucket_key]);
         }
         
         // Delete the file metadata

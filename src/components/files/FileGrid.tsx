@@ -76,10 +76,10 @@ export function FileGrid({
       // Delete each file
       for (const file of filesToDelete) {
         // Delete the file from storage
-        if (file.bucketPath) {
+        if (file.bucket_key) {
           await supabase.storage
             .from('raw_uploads')
-            .remove([file.bucketPath]);
+            .remove([file.bucket_key]);
         }
         
         // Delete the file metadata

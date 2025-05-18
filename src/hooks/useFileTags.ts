@@ -2,13 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
-import { CreatorFileType } from '@/types/fileTypes';
-
-export interface FileTag {
-  id: string;
-  name: string;
-  color?: string; // Make color optional to match the actual data structure
-}
+import { CreatorFileType, FileTag } from '@/types/fileTypes';
 
 export const useFileTags = () => {
   const [availableTags, setAvailableTags] = useState<FileTag[]>([]);
@@ -19,29 +13,34 @@ export const useFileTags = () => {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Check if the file_tags table exists first
+      // Check if the media table exists
       const { data: existingTables, error: tablesError } = await supabase
         .from('media')
-        .select('tags')
+        .select('id')
         .limit(1);
       
       if (tablesError) {
-        console.error('Error checking tags:', tablesError);
+        console.error('Error checking media table:', tablesError);
         setAvailableTags([]);
         return;
       }
 
-      // For now, we can't fetch from file_tags table as it doesn't exist
-      // Instead, collect unique tags from media table
+      // Since tags column might not exist yet, we'll handle the error gracefully
+      // and provide a fallback of empty tags
       const { data: mediaWithTags, error: mediaError } = await supabase
         .from('media')
-        .select('tags')
-        .not('tags', 'is', null);
+        .select('*');
 
-      if (mediaError) throw mediaError;
+      if (mediaError) {
+        // If there's an error related to the tags column not existing
+        console.error('Error fetching tags:', mediaError);
+        setAvailableTags([]);
+        return;
+      }
 
-      // Extract unique tags from media records
+      // Extract unique tags from media records if they exist
       const uniqueTags = new Set<string>();
+      
       mediaWithTags?.forEach(item => {
         if (item.tags && Array.isArray(item.tags)) {
           item.tags.forEach((tag: string) => uniqueTags.add(tag));
@@ -57,7 +56,8 @@ export const useFileTags = () => {
       
       setAvailableTags(tagObjects);
     } catch (error: any) {
-      console.error('Error fetching tags:', error);
+      console.error('Error in fetchTags:', error);
+      setAvailableTags([]);
       toast({
         title: 'Error fetching tags',
         description: error.message,
