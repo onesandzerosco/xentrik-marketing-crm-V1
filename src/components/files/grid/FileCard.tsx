@@ -31,11 +31,13 @@ interface FileCardProps {
   onFileDeleted?: (fileId: string) => Promise<void>;
   isNewlyUploaded?: boolean;
   onSelectFiles?: (fileIds: string[]) => void;
-  index: number;
+  index?: number;
   currentFolder?: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote?: (file: CreatorFileType) => void;
   onAddTag?: (file: CreatorFileType) => void;
+  isSelectable?: boolean;
+  isEditable?: boolean;
 }
 
 const FileCard: React.FC<FileCardProps> = ({
@@ -53,14 +55,14 @@ const FileCard: React.FC<FileCardProps> = ({
 }) => {
   const { toast } = useToast();
   const { canDelete, canEdit, canManageFolders } = useFilePermissions();
-  const { selected, toggle, isSelected } = useSelection();
+  const { selectedIds, toggleSelection, isSelected } = useSelection();
   const [isRemoving, setIsRemoving] = useState(false);
-  const { showContextMenu } = useContextMenu();
+  const { menuState, openContextMenu, closeContextMenu } = useContextMenu();
   
   // Handle file selection - used for bulk operations
   const handleCardClick = () => {
     if (isCreatorView && onSelectFiles) {
-      toggle(file.id);
+      toggleSelection(file.id);
     }
   };
   
@@ -131,8 +133,7 @@ const FileCard: React.FC<FileCardProps> = ({
             });
           }
         },
-        icon: <Trash2 className="mr-2 h-4 w-4" />,
-        variant: 'destructive'
+        icon: <Trash2 className="mr-2 h-4 w-4" />
       });
     }
     
@@ -171,7 +172,7 @@ const FileCard: React.FC<FileCardProps> = ({
       });
     }
     
-    showContextMenu(e, menuItems);
+    openContextMenu({ event: e, items: menuItems });
   };
   
   // Skip rendering if the file is being removed from a folder

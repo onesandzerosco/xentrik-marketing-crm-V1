@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileCard } from './FileCard';
+import FileCard from './FileCard';
 import { CreatorFileType } from '@/types/fileTypes';
 
 interface FileGridContainerProps {
@@ -31,20 +31,20 @@ export function FileGridContainer({
 }: FileGridContainerProps) {
   return (
     <>
-      {files.map((file) => (
+      {files.map((file, index) => (
         <FileCard
           key={file.id}
           file={file}
-          isSelectable={!!onSelectFiles}
-          isEditable={isCreatorView}
-          isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
-          onDelete={onFileDeleted}
+          isCreatorView={isCreatorView}
           onFilesChanged={onFilesChanged}
+          onFileDeleted={onFileDeleted}
+          isNewlyUploaded={recentlyUploadedIds.includes(file.id)}
+          onSelectFiles={onSelectFiles}
+          index={index}
           onEditNote={onEditNote}
           onAddTag={onAddTag}
           currentFolder={currentFolder}
           onRemoveFromFolder={onRemoveFromFolder}
-          isCreatorView={isCreatorView}
         />
       ))}
     </>
