@@ -37,6 +37,7 @@ interface FileListItemProps {
   onFileDeleted?: (fileId: string) => void;
   onFilesChanged: () => void;
   isNewlyUploaded?: boolean;
+  onAddTag?: (file: CreatorFileType) => void; // Added missing property
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
@@ -53,6 +54,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   onFileDeleted,
   onFilesChanged,
   isNewlyUploaded = false,
+  onAddTag,
 }) => {
   const { toast } = useToast();
   const { canDelete, canEdit, canManageFolders } = useFilePermissions();
@@ -113,8 +115,8 @@ export const FileListItem: React.FC<FileListItemProps> = ({
       <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
         {isCreatorView && (
           <Checkbox
-            checked={isFileSelected(file.id)}
-            onCheckedChange={() => toggleFileSelection(file.id)}
+            checked={isSelected}
+            onCheckedChange={() => toggleSelection(file.id)}
           />
         )}
       </TableCell>

@@ -83,6 +83,7 @@ interface FileExplorerModalsProps {
   onFilesChanged?: () => void;
   onUploadComplete?: (fileIds: string[]) => void;
   onFileDeleted?: (fileId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], targetFolderId: string) => Promise<void>; // Added missing property
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
@@ -118,7 +119,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   folderToDelete,
   setFolderToDelete,
   isRenameFolderModalOpen,
-  setIsRenameFolderModalOpen, // Fixed prop name
+  setIsRenameFolderModalOpen,
   folderToRename,
   setFolderToRename,
   folderCurrentName,
@@ -160,7 +161,9 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   creatorId,
   creatorName,
   onFilesChanged,
-  onUploadComplete
+  onUploadComplete,
+  onAddFilesToFolder, // Added missing prop
+  onFileDeleted
 }) => {
   // Wrapper functions to ensure correct argument passing
   const handleDeleteCategoryWrapper = () => {

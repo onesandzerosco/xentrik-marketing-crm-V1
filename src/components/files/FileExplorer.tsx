@@ -231,7 +231,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             setTargetFolderId={setFolderIdToAddTo}
             targetCategoryId={currentCategory || ''}
             setTargetCategoryId={(id: string) => onCategoryChange(id || null)}
-            onAddFilesToFolder={handleAddFilesToFolder}
+            handleAddToFolderSubmit={explorerState.handleAddToFolderSubmit}
+            onAddFilesToFolder={onAddFilesToFolder}
             isAddCategoryModalOpen={explorerState.isAddCategoryModalOpen}
             setIsAddCategoryModalOpen={explorerState.setIsAddCategoryModalOpen}
             newCategoryName={explorerState.newCategoryName}
@@ -259,7 +260,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             folderToRename={explorerState.folderToRename}
             setFolderToRename={explorerState.setFolderToRename}
             folderCurrentName={explorerState.folderCurrentName}
-            fileToEdit={fileToEdit}
             isEditNoteModalOpen={isEditNoteModalOpen}
             setIsEditNoteModalOpen={setIsEditNoteModalOpen}
             editingFile={fileToEdit}
@@ -269,17 +269,17 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
                 setFileToEdit({ ...fileToEdit, description: note });
               }
             }}
-            handleCreateCategorySubmit={handleCreateCategory}
-            handleDeleteCategory={handleDeleteCategory}
-            handleRenameCategory={handleRenameCategory}
-            handleCreateFolderSubmit={handleCreateFolder}
-            handleDeleteFolder={handleDeleteFolder}
-            handleRenameFolder={handleRenameFolder}
-            handleSaveNote={handleEditNote}
-            handleCreateNewFolder={() => {}} 
+            handleCreateFolderSubmit={explorerState.handleCreateFolderSubmit}
+            handleDeleteFolder={explorerState.handleDeleteFolder}
+            handleRenameFolder={explorerState.handleRenameFolder}
+            handleCreateCategorySubmit={explorerState.handleCreateCategorySubmit}
+            handleDeleteCategory={explorerState.handleDeleteCategory}
+            handleRenameCategory={explorerState.handleRenameCategory}
+            handleSaveNote={explorerState.handleSaveNote}
+            handleCreateNewFolder={handleCreateFolderClick}
+            onEditNote={explorerState.handleSaveNote}
             availableCategories={availableCategories}
             onFileDeleted={handleFileDeleted}
-            onEditNote={handleEditNote}
           />
         </FileExplorerProvider>
       </SelectionProvider>
