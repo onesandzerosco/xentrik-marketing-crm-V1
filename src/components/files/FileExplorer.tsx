@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -49,7 +50,7 @@ interface FileExplorerProps {
   recentlyUploadedIds: string[];
   onCreateFolder?: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
   onCreateCategory?: (categoryName: string) => Promise<void>;
-  onAddFilesToFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
   onDeleteCategory?: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
@@ -159,18 +160,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             // Log the file upload in the media table
             const { error: mediaError } = await supabase
               .from('media')
-              .insert([
-                {
-                  id: fileId,
-                  creator_id: creatorId,
-                  filename: file.name,
-                  file_size: file.size,
-                  file_type: file.type,
-                  bucket_key: filePath,
-                  status: 'complete',
-                  folders: ['all'] // Add to the 'all' folder by default
-                }
-              ]);
+              .insert({
+                id: fileId,
+                creator_id: creatorId,
+                filename: file.name,
+                file_size: file.size,
+                mime: file.type,
+                bucket_key: filePath,
+                status: 'complete',
+                folders: ['all'] // Add to the 'all' folder by default
+              });
             
             if (mediaError) {
               console.error('Error logging file upload:', mediaError);
@@ -285,7 +284,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
   
-  const onRemoveFromFolder = async (fileIds: string[], folderId: string) => {
+  const handleRemoveFromFolder = async (fileIds: string[], folderId: string) => {
     if (!onRemoveFromFolder) {
       toast({
         title: 'Error',
@@ -440,7 +439,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           currentCategory={currentCategory}
           onCreateFolder={currentCategory ? handleCreateFolderClick : undefined}
           availableFolders={availableFolders}
-          onRemoveFromFolder={onRemoveFromFolder}
+          onRemoveFromFolder={handleRemoveFromFolder}
           onEditNote={handleEditNoteClick}
         />
       </div>
@@ -472,7 +471,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             <Button onClick={() => {
               setShowAddToFolderModal(false);
               if (onAddFilesToFolder) {
-                onAddFilesToFolder(selectedFileIds, currentFolder);
+                onAddFilesToFolder(selectedFileIds, currentFolder, currentCategory || 'all');
               }
             }}>
               Add to Folder

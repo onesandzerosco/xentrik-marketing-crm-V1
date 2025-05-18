@@ -18,11 +18,10 @@ export const useFileFilters = ({ files }: { files: CreatorFileType[] }) => {
     // Type filter  
     const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
     
-    // Tag filter
-    const matchesTags = selectedTags.length === 0 || 
-      (file.tags && selectedTags.some(tag => file.tags?.includes(tag)));
+    // Tag filter - We'll handle this separately in the FileExplorer component
+    // to avoid duplicate filtering
     
-    return matchesSearch && matchesType && matchesTags;
+    return matchesSearch && matchesType;
   });
 
   return {

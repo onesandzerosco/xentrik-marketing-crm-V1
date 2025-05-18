@@ -14,6 +14,7 @@ export interface CreatorFileType {
   categoryRefs?: string[]; // Array of category IDs this file is associated with
   description?: string; // Field for file descriptions
   thumbnail_url?: string; // New field for video thumbnails
+  tags?: string[]; // Added tags field for file tagging
 }
 
 export interface Folder {

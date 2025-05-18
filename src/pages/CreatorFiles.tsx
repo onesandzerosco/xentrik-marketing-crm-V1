@@ -146,6 +146,11 @@ const CreatorFiles = () => {
     }
   };
 
+  // Wrapper function to bridge interface differences
+  const handleAddFilesToFolderWrapper = (fileIds: string[], folderId: string) => {
+    return handleAddFilesToFolder(fileIds, folderId, currentCategory || 'all');
+  };
+  
   // Wrapper to make the return type of these functions match the expected Promise<void>
   const createFolderWrapper = async (folderName: string, fileIds: string[], categoryId: string): Promise<void> => {
     await handleCreateFolder(folderName, fileIds, categoryId);
@@ -197,7 +202,7 @@ const CreatorFiles = () => {
       recentlyUploadedIds={recentlyUploadedIds}
       onCreateFolder={createFolderWrapper}
       onCreateCategory={createCategoryWrapper}
-      onAddFilesToFolder={handleAddFilesToFolder}
+      onAddFilesToFolder={handleAddFilesToFolderWrapper}
       onDeleteFolder={handleDeleteFolder}
       onDeleteCategory={handleDeleteCategory}
       onRemoveFromFolder={handleRemoveFromFolder}
