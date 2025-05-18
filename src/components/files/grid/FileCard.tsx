@@ -20,7 +20,7 @@ interface FileCardProps {
   isSelectable?: boolean;
   isEditable?: boolean;
   isNewlyUploaded?: boolean;
-  onDelete?: (fileId: string) => void;
+  onDelete?: (fileId: string) => Promise<void>;
   onFilesChanged: () => void;
   onEditNote?: (file: CreatorFileType) => void;
   onAddTag?: (file: CreatorFileType) => void;

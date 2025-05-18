@@ -19,43 +19,50 @@ export const useFileTags = () => {
   const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Check if the file_tags table exists first
-      const { data: existingTables, error: tablesError } = await supabase
-        .from('media')
-        .select('tags')
-        .limit(1);
+      // Fetch tags from the file_tags table
+      const { data: tagData, error: tagError } = await supabase
+        .from('file_tags')
+        .select('id, tag_name');
       
-      if (tablesError) {
-        console.error('Error checking tags:', tablesError);
-        setAvailableTags([]);
-        return;
-      }
-
-      // For now, we can't fetch from file_tags table as it doesn't exist
-      // Instead, collect unique tags from media table
-      const { data: mediaWithTags, error: mediaError } = await supabase
-        .from('media')
-        .select('tags')
-        .not('tags', 'is', null);
-
-      if (mediaError) throw mediaError;
-
-      // Extract unique tags from media records
-      const uniqueTags = new Set<string>();
-      mediaWithTags?.forEach(item => {
-        if (item.tags && Array.isArray(item.tags)) {
-          item.tags.forEach((tag: string) => uniqueTags.add(tag));
+      if (tagError) {
+        console.error('Error fetching tags from file_tags table:', tagError);
+        // Fallback to collecting unique tags from media table
+        const { data: mediaWithTags, error: mediaError } = await supabase
+          .from('media')
+          .select('tags');
+        
+        if (mediaError) {
+          console.error('Error fetching tags from media:', mediaError);
+          setAvailableTags([]);
+          return;
         }
-      });
 
-      // Convert to FileTag objects
-      const tagObjects = Array.from(uniqueTags).map(id => ({ 
-        id, 
-        name: id, // Use tag ID as name for now
-        color: 'gray' // Default color
-      }));
-      
-      setAvailableTags(tagObjects);
+        // Extract unique tags
+        const uniqueTags = new Set<string>();
+        mediaWithTags?.forEach(item => {
+          if (item.tags && Array.isArray(item.tags)) {
+            item.tags.forEach((tag: string) => uniqueTags.add(tag));
+          }
+        });
+
+        // Convert to FileTag objects
+        const tagObjects = Array.from(uniqueTags).map(id => ({ 
+          id, 
+          name: id, 
+          color: 'gray' 
+        }));
+        
+        setAvailableTags(tagObjects);
+      } else {
+        // Convert the file_tags data to our FileTag format
+        const tags = tagData?.map(tag => ({
+          id: tag.tag_name, // Use tag_name as id for easier reference
+          name: tag.tag_name,
+          color: 'gray' // Default color
+        })) || [];
+        
+        setAvailableTags(tags);
+      }
     } catch (error: any) {
       console.error('Error fetching tags:', error);
       toast({
@@ -83,7 +90,17 @@ export const useFileTags = () => {
         return existingTag;
       }
       
-      // For now, since there is no tag table, we'll create a tag locally
+      // Create a new tag in the file_tags table
+      const { data, error } = await supabase
+        .from('file_tags')
+        .insert({
+          tag_name: name,
+          creator: 'system' // Default value, ideally would be current user id
+        })
+        .select();
+      
+      if (error) throw error;
+      
       const newTag = { id: name, name, color: 'gray' };
       setAvailableTags(prev => [...prev, newTag]);
       return newTag;
