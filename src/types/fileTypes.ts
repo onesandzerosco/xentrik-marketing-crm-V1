@@ -38,3 +38,8 @@ export interface FileOperationsHandlers {
   onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
 }
+
+export interface FileTag {
+  id: string;
+  name: string;
+}

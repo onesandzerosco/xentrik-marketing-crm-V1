@@ -1,35 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDropzone } from 'react-dropzone';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
-
-import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
-import { FileExplorerContent } from './explorer/FileExplorerContent';
-import { useFileFilters } from './explorer/hooks/useFileFilters';
-import { supabase } from '@/integrations/supabase/client';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
+import { supabase } from '@/integrations/supabase/client';
+import { useFileFilters } from './explorer/hooks/useFileFilters';
 import { useFileTags } from '@/hooks/useFileTags';
+import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
+import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -41,7 +21,7 @@ interface FileExplorerProps {
   currentFolder: string;
   onCategoryChange: (categoryId: string | null) => void;
   currentCategory: string | null;
-  availableFolders: { id: string; name: string; categoryId: string }[];
+  availableFolders: Folder[];
   availableCategories: Category[];
   isCreatorView: boolean;
   onUploadComplete: (uploadedFileIds?: string[]) => void;
@@ -49,7 +29,7 @@ interface FileExplorerProps {
   recentlyUploadedIds: string[];
   onCreateFolder?: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
   onCreateCategory?: (categoryName: string) => Promise<void>;
-  onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], targetFolderId: string) => Promise<void>;
   onDeleteFolder?: (folderId: string) => Promise<void>;
   onDeleteCategory?: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
@@ -84,62 +64,40 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const { id } = useParams();
+
+  // State for managing modals
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false);
-  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
   const [showEditNoteModal, setShowEditNoteModal] = useState(false);
+
+  // State for file editing
   const [fileToEdit, setFileToEdit] = useState<CreatorFileType | null>(null);
   const [editedNote, setEditedNote] = useState('');
-  
-  const { 
-    availableTags, 
-    selectedTags, 
-    setSelectedTags, 
-    createTag, 
-    filterFilesByTags 
-  } = useFileTags();
-  
-  const {
-    getRootProps,
-    getInputProps,
-    open,
-    isDragActive
-  } = useDropzone({
-    noClick: true,
-    noKeyboard: true,
-    multiple: true,
-    onDrop: async (acceptedFiles) => {
-      if (!creatorId) {
-        toast({
-          title: 'Creator not found',
-          description: 'Please select a creator before uploading files.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
+
+  // State for file selection
+  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+
+  // State for managing tags
+  const { availableTags, selectedTags, setSelectedTags, createTag, filterFilesByTags } = useFileTags();
+
+  // File upload handlers
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
       onUploadStart();
-      setIsUploading(true);
       
-      // Upload files to Supabase
       const uploadedFileIds: string[] = [];
       
       for (const file of acceptedFiles) {
-        // Generate a unique file ID
-        const fileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-        
-        // Get file extension
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || '';
-        
-        // Set the storage path
-        const filePath = `${creatorId}/all/${fileId}.${fileExt}`;
-        
         try {
+          // Generate a unique file name
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+          const filePath = `${creatorId}/${fileName}`;
+          
           // Upload the file to Supabase storage
-          const { error } = await supabase.storage
-            .from('creator_files')
+          const { data, error } = await supabase.storage
+            .from('media')
             .upload(filePath, file, {
               cacheControl: '3600',
               upsert: false
@@ -148,394 +106,339 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           if (error) {
             console.error('Error uploading file:', error);
             toast({
-              title: 'Upload error',
-              description: `Failed to upload ${file.name}: ${error.message}`,
+              title: 'Upload Failed',
+              description: `Failed to upload ${file.name}. Please try again.`,
               variant: 'destructive',
             });
-          } else {
-            // File uploaded successfully
-            uploadedFileIds.push(fileId);
-            
-            // Log the file upload in the media table
-            const { error: mediaError } = await supabase
-              .from('media')
-              .insert({
-                id: fileId,
-                creator_id: creatorId,
-                filename: file.name,
-                file_size: file.size,
-                mime: file.type,
-                bucket_key: filePath,
-                status: 'complete',
-                folders: ['all'] // Add to the 'all' folder by default
-              });
-            
-            if (mediaError) {
-              console.error('Error logging file upload:', mediaError);
-              toast({
-                title: 'Upload error',
-                description: `Failed to log ${file.name} in media table: ${mediaError.message}`,
-                variant: 'destructive',
-              });
-            } else {
-              console.log(`${file.name} uploaded and logged successfully`);
-            }
+            continue;
           }
-        } catch (err: any) {
-          console.error('Error during upload:', err);
+          
+          // Get the public URL for the uploaded file
+          const fileUrl = `${supabase.storageUrl}/media/${data.path}`;
+          
+          // Create a new media record in the database
+          const { data: mediaData, error: mediaError } = await supabase
+            .from('media')
+            .insert([
+              {
+                creator_id: creatorId,
+                name: file.name,
+                size: file.size,
+                url: fileUrl,
+                type: file.type,
+                folder: currentFolder,
+                bucketPath: data.path,
+                folders: currentFolder !== 'all' ? [currentFolder] : [],
+                categories: currentCategory ? [currentCategory] : [],
+              },
+            ])
+            .select()
+            .single();
+          
+          if (mediaError) {
+            console.error('Error creating media record:', mediaError);
+            toast({
+              title: 'Upload Failed',
+              description: `Failed to create record for ${file.name}. Please try again.`,
+              variant: 'destructive',
+            });
+            continue;
+          }
+          
+          uploadedFileIds.push(mediaData.id);
+          
           toast({
-            title: 'Upload error',
-            description: `Failed to upload ${file.name}: ${err.message}`,
+            title: 'Upload Complete',
+            description: `${file.name} uploaded successfully.`,
+          });
+        } catch (err: any) {
+          console.error('Unexpected error during upload:', err);
+          toast({
+            title: 'Upload Error',
+            description: `An unexpected error occurred during the upload of ${file.name}.`,
             variant: 'destructive',
           });
         }
       }
       
-      setIsUploading(false);
       onUploadComplete(uploadedFileIds);
-      
-      if (uploadedFileIds.length > 0) {
-        toast({
-          title: 'Files uploaded',
-          description: `Successfully uploaded ${acceptedFiles.length} files.`,
-        });
-      }
+      setShowUploadModal(false);
     },
+    [creatorId, currentFolder, currentCategory, onUploadComplete, onUploadStart, toast]
+  );
+  
+  const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
+    onDrop,
+    noClick: true,
+    noKeyboard: true,
+    disabled: !isCreatorView,
   });
   
-  const handleCreateFolderClick = () => {
-    setShowCreateFolderModal(true);
-  };
-  
-  const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Folder name cannot be empty.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!onCreateFolder) {
-      toast({
-        title: 'Error',
-        description: 'Folder creation is not enabled for this view.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      await onCreateFolder(newFolderName, [], currentCategory || 'all');
-      toast({
-        title: 'Folder created',
-        description: `Folder "${newFolderName}" created successfully.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: `Failed to create folder: ${error.message}`,
-        variant: 'destructive',
-      });
-    } finally {
-      setShowCreateFolderModal(false);
-      setNewFolderName('');
-    }
-  };
-  
-  const handleDeleteFile = async (fileId: string) => {
-    try {
-      // Delete from media table
-      const { error: mediaError } = await supabase
-        .from('media')
-        .delete()
-        .eq('id', fileId);
-      
-      if (mediaError) {
-        console.error('Error deleting file from media table:', mediaError);
-        toast({
-          title: 'Error',
-          description: `Failed to delete file: ${mediaError.message}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Optimistically update the cache
-      queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
-        return old?.filter((file: any) => file.id !== fileId) || [];
-      });
-      
-      toast({
-        title: 'File deleted',
-        description: 'File deleted successfully.',
-      });
-      
-      onRefresh();
-    } catch (error: any) {
-      console.error('Error deleting file:', error);
-      toast({
-        title: 'Error',
-        description: `Failed to delete file: ${error.message}`,
-        variant: 'destructive',
-      });
-    }
-  };
-  
-  const handleRemoveFromFolder = async (fileIds: string[], folderId: string) => {
-    if (!onRemoveFromFolder) {
-      toast({
-        title: 'Error',
-        description: 'Removing from folder is not enabled for this view.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      await onRemoveFromFolder(fileIds, folderId);
-      toast({
-        title: 'Files removed',
-        description: `Files removed from folder successfully.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: `Failed to remove files from folder: ${error.message}`,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Use the useFileFilters hook to filter the files
-  const {
-    searchQuery,
-    setSearchQuery,
-    selectedTypes,
-    setSelectedTypes,
-    viewMode,
-    setViewMode,
-    filteredFiles: basicFilteredFiles
-  } = useFileFilters({ files });
-  
-  // Apply tag filtering on top of the basic filtered files
-  const finalFilteredFiles = filterFilesByTags(basicFilteredFiles, selectedTags);
-  
-  const handleEditNoteClick = (file: CreatorFileType) => {
+  // File description handlers
+  const handleEditNote = (file: CreatorFileType) => {
     setFileToEdit(file);
     setEditedNote(file.description || '');
     setShowEditNoteModal(true);
   };
   
-  const handleSaveNote = async () => {
+  const handleUpdateNote = async () => {
     if (!fileToEdit) return;
     
     try {
-      // Update the file description in the media table
-      const { error: mediaError } = await supabase
+      const { error } = await supabase
         .from('media')
         .update({ description: editedNote })
         .eq('id', fileToEdit.id);
       
-      if (mediaError) {
-        console.error('Error updating file description:', mediaError);
-        toast({
-          title: 'Error',
-          description: `Failed to update file description: ${mediaError.message}`,
-          variant: 'destructive',
-        });
-        return;
+      if (error) {
+        throw error;
       }
       
       // Optimistically update the cache
       queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
-        return (old as CreatorFileType[])?.map((file: CreatorFileType) => {
-          if (file.id === fileToEdit.id) {
-            return { ...file, description: editedNote };
-          }
-          return file;
-        }) || [];
+        if (!old) return old;
+        
+        const updatedFiles = old.map((file: CreatorFileType) =>
+          file.id === fileToEdit.id ? { ...file, description: editedNote } : file
+        );
+        
+        return updatedFiles;
       });
       
-      toast({
-        title: 'Note saved',
-        description: 'File note saved successfully.',
-      });
-      
+      setFileToEdit(null);
       setShowEditNoteModal(false);
+      toast({
+        title: 'Note Updated',
+        description: 'File note updated successfully.',
+      });
       onRefresh();
     } catch (error: any) {
-      console.error('Error saving note:', error);
+      console.error('Error updating note:', error);
       toast({
         title: 'Error',
-        description: `Failed to save note: ${error.message}`,
+        description: error.message,
         variant: 'destructive',
       });
     }
   };
-
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{creatorName}'s Files</h1>
-        <div className="flex items-center space-x-4">
-          {isCreatorView && (
-            <Button onClick={open} disabled={isUploading} {...getRootProps()} >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Files
-              <input {...getInputProps()} />
-            </Button>
-          )}
-          
-          {isCreatorView && (
-            <Button variant="outline" onClick={handleCreateFolderClick}>
-              <FolderPlus className="w-4 h-4 mr-2" />
-              Create Folder
-            </Button>
-          )}
-          
-          <Button variant="ghost" onClick={onRefresh} disabled={isLoading}>
-            Refresh
-          </Button>
-        </div>
-      </div>
+  
+  // File deletion handler
+  const handleFileDeleted = async (fileId: string) => {
+    try {
+      // Get the file from the database
+      const { data: file, error: fetchError } = await supabase
+        .from('media')
+        .select('*')
+        .eq('id', fileId)
+        .single();
       
-      <div className="flex flex-col md:flex-row gap-4 mt-4">
-        <FileExplorerSidebar
-          onFolderChange={onFolderChange}
-          currentFolder={currentFolder}
-          onCategoryChange={onCategoryChange}
-          currentCategory={currentCategory}
-          availableFolders={availableFolders}
-          availableCategories={availableCategories}
-          onCreateCategory={onCreateCategory}
-          onDeleteFolder={onDeleteFolder}
-          onDeleteCategory={onDeleteCategory}
-          isCreatorView={isCreatorView}
-        />
+      if (fetchError) {
+        throw new Error(`Failed to fetch file: ${fetchError.message}`);
+      }
+      
+      // Delete the file from Supabase storage
+      if (file?.bucketPath) {
+        const { error: storageError } = await supabase.storage
+          .from('media')
+          .remove([file.bucketPath]);
         
-        <FileExplorerContent
-          isLoading={isLoading}
+        if (storageError) {
+          console.error('Error deleting file from storage:', storageError);
+          toast({
+            title: 'Error Deleting File',
+            description: 'Failed to delete file from storage. Please try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+      
+      // Delete the file record from the database
+      const { error: deleteError } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', fileId);
+      
+      if (deleteError) {
+        throw new Error(`Failed to delete file from database: ${deleteError.message}`);
+      }
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['creator-files', creatorId], (old: any) => {
+        if (!old) return old;
+        
+        const updatedFiles = old.filter((file: CreatorFileType) => file.id !== fileId);
+        return updatedFiles;
+      });
+      
+      toast({
+        title: 'File Deleted',
+        description: 'File deleted successfully.',
+      });
+      onRefresh();
+    } catch (error: any) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: 'Error Deleting File',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleCreateFolderClick = () => {
+    setShowUploadModal(true);
+  };
+  
+  const handleAddToFolderClick = () => {
+    setShowAddToFolderModal(true);
+  };
+  
+  const handleInitiateNewCategory = () => {
+    // Placeholder for initiating new category creation
+    console.log("Initiating new category creation");
+  };
+  
+  const handleInitiateNewFolder = (categoryId?: string) => {
+    // Placeholder for initiating new folder creation with optional category
+    console.log(`Initiating new folder creation in category: ${categoryId || 'default'}`);
+  };
+  
+  const handleDeleteCategoryClick = (categoryId: string) => {
+    // Placeholder for category deletion click handler
+    console.log(`Delete category clicked: ${categoryId}`);
+    if (onDeleteCategory) {
+      onDeleteCategory(categoryId);
+    }
+  };
+  
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    // Placeholder for category rename click handler
+    console.log(`Rename category clicked: ${categoryId}, current name: ${currentName}`);
+  };
+  
+  const handleDeleteFolderClick = (folderId: string) => {
+    // Placeholder for folder deletion click handler
+    console.log(`Delete folder clicked: ${folderId}`);
+    if (onDeleteFolder) {
+      onDeleteFolder(folderId);
+    }
+  };
+  
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    // Placeholder for folder rename click handler
+    console.log(`Rename folder clicked: ${folderId}, current name: ${currentName}`);
+  };
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    selectedTags,
+    setSelectedTags,
+    viewMode,
+    setViewMode,
+    filteredFiles
+  } = useFileFilters({
+    files,
+    selectedTags: selectedTags || []
+  });
+  
+  // Apply tag filtering on top of the basic filtering
+  const tagFilteredFiles = selectedTags.length > 0
+    ? filterFilesByTags(filteredFiles, selectedTags)
+    : filteredFiles;
+
+  const contextValue = {
+    selectedFileIds,
+    setSelectedFileIds,
+    currentFolder,
+    currentCategory,
+    handleAddToFolderClick,
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    handleDeleteCategoryClick,
+    handleRenameCategoryClick,
+    handleDeleteFolderClick,
+    handleRenameFolderClick,
+    creatorName,
+    creatorId,
+    isCreatorView,
+    availableFolders,
+    availableCategories,
+    onCategoryChange,
+    onDeleteFolder: onDeleteFolder || (async () => { console.log('Delete folder not implemented'); }),
+    onDeleteCategory: onDeleteCategory || (async () => { console.log('Delete category not implemented'); }),
+    onRemoveFromFolder,
+    viewMode,
+    isLoading
+  };
+  
+  return (
+    <div className="flex flex-col h-full w-full">
+      <FileExplorerProvider value={contextValue}>
+        <FileExplorerLayout
+          filteredFiles={tagFilteredFiles}
           viewMode={viewMode}
+          setViewMode={setViewMode}
+          onUploadClick={open}
+          onRefresh={onRefresh}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          availableTags={availableTags}
-          onTagCreate={createTag}
-          filteredFiles={finalFilteredFiles}
-          isCreatorView={isCreatorView}
-          onFilesChanged={onRefresh}
-          onFileDeleted={handleDeleteFile}
-          recentlyUploadedIds={recentlyUploadedIds}
-          selectedFileIds={selectedFileIds}
-          setSelectedFileIds={setSelectedFileIds}
-          onAddToFolderClick={() => setShowAddToFolderModal(true)}
-          currentFolder={currentFolder}
-          currentCategory={currentCategory}
-          onCreateFolder={currentCategory ? handleCreateFolderClick : undefined}
-          availableFolders={availableFolders}
-          onRemoveFromFolder={handleRemoveFromFolder}
-          onEditNote={handleEditNoteClick}
+          onFolderChange={onFolderChange}
+          onEditNote={(file) => {
+            setFileToEdit(file);
+            setEditedNote(file.description || '');
+            setShowEditNoteModal(true);
+          }}
+          onCreateFolder={handleCreateFolderClick}
         />
-      </div>
+      </FileExplorerProvider>
       
-      {/* Add to Folder Modal */}
-      <Dialog open={showAddToFolderModal} onOpenChange={setShowAddToFolderModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add to Folder</DialogTitle>
-            <DialogDescription>
-              Select a folder to add the selected files to.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="folder">Select Folder</Label>
-            <select
-              id="folder"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {availableFolders.map((folder) => (
-                <option key={folder.id} value={folder.id}>{folder.name}</option>
-              ))}
-            </select>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddToFolderModal(false)}>
+      {/* Modals */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Upload Files</h2>
+            <p>Drag 'n' drop some files here, or click to select files</p>
+            <div {...getRootProps()} className="border-2 border-dashed rounded-md p-4 mt-2">
+              <input {...getInputProps()} />
+              {isDragActive ? (
+                <p>Drop the files here ...</p>
+              ) : (
+                <p>Drag 'n' drop some files here, or click to select files</p>
+              )}
+            </div>
+            <button onClick={() => setShowUploadModal(false)} className="mt-4 px-4 py-2 bg-gray-200 rounded">
               Cancel
-            </Button>
-            <Button onClick={() => {
-              setShowAddToFolderModal(false);
-              if (onAddFilesToFolder) {
-                onAddFilesToFolder(selectedFileIds, currentFolder, currentCategory || 'all');
-              }
-            }}>
-              Add to Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Create Folder Modal */}
-      <Dialog open={showCreateFolderModal} onOpenChange={setShowCreateFolderModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>
-              Enter a name for the new folder.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="folderName">Folder Name</Label>
-            <Input
-              id="folderName"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              placeholder="Enter folder name"
-            />
+            </button>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateFolderModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateFolder}>
-              Create Folder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
       
-      {/* Edit Note Modal */}
-      <Dialog open={showEditNoteModal} onOpenChange={() => setShowEditNoteModal(false)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Note</DialogTitle>
-            <DialogDescription>
-              Edit the note for this file.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Label htmlFor="note">Note</Label>
-            <Input
-              id="note"
+      {showEditNoteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white p-6 rounded-md shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4">Edit Note</h2>
+            <textarea
               value={editedNote}
               onChange={(e) => setEditedNote(e.target.value)}
-              placeholder="Enter note"
+              className="w-full h-32 border rounded-md p-2"
             />
+            <div className="flex justify-end mt-4 space-x-2">
+              <button onClick={() => setShowEditNoteModal(false)} className="px-4 py-2 bg-gray-200 rounded">
+                Cancel
+              </button>
+              <button onClick={handleUpdateNote} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Save
+              </button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditNoteModal(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveNote}>
-              Save Note
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 };
