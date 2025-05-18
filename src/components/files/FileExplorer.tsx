@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -30,7 +31,7 @@ import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { useFileFilters } from './explorer/hooks/useFileFilters';
 import { supabase } from '@/integrations/supabase/client';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { useFileTags } from '@/hooks/useFileTags';
+import { useFileTags, FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -89,7 +90,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [showAddToFolderModal, setShowAddToFolderModal] = useState(false);
   const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
   const [showEditNoteModal, setShowEditNoteModal] = useState(false);
   const [fileToEdit, setFileToEdit] = useState<CreatorFileType | null>(null);
   const [editedNote, setEditedNote] = useState('');
@@ -204,6 +204,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     },
   });
   
+  // Modal states - consolidated to avoid duplicates
   const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
   const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
   const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
@@ -212,8 +213,12 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedCategoryForNewFolder, setSelectedCategoryForNewFolder] = useState<string>('');
   
+  // Handler functions - consolidated
   const handleCreateFolderClick = () => {
-    setShowCreateFolderModal(true);
+    if (currentCategory) {
+      setSelectedCategoryForNewFolder(currentCategory);
+    }
+    setIsAddFolderModalOpen(true);
   };
   
   const handleCreateFolder = async () => {
@@ -395,14 +400,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setIsAddToFolderModalOpen(true);
   };
   
-  const handleCreateFolderClick = () => {
-    if (currentCategory) {
-      setSelectedCategoryForNewFolder(currentCategory);
-    }
-    
-    setIsAddFolderModalOpen(true);
-  };
-  
   const handleCreateNewFolderFromModal = () => {
     if (targetCategoryId) {
       setSelectedCategoryForNewFolder(targetCategoryId);
@@ -513,11 +510,33 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   
   const handleAddTagToFiles = async (tagId: string) => {
     try {
-      await addTagToFiles(selectedFileIds, tagId);
+      // Add tags to selected files
+      for (const fileId of selectedFileIds) {
+        const { data: fileData } = await supabase
+          .from('media')
+          .select('tags')
+          .eq('id', fileId)
+          .single();
+          
+        if (fileData) {
+          const currentTags = fileData.tags || [];
+          if (!currentTags.includes(tagId)) {
+            const updatedTags = [...currentTags, tagId];
+            
+            await supabase
+              .from('media')
+              .update({ tags: updatedTags })
+              .eq('id', fileId);
+          }
+        }
+      }
+      
       toast({
         title: "Tag added",
         description: `Tag added to ${selectedFileIds.length} files successfully`,
       });
+      
+      onRefresh();
     } catch (error: any) {
       toast({
         title: "Error adding tag",

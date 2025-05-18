@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { FileList } from '../FileList';
 import { FilterBar } from '../FilterBar';
-import { CreatorFileType, FileTag } from '@/types/fileTypes';
+import { CreatorFileType } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -125,7 +126,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         ) : (
           <FileList
             files={filteredFiles}
-            viewMode={viewMode}
             isCreatorView={isCreatorView}
             onFileDeleted={onFileDeleted}
             recentlyUploadedIds={recentlyUploadedIds}
@@ -137,6 +137,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             onRemoveFromFolder={onRemoveFromFolder}
             onEditNote={onEditNote}
             onAddTagClick={onAddTagClick}
+            viewMode={viewMode}
           />
         )}
       </div>

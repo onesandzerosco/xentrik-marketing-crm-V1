@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
+import { CreatorFileType } from '@/types/fileTypes';
 import { FileExplorerHeader } from '../FileExplorerHeader';
 import { FileExplorerSidebar } from '../FileExplorerSidebar';
 import { FileExplorerContent } from '../FileExplorerContent';
@@ -45,9 +45,6 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
     handleAddToFolderClick,
     availableFolders,
     availableCategories,
-    onCategoryChange,
-    onDeleteFolder,
-    onDeleteCategory,
     onRemoveFromFolder,
     isLoading
   } = useFileExplorerContext();
@@ -69,12 +66,9 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
         <FileExplorerSidebar 
           onFolderChange={onFolderChange}
           currentFolder={currentFolder}
-          onCategoryChange={onCategoryChange}
           currentCategory={currentCategory}
           availableFolders={availableFolders}
           availableCategories={availableCategories}
-          onDeleteFolder={onDeleteFolder}
-          onDeleteCategory={onDeleteCategory}
           isCreatorView={isCreatorView}
         />
         
