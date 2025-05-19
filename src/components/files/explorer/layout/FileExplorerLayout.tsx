@@ -47,7 +47,12 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
     availableCategories,
     onRemoveFromFolder,
     isLoading,
-    onCategoryChange
+    onCategoryChange,
+    onCreateCategory,
+    onDeleteFolder,
+    onDeleteCategory,
+    onRenameFolder,
+    onRenameCategory
   } = useFileExplorerContext();
 
   return (
@@ -72,6 +77,11 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
           availableFolders={availableFolders}
           availableCategories={availableCategories}
           isCreatorView={isCreatorView}
+          onCreateCategory={onCreateCategory}
+          onDeleteFolder={onDeleteFolder}
+          onDeleteCategory={onDeleteCategory}
+          onRenameFolder={onRenameFolder}
+          onRenameCategory={onRenameCategory}
         />
         
         <FileExplorerContent 
