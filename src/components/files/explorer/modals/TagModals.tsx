@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileTag } from '@/hooks/useFileTags';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddTagModalProps {
   isOpen: boolean;
@@ -33,6 +34,36 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
   singleFileName
 }) => {
   const [newTagName, setNewTagName] = useState('');
+  const { toast } = useToast();
+  
+  // Clear input when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setNewTagName('');
+    }
+  }, [isOpen]);
+  
+  const handleCreateAndAddTag = async () => {
+    if (!newTagName.trim() || !onTagCreate) return;
+    
+    try {
+      const newTag = await onTagCreate(newTagName);
+      onTagSelect(newTag.id); // Auto-select the newly created tag
+      setNewTagName('');
+      
+      toast({
+        title: "Tag created",
+        description: `Tag "${newTagName}" was created successfully.`,
+      });
+    } catch (error) {
+      console.error('Error creating tag:', error);
+      toast({
+        title: "Error creating tag",
+        description: "There was a problem creating the tag.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -78,17 +109,7 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
                 <Button 
                   type="button"
                   disabled={!newTagName.trim()}
-                  onClick={async () => {
-                    if (newTagName.trim()) {
-                      try {
-                        const newTag = await onTagCreate(newTagName);
-                        onTagSelect(newTag.id); // Auto-select the newly created tag
-                        setNewTagName('');
-                      } catch (error) {
-                        console.error('Error creating new tag:', error);
-                      }
-                    }
-                  }}
+                  onClick={handleCreateAndAddTag}
                 >
                   Create & Add
                 </Button>

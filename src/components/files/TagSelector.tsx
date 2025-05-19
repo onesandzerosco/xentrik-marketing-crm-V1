@@ -60,9 +60,13 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 
   const handleCreateTag = async () => {
     if (newTagName.trim() && onTagCreate) {
-      await onTagCreate(newTagName);
-      setNewTagName('');
-      setIsDialogOpen(false);
+      try {
+        await onTagCreate(newTagName);
+        setNewTagName('');
+        setIsDialogOpen(false);
+      } catch (error) {
+        console.error("Error creating tag:", error);
+      }
     }
   };
 
