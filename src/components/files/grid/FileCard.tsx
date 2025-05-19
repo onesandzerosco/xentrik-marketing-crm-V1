@@ -13,8 +13,7 @@ import {
   Trash2,
   FolderMinus,
   Pencil,
-  Eye,
-  Tag
+  Eye
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 
@@ -25,7 +24,6 @@ interface FileCardProps {
   onDeleteFile: (fileId: string) => void;
   onEditNote?: (file: CreatorFileType) => void;
   onRemoveFromFolder?: (fileId: string) => void;
-  onAddTag?: (file: CreatorFileType) => void;
   isDeleting: boolean;
   isRemoving: boolean;
   isSelected: boolean;
@@ -42,7 +40,6 @@ export const FileCard: React.FC<FileCardProps> = ({
   onDeleteFile,
   onEditNote,
   onRemoveFromFolder,
-  onAddTag,
   isDeleting,
   isRemoving,
   isSelected,
@@ -119,21 +116,6 @@ export const FileCard: React.FC<FileCardProps> = ({
                 <Download className="h-4 w-4" />
               </Button>
             </a>
-
-            {/* Add Tag button - available for creators and editors */}
-            {canEdit && onAddTag && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddTag(file);
-                }}
-              >
-                <Tag className="h-4 w-4" />
-              </Button>
-            )}
             
             {/* Edit description button - available for creators and VAs */}
             {canEdit && onEditNote && (
@@ -182,20 +164,6 @@ export const FileCard: React.FC<FileCardProps> = ({
           </div>
         </div>
       </div>
-      
-      {/* Display tags if present */}
-      {file.tags && file.tags.length > 0 && (
-        <div className="px-4 pt-2 flex flex-wrap gap-1">
-          {file.tags.map((tagId) => (
-            <span 
-              key={tagId} 
-              className="text-xs bg-purple-100 text-purple-800 rounded-full px-2 py-0.5"
-            >
-              {tagId}
-            </span>
-          ))}
-        </div>
-      )}
       
       <CardContent className="p-4 flex-grow">
         <div className="mt-1 text-sm font-medium truncate">{file.name}</div>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { FileList } from '../FileList';
@@ -26,7 +26,6 @@ interface FileExplorerContentProps {
   availableFolders: Array<{ id: string; name: string; categoryId: string }>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote: (file: CreatorFileType) => void;
-  onAddTag?: (file: CreatorFileType) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   selectedTypes: string[];
@@ -55,7 +54,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   availableFolders,
   onRemoveFromFolder,
   onEditNote,
-  onAddTag,
   searchQuery,
   onSearchChange,
   selectedTypes,
@@ -65,17 +63,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   availableTags = [],
   onTagCreate
 }) => {
-  // Handle adding tag to a single file directly
-  const handleSingleFileTagClick = (file: CreatorFileType) => {
-    // Update selected file IDs to be just this one file
-    setSelectedFileIds([file.id]);
-    
-    // Trigger the tag modal
-    if (onAddTagClick) {
-      onAddTagClick();
-    }
-  };
-
   return (
     <div className="flex-1 overflow-hidden">
       <div className="space-y-4">
@@ -148,7 +135,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
                 recentlyUploadedIds={recentlyUploadedIds}
                 onSelectFiles={setSelectedFileIds}
                 onEditNote={onEditNote}
-                onAddTag={handleSingleFileTagClick}
                 currentFolder={currentFolder}
                 onRemoveFromFolder={onRemoveFromFolder}
               />

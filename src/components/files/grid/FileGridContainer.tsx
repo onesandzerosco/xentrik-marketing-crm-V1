@@ -14,7 +14,6 @@ interface FileGridContainerProps {
   recentlyUploadedIds: string[];
   onSelectFiles?: (fileIds: string[]) => void;
   onEditNote?: (file: CreatorFileType) => void;
-  onAddTag?: (file: CreatorFileType) => void;
   currentFolder: string;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
@@ -27,7 +26,6 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
   recentlyUploadedIds,
   onSelectFiles,
   onEditNote,
-  onAddTag,
   currentFolder,
   onRemoveFromFolder
 }) => {
@@ -81,7 +79,6 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
               onFileClick={handleFileClick}
               onDeleteFile={() => handleDeleteFile(file.id, canDelete)}
               onEditNote={onEditNote}
-              onAddTag={onAddTag}
               onRemoveFromFolder={() => handleRemoveFromFolder(file.id)}
               isDeleting={isDeleting}
               isRemoving={isRemoving}
