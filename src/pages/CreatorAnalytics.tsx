@@ -8,6 +8,7 @@ import { EngagementDashboard } from "@/components/analytics/EngagementDashboard"
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { TimeFilter } from "@/types";
 import { mockEngagementStats } from "@/context/creator/mockData";
+import { CreatorInvoice } from "@/components/analytics/income/CreatorInvoice";
 
 const CreatorAnalytics = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,9 +41,12 @@ const CreatorAnalytics = () => {
           <TabsTrigger value="income" className="flex-1">
             Income
           </TabsTrigger>
+          <TabsTrigger value="invoices" className="flex-1">
+            Invoices
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="engagement" className="mt-0">
+        <TabsContent value="engagement">
           <EngagementDashboard 
             creator={creator} 
             stats={stats} 
@@ -51,8 +55,12 @@ const CreatorAnalytics = () => {
           />
         </TabsContent>
 
-        <TabsContent value="income" className="mt-0">
+        <TabsContent value="income">
           <CreatorIncomeDashboard creatorId={id || ""} creatorName={creator.name} />
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <CreatorInvoice creatorId={id || ""} creatorName={creator.name} />
         </TabsContent>
       </Tabs>
     </div>
