@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
-import { addDays } from 'date-fns';
+import React, { useState, useEffect } from 'react';
+import { addDays, startOfMonth, endOfMonth } from 'date-fns';
 import { useIncomeData } from './useIncomeData';
 import { InvoiceHeader } from './invoice/InvoiceHeader';
 import { InvoiceSummary } from './invoice/InvoiceSummary';
 import { InvoiceBreakdown } from './invoice/InvoiceBreakdown';
 import { useInvoiceCalculations } from './useInvoiceCalculations';
 import { InvoiceSettings } from './InvoiceTypes';
+import { DateRange } from 'react-day-picker';
 
 interface CreatorInvoiceProps {
   creatorId: string;
@@ -15,14 +16,35 @@ interface CreatorInvoiceProps {
 
 export const CreatorInvoice = ({ creatorId, creatorName }: CreatorInvoiceProps) => {
   // Get income data from the existing hook
-  const { filteredData } = useIncomeData();
+  const { filteredData, setDate, date } = useIncomeData();
   
   // Initial invoice settings
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
     xentrikPercentage: 20, // Default percentage
     invoiceDate: new Date(), // Today
     dueDate: addDays(new Date(), 30), // 30 days from today
+    dateRange: {
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date())
+    }
   });
+  
+  // Sync the date range between invoice settings and the income data filter
+  useEffect(() => {
+    if (invoiceSettings.dateRange) {
+      setDate(invoiceSettings.dateRange);
+    }
+  }, [invoiceSettings.dateRange, setDate]);
+
+  // Sync the income data filter with invoice settings
+  useEffect(() => {
+    if (date && (date.from !== invoiceSettings.dateRange?.from || date.to !== invoiceSettings.dateRange?.to)) {
+      setInvoiceSettings(prev => ({
+        ...prev,
+        dateRange: date
+      }));
+    }
+  }, [date, invoiceSettings.dateRange]);
   
   // Calculate invoice summary based on data and settings
   const invoiceSummary = useInvoiceCalculations(filteredData, invoiceSettings);

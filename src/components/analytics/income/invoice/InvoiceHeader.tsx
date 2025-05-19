@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { InvoiceSettings } from '../InvoiceTypes';
 import { DatePicker } from './DatePicker';
+import { DateRangeSelector } from '../DateRangeSelector';
 
 interface InvoiceHeaderProps {
   settings: InvoiceSettings;
@@ -41,6 +42,13 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
     }
   };
 
+  const handleDateRangeChange = (dateRange: any) => {
+    onSettingsChange({
+      ...settings,
+      dateRange
+    });
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -49,28 +57,35 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
             <h2 className="text-2xl font-bold">{creatorName}'s Invoice</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
-              <Input 
-                id="xentrikPercentage"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={settings.xentrikPercentage}
-                onChange={handlePercentageChange}
-              />
+              <Label>Invoice Period</Label>
+              <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
             </div>
             
-            <div className="space-y-2">
-              <Label>Invoice Date</Label>
-              <DatePicker date={settings.invoiceDate} onDateChange={handleInvoiceDateChange} />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Due Date</Label>
-              <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
+                <Input 
+                  id="xentrikPercentage"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={settings.xentrikPercentage}
+                  onChange={handlePercentageChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Invoice Date</Label>
+                <DatePicker date={settings.invoiceDate} onDateChange={handleInvoiceDateChange} />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Due Date</Label>
+                <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
+              </div>
             </div>
           </div>
         </div>
