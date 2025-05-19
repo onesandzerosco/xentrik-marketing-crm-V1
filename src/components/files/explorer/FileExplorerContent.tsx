@@ -65,12 +65,12 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   availableTags = [],
   onTagCreate
 }) => {
-  // State for handling single file tag management
-  const [selectedFileForTag, setSelectedFileForTag] = useState<CreatorFileType | null>(null);
-
-  // Handle adding tag to a single file
+  // Handle adding tag to a single file directly
   const handleSingleFileTagClick = (file: CreatorFileType) => {
-    setSelectedFileForTag(file);
+    // Update selected file IDs to be just this one file
+    setSelectedFileIds([file.id]);
+    
+    // Trigger the tag modal
     if (onAddTagClick) {
       onAddTagClick();
     }

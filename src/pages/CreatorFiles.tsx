@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,6 +10,7 @@ import { useFilePermissions } from '@/utils/permissionUtils';
 import { useFolderOperations } from '@/hooks/useFolderOperations';
 import { useFileOperations } from '@/hooks/file-operations';
 import { useFilesFetching } from '@/hooks/useFilesFetching';
+import { useFileTags } from '@/hooks/useFileTags';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 
 const CreatorFiles = () => {
@@ -61,6 +61,17 @@ const CreatorFiles = () => {
     recentlyUploadedIds,
     availableFolders
   });
+
+  // Add useFileTags hook to manage tags
+  const { 
+    availableTags, 
+    selectedTags, 
+    setSelectedTags, 
+    addTagToFiles, 
+    removeTagFromFiles,
+    createTag,
+    filterFilesByTags
+  } = useFileTags();
   
   useEffect(() => {
     ensureStorageBucket();
@@ -162,6 +173,25 @@ const CreatorFiles = () => {
     return Promise.resolve();
   };
 
+  // Handle file tagging for single or multiple files
+  const handleAddTagToFiles = async (fileIds: string[], tagId: string) => {
+    try {
+      await addTagToFiles(fileIds, tagId);
+      refetch(); // Refresh the file list to show updated tags
+      toast({
+        title: "Tag added",
+        description: `Successfully added tag to ${fileIds.length} file(s)`,
+      });
+    } catch (error) {
+      console.error("Error adding tag to files:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add tag to files",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (error) {
       toast({
@@ -208,6 +238,12 @@ const CreatorFiles = () => {
       onRemoveFromFolder={handleRemoveFromFolder}
       onRenameFolder={handleRenameFolder}
       onRenameCategory={handleRenameCategory}
+      // Add tag-related props
+      availableTags={availableTags}
+      selectedTags={selectedTags}
+      setSelectedTags={setSelectedTags}
+      onTagCreate={createTag}
+      onAddTagToFiles={handleAddTagToFiles}
     />
   );
 };
