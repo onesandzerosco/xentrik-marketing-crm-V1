@@ -223,7 +223,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onFileDeleted: handleFileDeleted,
         isLoading,
         viewMode,
-        setViewMode,
+        setViewMode, // Added missing prop
         isCreatorView,
         currentFolder,
         onFolderChange,
@@ -253,7 +253,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }}
     >
       <div className="flex flex-col h-full">
-        <FileExplorerHeader />
+        <FileExplorerHeader 
+          creatorName={creatorName}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onUploadClick={() => setIsUploadModalOpen(true)}
+          isCreatorView={isCreatorView}
+          onRefresh={onRefresh}
+          selectedFileIds={selectedFileIds}
+          onAddToFolderClick={handleAddToFolderClick}
+        />
         
         <div className="flex gap-4 mt-4 flex-1 overflow-hidden">
           <FileExplorerSidebar 

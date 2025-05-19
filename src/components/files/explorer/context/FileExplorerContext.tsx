@@ -36,6 +36,7 @@ interface FileExplorerContextProps {
   
   // UI state
   viewMode: 'grid' | 'list';
+  setViewMode: (mode: 'grid' | 'list') => void;  // Added missing setViewMode function
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
