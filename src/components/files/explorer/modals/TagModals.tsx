@@ -20,6 +20,7 @@ interface AddTagModalProps {
   availableTags: FileTag[];
   onTagSelect: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
+  singleFileName?: string;
 }
 
 export const AddTagModal: React.FC<AddTagModalProps> = ({
@@ -28,7 +29,8 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
   selectedFileIds,
   availableTags,
   onTagSelect,
-  onTagCreate
+  onTagCreate,
+  singleFileName
 }) => {
   const [newTagName, setNewTagName] = useState('');
   
@@ -38,7 +40,10 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
         <DialogHeader>
           <DialogTitle>Add Tags</DialogTitle>
           <DialogDescription>
-            Add tags to {selectedFileIds.length} selected {selectedFileIds.length === 1 ? 'file' : 'files'}
+            {singleFileName 
+              ? `Add tags to file: "${singleFileName}"`
+              : `Add tags to ${selectedFileIds.length} selected ${selectedFileIds.length === 1 ? 'file' : 'files'}`
+            }
           </DialogDescription>
         </DialogHeader>
         

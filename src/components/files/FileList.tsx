@@ -17,6 +17,7 @@ interface FileListProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote?: (file: CreatorFileType) => void;
   onAddTagClick?: () => void;
+  onAddTagToFile?: (file: CreatorFileType) => void;
   viewMode?: 'grid' | 'list';
 }
 
@@ -31,7 +32,8 @@ export const FileList: React.FC<FileListProps> = ({
   availableFolders = [],
   onRemoveFromFolder,
   onEditNote,
-  onAddTagClick
+  onAddTagClick,
+  onAddTagToFile
 }) => {
   const {
     selectedFileIds,
@@ -97,6 +99,7 @@ export const FileList: React.FC<FileListProps> = ({
             onEditNote={onEditNote}
             onFileDeleted={onFileDeleted}
             onFilesChanged={() => {}}
+            onAddTagToFile={onAddTagToFile}
           />
         ))}
       </TableBody>

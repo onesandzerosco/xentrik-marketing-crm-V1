@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Upload, FolderPlus, Edit, MoreVertical, Trash2 } from 'lucide-react';
@@ -99,7 +98,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     selectedTags, 
     setSelectedTags, 
     createTag, 
-    filterFilesByTags 
+    filterFilesByTags,
+    addTagToFiles 
   } = useFileTags();
   
   const {
@@ -212,6 +212,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [targetCategoryId, setTargetCategoryId] = useState<string>('');
   const [newFolderName, setNewFolderName] = useState('');
   const [selectedCategoryForNewFolder, setSelectedCategoryForNewFolder] = useState<string>('');
+  const [singleFileForTagging, setSingleFileForTagging] = useState<CreatorFileType | null>(null);
   
   // Handler functions - consolidated
   const handleCreateFolderClick = () => {
@@ -504,38 +505,50 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       });
       return;
     }
-    
+    setSingleFileForTagging(null);
+    setIsAddTagModalOpen(true);
+  };
+  
+  const handleAddTagToFile = (file: CreatorFileType) => {
+    // Set the selected file for tagging and open modal
+    setSingleFileForTagging(file);
+    // Clear any previously selected files
+    setSelectedFileIds([]);
     setIsAddTagModalOpen(true);
   };
   
   const handleAddTagToFiles = async (tagId: string) => {
     try {
-      // Add tags to selected files
-      for (const fileId of selectedFileIds) {
-        const { data: fileData } = await supabase
-          .from('media')
-          .select('tags')
-          .eq('id', fileId)
-          .single();
-          
-        if (fileData) {
-          const currentTags = fileData.tags || [];
-          if (!currentTags.includes(tagId)) {
-            const updatedTags = [...currentTags, tagId];
-            
-            await supabase
-              .from('media')
-              .update({ tags: updatedTags })
-              .eq('id', fileId);
-          }
-        }
+      let targetFileIds: string[] = [];
+      
+      // If we have a single file for tagging, use that
+      if (singleFileForTagging) {
+        targetFileIds = [singleFileForTagging.id];
+      } else {
+        // Otherwise use the selected files
+        targetFileIds = selectedFileIds;
       }
+      
+      if (targetFileIds.length === 0) {
+        toast({
+          title: "No files selected",
+          description: "Please select at least one file to add tags",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add tags to selected files
+      await addTagToFiles(targetFileIds, tagId);
       
       toast({
         title: "Tag added",
-        description: `Tag added to ${selectedFileIds.length} files successfully`,
+        description: `Tag added to ${targetFileIds.length} ${targetFileIds.length === 1 ? 'file' : 'files'} successfully`,
       });
       
+      // Clear selected file for tagging
+      setSingleFileForTagging(null);
+      setIsAddTagModalOpen(false);
       onRefresh();
     } catch (error: any) {
       toast({
@@ -606,6 +619,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           setSelectedFileIds={setSelectedFileIds}
           onAddToFolderClick={handleAddToFolderClick}
           onAddTagClick={handleAddTagClick}
+          onAddTagToFile={handleAddTagToFile}
           currentFolder={currentFolder}
           currentCategory={currentCategory}
           onCreateFolder={currentCategory ? handleCreateFolderClick : undefined}
@@ -640,6 +654,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleAddToFolderSubmit={handleAddToFolderSubmit}
         onAddFilesToFolder={onAddFilesToFolder}
         handleCreateNewFolder={handleCreateNewFolderFromModal}
+        singleFileForTagging={singleFileForTagging}
       />
       
       <Dialog open={showEditNoteModal} onOpenChange={setShowEditNoteModal}>

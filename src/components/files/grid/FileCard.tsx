@@ -13,7 +13,8 @@ import {
   Trash2,
   FolderMinus,
   Pencil,
-  Eye
+  Eye,
+  Tag
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
 
@@ -24,6 +25,7 @@ interface FileCardProps {
   onDeleteFile: (fileId: string) => void;
   onEditNote?: (file: CreatorFileType) => void;
   onRemoveFromFolder?: (fileId: string) => void;
+  onAddTagToFile?: (file: CreatorFileType) => void;
   isDeleting: boolean;
   isRemoving: boolean;
   isSelected: boolean;
@@ -40,6 +42,7 @@ export const FileCard: React.FC<FileCardProps> = ({
   onDeleteFile,
   onEditNote,
   onRemoveFromFolder,
+  onAddTagToFile,
   isDeleting,
   isRemoving,
   isSelected,
@@ -117,6 +120,21 @@ export const FileCard: React.FC<FileCardProps> = ({
               </Button>
             </a>
             
+            {/* Add Tag button - available for creators and admins */}
+            {canEdit && onAddTagToFile && (
+              <Button 
+                variant="secondary" 
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddTagToFile(file);
+                }}
+              >
+                <Tag className="h-4 w-4" />
+              </Button>
+            )}
+            
             {/* Edit description button - available for creators and VAs */}
             {canEdit && onEditNote && (
               <Button 
@@ -173,6 +191,15 @@ export const FileCard: React.FC<FileCardProps> = ({
         {file.description && (
           <div className="mt-1 text-xs text-muted-foreground italic truncate">
             "{file.description}"
+          </div>
+        )}
+        {file.tags && file.tags.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {file.tags.map(tagId => (
+              <span key={tagId} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                {tagId}
+              </span>
+            ))}
           </div>
         )}
       </CardContent>

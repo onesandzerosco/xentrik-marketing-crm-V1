@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FileTag {
   id: string;
@@ -23,10 +24,34 @@ export const useFileTags = () => {
     setAvailableTags(defaultTags);
   }, []);
   
-  const addTagToFiles = (fileIds: string[], tagId: string) => {
+  const addTagToFiles = async (fileIds: string[], tagId: string) => {
     // In a real implementation, update the database
-    console.log('Adding tag', tagId, 'to files', fileIds);
-    return Promise.resolve();
+    try {
+      // Process each file
+      for (const fileId of fileIds) {
+        const { data: fileData } = await supabase
+          .from('media')
+          .select('tags')
+          .eq('id', fileId)
+          .single();
+          
+        if (fileData) {
+          const currentTags = fileData.tags || [];
+          if (!currentTags.includes(tagId)) {
+            const updatedTags = [...currentTags, tagId];
+            
+            await supabase
+              .from('media')
+              .update({ tags: updatedTags })
+              .eq('id', fileId);
+          }
+        }
+      }
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error adding tag to files:', error);
+      return Promise.reject(error);
+    }
   };
   
   const removeTagFromFiles = (fileIds: string[], tagId: string) => {

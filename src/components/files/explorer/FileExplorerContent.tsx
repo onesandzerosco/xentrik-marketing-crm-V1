@@ -20,6 +20,7 @@ interface FileExplorerContentProps {
   setSelectedFileIds: (ids: string[]) => void;
   onAddToFolderClick: () => void;
   onAddTagClick?: () => void;
+  onAddTagToFile?: (file: CreatorFileType) => void;
   currentFolder: string;
   currentCategory: string | null;
   onCreateFolder?: () => void;
@@ -48,6 +49,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   setSelectedFileIds,
   onAddToFolderClick,
   onAddTagClick,
+  onAddTagToFile,
   currentFolder,
   currentCategory,
   onCreateFolder,
@@ -135,6 +137,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
                 recentlyUploadedIds={recentlyUploadedIds}
                 onSelectFiles={setSelectedFileIds}
                 onEditNote={onEditNote}
+                onAddTagToFile={onAddTagToFile}
                 currentFolder={currentFolder}
                 onRemoveFromFolder={onRemoveFromFolder}
               />
@@ -152,6 +155,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
               onRemoveFromFolder={onRemoveFromFolder}
               onEditNote={onEditNote}
               onAddTagClick={onAddTagClick}
+              onAddTagToFile={onAddTagToFile}
               viewMode={viewMode}
             />
           )

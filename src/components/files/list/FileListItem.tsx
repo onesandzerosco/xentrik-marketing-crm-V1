@@ -1,27 +1,26 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
-import { 
-  TableCell, 
-  TableRow
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { 
-  FileText, 
-  FileImage, 
-  FileVideo, 
-  FileAudio, 
-  File, 
-  Download,
-  Trash2,
-  FolderMinus,
+  MoreHorizontal, 
+  Trash2, 
+  Download, 
+  Eye, 
   Pencil,
-  Eye
+  FolderMinus,
+  Tag
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
-import { useFilePermissions } from '@/utils/permissionUtils';
-import { useToast } from "@/components/ui/use-toast";
 
 interface FileListItemProps {
   file: CreatorFileType;
@@ -34,8 +33,9 @@ interface FileListItemProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   currentFolder: string;
   onEditNote?: (file: CreatorFileType) => void;
-  onFileDeleted?: (fileId: string) => void;
+  onFileDeleted: (fileId: string) => void;
   onFilesChanged: () => void;
+  onAddTagToFile?: (file: CreatorFileType) => void;
 }
 
 export const FileListItem: React.FC<FileListItemProps> = ({
@@ -50,161 +50,108 @@ export const FileListItem: React.FC<FileListItemProps> = ({
   currentFolder,
   onEditNote,
   onFileDeleted,
-  onFilesChanged
+  onFilesChanged,
+  onAddTagToFile
 }) => {
-  const { toast } = useToast();
-  const { canDelete, canEdit, canManageFolders } = useFilePermissions();
-  const [isRemoving, setIsRemoving] = React.useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const selected = isFileSelected(file.id);
   
-  // Determine which icon to show based on file type
-  let Icon = File;
-  if (file.type === 'image') Icon = FileImage;
-  if (file.type === 'video') Icon = FileVideo;
-  if (file.type === 'audio') Icon = FileAudio;
-  if (file.type === 'document') Icon = FileText;
-  
-  // Handle removing a file from folder
-  const handleRemoveFromFolderClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!onRemoveFromFolder || !canManageFolders) return;
-    
+  const deleteFile = async () => {
+    setIsDeleting(true);
     try {
-      setIsRemoving(true);
-      
-      if (onFileDeleted && currentFolder !== 'all' && currentFolder !== 'unsorted') {
-        onFileDeleted(file.id); // Optimistically update UI
-      }
-      
-      await onRemoveFromFolder([file.id], currentFolder);
-      
-      toast({
-        title: "File removed",
-        description: `Removed ${file.name} from folder`,
-      });
-      
-      setIsRemoving(false);
-      onFilesChanged(); // Refresh in background
-    } catch (error) {
-      console.error("Error removing file from folder:", error);
-      setIsRemoving(false);
-      
-      toast({
-        title: "Error",
-        description: "Failed to remove file from folder",
-        variant: "destructive",
-      });
+      await handleDeleteFile(file.id);
+    } finally {
+      setIsDeleting(false);
     }
   };
-
-  // Skip rendering files being removed from folder when in folder view
-  if (isRemoving && currentFolder !== 'all' && currentFolder !== 'unsorted') return null;
-
-  // Add debugging info for video thumbnails
-  React.useEffect(() => {
-    if (file.type === 'video') {
-      console.log(`File ${file.name} thumbnail URL:`, file.thumbnail_url);
-    }
-  }, [file]);
-
+  
   return (
-    <TableRow key={file.id} className={isCreatorView ? "cursor-pointer" : ""}>
-      <TableCell className="font-medium" onClick={(e) => e.stopPropagation()}>
+    <TableRow className={selected ? "bg-muted/50" : ""}>
+      <TableCell>
         {isCreatorView && (
-          <Checkbox
-            checked={isFileSelected(file.id)}
-            onCheckedChange={() => toggleFileSelection(file.id)}
+          <input
+            type="checkbox"
+            className="h-4 w-4"
+            checked={selected}
+            onChange={() => toggleFileSelection(file.id)}
           />
         )}
       </TableCell>
-      <TableCell className="font-medium">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4" />
-          <span className="truncate max-w-[200px]">{file.name}</span>
-          {file.isNewlyUploaded && (
-            <span className="ml-1 rounded-md bg-secondary text-xs text-secondary-foreground px-2 py-0.5">
-              New
-            </span>
-          )}
-        </div>
+      <TableCell>
+        <div className="font-medium">{file.name}</div>
         {file.description && (
-          <div className="text-xs text-muted-foreground italic truncate max-w-[200px] mt-1">
-            "{file.description}"
+          <div className="text-sm text-muted-foreground">{file.description}</div>
+        )}
+        {file.tags && file.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {file.tags.map(tagId => (
+              <span key={tagId} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                {tagId}
+              </span>
+            ))}
           </div>
         )}
       </TableCell>
       <TableCell>{file.type}</TableCell>
       <TableCell>{formatFileSize(file.size)}</TableCell>
       <TableCell>{formatDate(file.created_at)}</TableCell>
-      {/* File actions column */}
-      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-end gap-1 flex-wrap">
-          {/* Preview button - available for all users */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
-            onClick={(e) => {
-              e.stopPropagation();
-              window.open(file.url, '_blank', 'noopener,noreferrer');
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          
-          {/* Download button - available for all users */}
-          <a href={file.url} download={file.name}>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Download className="h-4 w-4" />
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </a>
-          
-          {/* Edit description button - available for creators and VAs */}
-          {onEditNote && canEdit && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditNote(file);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          )}
-          
-          {/* Delete button - only for creators */}
-          {canDelete && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteFile(file.id);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-          
-          {/* Remove from folder button - for users with canManageFolders permission */}
-          {showRemoveFromFolder && onRemoveFromFolder && canManageFolders && (
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleRemoveFromFolderClick}
-            >
-              <FolderMinus className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => window.open(file.url, '_blank')}>
+              <Eye className="mr-2 h-4 w-4" />
+              View
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href={file.url} download={file.name}>
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </a>
+            </DropdownMenuItem>
+            
+            {isCreatorView && onEditNote && (
+              <DropdownMenuItem onClick={() => onEditNote(file)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Note
+              </DropdownMenuItem>
+            )}
+            
+            {isCreatorView && onAddTagToFile && (
+              <DropdownMenuItem onClick={() => onAddTagToFile(file)}>
+                <Tag className="mr-2 h-4 w-4" />
+                Add Tag
+              </DropdownMenuItem>
+            )}
+            
+            {showRemoveFromFolder && onRemoveFromFolder && (
+              <DropdownMenuItem 
+                onClick={() => onRemoveFromFolder([file.id], currentFolder)}
+              >
+                <FolderMinus className="mr-2 h-4 w-4" />
+                Remove from Folder
+              </DropdownMenuItem>
+            )}
+            
+            {isCreatorView && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive" 
+                  onClick={deleteFile}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </TableCell>
     </TableRow>
   );

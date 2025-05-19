@@ -1,127 +1,109 @@
 
-import React, { useState } from 'react';
-import { CreateFolderModal } from './CreateFolderModal';
-import { AddToFolderModal } from './AddToFolderModal';
-import { DeleteModal } from './DeleteModal';
-import { RenameModal } from './RenameModal';
-import { Category } from '@/types/fileTypes';
+import React from 'react';
+import { Category, Folder } from '@/types/fileTypes';
+import { AddToFolderModal } from './modals/FolderModals';
 import { AddTagModal } from './modals/TagModals';
+import { CreateFolderModal } from './modals/FolderModals';
 import { FileTag } from '@/hooks/useFileTags';
+import { CreatorFileType } from '@/types/fileTypes';
 
 interface FileExplorerModalsProps {
-  // Selected files
   selectedFileIds: string[];
-  
-  // Available data
-  customFolders: Array<{ id: string; name: string; categoryId: string }>;
+  customFolders: Folder[];
   categories: Category[];
-  availableTags?: FileTag[];
-  
-  // Add to folder modal
+  availableTags: FileTag[];
   isAddToFolderModalOpen: boolean;
-  setIsAddToFolderModalOpen: (open: boolean) => void;
+  setIsAddToFolderModalOpen: (isOpen: boolean) => void;
   targetFolderId: string;
-  setTargetFolderId: (id: string) => void;
+  setTargetFolderId: (folderId: string) => void;
   targetCategoryId: string;
-  setTargetCategoryId: (id: string) => void;
-  
-  // Tags modal
-  isAddTagModalOpen?: boolean;
-  setIsAddTagModalOpen?: (open: boolean) => void;
-  onTagSelect?: (tagId: string) => void;
+  setTargetCategoryId: (categoryId: string) => void;
+  isAddTagModalOpen: boolean;
+  setIsAddTagModalOpen: (isOpen: boolean) => void;
+  onTagSelect: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
-
-  // Create folder modal
   isAddFolderModalOpen: boolean;
-  setIsAddFolderModalOpen: (open: boolean) => void;
+  setIsAddFolderModalOpen: (isOpen: boolean) => void;
   newFolderName: string;
   setNewFolderName: (name: string) => void;
   selectedCategoryForNewFolder: string;
-  setSelectedCategoryForNewFolder: (id: string) => void;
-  
-  // Folder handlers
+  setSelectedCategoryForNewFolder: (categoryId: string) => void;
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
   onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
   handleCreateNewFolder: () => void;
+  singleFileForTagging: CreatorFileType | null;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
-  // Selected files
   selectedFileIds,
-  
-  // Available data
   customFolders,
   categories,
-  availableTags = [],
-
-  // Add to folder modal
+  availableTags,
   isAddToFolderModalOpen,
   setIsAddToFolderModalOpen,
   targetFolderId,
   setTargetFolderId,
   targetCategoryId,
   setTargetCategoryId,
-  
-  // Tags modal
-  isAddTagModalOpen = false,
-  setIsAddTagModalOpen = () => {},
-  onTagSelect = () => {},
+  isAddTagModalOpen,
+  setIsAddTagModalOpen,
+  onTagSelect,
   onTagCreate,
-
-  // Create folder modal
   isAddFolderModalOpen,
   setIsAddFolderModalOpen,
   newFolderName,
   setNewFolderName,
   selectedCategoryForNewFolder,
   setSelectedCategoryForNewFolder,
-  
-  // Folder handlers
   handleCreateFolderSubmit,
   handleAddToFolderSubmit,
-  handleCreateNewFolder
+  onAddFilesToFolder,
+  handleCreateNewFolder,
+  singleFileForTagging
 }) => {
+  // Calculate effective file count for the tag modal
+  const effectiveFileCount = singleFileForTagging ? 1 : selectedFileIds.length;
+  
   return (
     <>
-      {/* Create Folder Modal */}
-      <CreateFolderModal 
-        isOpen={isAddFolderModalOpen}
-        onOpenChange={setIsAddFolderModalOpen}
-        newFolderName={newFolderName}
-        setNewFolderName={setNewFolderName}
-        selectedCategoryId={selectedCategoryForNewFolder}
-        setSelectedCategoryId={setSelectedCategoryForNewFolder}
-        availableCategories={categories}
-        handleSubmit={handleCreateFolderSubmit}
-      />
-      
-      {/* Add to Folder Modal */}
+      {/* Add to folder modal */}
       <AddToFolderModal
         isOpen={isAddToFolderModalOpen}
         onOpenChange={setIsAddToFolderModalOpen}
+        selectedFileIds={selectedFileIds}
+        customFolders={customFolders}
+        categories={categories}
         targetFolderId={targetFolderId}
         setTargetFolderId={setTargetFolderId}
         targetCategoryId={targetCategoryId}
         setTargetCategoryId={setTargetCategoryId}
-        numSelectedFiles={selectedFileIds.length}
-        customFolders={customFolders}
-        categories={categories}
-        handleSubmit={handleAddToFolderSubmit}
-        onCreateNewFolder={handleCreateNewFolder}
+        onCreateFolder={handleCreateNewFolder}
+        onSubmit={handleAddToFolderSubmit}
       />
-
-      {/* Add Tag Modal */}
-      {setIsAddTagModalOpen && (
-        <AddTagModal
-          isOpen={isAddTagModalOpen}
-          onOpenChange={setIsAddTagModalOpen}
-          selectedFileIds={selectedFileIds}
-          availableTags={availableTags}
-          onTagSelect={onTagSelect}
-          onTagCreate={onTagCreate}
-        />
-      )}
+      
+      {/* Add tag modal */}
+      <AddTagModal
+        isOpen={isAddTagModalOpen}
+        onOpenChange={setIsAddTagModalOpen}
+        selectedFileIds={singleFileForTagging ? [singleFileForTagging.id] : selectedFileIds}
+        availableTags={availableTags}
+        onTagSelect={onTagSelect}
+        onTagCreate={onTagCreate}
+        singleFileName={singleFileForTagging?.name}
+      />
+      
+      {/* Create folder modal */}
+      <CreateFolderModal
+        isOpen={isAddFolderModalOpen}
+        onOpenChange={setIsAddFolderModalOpen}
+        folderName={newFolderName}
+        setFolderName={setNewFolderName}
+        categories={categories}
+        selectedCategoryId={selectedCategoryForNewFolder}
+        setSelectedCategoryId={setSelectedCategoryForNewFolder}
+        onSubmit={handleCreateFolderSubmit}
+      />
     </>
   );
 };
