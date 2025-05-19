@@ -37,49 +37,52 @@ export const useCategoryOperations = ({
       setIsProcessing(true);
       
       // Get all files that are in this category
-      const { data: filesInCategory, error: fetchFilesError } = await supabase
-        .from('media')
-        .select('id, categories')
-        .contains('categories', [categoryId]);
+      const { data: foldersInCategory, error: fetchFoldersError } = await supabase
+        .from('file_folders')
+        .select('folder_id')
+        .eq('category_id', categoryId);
       
-      if (fetchFilesError) {
-        throw new Error(`Failed to fetch files in category: ${fetchFilesError.message}`);
+      if (fetchFoldersError) {
+        throw new Error(`Failed to fetch folders in category: ${fetchFoldersError.message}`);
       }
       
-      // For each file, update it to remove the category reference
-      for (const file of filesInCategory || []) {
-        const updatedCategories = (file.categories || []).filter(
-          (category: string) => category !== categoryId
-        );
-        
-        const { error: updateError } = await supabase
+      const folderIds = foldersInCategory?.map(folder => folder.folder_id) || [];
+      
+      // For each file with folders in this category, update it to remove the folder references
+      if (folderIds.length > 0) {
+        const { data: filesInFolders, error: fetchFilesError } = await supabase
           .from('media')
-          .update({ categories: updatedCategories })
-          .eq('id', file.id);
+          .select('id, folders')
+          .contains('folders', folderIds);
         
-        if (updateError) {
-          console.error(`Error updating file ${file.id}:`, updateError);
+        if (fetchFilesError) {
+          console.error("Error fetching files in folders:", fetchFilesError);
+        } else {
+          // For each file, update it to remove the folder references
+          for (const file of filesInFolders || []) {
+            const updatedFolders = (file.folders || []).filter(
+              (folder: string) => !folderIds.includes(folder)
+            );
+            
+            const { error: updateError } = await supabase
+              .from('media')
+              .update({ folders: updatedFolders })
+              .eq('id', file.id);
+            
+            if (updateError) {
+              console.error(`Error updating file ${file.id}:`, updateError);
+            }
+          }
         }
       }
       
-      // Update folders that belong to this category
-      let foldersToUpdate: Folder[] = [];
-      if (setAvailableFolders) {
-        setAvailableFolders((prevFolders) => {
-          // Get the list of folders in this category
-          const foldersInCategory = prevFolders.filter(folder => folder.categoryId === categoryId);
-          foldersToUpdate = foldersInCategory;
-          
-          // Return folders not in this category
-          return prevFolders.filter(folder => folder.categoryId !== categoryId);
-        });
-      }
-      
-      // Delete the category from the database
+      // Delete the category from the file_categories table
+      // This will automatically delete all associated folders due to CASCADE
       const { error: deleteCategoryError } = await supabase
         .from('file_categories')
         .delete()
-        .eq('id', categoryId);
+        .eq('category_id', categoryId)
+        .eq('creator', creatorId);
       
       if (deleteCategoryError) {
         throw new Error(`Failed to delete category: ${deleteCategoryError.message}`);
@@ -89,6 +92,13 @@ export const useCategoryOperations = ({
       if (setAvailableCategories) {
         setAvailableCategories((prevCategories) => 
           prevCategories.filter(category => category.id !== categoryId)
+        );
+      }
+      
+      // Update the available folders list
+      if (setAvailableFolders) {
+        setAvailableFolders((prevFolders) => 
+          prevFolders.filter(folder => folder.categoryId !== categoryId)
         );
       }
       
@@ -132,12 +142,12 @@ export const useCategoryOperations = ({
     try {
       setIsProcessing(true);
       
-      // Update the category name in the database
+      // Update the category name in the file_categories table
       const { error: updateError } = await supabase
         .from('file_categories')
-        .update({ name: newCategoryName })
-        .eq('id', categoryId)
-        .eq('creator_id', creatorId);
+        .update({ category_name: newCategoryName })
+        .eq('category_id', categoryId)
+        .eq('creator', creatorId);
       
       if (updateError) {
         throw new Error(`Failed to rename category: ${updateError.message}`);

@@ -1,11 +1,10 @@
 
-import { useState } from 'react';
-import { Category, Folder } from '@/types/fileTypes';
 import { useCreateOperations } from './useCreateOperations';
-import { useFolderOperations } from './useFolderOperations';
 import { useCategoryOperations } from './useCategoryOperations';
+import { useFolderOperations } from './useFolderOperations';
+import { Category, Folder } from '@/types/fileTypes';
 
-interface FileOperationsProps {
+interface UseFileOperationsProps {
   creatorId?: string;
   onFilesChanged: () => void;
   setAvailableFolders?: React.Dispatch<React.SetStateAction<Folder[]>>;
@@ -14,32 +13,63 @@ interface FileOperationsProps {
   setCurrentCategory?: (categoryId: string | null) => void;
 }
 
-export const useFileOperations = (props: FileOperationsProps) => {
-  // Using individual hooks for each domain of operations
-  const createOps = useCreateOperations(props);
-  const folderOps = useFolderOperations(props);
-  const categoryOps = useCategoryOperations(props);
-
-  // Combine the processing state from all hooks
-  const isProcessing = createOps.isProcessing || folderOps.isProcessing || categoryOps.isProcessing;
-
-  // Combine and return all operations
+export const useFileOperations = ({
+  creatorId,
+  onFilesChanged,
+  setAvailableFolders,
+  setAvailableCategories,
+  setCurrentFolder,
+  setCurrentCategory
+}: UseFileOperationsProps) => {
+  // Use all the individual operation hooks
+  const {
+    handleCreateFolder,
+    handleCreateCategory
+  } = useCreateOperations({
+    creatorId,
+    onFilesChanged,
+    setAvailableFolders,
+    setAvailableCategories,
+    setCurrentFolder,
+    setCurrentCategory
+  });
+  
+  const {
+    handleDeleteCategory,
+    handleRenameCategory
+  } = useCategoryOperations({
+    creatorId,
+    onFilesChanged,
+    setAvailableCategories,
+    setAvailableFolders,
+    setCurrentCategory
+  });
+  
+  const {
+    handleAddFilesToFolder,
+    handleRemoveFromFolder,
+    handleDeleteFolder,
+    handleRenameFolder
+  } = useFolderOperations({
+    creatorId,
+    onFilesChanged,
+    setAvailableFolders,
+    setCurrentFolder
+  });
+  
   return {
     // Create operations
-    handleCreateFolder: createOps.handleCreateFolder,
-    handleCreateCategory: createOps.handleCreateCategory,
-    
-    // Folder operations
-    handleAddFilesToFolder: folderOps.handleAddFilesToFolder,
-    handleRemoveFromFolder: folderOps.handleRemoveFromFolder,
-    handleDeleteFolder: folderOps.handleDeleteFolder,
-    handleRenameFolder: folderOps.handleRenameFolder,
+    handleCreateFolder,
+    handleCreateCategory,
     
     // Category operations
-    handleDeleteCategory: categoryOps.handleDeleteCategory,
-    handleRenameCategory: categoryOps.handleRenameCategory,
+    handleDeleteCategory,
+    handleRenameCategory,
     
-    // Common state
-    isProcessing
+    // Folder operations
+    handleAddFilesToFolder,
+    handleRemoveFromFolder,
+    handleDeleteFolder,
+    handleRenameFolder
   };
 };

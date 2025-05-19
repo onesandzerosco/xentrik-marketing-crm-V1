@@ -162,14 +162,26 @@ export const useFolderOperations = ({
     try {
       setIsProcessing(true);
       
+      // Get folder details to verify ownership
+      const { data: folderData, error: fetchFolderError } = await supabase
+        .from('file_folders')
+        .select('folder_id, creator_id')
+        .eq('folder_id', folderId)
+        .eq('creator_id', creatorId)
+        .single();
+      
+      if (fetchFolderError || !folderData) {
+        throw new Error(`Failed to fetch folder or folder not found: ${fetchFolderError?.message || 'Unknown error'}`);
+      }
+      
       // Get all files that are in this folder
-      const { data: filesInFolder, error: fetchError } = await supabase
+      const { data: filesInFolder, error: fetchFilesError } = await supabase
         .from('media')
         .select('id, folders')
         .contains('folders', [folderId]);
       
-      if (fetchError) {
-        throw new Error(`Failed to fetch files in folder: ${fetchError.message}`);
+      if (fetchFilesError) {
+        throw new Error(`Failed to fetch files in folder: ${fetchFilesError.message}`);
       }
       
       // For each file, update it to remove the folder reference
@@ -186,6 +198,17 @@ export const useFolderOperations = ({
         if (updateError) {
           console.error(`Error updating file ${file.id}:`, updateError);
         }
+      }
+      
+      // Delete the folder from the file_folders table
+      const { error: deleteFolderError } = await supabase
+        .from('file_folders')
+        .delete()
+        .eq('folder_id', folderId)
+        .eq('creator_id', creatorId);
+      
+      if (deleteFolderError) {
+        throw new Error(`Failed to delete folder: ${deleteFolderError.message}`);
       }
       
       // Update the available folders list
@@ -234,6 +257,17 @@ export const useFolderOperations = ({
     
     try {
       setIsProcessing(true);
+      
+      // Update the folder name in the file_folders table
+      const { error: updateError } = await supabase
+        .from('file_folders')
+        .update({ folder_name: newFolderName })
+        .eq('folder_id', folderId)
+        .eq('creator_id', creatorId);
+      
+      if (updateError) {
+        throw new Error(`Failed to rename folder: ${updateError.message}`);
+      }
       
       // Update the available folders list with the new name
       if (setAvailableFolders) {

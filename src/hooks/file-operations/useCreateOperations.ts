@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from 'uuid';
 import { Category, Folder } from '@/types/fileTypes';
 
 interface CreateOperationsProps {
@@ -39,15 +38,23 @@ export const useCreateOperations = ({
     try {
       setIsProcessing(true);
       
-      // Generate a folder ID that is URL-friendly
-      const folderId = folderName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') + '-' + uuidv4().slice(0, 8);
+      // Insert the new folder into the file_folders table
+      const { data: folderData, error: folderError } = await supabase
+        .from('file_folders')
+        .insert({
+          folder_name: folderName,
+          category_id: categoryId,
+          creator_id: creatorId
+        })
+        .select('folder_id, folder_name, category_id')
+        .single();
+      
+      if (folderError) {
+        throw new Error(`Failed to create folder: ${folderError.message}`);
+      }
       
       // Update all selected files to add them to this folder
       if (fileIds.length > 0) {
-        // Get existing folders for each file first then append the new folder
         for (const fileId of fileIds) {
           const { data: fileData, error: fetchError } = await supabase
             .from('media')
@@ -60,7 +67,7 @@ export const useCreateOperations = ({
             continue;
           }
           
-          const updatedFolders = [...(fileData.folders || []), folderId];
+          const updatedFolders = [...(fileData.folders || []), folderData.folder_id];
           
           const { error: updateError } = await supabase
             .from('media')
@@ -74,16 +81,20 @@ export const useCreateOperations = ({
       }
       
       // Add the new folder to the available folders
-      if (setAvailableFolders) {
+      if (setAvailableFolders && folderData) {
         setAvailableFolders((prevFolders) => [
           ...prevFolders,
-          { id: folderId, name: folderName, categoryId }
+          { 
+            id: folderData.folder_id, 
+            name: folderData.folder_name, 
+            categoryId: folderData.category_id 
+          }
         ]);
       }
       
       // Set the current folder to the newly created folder
-      if (setCurrentFolder) {
-        setCurrentFolder(folderId);
+      if (setCurrentFolder && folderData) {
+        setCurrentFolder(folderData.folder_id);
       }
       
       onFilesChanged();
@@ -121,36 +132,31 @@ export const useCreateOperations = ({
     try {
       setIsProcessing(true);
       
-      // Generate a unique ID for the category
-      const categoryId = categoryName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') + '-' + uuidv4().slice(0, 8);
-      
-      // Insert the new category into the database
-      const { error: categoryError } = await supabase
+      // Insert the new category into the file_categories table
+      const { data: categoryData, error: categoryError } = await supabase
         .from('file_categories')
         .insert({
-          id: categoryId,
-          name: categoryName,
-          creator_id: creatorId
-        });
+          category_name: categoryName,
+          creator: creatorId
+        })
+        .select('category_id, category_name')
+        .single();
       
       if (categoryError) {
         throw new Error(`Failed to create category: ${categoryError.message}`);
       }
       
       // Add the new category to the available categories
-      if (setAvailableCategories) {
+      if (setAvailableCategories && categoryData) {
         setAvailableCategories((prevCategories) => [
           ...prevCategories,
-          { id: categoryId, name: categoryName }
+          { id: categoryData.category_id, name: categoryData.category_name }
         ]);
       }
       
       // Set the current category to the newly created category
-      if (setCurrentCategory) {
-        setCurrentCategory(categoryId);
+      if (setCurrentCategory && categoryData) {
+        setCurrentCategory(categoryData.category_id);
       }
       
       toast({

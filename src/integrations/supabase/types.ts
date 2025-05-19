@@ -228,24 +228,56 @@ export type Database = {
       }
       file_categories: {
         Row: {
+          category_id: string
+          category_name: string
           created_at: string
-          creator_id: string
-          id: string
-          name: string
+          creator: string
         }
         Insert: {
+          category_id?: string
+          category_name: string
           created_at?: string
-          creator_id: string
-          id: string
-          name: string
+          creator: string
         }
         Update: {
+          category_id?: string
+          category_name?: string
           created_at?: string
-          creator_id?: string
-          id?: string
-          name?: string
+          creator?: string
         }
         Relationships: []
+      }
+      file_folders: {
+        Row: {
+          category_id: string
+          created_at: string
+          creator_id: string
+          folder_id: string
+          folder_name: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          creator_id: string
+          folder_id?: string
+          folder_name: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          creator_id?: string
+          folder_id?: string
+          folder_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_folders_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "file_categories"
+            referencedColumns: ["category_id"]
+          },
+        ]
       }
       file_tags: {
         Row: {
