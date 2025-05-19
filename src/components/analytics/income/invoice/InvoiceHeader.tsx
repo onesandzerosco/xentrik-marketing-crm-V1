@@ -51,17 +51,17 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="mb-0">Invoice Period</Label>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="w-full md:w-auto flex-1">
+              <div className="space-y-2">
+                <Label>Invoice Period</Label>
                 <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="xentrikPercentage" className="mb-0">Xentrik Percentage (%)</Label>
+            <div className="w-full md:w-auto md:max-w-[180px]">
+              <div className="space-y-2">
+                <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
                 <Input 
                   id="xentrikPercentage"
                   type="number"
@@ -70,14 +70,13 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
                   step={1}
                   value={settings.xentrikPercentage}
                   onChange={handlePercentageChange}
-                  className="w-24 ml-2"
                 />
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="mb-0">Due Date</Label>
+            <div className="w-full md:w-auto flex-1">
+              <div className="space-y-2">
+                <Label>Due Date</Label>
                 <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
               </div>
             </div>
