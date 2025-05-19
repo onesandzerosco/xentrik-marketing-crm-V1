@@ -32,6 +32,9 @@ interface FileExplorerContextProps {
   onCategoryChange: (categoryId: string | null) => void;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onDeleteCategory: (categoryId: string) => Promise<void>;
+  onCreateCategory: (categoryName: string) => Promise<void>;
+  onRenameFolder: (folderId: string, newName: string) => Promise<void>;
+  onRenameCategory: (categoryId: string, newName: string) => Promise<void>;
   
   // UI state
   viewMode: 'grid' | 'list';
