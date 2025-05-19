@@ -1,4 +1,3 @@
-
 import { Creator, EngagementStats } from "../../types";
 
 // Mock data for initial creators
@@ -6,14 +5,18 @@ export const initialCreators: Creator[] = [
   {
     id: "1",
     name: "Oliver",
+    email: "",
     profileImage: "/avatar1.png",
     gender: "Male",
     team: "A Team",
     creatorType: "Real",
     socialLinks: {
       instagram: "https://instagram.com",
+      tiktok: "",
       twitter: "https://twitter.com",
       reddit: "https://reddit.com",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["Male", "A Team"],
     needsReview: true,
@@ -22,6 +25,7 @@ export const initialCreators: Creator[] = [
   {
     id: "2",
     name: "Janas",
+    email: "",
     profileImage: "/avatar2.png",
     gender: "Female",
     team: "B Team",
@@ -30,6 +34,9 @@ export const initialCreators: Creator[] = [
       instagram: "https://instagram.com",
       tiktok: "https://tiktok.com",
       twitter: "https://twitter.com",
+      reddit: "",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["Female", "B Team"],
     needsReview: false,
@@ -38,13 +45,18 @@ export const initialCreators: Creator[] = [
   {
     id: "3",
     name: "Frans",
+    email: "",
     profileImage: "/avatar3.png",
     gender: "Trans",
     team: "C Team",
     creatorType: "Real",
     socialLinks: {
       instagram: "https://instagram.com",
+      tiktok: "",
       twitter: "https://twitter.com",
+      reddit: "",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["Trans", "C Team"],
     active: true,
@@ -52,6 +64,7 @@ export const initialCreators: Creator[] = [
   {
     id: "4",
     name: "Jorelan",
+    email: "",
     profileImage: "/avatar4.png",
     gender: "Female",
     team: "B Team",
@@ -60,6 +73,9 @@ export const initialCreators: Creator[] = [
       instagram: "https://instagram.com",
       tiktok: "https://tiktok.com",
       twitter: "https://twitter.com",
+      reddit: "",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["AI", "B Team"],
     active: true,
@@ -67,13 +83,18 @@ export const initialCreators: Creator[] = [
   {
     id: "5",
     name: "Fremay",
+    email: "",
     profileImage: "/avatar5.png",
     gender: "Male",
     team: "A Team",
     creatorType: "AI",
     socialLinks: {
       instagram: "https://instagram.com",
+      tiktok: "",
       twitter: "https://twitter.com",
+      reddit: "",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["AI", "A Team"],
     active: true,
@@ -81,14 +102,18 @@ export const initialCreators: Creator[] = [
   {
     id: "6",
     name: "Tremt",
+    email: "",
     profileImage: "/avatar6.png",
     gender: "Male",
     team: "A Team",
     creatorType: "AI",
     socialLinks: {
       instagram: "https://instagram.com",
-      tiktok: "https://tiktok.com",
+      tiktok: "",
       twitter: "https://twitter.com",
+      reddit: "",
+      chaturbate: "",
+      youtube: "",
     },
     tags: ["AI", "A Team"],
     active: true,

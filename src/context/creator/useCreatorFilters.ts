@@ -1,57 +1,80 @@
 
-import { useCallback } from "react";
 import { Creator } from "@/types";
 
 export const useCreatorFilters = (creators: Creator[]) => {
-  const filterCreators = useCallback((filters: { 
-    gender?: string[]; 
-    team?: string[]; 
-    creatorType?: string[]; 
+  const filterCreators = (filters: {
+    gender?: string[];
+    team?: string[];
+    creatorType?: string[];
     reviewStatus?: string[];
     searchQuery?: string;
   }) => {
     return creators.filter((creator) => {
-      // Only show active creators (explicitly set to true)
+      // Filter by active status (always show only active creators)
       if (creator.active === false) {
         return false;
       }
-      
-      let genderMatch = true;
-      let teamMatch = true;
-      let creatorTypeMatch = true;
-      let reviewStatusMatch = true;
-      let searchMatch = true;
 
-      if (filters.gender && filters.gender.length > 0) {
-        genderMatch = filters.gender.includes(creator.gender);
+      // Filter by gender
+      if (
+        filters.gender &&
+        filters.gender.length > 0 &&
+        !filters.gender.includes(creator.gender)
+      ) {
+        return false;
       }
 
-      if (filters.team && filters.team.length > 0) {
-        teamMatch = filters.team.includes(creator.team);
+      // Filter by team
+      if (
+        filters.team &&
+        filters.team.length > 0 &&
+        !filters.team.includes(creator.team)
+      ) {
+        return false;
       }
 
-      if (filters.creatorType && filters.creatorType.length > 0) {
-        creatorTypeMatch = filters.creatorType.includes(creator.creatorType);
+      // Filter by creator type
+      if (
+        filters.creatorType &&
+        filters.creatorType.length > 0 &&
+        !filters.creatorType.includes(creator.creatorType)
+      ) {
+        return false;
       }
 
+      // Filter by review status
       if (filters.reviewStatus && filters.reviewStatus.length > 0) {
-        const isInReview = creator.needsReview === true;
-        reviewStatusMatch = filters.reviewStatus.includes('review') ? isInReview : !isInReview;
-      }
-      
-      if (filters.searchQuery && filters.searchQuery.trim() !== '') {
-        const searchLower = filters.searchQuery.toLowerCase().trim();
-        searchMatch = 
-          ((creator.name?.toLowerCase() || '').includes(searchLower)) || 
-          ((creator.email?.toLowerCase() || '').includes(searchLower)) ||
-          ((creator.telegramUsername?.toLowerCase() || '').includes(searchLower)) ||
-          ((creator.whatsappNumber?.toLowerCase() || '').includes(searchLower)) ||
-          ((creator.id?.toLowerCase() || '').includes(searchLower));
+        const needsReview = creator.needsReview === true;
+        if (
+          (filters.reviewStatus.includes("Needs Review") && !needsReview) ||
+          (filters.reviewStatus.includes("Reviewed") && needsReview)
+        ) {
+          return false;
+        }
       }
 
-      return genderMatch && teamMatch && creatorTypeMatch && reviewStatusMatch && searchMatch;
+      // Filter by search query
+      if (filters.searchQuery && filters.searchQuery.trim() !== "") {
+        const query = filters.searchQuery.toLowerCase();
+        const matchName = creator.name.toLowerCase().includes(query);
+        const matchTelegram = creator.telegramUsername 
+          ? creator.telegramUsername.toLowerCase().includes(query)
+          : false;
+        
+        // Match by tags if available
+        const matchTags = creator.tags 
+          ? creator.tags.some(tag => tag.toLowerCase().includes(query))
+          : false;
+          
+        if (!matchName && !matchTelegram && !matchTags) {
+          return false;
+        }
+      }
+
+      // Show this creator if it passed all filters
+      return true;
     });
-  }, [creators]);
+  };
 
   return { filterCreators };
 };

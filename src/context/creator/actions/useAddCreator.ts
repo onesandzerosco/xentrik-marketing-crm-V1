@@ -1,3 +1,4 @@
+
 import { Creator } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
@@ -115,8 +116,8 @@ export const useAddCreator = (
           creator_id: newCreator.id,
           ...Object.keys(creator.socialLinks).reduce((acc, key) => {
             // Only include non-empty values
-            if (creator.socialLinks[key]) {
-              acc[key] = creator.socialLinks[key];
+            if (creator.socialLinks[key as keyof typeof creator.socialLinks]) {
+              acc[key] = creator.socialLinks[key as keyof typeof creator.socialLinks];
             }
             return acc;
           }, {} as Record<string, string>)
@@ -178,7 +179,14 @@ export const useAddCreator = (
         gender: creator.gender,
         team: creator.team,
         creatorType: creator.creatorType,
-        socialLinks: creator.socialLinks || {},
+        socialLinks: {
+          instagram: creator.socialLinks?.instagram || '',
+          tiktok: creator.socialLinks?.tiktok || '',
+          twitter: creator.socialLinks?.twitter || '',
+          reddit: creator.socialLinks?.reddit || '',
+          chaturbate: creator.socialLinks?.chaturbate || '',
+          youtube: creator.socialLinks?.youtube || '',
+        },
         tags: creator.tags || [],
         assignedTeamMembers: [],
         needsReview: creator.needsReview !== undefined ? creator.needsReview : false,

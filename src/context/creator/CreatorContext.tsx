@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Creator } from "@/types";
 import { useActivities } from "../ActivityContext";
@@ -85,10 +84,17 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           name: creator.name,
           email: creator.email || '',
           profileImage: creator.profile_image || '',
-          gender: genderValue,
-          team: creator.team,
-          creatorType: creator.creator_type,
-          socialLinks: formattedSocialLinks,
+          gender: genderValue as "Male" | "Female" | "Trans",
+          team: creator.team as "A Team" | "B Team" | "C Team",
+          creatorType: creator.creator_type as "Real" | "AI",
+          socialLinks: {
+            instagram: formattedSocialLinks.instagram || '',
+            tiktok: formattedSocialLinks.tiktok || '',
+            twitter: formattedSocialLinks.twitter || '',
+            reddit: formattedSocialLinks.reddit || '',
+            chaturbate: formattedSocialLinks.chaturbate || '',
+            youtube: formattedSocialLinks.youtube || '',
+          },
           tags: creator.creator_tags?.map(t => t.tag) || [],
           assignedTeamMembers: [],
           needsReview: creator.needs_review || false,
