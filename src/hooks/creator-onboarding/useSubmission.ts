@@ -35,11 +35,19 @@ export function useSubmission() {
       // Create new creator object
       const newCreator = {
         name: formState.name,
+        email: "", // Add empty string email to satisfy TypeScript
         profileImage: formState.profileImage || '',
         gender: formState.gender,
         team: formState.team,
         creatorType: formState.creatorType,
-        socialLinks,
+        socialLinks: {
+          instagram: socialLinks.instagram || "",
+          tiktok: socialLinks.tiktok || "",
+          twitter: socialLinks.twitter || "",
+          reddit: socialLinks.reddit || "",
+          chaturbate: socialLinks.chaturbate || "",
+          youtube: socialLinks.youtube
+        },
         tags: [formState.gender, formState.team, formState.creatorType], // Default tags
         needsReview: false, // Explicitly set to false
         active: true, // Add required active property

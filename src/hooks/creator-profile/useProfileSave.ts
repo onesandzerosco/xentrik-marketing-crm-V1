@@ -3,7 +3,6 @@ import { Creator } from "@/types";
 import { useCreators } from "@/context/creator";
 import { useToast } from "@/hooks/use-toast";
 import { CreatorProfileState } from "./types";
-import { Employee } from "@/types/employee";
 
 export function useProfileSave(creator: Creator | null | undefined) {
   const { updateCreator } = useCreators();
@@ -29,22 +28,24 @@ export function useProfileSave(creator: Creator | null | undefined) {
     
     console.log("Saving creator profile with state:", state);
     
-    // Create socialLinks object from state
-    const socialLinksObj: Record<string, string | undefined> = {
-      instagram: state.instagram || undefined,
-      tiktok: state.tiktok || undefined,
-      twitter: state.twitter || undefined,
-      reddit: state.reddit || undefined,
-      chaturbate: state.chaturbate || undefined,
-      youtube: state.youtube || undefined,
+    // Build properly typed socialLinks object
+    const socialLinks = {
+      instagram: state.instagram || "",
+      tiktok: state.tiktok || "",
+      twitter: state.twitter || "",
+      reddit: state.reddit || "",
+      chaturbate: state.chaturbate || "",
+      youtube: state.youtube
     };
     
-    // Add custom social links
-    state.customSocialLinks.forEach(link => {
-      if (link.url) {
-        socialLinksObj[link.name.toLowerCase()] = link.url;
-      }
-    });
+    // Add custom social links if any
+    if (state.customSocialLinks && state.customSocialLinks.length > 0) {
+      state.customSocialLinks.forEach(link => {
+        if (link.url) {
+          (socialLinks as any)[link.name.toLowerCase()] = link.url;
+        }
+      });
+    }
     
     const assignedTeamMembers = state.assignedMembers.map(member => member.id);
     
@@ -57,7 +58,7 @@ export function useProfileSave(creator: Creator | null | undefined) {
       profileImage: state.profileImage,
       telegramUsername: state.telegramUsername || undefined,
       whatsappNumber: state.whatsappNumber || undefined,
-      socialLinks: socialLinksObj,
+      socialLinks: socialLinks,
       tags: [state.gender, state.team, state.creatorType],
       needsReview: state.needsReview,
       assignedTeamMembers,

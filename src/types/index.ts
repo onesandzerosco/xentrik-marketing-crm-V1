@@ -2,7 +2,7 @@
 export interface Creator {
   id: string;
   name: string;
-  email: string;
+  email?: string; // Make email optional
   profileImage: string;
   gender: Gender;
   team: Team;
