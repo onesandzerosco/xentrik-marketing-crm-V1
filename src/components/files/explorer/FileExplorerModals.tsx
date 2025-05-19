@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Category, Folder } from '@/types/fileTypes';
-import { CreateFolderModal, AddToFolderModal } from './modals/FolderModals';
+import { AddToFolderModal } from './AddToFolderModal';
+import { CreateFolderModal } from './modals/FolderModals';
 import { AddTagModal } from './modals/TagModals';
 import { FileTag } from '@/hooks/useFileTags';
 import { CreatorFileType } from '@/types/fileTypes';
@@ -32,6 +33,7 @@ interface FileExplorerModalsProps {
   onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
   handleCreateNewFolder: () => void;
   singleFileForTagging: CreatorFileType | null;
+  isTagsLoading?: boolean;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
@@ -59,7 +61,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   handleAddToFolderSubmit,
   onAddFilesToFolder,
   handleCreateNewFolder,
-  singleFileForTagging
+  singleFileForTagging,
+  isTagsLoading = false
 }) => {
   // Calculate effective file count for the tag modal
   const effectiveFileCount = singleFileForTagging ? 1 : selectedFileIds.length;
@@ -70,15 +73,15 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <AddToFolderModal
         isOpen={isAddToFolderModalOpen}
         onOpenChange={setIsAddToFolderModalOpen}
-        selectedFileIds={selectedFileIds}
-        customFolders={customFolders}
-        categories={categories}
         targetFolderId={targetFolderId}
         setTargetFolderId={setTargetFolderId}
         targetCategoryId={targetCategoryId}
         setTargetCategoryId={setTargetCategoryId}
-        onCreateFolder={handleCreateNewFolder}
-        onSubmit={handleAddToFolderSubmit}
+        numSelectedFiles={selectedFileIds.length}
+        customFolders={customFolders}
+        categories={categories}
+        handleSubmit={handleAddToFolderSubmit}
+        onCreateNewFolder={handleCreateNewFolder}
       />
       
       {/* Add tag modal */}
@@ -90,6 +93,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onTagSelect={onTagSelect}
         onTagCreate={onTagCreate}
         singleFileName={singleFileForTagging?.name}
+        isLoading={isTagsLoading}
       />
       
       {/* Create folder modal */}

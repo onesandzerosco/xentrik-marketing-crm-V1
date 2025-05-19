@@ -35,6 +35,7 @@ interface TagSelectorProps {
   onTagCreate?: (name: string) => Promise<FileTag>;
   disabled?: boolean;
   variant?: 'default' | 'compact';
+  isLoading?: boolean;
 }
 
 const tagColors: Record<string, string> = {
@@ -54,37 +55,43 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   onTagCreate,
   disabled = false,
   variant = 'default',
+  isLoading = false,
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const handleCreateTag = async () => {
     if (newTagName.trim() && onTagCreate) {
-      await onTagCreate(newTagName);
-      setNewTagName('');
-      setIsDialogOpen(false);
+      try {
+        await onTagCreate(newTagName);
+        setNewTagName('');
+        setIsDialogOpen(false);
+      } catch (error) {
+        console.error('Error creating tag:', error);
+      }
     }
   };
 
   return (
-    <Popover>
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
           size={variant === 'compact' ? 'sm' : 'default'} 
           className="border-dashed flex gap-2" 
-          disabled={disabled}
+          disabled={disabled || isLoading}
         >
           <Tag className="h-4 w-4" />
-          <span>Tags</span>
-          {selectedTags.length > 0 && (
+          <span>{isLoading ? 'Loading tags...' : 'Tags'}</span>
+          {selectedTags.length > 0 && !isLoading && (
             <Badge variant="secondary" className="ml-1 px-1 font-normal">
               {selectedTags.length}
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="p-0" align="start">
+      <PopoverContent className="p-0" align="start" side="bottom" sideOffset={5}>
         <Command>
           <CommandInput placeholder="Search tags..." />
           <CommandList>
@@ -93,7 +100,10 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               {tags.map(tag => (
                 <CommandItem
                   key={tag.id}
-                  onSelect={() => onTagSelect(tag.id)}
+                  onSelect={() => {
+                    onTagSelect(tag.id);
+                    // Don't close the popover so users can select multiple tags
+                  }}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -145,6 +155,22 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+              </CommandGroup>
+            )}
+            {selectedTags.length > 0 && (
+              <CommandGroup>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-sm pl-2 text-destructive"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTags([]);
+                    setIsPopoverOpen(false);
+                  }}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear all tags
+                </Button>
               </CommandGroup>
             )}
           </CommandList>
