@@ -53,26 +53,33 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Invoice Period</Label>
-              <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
+              <div className="flex items-center justify-between">
+                <Label className="mb-0">Invoice Period</Label>
+                <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
-              <Input 
-                id="xentrikPercentage"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={settings.xentrikPercentage}
-                onChange={handlePercentageChange}
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="xentrikPercentage" className="mb-0">Xentrik Percentage (%)</Label>
+                <Input 
+                  id="xentrikPercentage"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={settings.xentrikPercentage}
+                  onChange={handlePercentageChange}
+                  className="w-24 ml-2"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label>Due Date</Label>
-              <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
+              <div className="flex items-center justify-between">
+                <Label className="mb-0">Due Date</Label>
+                <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
+              </div>
             </div>
           </div>
         </div>
