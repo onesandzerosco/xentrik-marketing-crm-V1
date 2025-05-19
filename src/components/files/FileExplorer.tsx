@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -73,7 +72,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
-  // Use the tag hooks
+  // Pass the creatorId to useFileTags
   const { 
     availableTags, 
     selectedTags,
@@ -83,7 +82,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     createTag,
     deleteTag,
     filterFilesByTags
-  } = useFileTags();
+  } = useFileTags({ creatorId });
   
   const { toast } = useToast();
   
@@ -145,7 +144,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRenameFolder,
     onRenameCategory
   });
-  
+
   // Apply tag filtering to the already filtered files
   const filteredFiles = filterFilesByTags(baseFilteredFiles, selectedTags);
   
@@ -223,7 +222,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onFileDeleted: handleFileDeleted,
         isLoading,
         viewMode,
-        setViewMode, // Added missing prop
+        setViewMode,
         isCreatorView,
         currentFolder,
         onFolderChange,

@@ -9,18 +9,29 @@ export interface FileTag {
   color: string;
 }
 
-export const useFileTags = () => {
+interface UseFileTagsProps {
+  creatorId?: string;
+}
+
+export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const [availableTags, setAvailableTags] = useState<FileTag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Fetch tags from the database
+  // Fetch tags from the database, filtered by creator if specified
   const fetchTags = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('file_tags')
         .select('id, tag_name, creator');
+      
+      // If a creator ID is provided, filter tags by that creator
+      if (creatorId) {
+        query = query.eq('creator', creatorId);
+      }
+        
+      const { data, error } = await query;
         
       if (error) {
         console.error('Error fetching tags:', error);
@@ -44,7 +55,7 @@ export const useFileTags = () => {
   
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [creatorId]); // Re-fetch tags when creator ID changes
   
   // Simple function to assign colors based on tag name
   const getTagColor = (tagName: string): string => {
@@ -117,11 +128,12 @@ export const useFileTags = () => {
     if (!name.trim()) return Promise.reject(new Error('Tag name cannot be empty'));
     
     try {
+      // Create tag with the current creator ID if provided
       const { data, error } = await supabase
         .from('file_tags')
         .insert({
           tag_name: name,
-          creator: 'system' // This would ideally be the current user ID
+          creator: creatorId || 'system' // Use creatorId if available, otherwise fall back to 'system'
         })
         .select('id, tag_name')
         .single();

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -186,8 +185,8 @@ const CreatorFiles = () => {
   return (
     <FileExplorer 
       files={filteredFiles}
-      creatorName={creator.name}
-      creatorId={creator.id}
+      creatorName={creator?.name || ''}
+      creatorId={creator?.id || ''}
       isLoading={isLoading}
       onRefresh={refetch}
       onFolderChange={setCurrentFolder}
