@@ -60,7 +60,7 @@ const CreatorHeader: React.FC<CreatorHeaderProps> = ({
           {isAdmin && creatorId && (
             <>
               {showAnalytics && (
-                <Link to={`/creator-analytics/${creatorId}`}>
+                <Link to={`/creators/${creatorId}/analytics`}>
                   <Button variant="outline">
                     <LineChart className="h-4 w-4 mr-2" />
                     Analytics
