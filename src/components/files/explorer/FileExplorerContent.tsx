@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -6,9 +7,6 @@ import { FilterBar } from '../FilterBar';
 import { CreatorFileType } from '@/types/fileTypes';
 import { FileTag } from '@/hooks/useFileTags';
 import { FileGridContainer } from '../grid/FileGridContainer';
-import { EmptyState } from '../EmptyState';
-import { EmptyFoldersState } from './EmptyFoldersState';
-import { useFileExplorerContext } from './context/FileExplorerContext';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -67,15 +65,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   availableTags = [],
   onTagCreate
 }) => {
-  const { availableFolders: availableFoldersContext, currentCategory: currentCategoryContext } = useFileExplorerContext();
-  
-  // Check if the current category has any folders
-  const hasNoFolders = currentCategory && availableFoldersContext.filter(folder => 
-    folder.categoryId === currentCategory && 
-    folder.id !== 'all' && 
-    folder.id !== 'unsorted'
-  ).length === 0;
-  
   return (
     <div className="flex-1 overflow-hidden">
       <div className="space-y-4">
@@ -130,15 +119,13 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             <p className="mt-2 text-muted-foreground">Loading files...</p>
           </div>
-        ) : hasNoFolders && currentCategory ? (
-          <EmptyFoldersState onCreateFolder={onCreateFolder || (() => {})} />
         ) : filteredFiles.length === 0 ? (
-          <EmptyState 
-            isFiltered={searchQuery !== ''} 
-            isCreatorView={isCreatorView}
-            onUploadClick={onCreateFolder}
-            currentFolder={currentFolder}
-          />
+          <div className="flex flex-col items-center justify-center py-12 space-y-2">
+            <p className="text-muted-foreground">No files found</p>
+            {onCreateFolder && (
+              <Button onClick={onCreateFolder}>Create Folder</Button>
+            )}
+          </div>
         ) : (
           viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
