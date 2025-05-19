@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { AuthProvider } from './context/AuthContext';
@@ -75,6 +75,13 @@ function App() {
   );
 }
 
+// Create a redirect component that extracts the ID from the URL
+const CreatorAnalyticsRedirect = () => {
+  const location = useLocation();
+  const id = location.pathname.split('/').pop();
+  return <Navigate to={`/creators/${id}/analytics`} replace />;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -111,7 +118,7 @@ const AppRoutes = () => {
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       
       {/* Add a redirect for the old route pattern */}
-      <Route path="/creator-analytics/:id" element={<Navigate to={location => `/creators/${location.pathname.split('/').pop()}/analytics`} />} />
+      <Route path="/creator-analytics/:id" element={<CreatorAnalyticsRedirect />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
