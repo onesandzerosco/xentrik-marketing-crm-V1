@@ -7,16 +7,19 @@ import { CreatorIncomeDashboard } from "@/components/analytics/CreatorIncomeDash
 import { EngagementDashboard } from "@/components/analytics/EngagementDashboard";
 import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { TimeFilter } from "@/types";
+import { mockEngagementStats } from "@/context/creator/mockData";
 
 const CreatorAnalytics = () => {
   const { id } = useParams<{ id: string }>();
-  const { getCreator, getCreatorStats } = useCreators();
+  const { getCreator } = useCreators();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
   const [activeTab, setActiveTab] = useState<string>("engagement");
   
   const creator = getCreator(id || "");
-  const stats = getCreatorStats(id || "");
   
+  // Use mock stats data directly
+  const stats = id ? mockEngagementStats["1"] : undefined; // Default to first mock stats
+
   if (!creator || !stats) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">

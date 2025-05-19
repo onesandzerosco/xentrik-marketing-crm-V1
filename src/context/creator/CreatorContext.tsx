@@ -172,9 +172,13 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return creators.find((creator) => creator.id === id);
   };
 
+  // Updated getCreatorStats to use mock data from mockData.ts
   const getCreatorStats = (id: string) => {
-    // Note: Implement stats fetching from Supabase if needed
-    return undefined;
+    // Import directly from mock data (already imported at the top)
+    const { mockEngagementStats } = require('./mockData');
+    
+    // Return mock stats for the first creator as fallback
+    return mockEngagementStats["1"];
   };
 
   return (

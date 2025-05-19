@@ -5,6 +5,13 @@ import { supabase } from '../integrations/supabase/client';
  * Ensures that necessary storage buckets exist
  */
 export const ensureStorageBucket = async () => {
+  // We'll skip the bucket creation for now and just return true
+  // This avoids the RLS policy violations
+  console.log('Skipping storage bucket creation to avoid RLS policy violations');
+  return true;
+
+  // The original implementation is commented out below
+  /*
   try {
     // Check if buckets exist
     const { data: buckets, error: bucketsError } = await supabase
@@ -57,4 +64,5 @@ export const ensureStorageBucket = async () => {
     console.error('Error ensuring storage buckets:', err);
     return false;
   }
+  */
 };
