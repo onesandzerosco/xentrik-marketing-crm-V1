@@ -329,10 +329,10 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setSelectedTypes,
     viewMode,
     setViewMode,
-    filteredFiles: basicFilteredFiles
+    filteredFiles
   } = useFileFilters({ files });
   
-  const finalFilteredFiles = filterFilesByTags(basicFilteredFiles, selectedTags);
+  const finalFilteredFiles = filterFilesByTags(filteredFiles, selectedTags);
   
   const handleEditNoteClick = (file: CreatorFileType) => {
     setFileToEdit(file);
@@ -590,7 +590,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           isLoading={isLoading}
           viewMode={viewMode}
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={(query: string) => setSearchQuery(query)}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           selectedTags={selectedTags}
@@ -642,7 +642,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleCreateNewFolder={handleCreateNewFolderFromModal}
       />
       
-      <Dialog open={showEditNoteModal} onOpenChange={() => setShowEditNoteModal(false)}>
+      <Dialog open={showEditNoteModal} onOpenChange={setShowEditNoteModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Note</DialogTitle>

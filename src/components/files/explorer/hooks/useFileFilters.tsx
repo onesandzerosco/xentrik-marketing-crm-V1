@@ -1,37 +1,48 @@
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 
-export const useFileFilters = ({ files }: { files: CreatorFileType[] }) => {
+interface UseFileFiltersProps {
+  files: CreatorFileType[];
+}
+
+export const useFileFilters = ({ files }: UseFileFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
-  // Filter files based on search, type filters, and tags
-  const filteredFiles = files.filter(file => {
-    // Search filter
-    const matchesSearch = searchQuery === '' || 
-      file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Apply filters to the files
+  const filteredFiles = useMemo(() => {
+    if (!files) return [];
     
-    // Type filter  
-    const matchesType = selectedTypes.length === 0 || selectedTypes.includes(file.type);
+    let filtered = [...files];
     
-    // Tag filter
-    const matchesTags = selectedTags.length === 0 || 
-      (file.tags && selectedTags.some(tag => file.tags?.includes(tag)));
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(file => 
+        file.name.toLowerCase().includes(query) ||
+        (file.description || '').toLowerCase().includes(query)
+      );
+    }
     
-    return matchesSearch && matchesType && matchesTags;
-  });
+    // Filter by file types
+    if (selectedTypes.length > 0) {
+      filtered = filtered.filter(file => {
+        // Extract general file type category
+        const fileType = file.type?.split('/')[0] || '';
+        return selectedTypes.includes(fileType);
+      });
+    }
+    
+    return filtered;
+  }, [files, searchQuery, selectedTypes]);
 
   return {
     searchQuery,
     setSearchQuery,
     selectedTypes,
     setSelectedTypes,
-    selectedTags,
-    setSelectedTags,
     viewMode,
     setViewMode,
     filteredFiles
