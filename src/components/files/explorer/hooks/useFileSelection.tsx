@@ -28,7 +28,7 @@ export const useFileSelection = () => {
     return selectedFileIds.includes(fileId);
   };
 
-  // Select all files
+  // Select all files - updated to accept fileIds parameter
   const selectAllFiles = (fileIds: string[]) => {
     setSelectedFileIds(fileIds);
   };

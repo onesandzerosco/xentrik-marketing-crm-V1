@@ -42,10 +42,7 @@ export const FileList: React.FC<FileListProps> = ({
     toggleFileSelection,
     selectAllFiles,
     clearSelection,
-  } = useFileSelection({
-    files,
-    onSelectFiles
-  });
+  } = useFileSelection(); // Fix: Remove the object argument that was causing TS2554 error
 
   // Placeholder function for file clicks (used for viewing/previewing)
   const handleFileClick = (file: CreatorFileType) => {
@@ -68,7 +65,7 @@ export const FileList: React.FC<FileListProps> = ({
                 checked={selectedFileIds.length === files.length && files.length > 0}
                 onChange={(e) => {
                   if (e.target.checked) {
-                    selectAllFiles();
+                    selectAllFiles(files.map(file => file.id)); // Fix: Add the required argument for selectAllFiles
                   } else {
                     clearSelection();
                   }
