@@ -10,6 +10,17 @@ import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
 import { useFileTags } from '@/hooks/useFileTags';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -78,6 +89,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   
   // State for single file tagging
   const [singleFileForTagging, setSingleFileForTagging] = useState<CreatorFileType | null>(null);
+  // State for tag modal
+  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
   
   const {
     selectedFileIds,
@@ -89,8 +102,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setTargetFolderId,
     targetCategoryId,
     setTargetCategoryId,
-    isAddTagModalOpen,
-    setIsAddTagModalOpen,
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -206,7 +217,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   return (
     <FileExplorerProvider
       value={{
-        files,
         filteredFiles,
         selectedFileIds,
         setSelectedFileIds,
@@ -242,7 +252,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onRenameCategory
       }}
     >
-      <FileExplorerLayout>
+      <div className="flex flex-col h-full">
         <FileExplorerHeader />
         
         <div className="flex gap-4 mt-4 flex-1 overflow-hidden">
@@ -291,7 +301,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             onTagCreate={handleCreateTag}
           />
         </div>
-      </FileExplorerLayout>
+      </div>
       
       <FileExplorerModals 
         selectedFileIds={selectedFileIds}

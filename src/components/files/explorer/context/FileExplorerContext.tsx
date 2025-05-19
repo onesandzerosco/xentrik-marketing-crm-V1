@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerContextProps {
   // File selection
@@ -11,34 +12,49 @@ interface FileExplorerContextProps {
   currentFolder: string;
   currentCategory: string | null;
   
+  // File data
+  filteredFiles: CreatorFileType[];
+  
   // Modal controls
-  handleAddToFolderClick: () => void;
-  handleInitiateNewCategory: () => void;
-  handleInitiateNewFolder: (categoryId?: string) => void;
-  handleDeleteCategoryClick: (categoryId: string) => void;
-  handleRenameCategoryClick: (categoryId: string, currentName: string) => void;
-  handleDeleteFolderClick: (folderId: string) => void;
-  handleRenameFolderClick: (folderId: string, currentName: string) => void;
+  onAddTagClick: () => void;
+  onAddTagToFile: (file: CreatorFileType) => void;
+  
+  // Tags
+  availableTags: FileTag[];
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
+  onTagSelect: (tagId: string) => void;
+  onTagCreate?: (name: string) => Promise<FileTag>;
   
   // Creator information
   creatorName: string;
   creatorId: string;
   isCreatorView: boolean;
   
-  // Folder operations
-  availableFolders: Folder[];
-  availableCategories: Category[];
-  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  onCategoryChange: (categoryId: string | null) => void;
-  onDeleteFolder: (folderId: string) => Promise<void>;
-  onDeleteCategory: (categoryId: string) => Promise<void>;
-  onCreateCategory: (categoryName: string) => Promise<void>;
-  onRenameFolder: (folderId: string, newName: string) => Promise<void>;
-  onRenameCategory: (categoryId: string, newName: string) => Promise<void>;
+  // File operations
+  onFileDeleted: (fileId: string) => void;
   
   // UI state
   viewMode: 'grid' | 'list';
   isLoading: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedTypes: string[];
+  setSelectedTypes: (types: string[]) => void;
+  
+  // Upload controls
+  isUploadModalOpen: boolean;
+  setIsUploadModalOpen: (isOpen: boolean) => void;
+  onUploadComplete: (fileIds?: string[]) => void;
+  onUploadStart?: () => void;
+  onRefresh: () => void;
+  
+  // Folder operations
+  onFolderChange: (folderId: string) => void;
+  onCategoryChange: (categoryId: string | null) => void;
+  onCreateCategory?: (categoryName: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newName: string) => Promise<void>;
+  onRenameCategory?: (categoryId: string, newName: string) => Promise<void>;
 }
 
 const FileExplorerContext = createContext<FileExplorerContextProps | undefined>(undefined);
