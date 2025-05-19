@@ -14,6 +14,7 @@ import Dashboard from './pages/Dashboard';
 import Creators from './pages/Creators';
 import CreatorProfile from './pages/CreatorProfile';
 import CreatorAnalytics from './pages/CreatorAnalytics';
+import CreatorInvoice from './pages/CreatorInvoice';
 import CreatorOnboarding from './pages/CreatorOnboarding';
 import AccountSettings from './pages/AccountSettings';
 import Messages from './pages/Messages';
@@ -75,11 +76,17 @@ function App() {
   );
 }
 
-// Create a redirect component that extracts the ID from the URL
+// Create redirect components that extract the ID from the URL
 const CreatorAnalyticsRedirect = () => {
   const location = useLocation();
   const id = location.pathname.split('/').pop();
   return <Navigate to={`/creators/${id}/analytics`} replace />;
+};
+
+const CreatorInvoicesRedirect = () => {
+  const location = useLocation();
+  const id = location.pathname.split('/').pop();
+  return <Navigate to={`/creators/${id}/invoices`} replace />;
 };
 
 const AppRoutes = () => {
@@ -101,6 +108,7 @@ const AppRoutes = () => {
       <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
       <Route path="/creators/:id" element={<ProtectedRoute><CreatorProfile /></ProtectedRoute>} />
       <Route path="/creators/:id/analytics" element={<ProtectedRoute><CreatorAnalytics /></ProtectedRoute>} />
+      <Route path="/creators/:id/invoices" element={<ProtectedRoute><CreatorInvoice /></ProtectedRoute>} />
       <Route path="/secure-logins" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
       <Route path="/secure-logins/:id" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
       <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
@@ -117,8 +125,9 @@ const AppRoutes = () => {
       {/* Public route for creator onboarding from invitation */}
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       
-      {/* Add a redirect for the old route pattern */}
+      {/* Add redirects for old route patterns */}
       <Route path="/creator-analytics/:id" element={<CreatorAnalyticsRedirect />} />
+      <Route path="/creator-invoices/:id" element={<CreatorInvoicesRedirect />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

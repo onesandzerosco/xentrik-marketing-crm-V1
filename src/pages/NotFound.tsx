@@ -29,6 +29,11 @@ const NotFound = () => {
               Try using /creators/:id/analytics instead of /creator-analytics/:id
             </span>
           )}
+          {location.pathname.includes('creator-invoices') && (
+            <span className="text-xs block mb-4 text-amber-400">
+              Try using /creators/:id/invoices instead of /creator-invoices/:id
+            </span>
+          )}
         </p>
         <div className="space-x-4">
           <Link to="/">
