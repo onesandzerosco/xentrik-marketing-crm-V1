@@ -63,6 +63,6 @@ const SharedFilesCreatorList: React.FC<SharedFilesCreatorListProps> = ({
       })}
     </div>
   );
-};
+}
 
 export default SharedFilesCreatorList;

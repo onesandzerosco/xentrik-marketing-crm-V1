@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, FileText, LogIn, Files, Share2, Loader2 } from 'lucide-react';
+import { LineChart, FileText, LogIn, Files, Share2, Loader2, DollarSign } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -178,6 +179,17 @@ const CreatorCard = ({
                       )}
                     </Button>
                   </Link>
+                  
+                  <Link to={`/creator-analytics/${creator.id}?tab=income`} onClick={(e) => e.stopPropagation()}>
+                    <Button 
+                      variant="ghost" 
+                      className="px-3 h-10 bg-green-600/80 text-white hover:opacity-90 transition-all"
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Income
+                    </Button>
+                  </Link>
+                  
                   {/* Show Share button for users with appropriate permissions */}
                   {canUpload && (
                     <Button 
