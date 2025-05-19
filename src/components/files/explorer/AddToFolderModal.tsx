@@ -102,7 +102,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
               <Select
                 value={targetFolderId}
                 onValueChange={setTargetFolderId}
-                disabled={!targetCategoryId || filteredFolders.length === 0}
+                disabled={!targetCategoryId}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={
@@ -153,3 +153,4 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
     </Dialog>
   );
 };
+

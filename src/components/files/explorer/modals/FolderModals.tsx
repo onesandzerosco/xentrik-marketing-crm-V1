@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { 
   Dialog, 
@@ -121,7 +122,12 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   // Filter folders by selected category
   const filteredFolders = targetCategoryId
     ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
-    : customFolders;
+    : [];
+    
+  // Reset target folder when category changes
+  useEffect(() => {
+    setTargetFolderId('');
+  }, [targetCategoryId, setTargetFolderId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -164,9 +170,14 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 <Select
                   value={targetFolderId}
                   onValueChange={setTargetFolderId}
+                  disabled={!targetCategoryId}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a folder" />
+                    <SelectValue placeholder={
+                      !targetCategoryId
+                        ? "Select a category first"
+                        : "Select a folder" 
+                    } />
                   </SelectTrigger>
                   <SelectContent>
                     {filteredFolders.map((folder) => (
@@ -176,7 +187,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                {filteredFolders.length === 0 && (
+                {targetCategoryId && filteredFolders.length === 0 && (
                   <p className="text-sm text-muted-foreground mt-2">
                     No folders available in this category.
                   </p>
@@ -186,7 +197,8 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
           </div>
           <DialogFooter className="flex justify-between">
             {onCreateFolder && (
-              <Button type="button" variant="outline" onClick={onCreateFolder}>
+              <Button type="button" variant="outline" onClick={onCreateFolder} 
+                     disabled={!targetCategoryId}>
                 Create New Folder
               </Button>
             )}
