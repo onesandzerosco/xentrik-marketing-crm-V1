@@ -69,7 +69,8 @@ const CreatorProfile = () => {
           creatorType: creator.creatorType,
           needsReview: formState.needsReview
         }}
-        showAnalytics={false}
+        showAnalytics={true}
+        creatorId={creator.id}
       />
 
       <div className="space-y-8 max-w-7xl mx-auto">
