@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, ChevronRight, Pencil, Trash2, PlusCircle, FolderPlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -49,11 +49,27 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
   const { canManageFolders } = useFilePermissions();
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   
-  const toggleCategory = (categoryId: string) => {
+  // Effect to auto-expand the current category
+  useEffect(() => {
+    if (currentCategory) {
+      setExpandedCategories(prev => ({
+        ...prev,
+        [currentCategory]: true
+      }));
+    }
+  }, [currentCategory]);
+  
+  const toggleCategory = (e: React.MouseEvent, categoryId: string) => {
+    e.stopPropagation();
     setExpandedCategories(prev => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
+    
+    // Only change the active category if we're expanding
+    if (!expandedCategories[categoryId]) {
+      onCategoryChange(categoryId);
+    }
   };
   
   const handleDeleteCategory = async (e: React.MouseEvent, categoryId: string) => {
@@ -168,17 +184,15 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
         {categories.map((category) => {
           const categoryFolders = folders.filter(folder => folder.categoryId === category.id);
           const isExpanded = expandedCategories[category.id] || false;
+          const hasNoFolders = categoryFolders.length === 0;
           
           return (
             <div key={category.id} className="mb-1">
               <div 
                 className={`flex items-center px-3 py-1.5 cursor-pointer group hover:bg-accent hover:text-accent-foreground rounded-md ${
-                  currentCategory === category.id ? 'bg-muted' : ''
+                  currentCategory === category.id && currentFolder === 'all' ? 'bg-muted' : ''
                 }`}
-                onClick={() => {
-                  toggleCategory(category.id);
-                  onCategoryChange(category.id);
-                }}
+                onClick={(e) => toggleCategory(e, category.id)}
               >
                 {isExpanded ? (
                   <ChevronDown className="h-4 w-4 mr-1 shrink-0" />
@@ -187,9 +201,18 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
                 )}
                 <span className="text-sm flex-1 truncate">{category.name}</span>
                 
-                {/* Category actions - now only Rename and Delete */}
+                {/* Category actions */}
                 {canManageFolders && (
                   <div className="opacity-0 group-hover:opacity-100 flex space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={(e) => handleNewFolderClick(e, category.id)}
+                      title="New folder"
+                    >
+                      <FolderPlus className="h-3.5 w-3.5" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -213,43 +236,59 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
               </div>
               
               {/* Folders under this category */}
-              {isExpanded && categoryFolders.length > 0 && (
+              {isExpanded && (
                 <div className="ml-6 mt-1 space-y-1">
-                  {categoryFolders.map((folder) => (
-                    <div 
-                      key={folder.id} 
-                      className={`flex items-center px-3 py-1.5 rounded-md cursor-pointer group hover:bg-accent hover:text-accent-foreground ${
-                        currentFolder === folder.id ? 'bg-secondary text-secondary-foreground' : ''
-                      }`}
-                      onClick={() => onFolderChange(folder.id)}
-                    >
-                      <span className="text-sm flex-1 truncate">{folder.name}</span>
-                      
-                      {/* Folder actions */}
+                  {hasNoFolders ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No folders yet
                       {canManageFolders && (
-                        <div className="opacity-0 group-hover:opacity-100 flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => handleRenameFolderClick(e, folder.id, folder.name)}
-                            title="Rename folder"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => handleDeleteFolder(e, folder.id)}
-                            title="Delete folder"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="px-0 h-auto text-xs ml-2 font-medium"
+                          onClick={(e) => handleNewFolderClick(e, category.id)}
+                        >
+                          Create folder
+                        </Button>
                       )}
                     </div>
-                  ))}
+                  ) : (
+                    categoryFolders.map((folder) => (
+                      <div 
+                        key={folder.id} 
+                        className={`flex items-center px-3 py-1.5 rounded-md cursor-pointer group hover:bg-accent hover:text-accent-foreground ${
+                          currentFolder === folder.id ? 'bg-secondary text-secondary-foreground' : ''
+                        }`}
+                        onClick={() => onFolderChange(folder.id)}
+                      >
+                        <span className="text-sm flex-1 truncate">{folder.name}</span>
+                        
+                        {/* Folder actions */}
+                        {canManageFolders && (
+                          <div className="opacity-0 group-hover:opacity-100 flex space-x-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={(e) => handleRenameFolderClick(e, folder.id, folder.name)}
+                              title="Rename folder"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={(e) => handleDeleteFolder(e, folder.id)}
+                              title="Delete folder"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>

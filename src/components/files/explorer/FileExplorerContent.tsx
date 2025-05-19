@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { FileList } from '../FileList';
 import { FilterBar } from '../FilterBar';
 import { CreatorFileType } from '@/types/fileTypes';
@@ -24,6 +24,7 @@ interface FileExplorerContentProps {
   currentFolder: string;
   currentCategory: string | null;
   onCreateFolder?: () => void;
+  onUploadClick?: () => void;
   availableFolders: Array<{ id: string; name: string; categoryId: string }>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote: (file: CreatorFileType) => void;
@@ -53,6 +54,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   currentFolder,
   currentCategory,
   onCreateFolder,
+  onUploadClick,
   availableFolders,
   onRemoveFromFolder,
   onEditNote,
@@ -122,7 +124,17 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         ) : filteredFiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-2">
             <p className="text-muted-foreground">No files found</p>
-            {onCreateFolder && (
+            {currentFolder !== 'all' && currentFolder !== 'unsorted' ? (
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-muted-foreground">This folder is empty</p>
+                {isCreatorView && onUploadClick && (
+                  <Button onClick={onUploadClick} className="mt-2">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload files
+                  </Button>
+                )}
+              </div>
+            ) : onCreateFolder && (
               <Button onClick={onCreateFolder}>Create Folder</Button>
             )}
           </div>

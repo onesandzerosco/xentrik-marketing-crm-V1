@@ -92,6 +92,7 @@ export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
           currentFolder={currentFolder}
           currentCategory={currentCategory}
           onCreateFolder={onCreateFolder}
+          onUploadClick={onUploadClick}
           availableFolders={availableFolders}
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
