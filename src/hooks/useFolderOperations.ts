@@ -115,36 +115,8 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
       });
       
       // If we found folder references that aren't in our database yet,
-      // create placeholder folders in the uncategorized category
+      // create placeholder folders and assign them to appropriate categories
       if (folderIds.size > 0) {
-        // Create an "Uncategorized" category if it doesn't exist
-        let uncategorizedId: string;
-        const existingUncategorized = availableCategories.find(cat => cat.name === "Uncategorized");
-        
-        if (existingUncategorized) {
-          uncategorizedId = existingUncategorized.id;
-        } else {
-          const { data: newCategory, error: createCategoryError } = await supabase
-            .from('file_categories')
-            .insert({
-              category_name: "Uncategorized",
-              creator: creatorId
-            })
-            .select('category_id')
-            .single();
-          
-          if (createCategoryError) {
-            console.error("Error creating uncategorized category:", createCategoryError);
-            return;
-          }
-          
-          uncategorizedId = newCategory.category_id;
-          
-          // Add to available categories
-          setAvailableCategories(prev => [...prev, { id: uncategorizedId, name: "Uncategorized" }]);
-        }
-        
-        // Create placeholder folders in the database
         for (const folderId of folderIds) {
           // Check if this folder exists in the file_folders table
           const { data: existingFolder, error: checkError } = await supabase
@@ -158,8 +130,11 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
             continue;
           }
           
-          // If folder doesn't exist, create it
-          if (!existingFolder) {
+          // If folder doesn't exist and we have at least one category, create it
+          if (!existingFolder && availableCategories.length > 0) {
+            // Get the first available category to assign the folder to
+            const firstCategoryId = availableCategories[0].id;
+            
             const folderName = folderId
               .replace(/-/g, ' ')
               .replace(/\b\w/g, char => char.toUpperCase());
@@ -169,7 +144,7 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
               .insert({
                 folder_id: folderId,
                 folder_name: folderName,
-                category_id: uncategorizedId,
+                category_id: firstCategoryId,
                 creator_id: creatorId
               });
             
@@ -179,10 +154,12 @@ export const useFolderOperations = ({ creatorId }: UseFolderOperationsProps) => 
               // Add to available folders
               setAvailableFolders(prev => [
                 ...prev.filter(f => f.id !== folderId), // Remove if exists
-                { id: folderId, name: folderName, categoryId: uncategorizedId }
+                { id: folderId, name: folderName, categoryId: firstCategoryId }
               ]);
             }
           }
+          // If no categories exist, we'll just skip creating folders
+          // as folders must belong to a category
         }
       }
     } catch (err) {
