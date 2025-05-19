@@ -4,7 +4,7 @@ import { DateRange } from 'react-day-picker';
 
 export interface InvoiceSettings {
   xentrikPercentage: number;
-  invoiceDate: Date;
+  invoiceDate: Date; // We'll keep this but auto-set it to today
   dueDate: Date;
   dateRange: DateRange | undefined;
 }

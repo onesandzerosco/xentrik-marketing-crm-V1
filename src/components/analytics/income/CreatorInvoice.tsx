@@ -18,10 +18,10 @@ export const CreatorInvoice = ({ creatorId, creatorName }: CreatorInvoiceProps) 
   // Get income data from the existing hook
   const { filteredData, setDate, date } = useIncomeData();
   
-  // Initial invoice settings
+  // Initial invoice settings with today's date automatically set
   const [invoiceSettings, setInvoiceSettings] = useState<InvoiceSettings>({
     xentrikPercentage: 20, // Default percentage
-    invoiceDate: new Date(), // Today
+    invoiceDate: new Date(), // Today's date is automatically set
     dueDate: addDays(new Date(), 30), // 30 days from today
     dateRange: {
       from: startOfMonth(new Date()),

@@ -24,15 +24,6 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
     }
   };
 
-  const handleInvoiceDateChange = (date: Date | undefined) => {
-    if (date) {
-      onSettingsChange({
-        ...settings,
-        invoiceDate: date
-      });
-    }
-  };
-
   const handleDueDateChange = (date: Date | undefined) => {
     if (date) {
       onSettingsChange({
@@ -55,6 +46,9 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <h2 className="text-2xl font-bold">{creatorName}'s Invoice</h2>
+            <div className="text-sm text-muted-foreground">
+              Invoice Date: {settings.invoiceDate.toLocaleDateString()}
+            </div>
           </div>
           
           <div className="grid grid-cols-1 gap-4">
@@ -63,7 +57,7 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
               <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
                 <Input 
@@ -75,11 +69,6 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
                   value={settings.xentrikPercentage}
                   onChange={handlePercentageChange}
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Invoice Date</Label>
-                <DatePicker date={settings.invoiceDate} onDateChange={handleInvoiceDateChange} />
               </div>
               
               <div className="space-y-2">
