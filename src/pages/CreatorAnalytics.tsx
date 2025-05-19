@@ -41,20 +41,20 @@ const CreatorAnalytics = () => {
             Income
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="engagement" className="mt-0">
+          <EngagementDashboard 
+            creator={creator} 
+            stats={stats} 
+            timeFilter={timeFilter} 
+            setTimeFilter={setTimeFilter}
+          />
+        </TabsContent>
+
+        <TabsContent value="income" className="mt-0">
+          <CreatorIncomeDashboard creatorId={id || ""} creatorName={creator.name} />
+        </TabsContent>
       </Tabs>
-
-      <TabsContent value="engagement" className="mt-0">
-        <EngagementDashboard 
-          creator={creator} 
-          stats={stats} 
-          timeFilter={timeFilter} 
-          setTimeFilter={setTimeFilter}
-        />
-      </TabsContent>
-
-      <TabsContent value="income" className="mt-0">
-        <CreatorIncomeDashboard creatorId={id || ""} creatorName={creator.name} />
-      </TabsContent>
     </div>
   );
 };
