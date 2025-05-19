@@ -3,7 +3,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download } from "lucide-react";
-import { BackButton } from "@/components/ui/back-button";
 
 interface AnalyticsHeaderProps {
   creatorId: string;
