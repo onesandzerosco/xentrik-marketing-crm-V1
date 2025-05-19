@@ -9,7 +9,7 @@ import { AnalyticsHeader } from "@/components/analytics/AnalyticsHeader";
 import { TimeFilter } from "@/types";
 
 const CreatorAnalytics = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { getCreator, getCreatorStats } = useCreators();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
   const [activeTab, setActiveTab] = useState<string>("engagement");
