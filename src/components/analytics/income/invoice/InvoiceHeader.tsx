@@ -51,34 +51,28 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
             </div>
           </div>
           
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="w-full md:w-auto flex-1">
-              <div className="space-y-2">
-                <Label>Invoice Period</Label>
-                <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Invoice Period</Label>
+              <DateRangeSelector date={settings.dateRange} setDate={handleDateRangeChange} />
             </div>
             
-            <div className="w-full md:w-auto md:max-w-[180px]">
-              <div className="space-y-2">
-                <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
-                <Input 
-                  id="xentrikPercentage"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={settings.xentrikPercentage}
-                  onChange={handlePercentageChange}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="xentrikPercentage">Xentrik Percentage (%)</Label>
+              <Input 
+                id="xentrikPercentage"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={settings.xentrikPercentage}
+                onChange={handlePercentageChange}
+              />
             </div>
             
-            <div className="w-full md:w-auto flex-1">
-              <div className="space-y-2">
-                <Label>Due Date</Label>
-                <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
-              </div>
+            <div className="space-y-2">
+              <Label>Due Date</Label>
+              <DatePicker date={settings.dueDate} onDateChange={handleDueDateChange} />
             </div>
           </div>
         </div>
