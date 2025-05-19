@@ -1,42 +1,230 @@
-
 import React, { useEffect } from 'react';
-import { CreateFolderModal } from '../CreateFolderModal';
-import { AddToFolderModal } from '../AddToFolderModal';
-import { DeleteModal } from '../DeleteModal';
-import { RenameModal } from '../RenameModal';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Category } from '@/types/fileTypes';
 
+// Create Folder Modal Interface and Component
+interface CreateFolderModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  folderName: string;
+  setFolderName: (name: string) => void;
+  categories: Category[];
+  selectedCategoryId: string;
+  setSelectedCategoryId: (categoryId: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
+  isOpen,
+  onOpenChange,
+  folderName,
+  setFolderName,
+  categories,
+  selectedCategoryId,
+  setSelectedCategoryId,
+  onSubmit
+}) => {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Folder</DialogTitle>
+          <DialogDescription>
+            Enter a name and select a category for your new folder.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="folderName" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="folderName"
+                value={folderName}
+                onChange={(e) => setFolderName(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter folder name"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <Select
+                value={selectedCategoryId}
+                onValueChange={setSelectedCategoryId}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={!folderName.trim()}>
+              Create Folder
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Add to Folder Modal Interface and Component
+interface AddToFolderModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedFileIds: string[];
+  customFolders: Array<{ id: string; name: string; categoryId: string }>;
+  categories: Category[];
+  targetFolderId: string;
+  setTargetFolderId: (folderId: string) => void;
+  targetCategoryId: string;
+  setTargetCategoryId: (categoryId: string) => void;
+  onCreateFolder?: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+}
+
+export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
+  isOpen,
+  onOpenChange,
+  selectedFileIds,
+  customFolders,
+  categories,
+  targetFolderId,
+  setTargetFolderId,
+  targetCategoryId,
+  setTargetCategoryId,
+  onCreateFolder,
+  onSubmit
+}) => {
+  // Filter folders by selected category
+  const filteredFolders = targetCategoryId
+    ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
+    : customFolders;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add to Folder</DialogTitle>
+          <DialogDescription>
+            {selectedFileIds.length > 0
+              ? `Add ${selectedFileIds.length} selected ${selectedFileIds.length === 1 ? 'file' : 'files'} to a folder`
+              : 'Select files first to add them to a folder'}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <Select
+                value={targetCategoryId}
+                onValueChange={setTargetCategoryId}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="folder" className="text-right">
+                Folder
+              </Label>
+              <div className="col-span-3">
+                <Select
+                  value={targetFolderId}
+                  onValueChange={setTargetFolderId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a folder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredFolders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {filteredFolders.length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    No folders available in this category.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            {onCreateFolder && (
+              <Button type="button" variant="outline" onClick={onCreateFolder}>
+                Create New Folder
+              </Button>
+            )}
+            <Button
+              type="submit"
+              disabled={!targetFolderId || selectedFileIds.length === 0}
+            >
+              Add to Folder
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 interface FolderModalsProps {
-  // Folder creation modal
+  // Common props
   isAddFolderModalOpen: boolean;
   setIsAddFolderModalOpen: (open: boolean) => void;
   newFolderName: string;
   setNewFolderName: (name: string) => void;
   selectedCategoryForNewFolder: string;
-  
-  // Add to folder modal
+  setSelectedCategoryForNewFolder: (categoryId: string) => void;
   isAddToFolderModalOpen: boolean;
   setIsAddToFolderModalOpen: (open: boolean) => void;
   targetFolderId: string;
   setTargetFolderId: (id: string) => void;
   targetCategoryId: string;
   setTargetCategoryId: (id: string) => void;
-  
-  // Folder deletion modal
   isDeleteFolderModalOpen: boolean;
   setIsDeleteFolderModalOpen: (open: boolean) => void;
-  
-  // Folder rename modal
   isRenameFolderModalOpen: boolean;
   setIsRenameFolderModalOpen: (open: boolean) => void;
   folderCurrentName: string;
-  
-  // Data
   selectedFileIds: string[];
   customFolders: Array<{ id: string; name: string; categoryId: string }>;
   categories: Category[];
-  
-  // Handlers
   handleCreateFolderSubmit: (e: React.FormEvent) => void;
   handleAddToFolderSubmit: (e: React.FormEvent) => void;
   handleDeleteFolder: (folderId: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => void;
@@ -50,6 +238,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   newFolderName,
   setNewFolderName,
   selectedCategoryForNewFolder,
+  setSelectedCategoryForNewFolder,
   isAddToFolderModalOpen,
   setIsAddToFolderModalOpen,
   targetFolderId,
@@ -94,11 +283,12 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
       <CreateFolderModal 
         isOpen={isAddFolderModalOpen}
         onOpenChange={setIsAddFolderModalOpen}
-        newFolderName={newFolderName}
-        setNewFolderName={setNewFolderName}
+        folderName={newFolderName}
+        setFolderName={setNewFolderName}
+        categories={categories}
         selectedCategoryId={selectedCategoryForNewFolder}
-        availableCategories={categories}
-        handleSubmit={handleCreateFolderSubmit}
+        setSelectedCategoryId={setSelectedCategoryForNewFolder}
+        onSubmit={handleCreateFolderSubmit}
       />
       
       {/* Add to Folder Modal */}
@@ -109,11 +299,11 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         setTargetFolderId={setTargetFolderId}
         targetCategoryId={targetCategoryId}
         setTargetCategoryId={setTargetCategoryId}
-        numSelectedFiles={selectedFileIds.length}
+        selectedFileIds={selectedFileIds}
         customFolders={customFolders}
         categories={categories}
-        handleSubmit={handleAddToFolderSubmit}
-        onCreateNewFolder={handleCreateNewFolder}
+        onSubmit={handleAddToFolderSubmit}
+        onCreateFolder={handleCreateNewFolder}
       />
       
       {/* Delete Folder Modal */}
@@ -142,4 +332,93 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
       />
     </>
   );
+};
+
+interface DeleteModalProps {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+}
+
+const DeleteModal: React.FC<DeleteModalProps> = ({
+    isOpen,
+    onOpenChange,
+    title,
+    description,
+    onConfirm
+}) => {
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>{description}</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <p>Are you sure you want to proceed?</p>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                    <Button type="button" variant="destructive" onClick={onConfirm}>
+                        Delete
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+interface RenameModalProps {
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
+    title: string;
+    currentName: string;
+    setNewName: (name: string) => void;
+    onConfirm: () => void;
+}
+
+const RenameModal: React.FC<RenameModalProps> = ({
+    isOpen,
+    onOpenChange,
+    title,
+    currentName,
+    setNewName,
+    onConfirm
+}) => {
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>Enter a new name.</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                            New Name
+                        </Label>
+                        <Input
+                            id="name"
+                            value={currentName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            className="col-span-3"
+                            placeholder="Enter new name"
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                        Cancel
+                    </Button>
+                    <Button type="button" onClick={onConfirm} disabled={!currentName.trim()}>
+                        Rename
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };

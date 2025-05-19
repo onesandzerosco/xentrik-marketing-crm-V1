@@ -99,7 +99,7 @@ export const FileList: React.FC<FileListProps> = ({
             onEditNote={onEditNote}
             onFileDeleted={onFileDeleted}
             onFilesChanged={() => {}}
-            onAddTagToFile={onAddTagToFile}
+            onAddTagToFile={onAddTagToFile ? () => onAddTagToFile(file) : undefined}
           />
         ))}
       </TableBody>

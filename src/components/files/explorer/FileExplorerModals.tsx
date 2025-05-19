@@ -1,9 +1,8 @@
 
 import React from 'react';
 import { Category, Folder } from '@/types/fileTypes';
-import { AddToFolderModal } from './modals/FolderModals';
+import { CreateFolderModal, AddToFolderModal } from './modals/FolderModals';
 import { AddTagModal } from './modals/TagModals';
-import { CreateFolderModal } from './modals/FolderModals';
 import { FileTag } from '@/hooks/useFileTags';
 import { CreatorFileType } from '@/types/fileTypes';
 
