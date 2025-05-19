@@ -110,6 +110,9 @@ const AppRoutes = () => {
       {/* Public route for creator onboarding from invitation */}
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       
+      {/* Add a redirect for the old route pattern */}
+      <Route path="/creator-analytics/:id" element={<Navigate to={location => `/creators/${location.pathname.split('/').pop()}/analytics`} />} />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
