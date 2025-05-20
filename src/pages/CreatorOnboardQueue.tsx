@@ -26,13 +26,22 @@ const CreatorOnboardQueue: React.FC = () => {
     formatDate
   } = useOnboardingSubmissions();
 
+  const handleDeleteWithRefresh = async (token: string) => {
+    await deleteSubmission(token);
+    // No need for additional fetchSubmissions since deleteSubmission updates the state
+  };
+
   const {
     acceptModalOpen,
     selectedSubmission,
     openAcceptModal,
     setAcceptModalOpen,
     handleAcceptSubmission
-  } = useAcceptSubmission(deleteSubmission, setProcessingTokens, fetchSubmissions);
+  } = useAcceptSubmission(
+    deleteSubmission,
+    setProcessingTokens,
+    fetchSubmissions
+  );
   
   // Only allow admins to access this page
   if (userRole !== "Admin") {
@@ -81,10 +90,7 @@ const CreatorOnboardQueue: React.FC = () => {
               processingTokens={processingTokens}
               formatDate={formatDate}
               togglePreview={togglePreview}
-              deleteSubmission={async (token) => {
-                await deleteSubmission(token);
-                // No need for additional fetchSubmissions since deleteSubmission updates the state
-              }}
+              deleteSubmission={handleDeleteWithRefresh}
               onAcceptClick={openAcceptModal}
             />
           )}
@@ -96,7 +102,11 @@ const CreatorOnboardQueue: React.FC = () => {
         <AcceptSubmissionModal
           isOpen={acceptModalOpen}
           onClose={() => setAcceptModalOpen(false)}
-          onAccept={handleAcceptSubmission}
+          onAccept={async (creatorData) => {
+            await handleAcceptSubmission(creatorData);
+            // Refresh the submissions list after successful handling
+            await fetchSubmissions();
+          }}
           defaultName={selectedSubmission.name}
           isLoading={processingTokens.includes(selectedSubmission.token)}
         />
