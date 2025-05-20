@@ -70,6 +70,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     return colors[hash % colors.length];
   };
   
+  // Function to add a tag to files
   const addTagToFiles = async (fileIds: string[], tagId: string) => {
     if (!fileIds.length || !tagId) return Promise.resolve();
     
@@ -110,6 +111,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     }
   };
   
+  // Function to remove a tag from files
   const removeTagFromFiles = async (fileIds: string[], tagId: string) => {
     if (!fileIds.length || !tagId) return Promise.resolve();
     
@@ -148,6 +150,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     }
   };
   
+  // Function to create a new tag
   const createTag = async (name: string, color: string = 'gray') => {
     if (!name.trim()) return Promise.reject(new Error('Tag name cannot be empty'));
     
@@ -182,6 +185,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     }
   };
   
+  // Function to delete a tag
   const deleteTag = async (tagId: string) => {
     try {
       const { error } = await supabase
@@ -203,26 +207,47 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     }
   };
   
+  // Function to filter files by tags
   const filterFilesByTags = (files: CreatorFileType[], tagIds: string[]) => {
     if (tagIds.length === 0) return files;
     
-    console.log('Filtering files by tags:', tagIds);
-    console.log('Files before filtering:', files.length);
+    // Output debugging information to the browser console
+    console.log('DEBUG TAG FILTERING:');
+    console.log('- Selected tag IDs:', tagIds);
+    console.log('- Files to filter:', files.length);
     
-    // Log each file's tags before filtering
-    files.forEach(file => {
-      console.log(`File ${file.name} has tags:`, file.tags || []);
+    // Check if files have tags property
+    const filesWithTags = files.filter(file => file.tags && file.tags.length > 0).length;
+    console.log('- Files with tags:', filesWithTags);
+    
+    // Log tag IDs for the first few files
+    const sampleFiles = files.slice(0, 3);
+    sampleFiles.forEach(file => {
+      console.log(`- Sample file "${file.name}" has tags:`, file.tags || []);
     });
     
     // Filter files that have at least ONE of the selected tags
     const filtered = files.filter(file => {
-      const fileTags = file.tags || [];
-      const hasMatchingTag = tagIds.some(tagId => fileTags.includes(tagId));
-      console.log(`File ${file.name} matches filter?`, hasMatchingTag);
+      if (!file.tags || file.tags.length === 0) {
+        return false;
+      }
+      
+      // Check if any of the file's tags match any of the selected tags
+      const hasMatchingTag = file.tags.some(fileTagId => 
+        tagIds.includes(fileTagId)
+      );
+      
       return hasMatchingTag;
     });
     
-    console.log('Files after filtering:', filtered.length);
+    console.log('- Files after filtering:', filtered.length);
+    
+    // Log the first few filtered files
+    const sampleFilteredFiles = filtered.slice(0, 3);
+    sampleFilteredFiles.forEach(file => {
+      console.log(`- Filtered file "${file.name}" with tags:`, file.tags);
+    });
+    
     return filtered;
   };
   
@@ -239,4 +264,3 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     fetchTags
   };
 };
-

@@ -50,6 +50,9 @@ export const useFilesFetching = ({
         // Get folder references from the new folders array
         const folderRefs = media.folders || [];
         
+        // Debug tag information
+        console.log(`File ${fileName} tags:`, media.tags);
+        
         return {
           id: media.id,
           name: fileName,
@@ -63,7 +66,8 @@ export const useFilesFetching = ({
           bucketPath: media.bucket_key,
           isNewlyUploaded,
           description: media.description, // Add description field to file object
-          thumbnail_url: media.thumbnail_url // Add thumbnail_url for videos
+          thumbnail_url: media.thumbnail_url, // Add thumbnail_url for videos
+          tags: media.tags || [] // Ensure tags are included
         } as CreatorFileType;
       }));
       

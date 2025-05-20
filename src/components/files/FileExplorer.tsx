@@ -146,18 +146,19 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRenameCategory
   });
 
-  // Add logging for debugging
-  console.log('Available files before filtering:', files.length);
-  console.log('Base filtered files (after type/search filtering):', baseFilteredFiles.length);
-  console.log('Selected tags for filtering:', selectedTags);
+  // Debug logging for tag filtering
+  console.log('TAG FILTERING DEBUG:');
+  console.log('- Available files count:', files.length);
+  console.log('- Base filtered files count (after search/type):', baseFilteredFiles.length);
+  console.log('- Selected tag IDs for filtering:', selectedTags);
   
-  // Some files may have undefined or null tags, add logging
+  // Check for files without tag information
   const filesWithoutTags = baseFilteredFiles.filter(file => !file.tags || file.tags.length === 0).length;
-  console.log('Files without tags:', filesWithoutTags);
+  console.log('- Files without tags:', filesWithoutTags);
   
   // Apply tag filtering to the already filtered files
   const filteredFiles = filterFilesByTags(baseFilteredFiles, selectedTags);
-  console.log('Final filtered files (after tag filtering):', filteredFiles.length);
+  console.log('- Final filtered files count (after tag filtering):', filteredFiles.length);
   
   // Handle tag selection
   const handleTagSelect = async (tagId: string) => {
@@ -173,6 +174,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           title: "Tag added",
           description: `Tag added to ${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}.`
         });
+        // Refresh the file list to show updated tags
+        onRefresh();
         // Don't close the modal, allow adding multiple tags
       } catch (error) {
         console.error('Error adding tag:', error);
@@ -184,7 +187,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
     } else {
       // If we're in the filter bar, we're toggling tag filters
-      console.log('Toggling tag filter:', tagId);
+      console.log('- Toggling tag filter:', tagId);
       setSelectedTags(prevTags => {
         if (prevTags.includes(tagId)) {
           return prevTags.filter(id => id !== tagId);
@@ -385,4 +388,3 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     </FileExplorerProvider>
   );
 };
-
