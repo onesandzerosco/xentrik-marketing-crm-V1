@@ -125,8 +125,9 @@ export const useOnboardingSubmissions = () => {
         description: "The onboarding submission has been deleted.",
       });
       
-      // Refresh the list by removing the deleted submission
+      // Update the local state by removing the deleted submission
       setSubmissions(prev => prev.filter(sub => sub.token !== token));
+      
     } catch (error) {
       console.error("Error deleting submission:", error);
       toast({

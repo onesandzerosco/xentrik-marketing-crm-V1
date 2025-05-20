@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
 import type { Database } from "@/integrations/supabase/types";
@@ -11,7 +11,8 @@ type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
-  setProcessingTokens: React.Dispatch<React.SetStateAction<string[]>>
+  setProcessingTokens: React.Dispatch<React.SetStateAction<string[]>>,
+  refreshSubmissions: () => Promise<void> // Add refreshSubmissions parameter
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
@@ -55,6 +56,9 @@ export const useAcceptSubmission = (
       
       // Close the modal
       setAcceptModalOpen(false);
+      
+      // Refresh the submissions list after successful acceptance
+      await refreshSubmissions();
       
     } catch (error) {
       console.error("Error accepting submission:", error);

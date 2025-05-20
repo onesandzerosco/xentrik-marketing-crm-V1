@@ -32,7 +32,7 @@ const CreatorOnboardQueue: React.FC = () => {
     openAcceptModal,
     setAcceptModalOpen,
     handleAcceptSubmission
-  } = useAcceptSubmission(deleteSubmission, setProcessingTokens);
+  } = useAcceptSubmission(deleteSubmission, setProcessingTokens, fetchSubmissions);
   
   // Only allow admins to access this page
   if (userRole !== "Admin") {
@@ -81,7 +81,10 @@ const CreatorOnboardQueue: React.FC = () => {
               processingTokens={processingTokens}
               formatDate={formatDate}
               togglePreview={togglePreview}
-              deleteSubmission={deleteSubmission}
+              deleteSubmission={async (token) => {
+                await deleteSubmission(token);
+                // No need for additional fetchSubmissions since deleteSubmission updates the state
+              }}
               onAcceptClick={openAcceptModal}
             />
           )}
