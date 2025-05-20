@@ -1,145 +1,178 @@
 
 import React from 'react';
-import { GridView } from './GridView';
-import { ListView } from './ListView';
-import { Skeleton } from "@/components/ui/skeleton";
-import { useFileExplorerContext } from './context/FileExplorerContext';
-import { UploadArea } from './UploadArea';
-import { Empty } from '@/components/ui/empty';
+import { Button } from "@/components/ui/button";
+import { Loader2, Upload } from "lucide-react";
+import { FileList } from '../FileList';
+import { FilterBar } from '../FilterBar';
+import { CreatorFileType } from '@/types/fileTypes';
+import { FileTag } from '@/hooks/useFileTags';
+import { FileGridContainer } from '../grid/FileGridContainer';
 
-export const FileExplorerContent = () => {
-  const {
-    filteredFiles,
-    selectedFileIds,
-    setSelectedFileIds,
-    viewMode,
-    isLoading,
-    availableTags,
-    isCreatorView,
-    onFileDeleted,
-    onAddTagToFile,
-    onUploadClick,
-    currentFolder,
-    currentCategory,
-    onCreateFolder,
-    onRefresh,
-    onRemoveFromFolder,
-    onEditNote,
-    searchQuery,
-    setSearchQuery,
-    selectedTypes,
-    setSelectedTypes,
-    selectedTags,
-    setSelectedTags,
-    availableTags: allAvailableTags,
-    onTagCreate,
-    onTagSelect,
-    onSearchChange
-  } = useFileExplorerContext();
-  
-  const handleFileClick = (fileId: string) => {
-    setSelectedFileIds(prev => {
-      if (prev.includes(fileId)) {
-        return prev.filter(id => id !== fileId);
-      } else {
-        return [...prev, fileId];
-      }
-    });
-  };
-  
-  const handleSelectAll = () => {
-    if (selectedFileIds.length === filteredFiles.length) {
-      setSelectedFileIds([]);
-    } else {
-      setSelectedFileIds(filteredFiles.map(file => file.id));
-    }
-  };
-  
-  // Helper function to convert tagId to tagName
-  const getTagNameById = (tagId: string): string => {
-    const tag = allAvailableTags.find(t => t.id === tagId);
-    return tag ? tag.name : tagId;
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 p-4">
-        <Skeleton className="h-12 w-full" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-  
-  if (filteredFiles.length === 0) {
-    return (
-      <div className="p-4">
-        <Empty 
-          label="No files found"
-          description="Upload files to get started"
-          onCreateFolder={onCreateFolder}
-          onUploadClick={onUploadClick}
-          currentFolder={currentFolder}
-          currentCategory={currentCategory}
-        />
-      </div>
-    );
-  }
-  
+interface FileExplorerContentProps {
+  isLoading: boolean;
+  filteredFiles: CreatorFileType[];
+  viewMode: 'grid' | 'list';
+  isCreatorView: boolean;
+  onFilesChanged: () => void;
+  onFileDeleted: (fileId: string) => void;
+  recentlyUploadedIds: string[];
+  selectedFileIds: string[];
+  setSelectedFileIds: (ids: string[]) => void;
+  onAddToFolderClick: () => void;
+  onAddTagClick?: () => void;
+  onAddTagToFile?: (file: CreatorFileType) => void;
+  currentFolder: string;
+  currentCategory: string | null;
+  onCreateFolder?: () => void;
+  onUploadClick?: () => void;
+  availableFolders: Array<{ id: string; name: string; categoryId: string }>;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote: (file: CreatorFileType) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  selectedTypes: string[];
+  setSelectedTypes: (types: string[]) => void;
+  selectedTags?: string[];
+  setSelectedTags?: (tags: string[]) => void;
+  availableTags?: FileTag[];
+  onTagCreate?: (name: string) => Promise<FileTag>;
+}
+
+export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
+  isLoading,
+  filteredFiles,
+  viewMode,
+  isCreatorView,
+  onFilesChanged,
+  onFileDeleted,
+  recentlyUploadedIds,
+  selectedFileIds,
+  setSelectedFileIds,
+  onAddToFolderClick,
+  onAddTagClick,
+  onAddTagToFile,
+  currentFolder,
+  currentCategory,
+  onCreateFolder,
+  onUploadClick,
+  availableFolders,
+  onRemoveFromFolder,
+  onEditNote,
+  searchQuery,
+  onSearchChange,
+  selectedTypes,
+  setSelectedTypes,
+  selectedTags = [],
+  setSelectedTags = () => {},
+  availableTags = [],
+  onTagCreate
+}) => {
   return (
-    <div className="flex-1 overflow-auto p-4">
-      {viewMode === 'grid' ? (
-        <GridView
-          files={filteredFiles}
-          selectedFileIds={selectedFileIds}
-          onFileClick={handleFileClick}
-          onSelectAll={handleSelectAll}
-          isCreatorView={isCreatorView}
-          onFileDeleted={onFileDeleted}
-          onAddTagToFile={onAddTagToFile}
-          availableTags={availableTags}
-          getTagNameById={getTagNameById}
-          onRefresh={onRefresh}
-          onRemoveFromFolder={onRemoveFromFolder}
-          onEditNote={onEditNote}
+    <div className="flex-1 overflow-hidden">
+      <div className="space-y-4">
+        <FilterBar
+          activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}
+          onFilterChange={(filter) => {
+            if (filter) {
+              setSelectedTypes([filter]);
+            } else {
+              setSelectedTypes([]);
+            }
+          }}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange || function(query: string) { setSearchQuery(query); }}
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
+          onSearchChange={onSearchChange}
+          availableTags={availableTags}
           selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          allAvailableTags={allAvailableTags}
+          onTagSelect={(tagId) => {
+            if (selectedTags.includes(tagId)) {
+              setSelectedTags(selectedTags.filter(id => id !== tagId));
+            } else {
+              setSelectedTags([...selectedTags, tagId]);
+            }
+          }}
           onTagCreate={onTagCreate}
         />
-      ) : (
-        <ListView
-          files={filteredFiles}
-          selectedFileIds={selectedFileIds}
-          onFileClick={handleFileClick}
-          onSelectAll={handleSelectAll}
-          isCreatorView={isCreatorView}
-          onFileDeleted={onFileDeleted}
-          onAddTagToFile={onAddTagToFile}
-          availableTags={availableTags}
-          getTagNameById={getTagNameById}
-          onRefresh={onRefresh}
-          onRemoveFromFolder={onRemoveFromFolder}
-          onEditNote={onEditNote}
-          searchQuery={searchQuery}
-          onSearchChange={onSearchChange || function(query: string) { setSearchQuery(query); }}
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
-          selectedTags={selectedTags}
-          setSelectedTags={setSelectedTags}
-          allAvailableTags={allAvailableTags}
-          onTagCreate={onTagCreate}
-        />
-      )}
-      
-      {onUploadClick && <UploadArea onUploadClick={onUploadClick} />}
+        
+        {selectedFileIds.length > 0 && isCreatorView && (
+          <div className="flex items-center space-x-2 p-2 bg-muted/40 rounded-md">
+            <span className="text-sm">{selectedFileIds.length} files selected</span>
+            <Button size="sm" onClick={onAddToFolderClick}>
+              Add to Folder
+            </Button>
+            {onAddTagClick && (
+              <Button size="sm" variant="outline" onClick={onAddTagClick}>
+                Add Tags
+              </Button>
+            )}
+            {currentFolder !== 'all' && currentFolder !== 'unsorted' && onRemoveFromFolder && (
+              <Button 
+                size="sm"
+                variant="destructive"
+                onClick={() => onRemoveFromFolder(selectedFileIds, currentFolder)}
+              >
+                Remove from Folder
+              </Button>
+            )}
+          </div>
+        )}
+        
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="mt-2 text-muted-foreground">Loading files...</p>
+          </div>
+        ) : filteredFiles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-2">
+            <p className="text-muted-foreground">No files found</p>
+            {currentFolder !== 'all' && currentFolder !== 'unsorted' ? (
+              <div className="flex flex-col items-center">
+                <p className="text-sm text-muted-foreground">This folder is empty</p>
+                {isCreatorView && onUploadClick && (
+                  <Button onClick={onUploadClick} className="mt-2">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload files
+                  </Button>
+                )}
+              </div>
+            ) : onCreateFolder && (
+              <Button onClick={onCreateFolder}>Create Folder</Button>
+            )}
+          </div>
+        ) : (
+          viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <FileGridContainer 
+                files={filteredFiles}
+                isCreatorView={isCreatorView}
+                onFilesChanged={onFilesChanged}
+                onFileDeleted={onFileDeleted}
+                recentlyUploadedIds={recentlyUploadedIds}
+                onSelectFiles={setSelectedFileIds}
+                onEditNote={onEditNote}
+                onAddTagToFile={onAddTagToFile}
+                currentFolder={currentFolder}
+                onRemoveFromFolder={onRemoveFromFolder}
+              />
+            </div>
+          ) : (
+            <FileList
+              files={filteredFiles}
+              isCreatorView={isCreatorView}
+              onFileDeleted={onFileDeleted}
+              recentlyUploadedIds={recentlyUploadedIds}
+              onSelectFiles={setSelectedFileIds} 
+              onAddToFolderClick={onAddToFolderClick}
+              currentFolder={currentFolder}
+              availableFolders={availableFolders}
+              onRemoveFromFolder={onRemoveFromFolder}
+              onEditNote={onEditNote}
+              onAddTagClick={onAddTagClick}
+              onAddTagToFile={onAddTagToFile}
+              viewMode={viewMode}
+            />
+          )
+        )}
+      </div>
     </div>
   );
 };

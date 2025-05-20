@@ -1,12 +1,12 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { FileTag } from '@/types/tagTypes';
+import { FileTag } from '@/hooks/useFileTags';
 
 interface FileExplorerContextProps {
   // File selection
   selectedFileIds: string[];
-  setSelectedFileIds: (fileIds: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedFileIds: (fileIds: string[]) => void;
   
   // Current navigation state
   currentFolder: string;
@@ -22,7 +22,7 @@ interface FileExplorerContextProps {
   // Tags
   availableTags: FileTag[];
   selectedTags: string[];
-  setSelectedTags: (tags: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedTags: (tags: string[]) => void;
   onTagSelect: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
   
@@ -33,19 +33,15 @@ interface FileExplorerContextProps {
   
   // File operations
   onFileDeleted: (fileId: string) => void;
-  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  onEditNote?: (file: CreatorFileType) => void;
-  onCreateFolder?: () => void;
   
   // UI state
   viewMode: 'grid' | 'list';
-  setViewMode: (mode: 'grid' | 'list') => void;
+  setViewMode: (mode: 'grid' | 'list') => void;  // Added missing setViewMode function
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onSearchChange?: (query: string) => void;
   selectedTypes: string[];
-  setSelectedTypes: (types: string[] | ((prev: string[]) => string[])) => void;
+  setSelectedTypes: (types: string[]) => void;
   
   // Upload controls
   isUploadModalOpen: boolean;
@@ -53,7 +49,6 @@ interface FileExplorerContextProps {
   onUploadComplete: (fileIds?: string[]) => void;
   onUploadStart?: () => void;
   onRefresh: () => void;
-  onUploadClick?: () => void;
   
   // Folder operations
   onFolderChange: (folderId: string) => void;
