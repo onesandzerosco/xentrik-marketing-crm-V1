@@ -81,7 +81,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     removeTagFromFiles,
     createTag,
     deleteTag,
-    filterFilesByTags
+    filterFilesByTags,
+    removeTagFromFile
   } = useFileTags({ creatorId });
   
   const { toast } = useToast();
@@ -212,6 +213,26 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       throw error;
     }
   };
+
+  // Handle tag removal for a specific file
+  const handleRemoveTag = async (tagName: string, fileId: string) => {
+    try {
+      await removeTagFromFile(tagName, fileId);
+      toast({
+        title: "Tag removed",
+        description: `Tag "${tagName}" was removed successfully.`,
+      });
+      // Refresh the file list to show updated tags
+      onRefresh();
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove tag from file.",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Open the tag modal for a specific file
   const handleAddTagToFile = (file: CreatorFileType) => {
@@ -263,6 +284,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onTagCreate: handleCreateTag,
         onAddTagClick: handleAddTagClick,
         onAddTagToFile: handleAddTagToFile,
+        onTagRemove: handleRemoveTag,
         currentCategory,
         onCategoryChange,
         onCreateCategory,
@@ -345,6 +367,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setIsAddTagModalOpen={setIsAddTagModalOpen}
         onTagSelect={handleTagSelect}
         onTagCreate={handleCreateTag}
+        onTagRemove={handleRemoveTag}
         isAddFolderModalOpen={isAddFolderModalOpen}
         setIsAddFolderModalOpen={setIsAddFolderModalOpen}
         newFolderName={newFolderName}
@@ -358,7 +381,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         singleFileForTagging={singleFileForTagging}
       />
       
-      {/* Note editing modal */}
       {editingFile && (
         <Dialog open={isEditNoteModalOpen} onOpenChange={setIsEditNoteModalOpen}>
           <DialogContent>
