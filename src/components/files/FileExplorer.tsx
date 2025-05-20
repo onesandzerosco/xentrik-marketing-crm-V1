@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -80,7 +79,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setSelectedTags,
     addTagToFiles,
     removeTagFromFiles,
-    createTag
+    createTag,
+    deleteTag,
+    filterFilesByTags
   } = useFileTags({ creatorId });
   
   const { toast } = useToast();
@@ -117,16 +118,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     setEditingNote,
     handleEditNote,
     handleSaveNote,
-    viewMode,
-    setViewMode,
     searchQuery,
     setSearchQuery,
     selectedTypes,
     setSelectedTypes,
+    viewMode,
+    setViewMode,
     filteredFiles: baseFilteredFiles,
     isUploadModalOpen,
-    setIsUploadModalOpen,
-    filterFilesByTags
+    setIsUploadModalOpen
   } = useFileExplorer({
     files,
     availableFolders,
@@ -135,18 +135,29 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     currentCategory,
     onRefresh,
     onCategoryChange,
-    onCreateFolder,
-    onCreateCategory,
-    onAddFilesToFolder,
-    onDeleteFolder,
-    onDeleteCategory,
+    onCreateFolder: onCreateFolder || (async () => {}),
+    onCreateCategory: onCreateCategory || (async () => {}),
+    onAddFilesToFolder: onAddFilesToFolder || (async () => {}),
+    onDeleteFolder: onDeleteFolder || (async () => {}),
+    onDeleteCategory: onDeleteCategory || (async () => {}),
     onRemoveFromFolder,
     onRenameFolder,
     onRenameCategory
   });
 
+  // Debug logging for tag filtering
+  console.log('TAG FILTERING DEBUG:');
+  console.log('- Available files count:', files.length);
+  console.log('- Base filtered files count (after search/type):', baseFilteredFiles.length);
+  console.log('- Selected tag names for filtering:', selectedTags);
+  
+  // Check for files without tag information
+  const filesWithoutTags = baseFilteredFiles.filter(file => !file.tags || file.tags.length === 0).length;
+  console.log('- Files without tags:', filesWithoutTags);
+  
   // Apply tag filtering to the already filtered files
-  const filteredFiles = filterFilesByTags ? filterFilesByTags(baseFilteredFiles, selectedTags) : baseFilteredFiles;
+  const filteredFiles = filterFilesByTags(baseFilteredFiles, selectedTags);
+  console.log('- Final filtered files count (after tag filtering):', filteredFiles.length);
   
   // Handle tag selection
   const handleTagSelect = async (tagId: string) => {
@@ -186,33 +197,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           } else {
             return [...prevTags, tag.name];
           }
-        });
-      }
-    }
-  };
-  
-  // Handle removing a tag
-  const handleTagRemove = async (tagId: string) => {
-    if (isAddTagModalOpen) {
-      // If the tag modal is open, we're removing tags from selected files
-      const fileIds = singleFileForTagging
-        ? [singleFileForTagging.id]
-        : selectedFileIds;
-        
-      try {
-        await removeTagFromFiles(fileIds, tagId);
-        toast({
-          title: "Tag removed",
-          description: `Tag removed from ${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}.`
-        });
-        // Refresh the file list to show updated tags
-        onRefresh();
-      } catch (error) {
-        console.error('Error removing tag:', error);
-        toast({
-          title: "Error",
-          description: "Failed to remove tag from files.",
-          variant: "destructive"
         });
       }
     }
@@ -276,7 +260,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setSelectedTags,
         availableTags,
         onTagSelect: handleTagSelect,
-        onTagRemove: handleTagRemove,
         onTagCreate: handleCreateTag,
         onAddTagClick: handleAddTagClick,
         onAddTagToFile: handleAddTagToFile,
@@ -315,7 +298,35 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             isCreatorView={isCreatorView}
           />
           
-          <FileExplorerContent />
+          <FileExplorerContent 
+            isLoading={isLoading}
+            filteredFiles={filteredFiles}
+            viewMode={viewMode}
+            isCreatorView={isCreatorView}
+            onFilesChanged={onRefresh}
+            onFileDeleted={handleFileDeleted}
+            recentlyUploadedIds={recentlyUploadedIds}
+            selectedFileIds={selectedFileIds}
+            setSelectedFileIds={setSelectedFileIds}
+            onAddToFolderClick={handleAddToFolderClick}
+            onAddTagClick={handleAddTagClick}
+            onAddTagToFile={handleAddTagToFile}
+            currentFolder={currentFolder}
+            currentCategory={currentCategory}
+            onCreateFolder={handleCreateNewFolder}
+            onUploadClick={() => setIsUploadModalOpen(true)}
+            availableFolders={availableFolders}
+            onRemoveFromFolder={onRemoveFromFolder}
+            onEditNote={handleEditNote}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedTypes={selectedTypes}
+            setSelectedTypes={setSelectedTypes}
+            selectedTags={selectedTags}
+            setSelectedTags={setSelectedTags}
+            availableTags={availableTags}
+            onTagCreate={handleCreateTag}
+          />
         </div>
       </div>
       
@@ -333,7 +344,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         isAddTagModalOpen={isAddTagModalOpen}
         setIsAddTagModalOpen={setIsAddTagModalOpen}
         onTagSelect={handleTagSelect}
-        onTagRemove={handleTagRemove}
         onTagCreate={handleCreateTag}
         isAddFolderModalOpen={isAddFolderModalOpen}
         setIsAddFolderModalOpen={setIsAddFolderModalOpen}

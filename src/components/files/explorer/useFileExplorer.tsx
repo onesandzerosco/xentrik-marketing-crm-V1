@@ -1,7 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { useFileOperations } from '@/hooks/file-operations';
-import { useFileTags } from '@/hooks/useFileTags';
+import { useFileSelection } from './hooks/useFileSelection';
+import { useFolderModals } from './hooks/useFolderModals';
+import { useFileNotes } from './hooks/useFileNotes';
+import { useFileFilters } from './hooks/useFileFilters';
+import { useUploadModal } from './hooks/useUploadModal';
+import { useFolderOperations } from './hooks/useFolderOperations';
 
 interface UseFileExplorerProps {
   files: CreatorFileType[];
@@ -11,219 +15,341 @@ interface UseFileExplorerProps {
   currentCategory: string | null;
   onRefresh: () => void;
   onCategoryChange: (categoryId: string | null) => void;
-  onCreateFolder?: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
-  onCreateCategory?: (categoryName: string) => Promise<void>;
-  onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId?: string) => Promise<void>;
-  onDeleteFolder?: (folderId: string) => Promise<void>;
-  onDeleteCategory?: (categoryId: string) => Promise<void>;
+  onCreateFolder: (folderName: string, fileIds: string[], categoryId: string) => Promise<void>;
+  onCreateCategory: (categoryName: string) => Promise<void>;
+  onAddFilesToFolder: (fileIds: string[], targetFolderId: string, categoryId: string) => Promise<void>;
+  onDeleteFolder: (folderId: string) => Promise<void>;
+  onDeleteCategory: (categoryId: string) => Promise<void>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  onRenameFolder?: (folderId: string, newName: string) => Promise<void>;
-  onRenameCategory?: (categoryId: string, newName: string) => Promise<void>;
+  onRenameFolder?: (folderId: string, newFolderName: string) => Promise<void>;
+  onRenameCategory?: (categoryId: string, newCategoryName: string) => Promise<void>;
 }
 
-export const useFileExplorer = (props: UseFileExplorerProps) => {
+export const useFileExplorer = ({
+  files,
+  availableFolders,
+  availableCategories,
+  currentFolder,
+  currentCategory,
+  onRefresh,
+  onCategoryChange,
+  onCreateFolder,
+  onCreateCategory,
+  onAddFilesToFolder,
+  onDeleteFolder,
+  onDeleteCategory,
+  onRemoveFromFolder,
+  onRenameFolder,
+  onRenameCategory
+}: UseFileExplorerProps) => {
+  // Use all the sub-hooks
   const { 
-    files, 
-    availableFolders, 
-    availableCategories, 
-    currentFolder, 
-    currentCategory, 
-    onRefresh, 
-    onCategoryChange, 
-    onCreateFolder, 
-    onCreateCategory, 
-    onAddFilesToFolder, 
-    onDeleteFolder, 
-    onDeleteCategory, 
-    onRemoveFromFolder,
-    onRenameFolder,
-    onRenameCategory
-  } = props;
-  
-  // State variables
-  const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Folder modal states
-  const [isAddToFolderModalOpen, setIsAddToFolderModalOpen] = useState(false);
-  const [targetFolderId, setTargetFolderId] = useState('');
-  const [targetCategoryId, setTargetCategoryId] = useState('');
-  const [isAddFolderModalOpen, setIsAddFolderModalOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [selectedCategoryForNewFolder, setSelectedCategoryForNewFolder] = useState('');
-  
-  // Note modal states
-  const [isEditNoteModalOpen, setIsEditNoteModalOpen] = useState(false);
-  const [editingFile, setEditingFile] = useState<CreatorFileType | null>(null);
-  const [editingNote, setEditingNote] = useState<string | null>(null);
-  
-  // Tag operations handlers
-  const {
-    availableTags,
-    selectedTags,
-    setSelectedTags,
-    addTagToFiles,
-    removeTagFromFiles,
-    createTag,
-    deleteTag,
-    filterFilesByTags,
-    fetchTags
-  } = useFileTags();
-  
-  // File filtering
-  const baseFilteredFiles = files.filter(file => {
-    // Filter by search query
-    if (searchQuery && !file.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    
-    // Filter by file type
-    if (selectedTypes.length > 0 && !selectedTypes.includes(file.type)) {
-      return false;
-    }
-    
-    return true;
-  });
-  
-  // File deletion handler
-  const handleFileDeleted = (fileId: string) => {
-    setSelectedFileIds(prev => prev.filter(id => id !== fileId));
-    onRefresh();
-  };
-  
-  // Folder operations
-  const handleAddToFolderClick = () => {
-    if (selectedFileIds.length === 0) return;
-    setIsAddToFolderModalOpen(true);
-  };
-  
-  const handleCreateNewFolder = () => {
-    setIsAddFolderModalOpen(true);
-  };
-  
-  const handleAddToFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!onAddFilesToFolder) return;
-
-    try {
-      await onAddFilesToFolder(selectedFileIds, targetFolderId, targetCategoryId);
-      setIsAddToFolderModalOpen(false);
-      setSelectedFileIds([]);
-      onRefresh();
-    } catch (error) {
-      console.error('Error adding files to folder:', error);
-    }
-  };
-  
-  const handleCreateFolderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!onCreateFolder) return;
-
-    try {
-      await onCreateFolder(
-        newFolderName,
-        selectedFileIds,
-        selectedCategoryForNewFolder || currentCategory || 'all'
-      );
-      setIsAddFolderModalOpen(false);
-      setNewFolderName('');
-      setSelectedFileIds([]);
-      onRefresh();
-    } catch (error) {
-      console.error('Error creating folder:', error);
-    }
-  };
-  
-  // Note operations
-  const handleEditNote = (file: CreatorFileType) => {
-    setEditingFile(file);
-    setEditingNote(file.description || '');
-    setIsEditNoteModalOpen(true);
-  };
-  
-  const handleSaveNote = async () => {
-    if (!editingFile) return;
-    
-    try {
-      // Update note in the database
-      const response = await fetch(`/api/files/${editingFile.id}/note`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ note: editingNote }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save note');
-      }
-      
-      // Close the modal and refresh
-      setIsEditNoteModalOpen(false);
-      setEditingFile(null);
-      setEditingNote(null);
-      onRefresh();
-    } catch (error) {
-      console.error('Error saving note:', error);
-    }
-  };
-  
-  return {
-    files,
-    availableFolders,
-    availableCategories,
-    selectedFileIds,
+    selectedFileIds, 
     setSelectedFileIds,
-    currentFolder,
-    currentCategory,
-    viewMode,
-    setViewMode,
-    isLoading,
-    searchQuery,
-    setSearchQuery,
-    selectedTypes,
-    setSelectedTypes,
-    isUploadModalOpen,
-    setIsUploadModalOpen,
-    availableTags,
-    selectedTags,
-    setSelectedTags,
-    filteredFiles: baseFilteredFiles,
-    onRefresh,
-    handleFileDeleted,
-    isAddToFolderModalOpen,
-    setIsAddToFolderModalOpen,
-    targetFolderId,
-    setTargetFolderId,
-    targetCategoryId,
-    setTargetCategoryId,
+    handleFileDeleted 
+  } = useFileSelection();
+  
+  const {
+    isAddCategoryModalOpen,
+    setIsAddCategoryModalOpen,
+    newCategoryName,
+    setNewCategoryName,
+    isDeleteCategoryModalOpen,
+    setIsDeleteCategoryModalOpen,
+    categoryToDelete,
+    setCategoryToDelete,
+    handleDeleteCategoryClick,
+    isRenameCategoryModalOpen,
+    setIsRenameCategoryModalOpen,
+    categoryToRename,
+    setCategoryToRename,
+    categoryCurrentName,
+    setCategoryCurrentName,
+    handleRenameCategoryClick,
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
     setNewFolderName,
     selectedCategoryForNewFolder,
     setSelectedCategoryForNewFolder,
-    handleAddToFolderClick,
-    handleAddToFolderSubmit,
-    handleCreateNewFolder,
-    handleCreateFolderSubmit,
+    isAddToFolderModalOpen,
+    setIsAddToFolderModalOpen,
+    targetFolderId,
+    setTargetFolderId,
+    targetCategoryId,
+    setTargetCategoryId,
+    isDeleteFolderModalOpen,
+    setIsDeleteFolderModalOpen,
+    folderToDelete,
+    setFolderToDelete,
+    handleDeleteFolderClick,
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderToRename,
+    setFolderToRename,
+    folderCurrentName,
+    setFolderCurrentName,
+    handleRenameFolderClick
+  } = useFolderModals();
+  
+  const {
     isEditNoteModalOpen,
     setIsEditNoteModalOpen,
     editingFile,
-    editingNote,
+    editingNote, 
+    setEditingNote,
+    handleEditNote,
+    handleSaveNote
+  } = useFileNotes({ onRefresh });
+  
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles
+  } = useFileFilters({ files });
+  
+  const {
+    isUploadModalOpen,
+    setIsUploadModalOpen
+  } = useUploadModal();
+  
+  const {
+    handleCreateCategorySubmit: createCategoryBase,
+    handleCreateFolderSubmit: createFolderBase,
+    handleAddToFolderSubmit: addToFolderBase,
+    handleDeleteFolder: deleteFolderBase,
+    handleDeleteCategory: deleteCategoryBase,
+    handleRenameFolder: renameFolderBase,
+    handleRenameCategory: renameCategoryBase
+  } = useFolderOperations({
+    onCreateFolder,
+    onCreateCategory,
+    onAddFilesToFolder,
+    onDeleteFolder,
+    onDeleteCategory,
+    onRemoveFromFolder,
+    onRenameFolder,
+    onRenameCategory,
+    onRefresh
+  });
+  
+  // Initialize state for category operations
+  const [showNewFolderInCategory, setShowNewFolderInCategory] = useState(false);
+  
+  // Handle initiating a new category
+  const handleInitiateNewCategory = () => {
+    setIsAddCategoryModalOpen(true);
+  };
+  
+  // Handle initiating a new folder in a specific category
+  const handleInitiateNewFolder = (categoryId: string = '') => {
+    setSelectedCategoryForNewFolder(categoryId || (currentCategory || ''));
+    setIsAddFolderModalOpen(true);
+  };
+  
+  // Handler for "Add to Folder" button click
+  const handleAddToFolderClick = () => {
+    if (selectedFileIds.length > 0) {
+      setIsAddToFolderModalOpen(true);
+    }
+  };
+  
+  // Handler for creating a new category from the AddToFolder modal
+  const handleCreateNewCategory = () => {
+    setIsAddToFolderModalOpen(false);
+    setTimeout(() => {
+      setIsAddCategoryModalOpen(true);
+      setShowNewFolderInCategory(true); // Flag to show folder creation after category
+    }, 100);
+  };
+  
+  // Handler for creating a new folder from the AddToFolder modal
+  const handleCreateNewFolder = () => {
+    if (targetCategoryId) {
+      setIsAddToFolderModalOpen(false);
+      setTimeout(() => {
+        setSelectedCategoryForNewFolder(targetCategoryId);
+        setIsAddFolderModalOpen(true);
+      }, 100);
+    }
+  };
+  
+  // Customize folder operations with the state values
+  const handleCreateCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newCategoryName.trim()) {
+      return;
+    }
+    
+    // Attach the required values to the event so that the handler can use them
+    (e.currentTarget as any).newCategoryName = newCategoryName;
+    (e.currentTarget as any).setIsAddCategoryModalOpen = setIsAddCategoryModalOpen;
+    (e.currentTarget as any).setNewCategoryName = setNewCategoryName;
+    
+    createCategoryBase(e).then(() => {
+      // If we're creating a category from the AddToFolder flow,
+      // continue with folder creation after the category is created
+      if (showNewFolderInCategory) {
+        onRefresh(); // Refresh to get the new category
+        // Wait for state update before opening folder modal
+        setTimeout(() => {
+          const newCategoryId = availableCategories.find(c => c.name === newCategoryName)?.id;
+          if (newCategoryId) {
+            setSelectedCategoryForNewFolder(newCategoryId);
+            setIsAddFolderModalOpen(true);
+            setShowNewFolderInCategory(false); // Reset the flag
+          }
+        }, 500);
+      }
+    });
+  };
+  
+  const handleCreateFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newFolderName.trim() || !selectedCategoryForNewFolder) {
+      return;
+    }
+    
+    // Attach the required values to the event so that the handler can use them
+    (e.currentTarget as any).newFolderName = newFolderName;
+    (e.currentTarget as any).selectedFileIds = selectedFileIds;
+    (e.currentTarget as any).categoryId = selectedCategoryForNewFolder;
+    (e.currentTarget as any).setIsAddFolderModalOpen = setIsAddFolderModalOpen;
+    (e.currentTarget as any).setNewFolderName = setNewFolderName;
+    (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
+    
+    createFolderBase(e);
+  };
+  
+  const handleAddToFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Attach the required values to the event so that the handler can use them
+    (e.currentTarget as any).targetFolderId = targetFolderId;
+    (e.currentTarget as any).targetCategoryId = targetCategoryId;
+    (e.currentTarget as any).selectedFileIds = selectedFileIds;
+    (e.currentTarget as any).setIsAddToFolderModalOpen = setIsAddToFolderModalOpen;
+    (e.currentTarget as any).setTargetFolderId = setTargetFolderId;
+    (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
+    
+    addToFolderBase(e);
+  };
+  
+  const handleDeleteFolder = () => {
+    deleteFolderBase(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
+  };
+  
+  const handleDeleteCategory = () => {
+    deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
+  };
+  
+  // Fix rename handlers to match the expected function signatures
+  const handleRenameCategory = (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!categoryId || !newName.trim()) return;
+    renameCategoryBase(categoryId, newName, setIsOpen, setIdToRename);
+  };
+  
+  const handleRenameFolder = (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!folderId || !newName.trim()) return;
+    renameFolderBase(folderId, newName, setIsOpen, setIdToRename);
+  };
+
+  return {
+    // File selection
+    selectedFileIds,
+    setSelectedFileIds,
+    handleFileDeleted,
+    
+    // Category modals
+    isAddCategoryModalOpen,
+    setIsAddCategoryModalOpen,
+    newCategoryName,
+    setNewCategoryName,
+    isDeleteCategoryModalOpen,
+    setIsDeleteCategoryModalOpen,
+    categoryToDelete,
+    setCategoryToDelete,
+    handleDeleteCategoryClick,
+    isRenameCategoryModalOpen,
+    setIsRenameCategoryModalOpen,
+    categoryToRename,
+    setCategoryToRename,
+    categoryCurrentName,
+    setCategoryCurrentName,
+    handleRenameCategoryClick,
+    
+    // Folder modals
+    isAddFolderModalOpen,
+    setIsAddFolderModalOpen,
+    newFolderName,
+    setNewFolderName,
+    selectedCategoryForNewFolder,
+    setSelectedCategoryForNewFolder,
+    isAddToFolderModalOpen,
+    setIsAddToFolderModalOpen,
+    targetFolderId,
+    setTargetFolderId,
+    targetCategoryId,
+    setTargetCategoryId,
+    isDeleteFolderModalOpen,
+    setIsDeleteFolderModalOpen,
+    folderToDelete,
+    setFolderToDelete,
+    handleDeleteFolderClick,
+    isRenameFolderModalOpen,
+    setIsRenameFolderModalOpen,
+    folderToRename,
+    setFolderToRename,
+    folderCurrentName,
+    setFolderCurrentName,
+    handleRenameFolderClick,
+    
+    // File notes
+    isEditNoteModalOpen,
+    setIsEditNoteModalOpen,
+    editingFile,
+    editingNote, 
     setEditingNote,
     handleEditNote,
     handleSaveNote,
-    addTagToFiles,
-    removeTagFromFiles,
-    createTag,
-    deleteTag,
-    filterFilesByTags,
-    fetchTags
+    
+    // File filtering
+    searchQuery,
+    setSearchQuery,
+    selectedTypes,
+    setSelectedTypes,
+    viewMode,
+    setViewMode,
+    filteredFiles,
+    
+    // Upload modal
+    isUploadModalOpen,
+    setIsUploadModalOpen,
+    
+    // Category operations
+    handleInitiateNewCategory,
+    handleInitiateNewFolder,
+    
+    // Folder operations
+    handleAddToFolderClick,
+    handleCreateNewCategory,
+    handleCreateNewFolder,
+    handleCreateCategorySubmit,
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
+    handleDeleteFolder,
+    handleDeleteCategory,
+    handleRenameFolder,
+    handleRenameCategory,
+    
+    // Available data
+    availableFolders,
+    availableCategories
   };
 };

@@ -24,7 +24,6 @@ interface FileExplorerContextProps {
   selectedTags: string[];
   setSelectedTags: (tags: string[] | ((prev: string[]) => string[])) => void;
   onTagSelect: (tagId: string) => void;
-  onTagRemove: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
   
   // Creator information
@@ -57,33 +56,6 @@ interface FileExplorerContextProps {
   onCreateCategory?: (categoryName: string) => Promise<void>;
   onRenameFolder?: (folderId: string, newName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newName: string) => Promise<void>;
-  
-  // Additional properties needed for folder operations
-  handleAddToFolderClick?: () => void;
-  handleAddToFolderSubmit?: (e: React.FormEvent) => Promise<void>;
-  handleCreateNewFolder?: () => void;
-  handleCreateFolderSubmit?: (e: React.FormEvent) => Promise<void>;
-  isAddToFolderModalOpen?: boolean;
-  setIsAddToFolderModalOpen?: (isOpen: boolean) => void;
-  targetFolderId?: string;
-  setTargetFolderId?: (folderId: string) => void;
-  targetCategoryId?: string;
-  setTargetCategoryId?: (categoryId: string) => void;
-  isAddFolderModalOpen?: boolean;
-  setIsAddFolderModalOpen?: (isOpen: boolean) => void;
-  newFolderName?: string;
-  setNewFolderName?: (name: string) => void;
-  selectedCategoryForNewFolder?: string;
-  setSelectedCategoryForNewFolder?: (categoryId: string) => void;
-  
-  // Note operations
-  isEditNoteModalOpen?: boolean;
-  setIsEditNoteModalOpen?: (isOpen: boolean) => void;
-  editingFile?: CreatorFileType | null;
-  editingNote?: string | null;
-  setEditingNote?: (note: string | null) => void;
-  handleEditNote?: (file: CreatorFileType) => void;
-  handleSaveNote?: () => Promise<void>;
 }
 
 const FileExplorerContext = createContext<FileExplorerContextProps | undefined>(undefined);
