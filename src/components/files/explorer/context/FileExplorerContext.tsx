@@ -24,6 +24,7 @@ interface FileExplorerContextProps {
   selectedTags: string[];
   setSelectedTags: (tags: string[] | ((prev: string[]) => string[])) => void;
   onTagSelect: (tagId: string) => void;
+  onTagRemove: (tagId: string) => void; // Add this line
   onTagCreate?: (name: string) => Promise<FileTag>;
   
   // Creator information

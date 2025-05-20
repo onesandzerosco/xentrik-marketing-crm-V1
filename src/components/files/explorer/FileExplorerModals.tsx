@@ -20,6 +20,7 @@ interface FileExplorerModalsProps {
   isAddTagModalOpen: boolean;
   setIsAddTagModalOpen: (isOpen: boolean) => void;
   onTagSelect: (tagId: string) => void;
+  onTagRemove?: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
   isAddFolderModalOpen: boolean;
   setIsAddFolderModalOpen: (isOpen: boolean) => void;
@@ -48,6 +49,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   isAddTagModalOpen,
   setIsAddTagModalOpen,
   onTagSelect,
+  onTagRemove,
   onTagCreate,
   isAddFolderModalOpen,
   setIsAddFolderModalOpen,
@@ -63,6 +65,9 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
 }) => {
   // Calculate effective file count for the tag modal
   const effectiveFileCount = singleFileForTagging ? 1 : selectedFileIds.length;
+
+  // Get current tags from single file if available
+  const currentTags = singleFileForTagging?.tags || [];
   
   return (
     <>
@@ -88,8 +93,10 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         selectedFileIds={singleFileForTagging ? [singleFileForTagging.id] : selectedFileIds}
         availableTags={availableTags}
         onTagSelect={onTagSelect}
+        onTagRemove={onTagRemove}
         onTagCreate={onTagCreate}
         singleFileName={singleFileForTagging?.name}
+        currentTags={currentTags}
       />
       
       {/* Create folder modal */}
