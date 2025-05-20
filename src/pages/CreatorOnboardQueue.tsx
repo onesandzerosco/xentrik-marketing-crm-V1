@@ -99,8 +99,6 @@ const CreatorOnboardQueue: React.FC = () => {
           onClose={() => setAcceptModalOpen(false)}
           onAccept={async (creatorData) => {
             await handleAcceptSubmission(creatorData);
-            // Refresh the submissions list after successful handling
-            await fetchSubmissions();
           }}
           defaultName={selectedSubmission.name}
           isLoading={processingTokens.includes(selectedSubmission.token)}

@@ -35,7 +35,7 @@ export const useOnboardingSubmissions = () => {
         throw error;
       }
       
-      console.log("Submissions found:", dbSubmissions?.length || 0);
+      console.log("Submissions found:", dbSubmissions?.length || 0, dbSubmissions);
       
       if (!dbSubmissions || dbSubmissions.length === 0) {
         setSubmissions([]);

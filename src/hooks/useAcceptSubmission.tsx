@@ -65,6 +65,9 @@ export const useAcceptSubmission = (
       // Close the modal
       setAcceptModalOpen(false);
       
+      // Refresh the submissions list after successful update
+      await refreshSubmissions();
+      
     } catch (error) {
       console.error("Error accepting submission:", error);
       toast({
