@@ -71,24 +71,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   };
   
   // Function to add a tag to files
-  const addTagToFiles = async (fileIds: string[], tagId: string) => {
-    if (!fileIds.length || !tagId) return Promise.resolve();
+  const addTagToFiles = async (fileIds: string[], tagName: string) => {
+    if (!fileIds.length || !tagName) return Promise.resolve();
     
     try {
-      // First get the tag name from the tag ID
-      const { data: tagData, error: tagError } = await supabase
-        .from('file_tags')
-        .select('tag_name')
-        .eq('id', tagId)
-        .single();
-        
-      if (tagError || !tagData) {
-        console.error('Error fetching tag name:', tagError);
-        return Promise.reject(tagError || new Error('Tag not found'));
-      }
-      
-      const tagName = tagData.tag_name;
-      
       // Process each file
       for (const fileId of fileIds) {
         const { data: fileData, error: fetchError } = await supabase
@@ -104,7 +90,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
           
         if (fileData) {
           const currentTags = fileData.tags || [];
-          if (!currentTags.includes(tagName)) {  // Store tag name instead of ID
+          if (!currentTags.includes(tagName)) {
             const updatedTags = [...currentTags, tagName];
             
             const { error: updateError } = await supabase
@@ -126,24 +112,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   };
   
   // Function to remove a tag from files
-  const removeTagFromFiles = async (fileIds: string[], tagId: string) => {
-    if (!fileIds.length || !tagId) return Promise.resolve();
+  const removeTagFromFiles = async (fileIds: string[], tagName: string) => {
+    if (!fileIds.length || !tagName) return Promise.resolve();
     
     try {
-      // First get the tag name from the tag ID
-      const { data: tagData, error: tagError } = await supabase
-        .from('file_tags')
-        .select('tag_name')
-        .eq('id', tagId)
-        .single();
-        
-      if (tagError || !tagData) {
-        console.error('Error fetching tag name:', tagError);
-        return Promise.reject(tagError || new Error('Tag not found'));
-      }
-      
-      const tagName = tagData.tag_name;
-      
       // Process each file
       for (const fileId of fileIds) {
         const { data: fileData, error: fetchError } = await supabase
@@ -159,7 +131,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
           
         if (fileData) {
           const currentTags = fileData.tags || [];
-          const updatedTags = currentTags.filter(tag => tag !== tagName);  // Filter by tag name
+          const updatedTags = currentTags.filter(tag => tag !== tagName);
           
           const { error: updateError } = await supabase
             .from('media')

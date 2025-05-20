@@ -160,7 +160,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   console.log('- Final filtered files count (after tag filtering):', filteredFiles.length);
   
   // Handle tag selection
-  const handleTagSelect = async (tagId: string) => {
+  const handleTagSelect = async (tagName: string) => {
     if (isAddTagModalOpen) {
       // If the tag modal is open, we're adding tags to selected files
       const fileIds = singleFileForTagging
@@ -168,7 +168,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         : selectedFileIds;
         
       try {
-        await addTagToFiles(fileIds, tagId);
+        await addTagToFiles(fileIds, tagName);
         toast({
           title: "Tag added",
           description: `Tag added to ${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}.`
@@ -186,19 +186,45 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
     } else {
       // If we're in the filter bar, we're toggling tag filters
-      console.log('- Toggling tag filter:', tagId);
-
-      // Find the tag name from the tag ID
-      const tag = availableTags.find(t => t.id === tagId);
-      if (tag) {
-        setSelectedTags(prevTags => {
-          if (prevTags.includes(tag.name)) {
-            return prevTags.filter(name => name !== tag.name);
-          } else {
-            return [...prevTags, tag.name];
-          }
+      console.log('- Toggling tag filter:', tagName);
+      
+      setSelectedTags(prevTags => {
+        if (prevTags.includes(tagName)) {
+          return prevTags.filter(name => name !== tagName);
+        } else {
+          return [...prevTags, tagName];
+        }
+      });
+    }
+  };
+  
+  // Handle removing a tag from files
+  const handleRemoveTagFromFile = async (tagName: string) => {
+    if (!singleFileForTagging) return;
+    
+    try {
+      await removeTagFromFiles([singleFileForTagging.id], tagName);
+      toast({
+        title: "Tag removed",
+        description: `Tag removed from file.`
+      });
+      // Refresh the file list to show updated tags
+      onRefresh();
+      
+      // Update the single file for tagging to reflect changes
+      if (singleFileForTagging.tags) {
+        setSingleFileForTagging({
+          ...singleFileForTagging,
+          tags: singleFileForTagging.tags.filter(tag => tag !== tagName)
         });
       }
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove tag from file.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -345,6 +371,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setIsAddTagModalOpen={setIsAddTagModalOpen}
         onTagSelect={handleTagSelect}
         onTagCreate={handleCreateTag}
+        onTagRemove={handleRemoveTagFromFile}
         isAddFolderModalOpen={isAddFolderModalOpen}
         setIsAddFolderModalOpen={setIsAddFolderModalOpen}
         newFolderName={newFolderName}
@@ -358,7 +385,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         singleFileForTagging={singleFileForTagging}
       />
       
-      {/* Note editing modal */}
       {editingFile && (
         <Dialog open={isEditNoteModalOpen} onOpenChange={setIsEditNoteModalOpen}>
           <DialogContent>
