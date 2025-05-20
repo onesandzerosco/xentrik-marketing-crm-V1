@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileExplorerContext } from '../context/FileExplorerContext';
-import { useFileExplorer } from '../useFileExplorer';
 import { FileTag } from '@/hooks/useFileTags';
 
 export const useExplorerExtendedContext = () => {
@@ -15,7 +14,8 @@ export const useExplorerExtendedContext = () => {
     onFileDeleted,
     availableTags,
     onTagSelect,
-    onTagCreate
+    onTagCreate,
+    onCreateCategory
   } = useFileExplorerContext();
   
   const { toast } = useToast();
@@ -55,7 +55,6 @@ export const useExplorerExtendedContext = () => {
     handleSaveNote,
     availableFolders,
     availableCategories,
-    onCreateCategory,
     onDeleteFolder,
     onDeleteCategory,
     onRenameFolder,
@@ -187,7 +186,6 @@ const useFileExplorerExtended = () => {
     handleSaveNote: () => {},
     availableFolders: [] as Folder[],
     availableCategories: [] as Category[],
-    onCreateCategory: undefined,
     onDeleteFolder: undefined,
     onDeleteCategory: undefined,
     onRenameFolder: undefined,

@@ -5,8 +5,9 @@ import { FileExplorerContent } from './FileExplorerContent';
 import { FileExplorerHeader } from './FileExplorerHeader';
 import { FileExplorerSidebar } from './FileExplorerSidebar';
 import { FileExplorerModals } from './FileExplorerModals';
-import { NoteModals } from './NoteModals';
+import { EditNoteModal } from './NoteModals';
 import { useFileExplorerContext } from './context/FileExplorerContext';
+import { useExplorerExtendedContext } from './hooks/useExplorerExtendedContext';
 
 export const FileExplorerContainer = () => {
   const {
@@ -68,6 +69,7 @@ export const FileExplorerContainer = () => {
     handleSaveNote,
     availableFolders,
     availableCategories,
+    onCreateCategory,
     onDeleteCategory,
     onDeleteFolder,
     onRenameCategory,

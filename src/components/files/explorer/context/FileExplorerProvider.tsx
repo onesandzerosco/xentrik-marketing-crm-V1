@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileExplorerProvider as ContextProvider } from './FileExplorerContext';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { FileTag } from '@/hooks/useFileTags';
+import { useFileExplorer } from '../useFileExplorer';
+import { useToast } from '@/hooks/use-toast';
 
 interface FileExplorerProviderProps {
   children: React.ReactNode;
@@ -71,6 +73,27 @@ export const FileExplorerProvider: React.FC<FileExplorerProviderProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
+  const { toast } = useToast();
+  
+  // Filter files by tags helper function - move this up before its first usage
+  const filterFilesByTags = (files: CreatorFileType[], tagNames: string[]) => {
+    if (tagNames.length === 0) return files;
+    
+    // Filter files that have at least ONE of the selected tags
+    return files.filter(file => {
+      if (!file.tags || file.tags.length === 0) {
+        return false;
+      }
+      
+      // Check if any of the file's tags match any of the selected tag names
+      const hasMatchingTag = file.tags.some(fileTag => 
+        tagNames.includes(fileTag)
+      );
+      
+      return hasMatchingTag;
+    });
+  };
+  
   const {
     selectedFileIds,
     setSelectedFileIds,
@@ -174,13 +197,12 @@ export const FileExplorerProvider: React.FC<FileExplorerProviderProps> = ({
       // If we're in the filter bar, we're toggling tag filters
       console.log('- Toggling tag filter:', tagName);
       
-      setSelectedTags(prevTags => {
-        if (prevTags.includes(tagName)) {
-          return prevTags.filter(name => name !== tagName);
-        } else {
-          return [...prevTags, tagName];
-        }
-      });
+      // We need to modify this to not use a function inside setSelectedTags
+      const newSelectedTags = selectedTags.includes(tagName) 
+        ? selectedTags.filter(name => name !== tagName)
+        : [...selectedTags, tagName];
+      
+      setSelectedTags(newSelectedTags);
     }
   };
   
@@ -244,25 +266,6 @@ export const FileExplorerProvider: React.FC<FileExplorerProviderProps> = ({
     setIsAddTagModalOpen(true);
   };
 
-  // Filter files by tags helper function
-  const filterFilesByTags = (files: CreatorFileType[], tagNames: string[]) => {
-    if (tagNames.length === 0) return files;
-    
-    // Filter files that have at least ONE of the selected tags
-    return files.filter(file => {
-      if (!file.tags || file.tags.length === 0) {
-        return false;
-      }
-      
-      // Check if any of the file's tags match any of the selected tag names
-      const hasMatchingTag = file.tags.some(fileTag => 
-        tagNames.includes(fileTag)
-      );
-      
-      return hasMatchingTag;
-    });
-  };
-
   const contextValue = {
     filteredFiles,
     selectedFileIds,
@@ -305,9 +308,3 @@ export const FileExplorerProvider: React.FC<FileExplorerProviderProps> = ({
     </ContextProvider>
   );
 };
-
-// Import required dependencies at the top
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useFileExplorer } from '../useFileExplorer';
-
