@@ -38,6 +38,12 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
         return;
       }
       
+      if (!data) {
+        console.log('No tags found');
+        setAvailableTags([]);
+        return;
+      }
+      
       // Transform the database tags to our FileTag interface
       const formattedTags = data.map(tag => ({
         id: tag.id,
@@ -70,21 +76,30 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     try {
       // Process each file
       for (const fileId of fileIds) {
-        const { data: fileData } = await supabase
+        const { data: fileData, error: fetchError } = await supabase
           .from('media')
           .select('tags')
           .eq('id', fileId)
           .single();
+          
+        if (fetchError) {
+          console.error('Error fetching file data:', fetchError);
+          continue;
+        }
           
         if (fileData) {
           const currentTags = fileData.tags || [];
           if (!currentTags.includes(tagId)) {
             const updatedTags = [...currentTags, tagId];
             
-            await supabase
+            const { error: updateError } = await supabase
               .from('media')
               .update({ tags: updatedTags })
               .eq('id', fileId);
+              
+            if (updateError) {
+              console.error('Error updating file tags:', updateError);
+            }
           }
         }
       }
@@ -101,20 +116,29 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     try {
       // Process each file
       for (const fileId of fileIds) {
-        const { data: fileData } = await supabase
+        const { data: fileData, error: fetchError } = await supabase
           .from('media')
           .select('tags')
           .eq('id', fileId)
           .single();
           
+        if (fetchError) {
+          console.error('Error fetching file data:', fetchError);
+          continue;
+        }
+          
         if (fileData) {
           const currentTags = fileData.tags || [];
           const updatedTags = currentTags.filter(id => id !== tagId);
           
-          await supabase
+          const { error: updateError } = await supabase
             .from('media')
             .update({ tags: updatedTags })
             .eq('id', fileId);
+            
+          if (updateError) {
+            console.error('Error updating file tags:', updateError);
+          }
         }
       }
       return Promise.resolve();
