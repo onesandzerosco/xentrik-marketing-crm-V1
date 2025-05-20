@@ -27,12 +27,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   onTagSelect,
   onTagCreate
 }) => {
-  // Get tag names from IDs for display purposes
-  const getTagNameById = (id: string) => {
-    const tag = availableTags.find(tag => tag.id === id);
-    return tag ? tag.name : id;
-  };
-
   // Simplified filter options to only include images, videos, audio, and others
   const filterOptions = [
     { value: 'image', label: 'Images' },
@@ -92,4 +86,3 @@ export const FilterBar: React.FC<FilterBarProps> = ({
     </div>
   );
 };
-

@@ -75,6 +75,20 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     if (!fileIds.length || !tagId) return Promise.resolve();
     
     try {
+      // First get the tag name from the tag ID
+      const { data: tagData, error: tagError } = await supabase
+        .from('file_tags')
+        .select('tag_name')
+        .eq('id', tagId)
+        .single();
+        
+      if (tagError || !tagData) {
+        console.error('Error fetching tag name:', tagError);
+        return Promise.reject(tagError || new Error('Tag not found'));
+      }
+      
+      const tagName = tagData.tag_name;
+      
       // Process each file
       for (const fileId of fileIds) {
         const { data: fileData, error: fetchError } = await supabase
@@ -90,8 +104,8 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
           
         if (fileData) {
           const currentTags = fileData.tags || [];
-          if (!currentTags.includes(tagId)) {
-            const updatedTags = [...currentTags, tagId];
+          if (!currentTags.includes(tagName)) {  // Store tag name instead of ID
+            const updatedTags = [...currentTags, tagName];
             
             const { error: updateError } = await supabase
               .from('media')
@@ -116,6 +130,20 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     if (!fileIds.length || !tagId) return Promise.resolve();
     
     try {
+      // First get the tag name from the tag ID
+      const { data: tagData, error: tagError } = await supabase
+        .from('file_tags')
+        .select('tag_name')
+        .eq('id', tagId)
+        .single();
+        
+      if (tagError || !tagData) {
+        console.error('Error fetching tag name:', tagError);
+        return Promise.reject(tagError || new Error('Tag not found'));
+      }
+      
+      const tagName = tagData.tag_name;
+      
       // Process each file
       for (const fileId of fileIds) {
         const { data: fileData, error: fetchError } = await supabase
@@ -131,7 +159,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
           
         if (fileData) {
           const currentTags = fileData.tags || [];
-          const updatedTags = currentTags.filter(id => id !== tagId);
+          const updatedTags = currentTags.filter(tag => tag !== tagName);  // Filter by tag name
           
           const { error: updateError } = await supabase
             .from('media')
@@ -188,6 +216,21 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   // Function to delete a tag
   const deleteTag = async (tagId: string) => {
     try {
+      // Get the tag name first for cleanup
+      const { data: tagData, error: getError } = await supabase
+        .from('file_tags')
+        .select('tag_name')
+        .eq('id', tagId)
+        .single();
+        
+      if (getError || !tagData) {
+        console.error('Error getting tag name:', getError);
+        return Promise.reject(getError || new Error('Tag not found'));
+      }
+      
+      const tagName = tagData.tag_name;
+      
+      // Delete the tag
       const { error } = await supabase
         .from('file_tags')
         .delete()
@@ -196,6 +239,24 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       if (error) {
         console.error('Error deleting tag:', error);
         return Promise.reject(error);
+      }
+      
+      // Clean up tag references in all media files
+      const { data: mediaFiles, error: mediaError } = await supabase
+        .from('media')
+        .select('id, tags');
+        
+      if (!mediaError && mediaFiles) {
+        for (const file of mediaFiles) {
+          if (file.tags && file.tags.includes(tagName)) {
+            const updatedTags = file.tags.filter(tag => tag !== tagName);
+            
+            await supabase
+              .from('media')
+              .update({ tags: updatedTags })
+              .eq('id', file.id);
+          }
+        }
       }
       
       // Update the local state
@@ -208,19 +269,19 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   };
   
   // Function to filter files by tags
-  const filterFilesByTags = (files: CreatorFileType[], tagIds: string[]) => {
-    if (tagIds.length === 0) return files;
+  const filterFilesByTags = (files: CreatorFileType[], tagNames: string[]) => {
+    if (tagNames.length === 0) return files;
     
     // Output debugging information to the browser console
     console.log('DEBUG TAG FILTERING:');
-    console.log('- Selected tag IDs:', tagIds);
+    console.log('- Selected tag names:', tagNames);
     console.log('- Files to filter:', files.length);
     
     // Check if files have tags property
     const filesWithTags = files.filter(file => file.tags && file.tags.length > 0).length;
     console.log('- Files with tags:', filesWithTags);
     
-    // Log tag IDs for the first few files
+    // Log tag names for the first few files
     const sampleFiles = files.slice(0, 3);
     sampleFiles.forEach(file => {
       console.log(`- Sample file "${file.name}" has tags:`, file.tags || []);
@@ -232,9 +293,9 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
         return false;
       }
       
-      // Check if any of the file's tags match any of the selected tags
-      const hasMatchingTag = file.tags.some(fileTagId => 
-        tagIds.includes(fileTagId)
+      // Check if any of the file's tags match any of the selected tag names
+      const hasMatchingTag = file.tags.some(fileTag => 
+        tagNames.includes(fileTag)
       );
       
       return hasMatchingTag;

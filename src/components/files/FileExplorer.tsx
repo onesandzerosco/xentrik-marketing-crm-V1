@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -150,7 +149,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   console.log('TAG FILTERING DEBUG:');
   console.log('- Available files count:', files.length);
   console.log('- Base filtered files count (after search/type):', baseFilteredFiles.length);
-  console.log('- Selected tag IDs for filtering:', selectedTags);
+  console.log('- Selected tag names for filtering:', selectedTags);
   
   // Check for files without tag information
   const filesWithoutTags = baseFilteredFiles.filter(file => !file.tags || file.tags.length === 0).length;
@@ -188,13 +187,18 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     } else {
       // If we're in the filter bar, we're toggling tag filters
       console.log('- Toggling tag filter:', tagId);
-      setSelectedTags(prevTags => {
-        if (prevTags.includes(tagId)) {
-          return prevTags.filter(id => id !== tagId);
-        } else {
-          return [...prevTags, tagId];
-        }
-      });
+
+      // Find the tag name from the tag ID
+      const tag = availableTags.find(t => t.id === tagId);
+      if (tag) {
+        setSelectedTags(prevTags => {
+          if (prevTags.includes(tag.name)) {
+            return prevTags.filter(name => name !== tag.name);
+          } else {
+            return [...prevTags, tag.name];
+          }
+        });
+      }
     }
   };
   
