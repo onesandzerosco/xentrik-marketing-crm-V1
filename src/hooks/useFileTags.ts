@@ -6,7 +6,8 @@ import { useTagManagement } from './tags/useTagManagement';
 import { filterFilesByTags } from './tags/tagUtils';
 import { FileTag, UseFileTagsProps } from './tags/types';
 
-export { FileTag } from './tags/types';
+// Change regular export to export type for FileTag
+export type { FileTag } from './tags/types';
 
 export const useFileTags = (props: UseFileTagsProps = {}) => {
   const { availableTags, setAvailableTags, isLoading, fetchTags } = useTagsFetching(props);
