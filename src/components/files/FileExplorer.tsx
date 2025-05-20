@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -145,8 +146,18 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRenameCategory
   });
 
+  // Add logging for debugging
+  console.log('Available files before filtering:', files.length);
+  console.log('Base filtered files (after type/search filtering):', baseFilteredFiles.length);
+  console.log('Selected tags for filtering:', selectedTags);
+  
+  // Some files may have undefined or null tags, add logging
+  const filesWithoutTags = baseFilteredFiles.filter(file => !file.tags || file.tags.length === 0).length;
+  console.log('Files without tags:', filesWithoutTags);
+  
   // Apply tag filtering to the already filtered files
   const filteredFiles = filterFilesByTags(baseFilteredFiles, selectedTags);
+  console.log('Final filtered files (after tag filtering):', filteredFiles.length);
   
   // Handle tag selection
   const handleTagSelect = async (tagId: string) => {
@@ -173,6 +184,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
       }
     } else {
       // If we're in the filter bar, we're toggling tag filters
+      console.log('Toggling tag filter:', tagId);
       setSelectedTags(prevTags => {
         if (prevTags.includes(tagId)) {
           return prevTags.filter(id => id !== tagId);
@@ -373,3 +385,4 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     </FileExplorerProvider>
   );
 };
+

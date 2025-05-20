@@ -206,12 +206,24 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const filterFilesByTags = (files: CreatorFileType[], tagIds: string[]) => {
     if (tagIds.length === 0) return files;
     
-    // Modified to show files that have at least ONE of the selected tags
-    // instead of requiring ALL of the selected tags
-    return files.filter(file => {
-      const fileTags = file.tags || [];
-      return tagIds.some(tagId => fileTags.includes(tagId));
+    console.log('Filtering files by tags:', tagIds);
+    console.log('Files before filtering:', files.length);
+    
+    // Log each file's tags before filtering
+    files.forEach(file => {
+      console.log(`File ${file.name} has tags:`, file.tags || []);
     });
+    
+    // Filter files that have at least ONE of the selected tags
+    const filtered = files.filter(file => {
+      const fileTags = file.tags || [];
+      const hasMatchingTag = tagIds.some(tagId => fileTags.includes(tagId));
+      console.log(`File ${file.name} matches filter?`, hasMatchingTag);
+      return hasMatchingTag;
+    });
+    
+    console.log('Files after filtering:', filtered.length);
+    return filtered;
   };
   
   return {
@@ -227,3 +239,4 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     fetchTags
   };
 };
+
