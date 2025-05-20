@@ -182,6 +182,8 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const filterFilesByTags = (files: CreatorFileType[], tagIds: string[]) => {
     if (tagIds.length === 0) return files;
     
+    // Modified to show files that have at least ONE of the selected tags
+    // instead of requiring ALL of the selected tags
     return files.filter(file => {
       const fileTags = file.tags || [];
       return tagIds.some(tagId => fileTags.includes(tagId));
