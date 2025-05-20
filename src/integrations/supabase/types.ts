@@ -389,6 +389,36 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_submissions: {
+        Row: {
+          data: Json
+          email: string
+          id: string
+          name: string
+          status: string
+          submitted_at: string
+          token: string
+        }
+        Insert: {
+          data: Json
+          email: string
+          id?: string
+          name: string
+          status?: string
+          submitted_at?: string
+          token: string
+        }
+        Update: {
+          data?: Json
+          email?: string
+          id?: string
+          name?: string
+          status?: string
+          submitted_at?: string
+          token?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null

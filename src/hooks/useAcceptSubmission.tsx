@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
 import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 
 // Define the enum types from Supabase
 type TeamEnum = Database["public"]["Enums"]["team"];
@@ -12,7 +13,7 @@ type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
   setProcessingTokens: React.Dispatch<React.SetStateAction<string[]>>,
-  refreshSubmissions: () => Promise<void> // Add refreshSubmissions parameter
+  refreshSubmissions: () => Promise<void>
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
@@ -46,8 +47,15 @@ export const useAcceptSubmission = (
       
       console.log("Creator created with ID:", creatorId);
       
-      // Delete the submission file after successful approval
-      await deleteSubmission(token);
+      // Update status in database instead of deleting file
+      const { error: updateError } = await supabase
+        .from('onboarding_submissions')
+        .update({ status: 'accepted' })
+        .eq('token', token);
+        
+      if (updateError) {
+        console.error("Error updating submission status:", updateError);
+      }
       
       toast({
         title: "Creator approved",

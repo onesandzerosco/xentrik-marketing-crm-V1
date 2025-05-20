@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export interface OnboardSubmission {
@@ -22,74 +22,38 @@ export const useOnboardingSubmissions = () => {
   const fetchSubmissions = async () => {
     setLoading(true);
     try {
-      console.log("Fetching submissions from bucket...");
-      // Get a list of all files in the onboard_submissions bucket
-      const { data: files, error } = await supabase
-        .storage
-        .from('onboard_submissions')
-        .list();
+      console.log("Fetching submissions from database...");
+      // Get submissions from the database table
+      const { data: dbSubmissions, error } = await supabase
+        .from('onboarding_submissions')
+        .select('*')
+        .eq('status', 'pending')
+        .order('submitted_at', { ascending: false });
       
       if (error) {
-        console.error("Error listing files:", error);
+        console.error("Error fetching submissions:", error);
         throw error;
       }
       
-      console.log("Files found:", files?.length || 0);
+      console.log("Submissions found:", dbSubmissions?.length || 0);
       
-      if (!files || files.length === 0) {
+      if (!dbSubmissions || dbSubmissions.length === 0) {
         setSubmissions([]);
         setLoading(false);
         return;
       }
       
-      // Process each file to get its content
-      const submissionsData = await Promise.all(
-        files.filter(file => file.name.endsWith('.json')).map(async (file) => {
-          try {
-            console.log("Processing file:", file.name);
-            // Get the file download URL
-            const { data: fileData, error: downloadError } = await supabase
-              .storage
-              .from('onboard_submissions')
-              .download(file.name);
-            
-            if (downloadError) {
-              console.error(`Error downloading ${file.name}:`, downloadError);
-              return null;
-            }
-            
-            // Parse the JSON content from the file
-            const text = await fileData.text();
-            const jsonData = JSON.parse(text);
-            
-            // Extract token from the filename (remove .json extension)
-            const token = file.name.replace('.json', '');
-            
-            return {
-              token,
-              email: jsonData.personalInfo?.email || 'No email provided',
-              name: jsonData.personalInfo?.fullName || 'No name provided',
-              submittedAt: file.created_at || new Date().toISOString(),
-              data: jsonData,
-              showPreview: false
-            };
-          } catch (parseError) {
-            console.error(`Error processing ${file.name}:`, parseError);
-            return null;
-          }
-        })
-      );
+      // Map database records to OnboardSubmission format
+      const formattedSubmissions = dbSubmissions.map(submission => ({
+        token: submission.token,
+        email: submission.email,
+        name: submission.name,
+        submittedAt: submission.submitted_at,
+        data: submission.data,
+        showPreview: false
+      }));
       
-      // Filter out any null entries and sort by submission date (newest first)
-      const validSubmissions = submissionsData
-        .filter(submission => submission !== null) as OnboardSubmission[];
-      
-      validSubmissions.sort((a, b) => 
-        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-      );
-      
-      console.log("Valid submissions:", validSubmissions.length);
-      setSubmissions(validSubmissions);
+      setSubmissions(formattedSubmissions);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast({
@@ -111,10 +75,12 @@ export const useOnboardingSubmissions = () => {
   const deleteSubmission = async (token: string) => {
     try {
       setProcessingTokens(prev => [...prev, token]);
+      
+      // Delete from the database table instead of storage
       const { error } = await supabase
-        .storage
-        .from('onboard_submissions')
-        .remove([`${token}.json`]);
+        .from('onboarding_submissions')
+        .delete()
+        .eq('token', token);
       
       if (error) {
         throw error;

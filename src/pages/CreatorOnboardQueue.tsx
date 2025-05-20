@@ -26,11 +26,6 @@ const CreatorOnboardQueue: React.FC = () => {
     formatDate
   } = useOnboardingSubmissions();
 
-  const handleDeleteWithRefresh = async (token: string) => {
-    await deleteSubmission(token);
-    // No need for additional fetchSubmissions since deleteSubmission updates the state
-  };
-
   const {
     acceptModalOpen,
     selectedSubmission,
@@ -90,7 +85,7 @@ const CreatorOnboardQueue: React.FC = () => {
               processingTokens={processingTokens}
               formatDate={formatDate}
               togglePreview={togglePreview}
-              deleteSubmission={handleDeleteWithRefresh}
+              deleteSubmission={deleteSubmission}
               onAcceptClick={openAcceptModal}
             />
           )}
