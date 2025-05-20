@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useFileTags } from '@/hooks/useFileTags';
+import { useFileTags, FileTag } from '@/hooks/useFileTags';
 import { CreatorFileType } from '@/types/fileTypes';
 import { useToast } from '@/hooks/use-toast';
 
