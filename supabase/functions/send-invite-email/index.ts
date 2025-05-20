@@ -43,18 +43,24 @@ serve(async (req) => {
     // Format name for email greeting if needed
     const nameToGreet = stageName || email.split('@')[0];
     
+    // Construct the onboarding link
+    const onboardingLink = `${appUrl}/onboard/${token}`;
+    
     // Use Supabase's built-in invite function to trigger the custom template
-    // Passing all the variables that your template might be expecting
+    // Making sure to explicitly use the "invite" template and pass all expected variables
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${appUrl}/onboard/${token}`,
+      redirectTo: onboardingLink,
       data: {
-        // Include all potential template variables
+        // Include all potential template variables that might be in the custom template
         name: nameToGreet,
         stage_name: stageName || null,
         token: token,
-        onboard_link: `${appUrl}/onboard/${token}`,
-        agency_name: "Xentrik", // Providing the missing variable
-        invitation_link: `${appUrl}/onboard/${token}`
+        onboard_link: onboardingLink,
+        agency_name: "Xentrik",
+        invitation_link: onboardingLink,
+        // Additional fields that might help template rendering
+        template: "invite",
+        template_type: "invite"
       }
     });
     
