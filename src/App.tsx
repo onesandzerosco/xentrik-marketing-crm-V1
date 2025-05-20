@@ -1,13 +1,9 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import CreatorFiles from './pages/creator-files/CreatorFiles';
 
-const AppRoutes: React.FC = () => {
-  return (
-    <Routes>
-      <Route path="/creator-files/:id" element={<CreatorFiles />} />
-    </Routes>
-  );
+import React from 'react';
+import AppRoutes from './routes';
+
+const App: React.FC = () => {
+  return <AppRoutes />;
 };
 
-export default AppRoutes;
+export default App;
