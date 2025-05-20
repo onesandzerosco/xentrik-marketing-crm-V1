@@ -125,6 +125,45 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     }
   };
   
+  // Function to remove a tag from a single file by tag name
+  const removeTagFromFile = async (tagName: string, fileId: string) => {
+    if (!fileId || !tagName) return Promise.resolve();
+    
+    try {
+      // Get current tags for the file
+      const { data: fileData, error: fetchError } = await supabase
+        .from('media')
+        .select('tags')
+        .eq('id', fileId)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching file data:', fetchError);
+        return Promise.reject(fetchError);
+      }
+      
+      if (fileData) {
+        const currentTags = fileData.tags || [];
+        const updatedTags = currentTags.filter(tag => tag !== tagName);
+        
+        // Update the file with the new tags array
+        const { error: updateError } = await supabase
+          .from('media')
+          .update({ tags: updatedTags })
+          .eq('id', fileId);
+          
+        if (updateError) {
+          console.error('Error updating file tags:', updateError);
+          return Promise.reject(updateError);
+        }
+      }
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error removing tag from file:', error);
+      return Promise.reject(error);
+    }
+  };
+  
   // Function to remove a tag from files
   const removeTagFromFiles = async (fileIds: string[], tagId: string) => {
     if (!fileIds.length || !tagId) return Promise.resolve();
@@ -319,6 +358,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     isLoading,
     addTagToFiles,
     removeTagFromFiles,
+    removeTagFromFile,
     createTag,
     deleteTag,
     filterFilesByTags,

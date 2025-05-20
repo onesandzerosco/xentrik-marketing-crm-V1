@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileTag } from '@/hooks/useFileTags';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
 
 interface AddTagModalProps {
   isOpen: boolean;
@@ -21,7 +23,10 @@ interface AddTagModalProps {
   availableTags: FileTag[];
   onTagSelect: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
+  onTagRemove?: (tagName: string, fileId: string) => Promise<void>;
   singleFileName?: string;
+  currentFileTags?: string[];
+  singleFileId?: string;
 }
 
 export const AddTagModal: React.FC<AddTagModalProps> = ({
@@ -31,7 +36,10 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
   availableTags,
   onTagSelect,
   onTagCreate,
-  singleFileName
+  onTagRemove,
+  singleFileName,
+  currentFileTags = [],
+  singleFileId
 }) => {
   const [newTagName, setNewTagName] = useState('');
   const { toast } = useToast();
@@ -64,6 +72,25 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
       });
     }
   };
+
+  const handleRemoveTag = async (tagName: string) => {
+    if (!onTagRemove || !singleFileId) return;
+    
+    try {
+      await onTagRemove(tagName, singleFileId);
+      toast({
+        title: "Tag removed",
+        description: `Tag "${tagName}" was removed successfully.`,
+      });
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast({
+        title: "Error removing tag",
+        description: "There was a problem removing the tag.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -79,6 +106,32 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
         </DialogHeader>
         
         <div className="py-4 space-y-4">
+          {/* Current tags section */}
+          {singleFileId && currentFileTags && currentFileTags.length > 0 && (
+            <div className="space-y-2">
+              <Label>Current Tags</Label>
+              <div className="flex flex-wrap gap-2">
+                {currentFileTags.map((tagName) => (
+                  <Badge 
+                    key={tagName} 
+                    variant="secondary"
+                    className="flex items-center gap-1 px-2 py-1"
+                  >
+                    {tagName}
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveTag(tagName)}
+                      className="ml-1 rounded-full hover:bg-destructive/20 p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                      <span className="sr-only">Remove {tagName} tag</span>
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div>
             <Label htmlFor="tag">Select Existing Tag</Label>
             <div className="flex flex-wrap gap-2 mt-2">
