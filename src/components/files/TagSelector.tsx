@@ -105,7 +105,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               {tags.map(tag => (
                 <CommandItem
                   key={tag.id}
-                  onSelect={() => onTagSelect(tag.name)} // Change: Using tag.name instead of tag.id
+                  onSelect={() => onTagSelect(tag.id)}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       {tag.name}
                     </Badge>
                   </div>
-                  {selectedTags.includes(tag.name) && ( // Change: Using tag.name instead of tag.id
+                  {selectedTags.includes(tag.id) && (
                     <Check className="h-4 w-4" />
                   )}
                 </CommandItem>

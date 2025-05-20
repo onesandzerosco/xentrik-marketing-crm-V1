@@ -13,7 +13,7 @@ interface FilterBarProps {
   onSearchChange: (query: string) => void;
   availableTags?: FileTag[];
   selectedTags?: string[];
-  onTagSelect?: (tagName: string) => void;
+  onTagSelect?: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
 }
 
