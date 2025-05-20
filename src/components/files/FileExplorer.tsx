@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
+
+import React, { useState } from 'react';
 import { useFileExplorer } from './explorer/useFileExplorer';
 import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { FileExplorerContent } from './explorer/FileExplorerContent';
@@ -7,19 +7,8 @@ import { FileExplorerHeader } from './explorer/FileExplorerHeader';
 import { Category, CreatorFileType, Folder } from '@/types/fileTypes';
 import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
 import { FileExplorerProvider } from './explorer/context/FileExplorerContext';
-import { useFileTags } from '@/hooks/useFileTags';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useTagOperations } from '@/hooks/useTagOperations';
+import { NoteEditModal } from './explorer/modals/NoteEditModal';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -72,26 +61,26 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
-  // Pass the creatorId to useFileTags
-  const { 
-    availableTags, 
+  // Get tag operations from the custom hook
+  const {
+    availableTags,
     selectedTags,
     setSelectedTags,
-    addTagToFiles,
-    removeTagFromFiles,
-    createTag,
-    deleteTag,
-    filterFilesByTags,
-    removeTagFromFile
-  } = useFileTags({ creatorId });
-  
-  const { toast } = useToast();
-  
-  // State for single file tagging
-  const [singleFileForTagging, setSingleFileForTagging] = useState<CreatorFileType | null>(null);
-  // State for tag modal
-  const [isAddTagModalOpen, setIsAddTagModalOpen] = useState(false);
-  
+    handleTagSelect,
+    handleCreateTag,
+    handleRemoveTag,
+    handleAddTagToFile,
+    handleAddTagClick,
+    singleFileForTagging,
+    isAddTagModalOpen,
+    setIsAddTagModalOpen,
+    filterFilesByTags
+  } = useTagOperations({
+    creatorId,
+    onRefresh
+  });
+
+  // Get file explorer functionality from the hook
   const {
     selectedFileIds,
     setSelectedFileIds,
@@ -146,113 +135,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRenameCategory
   });
 
-  // Debug logging for tag filtering
-  console.log('TAG FILTERING DEBUG:');
-  console.log('- Available files count:', files.length);
-  console.log('- Base filtered files count (after search/type):', baseFilteredFiles.length);
-  console.log('- Selected tag names for filtering:', selectedTags);
-  
-  // Check for files without tag information
-  const filesWithoutTags = baseFilteredFiles.filter(file => !file.tags || file.tags.length === 0).length;
-  console.log('- Files without tags:', filesWithoutTags);
-  
   // Apply tag filtering to the already filtered files
   const filteredFiles = filterFilesByTags(baseFilteredFiles, selectedTags);
-  console.log('- Final filtered files count (after tag filtering):', filteredFiles.length);
-  
-  // Handle tag selection
-  const handleTagSelect = async (tagId: string) => {
-    if (isAddTagModalOpen) {
-      // If the tag modal is open, we're adding tags to selected files
-      const fileIds = singleFileForTagging
-        ? [singleFileForTagging.id]
-        : selectedFileIds;
-        
-      try {
-        // First get the tag name from the tag ID for immediate UI update
-        const selectedTag = availableTags.find(tag => tag.id === tagId);
-        
-        // Update UI immediately (the modal component will handle this)
-        
-        // Then perform the actual tag operation
-        await addTagToFiles(fileIds, tagId);
-        toast({
-          title: "Tag added",
-          description: `Tag added to ${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}.`
-        });
-        
-        // Refresh file list to show updated tags in other components
-        onRefresh();
-        
-      } catch (error) {
-        console.error('Error adding tag:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add tag to files.",
-          variant: "destructive"
-        });
-      }
-    } else {
-      console.log('- Toggling tag filter:', tagId);
-
-      // Find the tag name from the tag ID
-      const tag = availableTags.find(t => t.id === tagId);
-      if (tag) {
-        setSelectedTags(prevTags => {
-          if (prevTags.includes(tag.name)) {
-            return prevTags.filter(name => name !== tag.name);
-          } else {
-            return [...prevTags, tag.name];
-          }
-        });
-      }
-    }
-  };
-  
-  // Handle creating a new tag
-  const handleCreateTag = async (tagName: string) => {
-    try {
-      const newTag = await createTag(tagName);
-      return newTag;
-    } catch (error) {
-      console.error('Error creating tag:', error);
-      throw error;
-    }
-  };
-
-  // Handle tag removal for a specific file
-  const handleRemoveTag = async (tagName: string, fileId: string) => {
-    try {
-      await removeTagFromFile(tagName, fileId);
-      
-      // Toast is handled by the modal component to avoid duplication
-      
-      // Refresh the file list to show updated tags in other components
-      onRefresh();
-    } catch (error) {
-      console.error('Error removing tag:', error);
-      // Error handling is done in the modal component
-    }
-  };
-  
-  // Open the tag modal for a specific file
-  const handleAddTagToFile = (file: CreatorFileType) => {
-    setSingleFileForTagging(file);
-    setIsAddTagModalOpen(true);
-  };
-  
-  // Close the add tag modal and reset the single file
-  useEffect(() => {
-    if (!isAddTagModalOpen) {
-      setSingleFileForTagging(null);
-    }
-  }, [isAddTagModalOpen]);
-  
-  // Open the add tag modal for multiple files
-  const handleAddTagClick = () => {
-    setSingleFileForTagging(null);
-    setIsAddTagModalOpen(true);
-  };
   
   return (
     <FileExplorerProvider
@@ -382,36 +266,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         singleFileForTagging={singleFileForTagging}
       />
       
-      {editingFile && (
-        <Dialog open={isEditNoteModalOpen} onOpenChange={setIsEditNoteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Note</DialogTitle>
-              <DialogDescription>
-                Add or edit the note for {editingFile.name}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Label htmlFor="note">Note</Label>
-              <Input 
-                id="note"
-                value={editingNote || ''}
-                onChange={(e) => setEditingNote(e.target.value)}
-                placeholder="Add a note about this file..."
-                className="mt-2"
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditNoteModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSaveNote}>
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Note Edit Modal */}
+      <NoteEditModal
+        isEditNoteModalOpen={isEditNoteModalOpen}
+        setIsEditNoteModalOpen={setIsEditNoteModalOpen}
+        editingFile={editingFile}
+        editingNote={editingNote}
+        setEditingNote={setEditingNote}
+        handleSaveNote={handleSaveNote}
+      />
     </FileExplorerProvider>
   );
 };
