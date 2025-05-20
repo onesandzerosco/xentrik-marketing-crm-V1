@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { FileExplorerView } from './FileExplorerView';
-import { FileExplorerModals } from './FileExplorerModals';
 import { FilterBar } from '../FilterBar';
 import { CreatorFileType } from '@/types/fileTypes';
 import { useFileExplorerContext } from './context/FileExplorerContext';
@@ -54,92 +54,61 @@ export const FileExplorerContent: React.FC = () => {
   };
   
   return (
-    <>
-      <FileExplorerModals
-        selectedFileIds={selectedFileIds}
-        customFolders={[]}
-        categories={[]}
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">
+          {creatorName ? `${creatorName}'s Files` : 'Shared Files'}
+        </h2>
+        
+        <UploadButton 
+          creatorId={creatorId}
+          onUploadComplete={onUploadComplete}
+          onUploadStart={onUploadStart}
+          currentFolder={currentFolder}
+          currentCategory={currentCategory}
+        />
+      </div>
+      
+      <FilterBar
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
         availableTags={availableTags}
-        isAddToFolderModalOpen={false}
-        setIsAddToFolderModalOpen={() => {}}
-        targetFolderId=""
-        setTargetFolderId={() => {}}
-        targetCategoryId=""
-        setTargetCategoryId={() => {}}
-        isAddTagModalOpen={false}
-        setIsAddTagModalOpen={() => {}}
+        selectedTags={selectedTags}
         onTagSelect={onTagSelect}
-        onTagRemove={onTagRemove}
         onTagCreate={onTagCreate}
-        isAddFolderModalOpen={false}
-        setIsAddFolderModalOpen={() => {}}
-        newFolderName=""
-        setNewFolderName={() => {}}
-        selectedCategoryForNewFolder=""
-        setSelectedCategoryForNewFolder={() => {}}
-        handleCreateFolderSubmit={() => {}}
-        handleAddToFolderSubmit={() => {}}
-        onAddFilesToFolder={() => Promise.resolve()}
-        handleCreateNewFolder={() => {}}
-        singleFileForTagging={null}
       />
       
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">
-            {creatorName ? `${creatorName}'s Files` : 'Shared Files'}
-          </h2>
-          
-          <UploadButton 
-            creatorId={creatorId}
-            onUploadComplete={onUploadComplete}
-            onUploadStart={onUploadStart}
-            currentFolder={currentFolder}
-            currentCategory={currentCategory}
-          />
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-40 w-full rounded-md" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          ))}
         </div>
-        
-        <FilterBar
-          activeFilter={activeFilter}
-          onFilterChange={handleFilterChange}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          availableTags={availableTags}
-          selectedTags={selectedTags}
-          onTagSelect={onTagSelect}
-          onTagCreate={onTagCreate}
+      ) : filteredFiles.length === 0 && searchQuery ? (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertTitle>No files found.</AlertTitle>
+          <AlertDescription>
+            No files matched your search query. Please try a different search.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <FileExplorerView
+          files={filteredFiles}
+          selectedFileIds={selectedFileIds}
+          setSelectedFileIds={setSelectedFileIds}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onFileDeleted={onFileDeleted}
+          onAddTagToFile={onAddTagToFile}
         />
-        
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-40 w-full rounded-md" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            ))}
-          </div>
-        ) : filteredFiles.length === 0 && searchQuery ? (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>No files found.</AlertTitle>
-            <AlertDescription>
-              No files matched your search query. Please try a different search.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <FileExplorerView
-            files={filteredFiles}
-            selectedFileIds={selectedFileIds}
-            setSelectedFileIds={setSelectedFileIds}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onFileDeleted={onFileDeleted}
-            onAddTagToFile={onAddTagToFile}
-          />
-        )}
-      </div>
-    </>
+      )}
+    </div>
   );
 };

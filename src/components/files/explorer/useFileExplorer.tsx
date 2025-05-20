@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileOperations } from '@/hooks/file-operations';
@@ -90,7 +89,7 @@ export const useFileExplorer = (props: UseFileExplorerProps) => {
     return true;
   });
   
-  // File deletion
+  // File deletion handler
   const handleFileDeleted = (fileId: string) => {
     setSelectedFileIds(prev => prev.filter(id => id !== fileId));
     onRefresh();
@@ -142,7 +141,7 @@ export const useFileExplorer = (props: UseFileExplorerProps) => {
   // Note operations
   const handleEditNote = (file: CreatorFileType) => {
     setEditingFile(file);
-    setEditingNote(file.note || '');
+    setEditingNote(file.description || '');
     setIsEditNoteModalOpen(true);
   };
   
@@ -151,7 +150,7 @@ export const useFileExplorer = (props: UseFileExplorerProps) => {
     
     try {
       // Update note in the database
-      const { data, error } = await fetch(`/api/files/${editingFile.id}/note`, {
+      const response = await fetch(`/api/files/${editingFile.id}/note`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,8 +158,9 @@ export const useFileExplorer = (props: UseFileExplorerProps) => {
         body: JSON.stringify({ note: editingNote }),
       });
       
-      if (error) {
-        throw new Error(error as any);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save note');
       }
       
       // Close the modal and refresh
