@@ -26,17 +26,19 @@ export const FileExplorerContent = () => {
     onRemoveFromFolder,
     onEditNote,
     searchQuery,
-    onSearchChange,
+    setSearchQuery,
     selectedTypes,
     setSelectedTypes,
     selectedTags,
     setSelectedTags,
     availableTags: allAvailableTags,
-    onTagCreate
+    onTagCreate,
+    onTagSelect,
+    onSearchChange
   } = useFileExplorerContext();
   
   const handleFileClick = (fileId: string) => {
-    setSelectedFileIds((prev: string[]) => {
+    setSelectedFileIds(prev => {
       if (prev.includes(fileId)) {
         return prev.filter(id => id !== fileId);
       } else {
@@ -104,7 +106,7 @@ export const FileExplorerContent = () => {
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange || setSearchQuery}
+          onSearchChange={onSearchChange || function(query: string) { setSearchQuery(query); }}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           selectedTags={selectedTags}
@@ -127,7 +129,7 @@ export const FileExplorerContent = () => {
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange || setSearchQuery}
+          onSearchChange={onSearchChange || function(query: string) { setSearchQuery(query); }}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           selectedTags={selectedTags}
