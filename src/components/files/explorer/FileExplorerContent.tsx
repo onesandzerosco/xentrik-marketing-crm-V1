@@ -29,7 +29,7 @@ interface FileExplorerContentProps {
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   onEditNote: (file: CreatorFileType) => void;
   searchQuery: string;
-  onSearchChange: (query: string) => void;
+  onSearchChange?: (query: string) => void;
   selectedTypes: string[];
   setSelectedTypes: (types: string[]) => void;
   selectedTags?: string[];
@@ -67,6 +67,19 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   availableTags = [],
   onTagCreate
 }) => {
+  // Helper function to get tag name from ID
+  const getTagNameById = (tagId: string): string => {
+    const tag = availableTags.find(tag => tag.id === tagId);
+    return tag ? tag.name : tagId;
+  };
+  
+  // Handle search change with fallback to setSearchQuery if onSearchChange not provided
+  const handleSearchChange = (query: string) => {
+    if (onSearchChange) {
+      onSearchChange(query);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-hidden">
       <div className="space-y-4">
@@ -80,7 +93,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             }
           }}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
+          onSearchChange={handleSearchChange}
           availableTags={availableTags}
           selectedTags={selectedTags}
           onTagSelect={(tagId) => {

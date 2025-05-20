@@ -58,6 +58,18 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
+  // Helper to get selected tag names for display
+  const getSelectedTagsDisplay = () => {
+    if (selectedTags.length === 0) return null;
+    
+    // Just show count for compact view
+    return (
+      <Badge variant="secondary" className="ml-1 px-1 font-normal">
+        {selectedTags.length}
+      </Badge>
+    );
+  };
+
   const handleCreateTag = async () => {
     if (newTagName.trim() && onTagCreate) {
       try {
@@ -81,11 +93,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
         >
           <Tag className="h-4 w-4" />
           <span>Tags</span>
-          {selectedTags.length > 0 && (
-            <Badge variant="secondary" className="ml-1 px-1 font-normal">
-              {selectedTags.length}
-            </Badge>
-          )}
+          {getSelectedTagsDisplay()}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">

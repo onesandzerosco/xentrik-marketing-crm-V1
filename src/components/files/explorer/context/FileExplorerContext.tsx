@@ -22,7 +22,7 @@ interface FileExplorerContextProps {
   // Tags
   availableTags: FileTag[];
   selectedTags: string[];
-  setSelectedTags: (tags: string[]) => void;
+  setSelectedTags: (tags: string[] | ((prev: string[]) => string[])) => void;
   onTagSelect: (tagId: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
   
@@ -36,12 +36,12 @@ interface FileExplorerContextProps {
   
   // UI state
   viewMode: 'grid' | 'list';
-  setViewMode: (mode: 'grid' | 'list') => void;  // Added missing setViewMode function
+  setViewMode: (mode: 'grid' | 'list') => void;
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedTypes: string[];
-  setSelectedTypes: (types: string[]) => void;
+  setSelectedTypes: (types: string[] | ((prev: string[]) => string[])) => void;
   
   // Upload controls
   isUploadModalOpen: boolean;
