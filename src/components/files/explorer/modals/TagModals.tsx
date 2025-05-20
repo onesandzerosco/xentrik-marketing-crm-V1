@@ -42,7 +42,15 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
   singleFileId
 }) => {
   const [newTagName, setNewTagName] = useState('');
+  const [localTags, setLocalTags] = useState<string[]>(currentFileTags);
   const { toast } = useToast();
+  
+  // Update local tags when currentFileTags changes or when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setLocalTags(currentFileTags);
+    }
+  }, [isOpen, currentFileTags]);
   
   // Clear input when modal closes
   useEffect(() => {
@@ -57,6 +65,12 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
     try {
       const newTag = await onTagCreate(newTagName);
       onTagSelect(newTag.id); // Auto-select the newly created tag
+      
+      // Update local state to show the new tag immediately
+      if (singleFileId) {
+        setLocalTags(prev => [...prev, newTag.name]);
+      }
+      
       setNewTagName('');
       
       toast({
@@ -77,12 +91,14 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
     if (!onTagRemove || !singleFileId) return;
     
     try {
+      // Update local state immediately for a responsive UI
+      setLocalTags(prev => prev.filter(tag => tag !== tagName));
+      
+      // Then perform the actual removal operation
       await onTagRemove(tagName, singleFileId);
-      toast({
-        title: "Tag removed",
-        description: `Tag "${tagName}" was removed successfully.`,
-      });
     } catch (error) {
+      // If there's an error, revert the local state
+      setLocalTags(currentFileTags);
       console.error('Error removing tag:', error);
       toast({
         title: "Error removing tag",
@@ -90,6 +106,19 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleExistingTagSelect = (tagId: string) => {
+    // Find the tag name from the tag ID
+    const selectedTag = availableTags.find(tag => tag.id === tagId);
+    
+    // If it's a single file tagging operation, update local tags immediately
+    if (singleFileId && selectedTag && !localTags.includes(selectedTag.name)) {
+      setLocalTags(prev => [...prev, selectedTag.name]);
+    }
+    
+    // Call the original onTagSelect function
+    onTagSelect(tagId);
   };
   
   return (
@@ -107,11 +136,11 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
         
         <div className="py-4 space-y-4">
           {/* Current tags section */}
-          {singleFileId && currentFileTags && currentFileTags.length > 0 && (
+          {singleFileId && localTags.length > 0 && (
             <div className="space-y-2">
               <Label>Current Tags</Label>
               <div className="flex flex-wrap gap-2">
-                {currentFileTags.map((tagName) => (
+                {localTags.map((tagName) => (
                   <Badge 
                     key={tagName} 
                     variant="secondary"
@@ -140,8 +169,10 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
                   key={tag.id}
                   variant="outline"
                   size="sm"
-                  className={`py-1 px-2 rounded-full border-2 border-${tag.color}-500 hover:bg-${tag.color}-100`}
-                  onClick={() => onTagSelect(tag.id)}
+                  className={`py-1 px-2 rounded-full border-2 border-${tag.color}-500 hover:bg-${tag.color}-100 ${
+                    singleFileId && localTags.includes(tag.name) ? 'bg-gray-200' : ''
+                  }`}
+                  onClick={() => handleExistingTagSelect(tag.id)}
                 >
                   {tag.name}
                 </Button>

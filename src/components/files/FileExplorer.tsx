@@ -169,14 +169,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         : selectedFileIds;
         
       try {
+        // First get the tag name from the tag ID for immediate UI update
+        const selectedTag = availableTags.find(tag => tag.id === tagId);
+        
+        // Update UI immediately (the modal component will handle this)
+        
+        // Then perform the actual tag operation
         await addTagToFiles(fileIds, tagId);
         toast({
           title: "Tag added",
           description: `Tag added to ${fileIds.length} ${fileIds.length === 1 ? 'file' : 'files'}.`
         });
-        // Refresh the file list to show updated tags
+        
+        // Refresh file list to show updated tags in other components
         onRefresh();
-        // Don't close the modal, allow adding multiple tags
+        
       } catch (error) {
         console.error('Error adding tag:', error);
         toast({
@@ -186,7 +193,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         });
       }
     } else {
-      // If we're in the filter bar, we're toggling tag filters
       console.log('- Toggling tag filter:', tagId);
 
       // Find the tag name from the tag ID
@@ -218,19 +224,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleRemoveTag = async (tagName: string, fileId: string) => {
     try {
       await removeTagFromFile(tagName, fileId);
-      toast({
-        title: "Tag removed",
-        description: `Tag "${tagName}" was removed successfully.`,
-      });
-      // Refresh the file list to show updated tags
+      
+      // Toast is handled by the modal component to avoid duplication
+      
+      // Refresh the file list to show updated tags in other components
       onRefresh();
     } catch (error) {
       console.error('Error removing tag:', error);
-      toast({
-        title: "Error",
-        description: "Failed to remove tag from file.",
-        variant: "destructive"
-      });
+      // Error handling is done in the modal component
     }
   };
   
