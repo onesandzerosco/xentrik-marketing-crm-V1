@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
-import { FileTag } from '@/hooks/useFileTags';
+import { FileTag } from '@/types/tagTypes';
 
 interface FileExplorerContextProps {
   // File selection
@@ -33,13 +33,17 @@ interface FileExplorerContextProps {
   
   // File operations
   onFileDeleted: (fileId: string) => void;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
+  onEditNote?: (file: CreatorFileType) => void;
+  onCreateFolder?: () => void;
   
   // UI state
   viewMode: 'grid' | 'list';
-  setViewMode: (mode: 'grid' | 'list') => void;  // Added missing setViewMode function
+  setViewMode: (mode: 'grid' | 'list') => void;
   isLoading: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  onSearchChange?: (query: string) => void;
   selectedTypes: string[];
   setSelectedTypes: (types: string[]) => void;
   
@@ -49,6 +53,7 @@ interface FileExplorerContextProps {
   onUploadComplete: (fileIds?: string[]) => void;
   onUploadStart?: () => void;
   onRefresh: () => void;
+  onUploadClick?: () => void;
   
   // Folder operations
   onFolderChange: (folderId: string) => void;

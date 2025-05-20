@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { useFileExplorer } from './explorer/useFileExplorer';
@@ -73,7 +72,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
-  // Pass the creatorId to useFileTags
   const { 
     availableTags, 
     selectedTags,
@@ -243,6 +241,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onFolderChange,
         searchQuery,
         setSearchQuery,
+        onSearchChange: setSearchQuery,
         selectedTypes,
         setSelectedTypes,
         isUploadModalOpen,
@@ -263,7 +262,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onCategoryChange,
         onCreateCategory,
         onRenameFolder,
-        onRenameCategory
+        onRenameCategory,
+        onUploadClick: () => setIsUploadModalOpen(true),
+        onCreateFolder: handleCreateNewFolder,
+        onRemoveFromFolder,
+        onEditNote: handleEditNote
       }}
     >
       <div className="flex flex-col h-full">
@@ -294,35 +297,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
             isCreatorView={isCreatorView}
           />
           
-          <FileExplorerContent 
-            isLoading={isLoading}
-            filteredFiles={filteredFiles}
-            viewMode={viewMode}
-            isCreatorView={isCreatorView}
-            onFilesChanged={onRefresh}
-            onFileDeleted={handleFileDeleted}
-            recentlyUploadedIds={recentlyUploadedIds}
-            selectedFileIds={selectedFileIds}
-            setSelectedFileIds={setSelectedFileIds}
-            onAddToFolderClick={handleAddToFolderClick}
-            onAddTagClick={handleAddTagClick}
-            onAddTagToFile={handleAddTagToFile}
-            currentFolder={currentFolder}
-            currentCategory={currentCategory}
-            onCreateFolder={handleCreateNewFolder}
-            onUploadClick={() => setIsUploadModalOpen(true)}
-            availableFolders={availableFolders}
-            onRemoveFromFolder={onRemoveFromFolder}
-            onEditNote={handleEditNote}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            selectedTypes={selectedTypes}
-            setSelectedTypes={setSelectedTypes}
-            selectedTags={selectedTags}
-            setSelectedTags={setSelectedTags}
-            availableTags={availableTags}
-            onTagCreate={handleCreateTag}
-          />
+          <FileExplorerContent />
         </div>
       </div>
       

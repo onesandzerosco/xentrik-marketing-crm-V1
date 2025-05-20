@@ -5,7 +5,7 @@ import { FileTag, UseFileTagsProps } from '@/types/tagTypes';
 import * as tagService from '@/services/tagService';
 import { filterFilesByTags } from '@/utils/tagUtils';
 
-export { FileTag } from '@/types/tagTypes';
+export type { FileTag } from '@/types/tagTypes';
 
 export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const [availableTags, setAvailableTags] = useState<FileTag[]>([]);

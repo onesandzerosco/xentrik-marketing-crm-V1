@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { GridView } from './GridView';
 import { ListView } from './ListView';
@@ -35,7 +36,7 @@ export const FileExplorerContent = () => {
   } = useFileExplorerContext();
   
   const handleFileClick = (fileId: string) => {
-    setSelectedFileIds(prev => {
+    setSelectedFileIds((prev: string[]) => {
       if (prev.includes(fileId)) {
         return prev.filter(id => id !== fileId);
       } else {
@@ -103,7 +104,7 @@ export const FileExplorerContent = () => {
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
+          onSearchChange={onSearchChange || setSearchQuery}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           selectedTags={selectedTags}
@@ -126,7 +127,7 @@ export const FileExplorerContent = () => {
           onRemoveFromFolder={onRemoveFromFolder}
           onEditNote={onEditNote}
           searchQuery={searchQuery}
-          onSearchChange={onSearchChange}
+          onSearchChange={onSearchChange || setSearchQuery}
           selectedTypes={selectedTypes}
           setSelectedTypes={setSelectedTypes}
           selectedTags={selectedTags}
@@ -136,7 +137,7 @@ export const FileExplorerContent = () => {
         />
       )}
       
-      <UploadArea onUploadClick={onUploadClick} />
+      {onUploadClick && <UploadArea onUploadClick={onUploadClick} />}
     </div>
   );
 };
