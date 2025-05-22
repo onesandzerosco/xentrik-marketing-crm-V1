@@ -1,3 +1,4 @@
+
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from '@/types/fileTypes';
 
@@ -61,12 +62,14 @@ export const useFolderOperations = ({
         title: "Category created",
         description: `Successfully created category: ${newCategoryName}`,
       });
+      return Promise.resolve();
     } catch (error) {
       toast({
         title: "Error creating category",
         description: "Failed to create category",
         variant: "destructive"
       });
+      return Promise.reject(error);
     }
   };
 
@@ -112,12 +115,14 @@ export const useFolderOperations = ({
         title: "Folder created",
         description: `Successfully created folder: ${newFolderName}`,
       });
+      return Promise.resolve();
     } catch (error) {
       toast({
         title: "Error creating folder",
         description: "Failed to create folder",
         variant: "destructive"
       });
+      return Promise.reject(error);
     }
   };
 
@@ -154,12 +159,14 @@ export const useFolderOperations = ({
         description: `${selectedFileIds.length} files added to folder successfully`,
       });
       setSelectedFileIds([]);
+      return Promise.resolve();
     } catch (error) {
       toast({
         title: "Error adding to folder",
         description: "Failed to add files to folder",
         variant: "destructive"
       });
+      return Promise.reject(error);
     }
   };
 
@@ -261,8 +268,8 @@ export const useFolderOperations = ({
 
   return {
     handleCreateCategorySubmit,
-    handleCreateFolderSubmit: null, // These will be assigned in useFileExplorer
-    handleAddToFolderSubmit: null,  // These will be assigned in useFileExplorer
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
     handleDeleteFolder,
     handleDeleteCategory,
     handleRenameFolder,
