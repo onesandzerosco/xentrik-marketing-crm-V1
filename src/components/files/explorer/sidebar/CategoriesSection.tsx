@@ -15,6 +15,8 @@ interface CategoriesSectionProps {
   onCreateCategoryClick?: () => void;
   onCreateFolderClick?: (categoryId: string) => void;
   isCreatorView?: boolean;
+  // Add the missing expandedCategories prop
+  expandedCategories?: Record<string, boolean>;
 }
 
 export const CategoriesSection: React.FC<CategoriesSectionProps> = ({
@@ -26,7 +28,8 @@ export const CategoriesSection: React.FC<CategoriesSectionProps> = ({
   onRenameCategoryClick,
   onCreateCategoryClick,
   onCreateFolderClick,
-  isCreatorView = false
+  isCreatorView = false,
+  expandedCategories = {} // Provide a default empty object
 }) => {
   const handleRenameClick = (categoryId: string, categoryName: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -70,13 +73,14 @@ export const CategoriesSection: React.FC<CategoriesSectionProps> = ({
         <div className="space-y-1">
           {categories.map(category => {
             const categoryFolders = folders.filter(f => f.categoryId === category.id);
+            const isExpanded = expandedCategories?.[category.id] || false;
             
             return (
               <CategoryItem 
                 key={category.id}
                 category={category}
                 folders={categoryFolders}
-                isSelected={currentCategory === category.id}
+                isExpanded={isExpanded} // Pass isExpanded instead of isSelected
                 onSelect={() => onCategoryChange(category.id)}
                 onRenameClick={(e) => handleRenameClick(category.id, category.name, e)}
                 onDeleteClick={(e) => handleDeleteClick(category.id, e)}

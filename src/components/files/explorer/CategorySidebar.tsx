@@ -80,18 +80,14 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
       <CategoriesSection 
         categories={categories}
         folders={folders}
-        expandedCategories={expandedCategories}
         currentCategory={currentCategory}
-        currentFolder={currentFolder}
-        canManageFolders={canManageFolders}
-        onInitiateNewCategory={onInitiateNewCategory}
-        onToggleCategory={toggleCategory}
-        onFolderChange={onFolderChange}
-        onNewFolderClick={handleNewFolderClick}
-        onRenameCategory={handleRenameCategory}
-        onDeleteCategory={handleDeleteCategory}
-        onRenameFolder={handleRenameFolder}
-        onDeleteFolder={handleDeleteFolder}
+        onCategoryChange={onCategoryChange}
+        expandedCategories={expandedCategories}
+        onCreateCategoryClick={canManageFolders ? onInitiateNewCategory : undefined}
+        onCreateFolderClick={canManageFolders ? handleNewFolderClick : undefined}
+        onDeleteCategoryClick={canManageFolders ? handleDeleteCategory : undefined}
+        onRenameCategoryClick={canManageFolders ? handleRenameCategory : undefined}
+        isCreatorView={canManageFolders}
       />
     </div>
   );

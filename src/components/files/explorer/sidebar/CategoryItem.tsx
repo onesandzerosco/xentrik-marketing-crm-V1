@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronDown, ChevronRight, Pencil, Trash2, FolderPlus } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -232,4 +231,3 @@ const FolderItem: React.FC<FolderItemProps> = ({
     </div>
   );
 };
-
