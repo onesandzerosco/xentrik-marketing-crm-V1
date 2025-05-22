@@ -282,15 +282,6 @@ export const useFileExplorer = ({
     );
   };
 
-  // Implementation of event handlers for rename operations
-  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
-    handleInitiateRenameCategory(categoryId, currentName);
-  };
-  
-  const handleRenameFolderClick = (folderId: string, currentName: string) => {
-    handleInitiateRenameFolder(folderId, currentName);
-  };
-
   return {
     // File selection
     selectedFileIds,
@@ -313,6 +304,8 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
+    
+    // Use the click handler from useFolderModals
     handleRenameCategoryClick,
     
     // Folder modals
@@ -339,6 +332,8 @@ export const useFileExplorer = ({
     setFolderToRename,
     folderCurrentName,
     setFolderCurrentName,
+    
+    // Use the click handler from useFolderModals
     handleRenameFolderClick,
     
     // File notes

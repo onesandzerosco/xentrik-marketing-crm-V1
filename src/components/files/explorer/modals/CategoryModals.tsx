@@ -27,7 +27,7 @@ interface CategoryModalsProps {
   // Handlers - Updated to match the expected function signatures
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
   handleDeleteCategory: () => void;
-  handleRenameCategory: () => void;
+  handleRenameCategory: (e: React.FormEvent) => void; // Updated to accept an event parameter
   
   // Optional callbacks
   onCreateNewCategory?: () => void;
@@ -62,7 +62,7 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
     e.preventDefault();
     // Update the parent's newCategoryName with our local state before submitting
     setNewCategoryName(newCategoryNameForRename);
-    handleRenameCategory();
+    handleRenameCategory(e); // Ensure we pass the event to match the expected signature
   };
 
   return (
