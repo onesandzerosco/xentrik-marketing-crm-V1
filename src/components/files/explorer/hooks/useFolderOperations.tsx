@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from '@/types/fileTypes';
 
@@ -208,8 +207,8 @@ export const useFolderOperations = ({
       });
   };
 
-  // Handle the actual folder renaming
-  const handleRenameFolder = (
+  // Handle the actual folder renaming - updated to properly request the rename operation
+  const handleRenameFolder = async (
     folderToRename: string | null, 
     newFolderName: string,
     setIsRenameFolderModalOpen: (open: boolean) => void, 
@@ -217,26 +216,25 @@ export const useFolderOperations = ({
   ) => {
     if (!folderToRename || !newFolderName.trim() || !onRenameFolder) return;
     
-    return onRenameFolder(folderToRename, newFolderName)
-      .then(() => {
-        setFolderToRename(null);
-        setIsRenameFolderModalOpen(false);
-        toast({
-          title: "Folder renamed",
-          description: `Folder renamed to "${newFolderName}" successfully`,
-        });
-      })
-      .catch(error => {
-        toast({
-          title: "Error renaming folder",
-          description: "Failed to rename folder",
-          variant: "destructive"
-        });
+    try {
+      await onRenameFolder(folderToRename, newFolderName);
+      setFolderToRename(null);
+      setIsRenameFolderModalOpen(false);
+      toast({
+        title: "Folder renamed",
+        description: `Folder renamed to "${newFolderName}" successfully`,
       });
+    } catch (error) {
+      toast({
+        title: "Error renaming folder",
+        description: "Failed to rename folder",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Handle the actual category renaming
-  const handleRenameCategory = (
+  // Handle the actual category renaming - updated to properly request the rename operation
+  const handleRenameCategory = async (
     categoryToRename: string | null, 
     newCategoryName: string,
     setIsRenameCategoryModalOpen: (open: boolean) => void, 
@@ -244,28 +242,27 @@ export const useFolderOperations = ({
   ) => {
     if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) return;
     
-    return onRenameCategory(categoryToRename, newCategoryName)
-      .then(() => {
-        setCategoryToRename(null);
-        setIsRenameCategoryModalOpen(false);
-        toast({
-          title: "Category renamed",
-          description: `Category renamed to "${newCategoryName}" successfully`,
-        });
-      })
-      .catch(error => {
-        toast({
-          title: "Error renaming category",
-          description: "Failed to rename category",
-          variant: "destructive"
-        });
+    try {
+      await onRenameCategory(categoryToRename, newCategoryName);
+      setCategoryToRename(null);
+      setIsRenameCategoryModalOpen(false);
+      toast({
+        title: "Category renamed",
+        description: `Category renamed to "${newCategoryName}" successfully`,
       });
+    } catch (error) {
+      toast({
+        title: "Error renaming category",
+        description: "Failed to rename category",
+        variant: "destructive"
+      });
+    }
   };
 
   return {
     handleCreateCategorySubmit,
-    handleCreateFolderSubmit,
-    handleAddToFolderSubmit,
+    handleCreateFolderSubmit: null, // These will be assigned in useFileExplorer
+    handleAddToFolderSubmit: null,  // These will be assigned in useFileExplorer
     handleDeleteFolder,
     handleDeleteCategory,
     handleRenameFolder,

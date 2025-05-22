@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,6 +30,18 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   onSubmit,
   isSubmitting = false
 }) => {
+  // Initialize newFolderName with current value when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setNewFolderName(folderCurrentName);
+    }
+  }, [isOpen, folderCurrentName, setNewFolderName]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -40,7 +52,7 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Input
               id="folderName"

@@ -143,7 +143,11 @@ const FoldersList: React.FC<FoldersListProps> = ({
               variant="link"
               size="sm"
               className="px-0 h-auto text-xs ml-2 font-medium"
-              onClick={(e) => onNewFolderClick(e, categoryId)}
+              onClick={(e) => {
+                // Stop propagation to prevent triggering parent click events
+                e.stopPropagation();
+                onNewFolderClick(e, categoryId);
+              }}
             >
               Create folder
             </Button>
@@ -203,7 +207,10 @@ const FolderItem: React.FC<FolderItemProps> = ({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={(e) => onRenameFolder(e, folder.id, folder.name)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRenameFolder(e, folder.id, folder.name);
+            }}
             title="Rename folder"
           >
             <Pencil className="h-3.5 w-3.5" />
@@ -212,7 +219,10 @@ const FolderItem: React.FC<FolderItemProps> = ({
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={(e) => onDeleteFolder(e, folder.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteFolder(e, folder.id);
+            }}
             title="Delete folder"
           >
             <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
@@ -222,3 +232,4 @@ const FolderItem: React.FC<FolderItemProps> = ({
     </div>
   );
 };
+

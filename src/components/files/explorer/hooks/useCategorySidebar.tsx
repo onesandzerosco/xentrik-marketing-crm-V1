@@ -57,6 +57,7 @@ export const useCategorySidebar = ({
   const handleRenameCategory = useCallback(async (e: React.MouseEvent, categoryId: string, currentName: string) => {
     e.stopPropagation();
     try {
+      // This should now open the rename modal instead of immediately renaming
       await onRenameCategory(categoryId, currentName);
     } catch (error) {
       console.error("Error renaming category:", error);
@@ -85,6 +86,7 @@ export const useCategorySidebar = ({
   const handleRenameFolder = useCallback(async (e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
     try {
+      // This should now open the rename modal instead of immediately renaming
       await onRenameFolder(folderId, currentName);
     } catch (error) {
       console.error("Error renaming folder:", error);
@@ -98,6 +100,7 @@ export const useCategorySidebar = ({
   
   const handleNewFolderClick = useCallback((e: React.MouseEvent, categoryId: string) => {
     e.stopPropagation();
+    // This calls the initiating function to open the modal
     onInitiateNewFolder(categoryId);
   }, [onInitiateNewFolder]);
 

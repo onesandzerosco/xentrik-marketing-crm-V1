@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,13 @@ export const RenameCategoryModal: React.FC<RenameCategoryModalProps> = ({
   setNewCategoryName,
   onSubmit
 }) => {
+  // Initialize newCategoryName with current value when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setNewCategoryName(categoryCurrentName);
+    }
+  }, [isOpen, categoryCurrentName, setNewCategoryName]);
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(e);

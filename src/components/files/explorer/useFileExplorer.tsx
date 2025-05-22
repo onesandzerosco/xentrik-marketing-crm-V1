@@ -119,8 +119,6 @@ export const useFileExplorer = ({
   
   const {
     handleCreateCategorySubmit: createCategoryBase,
-    handleCreateFolderSubmit: createFolderBase,
-    handleAddToFolderSubmit: addToFolderBase,
     handleDeleteFolder: deleteFolderBase,
     handleDeleteCategory: deleteCategoryBase,
     handleRenameFolder: renameFolderBase,
@@ -249,15 +247,27 @@ export const useFileExplorer = ({
     deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Fix rename handlers to match the expected function signatures
-  const handleRenameCategory = (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    if (!categoryId || !newName.trim()) return;
-    renameCategoryBase(categoryId, newName, setIsOpen, setIdToRename);
+  // Fix rename handlers so they open the modals instead of immediately executing
+  const handleRenameCategorySubmit = () => {
+    if (!categoryToRename || !newCategoryName.trim()) return;
+    
+    renameCategoryBase(
+      categoryToRename, 
+      newCategoryName, 
+      setIsRenameCategoryModalOpen, 
+      setCategoryToRename
+    );
   };
   
-  const handleRenameFolder = (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    if (!folderId || !newName.trim()) return;
-    renameFolderBase(folderId, newName, setIsOpen, setIdToRename);
+  const handleRenameFolderSubmit = () => {
+    if (!folderToRename || !newFolderName.trim()) return;
+    
+    renameFolderBase(
+      folderToRename, 
+      newFolderName, 
+      setIsRenameFolderModalOpen, 
+      setFolderToRename
+    );
   };
 
   return {
@@ -303,7 +313,7 @@ export const useFileExplorer = ({
     setFolderToDelete,
     handleDeleteFolderClick,
     isRenameFolderModalOpen,
-    setIsRenameFolderModalOpen,
+    setIsRenameCategoryModalOpen,
     folderToRename,
     setFolderToRename,
     folderCurrentName,
@@ -345,8 +355,8 @@ export const useFileExplorer = ({
     handleAddToFolderSubmit,
     handleDeleteFolder,
     handleDeleteCategory,
-    handleRenameFolder,
-    handleRenameCategory,
+    handleRenameFolder: handleRenameFolderSubmit,
+    handleRenameCategory: handleRenameCategorySubmit,
     
     // Available data
     availableFolders,
