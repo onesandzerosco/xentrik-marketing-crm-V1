@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
@@ -180,6 +179,22 @@ export const useFileExplorer = ({
     }
   };
   
+  // Handler to open the rename category modal
+  const handleRenameCategoryModal = (categoryId: string, currentName: string) => {
+    console.log("Opening rename category modal for:", categoryId, currentName);
+    setCategoryToRename(categoryId);
+    setCategoryCurrentName(currentName);
+    setIsRenameCategoryModalOpen(true);
+  };
+  
+  // Handler to open the rename folder modal
+  const handleRenameFolderModal = (folderId: string, currentName: string) => {
+    console.log("Opening rename folder modal for:", folderId, currentName);
+    setFolderToRename(folderId);
+    setFolderCurrentName(currentName);
+    setIsRenameFolderModalOpen(true);
+  };
+  
   // Customize folder operations with the state values
   const handleCreateCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,21 +266,7 @@ export const useFileExplorer = ({
     deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Create a proper function to handle the rename category modal opening
-  const handleRenameCategoryModal = (categoryId: string, currentName: string) => {
-    setCategoryToRename(categoryId);
-    setCategoryCurrentName(currentName);
-    setIsRenameCategoryModalOpen(true);
-  };
-  
-  // Create a proper function to handle the rename folder modal opening
-  const handleRenameFolderModal = (folderId: string, currentName: string) => {
-    setFolderToRename(folderId);
-    setFolderCurrentName(currentName);
-    setIsRenameFolderModalOpen(true);
-  };
-  
-  // Fix rename handlers to properly work with modals
+  // Properly handle the rename actions after modal confirmation
   const handleRenameCategory = (e: React.FormEvent) => {
     e.preventDefault();
     if (!categoryToRename || !categoryCurrentName.trim()) return;

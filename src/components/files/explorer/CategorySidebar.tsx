@@ -59,9 +59,9 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
     currentCategory,
     onInitiateNewFolder,
     onDeleteCategory,
-    onRenameCategory,
+    onRenameCategoryClick: onRenameCategory, // Renamed to clarify intent
     onDeleteFolder,
-    onRenameFolder
+    onRenameFolderClick: onRenameFolder  // Renamed to clarify intent
   });
 
   return (

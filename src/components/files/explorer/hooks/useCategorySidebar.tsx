@@ -6,18 +6,18 @@ interface UseCategorySidebarProps {
   currentCategory: string | null;
   onInitiateNewFolder: (categoryId: string) => void;
   onDeleteCategory: (categoryId: string) => Promise<void>;
-  onRenameCategory: (categoryId: string, currentName: string) => void;
+  onRenameCategoryClick: (categoryId: string, currentName: string) => void; // Changed name to clarify purpose
   onDeleteFolder: (folderId: string) => Promise<void>;
-  onRenameFolder: (folderId: string, currentName: string) => void;
+  onRenameFolderClick: (folderId: string, currentName: string) => void; // Changed name to clarify purpose
 }
 
 export const useCategorySidebar = ({
   currentCategory,
   onInitiateNewFolder,
   onDeleteCategory,
-  onRenameCategory,
+  onRenameCategoryClick,
   onDeleteFolder,
-  onRenameFolder
+  onRenameFolderClick
 }: UseCategorySidebarProps) => {
   const { toast } = useToast();
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -54,10 +54,11 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteCategory, toast]);
   
+  // This only triggers the modal to open
   const handleRenameCategory = useCallback((e: React.MouseEvent, categoryId: string, currentName: string) => {
     e.stopPropagation();
-    onRenameCategory(categoryId, currentName);
-  }, [onRenameCategory]);
+    onRenameCategoryClick(categoryId, currentName);
+  }, [onRenameCategoryClick]);
   
   const handleDeleteFolder = useCallback(async (e: React.MouseEvent, folderId: string) => {
     e.stopPropagation();
@@ -73,10 +74,11 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteFolder, toast]);
   
+  // This only triggers the modal to open
   const handleRenameFolder = useCallback((e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
-    onRenameFolder(folderId, currentName);
-  }, [onRenameFolder]);
+    onRenameFolderClick(folderId, currentName);
+  }, [onRenameFolderClick]);
   
   const handleNewFolderClick = useCallback((e: React.MouseEvent, categoryId: string) => {
     e.stopPropagation();

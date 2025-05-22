@@ -1,14 +1,9 @@
 
 import React from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface RenameModalProps {
   isOpen: boolean;
@@ -17,6 +12,7 @@ interface RenameModalProps {
   currentName: string;
   setNewName: (name: string) => void;
   onConfirm: (e: React.FormEvent) => void;
+  isSubmitting?: boolean;
 }
 
 export const RenameModal: React.FC<RenameModalProps> = ({
@@ -26,6 +22,7 @@ export const RenameModal: React.FC<RenameModalProps> = ({
   currentName,
   setNewName,
   onConfirm,
+  isSubmitting = false
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,27 +31,34 @@ export const RenameModal: React.FC<RenameModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] w-full">
+      <DialogContent className="sm:max-w-[500px] w-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            Update the name
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="py-4">
-          <div className="space-y-4">
-            <Input
-              value={currentName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Enter new name"
-              autoFocus
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="newName">New Name</Label>
+              <Input
+                id="newName"
+                placeholder="Enter new name"
+                value={currentName}
+                onChange={(e) => setNewName(e.target.value)}
+                autoFocus
+              />
+            </div>
           </div>
           
-          <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!currentName.trim()}>
-              Rename
+            <Button type="submit" disabled={!currentName.trim() || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

@@ -59,6 +59,17 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     // Additional logic if needed
   };
 
+  // Modal opening handlers for rename operations
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    console.log("Opening rename category modal for:", categoryId, currentName);
+    // This will be handled by useFileExplorer to open the modal
+  };
+
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    console.log("Opening rename folder modal for:", folderId, currentName);
+    // This will be handled by useFileExplorer to open the modal
+  };
+
   return (
     <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0">
       <h2 className="text-lg font-semibold">Folders</h2>
@@ -100,9 +111,9 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onInitiateNewCategory={handleInitiateNewCategory}
         onInitiateNewFolder={handleInitiateNewFolder}
         onDeleteCategory={onDeleteCategory || (async () => {})}
-        onRenameCategory={onRenameCategory || (async () => {})}
+        onRenameCategory={handleRenameCategoryClick}
         onDeleteFolder={onDeleteFolder || (async () => {})}
-        onRenameFolder={onRenameFolder || (async () => {})}
+        onRenameFolder={handleRenameFolderClick}
       />
     </div>
   );
