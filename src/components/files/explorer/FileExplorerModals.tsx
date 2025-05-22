@@ -60,7 +60,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onOpenChange={fileExplorerState.setIsUploadModalOpen}
         creatorId={creatorId}
         currentFolder={currentFolder}
-        currentCategory={currentCategory}
+        availableCategories={[]} // Pass an empty array or get actual categories
         onUploadComplete={onUploadComplete}
         onUploadStart={onUploadStart}
       />
