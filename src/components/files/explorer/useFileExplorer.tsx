@@ -118,15 +118,7 @@ export const useFileExplorer = ({
     setIsUploadModalOpen
   } = useUploadModal();
   
-  const {
-    handleCreateCategorySubmit,
-    handleCreateFolderSubmit,
-    handleAddToFolderSubmit,
-    handleDeleteFolder,
-    handleDeleteCategory,
-    handleRenameFolder,
-    handleRenameCategory
-  } = useFolderOperations({
+  const folderOperations = useFolderOperations({
     onCreateFolder,
     onCreateCategory,
     onAddFilesToFolder,
@@ -180,7 +172,7 @@ export const useFileExplorer = ({
   };
   
   // Customize folder operations with the state values
-  const handleCreateCategorySubmit = (e: React.FormEvent) => {
+  const createCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newCategoryName.trim()) {
@@ -192,7 +184,7 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setIsAddCategoryModalOpen = setIsAddCategoryModalOpen;
     (e.currentTarget as any).setNewCategoryName = setNewCategoryName;
     
-    handleCreateCategorySubmit(e).then(() => {
+    folderOperations.handleCreateCategorySubmit(e).then(() => {
       // If we're creating a category from the AddToFolder flow,
       // continue with folder creation after the category is created
       if (showNewFolderInCategory) {
@@ -210,7 +202,7 @@ export const useFileExplorer = ({
     });
   };
   
-  const handleCreateFolderSubmit = (e: React.FormEvent) => {
+  const createFolderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newFolderName.trim() || !selectedCategoryForNewFolder) {
@@ -225,10 +217,10 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setNewFolderName = setNewFolderName;
     (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
     
-    handleCreateFolderSubmit(e);
+    folderOperations.handleCreateFolderSubmit(e);
   };
   
-  const handleAddToFolderSubmit = (e: React.FormEvent) => {
+  const addToFolderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Attach the required values to the event so that the handler can use them
@@ -239,22 +231,22 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setTargetFolderId = setTargetFolderId;
     (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
     
-    handleAddToFolderSubmit(e);
+    folderOperations.handleAddToFolderSubmit(e);
   };
   
   const handleDeleteFolderFn = () => {
-    handleDeleteFolder(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
+    folderOperations.handleDeleteFolder(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
   };
   
   const handleDeleteCategoryFn = () => {
-    handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
+    folderOperations.handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
   // Fix rename handlers so they open the modals instead of immediately executing
   const handleRenameCategorySubmit = () => {
     if (!categoryToRename || !newCategoryName.trim()) return;
     
-    handleRenameCategory(
+    folderOperations.handleRenameCategory(
       categoryToRename, 
       newCategoryName, 
       setIsRenameCategoryModalOpen, 
@@ -265,7 +257,7 @@ export const useFileExplorer = ({
   const handleRenameFolderSubmit = () => {
     if (!folderToRename || !newFolderName.trim()) return;
     
-    handleRenameFolder(
+    folderOperations.handleRenameFolder(
       folderToRename, 
       newFolderName, 
       setIsRenameFolderModalOpen, 
@@ -353,9 +345,9 @@ export const useFileExplorer = ({
     handleAddToFolderClick,
     handleCreateNewCategory,
     handleCreateNewFolder,
-    handleCreateCategorySubmit,
-    handleCreateFolderSubmit,
-    handleAddToFolderSubmit,
+    handleCreateCategorySubmit: createCategorySubmit,
+    handleCreateFolderSubmit: createFolderSubmit,
+    handleAddToFolderSubmit: addToFolderSubmit,
     handleDeleteFolder: handleDeleteFolderFn,
     handleDeleteCategory: handleDeleteCategoryFn,
     handleRenameFolder: handleRenameFolderSubmit,

@@ -51,7 +51,7 @@ export const useFolderOperations = ({
         description: "Please enter a valid category name",
         variant: "destructive"
       });
-      return;
+      return Promise.reject(new Error("Category name required"));
     }
     
     try {
@@ -94,7 +94,7 @@ export const useFolderOperations = ({
         description: "Please enter a valid folder name",
         variant: "destructive"
       });
-      return;
+      return Promise.reject(new Error("Folder name required"));
     }
     
     if (!categoryId) {
@@ -103,7 +103,7 @@ export const useFolderOperations = ({
         description: "Please select a category for the new folder",
         variant: "destructive"
       });
-      return;
+      return Promise.reject(new Error("Category required"));
     }
     
     try {
@@ -147,7 +147,7 @@ export const useFolderOperations = ({
         description: "Please select a category, folder, and at least one file",
         variant: "destructive"
       });
-      return;
+      return Promise.reject(new Error("Selection required"));
     }
     
     try {
@@ -172,7 +172,7 @@ export const useFolderOperations = ({
 
   // Handle the actual folder deletion
   const handleDeleteFolder = (folderToDelete: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => {
-    if (!folderToDelete) return;
+    if (!folderToDelete) return Promise.reject(new Error("No folder selected"));
     
     return onDeleteFolder(folderToDelete)
       .then(() => {
@@ -189,12 +189,13 @@ export const useFolderOperations = ({
           description: "Failed to delete folder",
           variant: "destructive"
         });
+        return Promise.reject(error);
       });
   };
 
   // Handle the actual category deletion
   const handleDeleteCategory = (categoryToDelete: string | null, setIsDeleteCategoryModalOpen: (open: boolean) => void, setCategoryToDelete: (id: string | null) => void) => {
-    if (!categoryToDelete) return;
+    if (!categoryToDelete) return Promise.reject(new Error("No category selected"));
     
     return onDeleteCategory(categoryToDelete)
       .then(() => {
@@ -211,6 +212,7 @@ export const useFolderOperations = ({
           description: "Failed to delete category",
           variant: "destructive"
         });
+        return Promise.reject(error);
       });
   };
 
@@ -221,7 +223,9 @@ export const useFolderOperations = ({
     setIsRenameFolderModalOpen: (open: boolean) => void, 
     setFolderToRename: (id: string | null) => void
   ) => {
-    if (!folderToRename || !newFolderName.trim() || !onRenameFolder) return;
+    if (!folderToRename || !newFolderName.trim() || !onRenameFolder) {
+      return Promise.reject(new Error("Invalid folder rename parameters"));
+    }
     
     try {
       await onRenameFolder(folderToRename, newFolderName);
@@ -231,12 +235,14 @@ export const useFolderOperations = ({
         title: "Folder renamed",
         description: `Folder renamed to "${newFolderName}" successfully`,
       });
+      return Promise.resolve();
     } catch (error) {
       toast({
         title: "Error renaming folder",
         description: "Failed to rename folder",
         variant: "destructive"
       });
+      return Promise.reject(error);
     }
   };
 
@@ -247,7 +253,9 @@ export const useFolderOperations = ({
     setIsRenameCategoryModalOpen: (open: boolean) => void, 
     setCategoryToRename: (id: string | null) => void
   ) => {
-    if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) return;
+    if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) {
+      return Promise.reject(new Error("Invalid category rename parameters"));
+    }
     
     try {
       await onRenameCategory(categoryToRename, newCategoryName);
@@ -257,12 +265,14 @@ export const useFolderOperations = ({
         title: "Category renamed",
         description: `Category renamed to "${newCategoryName}" successfully`,
       });
+      return Promise.resolve();
     } catch (error) {
       toast({
         title: "Error renaming category",
         description: "Failed to rename category",
         variant: "destructive"
       });
+      return Promise.reject(error);
     }
   };
 
