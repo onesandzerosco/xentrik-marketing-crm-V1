@@ -64,7 +64,17 @@ export const useAcceptSubmission = (
       
       // 3. Close the modal and refresh the list
       setAcceptModalOpen(false);
-      deleteSubmission(selectedSubmission.token);
+      
+      // Don't call deleteSubmission as it marks the submission as declined
+      // Instead, fetch the submissions again to refresh the list
+      const { data: updatedData, error: fetchError } = await supabase
+        .from('onboarding_submissions')
+        .select('*')
+        .eq('status', 'pending');
+        
+      if (fetchError) {
+        console.error("Error refreshing submissions:", fetchError);
+      }
       
     } catch (error) {
       console.error("Error accepting submission:", error);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { format } from "date-fns";
@@ -21,7 +21,7 @@ export const useOnboardingSubmissions = () => {
   const [loading, setLoading] = useState(true);
   const [processingTokens, setProcessingTokens] = useState<string[]>([]);
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     try {
       console.log("Fetching submissions from database...");
@@ -69,7 +69,7 @@ export const useOnboardingSubmissions = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const togglePreview = (token: string) => {
     setSubmissions(prev => prev.map(sub => 
@@ -121,7 +121,7 @@ export const useOnboardingSubmissions = () => {
 
   useEffect(() => {
     fetchSubmissions();
-  }, []);
+  }, [fetchSubmissions]);
 
   return {
     submissions,
