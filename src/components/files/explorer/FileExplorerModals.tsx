@@ -58,7 +58,6 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <FileUploadModal
         isOpen={fileExplorerState.isUploadModalOpen}
         onOpenChange={fileExplorerState.setIsUploadModalOpen}
-        onRefresh={onRefresh}
         creatorId={creatorId}
         currentFolder={currentFolder}
         currentCategory={currentCategory}
@@ -69,42 +68,54 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <AddToFolderModal
         isOpen={fileExplorerState.isAddToFolderModalOpen}
         onOpenChange={fileExplorerState.setIsAddToFolderModalOpen}
-        selectedFileIds={fileExplorerState.selectedFileIds}
-        onRefresh={onRefresh}
-        currentCategory={currentCategory}
+        targetFolderId=""
+        setTargetFolderId={() => {}}
+        targetCategoryId={currentCategory || ""}
+        setTargetCategoryId={() => {}}
+        numSelectedFiles={fileExplorerState.selectedFileIds.length}
+        customFolders={[]}
+        categories={[]}
+        handleSubmit={(e) => { e.preventDefault(); onRefresh(); }}
       />
       
       <CreateFolderModal
         isOpen={fileExplorerState.isCreateFolderModalOpen}
         onOpenChange={fileExplorerState.setIsCreateFolderModalOpen}
-        selectedFileIds={fileExplorerState.selectedFileIds}
-        onRefresh={onRefresh}
-        currentCategory={currentCategory}
+        newFolderName=""
+        setNewFolderName={() => {}}
+        selectedCategoryId={currentCategory || ""}
+        availableCategories={[]}
+        handleSubmit={(e) => { e.preventDefault(); onRefresh(); }}
       />
       
       <CreateCategoryModal
         isOpen={fileExplorerState.isAddCategoryModalOpen}
         onOpenChange={fileExplorerState.setIsAddCategoryModalOpen}
-        onRefresh={onRefresh}
+        newCategoryName=""
+        setNewCategoryName={() => {}}
+        handleSubmit={(e) => { e.preventDefault(); onRefresh(); }}
+        onCreate={() => onRefresh()}
       />
       
       <DeleteFolderModal
         isOpen={fileExplorerState.isDeleteFolderModalOpen}
         onOpenChange={fileExplorerState.setIsDeleteFolderModalOpen}
-        onRefresh={onRefresh}
+        onConfirm={() => onRefresh()}
       />
       
       <DeleteCategoryModal
         isOpen={fileExplorerState.isDeleteCategoryModalOpen}
         onOpenChange={fileExplorerState.setIsDeleteCategoryModalOpen}
-        onRefresh={onRefresh}
+        onConfirm={() => onRefresh()}
       />
       
       <EditNoteModal
         isOpen={fileExplorerState.isFileNoteModalOpen}
         onOpenChange={fileExplorerState.setIsFileNoteModalOpen}
         file={fileExplorerState.fileToEdit}
-        onRefresh={onRefresh}
+        note={fileExplorerState.fileToEdit?.note || ""}
+        setNote={() => {}}
+        onSave={() => onRefresh()}
       />
       
       {/* Add Tag Modal */}
