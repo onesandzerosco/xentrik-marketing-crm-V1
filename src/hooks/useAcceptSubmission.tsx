@@ -1,17 +1,13 @@
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
-import type { Database } from "@/integrations/supabase/types";
-
-// Define the enum types from Supabase
-type TeamEnum = Database["public"]["Enums"]["team"];
-type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
-  setProcessingTokens: React.Dispatch<React.SetStateAction<string[]>>
+  setProcessingTokens: (fn: (prev: string[]) => string[]) => void
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
@@ -22,51 +18,53 @@ export const useAcceptSubmission = (
     setAcceptModalOpen(true);
   };
 
-  const handleAcceptSubmission = async (creatorData: {
-    name: string;
-    team: TeamEnum;
-    creatorType: CreatorTypeEnum;
-  }) => {
+  const handleAcceptSubmission = async (name: string, team: any, creatorType: any) => {
     if (!selectedSubmission) return;
     
     try {
-      const token = selectedSubmission.token;
-      setProcessingTokens(prev => [...prev, token]);
+      setProcessingTokens(prev => [...prev, selectedSubmission.token]);
       
-      // Process the submission using the CreatorService
+      // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
-        selectedSubmission.data, 
-        creatorData
+        selectedSubmission.data,
+        {
+          name,
+          team,
+          creatorType
+        }
       );
       
       if (!creatorId) {
-        throw new Error("Failed to create creator record");
+        throw new Error("Failed to create creator account");
       }
       
-      console.log("Creator created with ID:", creatorId);
+      // 2. Update the submission status in the database
+      const { error } = await supabase
+        .from('onboarding_submissions')
+        .update({ status: 'approved' })
+        .eq('token', selectedSubmission.token);
       
-      // Delete the submission file after successful approval
-      await deleteSubmission(token);
-      
+      if (error) {
+        throw error;
+      }
+
       toast({
-        title: "Creator approved",
-        description: `${creatorData.name} has been approved and added as a creator with account credentials.`,
+        title: "Creator account created",
+        description: `${name} has been added as a creator.`,
       });
       
-      // Close the modal
+      // 3. Close the modal and refresh the list
       setAcceptModalOpen(false);
+      deleteSubmission(selectedSubmission.token);
       
     } catch (error) {
       console.error("Error accepting submission:", error);
       toast({
-        title: "Error approving submission",
-        description: error instanceof Error ? error.message : "Failed to approve the creator.",
+        title: "Error accepting submission",
+        description: "Failed to create creator account.",
         variant: "destructive"
       });
-    } finally {
-      if (selectedSubmission) {
-        setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
-      }
+      setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
     }
   };
 

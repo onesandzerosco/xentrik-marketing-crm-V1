@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
-import { CreatorAddService } from "./CreatorAddService";
 import { v4 as uuidv4 } from "uuid";
 
 // Define the enum types from Supabase
@@ -22,32 +21,32 @@ export class OnboardingService {
    */
   static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
     try {
-      // Extract basic required fields
-      const name = formData.name || formData.personalInfo?.fullName || "New Creator";
-      const gender = formData.gender || formData.personalInfo?.sex || "Female";
-      const teamValue = formData.team || "A Team";
-      const creatorTypeValue = formData.creatorType || "Real";
+      // Extract basic required fields for the onboarding_submissions table
+      const name = formData.personalInfo?.fullName || formData.name || "New Creator";
+      const email = formData.personalInfo?.email || "noemail@example.com";
       
-      // Insert without specifying an ID
-      const { error } = await supabase
-        .from('creators')
+      // Insert the submission into the onboarding_submissions table
+      const { data, error } = await supabase
+        .from('onboarding_submissions')
         .insert({
+          token,
           name,
-          gender,
-          team: teamValue,
-          creator_type: creatorTypeValue,
-          needs_review: true,
-          active: true,
-          model_profile: formData 
-        } as TablesInsert<"creators">);
-      
+          email,
+          data: formData,
+          status: 'pending'
+        })
+        .select('id')
+        .single();
+        
       if (error) {
         console.error("Error saving onboarding data:", error);
         throw error;
       }
       
+      console.log("Onboarding submission saved:", data);
+      
       // Return a placeholder ID for now - actual ID will be generated upon approval
-      return "pending";
+      return data?.id;
     } catch (error) {
       console.error("Error in saveOnboardingData:", error);
       return undefined;

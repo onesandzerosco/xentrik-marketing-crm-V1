@@ -63,7 +63,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     size="icon"
                     onClick={() => deleteSubmission(submission.token)}
                     disabled={processingTokens.includes(submission.token)}
-                    title="Delete submission"
+                    title="Decline submission"
                   >
                     {processingTokens.includes(submission.token) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
