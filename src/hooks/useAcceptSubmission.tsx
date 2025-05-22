@@ -75,8 +75,7 @@ export const useAcceptSubmission = (
       // 3. Close the modal and refresh the list
       setAcceptModalOpen(false);
       
-      // Don't call deleteSubmission as it marks the submission as declined
-      // Instead, fetch the submissions again to refresh the list
+      // Fetch the submissions again to refresh the list with proper status
       const { data: updatedData, error: fetchError } = await supabase
         .from('onboarding_submissions')
         .select('*')
@@ -93,11 +92,11 @@ export const useAcceptSubmission = (
       let errorMessage = "Failed to create creator account.";
       
       // Check for common error patterns
-      if (error.message?.includes("User already registered")) {
+      if (error.message?.includes("already exists")) {
         errorMessage = "This email is already registered. Please use a different email.";
       } else if (error.message?.includes("Invalid email format")) {
         errorMessage = "Invalid email format. Please check the email address.";
-      } else if (error.message?.includes("already exists")) {
+      } else if (error.message?.includes("unique constraint")) {
         errorMessage = "This email is already associated with an account.";
       }
       

@@ -93,11 +93,19 @@ export class OnboardingService {
       }
       
       // Check if user already exists with this email
-      const { data: existingUser, error: checkError } = await supabase.auth.admin
-        .getUserByEmail(email)
-        .catch(() => ({ data: null, error: null }));
+      // Instead of using admin.getUserByEmail which isn't available,
+      // we'll check the profiles table
+      const { data: existingUserProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
 
-      if (existingUser) {
+      if (profileError) {
+        console.error("Error checking existing user:", profileError);
+      }
+      
+      if (existingUserProfile) {
         throw new Error(`A user with email ${email} already exists`);
       }
       
