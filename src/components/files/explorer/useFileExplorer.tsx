@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -65,7 +66,6 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
-    handleRenameCategoryClick,
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -88,8 +88,7 @@ export const useFileExplorer = ({
     folderToRename,
     setFolderToRename,
     folderCurrentName,
-    setFolderCurrentName,
-    handleRenameFolderClick
+    setFolderCurrentName
   } = useFolderModals();
   
   const {
@@ -305,9 +304,6 @@ export const useFileExplorer = ({
     categoryCurrentName,
     setCategoryCurrentName,
     
-    // Use the click handler from useFolderModals
-    handleRenameCategoryClick,
-    
     // Folder modals
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
@@ -332,9 +328,6 @@ export const useFileExplorer = ({
     setFolderToRename,
     folderCurrentName,
     setFolderCurrentName,
-    
-    // Use the click handler from useFolderModals
-    handleRenameFolderClick,
     
     // File notes
     isEditNoteModalOpen,
@@ -361,6 +354,8 @@ export const useFileExplorer = ({
     // Category operations
     handleInitiateNewCategory,
     handleInitiateNewFolder,
+    handleInitiateRenameCategory,
+    handleInitiateRenameFolder,
     
     // Folder operations
     handleAddToFolderClick,
