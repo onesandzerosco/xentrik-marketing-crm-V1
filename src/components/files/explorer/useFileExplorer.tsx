@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -138,12 +137,28 @@ export const useFileExplorer = ({
     setIsAddCategoryModalOpen(true);
   };
   
+  // Handle initiating category rename - this should open the modal, not rename directly
+  const handleInitiateRenameCategory = (categoryId: string, currentName: string) => {
+    setCategoryToRename(categoryId);
+    setCategoryCurrentName(currentName);
+    setNewCategoryName(currentName); // Pre-fill with current name
+    setIsRenameCategoryModalOpen(true);
+  };
+  
   // Handle initiating a new folder in a specific category
   const handleInitiateNewFolder = (categoryId: string = '') => {
     setSelectedCategoryForNewFolder(categoryId || (currentCategory || ''));
     setIsAddFolderModalOpen(true);
   };
   
+  // Handle initiating folder rename - this should open the modal, not rename directly
+  const handleInitiateRenameFolder = (folderId: string, currentName: string) => {
+    setFolderToRename(folderId);
+    setFolderCurrentName(currentName);
+    setNewFolderName(currentName); // Pre-fill with current name
+    setIsRenameFolderModalOpen(true);
+  };
+
   // Handler for "Add to Folder" button click
   const handleAddToFolderClick = () => {
     if (selectedFileIds.length > 0) {
@@ -265,6 +280,15 @@ export const useFileExplorer = ({
       setIsRenameFolderModalOpen, 
       setFolderToRename
     );
+  };
+
+  // Implementation of event handlers for rename operations
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    handleInitiateRenameCategory(categoryId, currentName);
+  };
+  
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    handleInitiateRenameFolder(folderId, currentName);
   };
 
   return {

@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from '@/types/fileTypes';
 
@@ -216,7 +215,7 @@ export const useFolderOperations = ({
       });
   };
 
-  // Handle folder renaming - *Fixed to not immediately execute the rename operation*
+  // Handle folder renaming - should be called from modal submit, not directly from click
   const handleRenameFolder = async (
     folderToRename: string | null, 
     newFolderName: string,
@@ -246,7 +245,7 @@ export const useFolderOperations = ({
     }
   };
 
-  // Handle category renaming - *Fixed to not immediately execute the rename operation*
+  // Handle category renaming - should be called from modal submit, not directly from click
   const handleRenameCategory = async (
     categoryToRename: string | null, 
     newCategoryName: string,
