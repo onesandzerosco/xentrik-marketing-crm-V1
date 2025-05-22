@@ -1,14 +1,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface UseCategorySidebarProps {
   currentCategory: string | null;
   onInitiateNewFolder: (categoryId: string) => void;
   onDeleteCategory: (categoryId: string) => Promise<void>;
-  onRenameCategory: (categoryId: string, currentName: string) => Promise<void>;
+  onRenameCategory: (categoryId: string, currentName: string) => void;
   onDeleteFolder: (folderId: string) => Promise<void>;
-  onRenameFolder: (folderId: string, currentName: string) => Promise<void>;
+  onRenameFolder: (folderId: string, currentName: string) => void;
 }
 
 export const useCategorySidebar = ({
@@ -54,19 +54,10 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteCategory, toast]);
   
-  const handleRenameCategory = useCallback(async (e: React.MouseEvent, categoryId: string, currentName: string) => {
+  const handleRenameCategory = useCallback((e: React.MouseEvent, categoryId: string, currentName: string) => {
     e.stopPropagation();
-    try {
-      await onRenameCategory(categoryId, currentName);
-    } catch (error) {
-      console.error("Error renaming category:", error);
-      toast({
-        title: "Error renaming category",
-        description: "Failed to rename the category",
-        variant: "destructive"
-      });
-    }
-  }, [onRenameCategory, toast]);
+    onRenameCategory(categoryId, currentName);
+  }, [onRenameCategory]);
   
   const handleDeleteFolder = useCallback(async (e: React.MouseEvent, folderId: string) => {
     e.stopPropagation();
@@ -82,19 +73,10 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteFolder, toast]);
   
-  const handleRenameFolder = useCallback(async (e: React.MouseEvent, folderId: string, currentName: string) => {
+  const handleRenameFolder = useCallback((e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
-    try {
-      await onRenameFolder(folderId, currentName);
-    } catch (error) {
-      console.error("Error renaming folder:", error);
-      toast({
-        title: "Error renaming folder",
-        description: "Failed to rename the folder",
-        variant: "destructive"
-      });
-    }
-  }, [onRenameFolder, toast]);
+    onRenameFolder(folderId, currentName);
+  }, [onRenameFolder]);
   
   const handleNewFolderClick = useCallback((e: React.MouseEvent, categoryId: string) => {
     e.stopPropagation();

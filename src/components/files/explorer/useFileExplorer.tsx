@@ -1,4 +1,6 @@
+
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
 import { useFolderModals } from './hooks/useFolderModals';
@@ -42,6 +44,8 @@ export const useFileExplorer = ({
   onRenameFolder,
   onRenameCategory
 }: UseFileExplorerProps) => {
+  const { toast } = useToast();
+  
   // Use all the sub-hooks
   const { 
     selectedFileIds, 
@@ -65,7 +69,6 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
-    handleRenameCategoryClick,
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -88,8 +91,7 @@ export const useFileExplorer = ({
     folderToRename,
     setFolderToRename,
     folderCurrentName,
-    setFolderCurrentName,
-    handleRenameFolderClick
+    setFolderCurrentName
   } = useFolderModals();
   
   const {
@@ -250,14 +252,14 @@ export const useFileExplorer = ({
   };
   
   // Create a proper function to handle the rename category modal opening
-  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+  const handleRenameCategoryModal = (categoryId: string, currentName: string) => {
     setCategoryToRename(categoryId);
     setCategoryCurrentName(currentName);
     setIsRenameCategoryModalOpen(true);
   };
   
   // Create a proper function to handle the rename folder modal opening
-  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+  const handleRenameFolderModal = (folderId: string, currentName: string) => {
     setFolderToRename(folderId);
     setFolderCurrentName(currentName);
     setIsRenameFolderModalOpen(true);
@@ -334,7 +336,7 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
-    handleRenameCategoryClick,
+    handleRenameCategoryModal,
     
     // Folder modals
     isAddFolderModalOpen,
@@ -360,7 +362,7 @@ export const useFileExplorer = ({
     setFolderToRename,
     folderCurrentName,
     setFolderCurrentName,
-    handleRenameFolderClick,
+    handleRenameFolderModal,
     
     // File notes
     isEditNoteModalOpen,
