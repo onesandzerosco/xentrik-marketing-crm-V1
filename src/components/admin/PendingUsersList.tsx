@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Card,
@@ -9,21 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, AlertTriangle, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 const PendingUsersList: React.FC = () => {
   const { pendingUsers, approvePendingUser } = useAuth();
-  const [processingIds, setProcessingIds] = useState<string[]>([]);
-
-  const handleApproveUser = async (userId: string, approved: boolean) => {
-    setProcessingIds(prev => [...prev, userId]);
-    try {
-      await approvePendingUser(userId, approved);
-    } finally {
-      setProcessingIds(prev => prev.filter(id => id !== userId));
-    }
-  };
 
   if (pendingUsers.length === 0) {
     return (
@@ -73,8 +63,7 @@ const PendingUsersList: React.FC = () => {
                     variant="outline"
                     size="sm"
                     className="flex items-center text-destructive border-destructive hover:bg-destructive/10"
-                    onClick={() => handleApproveUser(user.id, false)}
-                    disabled={processingIds.includes(user.id)}
+                    onClick={() => approvePendingUser(user.id, false)}
                   >
                     <XCircle className="w-4 h-4 mr-1" />
                     Reject
@@ -83,8 +72,7 @@ const PendingUsersList: React.FC = () => {
                     variant="outline"
                     size="sm"
                     className="flex items-center text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                    onClick={() => handleApproveUser(user.id, true)}
-                    disabled={processingIds.includes(user.id)}
+                    onClick={() => approvePendingUser(user.id, true)}
                   >
                     <CheckCircle className="w-4 h-4 mr-1" />
                     Approve

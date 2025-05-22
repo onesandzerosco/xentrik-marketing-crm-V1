@@ -29,8 +29,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   deleteSubmission,
   onAcceptClick
 }) => {
-  const isProcessing = (token: string) => processingTokens.includes(token);
-
   return (
     <Table>
       <TableHeader>
@@ -56,7 +54,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => togglePreview(submission.token)}
-                    disabled={isProcessing(submission.token)}
                     title="Toggle preview"
                   >
                     <Eye className="h-4 w-4" />
@@ -65,10 +62,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => deleteSubmission(submission.token)}
-                    disabled={isProcessing(submission.token)}
+                    disabled={processingTokens.includes(submission.token)}
                     title="Delete submission"
                   >
-                    {isProcessing(submission.token) ? (
+                    {processingTokens.includes(submission.token) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Trash2 className="h-4 w-4" />
@@ -78,10 +75,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     variant="ghost"
                     size="icon"
                     onClick={() => onAcceptClick(submission)}
-                    disabled={isProcessing(submission.token)}
+                    disabled={processingTokens.includes(submission.token)}
                     title="Approve creator"
                   >
-                    {isProcessing(submission.token) ? (
+                    {processingTokens.includes(submission.token) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Check className="h-4 w-4" />

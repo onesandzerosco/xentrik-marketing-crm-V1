@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileTag } from '@/hooks/useFileTags';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 
 interface AddTagModalProps {
@@ -21,12 +20,11 @@ interface AddTagModalProps {
   onOpenChange: (open: boolean) => void;
   selectedFileIds: string[];
   availableTags: FileTag[];
-  onTagSelect: (tagId: string) => void;
+  onTagSelect: (tagName: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
-  onTagRemove?: (tagName: string, fileId: string) => Promise<void>;
+  onTagRemove?: (tagName: string) => void;
   singleFileName?: string;
-  currentFileTags?: string[];
-  singleFileId?: string;
+  fileTags?: string[];
 }
 
 export const AddTagModal: React.FC<AddTagModalProps> = ({
@@ -38,19 +36,10 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
   onTagCreate,
   onTagRemove,
   singleFileName,
-  currentFileTags = [],
-  singleFileId
+  fileTags = []
 }) => {
   const [newTagName, setNewTagName] = useState('');
-  const [localTags, setLocalTags] = useState<string[]>(currentFileTags);
   const { toast } = useToast();
-  
-  // Update local tags when currentFileTags changes or when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setLocalTags(currentFileTags);
-    }
-  }, [isOpen, currentFileTags]);
   
   // Clear input when modal closes
   useEffect(() => {
@@ -64,13 +53,7 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
     
     try {
       const newTag = await onTagCreate(newTagName);
-      onTagSelect(newTag.id); // Auto-select the newly created tag
-      
-      // Update local state to show the new tag immediately
-      if (singleFileId) {
-        setLocalTags(prev => [...prev, newTag.name]);
-      }
-      
+      onTagSelect(newTag.name); // Select by name instead of id
       setNewTagName('');
       
       toast({
@@ -87,38 +70,14 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
     }
   };
 
-  const handleRemoveTag = async (tagName: string) => {
-    if (!onTagRemove || !singleFileId) return;
-    
-    try {
-      // Update local state immediately for a responsive UI
-      setLocalTags(prev => prev.filter(tag => tag !== tagName));
-      
-      // Then perform the actual removal operation
-      await onTagRemove(tagName, singleFileId);
-    } catch (error) {
-      // If there's an error, revert the local state
-      setLocalTags(currentFileTags);
-      console.error('Error removing tag:', error);
+  const handleRemoveTag = (tagName: string) => {
+    if (onTagRemove) {
+      onTagRemove(tagName);
       toast({
-        title: "Error removing tag",
-        description: "There was a problem removing the tag.",
-        variant: "destructive"
+        title: "Tag removed",
+        description: `Tag "${tagName}" was removed successfully.`,
       });
     }
-  };
-
-  const handleExistingTagSelect = (tagId: string) => {
-    // Find the tag name from the tag ID
-    const selectedTag = availableTags.find(tag => tag.id === tagId);
-    
-    // If it's a single file tagging operation, update local tags immediately
-    if (singleFileId && selectedTag && !localTags.includes(selectedTag.name)) {
-      setLocalTags(prev => [...prev, selectedTag.name]);
-    }
-    
-    // Call the original onTagSelect function
-    onTagSelect(tagId);
   };
   
   return (
@@ -135,32 +94,33 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
         </DialogHeader>
         
         <div className="py-4 space-y-4">
-          {/* Current tags section */}
-          {singleFileId && localTags.length > 0 && (
-            <div className="space-y-2">
+          {/* Display existing tags with remove option */}
+          {fileTags && fileTags.length > 0 && (
+            <div>
               <Label>Current Tags</Label>
-              <div className="flex flex-wrap gap-2">
-                {localTags.map((tagName) => (
-                  <Badge 
-                    key={tagName} 
-                    variant="secondary"
-                    className="flex items-center gap-1 px-2 py-1"
+              <div className="flex flex-wrap gap-2 mt-2">
+                {fileTags.map((tag) => (
+                  <div 
+                    key={tag} 
+                    className="flex items-center bg-gray-100 text-gray-800 py-1 px-3 rounded-full"
                   >
-                    {tagName}
-                    <button 
-                      type="button" 
-                      onClick={() => handleRemoveTag(tagName)}
-                      className="ml-1 rounded-full hover:bg-destructive/20 p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                      <span className="sr-only">Remove {tagName} tag</span>
-                    </button>
-                  </Badge>
+                    {tag}
+                    {onTagRemove && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 ml-1 hover:bg-gray-200 rounded-full"
+                        onClick={() => handleRemoveTag(tag)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
           )}
-          
+
           <div>
             <Label htmlFor="tag">Select Existing Tag</Label>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -169,10 +129,8 @@ export const AddTagModal: React.FC<AddTagModalProps> = ({
                   key={tag.id}
                   variant="outline"
                   size="sm"
-                  className={`py-1 px-2 rounded-full border-2 border-${tag.color}-500 hover:bg-${tag.color}-100 ${
-                    singleFileId && localTags.includes(tag.name) ? 'bg-gray-200' : ''
-                  }`}
-                  onClick={() => handleExistingTagSelect(tag.id)}
+                  className={`py-1 px-2 rounded-full border-2 border-${tag.color}-500 hover:bg-${tag.color}-100`}
+                  onClick={() => onTagSelect(tag.name)}
                 >
                   {tag.name}
                 </Button>

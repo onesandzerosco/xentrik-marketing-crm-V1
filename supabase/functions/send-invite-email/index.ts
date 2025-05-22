@@ -37,36 +37,35 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
     
+    // Format name for email greeting
+    const nameToGreet = stageName || email.split('@')[0];
+    
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Format name for email greeting if needed
-    const nameToGreet = stageName || email.split('@')[0];
-    
-    // Construct the onboarding link
-    const onboardingLink = `${appUrl}/onboard/${token}`;
-    
-    // Use Supabase's built-in invite function to trigger the custom template
-    // Making sure to explicitly use the "invite" template and pass all expected variables
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: onboardingLink,
-      data: {
-        // Include all potential template variables that might be in the custom template
-        name: nameToGreet,
-        stage_name: stageName || null,
-        token: token,
-        onboard_link: onboardingLink,
-        agency_name: "Xentrik",
-        invitation_link: onboardingLink,
-        // Additional fields that might help template rendering
-        template: "invite",
-        template_type: "invite"
-      }
+    // Send email using raw API approach
+    const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+        "apikey": supabaseServiceKey
+      },
+      body: JSON.stringify({
+        email,
+        data: {
+          name: nameToGreet,
+          onboard_link: `${appUrl}/onboard/${token}`,
+          agency_name: "Your Agency"
+        }
+      })
     });
     
-    if (error) {
-      console.error("Error sending email via Supabase:", error);
-      throw new Error(`Failed to send invitation email: ${error.message}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error("Error sending email via Supabase:", data);
+      throw new Error(`Failed to send invitation email: ${data.msg || data.message || JSON.stringify(data)}`);
     }
     
     console.log("Email sent successfully:", data);

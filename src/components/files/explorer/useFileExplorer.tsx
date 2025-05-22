@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { useFileSelection } from './hooks/useFileSelection';
@@ -66,6 +65,7 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
+    handleRenameCategoryClick,
     isAddFolderModalOpen,
     setIsAddFolderModalOpen,
     newFolderName,
@@ -88,7 +88,8 @@ export const useFileExplorer = ({
     folderToRename,
     setFolderToRename,
     folderCurrentName,
-    setFolderCurrentName
+    setFolderCurrentName,
+    handleRenameFolderClick
   } = useFolderModals();
   
   const {
@@ -116,7 +117,15 @@ export const useFileExplorer = ({
     setIsUploadModalOpen
   } = useUploadModal();
   
-  const folderOperations = useFolderOperations({
+  const {
+    handleCreateCategorySubmit: createCategoryBase,
+    handleCreateFolderSubmit: createFolderBase,
+    handleAddToFolderSubmit: addToFolderBase,
+    handleDeleteFolder: deleteFolderBase,
+    handleDeleteCategory: deleteCategoryBase,
+    handleRenameFolder: renameFolderBase,
+    handleRenameCategory: renameCategoryBase
+  } = useFolderOperations({
     onCreateFolder,
     onCreateCategory,
     onAddFilesToFolder,
@@ -136,28 +145,12 @@ export const useFileExplorer = ({
     setIsAddCategoryModalOpen(true);
   };
   
-  // Handle initiating category rename - this should open the modal, not rename directly
-  const handleInitiateRenameCategory = (categoryId: string, currentName: string) => {
-    setCategoryToRename(categoryId);
-    setCategoryCurrentName(currentName);
-    setNewCategoryName(currentName); // Pre-fill with current name
-    setIsRenameCategoryModalOpen(true);
-  };
-  
   // Handle initiating a new folder in a specific category
   const handleInitiateNewFolder = (categoryId: string = '') => {
     setSelectedCategoryForNewFolder(categoryId || (currentCategory || ''));
     setIsAddFolderModalOpen(true);
   };
   
-  // Handle initiating folder rename - this should open the modal, not rename directly
-  const handleInitiateRenameFolder = (folderId: string, currentName: string) => {
-    setFolderToRename(folderId);
-    setFolderCurrentName(currentName);
-    setNewFolderName(currentName); // Pre-fill with current name
-    setIsRenameFolderModalOpen(true);
-  };
-
   // Handler for "Add to Folder" button click
   const handleAddToFolderClick = () => {
     if (selectedFileIds.length > 0) {
@@ -185,8 +178,8 @@ export const useFileExplorer = ({
     }
   };
   
-  // Implementation of folder operations using the useFolderOperations hook
-  const createCategorySubmit = (e: React.FormEvent) => {
+  // Customize folder operations with the state values
+  const handleCreateCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newCategoryName.trim()) {
@@ -198,7 +191,7 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setIsAddCategoryModalOpen = setIsAddCategoryModalOpen;
     (e.currentTarget as any).setNewCategoryName = setNewCategoryName;
     
-    folderOperations.handleCreateCategorySubmit(e).then(() => {
+    createCategoryBase(e).then(() => {
       // If we're creating a category from the AddToFolder flow,
       // continue with folder creation after the category is created
       if (showNewFolderInCategory) {
@@ -216,7 +209,7 @@ export const useFileExplorer = ({
     });
   };
   
-  const createFolderSubmit = (e: React.FormEvent) => {
+  const handleCreateFolderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newFolderName.trim() || !selectedCategoryForNewFolder) {
@@ -231,10 +224,10 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setNewFolderName = setNewFolderName;
     (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
     
-    folderOperations.handleCreateFolderSubmit(e);
+    createFolderBase(e);
   };
   
-  const addToFolderSubmit = (e: React.FormEvent) => {
+  const handleAddToFolderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Attach the required values to the event so that the handler can use them
@@ -245,40 +238,26 @@ export const useFileExplorer = ({
     (e.currentTarget as any).setTargetFolderId = setTargetFolderId;
     (e.currentTarget as any).setSelectedFileIds = setSelectedFileIds;
     
-    folderOperations.handleAddToFolderSubmit(e);
+    addToFolderBase(e);
   };
   
-  const handleDeleteFolderFn = () => {
-    folderOperations.handleDeleteFolder(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
+  const handleDeleteFolder = () => {
+    deleteFolderBase(folderToDelete, setIsDeleteFolderModalOpen, setFolderToDelete);
   };
   
-  const handleDeleteCategoryFn = () => {
-    folderOperations.handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
+  const handleDeleteCategory = () => {
+    deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Fixed rename handlers to use modal data properly
-  const handleRenameCategorySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!categoryToRename || !newCategoryName.trim()) return;
-    
-    folderOperations.handleRenameCategory(
-      categoryToRename, 
-      newCategoryName, 
-      setIsRenameCategoryModalOpen, 
-      setCategoryToRename
-    );
+  // Fix rename handlers to match the expected function signatures
+  const handleRenameCategory = (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!categoryId || !newName.trim()) return;
+    renameCategoryBase(categoryId, newName, setIsOpen, setIdToRename);
   };
   
-  const handleRenameFolderSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!folderToRename || !newFolderName.trim()) return;
-    
-    folderOperations.handleRenameFolder(
-      folderToRename, 
-      newFolderName, 
-      setIsRenameFolderModalOpen, 
-      setFolderToRename
-    );
+  const handleRenameFolder = (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
+    if (!folderId || !newName.trim()) return;
+    renameFolderBase(folderId, newName, setIsOpen, setIdToRename);
   };
 
   return {
@@ -303,6 +282,7 @@ export const useFileExplorer = ({
     setCategoryToRename,
     categoryCurrentName,
     setCategoryCurrentName,
+    handleRenameCategoryClick,
     
     // Folder modals
     isAddFolderModalOpen,
@@ -328,6 +308,7 @@ export const useFileExplorer = ({
     setFolderToRename,
     folderCurrentName,
     setFolderCurrentName,
+    handleRenameFolderClick,
     
     // File notes
     isEditNoteModalOpen,
@@ -354,20 +335,18 @@ export const useFileExplorer = ({
     // Category operations
     handleInitiateNewCategory,
     handleInitiateNewFolder,
-    handleInitiateRenameCategory,
-    handleInitiateRenameFolder,
     
     // Folder operations
     handleAddToFolderClick,
     handleCreateNewCategory,
     handleCreateNewFolder,
-    handleCreateCategorySubmit: createCategorySubmit,
-    handleCreateFolderSubmit: createFolderSubmit,
-    handleAddToFolderSubmit: addToFolderSubmit,
-    handleDeleteFolder: handleDeleteFolderFn,
-    handleDeleteCategory: handleDeleteCategoryFn,
-    handleRenameFolder: handleRenameFolderSubmit,
-    handleRenameCategory: handleRenameCategorySubmit,
+    handleCreateCategorySubmit,
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
+    handleDeleteFolder,
+    handleDeleteCategory,
+    handleRenameFolder,
+    handleRenameCategory,
     
     // Available data
     availableFolders,

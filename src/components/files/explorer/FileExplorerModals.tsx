@@ -19,9 +19,9 @@ interface FileExplorerModalsProps {
   setTargetCategoryId: (categoryId: string) => void;
   isAddTagModalOpen: boolean;
   setIsAddTagModalOpen: (isOpen: boolean) => void;
-  onTagSelect: (tagId: string) => void;
+  onTagSelect: (tagName: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
-  onTagRemove?: (tagName: string, fileId: string) => Promise<void>;
+  onTagRemove?: (tagName: string) => void;
   isAddFolderModalOpen: boolean;
   setIsAddFolderModalOpen: (isOpen: boolean) => void;
   newFolderName: string;
@@ -93,8 +93,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onTagCreate={onTagCreate}
         onTagRemove={onTagRemove}
         singleFileName={singleFileForTagging?.name}
-        currentFileTags={singleFileForTagging?.tags || []}
-        singleFileId={singleFileForTagging?.id}
+        fileTags={singleFileForTagging?.tags}
       />
       
       {/* Create folder modal */}

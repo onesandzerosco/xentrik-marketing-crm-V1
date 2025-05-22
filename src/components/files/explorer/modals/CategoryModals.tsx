@@ -27,7 +27,7 @@ interface CategoryModalsProps {
   // Handlers - Updated to match the expected function signatures
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
   handleDeleteCategory: () => void;
-  handleRenameCategory: (e: React.FormEvent) => void; // Updated to accept an event parameter
+  handleRenameCategory: () => void;
   
   // Optional callbacks
   onCreateNewCategory?: () => void;
@@ -50,20 +50,11 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
 }) => {
   const [newCategoryNameForRename, setNewCategoryNameForRename] = useState<string>('');
   
-  // Effect to update the rename input field when the modal opens
   useEffect(() => {
     if (isRenameCategoryModalOpen) {
       setNewCategoryNameForRename(categoryCurrentName);
     }
   }, [isRenameCategoryModalOpen, categoryCurrentName]);
-
-  // Wrapper for rename submit to pass the new name to the handler
-  const handleRenameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Update the parent's newCategoryName with our local state before submitting
-    setNewCategoryName(newCategoryNameForRename);
-    handleRenameCategory(e); // Ensure we pass the event to match the expected signature
-  };
 
   return (
     <>
@@ -93,7 +84,7 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
         title="Rename Category"
         currentName={newCategoryNameForRename}
         setNewName={setNewCategoryNameForRename}
-        onConfirm={handleRenameSubmit}
+        onConfirm={handleRenameCategory}
       />
     </>
   );

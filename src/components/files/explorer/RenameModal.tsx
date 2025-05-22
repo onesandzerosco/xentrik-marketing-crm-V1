@@ -1,9 +1,14 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 interface RenameModalProps {
   isOpen: boolean;
@@ -11,7 +16,7 @@ interface RenameModalProps {
   title: string;
   currentName: string;
   setNewName: (name: string) => void;
-  onConfirm: (e: React.FormEvent) => void;  // Updated to expect a form event
+  onConfirm: () => void;
 }
 
 export const RenameModal: React.FC<RenameModalProps> = ({
@@ -20,11 +25,11 @@ export const RenameModal: React.FC<RenameModalProps> = ({
   title,
   currentName,
   setNewName,
-  onConfirm
+  onConfirm,
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(e);  // Pass the event to onConfirm
+    onConfirm();
   };
 
   return (
@@ -32,30 +37,23 @@ export const RenameModal: React.FC<RenameModalProps> = ({
       <DialogContent className="sm:max-w-[500px] w-full">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            Enter a new name
-          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="py-4">
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="newName">New name</Label>
-              <Input
-                id="newName"
-                placeholder="Enter new name"
-                value={currentName}
-                onChange={(e) => setNewName(e.target.value)}
-                autoFocus
-              />
-            </div>
+          <div className="space-y-4">
+            <Input
+              value={currentName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Enter new name"
+              autoFocus
+            />
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={!currentName.trim()}>
               Rename
             </Button>
           </DialogFooter>

@@ -62,7 +62,7 @@ const InviteCreatorCard: React.FC = () => {
         throw new Error("Failed to generate invitation token");
       }
 
-      // Send invitation email - using our updated edge function
+      // Send invitation email
       const appUrl = window.location.origin;
       const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
         body: {

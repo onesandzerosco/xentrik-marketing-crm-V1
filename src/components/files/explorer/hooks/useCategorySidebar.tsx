@@ -54,12 +54,19 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteCategory, toast]);
   
-  // This should just trigger the modal to open and NOT directly rename
-  const handleRenameCategory = useCallback((e: React.MouseEvent, categoryId: string, currentName: string) => {
+  const handleRenameCategory = useCallback(async (e: React.MouseEvent, categoryId: string, currentName: string) => {
     e.stopPropagation();
-    // We shouldn't call the API here - just pass the info to open a modal
-    onRenameCategory(categoryId, currentName);
-  }, [onRenameCategory]);
+    try {
+      await onRenameCategory(categoryId, currentName);
+    } catch (error) {
+      console.error("Error renaming category:", error);
+      toast({
+        title: "Error renaming category",
+        description: "Failed to rename the category",
+        variant: "destructive"
+      });
+    }
+  }, [onRenameCategory, toast]);
   
   const handleDeleteFolder = useCallback(async (e: React.MouseEvent, folderId: string) => {
     e.stopPropagation();
@@ -75,16 +82,22 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteFolder, toast]);
   
-  // This should just trigger the modal to open and NOT directly rename
-  const handleRenameFolder = useCallback((e: React.MouseEvent, folderId: string, currentName: string) => {
+  const handleRenameFolder = useCallback(async (e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
-    // We shouldn't call the API here - just pass the info to open a modal
-    onRenameFolder(folderId, currentName);
-  }, [onRenameFolder]);
+    try {
+      await onRenameFolder(folderId, currentName);
+    } catch (error) {
+      console.error("Error renaming folder:", error);
+      toast({
+        title: "Error renaming folder",
+        description: "Failed to rename the folder",
+        variant: "destructive"
+      });
+    }
+  }, [onRenameFolder, toast]);
   
   const handleNewFolderClick = useCallback((e: React.MouseEvent, categoryId: string) => {
     e.stopPropagation();
-    // This calls the initiating function to open the modal
     onInitiateNewFolder(categoryId);
   }, [onInitiateNewFolder]);
 
