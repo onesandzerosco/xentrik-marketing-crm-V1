@@ -59,9 +59,9 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
     currentCategory,
     onInitiateNewFolder,
     onDeleteCategory,
-    onRenameCategoryClick: onRenameCategory, // This should just open the modal
+    onRenameCategoryClick: onRenameCategory,
     onDeleteFolder,
-    onRenameFolderClick: onRenameFolder  // This should just open the modal
+    onRenameFolderClick: onRenameFolder
   });
 
   return (

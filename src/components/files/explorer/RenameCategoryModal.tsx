@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ interface RenameCategoryModalProps {
   newCategoryName: string;
   setNewCategoryName: (name: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  categoryToRename?: string | null;
+  setCategoryToRename?: (id: string | null) => void;
 }
 
 export const RenameCategoryModal: React.FC<RenameCategoryModalProps> = ({
@@ -20,12 +22,29 @@ export const RenameCategoryModal: React.FC<RenameCategoryModalProps> = ({
   categoryCurrentName,
   newCategoryName,
   setNewCategoryName,
-  onSubmit
+  onSubmit,
+  categoryToRename,
+  setCategoryToRename
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(e);
   };
+
+  // Create a global function that other components can call to open the modal
+  useEffect(() => {
+    window.openRenameCategoryModal = (categoryId: string, currentName: string) => {
+      if (setCategoryToRename) {
+        setCategoryToRename(categoryId);
+      }
+      setNewCategoryName(currentName);
+      onOpenChange(true);
+    };
+    
+    return () => {
+      window.openRenameCategoryModal = undefined;
+    };
+  }, [setNewCategoryName, onOpenChange, setCategoryToRename]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

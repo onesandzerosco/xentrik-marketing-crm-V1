@@ -19,6 +19,8 @@ interface RenameFolderModalProps {
   setNewFolderName: (name: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isSubmitting?: boolean;
+  folderToRename?: string | null;
+  setFolderToRename?: (id: string | null) => void;
 }
 
 export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
@@ -28,7 +30,9 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   newFolderName,
   setNewFolderName,
   onSubmit,
-  isSubmitting = false
+  isSubmitting = false,
+  folderToRename,
+  setFolderToRename
 }) => {
   // Set initial value when the modal opens
   useEffect(() => {
@@ -44,17 +48,18 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
 
   // Create a global function that other components can call to open the modal
   useEffect(() => {
-    // @ts-ignore - Adding a custom method to window
     window.openRenameFolderModal = (folderId: string, currentName: string) => {
+      if (setFolderToRename) {
+        setFolderToRename(folderId);
+      }
       setNewFolderName(currentName);
       onOpenChange(true);
     };
     
     return () => {
-      // @ts-ignore - Cleanup
-      delete window.openRenameFolderModal;
+      window.openRenameFolderModal = undefined;
     };
-  }, [setNewFolderName, onOpenChange]);
+  }, [setNewFolderName, onOpenChange, setFolderToRename]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

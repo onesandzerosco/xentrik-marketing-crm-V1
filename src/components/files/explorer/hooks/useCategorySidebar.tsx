@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 interface UseCategorySidebarProps {
@@ -23,7 +23,7 @@ export const useCategorySidebar = ({
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   
   // Effect to auto-expand the current category
-  useCallback(() => {
+  useEffect(() => {
     if (currentCategory) {
       setExpandedCategories(prev => ({
         ...prev,
