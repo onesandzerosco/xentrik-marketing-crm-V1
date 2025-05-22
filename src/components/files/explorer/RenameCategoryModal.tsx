@@ -34,19 +34,21 @@ export const RenameCategoryModal: React.FC<RenameCategoryModalProps> = ({
   // Create a global function that other components can call to open the modal
   useEffect(() => {
     // Define the function directly on window object
-    window.openRenameCategoryModal = (categoryId: string, currentName: string) => {
-      console.log("Modal function called with:", categoryId, currentName);
-      if (setCategoryToRename) {
-        setCategoryToRename(categoryId);
-      }
-      setNewCategoryName(currentName);
-      onOpenChange(true);
-    };
-    
-    // Cleanup function to remove the global function
-    return () => {
-      window.openRenameCategoryModal = undefined;
-    };
+    if (typeof window !== 'undefined') {
+      (window as any).openRenameCategoryModal = (categoryId: string, currentName: string) => {
+        console.log("Modal function called with:", categoryId, currentName);
+        if (setCategoryToRename) {
+          setCategoryToRename(categoryId);
+        }
+        setNewCategoryName(currentName);
+        onOpenChange(true);
+      };
+      
+      // Cleanup function to remove the global function
+      return () => {
+        (window as any).openRenameCategoryModal = undefined;
+      };
+    }
   }, [setNewCategoryName, onOpenChange, setCategoryToRename]);
 
   return (

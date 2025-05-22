@@ -63,8 +63,8 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
     console.log("Opening rename category modal for:", categoryId, currentName);
     // This will be handled by the global function in RenameCategoryModal
-    if (typeof window.openRenameCategoryModal === 'function') {
-      window.openRenameCategoryModal(categoryId, currentName);
+    if (typeof (window as any).openRenameCategoryModal === 'function') {
+      (window as any).openRenameCategoryModal(categoryId, currentName);
     } else {
       console.warn("openRenameCategoryModal is not available");
     }
@@ -73,8 +73,8 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   const handleRenameFolderClick = (folderId: string, currentName: string) => {
     console.log("Opening rename folder modal for:", folderId, currentName);
     // This will be handled by the global function in RenameFolderModal
-    if (typeof window.openRenameFolderModal === 'function') {
-      window.openRenameFolderModal(folderId, currentName);
+    if (typeof (window as any).openRenameFolderModal === 'function') {
+      (window as any).openRenameFolderModal(folderId, currentName);
     } else {
       console.warn("openRenameFolderModal is not available");
     }

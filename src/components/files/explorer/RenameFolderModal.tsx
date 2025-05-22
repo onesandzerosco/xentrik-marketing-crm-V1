@@ -49,18 +49,20 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   // Create a global function that other components can call to open the modal
   useEffect(() => {
     // Define the function directly on window object
-    window.openRenameFolderModal = (folderId: string, currentName: string) => {
-      console.log("Folder modal function called with:", folderId, currentName);
-      if (setFolderToRename) {
-        setFolderToRename(folderId);
-      }
-      setNewFolderName(currentName);
-      onOpenChange(true);
-    };
-    
-    return () => {
-      window.openRenameFolderModal = undefined;
-    };
+    if (typeof window !== 'undefined') {
+      (window as any).openRenameFolderModal = (folderId: string, currentName: string) => {
+        console.log("Folder modal function called with:", folderId, currentName);
+        if (setFolderToRename) {
+          setFolderToRename(folderId);
+        }
+        setNewFolderName(currentName);
+        onOpenChange(true);
+      };
+      
+      return () => {
+        (window as any).openRenameFolderModal = undefined;
+      };
+    }
   }, [setNewFolderName, onOpenChange, setFolderToRename]);
 
   return (
