@@ -1,70 +1,61 @@
 
 import React from 'react';
-import { Category, Folder } from '@/types/fileTypes';
+import { Category, Folder, CreatorFileType } from '@/types/fileTypes';
 import { CreateFolderModal, AddToFolderModal } from './modals/FolderModals';
 import { AddTagModal } from './modals/TagModals';
 import { FileTag } from '@/hooks/useFileTags';
-import { CreatorFileType } from '@/types/fileTypes';
+import { useFileExplorer } from './useFileExplorer';
 
 interface FileExplorerModalsProps {
-  selectedFileIds: string[];
-  customFolders: Folder[];
-  categories: Category[];
-  availableTags: FileTag[];
-  isAddToFolderModalOpen: boolean;
-  setIsAddToFolderModalOpen: (isOpen: boolean) => void;
-  targetFolderId: string;
-  setTargetFolderId: (folderId: string) => void;
-  targetCategoryId: string;
-  setTargetCategoryId: (categoryId: string) => void;
-  isAddTagModalOpen: boolean;
-  setIsAddTagModalOpen: (isOpen: boolean) => void;
-  onTagSelect: (tagName: string) => void;
-  onTagCreate?: (name: string) => Promise<FileTag>;
-  onTagRemove?: (tagName: string) => void;
-  isAddFolderModalOpen: boolean;
-  setIsAddFolderModalOpen: (isOpen: boolean) => void;
-  newFolderName: string;
-  setNewFolderName: (name: string) => void;
-  selectedCategoryForNewFolder: string;
-  setSelectedCategoryForNewFolder: (categoryId: string) => void;
-  handleCreateFolderSubmit: (e: React.FormEvent) => void;
-  handleAddToFolderSubmit: (e: React.FormEvent) => void;
-  onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
-  handleCreateNewFolder: () => void;
-  singleFileForTagging: CreatorFileType | null;
+  onRefresh: () => void;
+  onUploadComplete?: (uploadedFileIds?: string[]) => void;
+  onUploadStart?: () => void;
+  creatorId: string;
+  currentFolder: string;
+  currentCategory: string | null;
+  fileExplorerState: ReturnType<typeof useFileExplorer>;
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
-  selectedFileIds,
-  customFolders,
-  categories,
-  availableTags,
-  isAddToFolderModalOpen,
-  setIsAddToFolderModalOpen,
-  targetFolderId,
-  setTargetFolderId,
-  targetCategoryId,
-  setTargetCategoryId,
-  isAddTagModalOpen,
-  setIsAddTagModalOpen,
-  onTagSelect,
-  onTagCreate,
-  onTagRemove,
-  isAddFolderModalOpen,
-  setIsAddFolderModalOpen,
-  newFolderName,
-  setNewFolderName,
-  selectedCategoryForNewFolder,
-  setSelectedCategoryForNewFolder,
-  handleCreateFolderSubmit,
-  handleAddToFolderSubmit,
-  onAddFilesToFolder,
-  handleCreateNewFolder,
-  singleFileForTagging
+  onRefresh,
+  onUploadComplete,
+  onUploadStart,
+  creatorId,
+  currentFolder,
+  currentCategory,
+  fileExplorerState
 }) => {
-  // Calculate effective file count for the tag modal
-  const effectiveFileCount = singleFileForTagging ? 1 : selectedFileIds.length;
+  const {
+    selectedFileIds,
+    isAddToFolderModalOpen,
+    setIsAddToFolderModalOpen,
+    targetFolderId,
+    setTargetFolderId,
+    targetCategoryId,
+    setTargetCategoryId,
+    isAddFolderModalOpen,
+    setIsAddFolderModalOpen,
+    newFolderName,
+    setNewFolderName,
+    selectedCategoryForNewFolder,
+    setSelectedCategoryForNewFolder,
+    handleCreateFolderSubmit,
+    handleAddToFolderSubmit,
+    handleCreateNewFolder,
+    availableFolders,
+    availableCategories,
+    isUploadModalOpen,
+    setIsUploadModalOpen
+  } = fileExplorerState;
+  
+  // For now we'll stub this until we implement tag functionality
+  const singleFileForTagging = null;
+  const availableTags: FileTag[] = [];
+  const isAddTagModalOpen = false;
+  const setIsAddTagModalOpen = () => {};
+  const onTagSelect = () => {};
+  const onTagCreate = undefined;
+  const onTagRemove = undefined;
   
   return (
     <>
@@ -73,8 +64,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={isAddToFolderModalOpen}
         onOpenChange={setIsAddToFolderModalOpen}
         selectedFileIds={selectedFileIds}
-        customFolders={customFolders}
-        categories={categories}
+        customFolders={availableFolders}
+        categories={availableCategories}
         targetFolderId={targetFolderId}
         setTargetFolderId={setTargetFolderId}
         targetCategoryId={targetCategoryId}
@@ -102,7 +93,7 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onOpenChange={setIsAddFolderModalOpen}
         folderName={newFolderName}
         setFolderName={setNewFolderName}
-        categories={categories}
+        categories={availableCategories}
         selectedCategoryId={selectedCategoryForNewFolder}
         setSelectedCategoryId={setSelectedCategoryForNewFolder}
         onSubmit={handleCreateFolderSubmit}

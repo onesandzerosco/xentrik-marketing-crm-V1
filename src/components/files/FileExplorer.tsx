@@ -131,6 +131,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         setIsUploadModalOpen={fileExplorerState.setIsUploadModalOpen}
         handleAddToFolderClick={fileExplorerState.handleAddToFolderClick}
         isCreatorView={isCreatorView}
+        onRefresh={onRefresh}
       />
       
       <FileExplorerLayout>
@@ -150,17 +151,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         />
         
         <FileExplorerContent
-          files={fileExplorerState.filteredFiles}
+          filteredFiles={fileExplorerState.filteredFiles}
           isLoading={isLoading}
           viewMode={fileExplorerState.viewMode}
           searchQuery={fileExplorerState.searchQuery}
           selectedFileIds={fileExplorerState.selectedFileIds}
           setSelectedFileIds={fileExplorerState.setSelectedFileIds}
-          handleEditNote={fileExplorerState.handleEditNote}
-          handleFileDeleted={fileExplorerState.handleFileDeleted}
+          onFileDeleted={fileExplorerState.handleFileDeleted}
           currentFolder={currentFolder}
           recentlyUploadedIds={recentlyUploadedIds}
           isCreatorView={isCreatorView}
+          handleEditNote={fileExplorerState.handleEditNote}
+          onAddToFolderClick={fileExplorerState.handleAddToFolderClick}
+          onRemoveFromFolder={onRemoveFromFolder}
+          selectedTypes={fileExplorerState.selectedTypes}
+          setSelectedTypes={fileExplorerState.setSelectedTypes}
         />
       </FileExplorerLayout>
       

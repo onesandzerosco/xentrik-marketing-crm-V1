@@ -8,27 +8,43 @@ interface FileExplorerHeaderProps {
   creatorName: string;
   viewMode: "list" | "grid";
   setViewMode: (mode: "list" | "grid") => void;
-  onUploadClick: () => void;
-  isCreatorView: boolean;
-  onRefresh: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedTypes: string[];
+  setSelectedTypes: (types: string[]) => void;
   selectedFileIds: string[];
-  onAddToFolderClick: () => void;
+  setSelectedFileIds: (ids: string[]) => void;
+  isUploadModalOpen: boolean;
+  setIsUploadModalOpen: (isOpen: boolean) => void;
+  handleAddToFolderClick: () => void;
+  isCreatorView: boolean;
+  onRefresh?: () => void;
 }
 
 export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
   creatorName,
   viewMode,
   setViewMode,
-  onUploadClick,
-  isCreatorView,
-  onRefresh,
+  searchQuery,
+  setSearchQuery,
+  selectedTypes,
+  setSelectedTypes,
   selectedFileIds,
-  onAddToFolderClick
+  setSelectedFileIds,
+  isUploadModalOpen,
+  setIsUploadModalOpen,
+  handleAddToFolderClick,
+  isCreatorView,
+  onRefresh
 }) => {
   const handleViewModeChange = (value: string) => {
     if (value === 'grid' || value === 'list') {
       setViewMode(value);
     }
+  };
+
+  const onUploadClick = () => {
+    setIsUploadModalOpen(true);
   };
 
   return (
@@ -43,7 +59,7 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onAddToFolderClick}
+            onClick={handleAddToFolderClick}
             className="flex items-center"
           >
             <FolderPlus className="mr-1 h-4 w-4" />

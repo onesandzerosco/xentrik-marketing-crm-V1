@@ -13,29 +13,30 @@ interface FileExplorerContentProps {
   filteredFiles: CreatorFileType[];
   viewMode: 'grid' | 'list';
   isCreatorView: boolean;
-  onFilesChanged: () => void;
+  onFilesChanged?: () => void;
   onFileDeleted: (fileId: string) => void;
-  recentlyUploadedIds: string[];
+  recentlyUploadedIds?: string[];
   selectedFileIds: string[];
   setSelectedFileIds: (ids: string[]) => void;
-  onAddToFolderClick: () => void;
+  onAddToFolderClick?: () => void;
   onAddTagClick?: () => void;
   onAddTagToFile?: (file: CreatorFileType) => void;
-  currentFolder: string;
-  currentCategory: string | null;
+  currentFolder?: string;
+  currentCategory?: string | null;
   onCreateFolder?: () => void;
   onUploadClick?: () => void;
-  availableFolders: Array<{ id: string; name: string; categoryId: string }>;
+  availableFolders?: Array<{ id: string; name: string; categoryId: string }>;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
-  onEditNote: (file: CreatorFileType) => void;
-  searchQuery: string;
+  onEditNote?: (file: CreatorFileType) => void;
+  searchQuery?: string;
   onSearchChange?: (query: string) => void;
-  selectedTypes: string[];
-  setSelectedTypes: (types: string[]) => void;
+  selectedTypes?: string[];
+  setSelectedTypes?: (types: string[]) => void;
   selectedTags?: string[];
   setSelectedTags?: (tags: string[]) => void;
   availableTags?: FileTag[];
   onTagCreate?: (name: string) => Promise<FileTag>;
+  handleEditNote: (file: CreatorFileType) => void;
 }
 
 export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
@@ -43,29 +44,30 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   filteredFiles,
   viewMode,
   isCreatorView,
-  onFilesChanged,
+  onFilesChanged = () => {},
   onFileDeleted,
-  recentlyUploadedIds,
+  recentlyUploadedIds = [],
   selectedFileIds,
   setSelectedFileIds,
-  onAddToFolderClick,
+  onAddToFolderClick = () => {},
   onAddTagClick,
   onAddTagToFile,
-  currentFolder,
+  currentFolder = 'all',
   currentCategory,
   onCreateFolder,
   onUploadClick,
-  availableFolders,
+  availableFolders = [],
   onRemoveFromFolder,
   onEditNote,
-  searchQuery,
+  searchQuery = '',
   onSearchChange,
-  selectedTypes,
-  setSelectedTypes,
+  selectedTypes = [],
+  setSelectedTypes = () => {},
   selectedTags = [],
   setSelectedTags = () => {},
   availableTags = [],
-  onTagCreate
+  onTagCreate,
+  handleEditNote
 }) => {
   // Helper function to get tag name from ID
   const getTagNameById = (tagId: string): string => {
@@ -161,7 +163,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
                 onFileDeleted={onFileDeleted}
                 recentlyUploadedIds={recentlyUploadedIds}
                 onSelectFiles={setSelectedFileIds}
-                onEditNote={onEditNote}
+                onEditNote={onEditNote || handleEditNote}
                 onAddTagToFile={onAddTagToFile}
                 currentFolder={currentFolder}
                 onRemoveFromFolder={onRemoveFromFolder}
@@ -178,7 +180,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
               currentFolder={currentFolder}
               availableFolders={availableFolders}
               onRemoveFromFolder={onRemoveFromFolder}
-              onEditNote={onEditNote}
+              onEditNote={onEditNote || handleEditNote}
               onAddTagClick={onAddTagClick}
               onAddTagToFile={onAddTagToFile}
               viewMode={viewMode}
