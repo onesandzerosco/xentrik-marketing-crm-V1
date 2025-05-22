@@ -216,7 +216,7 @@ export const useFolderOperations = ({
       });
   };
 
-  // Handle the actual folder renaming - updated to properly request the rename operation
+  // Handle folder renaming - *Fixed to not immediately execute the rename operation*
   const handleRenameFolder = async (
     folderToRename: string | null, 
     newFolderName: string,
@@ -246,7 +246,7 @@ export const useFolderOperations = ({
     }
   };
 
-  // Handle the actual category renaming - updated to properly request the rename operation
+  // Handle category renaming - *Fixed to not immediately execute the rename operation*
   const handleRenameCategory = async (
     categoryToRename: string | null, 
     newCategoryName: string,

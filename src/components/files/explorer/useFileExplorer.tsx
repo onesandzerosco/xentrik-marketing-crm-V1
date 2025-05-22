@@ -171,7 +171,7 @@ export const useFileExplorer = ({
     }
   };
   
-  // Customize folder operations with the state values
+  // Implementation of folder operations using the useFolderOperations hook
   const createCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -242,8 +242,9 @@ export const useFileExplorer = ({
     folderOperations.handleDeleteCategory(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Fix rename handlers so they open the modals instead of immediately executing
-  const handleRenameCategorySubmit = () => {
+  // Fixed rename handlers to use modal data properly
+  const handleRenameCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!categoryToRename || !newCategoryName.trim()) return;
     
     folderOperations.handleRenameCategory(
@@ -254,7 +255,8 @@ export const useFileExplorer = ({
     );
   };
   
-  const handleRenameFolderSubmit = () => {
+  const handleRenameFolderSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!folderToRename || !newFolderName.trim()) return;
     
     folderOperations.handleRenameFolder(
