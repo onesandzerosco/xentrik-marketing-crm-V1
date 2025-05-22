@@ -25,14 +25,17 @@ import type { Database } from "@/integrations/supabase/types";
 type TeamEnum = Database["public"]["Enums"]["team"];
 type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
 
+// Define the CreatorData type
+interface CreatorData {
+  name: string;
+  team: TeamEnum;
+  creatorType: CreatorTypeEnum;
+}
+
 interface AcceptSubmissionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAccept: (creatorData: {
-    name: string;
-    team: TeamEnum;
-    creatorType: CreatorTypeEnum;
-  }) => Promise<void>;
+  onAccept: (creatorData: CreatorData) => Promise<void>;
   defaultName: string;
   isLoading: boolean;
 }

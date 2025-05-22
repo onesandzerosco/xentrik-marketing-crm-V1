@@ -4,6 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
+import type { Database } from "@/integrations/supabase/types";
+
+// Define the enum types from Supabase
+type TeamEnum = Database["public"]["Enums"]["team"];
+type CreatorTypeEnum = Database["public"]["Enums"]["creator_type"];
+
+// Define the type for creator data
+interface CreatorData {
+  name: string;
+  team: TeamEnum;
+  creatorType: CreatorTypeEnum;
+}
 
 export const useAcceptSubmission = (
   deleteSubmission: (token: string) => Promise<void>,
@@ -18,7 +30,8 @@ export const useAcceptSubmission = (
     setAcceptModalOpen(true);
   };
 
-  const handleAcceptSubmission = async (name: string, team: any, creatorType: any) => {
+  // Update the function signature to match what AcceptSubmissionModal expects
+  const handleAcceptSubmission = async (creatorData: CreatorData) => {
     if (!selectedSubmission) return;
     
     try {
@@ -27,11 +40,7 @@ export const useAcceptSubmission = (
       // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
         selectedSubmission.data,
-        {
-          name,
-          team,
-          creatorType
-        }
+        creatorData
       );
       
       if (!creatorId) {
@@ -50,7 +59,7 @@ export const useAcceptSubmission = (
 
       toast({
         title: "Creator account created",
-        description: `${name} has been added as a creator.`,
+        description: `${creatorData.name} has been added as a creator.`,
       });
       
       // 3. Close the modal and refresh the list
