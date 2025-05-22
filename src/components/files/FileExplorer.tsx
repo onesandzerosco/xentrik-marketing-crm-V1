@@ -134,7 +134,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onRefresh={onRefresh}
       />
       
-      <FileExplorerLayout>
+      <div className="flex flex-1 overflow-hidden">
         <FileExplorerSidebar
           onFolderChange={onFolderChange}
           currentFolder={currentFolder}
@@ -152,7 +152,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         
         <FileExplorerContent
           filteredFiles={fileExplorerState.filteredFiles}
-          isLoading={isLoading}
+          isLoading={isLoading || false}
           viewMode={fileExplorerState.viewMode}
           searchQuery={fileExplorerState.searchQuery}
           selectedFileIds={fileExplorerState.selectedFileIds}
@@ -167,16 +167,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           selectedTypes={fileExplorerState.selectedTypes}
           setSelectedTypes={fileExplorerState.setSelectedTypes}
         />
-      </FileExplorerLayout>
+      </div>
       
       <FileExplorerModals
-        fileExplorerState={fileExplorerState}
         onRefresh={onRefresh}
         onUploadComplete={onUploadComplete}
         onUploadStart={onUploadStart}
         creatorId={creatorId}
         currentFolder={currentFolder}
         currentCategory={currentCategory}
+        fileExplorerState={fileExplorerState}
       />
 
       {/* Separate modals for rename operations */}

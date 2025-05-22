@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload } from "lucide-react";
@@ -83,7 +82,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-hidden">
+    <div className="flex-1 overflow-y-auto p-4">
       <div className="space-y-4">
         <FilterBar
           activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}

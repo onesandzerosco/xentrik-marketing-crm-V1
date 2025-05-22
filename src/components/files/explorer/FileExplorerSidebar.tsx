@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Folder, Category } from '@/types/fileTypes';
@@ -81,7 +80,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   };
 
   return (
-    <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0">
+    <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0 h-full overflow-y-auto">
       <h2 className="text-lg font-semibold">Folders</h2>
       
       {isAddingCategory && (
