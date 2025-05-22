@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { Category } from '@/types/fileTypes';
 
@@ -208,7 +207,7 @@ export const useFolderOperations = ({
       });
   };
 
-  // Handle the actual folder renaming
+  // Remove the direct API calls from these handlers - they should just be passed to the useFileExplorer
   const handleRenameFolder = (
     folderToRename: string | null, 
     newFolderName: string,
@@ -217,25 +216,10 @@ export const useFolderOperations = ({
   ) => {
     if (!folderToRename || !newFolderName.trim() || !onRenameFolder) return;
     
-    return onRenameFolder(folderToRename, newFolderName)
-      .then(() => {
-        setFolderToRename(null);
-        setIsRenameFolderModalOpen(false);
-        toast({
-          title: "Folder renamed",
-          description: `Folder renamed to "${newFolderName}" successfully`,
-        });
-      })
-      .catch(error => {
-        toast({
-          title: "Error renaming folder",
-          description: "Failed to rename folder",
-          variant: "destructive"
-        });
-      });
+    return onRenameFolder(folderToRename, newFolderName);
   };
 
-  // Handle the actual category renaming
+  // Remove the direct API calls from these handlers - they should just be passed to the useFileExplorer
   const handleRenameCategory = (
     categoryToRename: string | null, 
     newCategoryName: string,
@@ -244,22 +228,7 @@ export const useFolderOperations = ({
   ) => {
     if (!categoryToRename || !newCategoryName.trim() || !onRenameCategory) return;
     
-    return onRenameCategory(categoryToRename, newCategoryName)
-      .then(() => {
-        setCategoryToRename(null);
-        setIsRenameCategoryModalOpen(false);
-        toast({
-          title: "Category renamed",
-          description: `Category renamed to "${newCategoryName}" successfully`,
-        });
-      })
-      .catch(error => {
-        toast({
-          title: "Error renaming category",
-          description: "Failed to rename category",
-          variant: "destructive"
-        });
-      });
+    return onRenameCategory(categoryToRename, newCategoryName);
   };
 
   return {

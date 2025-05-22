@@ -59,10 +59,32 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
     currentCategory,
     onInitiateNewFolder,
     onDeleteCategory,
-    onRenameCategory,
+    onRenameCategory: (categoryId, currentName) => { 
+      // This should just trigger the modal to open
+      // The actual rename will happen when the modal form is submitted
+      handleRenameCategoryClick(categoryId, currentName);  
+    },
     onDeleteFolder,
-    onRenameFolder
+    onRenameFolder: (folderId, currentName) => {
+      // This should just trigger the modal to open
+      // The actual rename will happen when the modal form is submitted
+      handleRenameFolderClick(folderId, currentName);
+    }
   });
+  
+  // Add these handlers to open the modal
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    // We need to implement this to open the modal instead of directly renaming
+    // This would typically be passed from parent component
+    console.log("Open rename category modal for:", categoryId, currentName);
+    // You would typically call a function like setIsRenameCategoryModalOpen(true)
+  };
+  
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    // We need to implement this to open the modal instead of directly renaming
+    console.log("Open rename folder modal for:", folderId, currentName);
+    // You would typically call a function like setIsRenameFolderModalOpen(true)
+  };
 
   return (
     <div className="space-y-1 pr-1">

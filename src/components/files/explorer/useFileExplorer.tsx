@@ -249,15 +249,67 @@ export const useFileExplorer = ({
     deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Fix rename handlers to match the expected function signatures
-  const handleRenameCategory = (categoryId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    if (!categoryId || !newName.trim()) return;
-    renameCategoryBase(categoryId, newName, setIsOpen, setIdToRename);
+  // Create a proper function to handle the rename category modal opening
+  const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
+    setCategoryToRename(categoryId);
+    setCategoryCurrentName(currentName);
+    setIsRenameCategoryModalOpen(true);
   };
   
-  const handleRenameFolder = (folderId: string | null, newName: string, setIsOpen: (open: boolean) => void, setIdToRename: (id: string | null) => void) => {
-    if (!folderId || !newName.trim()) return;
-    renameFolderBase(folderId, newName, setIsOpen, setIdToRename);
+  // Create a proper function to handle the rename folder modal opening
+  const handleRenameFolderClick = (folderId: string, currentName: string) => {
+    setFolderToRename(folderId);
+    setFolderCurrentName(currentName);
+    setIsRenameFolderModalOpen(true);
+  };
+  
+  // Fix rename handlers to properly work with modals
+  const handleRenameCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!categoryToRename || !categoryCurrentName.trim()) return;
+    
+    if (onRenameCategory) {
+      onRenameCategory(categoryToRename, categoryCurrentName)
+        .then(() => {
+          setIsRenameCategoryModalOpen(false);
+          setCategoryToRename(null);
+          toast({
+            title: "Category renamed",
+            description: `Category renamed successfully`
+          });
+        })
+        .catch(error => {
+          toast({
+            title: "Error renaming category",
+            description: "Failed to rename category",
+            variant: "destructive"
+          });
+        });
+    }
+  };
+  
+  const handleRenameFolder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!folderToRename || !folderCurrentName.trim()) return;
+    
+    if (onRenameFolder) {
+      onRenameFolder(folderToRename, folderCurrentName)
+        .then(() => {
+          setIsRenameFolderModalOpen(false);
+          setFolderToRename(null);
+          toast({
+            title: "Folder renamed",
+            description: `Folder renamed successfully`
+          });
+        })
+        .catch(error => {
+          toast({
+            title: "Error renaming folder",
+            description: "Failed to rename folder",
+            variant: "destructive"
+          });
+        });
+    }
   };
 
   return {

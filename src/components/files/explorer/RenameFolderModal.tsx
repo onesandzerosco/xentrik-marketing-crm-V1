@@ -30,6 +30,11 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   onSubmit,
   isSubmitting = false
 }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -40,7 +45,7 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Input
               id="folderName"

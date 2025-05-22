@@ -16,7 +16,7 @@ interface RenameModalProps {
   title: string;
   currentName: string;
   setNewName: (name: string) => void;
-  onConfirm: () => void;
+  onConfirm: (e: React.FormEvent) => void;
 }
 
 export const RenameModal: React.FC<RenameModalProps> = ({
@@ -29,7 +29,7 @@ export const RenameModal: React.FC<RenameModalProps> = ({
 }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm();
+    onConfirm(e);
   };
 
   return (

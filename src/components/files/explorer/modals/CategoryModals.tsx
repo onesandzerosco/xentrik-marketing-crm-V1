@@ -20,17 +20,16 @@ interface CategoryModalsProps {
   isRenameCategoryModalOpen: boolean;
   setIsRenameCategoryModalOpen: (open: boolean) => void;
   categoryCurrentName: string;
+  setCategoryCurrentName: (name: string) => void;
+  categoryToRename: string | null;
   
   // Data
   categories?: Category[];
   
-  // Handlers - Updated to match the expected function signatures
+  // Handlers
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
   handleDeleteCategory: () => void;
-  handleRenameCategory: () => void;
-  
-  // Optional callbacks
-  onCreateNewCategory?: () => void;
+  handleRenameCategory: (e: React.FormEvent) => void;
 }
 
 export const CategoryModals: React.FC<CategoryModalsProps> = ({
@@ -43,10 +42,11 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
   isRenameCategoryModalOpen,
   setIsRenameCategoryModalOpen,
   categoryCurrentName,
+  setCategoryCurrentName,
+  categoryToRename,
   handleCreateCategorySubmit,
   handleDeleteCategory,
   handleRenameCategory,
-  onCreateNewCategory
 }) => {
   const [newCategoryNameForRename, setNewCategoryNameForRename] = useState<string>('');
   
@@ -55,6 +55,13 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
       setNewCategoryNameForRename(categoryCurrentName);
     }
   }, [isRenameCategoryModalOpen, categoryCurrentName]);
+
+  const handleRenameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Update the current name with the new name before calling the handler
+    setCategoryCurrentName(newCategoryNameForRename);
+    handleRenameCategory(e);
+  };
 
   return (
     <>
@@ -65,7 +72,6 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
         newCategoryName={newCategoryName}
         setNewCategoryName={setNewCategoryName}
         handleSubmit={handleCreateCategorySubmit}
-        onCreate={onCreateNewCategory}
       />
       
       {/* Delete Category Modal */}
@@ -84,7 +90,7 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
         title="Rename Category"
         currentName={newCategoryNameForRename}
         setNewName={setNewCategoryNameForRename}
-        onConfirm={handleRenameCategory}
+        onConfirm={handleRenameSubmit}
       />
     </>
   );
