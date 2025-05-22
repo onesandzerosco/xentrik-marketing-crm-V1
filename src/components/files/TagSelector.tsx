@@ -31,7 +31,7 @@ import { FileTag } from '@/hooks/useFileTags';
 interface TagSelectorProps {
   tags: FileTag[];
   selectedTags: string[];
-  onTagSelect: (tagId: string) => void;
+  onTagSelect: (tagName: string) => void;
   onTagCreate?: (name: string) => Promise<FileTag>;
   disabled?: boolean;
   variant?: 'default' | 'compact';
@@ -47,7 +47,7 @@ const tagColors: Record<string, string> = {
   'pink': 'bg-pink-100 text-pink-800 hover:bg-pink-200',
 };
 
-export const TagSelector: React.FC<TagSelectorProps> = ({
+const TagSelector: React.FC<TagSelectorProps> = ({
   tags,
   selectedTags,
   onTagSelect,
@@ -57,6 +57,9 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTagName, setNewTagName] = useState('');
+
+  console.log("TagSelector received tags:", tags);
+  console.log("TagSelector selected tags:", selectedTags);
 
   // Helper to get selected tag names for display
   const getSelectedTagsDisplay = () => {
@@ -105,7 +108,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               {tags.map(tag => (
                 <CommandItem
                   key={tag.id}
-                  onSelect={() => onTagSelect(tag.name)} // Change: Using tag.name instead of tag.id
+                  onSelect={() => onTagSelect(tag.name)}
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-2">
@@ -113,7 +116,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
                       {tag.name}
                     </Badge>
                   </div>
-                  {selectedTags.includes(tag.name) && ( // Change: Using tag.name instead of tag.id
+                  {selectedTags.includes(tag.name) && (
                     <Check className="h-4 w-4" />
                   )}
                 </CommandItem>

@@ -155,17 +155,23 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           isLoading={isLoading || false}
           viewMode={fileExplorerState.viewMode}
           searchQuery={fileExplorerState.searchQuery}
+          onSearchChange={fileExplorerState.setSearchQuery}
           selectedFileIds={fileExplorerState.selectedFileIds}
           setSelectedFileIds={fileExplorerState.setSelectedFileIds}
           onFileDeleted={fileExplorerState.handleFileDeleted}
           currentFolder={currentFolder}
-          recentlyUploadedIds={recentlyUploadedIds}
-          isCreatorView={isCreatorView}
-          handleEditNote={fileExplorerState.handleEditNote}
           onAddToFolderClick={fileExplorerState.handleAddToFolderClick}
           onRemoveFromFolder={onRemoveFromFolder}
+          handleEditNote={fileExplorerState.handleEditNote}
           selectedTypes={fileExplorerState.selectedTypes}
           setSelectedTypes={fileExplorerState.setSelectedTypes}
+          selectedTags={fileExplorerState.selectedTags}
+          setSelectedTags={fileExplorerState.setSelectedTags}
+          availableTags={fileExplorerState.availableTags}
+          onTagCreate={fileExplorerState.onTagCreate}
+          onAddTagClick={fileExplorerState.handleAddTagClick}
+          recentlyUploadedIds={recentlyUploadedIds}
+          isCreatorView={isCreatorView}
         />
       </div>
       
