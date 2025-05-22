@@ -1,19 +1,47 @@
 
 import React from 'react';
-import { Category, Folder, CreatorFileType } from '@/types/fileTypes';
-import { CreateFolderModal, AddToFolderModal } from './modals/FolderModals';
+import { FileUploadModal } from './FileUploadModal';
+import { AddToFolderModal } from './AddToFolderModal';
+import { CreateFolderModal } from './CreateFolderModal';
+import { CreateCategoryModal } from './CreateCategoryModal';
+import { DeleteFolderModal } from './DeleteFolderModal';
+import { DeleteCategoryModal } from './DeleteCategoryModal';
+import { EditNoteModal } from './EditNoteModal';
 import { AddTagModal } from './modals/TagModals';
-import { FileTag } from '@/hooks/useFileTags';
-import { useFileExplorer } from './useFileExplorer';
 
 interface FileExplorerModalsProps {
   onRefresh: () => void;
-  onUploadComplete?: (uploadedFileIds?: string[]) => void;
+  onUploadComplete?: (fileIds?: string[]) => void;
   onUploadStart?: () => void;
   creatorId: string;
   currentFolder: string;
   currentCategory: string | null;
-  fileExplorerState: ReturnType<typeof useFileExplorer>;
+  fileExplorerState: {
+    isUploadModalOpen: boolean;
+    setIsUploadModalOpen: (isOpen: boolean) => void;
+    isAddToFolderModalOpen: boolean;
+    setIsAddToFolderModalOpen: (isOpen: boolean) => void;
+    isCreateFolderModalOpen: boolean;
+    setIsCreateFolderModalOpen: (isOpen: boolean) => void;
+    isAddCategoryModalOpen: boolean;
+    setIsAddCategoryModalOpen: (isOpen: boolean) => void;
+    isDeleteFolderModalOpen: boolean;
+    setIsDeleteFolderModalOpen: (isOpen: boolean) => void;
+    isDeleteCategoryModalOpen: boolean;
+    setIsDeleteCategoryModalOpen: (isOpen: boolean) => void;
+    isFileNoteModalOpen: boolean;
+    setIsFileNoteModalOpen: (isOpen: boolean) => void;
+    fileToEdit: any;
+    setFileToEdit: (file: any) => void;
+    selectedFileIds: string[];
+    // Tag related props
+    isAddTagModalOpen?: boolean;
+    setIsAddTagModalOpen?: (isOpen: boolean) => void;
+    availableTags?: any[];
+    onAddTagToFiles?: (tagName: string) => Promise<void>;
+    onRemoveTagFromFiles?: (tagName: string) => Promise<void>;
+    onTagCreate?: (name: string) => Promise<any>;
+  };
 }
 
 export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
@@ -25,79 +53,74 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   currentCategory,
   fileExplorerState
 }) => {
-  const {
-    selectedFileIds,
-    isAddToFolderModalOpen,
-    setIsAddToFolderModalOpen,
-    targetFolderId,
-    setTargetFolderId,
-    targetCategoryId,
-    setTargetCategoryId,
-    isAddFolderModalOpen,
-    setIsAddFolderModalOpen,
-    newFolderName,
-    setNewFolderName,
-    selectedCategoryForNewFolder,
-    setSelectedCategoryForNewFolder,
-    handleCreateFolderSubmit,
-    handleAddToFolderSubmit,
-    handleCreateNewFolder,
-    availableFolders,
-    availableCategories,
-    isUploadModalOpen,
-    setIsUploadModalOpen
-  } = fileExplorerState;
-  
-  // For now we'll stub this until we implement tag functionality
-  const singleFileForTagging = null;
-  const availableTags: FileTag[] = [];
-  const isAddTagModalOpen = false;
-  const setIsAddTagModalOpen = () => {};
-  const onTagSelect = () => {};
-  const onTagCreate = undefined;
-  const onTagRemove = undefined;
-  
   return (
     <>
-      {/* Add to folder modal */}
+      <FileUploadModal
+        isOpen={fileExplorerState.isUploadModalOpen}
+        onOpenChange={fileExplorerState.setIsUploadModalOpen}
+        onRefresh={onRefresh}
+        creatorId={creatorId}
+        currentFolder={currentFolder}
+        currentCategory={currentCategory}
+        onUploadComplete={onUploadComplete}
+        onUploadStart={onUploadStart}
+      />
+      
       <AddToFolderModal
-        isOpen={isAddToFolderModalOpen}
-        onOpenChange={setIsAddToFolderModalOpen}
-        selectedFileIds={selectedFileIds}
-        customFolders={availableFolders}
-        categories={availableCategories}
-        targetFolderId={targetFolderId}
-        setTargetFolderId={setTargetFolderId}
-        targetCategoryId={targetCategoryId}
-        setTargetCategoryId={setTargetCategoryId}
-        onCreateFolder={handleCreateNewFolder}
-        onSubmit={handleAddToFolderSubmit}
+        isOpen={fileExplorerState.isAddToFolderModalOpen}
+        onOpenChange={fileExplorerState.setIsAddToFolderModalOpen}
+        selectedFileIds={fileExplorerState.selectedFileIds}
+        onRefresh={onRefresh}
+        currentCategory={currentCategory}
       />
       
-      {/* Add tag modal */}
-      <AddTagModal
-        isOpen={isAddTagModalOpen}
-        onOpenChange={setIsAddTagModalOpen}
-        selectedFileIds={singleFileForTagging ? [singleFileForTagging.id] : selectedFileIds}
-        availableTags={availableTags}
-        onTagSelect={onTagSelect}
-        onTagCreate={onTagCreate}
-        onTagRemove={onTagRemove}
-        singleFileName={singleFileForTagging?.name}
-        fileTags={singleFileForTagging?.tags}
-      />
-      
-      {/* Create folder modal */}
       <CreateFolderModal
-        isOpen={isAddFolderModalOpen}
-        onOpenChange={setIsAddFolderModalOpen}
-        folderName={newFolderName}
-        setFolderName={setNewFolderName}
-        categories={availableCategories}
-        selectedCategoryId={selectedCategoryForNewFolder}
-        setSelectedCategoryId={setSelectedCategoryForNewFolder}
-        onSubmit={handleCreateFolderSubmit}
+        isOpen={fileExplorerState.isCreateFolderModalOpen}
+        onOpenChange={fileExplorerState.setIsCreateFolderModalOpen}
+        selectedFileIds={fileExplorerState.selectedFileIds}
+        onRefresh={onRefresh}
+        currentCategory={currentCategory}
       />
+      
+      <CreateCategoryModal
+        isOpen={fileExplorerState.isAddCategoryModalOpen}
+        onOpenChange={fileExplorerState.setIsAddCategoryModalOpen}
+        onRefresh={onRefresh}
+      />
+      
+      <DeleteFolderModal
+        isOpen={fileExplorerState.isDeleteFolderModalOpen}
+        onOpenChange={fileExplorerState.setIsDeleteFolderModalOpen}
+        onRefresh={onRefresh}
+      />
+      
+      <DeleteCategoryModal
+        isOpen={fileExplorerState.isDeleteCategoryModalOpen}
+        onOpenChange={fileExplorerState.setIsDeleteCategoryModalOpen}
+        onRefresh={onRefresh}
+      />
+      
+      <EditNoteModal
+        isOpen={fileExplorerState.isFileNoteModalOpen}
+        onOpenChange={fileExplorerState.setIsFileNoteModalOpen}
+        file={fileExplorerState.fileToEdit}
+        onRefresh={onRefresh}
+      />
+      
+      {/* Add Tag Modal */}
+      {fileExplorerState.isAddTagModalOpen !== undefined && fileExplorerState.setIsAddTagModalOpen && (
+        <AddTagModal
+          isOpen={fileExplorerState.isAddTagModalOpen}
+          onOpenChange={fileExplorerState.setIsAddTagModalOpen}
+          selectedFileIds={fileExplorerState.selectedFileIds}
+          availableTags={fileExplorerState.availableTags || []}
+          onTagSelect={fileExplorerState.onAddTagToFiles || (() => Promise.resolve())}
+          onTagRemove={fileExplorerState.onRemoveTagFromFiles}
+          onTagCreate={fileExplorerState.onTagCreate}
+          singleFileName={fileExplorerState.fileToEdit?.name}
+          fileTags={fileExplorerState.fileToEdit?.tags || []}
+        />
+      )}
     </>
   );
 };

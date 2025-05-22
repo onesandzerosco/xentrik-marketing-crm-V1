@@ -69,12 +69,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   onTagCreate,
   handleEditNote
 }) => {
-  // Helper function to get tag name from ID
-  const getTagNameById = (tagId: string): string => {
-    const tag = availableTags.find(tag => tag.id === tagId);
-    return tag ? tag.name : tagId;
-  };
-  
   // Handle search change with fallback to setSearchQuery if onSearchChange not provided
   const handleSearchChange = (query: string) => {
     if (onSearchChange) {

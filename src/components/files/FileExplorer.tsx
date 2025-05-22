@@ -84,7 +84,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onDeleteCategory: onDeleteCategory || (async () => {}),
     onRemoveFromFolder,
     onRenameFolder,
-    onRenameCategory
+    onRenameCategory,
+    creatorId // Pass the creatorId to useFileExplorer
   });
 
   const handleRenameCategory = async (e: React.FormEvent) => {
@@ -170,6 +171,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           availableTags={fileExplorerState.availableTags}
           onTagCreate={fileExplorerState.onTagCreate}
           onAddTagClick={fileExplorerState.handleAddTagClick}
+          onAddTagToFile={fileExplorerState.handleAddTagToFile}
           recentlyUploadedIds={recentlyUploadedIds}
           isCreatorView={isCreatorView}
         />
