@@ -62,7 +62,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   // Modal opening handlers for rename operations
   const handleRenameCategoryClick = (categoryId: string, currentName: string) => {
     console.log("Opening rename category modal for:", categoryId, currentName);
-    // This will be handled by useFileExplorer to open the modal
+    // This will be handled by the global function in RenameCategoryModal
     if (typeof window.openRenameCategoryModal === 'function') {
       window.openRenameCategoryModal(categoryId, currentName);
     } else {
@@ -72,7 +72,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
 
   const handleRenameFolderClick = (folderId: string, currentName: string) => {
     console.log("Opening rename folder modal for:", folderId, currentName);
-    // This will be handled by useFileExplorer to open the modal
+    // This will be handled by the global function in RenameFolderModal
     if (typeof window.openRenameFolderModal === 'function') {
       window.openRenameFolderModal(folderId, currentName);
     } else {
