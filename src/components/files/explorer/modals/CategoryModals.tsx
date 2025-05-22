@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { CreateCategoryModal } from '../CreateCategoryModal';
 import { DeleteModal } from '../DeleteModal';
-import { RenameModal } from '../RenameModal';
+import { RenameCategoryModal } from '../RenameCategoryModal';
 import { Category } from '@/types/fileTypes';
 
 interface CategoryModalsProps {
@@ -27,7 +27,7 @@ interface CategoryModalsProps {
   // Handlers - Updated to match the expected function signatures
   handleCreateCategorySubmit: (e: React.FormEvent) => void;
   handleDeleteCategory: () => void;
-  handleRenameCategory: () => void;
+  handleRenameCategory: (e: React.FormEvent) => void;
   
   // Optional callbacks
   onCreateNewCategory?: () => void;
@@ -78,13 +78,13 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
       />
       
       {/* Rename Category Modal */}
-      <RenameModal 
+      <RenameCategoryModal 
         isOpen={isRenameCategoryModalOpen}
         onOpenChange={setIsRenameCategoryModalOpen}
-        title="Rename Category"
-        currentName={newCategoryNameForRename}
-        setNewName={setNewCategoryNameForRename}
-        onConfirm={handleRenameCategory}
+        categoryCurrentName={categoryCurrentName}
+        newCategoryName={newCategoryNameForRename}
+        setNewCategoryName={setNewCategoryNameForRename}
+        onSubmit={handleRenameCategory}
       />
     </>
   );
