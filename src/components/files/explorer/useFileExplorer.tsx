@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
@@ -123,9 +124,7 @@ export const useFileExplorer = ({
     handleCreateFolderSubmit: createFolderBase,
     handleAddToFolderSubmit: addToFolderBase,
     handleDeleteFolder: deleteFolderBase,
-    handleDeleteCategory: deleteCategoryBase,
-    handleRenameFolder: renameFolderBase,
-    handleRenameCategory: renameCategoryBase
+    handleDeleteCategory: deleteCategoryBase
   } = useFolderOperations({
     onCreateFolder,
     onCreateCategory,
@@ -140,6 +139,22 @@ export const useFileExplorer = ({
   
   // Initialize state for category operations
   const [showNewFolderInCategory, setShowNewFolderInCategory] = useState(false);
+  
+  // Handler to open the rename category modal - This only OPENS the modal
+  const handleRenameCategoryModal = (categoryId: string, currentName: string) => {
+    console.log("Opening rename category modal for:", categoryId, currentName);
+    setCategoryToRename(categoryId);
+    setCategoryCurrentName(currentName);
+    setIsRenameCategoryModalOpen(true);
+  };
+  
+  // Handler to open the rename folder modal - This only OPENS the modal
+  const handleRenameFolderModal = (folderId: string, currentName: string) => {
+    console.log("Opening rename folder modal for:", folderId, currentName);
+    setFolderToRename(folderId);
+    setFolderCurrentName(currentName);
+    setIsRenameFolderModalOpen(true);
+  };
   
   // Handle initiating a new category
   const handleInitiateNewCategory = () => {
@@ -177,22 +192,6 @@ export const useFileExplorer = ({
         setIsAddFolderModalOpen(true);
       }, 100);
     }
-  };
-  
-  // Handler to open the rename category modal
-  const handleRenameCategoryModal = (categoryId: string, currentName: string) => {
-    console.log("Opening rename category modal for:", categoryId, currentName);
-    setCategoryToRename(categoryId);
-    setCategoryCurrentName(currentName);
-    setIsRenameCategoryModalOpen(true);
-  };
-  
-  // Handler to open the rename folder modal
-  const handleRenameFolderModal = (folderId: string, currentName: string) => {
-    console.log("Opening rename folder modal for:", folderId, currentName);
-    setFolderToRename(folderId);
-    setFolderCurrentName(currentName);
-    setIsRenameFolderModalOpen(true);
   };
   
   // Customize folder operations with the state values
@@ -266,53 +265,50 @@ export const useFileExplorer = ({
     deleteCategoryBase(categoryToDelete, setIsDeleteCategoryModalOpen, setCategoryToDelete);
   };
   
-  // Properly handle the rename actions after modal confirmation
+  // Handle the actual renaming after modal confirmation - This is called when the form is submitted
   const handleRenameCategory = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryToRename || !categoryCurrentName.trim()) return;
+    if (!categoryToRename || !categoryCurrentName.trim() || !onRenameCategory) return;
     
-    if (onRenameCategory) {
-      onRenameCategory(categoryToRename, categoryCurrentName)
-        .then(() => {
-          setIsRenameCategoryModalOpen(false);
-          setCategoryToRename(null);
-          toast({
-            title: "Category renamed",
-            description: `Category renamed successfully`
-          });
-        })
-        .catch(error => {
-          toast({
-            title: "Error renaming category",
-            description: "Failed to rename category",
-            variant: "destructive"
-          });
+    onRenameCategory(categoryToRename, categoryCurrentName)
+      .then(() => {
+        setIsRenameCategoryModalOpen(false);
+        setCategoryToRename(null);
+        toast({
+          title: "Category renamed",
+          description: `Category renamed successfully`
         });
-    }
+      })
+      .catch(error => {
+        toast({
+          title: "Error renaming category",
+          description: "Failed to rename category",
+          variant: "destructive"
+        });
+      });
   };
   
+  // Handle the actual renaming after modal confirmation - This is called when the form is submitted
   const handleRenameFolder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!folderToRename || !folderCurrentName.trim()) return;
+    if (!folderToRename || !folderCurrentName.trim() || !onRenameFolder) return;
     
-    if (onRenameFolder) {
-      onRenameFolder(folderToRename, folderCurrentName)
-        .then(() => {
-          setIsRenameFolderModalOpen(false);
-          setFolderToRename(null);
-          toast({
-            title: "Folder renamed",
-            description: `Folder renamed successfully`
-          });
-        })
-        .catch(error => {
-          toast({
-            title: "Error renaming folder",
-            description: "Failed to rename folder",
-            variant: "destructive"
-          });
+    onRenameFolder(folderToRename, folderCurrentName)
+      .then(() => {
+        setIsRenameFolderModalOpen(false);
+        setFolderToRename(null);
+        toast({
+          title: "Folder renamed",
+          description: `Folder renamed successfully`
         });
-    }
+      })
+      .catch(error => {
+        toast({
+          title: "Error renaming folder",
+          description: "Failed to rename folder",
+          variant: "destructive"
+        });
+      });
   };
 
   return {

@@ -1,14 +1,14 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 
 interface UseCategorySidebarProps {
   currentCategory: string | null;
   onInitiateNewFolder: (categoryId: string) => void;
   onDeleteCategory: (categoryId: string) => Promise<void>;
-  onRenameCategoryClick: (categoryId: string, currentName: string) => void; // Changed name to clarify purpose
+  onRenameCategoryClick: (categoryId: string, currentName: string) => void; 
   onDeleteFolder: (folderId: string) => Promise<void>;
-  onRenameFolderClick: (folderId: string, currentName: string) => void; // Changed name to clarify purpose
+  onRenameFolderClick: (folderId: string, currentName: string) => void; 
 }
 
 export const useCategorySidebar = ({
@@ -23,7 +23,7 @@ export const useCategorySidebar = ({
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   
   // Effect to auto-expand the current category
-  useEffect(() => {
+  useCallback(() => {
     if (currentCategory) {
       setExpandedCategories(prev => ({
         ...prev,
@@ -54,7 +54,7 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteCategory, toast]);
   
-  // This only triggers the modal to open
+  // This only triggers the modal to open - NOT the rename action itself
   const handleRenameCategory = useCallback((e: React.MouseEvent, categoryId: string, currentName: string) => {
     e.stopPropagation();
     onRenameCategoryClick(categoryId, currentName);
@@ -74,7 +74,7 @@ export const useCategorySidebar = ({
     }
   }, [onDeleteFolder, toast]);
   
-  // This only triggers the modal to open
+  // This only triggers the modal to open - NOT the rename action itself
   const handleRenameFolder = useCallback((e: React.MouseEvent, folderId: string, currentName: string) => {
     e.stopPropagation();
     onRenameFolderClick(folderId, currentName);

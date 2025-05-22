@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,10 +30,31 @@ export const RenameFolderModal: React.FC<RenameFolderModalProps> = ({
   onSubmit,
   isSubmitting = false
 }) => {
+  // Set initial value when the modal opens
+  useEffect(() => {
+    if (isOpen && folderCurrentName) {
+      setNewFolderName(folderCurrentName);
+    }
+  }, [isOpen, folderCurrentName, setNewFolderName]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(e);
   };
+
+  // Create a global function that other components can call to open the modal
+  useEffect(() => {
+    // @ts-ignore - Adding a custom method to window
+    window.openRenameFolderModal = (folderId: string, currentName: string) => {
+      setNewFolderName(currentName);
+      onOpenChange(true);
+    };
+    
+    return () => {
+      // @ts-ignore - Cleanup
+      delete window.openRenameFolderModal;
+    };
+  }, [setNewFolderName, onOpenChange]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

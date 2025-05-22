@@ -24,9 +24,10 @@ export const RenameModal: React.FC<RenameModalProps> = ({
   onConfirm,
   isSubmitting = false
 }) => {
+  // This function handles form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(e);
+    onConfirm(e); // Call the onConfirm function passed from parent
   };
 
   return (
@@ -54,10 +55,18 @@ export const RenameModal: React.FC<RenameModalProps> = ({
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)} 
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!currentName.trim() || isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={!currentName.trim() || isSubmitting}
+            >
               {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>

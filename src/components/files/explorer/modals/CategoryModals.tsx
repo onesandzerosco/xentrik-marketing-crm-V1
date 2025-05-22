@@ -50,18 +50,35 @@ export const CategoryModals: React.FC<CategoryModalsProps> = ({
 }) => {
   const [newCategoryNameForRename, setNewCategoryNameForRename] = useState<string>('');
   
+  // When the modal opens, set the name field to the current name
   useEffect(() => {
     if (isRenameCategoryModalOpen) {
       setNewCategoryNameForRename(categoryCurrentName);
     }
   }, [isRenameCategoryModalOpen, categoryCurrentName]);
 
+  // Handle form submission in the rename modal
   const handleRenameSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Update the current name with the new name before calling the handler
     setCategoryCurrentName(newCategoryNameForRename);
+    // This now calls the API to update the database
     handleRenameCategory(e);
   };
+
+  // Create a global function that other components can call to open the modal
+  useEffect(() => {
+    // @ts-ignore - Adding a custom method to window
+    window.openRenameCategoryModal = (categoryId: string, currentName: string) => {
+      setCategoryCurrentName(currentName);
+      setIsRenameCategoryModalOpen(true);
+    };
+    
+    return () => {
+      // @ts-ignore - Cleanup
+      delete window.openRenameCategoryModal;
+    };
+  }, [setCategoryCurrentName, setIsRenameCategoryModalOpen]);
 
   return (
     <>
