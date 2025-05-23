@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -51,27 +51,52 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   const [team, setTeam] = useState<TeamEnum>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const acceptClickedRef = useRef(false);
+  
+  // Reset submission state when modal opens/closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsSubmitting(false);
+      acceptClickedRef.current = false;
+    }
+  }, [isOpen]);
 
   const handleAccept = async () => {
-    if (isSubmitting) return; // Prevent duplicate submissions
+    // Multiple protections against double submissions
+    if (isSubmitting || isLoading || acceptClickedRef.current) {
+      console.log("Preventing duplicate submission attempt");
+      return;
+    } 
     
-    setIsSubmitting(true);
     try {
+      // Set flags to prevent re-entry
+      setIsSubmitting(true);
+      acceptClickedRef.current = true;
+      
+      console.log("AcceptSubmissionModal: Accepting submission with name:", name);
       await onAccept({
         name,
         team,
         creatorType,
       });
     } finally {
-      setIsSubmitting(false);
+      // No need to reset isSubmitting here as the modal will close
+      // and the effect will handle the reset
     }
   };
 
   // Combine local and parent loading states
-  const isButtonDisabled = isLoading || isSubmitting || !name.trim();
+  const isButtonDisabled = isLoading || isSubmitting || !name.trim() || acceptClickedRef.current;
+
+  // Function to safely close the modal
+  const handleClose = () => {
+    if (!isSubmitting && !isLoading) {
+      onClose();
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] bg-[#1a1a33] text-white border-[#252538]">
         <DialogHeader>
           <DialogTitle>Accept Creator Submission</DialogTitle>
@@ -133,7 +158,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
         <DialogFooter>
           <Button 
             variant="outline" 
-            onClick={onClose}
+            onClick={handleClose}
             className="text-white border-white/20"
             disabled={isSubmitting || isLoading}
           >

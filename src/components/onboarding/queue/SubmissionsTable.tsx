@@ -29,6 +29,40 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   deleteSubmission,
   onAcceptClick
 }) => {
+  // Track buttons that have been clicked to prevent double clicks
+  const [clickedButtons, setClickedButtons] = React.useState<Record<string, boolean>>({});
+  
+  const handleDeleteClick = (token: string) => {
+    if (processingTokens.includes(token) || clickedButtons[token]) return;
+    
+    // Mark this button as clicked
+    setClickedButtons(prev => ({ ...prev, [token]: true }));
+    
+    // Process the deletion
+    console.log("Delete button clicked for token:", token);
+    deleteSubmission(token).finally(() => {
+      // Reset clicked state after completion
+      setClickedButtons(prev => ({ ...prev, [token]: false }));
+    });
+  };
+  
+  const handleAcceptClick = (submission: OnboardSubmission) => {
+    const token = submission.token;
+    if (processingTokens.includes(token) || clickedButtons[token]) return;
+    
+    // Mark this button as clicked
+    setClickedButtons(prev => ({ ...prev, [token]: true }));
+    
+    // Process the acceptance
+    console.log("Accept button clicked for token:", token);
+    onAcceptClick(submission);
+    
+    // We'll reset this when the modal closes or the action completes
+    setTimeout(() => {
+      setClickedButtons(prev => ({ ...prev, [token]: false }));
+    }, 5000);
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -61,8 +95,8 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => deleteSubmission(submission.token)}
-                    disabled={processingTokens.includes(submission.token)}
+                    onClick={() => handleDeleteClick(submission.token)}
+                    disabled={processingTokens.includes(submission.token) || clickedButtons[submission.token]}
                     title="Decline submission"
                   >
                     {processingTokens.includes(submission.token) ? (
@@ -74,8 +108,8 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onAcceptClick(submission)}
-                    disabled={processingTokens.includes(submission.token)}
+                    onClick={() => handleAcceptClick(submission)}
+                    disabled={processingTokens.includes(submission.token) || clickedButtons[submission.token]}
                     title="Approve creator"
                   >
                     {processingTokens.includes(submission.token) ? (

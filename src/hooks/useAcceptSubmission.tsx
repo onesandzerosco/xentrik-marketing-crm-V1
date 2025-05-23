@@ -24,6 +24,7 @@ export const useAcceptSubmission = (
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
   const [isProcessing, setIsProcessing] = useState(false); // Flag to prevent double submission
+  const [processedTokens, setProcessedTokens] = useState<Set<string>>(new Set()); // Track already processed tokens
   const { toast } = useToast();
 
   const openAcceptModal = (submission: OnboardSubmission) => {
@@ -33,14 +34,33 @@ export const useAcceptSubmission = (
 
   // Update the function signature to match what AcceptSubmissionModal expects
   const handleAcceptSubmission = async (creatorData: CreatorData) => {
-    if (!selectedSubmission || isProcessing) return; // Prevent multiple submissions
+    if (!selectedSubmission) {
+      console.log("No submission selected, cannot proceed");
+      return;
+    }
+    
+    const token = selectedSubmission.token;
+    
+    // Multiple safeguards against duplicate processing
+    if (isProcessing) {
+      console.log("Already processing a submission, ignoring duplicate call");
+      return;
+    }
+    
+    if (processedTokens.has(token)) {
+      console.log("Token already processed, ignoring duplicate call:", token);
+      return;
+    }
     
     try {
       // Set processing flag to prevent duplicate calls
       setIsProcessing(true);
-      setProcessingTokens(prev => [...prev, selectedSubmission.token]);
+      setProcessingTokens(prev => [...prev, token]);
       
-      console.log("Processing submission:", selectedSubmission.token);
+      console.log("Processing submission:", token);
+      
+      // Add the token to processed set immediately
+      setProcessedTokens(prev => new Set(prev).add(token));
       
       // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
@@ -56,7 +76,7 @@ export const useAcceptSubmission = (
       const { error } = await supabase
         .from('onboarding_submissions')
         .update({ status: 'accepted' })
-        .eq('token', selectedSubmission.token);
+        .eq('token', token);
       
       if (error) {
         throw error;
@@ -69,7 +89,7 @@ export const useAcceptSubmission = (
       
       // 3. Close the modal and refresh the list
       setAcceptModalOpen(false);
-      deleteSubmission(selectedSubmission.token);
+      deleteSubmission(token);
       
     } catch (error) {
       console.error("Error accepting submission:", error);
@@ -78,7 +98,13 @@ export const useAcceptSubmission = (
         description: "Failed to create creator account.",
         variant: "destructive"
       });
-      setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
+      // If there was an error, remove the token from processed set
+      setProcessedTokens(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(token);
+        return newSet;
+      });
+      setProcessingTokens(prev => prev.filter(t => t !== token));
     } finally {
       setIsProcessing(false); // Reset processing flag
     }
@@ -89,6 +115,7 @@ export const useAcceptSubmission = (
     selectedSubmission,
     openAcceptModal,
     setAcceptModalOpen,
-    handleAcceptSubmission
+    handleAcceptSubmission,
+    isProcessing
   };
 };
