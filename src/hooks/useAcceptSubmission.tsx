@@ -47,10 +47,10 @@ export const useAcceptSubmission = (
         throw new Error("Failed to create creator account");
       }
       
-      // 2. Update the submission status in the database
+      // 2. Update the submission status in the database to "accepted" instead of "approved"
       const { error } = await supabase
         .from('onboarding_submissions')
-        .update({ status: 'approved' })
+        .update({ status: 'accepted' })
         .eq('token', selectedSubmission.token);
       
       if (error) {
