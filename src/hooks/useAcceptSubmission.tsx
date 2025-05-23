@@ -18,7 +18,8 @@ interface CreatorData {
 }
 
 export const useAcceptSubmission = (
-  deleteSubmission: (token: string) => Promise<void>,
+  declineSubmission: (token: string) => Promise<void>,
+  removeSubmissionFromView: (token: string) => void,
   setProcessingTokens: (fn: (prev: string[]) => string[]) => void
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
@@ -118,9 +119,10 @@ export const useAcceptSubmission = (
         description: `${creatorData.name} has been added as a creator.`,
       });
       
-      // 3. Close the modal and refresh the list
+      // 3. Close the modal and remove the submission from the view
       closeModal();
-      await deleteSubmission(token);
+      // Use removeSubmissionFromView instead of deleteSubmission to prevent declining the submission
+      removeSubmissionFromView(token);
       
     } catch (error) {
       console.error("Error accepting submission:", error);
@@ -146,7 +148,7 @@ export const useAcceptSubmission = (
       isProcessingRef.current = false;
       // Don't clear currentTokenRef here to prevent immediate reprocessing
     }
-  }, [selectedSubmission, closeModal, deleteSubmission, isProcessing, processedTokens, setProcessingTokens, toast]);
+  }, [selectedSubmission, closeModal, removeSubmissionFromView, isProcessing, processedTokens, setProcessingTokens, toast]);
 
   return {
     acceptModalOpen,

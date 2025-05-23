@@ -21,7 +21,8 @@ const CreatorOnboardQueue: React.FC = () => {
     processingTokens,
     fetchSubmissions,
     togglePreview,
-    deleteSubmission,
+    declineSubmission,
+    removeSubmissionFromView,
     setProcessingTokens,
     formatDate
   } = useOnboardingSubmissions();
@@ -34,7 +35,7 @@ const CreatorOnboardQueue: React.FC = () => {
     handleAcceptSubmission,
     isProcessing,
     processedTokens
-  } = useAcceptSubmission(deleteSubmission, setProcessingTokens);
+  } = useAcceptSubmission(declineSubmission, removeSubmissionFromView, setProcessingTokens);
   
   // Use memoization to filter submissions only when dependencies change
   const availableSubmissions = useMemo(() => {
@@ -88,7 +89,7 @@ const CreatorOnboardQueue: React.FC = () => {
               processingTokens={processingTokens}
               formatDate={formatDate}
               togglePreview={togglePreview}
-              deleteSubmission={deleteSubmission}
+              deleteSubmission={declineSubmission}
               onAcceptClick={openAcceptModal}
             />
           )}
@@ -99,7 +100,7 @@ const CreatorOnboardQueue: React.FC = () => {
       {selectedSubmission && (
         <AcceptSubmissionModal
           isOpen={acceptModalOpen}
-          onClose={() => setAcceptModalOpen()} // Fixed: Removing the boolean argument
+          onClose={() => setAcceptModalOpen()}
           onAccept={handleAcceptSubmission}
           defaultName={selectedSubmission.name}
           isLoading={isProcessing || processingTokens.includes(selectedSubmission.token)}

@@ -17,7 +17,7 @@ interface SubmissionsTableProps {
   processingTokens: string[];
   formatDate: (dateString: string) => string;
   togglePreview: (token: string) => void;
-  deleteSubmission: (token: string) => Promise<void>;
+  deleteSubmission: (token: string) => Promise<void>; // This is now the decline function
   onAcceptClick: (submission: OnboardSubmission) => void;
 }
 
@@ -51,9 +51,9 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     return tokens;
   }, [processingTokens, clickedButtons, handlingTokens]);
   
-  const handleDeleteClick = async (token: string) => {
+  const handleDeclineClick = async (token: string) => {
     if (disabledTokens.has(token)) {
-      console.log("Skipping delete action - token already being handled:", token);
+      console.log("Skipping decline action - token already being handled:", token);
       return;
     }
     
@@ -62,8 +62,8 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
       setClickedButtons(prev => ({ ...prev, [token]: true }));
       setHandlingTokens(prev => new Set(prev).add(token));
       
-      // Process the deletion
-      console.log("Delete button clicked for token:", token);
+      // Process the deletion (now decline)
+      console.log("Decline button clicked for token:", token);
       await deleteSubmission(token);
     } finally {
       // Reset clicked state after completion
@@ -134,7 +134,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeleteClick(submission.token)}
+                    onClick={() => handleDeclineClick(submission.token)}
                     disabled={disabledTokens.has(submission.token)}
                     title="Decline submission"
                   >

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export interface OnboardSubmission {
@@ -77,15 +77,16 @@ export const useOnboardingSubmissions = () => {
     ));
   };
 
-  const deleteSubmission = async (token: string) => {
-    // If token is already being processed, don't try to delete it again
+  // New function to specifically decline a submission
+  const declineSubmission = async (token: string) => {
+    // If token is already being processed, don't try to decline it again
     if (processingTokens.includes(token)) {
-      console.log("Token already being processed, skipping deleteSubmission:", token);
+      console.log("Token already being processed, skipping declineSubmission:", token);
       return;
     }
     
     try {
-      console.log("Processing deleteSubmission for token:", token);
+      console.log("Processing declineSubmission for token:", token);
       setProcessingTokens(prev => [...prev, token]);
       
       // Update the status to 'declined' in the database
@@ -117,6 +118,12 @@ export const useOnboardingSubmissions = () => {
     }
   };
 
+  // Modified function to remove a submission from the view only without changing its status
+  const removeSubmissionFromView = (token: string) => {
+    console.log("Removing submission from view:", token);
+    setSubmissions(prev => prev.filter(sub => sub.token !== token));
+  };
+
   // Format date utility
   const formatDate = (dateString: string) => {
     try {
@@ -138,7 +145,8 @@ export const useOnboardingSubmissions = () => {
     processingTokens,
     fetchSubmissions,
     togglePreview,
-    deleteSubmission,
+    declineSubmission,
+    removeSubmissionFromView,
     setProcessingTokens,
     formatDate
   };
