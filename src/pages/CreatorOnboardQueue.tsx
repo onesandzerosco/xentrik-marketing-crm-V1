@@ -31,13 +31,18 @@ const CreatorOnboardQueue: React.FC = () => {
     selectedSubmission,
     openAcceptModal,
     setAcceptModalOpen,
-    handleAcceptSubmission
+    handleAcceptSubmission,
+    isProcessing,
+    processedTokens
   } = useAcceptSubmission(deleteSubmission, setProcessingTokens);
   
   // Only allow admins to access this page
   if (userRole !== "Admin") {
     return <Navigate to="/dashboard" replace />;
   }
+
+  // Filter out submissions that have already been processed
+  const availableSubmissions = submissions.filter(sub => !processedTokens.has(sub.token));
 
   return (
     <div className="p-8 w-full">
@@ -73,11 +78,11 @@ const CreatorOnboardQueue: React.FC = () => {
         <CardContent>
           {loading ? (
             <LoadingState />
-          ) : submissions.length === 0 ? (
+          ) : availableSubmissions.length === 0 ? (
             <EmptyState />
           ) : (
             <SubmissionsTable 
-              submissions={submissions}
+              submissions={availableSubmissions}
               processingTokens={processingTokens}
               formatDate={formatDate}
               togglePreview={togglePreview}
@@ -95,7 +100,7 @@ const CreatorOnboardQueue: React.FC = () => {
           onClose={() => setAcceptModalOpen(false)}
           onAccept={handleAcceptSubmission}
           defaultName={selectedSubmission.name}
-          isLoading={processingTokens.includes(selectedSubmission.token)}
+          isLoading={isProcessing || processingTokens.includes(selectedSubmission.token)}
         />
       )}
     </div>

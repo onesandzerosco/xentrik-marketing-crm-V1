@@ -33,7 +33,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   const [clickedButtons, setClickedButtons] = React.useState<Record<string, boolean>>({});
   
   const handleDeleteClick = (token: string) => {
-    if (processingTokens.includes(token) || clickedButtons[token]) return;
+    if (processingTokens.includes(token) || clickedButtons[token]) {
+      console.log("Skipping delete action - token already processing or button clicked:", token);
+      return;
+    }
     
     // Mark this button as clicked
     setClickedButtons(prev => ({ ...prev, [token]: true }));
@@ -48,7 +51,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   
   const handleAcceptClick = (submission: OnboardSubmission) => {
     const token = submission.token;
-    if (processingTokens.includes(token) || clickedButtons[token]) return;
+    if (processingTokens.includes(token) || clickedButtons[token]) {
+      console.log("Skipping accept action - token already processing or button clicked:", token);
+      return;
+    }
     
     // Mark this button as clicked
     setClickedButtons(prev => ({ ...prev, [token]: true }));

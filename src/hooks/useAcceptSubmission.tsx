@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
@@ -25,9 +25,16 @@ export const useAcceptSubmission = (
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
   const [isProcessing, setIsProcessing] = useState(false); // Flag to prevent double submission
   const [processedTokens, setProcessedTokens] = useState<Set<string>>(new Set()); // Track already processed tokens
+  const processingRef = useRef(false); // Ref to track processing state across renders
   const { toast } = useToast();
 
   const openAcceptModal = (submission: OnboardSubmission) => {
+    console.log("Opening accept modal for submission:", submission.token);
+    // Don't open the modal if the token is already being processed
+    if (processedTokens.has(submission.token)) {
+      console.log("This token has already been processed, not opening modal:", submission.token);
+      return;
+    }
     setSelectedSubmission(submission);
     setAcceptModalOpen(true);
   };
@@ -42,7 +49,7 @@ export const useAcceptSubmission = (
     const token = selectedSubmission.token;
     
     // Multiple safeguards against duplicate processing
-    if (isProcessing) {
+    if (isProcessing || processingRef.current) {
       console.log("Already processing a submission, ignoring duplicate call");
       return;
     }
@@ -53,14 +60,17 @@ export const useAcceptSubmission = (
     }
     
     try {
-      // Set processing flag to prevent duplicate calls
+      // Set processing flags to prevent duplicate calls
+      console.log("Setting processing flags for token:", token);
       setIsProcessing(true);
+      processingRef.current = true;
       setProcessingTokens(prev => [...prev, token]);
       
-      console.log("Processing submission:", token);
-      
       // Add the token to processed set immediately
+      console.log("Adding token to processed set:", token);
       setProcessedTokens(prev => new Set(prev).add(token));
+      
+      console.log("Processing submission:", token);
       
       // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
@@ -98,15 +108,20 @@ export const useAcceptSubmission = (
         description: "Failed to create creator account.",
         variant: "destructive"
       });
+      
       // If there was an error, remove the token from processed set
       setProcessedTokens(prev => {
         const newSet = new Set(prev);
         newSet.delete(token);
         return newSet;
       });
+      
       setProcessingTokens(prev => prev.filter(t => t !== token));
     } finally {
-      setIsProcessing(false); // Reset processing flag
+      // Reset processing flags
+      console.log("Resetting processing flags for token:", token);
+      setIsProcessing(false);
+      processingRef.current = false;
     }
   };
 
@@ -116,6 +131,7 @@ export const useAcceptSubmission = (
     openAcceptModal,
     setAcceptModalOpen,
     handleAcceptSubmission,
-    isProcessing
+    isProcessing,
+    processedTokens // Export this to check in other components
   };
 };

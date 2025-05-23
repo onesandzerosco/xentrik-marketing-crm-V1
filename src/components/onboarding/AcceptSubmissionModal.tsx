@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -52,18 +52,28 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const acceptClickedRef = useRef(false);
+  const acceptHandlerCalledRef = useRef(false);
   
-  // Reset submission state when modal opens/closes
-  React.useEffect(() => {
-    if (!isOpen) {
+  // Reset all submission state when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state when modal opens
+      setName(defaultName);
       setIsSubmitting(false);
       acceptClickedRef.current = false;
+      acceptHandlerCalledRef.current = false;
     }
-  }, [isOpen]);
+  }, [isOpen, defaultName]);
 
   const handleAccept = async () => {
     // Multiple protections against double submissions
-    if (isSubmitting || isLoading || acceptClickedRef.current) {
+    console.log("Accept button clicked, checking submission state...");
+    console.log("isSubmitting:", isSubmitting);
+    console.log("isLoading:", isLoading);
+    console.log("acceptClickedRef.current:", acceptClickedRef.current);
+    console.log("acceptHandlerCalledRef.current:", acceptHandlerCalledRef.current);
+    
+    if (isSubmitting || isLoading || acceptClickedRef.current || acceptHandlerCalledRef.current) {
       console.log("Preventing duplicate submission attempt");
       return;
     } 
@@ -72,6 +82,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
       // Set flags to prevent re-entry
       setIsSubmitting(true);
       acceptClickedRef.current = true;
+      acceptHandlerCalledRef.current = true;
       
       console.log("AcceptSubmissionModal: Accepting submission with name:", name);
       await onAccept({
@@ -80,8 +91,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
         creatorType,
       });
     } finally {
-      // No need to reset isSubmitting here as the modal will close
-      // and the effect will handle the reset
+      // We don't reset the flags here because the modal will close or be reset via the effect
     }
   };
 
