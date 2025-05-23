@@ -23,6 +23,7 @@ export const useAcceptSubmission = (
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false); // Flag to prevent double submission
   const { toast } = useToast();
 
   const openAcceptModal = (submission: OnboardSubmission) => {
@@ -32,10 +33,14 @@ export const useAcceptSubmission = (
 
   // Update the function signature to match what AcceptSubmissionModal expects
   const handleAcceptSubmission = async (creatorData: CreatorData) => {
-    if (!selectedSubmission) return;
+    if (!selectedSubmission || isProcessing) return; // Prevent multiple submissions
     
     try {
+      // Set processing flag to prevent duplicate calls
+      setIsProcessing(true);
       setProcessingTokens(prev => [...prev, selectedSubmission.token]);
+      
+      console.log("Processing submission:", selectedSubmission.token);
       
       // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
@@ -74,6 +79,8 @@ export const useAcceptSubmission = (
         variant: "destructive"
       });
       setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
+    } finally {
+      setIsProcessing(false); // Reset processing flag
     }
   };
 

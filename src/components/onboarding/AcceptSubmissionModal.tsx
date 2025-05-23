@@ -50,14 +50,25 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   const [name, setName] = useState(defaultName);
   const [team, setTeam] = useState<TeamEnum>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAccept = async () => {
-    await onAccept({
-      name,
-      team,
-      creatorType,
-    });
+    if (isSubmitting) return; // Prevent duplicate submissions
+    
+    setIsSubmitting(true);
+    try {
+      await onAccept({
+        name,
+        team,
+        creatorType,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  // Combine local and parent loading states
+  const isButtonDisabled = isLoading || isSubmitting || !name.trim();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -78,6 +89,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="col-span-3 bg-[#252538] border-[#383854] text-white"
+              disabled={isSubmitting || isLoading}
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
@@ -87,6 +99,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             <Select 
               value={team} 
               onValueChange={(value: TeamEnum) => setTeam(value)}
+              disabled={isSubmitting || isLoading}
             >
               <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
                 <SelectValue placeholder="Select a team" />
@@ -105,6 +118,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             <Select 
               value={creatorType} 
               onValueChange={(value: CreatorTypeEnum) => setCreatorType(value)}
+              disabled={isSubmitting || isLoading}
             >
               <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
                 <SelectValue placeholder="Select creator type" />
@@ -121,15 +135,16 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             variant="outline" 
             onClick={onClose}
             className="text-white border-white/20"
+            disabled={isSubmitting || isLoading}
           >
             Cancel
           </Button>
           <Button 
             onClick={handleAccept} 
-            disabled={isLoading || !name.trim()}
+            disabled={isButtonDisabled}
             className="bg-gradient-to-r from-purple-600 to-blue-600 text-white"
           >
-            {isLoading ? (
+            {(isLoading || isSubmitting) ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...

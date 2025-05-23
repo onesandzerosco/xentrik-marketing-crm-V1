@@ -78,7 +78,14 @@ export const useOnboardingSubmissions = () => {
   };
 
   const deleteSubmission = async (token: string) => {
+    // If token is already being processed, don't try to delete it again
+    if (processingTokens.includes(token)) {
+      console.log("Token already being processed, skipping deleteSubmission:", token);
+      return;
+    }
+    
     try {
+      console.log("Processing deleteSubmission for token:", token);
       setProcessingTokens(prev => [...prev, token]);
       
       // Update the status to 'declined' in the database
