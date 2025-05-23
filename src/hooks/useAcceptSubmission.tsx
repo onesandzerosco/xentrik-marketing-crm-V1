@@ -92,11 +92,11 @@ export const useAcceptSubmission = (
       let errorMessage = "Failed to create creator account.";
       
       // Check for common error patterns
-      if (error.message?.includes("already exists")) {
+      if (error.message?.includes("User already registered")) {
         errorMessage = "This email is already registered. Please use a different email.";
       } else if (error.message?.includes("Invalid email format")) {
         errorMessage = "Invalid email format. Please check the email address.";
-      } else if (error.message?.includes("unique constraint")) {
+      } else if (error.message?.includes("already exists")) {
         errorMessage = "This email is already associated with an account.";
       }
       

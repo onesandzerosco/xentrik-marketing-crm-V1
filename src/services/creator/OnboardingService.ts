@@ -92,23 +92,6 @@ export class OnboardingService {
         throw new Error(`Invalid email format: ${email}`);
       }
       
-      // Check if user already exists with this email
-      // Instead of using admin.getUserByEmail which isn't available,
-      // we'll check the profiles table
-      const { data: existingUserProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error("Error checking existing user:", profileError);
-      }
-      
-      if (existingUserProfile) {
-        throw new Error(`A user with email ${email} already exists`);
-      }
-      
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
