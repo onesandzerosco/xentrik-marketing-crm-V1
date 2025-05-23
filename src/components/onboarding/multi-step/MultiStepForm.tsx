@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { ChevronLeft, ChevronRight, Save, Upload } from "lucide-react";
 import { 
   creatorOnboardingSchema,
@@ -40,6 +40,7 @@ export const MultiStepForm: React.FC = () => {
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   
+  // Navigation functions - separated from form submission logic
   const goToNextStep = () => {
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
@@ -52,10 +53,11 @@ export const MultiStepForm: React.FC = () => {
     }
   };
 
+  // Only called when the final submit button is clicked
   const onSubmit = async (data: CreatorOnboardingFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Form data:", data);
+      console.log("Form data being submitted:", data);
 
       // Calculate age from date of birth if provided
       if (data.personalInfo.dateOfBirth) {

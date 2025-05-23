@@ -11,11 +11,9 @@ import CreatorService from "@/services/creator";
  */
 export const saveOnboardingData = async (data: CreatorOnboardingFormValues) => {
   try {
-    console.log("Starting saveOnboardingData...");
+    console.log("Starting saveOnboardingData with complete form data...");
     // Generate a unique token for the submission
     const token = uuidv4();
-    
-    console.log("Converting data to JSON...");
     
     console.log("Saving data to onboarding_submissions table...");
     // Save to onboarding_submissions table

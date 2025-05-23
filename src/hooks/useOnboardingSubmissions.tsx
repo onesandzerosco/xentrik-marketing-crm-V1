@@ -115,11 +115,13 @@ export const useOnboardingSubmissions = () => {
     try {
       return format(new Date(dateString), 'MMM d, yyyy h:mm a');
     } catch (e) {
+      console.error("Invalid date format:", dateString, e);
       return 'Invalid date';
     }
   };
 
   useEffect(() => {
+    console.log("useEffect in useOnboardingSubmissions is running, fetching submissions...");
     fetchSubmissions();
   }, []);
 

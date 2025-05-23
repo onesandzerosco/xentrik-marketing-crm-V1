@@ -25,6 +25,12 @@ export class OnboardingService {
       const name = formData.personalInfo?.fullName || formData.name || "New Creator";
       const email = formData.personalInfo?.email || "noemail@example.com";
       
+      console.log("Saving onboarding data with token:", token);
+      console.log("Form data contains:", 
+        Object.keys(formData).join(", "),
+        "personal info fields:", 
+        formData.personalInfo ? Object.keys(formData.personalInfo).join(", ") : "none");
+      
       // Insert the submission into the onboarding_submissions table
       const { data, error } = await supabase
         .from('onboarding_submissions')
