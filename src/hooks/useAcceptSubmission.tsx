@@ -37,13 +37,6 @@ export const useAcceptSubmission = (
     try {
       setProcessingTokens(prev => [...prev, selectedSubmission.token]);
       
-      // Validate submission data
-      if (!selectedSubmission.email) {
-        throw new Error("Missing email in submission data");
-      }
-      
-      console.log("Processing submission for email:", selectedSubmission.email);
-      
       // 1. First, call the service to create a creator user
       const creatorId = await CreatorService.acceptOnboardingSubmission(
         selectedSubmission.data,
@@ -54,8 +47,6 @@ export const useAcceptSubmission = (
         throw new Error("Failed to create creator account");
       }
       
-      console.log("Creator account created with ID:", creatorId);
-      
       // 2. Update the submission status in the database
       const { error } = await supabase
         .from('onboarding_submissions')
@@ -63,7 +54,6 @@ export const useAcceptSubmission = (
         .eq('token', selectedSubmission.token);
       
       if (error) {
-        console.error("Error updating submission status:", error);
         throw error;
       }
 
@@ -74,38 +64,15 @@ export const useAcceptSubmission = (
       
       // 3. Close the modal and refresh the list
       setAcceptModalOpen(false);
+      deleteSubmission(selectedSubmission.token);
       
-      // Fetch the submissions again to refresh the list with proper status
-      const { data: updatedData, error: fetchError } = await supabase
-        .from('onboarding_submissions')
-        .select('*')
-        .eq('status', 'pending');
-        
-      if (fetchError) {
-        console.error("Error refreshing submissions:", fetchError);
-      }
-      
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error accepting submission:", error);
-      
-      // Provide more specific error messages based on error content
-      let errorMessage = "Failed to create creator account.";
-      
-      // Check for common error patterns
-      if (error.message?.includes("User already registered")) {
-        errorMessage = "This email is already registered. Please use a different email.";
-      } else if (error.message?.includes("Invalid email format")) {
-        errorMessage = "Invalid email format. Please check the email address.";
-      } else if (error.message?.includes("already exists")) {
-        errorMessage = "This email is already associated with an account.";
-      }
-      
       toast({
         title: "Error accepting submission",
-        description: errorMessage,
+        description: "Failed to create creator account.",
         variant: "destructive"
       });
-      
       setProcessingTokens(prev => prev.filter(t => t !== selectedSubmission.token));
     }
   };

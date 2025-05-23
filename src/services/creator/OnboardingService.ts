@@ -54,17 +54,6 @@ export class OnboardingService {
   }
   
   /**
-   * Validate email address format
-   * @param email The email address to validate
-   * @returns True if email is valid, false otherwise
-   */
-  private static validateEmail(email: string): boolean {
-    // Basic email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  /**
    * Accept a creator onboarding submission
    * @param formData The onboarding form data 
    * @param creatorInfo The basic creator information to save
@@ -86,16 +75,9 @@ export class OnboardingService {
       if (!email) {
         throw new Error("Email is required for creator registration");
       }
-
-      // Validate email format
-      if (!this.validateEmail(email)) {
-        throw new Error(`Invalid email format: ${email}`);
-      }
       
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
-      
-      console.log(`Attempting to create auth user with email: ${email}`);
       
       // Create a user in the auth system using the authenticated client
       // This should include the API key by default
@@ -107,8 +89,7 @@ export class OnboardingService {
             name: creatorInfo.name,
             role: 'Employee',
             roles: ['Creator']
-          },
-          emailRedirectTo: window.location.origin // Add redirect URL
+          }
         }
       });
       
@@ -156,7 +137,15 @@ export class OnboardingService {
         .single();
       
       if (creatorError) {
-        console.error("Error creating creator record:", creatorError);
+        // If there was an error creating the creator, try to delete the auth user
+        if (userId) {
+          try {
+            // NOTE: Delete functionality is disabled here since it would require admin privileges
+            console.error("Failed to create creator record, but cannot delete auth user due to permissions");
+          } catch (deleteError) {
+            console.error("Error deleting auth user after creator creation failed:", deleteError);
+          }
+        }
         throw creatorError;
       }
       
@@ -176,7 +165,7 @@ export class OnboardingService {
       return userId;
     } catch (error) {
       console.error("Error accepting submission:", error);
-      throw error; // Re-throw to handle in the calling function
+      return undefined;
     }
   }
 }
