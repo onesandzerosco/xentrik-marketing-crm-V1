@@ -29,7 +29,7 @@ export const MultiStepForm: React.FC = () => {
     mode: "onChange"
   });
 
-  const { handleSubmit, formState: { isValid, errors } } = methods;
+  const { formState: { isValid, errors } } = methods;
 
   const steps = [
     { id: "personalInfo", label: "Personal Info" },
@@ -40,8 +40,9 @@ export const MultiStepForm: React.FC = () => {
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   
-  // Navigation functions - separated from form submission logic
+  // Navigation functions - completely separated from form submission
   const goToNextStep = () => {
+    console.log("Moving to next step from step:", currentStepIndex);
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
     }
@@ -53,11 +54,11 @@ export const MultiStepForm: React.FC = () => {
     }
   };
 
-  // Only called when the final submit button is clicked
-  const onSubmit = async (data: CreatorOnboardingFormValues) => {
+  // Only called when the final submit button is explicitly clicked
+  const handleFinalSubmit = async (data: CreatorOnboardingFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Form data being submitted:", data);
+      console.log("Form data being submitted from final step button click:", data);
 
       // Calculate age from date of birth if provided
       if (data.personalInfo.dateOfBirth) {
@@ -99,7 +100,8 @@ export const MultiStepForm: React.FC = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* Use onSubmit handler only for form validation, not for automatic submission */}
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">Creator Onboarding</CardTitle>
@@ -160,10 +162,11 @@ export const MultiStepForm: React.FC = () => {
               </Button>
             ) : (
               <Button
-                type="submit"
+                type="button" 
                 variant="premium"
                 disabled={isSubmitting || !isValid}
                 className="flex items-center gap-2"
+                onClick={() => methods.handleSubmit(handleFinalSubmit)()}
               >
                 {isSubmitting ? (
                   <>Processing <Upload className="h-4 w-4 animate-bounce" /></>
