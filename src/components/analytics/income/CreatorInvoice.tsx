@@ -29,22 +29,31 @@ export const CreatorInvoice = ({ creatorId, creatorName }: CreatorInvoiceProps) 
     }
   });
   
-  // Sync the date range between invoice settings and the income data filter
-  useEffect(() => {
-    if (invoiceSettings.dateRange) {
-      setDate(invoiceSettings.dateRange);
+  // Handle settings changes without causing infinite loops
+  const handleSettingsChange = (settings: InvoiceSettings) => {
+    setInvoiceSettings(settings);
+    
+    // Only update the income data filter if date range has changed
+    if (settings.dateRange && 
+        (settings.dateRange.from !== date?.from || 
+         settings.dateRange.to !== date?.to)) {
+      setDate(settings.dateRange);
     }
-  }, [invoiceSettings.dateRange, setDate]);
-
-  // Sync the income data filter with invoice settings
+  };
+  
+  // Sync the income data filter with invoice settings once on first render
   useEffect(() => {
-    if (date && (date.from !== invoiceSettings.dateRange?.from || date.to !== invoiceSettings.dateRange?.to)) {
+    // Only update dateRange in invoiceSettings if date has values and they're different
+    if (date && 
+        (date.from !== invoiceSettings.dateRange?.from || 
+         date.to !== invoiceSettings.dateRange?.to)) {
+      
       setInvoiceSettings(prev => ({
         ...prev,
         dateRange: date
       }));
     }
-  }, [date, invoiceSettings.dateRange]);
+  }, [date]); // Only depend on date changes
   
   // Calculate invoice summary based on data and settings
   const invoiceSummary = useInvoiceCalculations(filteredData, invoiceSettings);
@@ -54,7 +63,7 @@ export const CreatorInvoice = ({ creatorId, creatorName }: CreatorInvoiceProps) 
       {/* Header with settings */}
       <InvoiceHeader 
         settings={invoiceSettings}
-        onSettingsChange={setInvoiceSettings}
+        onSettingsChange={handleSettingsChange}
         creatorName={creatorName}
       />
       

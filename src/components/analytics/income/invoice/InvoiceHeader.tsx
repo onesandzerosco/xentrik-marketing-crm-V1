@@ -34,10 +34,14 @@ export const InvoiceHeader = ({ settings, onSettingsChange, creatorName }: Invoi
   };
 
   const handleDateRangeChange = (dateRange: any) => {
-    onSettingsChange({
-      ...settings,
-      dateRange
-    });
+    // Only update if the dateRange actually changed
+    if (dateRange?.from !== settings.dateRange?.from || 
+        dateRange?.to !== settings.dateRange?.to) {
+      onSettingsChange({
+        ...settings,
+        dateRange
+      });
+    }
   };
 
   return (
