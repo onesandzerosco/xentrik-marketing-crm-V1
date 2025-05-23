@@ -43,32 +43,23 @@ serve(async (req) => {
     console.log("Sending email to:", email);
     console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
     
-    // Send email using raw API approach
-    const response = await fetch(`${supabaseUrl}/auth/v1/invite`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-        "Content-Type": "application/json",
-        "apikey": supabaseServiceKey
-      },
-      body: JSON.stringify({
-        email,
-        data: {
-          name: nameToGreet,
-          onboard_link: `${appUrl}/onboard/${token}`,
-          agency_name: "Your Agency"
-        }
-      })
+    // Use Supabase's built-in email invitation system
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${appUrl}/onboard/${token}`,
+      data: {
+        name: nameToGreet,
+        onboard_link: `${appUrl}/onboard/${token}`,
+        agency_name: "Your Agency",
+        token: token
+      }
     });
     
-    const data = await response.json();
-    
-    if (!response.ok) {
-      console.error("Error sending email via Supabase:", data);
-      throw new Error(`Failed to send invitation email: ${data.msg || data.message || JSON.stringify(data)}`);
+    if (error) {
+      console.error("Error sending email via Supabase:", error);
+      throw new Error(`Failed to send invitation email: ${error.message}`);
     }
     
-    console.log("Email sent successfully:", data);
+    console.log("Email sent successfully via Supabase templates");
     
     return new Response(
       JSON.stringify({ success: true, data }),
