@@ -1,7 +1,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
 import CreatorService from "@/services/creator";
 import type { Database } from "@/integrations/supabase/types";
@@ -152,7 +152,7 @@ export const useAcceptSubmission = (
     acceptModalOpen,
     selectedSubmission,
     openAcceptModal,
-    setAcceptModalOpen: closeModal, // Use the closeModal function instead
+    setAcceptModalOpen: closeModal, // Export the closeModal function as setAcceptModalOpen
     handleAcceptSubmission,
     isProcessing,
     processedTokens

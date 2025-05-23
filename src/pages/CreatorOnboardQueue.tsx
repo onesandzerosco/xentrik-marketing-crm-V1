@@ -99,7 +99,7 @@ const CreatorOnboardQueue: React.FC = () => {
       {selectedSubmission && (
         <AcceptSubmissionModal
           isOpen={acceptModalOpen}
-          onClose={() => setAcceptModalOpen(false)}
+          onClose={() => setAcceptModalOpen()} // Fixed: Removing the boolean argument
           onAccept={handleAcceptSubmission}
           defaultName={selectedSubmission.name}
           isLoading={isProcessing || processingTokens.includes(selectedSubmission.token)}
