@@ -51,17 +51,18 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   const [team, setTeam] = useState<TeamEnum>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const acceptClickedRef = useRef(false);
-  const acceptHandlerCalledRef = useRef(false);
   
-  // Reset all submission state when modal opens/closes
+  // Use refs to prevent duplicate submissions
+  const hasSubmittedRef = useRef(false);
+  
+  // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      // Reset state when modal opens
       setName(defaultName);
+      setTeam("A Team");
+      setCreatorType("Real");
       setIsSubmitting(false);
-      acceptClickedRef.current = false;
-      acceptHandlerCalledRef.current = false;
+      hasSubmittedRef.current = false;
     }
   }, [isOpen, defaultName]);
 
@@ -70,10 +71,9 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
     console.log("Accept button clicked, checking submission state...");
     console.log("isSubmitting:", isSubmitting);
     console.log("isLoading:", isLoading);
-    console.log("acceptClickedRef.current:", acceptClickedRef.current);
-    console.log("acceptHandlerCalledRef.current:", acceptHandlerCalledRef.current);
+    console.log("hasSubmittedRef.current:", hasSubmittedRef.current);
     
-    if (isSubmitting || isLoading || acceptClickedRef.current || acceptHandlerCalledRef.current) {
+    if (isSubmitting || isLoading || hasSubmittedRef.current) {
       console.log("Preventing duplicate submission attempt");
       return;
     } 
@@ -81,8 +81,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
     try {
       // Set flags to prevent re-entry
       setIsSubmitting(true);
-      acceptClickedRef.current = true;
-      acceptHandlerCalledRef.current = true;
+      hasSubmittedRef.current = true;
       
       console.log("AcceptSubmissionModal: Accepting submission with name:", name);
       await onAccept({
@@ -90,13 +89,18 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
         team,
         creatorType,
       });
-    } finally {
-      // We don't reset the flags here because the modal will close or be reset via the effect
+    } catch (error) {
+      console.error("Error in modal during submission:", error);
+      // Only reset the flags on error to allow retrying
+      setIsSubmitting(false);
+      hasSubmittedRef.current = false;
     }
+    // We don't reset the flags here on success 
+    // because the modal will close and be reset via the effect
   };
 
-  // Combine local and parent loading states
-  const isButtonDisabled = isLoading || isSubmitting || !name.trim() || acceptClickedRef.current;
+  // Combine all loading/submitting states
+  const isButtonDisabled = isLoading || isSubmitting || !name.trim() || hasSubmittedRef.current;
 
   // Function to safely close the modal
   const handleClose = () => {

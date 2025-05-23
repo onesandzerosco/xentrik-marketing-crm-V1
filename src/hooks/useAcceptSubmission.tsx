@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { OnboardSubmission } from "./useOnboardingSubmissions";
@@ -23,24 +23,37 @@ export const useAcceptSubmission = (
 ) => {
   const [acceptModalOpen, setAcceptModalOpen] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<OnboardSubmission | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false); // Flag to prevent double submission
-  const [processedTokens, setProcessedTokens] = useState<Set<string>>(new Set()); // Track already processed tokens
-  const processingRef = useRef(false); // Ref to track processing state across renders
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processedTokens, setProcessedTokens] = useState<Set<string>>(new Set());
+  
+  // Use refs to maintain values across renders and async operations
+  const isProcessingRef = useRef(false);
+  const currentTokenRef = useRef<string | null>(null);
+  
   const { toast } = useToast();
 
-  const openAcceptModal = (submission: OnboardSubmission) => {
-    console.log("Opening accept modal for submission:", submission.token);
-    // Don't open the modal if the token is already being processed
-    if (processedTokens.has(submission.token)) {
-      console.log("This token has already been processed, not opening modal:", submission.token);
+  // Use useCallback to ensure the function reference is stable
+  const openAcceptModal = useCallback((submission: OnboardSubmission) => {
+    const token = submission.token;
+    console.log("Opening accept modal for submission:", token);
+    
+    // Don't open the modal if the token is already being processed or was processed
+    if (processedTokens.has(token) || isProcessingRef.current || currentTokenRef.current === token) {
+      console.log("This token is being or has been processed, not opening modal:", token);
       return;
     }
+    
     setSelectedSubmission(submission);
     setAcceptModalOpen(true);
-  };
+  }, [processedTokens]);
 
-  // Update the function signature to match what AcceptSubmissionModal expects
-  const handleAcceptSubmission = async (creatorData: CreatorData) => {
+  const closeModal = useCallback(() => {
+    setAcceptModalOpen(false);
+    setSelectedSubmission(null);
+    currentTokenRef.current = null;
+  }, []);
+
+  const handleAcceptSubmission = useCallback(async (creatorData: CreatorData) => {
     if (!selectedSubmission) {
       console.log("No submission selected, cannot proceed");
       return;
@@ -49,13 +62,8 @@ export const useAcceptSubmission = (
     const token = selectedSubmission.token;
     
     // Multiple safeguards against duplicate processing
-    if (isProcessing || processingRef.current) {
-      console.log("Already processing a submission, ignoring duplicate call");
-      return;
-    }
-    
-    if (processedTokens.has(token)) {
-      console.log("Token already processed, ignoring duplicate call:", token);
+    if (isProcessingRef.current || isProcessing || currentTokenRef.current === token || processedTokens.has(token)) {
+      console.log("Already processing or processed, ignoring duplicate call:", token);
       return;
     }
     
@@ -63,12 +71,25 @@ export const useAcceptSubmission = (
       // Set processing flags to prevent duplicate calls
       console.log("Setting processing flags for token:", token);
       setIsProcessing(true);
-      processingRef.current = true;
-      setProcessingTokens(prev => [...prev, token]);
+      isProcessingRef.current = true;
+      currentTokenRef.current = token;
+      
+      // Track this token as being processed
+      setProcessingTokens(prev => {
+        // Ensure the token isn't already in the array
+        if (!prev.includes(token)) {
+          return [...prev, token];
+        }
+        return prev;
+      });
       
       // Add the token to processed set immediately
       console.log("Adding token to processed set:", token);
-      setProcessedTokens(prev => new Set(prev).add(token));
+      setProcessedTokens(prev => {
+        const newSet = new Set(prev);
+        newSet.add(token);
+        return newSet;
+      });
       
       console.log("Processing submission:", token);
       
@@ -98,8 +119,8 @@ export const useAcceptSubmission = (
       });
       
       // 3. Close the modal and refresh the list
-      setAcceptModalOpen(false);
-      deleteSubmission(token);
+      closeModal();
+      await deleteSubmission(token);
       
     } catch (error) {
       console.error("Error accepting submission:", error);
@@ -110,6 +131,7 @@ export const useAcceptSubmission = (
       });
       
       // If there was an error, remove the token from processed set
+      // to allow retrying
       setProcessedTokens(prev => {
         const newSet = new Set(prev);
         newSet.delete(token);
@@ -121,17 +143,18 @@ export const useAcceptSubmission = (
       // Reset processing flags
       console.log("Resetting processing flags for token:", token);
       setIsProcessing(false);
-      processingRef.current = false;
+      isProcessingRef.current = false;
+      // Don't clear currentTokenRef here to prevent immediate reprocessing
     }
-  };
+  }, [selectedSubmission, closeModal, deleteSubmission, isProcessing, processedTokens, setProcessingTokens, toast]);
 
   return {
     acceptModalOpen,
     selectedSubmission,
     openAcceptModal,
-    setAcceptModalOpen,
+    setAcceptModalOpen: closeModal, // Use the closeModal function instead
     handleAcceptSubmission,
     isProcessing,
-    processedTokens // Export this to check in other components
+    processedTokens
   };
 };

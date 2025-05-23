@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -36,13 +36,15 @@ const CreatorOnboardQueue: React.FC = () => {
     processedTokens
   } = useAcceptSubmission(deleteSubmission, setProcessingTokens);
   
+  // Use memoization to filter submissions only when dependencies change
+  const availableSubmissions = useMemo(() => {
+    return submissions.filter(sub => !processedTokens.has(sub.token));
+  }, [submissions, processedTokens]);
+
   // Only allow admins to access this page
   if (userRole !== "Admin") {
     return <Navigate to="/dashboard" replace />;
   }
-
-  // Filter out submissions that have already been processed
-  const availableSubmissions = submissions.filter(sub => !processedTokens.has(sub.token));
 
   return (
     <div className="p-8 w-full">
