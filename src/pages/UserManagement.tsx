@@ -4,7 +4,6 @@ import { useAuth } from "../context/AuthContext";
 import AddTeamMemberForm from "../components/admin/AddTeamMemberForm";
 import { Card } from "@/components/ui/card";
 import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
-import InvitationsList from "@/components/admin/creator-invite/InvitationsList";
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -28,7 +27,7 @@ const UserManagement = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <InviteCreatorCard />
-        <InvitationsList />
+        {/* Removed InvitationsList component */}
       </div>
       
       <div>

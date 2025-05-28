@@ -1,178 +1,148 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-
-const logoUrl = "/lovable-uploads/20bc55f1-9a4b-4fc9-acf0-bfef2843d250.png";
+import { Eye, EyeOff, UserPlus } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signInWithEmail, isAuthenticated } = useSupabaseAuth();
+  const { signIn, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Check if user is already logged in and redirect if so
+  const from = location.state?.from?.pathname || '/dashboard';
+
   useEffect(() => {
-    const checkAuth = async () => {
-      // First check if we have isAuthenticated flag from context
-      if (isAuthenticated) {
-        console.log("User already authenticated via context, redirecting to dashboard");
-        navigate('/dashboard');
-        return;
-      }
-      
-      // Double-check with Supabase directly as a fallback
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        console.log("Active session found, redirecting to dashboard");
-        navigate('/dashboard');
-      }
-    };
-    
-    checkAuth();
-  }, [navigate, isAuthenticated]);
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
+    } catch (error) {
       toast({
         variant: "destructive",
-        title: "Missing fields",
-        description: "Please enter both email and password"
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
       });
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      await signInWithEmail(email, password);
-      
-      // After successful login, check if the user is a creator
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Check if the user is associated with any creator
-        const { data: creatorTeamMembers } = await supabase
-          .from('creator_team_members')
-          .select('creator_id')
-          .eq('team_member_id', user.id)
-          .limit(1);
-        
-        // If the user is associated with a creator, store this info in localStorage
-        if (creatorTeamMembers && creatorTeamMembers.length > 0) {
-          localStorage.setItem('isCreator', 'true');
-          localStorage.setItem('creatorId', creatorTeamMembers[0].creator_id);
-        }
-        
-        // Fetch the user's profile data to get roles
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role, roles')
-          .eq('id', user.id)
-          .single();
-          
-        if (profileData) {
-          localStorage.setItem('userRole', profileData.role);
-          
-          // Store roles array in localStorage
-          if (profileData.roles && profileData.roles.length > 0) {
-            localStorage.setItem('userRoles', JSON.stringify(profileData.roles));
-            
-            // Check if user has Creator role
-            if (profileData.roles.includes('Creator')) {
-              localStorage.setItem('isCreator', 'true');
-            }
-          }
-        }
-      }
-      
-    } catch (error) {
-      // Error is already handled in the context
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background">
-      <div className="w-full max-w-md">
-        <Card>
-          <div className="text-center pt-6">
-            <img src={logoUrl} alt="XENTRIK MARKETING" className="h-44 mx-auto" />
-          </div>
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>
-              Sign in to your account
+    <div className="min-h-screen flex items-center justify-center bg-premium-dark p-4">
+      <div className="w-full max-w-md space-y-6">
+        <Card className="bg-premium-darker border-premium-border/30">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center text-white">
+              Welcome Back
+            </CardTitle>
+            <CardDescription className="text-center text-muted-foreground">
+              Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleEmailLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Email" 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)} 
-                    className="pl-10" 
-                    required 
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-premium-dark border-premium-border/30"
+                />
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Lock className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Password" 
-                    value={password} 
-                    onChange={e => setPassword(e.target.value)} 
-                    className="pl-10 pr-10" 
-                    required 
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="bg-premium-dark border-premium-border/30 pr-10"
                   />
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute inset-y-0 right-0 flex items-center justify-center" 
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </Button>
                 </div>
               </div>
-              
               <Button 
                 type="submit" 
-                className="w-full bg-brand-yellow text-black hover:bg-brand-highlight" 
+                className="w-full" 
                 disabled={isLoading}
+                variant="premium"
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
-            <p className="text-xs text-muted-foreground">Powered by Ones &amp; Zeros AI</p>
-          </CardFooter>
+        </Card>
+
+        {/* Creator Onboarding Access */}
+        <Card className="bg-premium-darker border-premium-border/30">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-lg font-semibold text-center text-white">
+              New Creator?
+            </CardTitle>
+            <CardDescription className="text-center text-muted-foreground">
+              Start your onboarding process here
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link to="/onboard">
+              <Button 
+                variant="outline" 
+                className="w-full border-brand-yellow/50 text-brand-yellow hover:bg-brand-yellow/10"
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Creator Onboarding
+              </Button>
+            </Link>
+          </CardContent>
         </Card>
       </div>
     </div>
