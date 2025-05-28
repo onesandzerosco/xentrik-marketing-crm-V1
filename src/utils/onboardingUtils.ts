@@ -11,10 +11,15 @@ export const validateToken = async (token: string): Promise<boolean> => {
       .from('creator_invitations')
       .select('expires_at, status')
       .eq('token', token)
-      .single();
+      .maybeSingle(); // Changed from .single() to .maybeSingle()
     
-    if (error || !data) {
-      console.error('Token not found:', error);
+    if (error) {
+      console.error('Error validating token:', error);
+      return false;
+    }
+    
+    if (!data) {
+      console.error('Token not found:', token);
       return false;
     }
     
@@ -75,11 +80,11 @@ export const saveOnboardingData = async (
       throw submissionError;
     }
     
-    // If token was provided, mark the invitation as used
+    // If token was provided, mark the invitation as completed
     if (token) {
       const { error: updateError } = await supabase
         .from('creator_invitations')
-        .update({ status: 'used' })
+        .update({ status: 'completed' })
         .eq('token', token);
       
       if (updateError) {
