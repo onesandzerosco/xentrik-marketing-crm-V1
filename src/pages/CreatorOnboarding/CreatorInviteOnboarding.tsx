@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -78,12 +77,12 @@ const CreatorInviteOnboarding = () => {
 
         setInvitationData(data);
         
-        // Pre-fill form with invitation data
+        // Pre-fill form with invitation data using correct schema paths
         if (data.model_name) {
-          form.setValue("name", data.model_name);
+          form.setValue("personalInfo.fullName", data.model_name);
         }
         if (data.stage_name) {
-          form.setValue("name", data.stage_name);
+          form.setValue("personalInfo.nickname", data.stage_name);
         }
       } catch (error: any) {
         console.error("Error fetching invitation:", error);
