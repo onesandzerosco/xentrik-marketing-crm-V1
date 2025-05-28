@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { generateInvitationToken } from "@/utils/onboardingUtils";
 
 // Validation schema
 const inviteSchema = z.object({
@@ -36,27 +36,16 @@ const InviteCreatorCard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Insert invitation record to get a token
-      const { data: invitation, error } = await supabase
-        .from("creator_invitations")
-        .insert({
-          email: null, // No email required anymore
-          stage_name: data.stageName || null,
-        })
-        .select("token")
-        .single();
+      // Generate invitation token
+      const result = await generateInvitationToken(data.stageName);
         
-      if (error) {
-        throw error;
-      }
-      
-      if (!invitation?.token) {
-        throw new Error("Failed to generate invitation token");
+      if (!result.success || !result.token) {
+        throw new Error(result.error || "Failed to generate invitation token");
       }
 
       // Generate the onboarding link
       const appUrl = window.location.origin;
-      const onboardingLink = `${appUrl}/onboarding-form/${invitation.token}`;
+      const onboardingLink = `${appUrl}/onboarding-form/${result.token}`;
       
       setGeneratedLink(onboardingLink);
 
@@ -107,7 +96,7 @@ const InviteCreatorCard: React.FC = () => {
         <div>
           <CardTitle>Generate Creator Onboarding Link</CardTitle>
           <CardDescription>
-            Create a unique onboarding link for new creators
+            Create a unique onboarding link for new creators (expires in 72 hours)
           </CardDescription>
         </div>
         <Link className="h-5 w-5 text-muted-foreground" />

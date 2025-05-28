@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +16,16 @@ import { PersonalInfoForm } from "./PersonalInfoForm";
 import { PhysicalAttributesForm } from "./PhysicalAttributesForm";
 import { PersonalPreferencesForm } from "./PersonalPreferencesForm";
 import { ContentAndServiceForm } from "./ContentAndServiceForm";
-import { saveOnboardingData } from "@/utils/onboardingUtils";
+import { saveOnboardingData, validateToken } from "@/utils/onboardingUtils";
 
-export const MultiStepForm: React.FC = () => {
+interface MultiStepFormProps {
+  token?: string;
+}
+
+export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   const [currentStep, setCurrentStep] = useState<string>("personalInfo");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const { toast } = useToast();
   
   const methods = useForm<CreatorOnboardingFormValues>({
@@ -31,6 +36,24 @@ export const MultiStepForm: React.FC = () => {
 
   const { formState: { isValid, errors } } = methods;
 
+  // Validate token on component mount
+  useEffect(() => {
+    if (token) {
+      validateToken(token).then(isValid => {
+        setTokenValid(isValid);
+        if (!isValid) {
+          toast({
+            title: "Invalid or Expired Link",
+            description: "This onboarding link is invalid or has already been used.",
+            variant: "destructive",
+          });
+        }
+      });
+    } else {
+      setTokenValid(true); // No token required for admin access
+    }
+  }, [token, toast]);
+
   const steps = [
     { id: "personalInfo", label: "Personal Info" },
     { id: "physicalAttributes", label: "Physical Attributes" },
@@ -40,9 +63,7 @@ export const MultiStepForm: React.FC = () => {
 
   const currentStepIndex = steps.findIndex(step => step.id === currentStep);
   
-  // Navigation functions - completely separated from form submission
   const goToNextStep = () => {
-    console.log("Moving to next step from step:", currentStepIndex);
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
     }
@@ -54,11 +75,10 @@ export const MultiStepForm: React.FC = () => {
     }
   };
 
-  // Only called when the final submit button is explicitly clicked
   const handleFinalSubmit = async (data: CreatorOnboardingFormValues) => {
     try {
       setIsSubmitting(true);
-      console.log("Form data being submitted from final step button click:", data);
+      console.log("Form data being submitted:", data);
 
       // Calculate age from date of birth if provided
       if (data.personalInfo.dateOfBirth) {
@@ -74,8 +94,8 @@ export const MultiStepForm: React.FC = () => {
         data.personalInfo.age = age;
       }
 
-      // Save to Supabase bucket
-      const result = await saveOnboardingData(data);
+      // Save to Supabase with the provided token
+      const result = await saveOnboardingData(data, token);
       
       if (result.success) {
         toast({
@@ -98,9 +118,36 @@ export const MultiStepForm: React.FC = () => {
     }
   };
 
+  // Show loading state while validating token
+  if (token && tokenValid === null) {
+    return (
+      <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Upload className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-white">Validating invitation link...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show error state for invalid token
+  if (token && tokenValid === false) {
+    return (
+      <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-red-400 mb-4">This onboarding link is invalid or has expired.</p>
+            <p className="text-gray-400">Please contact an administrator for a new link.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <FormProvider {...methods}>
-      {/* Use onSubmit handler only for form validation, not for automatic submission */}
       <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
         <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
           <CardHeader>
