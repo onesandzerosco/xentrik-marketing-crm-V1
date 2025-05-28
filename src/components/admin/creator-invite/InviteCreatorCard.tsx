@@ -14,7 +14,7 @@ import { generateInvitationToken } from "@/utils/onboardingUtils";
 
 // Validation schema
 const inviteSchema = z.object({
-  stageName: z.string().optional(),
+  modelName: z.string().min(1, "Model name is required"),
 });
 
 type InviteFormValues = z.infer<typeof inviteSchema>;
@@ -28,7 +28,7 @@ const InviteCreatorCard: React.FC = () => {
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     defaultValues: {
-      stageName: "",
+      modelName: "",
     },
   });
 
@@ -36,8 +36,8 @@ const InviteCreatorCard: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Generate invitation token
-      const result = await generateInvitationToken(data.stageName);
+      // Generate invitation token with model name
+      const result = await generateInvitationToken(data.modelName);
         
       if (!result.success || !result.token) {
         throw new Error(result.error || "Failed to generate invitation token");
@@ -51,7 +51,7 @@ const InviteCreatorCard: React.FC = () => {
 
       toast({
         title: "Onboarding link generated",
-        description: "Copy the link and share it with the creator",
+        description: `Copy the link and share it with ${data.modelName}`,
       });
       
       form.reset();
@@ -107,13 +107,13 @@ const InviteCreatorCard: React.FC = () => {
             <form onSubmit={form.handleSubmit(handleGenerateLink)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="stageName"
+                name="modelName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stage Name (optional)</FormLabel>
+                    <FormLabel>Model Name *</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Creator's stage name" 
+                        placeholder="Enter the model's name" 
                         {...field} 
                         disabled={isLoading}
                       />

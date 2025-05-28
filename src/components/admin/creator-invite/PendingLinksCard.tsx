@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface PendingInvitation {
   token: string;
-  stage_name: string | null;
+  model_name: string | null;
   created_at: string;
   expires_at: string;
 }
@@ -95,6 +95,13 @@ const PendingLinksCard: React.FC = () => {
     return new Date(expiresAt) < new Date();
   };
 
+  const getHoursLeft = (expiresAt: string) => {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const hoursLeft = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60)));
+    return hoursLeft;
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -128,56 +135,67 @@ const PendingLinksCard: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {invitations.map((invitation) => (
-              <div 
-                key={invitation.token} 
-                className={`border rounded-lg p-3 ${isExpired(invitation.expires_at) ? 'border-red-200 bg-red-50' : 'border-border'}`}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-sm">
-                        {invitation.stage_name || 'Unnamed Creator'}
+            {invitations.map((invitation) => {
+              const expired = isExpired(invitation.expires_at);
+              const hoursLeft = getHoursLeft(invitation.expires_at);
+              
+              return (
+                <div 
+                  key={invitation.token} 
+                  className={`border rounded-lg p-3 ${expired ? 'border-red-200 bg-red-50' : 'border-border'}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-medium text-sm">
+                          {invitation.model_name || 'Unnamed Model'}
+                        </p>
+                        {expired ? (
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                            Expired
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                            {hoursLeft}h left
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Created {formatDistanceToNow(new Date(invitation.created_at))} ago
                       </p>
-                      {isExpired(invitation.expires_at) && (
-                        <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                          Expired
-                        </span>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {expired ? 
+                          `Expired ${formatDistanceToNow(new Date(invitation.expires_at))} ago` :
+                          `Expires in ${hoursLeft} hours`
+                        }
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Created {formatDistanceToNow(new Date(invitation.created_at))} ago
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Expires {formatDistanceToNow(new Date(invitation.expires_at))} 
-                      {isExpired(invitation.expires_at) ? ' ago' : ' from now'}
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => copyLink(invitation.token)}
-                      disabled={copiedToken === invitation.token}
-                    >
-                      {copiedToken === invitation.token ? 
-                        <Check className="h-3 w-3" /> : 
-                        <Copy className="h-3 w-3" />
-                      }
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      onClick={() => deleteInvitation(invitation.token)}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => copyLink(invitation.token)}
+                        disabled={copiedToken === invitation.token}
+                      >
+                        {copiedToken === invitation.token ? 
+                          <Check className="h-3 w-3" /> : 
+                          <Copy className="h-3 w-3" />
+                        }
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteInvitation(invitation.token)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

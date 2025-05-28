@@ -102,13 +102,12 @@ export const saveOnboardingData = async (
 /**
  * Generate a new invitation token
  */
-export const generateInvitationToken = async (stageName?: string): Promise<{ success: boolean; token?: string; error?: string }> => {
+export const generateInvitationToken = async (modelName: string): Promise<{ success: boolean; token?: string; error?: string }> => {
   try {
     const { data, error } = await supabase
       .from('creator_invitations')
       .insert({
-        email: 'noemail@example.com', // Not used anymore but required by schema
-        stage_name: stageName || null,
+        model_name: modelName,
         status: 'pending'
       })
       .select('token')
@@ -135,7 +134,7 @@ export const getPendingInvitations = async () => {
   try {
     const { data, error } = await supabase
       .from('creator_invitations')
-      .select('token, stage_name, created_at, expires_at')
+      .select('token, model_name, created_at, expires_at')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
     

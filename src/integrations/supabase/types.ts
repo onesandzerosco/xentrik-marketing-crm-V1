@@ -12,9 +12,9 @@ export type Database = {
       creator_invitations: {
         Row: {
           created_at: string
-          email: string
           expires_at: string
           id: string
+          model_name: string | null
           stage_name: string | null
           status: string
           submission_path: string | null
@@ -22,9 +22,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email: string
           expires_at?: string
           id?: string
+          model_name?: string | null
           stage_name?: string | null
           status?: string
           submission_path?: string | null
@@ -32,9 +32,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string
           expires_at?: string
           id?: string
+          model_name?: string | null
           stage_name?: string | null
           status?: string
           submission_path?: string | null
