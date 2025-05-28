@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -44,15 +45,24 @@ const CreatorInviteOnboarding = () => {
           throw new Error("Invalid invitation token");
         }
 
+        console.log("Fetching invitation for token:", token);
+
         const { data, error } = await supabase
           .from("creator_invitations")
           .select("*")
           .eq("token", token)
           .single();
 
-        if (error || !data) {
+        if (error) {
+          console.error("Supabase error:", error);
           throw new Error("Invalid or expired invitation");
         }
+
+        if (!data) {
+          throw new Error("Invitation not found");
+        }
+
+        console.log("Found invitation data:", data);
 
         // Check if invitation has expired
         const now = new Date();
@@ -70,17 +80,17 @@ const CreatorInviteOnboarding = () => {
         
         // Pre-fill form with invitation data
         if (data.model_name) {
-          form.setValue("personalInfo.fullName", data.model_name);
+          form.setValue("name", data.model_name);
         }
         if (data.stage_name) {
-          form.setValue("personalInfo.nickname", data.stage_name);
+          form.setValue("name", data.stage_name);
         }
       } catch (error: any) {
         console.error("Error fetching invitation:", error);
         toast({
           variant: "destructive",
           title: "Invalid invitation",
-          description: error.message,
+          description: error.message || "This onboarding link is invalid or has expired. Please contact an administrator for a new link.",
         });
         navigate("/");
       } finally {
