@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -6,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { 
   creatorOnboardingSchema, 
   CreatorOnboardingFormValues,
-  defaultCreatorOnboardingValues
-} from "@/components/onboarding/schema/creatorOnboardingSchema";
+  defaultOnboardingValues
+} from "@/schemas/creatorOnboardingSchema";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -34,9 +33,7 @@ const CreatorInviteOnboarding = () => {
 
   const form = useForm<CreatorOnboardingFormValues>({
     resolver: zodResolver(creatorOnboardingSchema),
-    defaultValues: {
-      ...defaultCreatorOnboardingValues,
-    },
+    defaultValues: defaultOnboardingValues,
   });
 
   // Fetch invitation data and validate token
@@ -72,9 +69,11 @@ const CreatorInviteOnboarding = () => {
         setInvitationData(data);
         
         // Pre-fill form with invitation data
-        form.setValue("email", data.email);
+        if (data.model_name) {
+          form.setValue("personalInfo.fullName", data.model_name);
+        }
         if (data.stage_name) {
-          form.setValue("name", data.stage_name);
+          form.setValue("personalInfo.nickname", data.stage_name);
         }
       } catch (error: any) {
         console.error("Error fetching invitation:", error);
