@@ -46,22 +46,42 @@ const CreatorInviteOnboarding = () => {
 
         console.log("Fetching invitation for token:", token);
 
-        // Query creator_invitations table directly
+        // Query creator_invitations table directly using maybeSingle to handle no results
         const { data, error } = await supabase
           .from("creator_invitations")
           .select("*")
           .eq("token", token)
           .eq("status", "pending") // Only fetch pending invitations
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to handle no results
 
         if (error) {
           console.error("Supabase error:", error);
-          throw new Error("Invalid or expired invitation");
+          throw new Error("Error fetching invitation details");
         }
 
         if (!data) {
-          console.error("No invitation found for token:", token);
-          throw new Error("Invitation not found");
+          console.error("No pending invitation found for token:", token);
+          // Check if the token exists but with different status
+          const { data: existingInvitation, error: checkError } = await supabase
+            .from("creator_invitations")
+            .select("status, expires_at")
+            .eq("token", token)
+            .maybeSingle();
+          
+          if (checkError) {
+            console.error("Error checking invitation:", checkError);
+            throw new Error("Invalid invitation token");
+          }
+          
+          if (existingInvitation) {
+            if (existingInvitation.status === "completed") {
+              throw new Error("This invitation has already been used");
+            } else {
+              throw new Error("This invitation is no longer available");
+            }
+          } else {
+            throw new Error("Invitation not found");
+          }
         }
 
         console.log("Found invitation data:", data);
@@ -104,25 +124,26 @@ const CreatorInviteOnboarding = () => {
     try {
       setIsSubmitting(true);
       
-      // Store form submission in storage bucket
-      const filePath = `${token}.json`;
-      const { error: uploadError } = await supabase.storage
-        .from("onboard_submissions")
-        .upload(filePath, JSON.stringify(formData), {
-          contentType: "application/json",
-          upsert: true,
+      // Save submission to onboarding_submissions table
+      const { error: submissionError } = await supabase
+        .from("onboarding_submissions")
+        .insert({
+          token: token,
+          name: formData.personalInfo?.fullName || "Unknown",
+          email: formData.personalInfo?.email || "no-email@example.com",
+          data: formData,
+          status: "pending"
         });
 
-      if (uploadError) {
-        throw uploadError;
+      if (submissionError) {
+        throw submissionError;
       }
 
       // Update invitation status to completed
       const { error: updateError } = await supabase
         .from("creator_invitations")
         .update({
-          status: "completed",
-          submission_path: filePath,
+          status: "completed"
         })
         .eq("id", invitationData.id);
 
