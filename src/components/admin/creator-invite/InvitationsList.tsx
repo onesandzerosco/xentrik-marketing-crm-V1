@@ -9,7 +9,7 @@ import { formatDate } from "@/utils/fileUtils";
 
 interface Invitation {
   id: string;
-  email: string;
+  model_name: string | null;
   stage_name: string | null;
   status: string;
   created_at: string;
@@ -130,10 +130,10 @@ const InvitationsList: React.FC = () => {
                 className="flex items-center justify-between border rounded-md p-3"
               >
                 <div className="flex flex-col">
-                  <div className="font-medium">{invitation.email}</div>
+                  <div className="font-medium">{invitation.model_name || 'Unnamed Model'}</div>
                   {invitation.stage_name && (
                     <div className="text-sm text-muted-foreground">
-                      {invitation.stage_name}
+                      Stage: {invitation.stage_name}
                     </div>
                   )}
                   <div className="flex items-center gap-1 mt-1">
