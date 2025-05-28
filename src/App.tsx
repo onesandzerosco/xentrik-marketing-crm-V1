@@ -122,6 +122,10 @@ const AppRoutes = () => {
       {/* New admin onboard queue - Admin only */}
       <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
       
+      {/* Public Creator Onboarding Form - No authentication required */}
+      <Route path="/onboarding-form" element={<CreatorOnboardForm />} />
+      <Route path="/onboarding-form/:token" element={<CreatorOnboardForm />} />
+      
       {/* Public route for creator onboarding from invitation */}
       <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       

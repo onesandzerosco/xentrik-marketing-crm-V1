@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Plus } from "lucide-react";
+import { Link, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -14,7 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 
 // Validation schema
 const inviteSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
   stageName: z.string().optional(),
 });
 
@@ -23,32 +22,25 @@ type InviteFormValues = z.infer<typeof inviteSchema>;
 const InviteCreatorCard: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string>("");
+  const [copied, setCopied] = useState(false);
   
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteSchema),
     defaultValues: {
-      email: "",
       stageName: "",
     },
   });
 
-  const handleInviteCreator = async (data: InviteFormValues) => {
+  const handleGenerateLink = async (data: InviteFormValues) => {
     try {
       setIsLoading(true);
-      
-      // Initialize onboard_submissions bucket if it doesn't exist
-      try {
-        await supabase.functions.invoke("create-onboard-submissions-bucket");
-      } catch (err) {
-        console.warn("Bucket may already exist:", err);
-        // Continue anyway as this is just a precautionary step
-      }
       
       // Insert invitation record to get a token
       const { data: invitation, error } = await supabase
         .from("creator_invitations")
         .insert({
-          email: data.email,
+          email: null, // No email required anymore
           stage_name: data.stageName || null,
         })
         .select("token")
@@ -62,39 +54,23 @@ const InviteCreatorCard: React.FC = () => {
         throw new Error("Failed to generate invitation token");
       }
 
-      // Send invitation email using the edge function
-      // The edge function now uses Supabase's built-in email templates
+      // Generate the onboarding link
       const appUrl = window.location.origin;
-      const { error: emailError, data: emailData } = await supabase.functions.invoke("send-invite-email", {
-        body: {
-          email: data.email,
-          stageName: data.stageName || undefined,
-          token: invitation.token,
-          appUrl,
-        },
-      });
+      const onboardingLink = `${appUrl}/onboarding-form/${invitation.token}`;
       
-      if (emailError) {
-        console.error("Edge function error:", emailError);
-        throw new Error(`Failed to send email: ${emailError.message || "Unknown error"}`);
-      }
-      
-      if (emailData?.error) {
-        console.error("Email sending error:", emailData.error);
-        throw new Error(`Email service error: ${emailData.error}`);
-      }
+      setGeneratedLink(onboardingLink);
 
       toast({
-        title: "Invitation sent",
-        description: `An invitation has been sent to ${data.email}`,
+        title: "Onboarding link generated",
+        description: "Copy the link and share it with the creator",
       });
       
       form.reset();
     } catch (error: any) {
-      console.error("Error sending invitation:", error);
+      console.error("Error generating link:", error);
       toast({
         variant: "destructive",
-        title: "Failed to send invitation",
+        title: "Failed to generate link",
         description: error.message || "An unexpected error occurred",
       });
     } finally {
@@ -102,66 +78,111 @@ const InviteCreatorCard: React.FC = () => {
     }
   };
 
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
+      toast({
+        title: "Link copied",
+        description: "The onboarding link has been copied to your clipboard",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to copy",
+        description: "Could not copy the link to clipboard",
+      });
+    }
+  };
+
+  const generateNewLink = () => {
+    setGeneratedLink("");
+    setCopied(false);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle>Invite Creator</CardTitle>
+          <CardTitle>Generate Creator Onboarding Link</CardTitle>
           <CardDescription>
-            Send invitation to a new creator
+            Create a unique onboarding link for new creators
           </CardDescription>
         </div>
-        <Mail className="h-5 w-5 text-muted-foreground" />
+        <Link className="h-5 w-5 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleInviteCreator)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email address <span className="text-red-500">*</span></FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="creator@example.com" 
-                      {...field} 
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="stageName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stage Name (optional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Creator's stage name" 
-                      {...field} 
-                      disabled={isLoading}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {!generatedLink ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleGenerateLink)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="stageName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stage Name (optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Creator's stage name" 
+                        {...field} 
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Invite Creator
-            </Button>
-          </form>
-        </Form>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                <Link className="mr-2 h-4 w-4" />
+                Generate Onboarding Link
+              </Button>
+            </form>
+          </Form>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Label>Generated Onboarding Link</Label>
+              <div className="flex gap-2 mt-2">
+                <Input 
+                  value={generatedLink} 
+                  readOnly 
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={copyToClipboard}
+                  disabled={copied}
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={generateNewLink}
+                className="flex-1"
+              >
+                Generate New Link
+              </Button>
+              <Button
+                onClick={copyToClipboard}
+                disabled={copied}
+                className="flex-1"
+              >
+                {copied ? "Copied!" : "Copy Link"}
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -1,28 +1,33 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { useAuth } from "@/context/AuthContext";
-import { Navigate } from "react-router-dom";
 import { MultiStepForm } from "@/components/onboarding/multi-step/MultiStepForm";
+import { ArrowLeft } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const CreatorOnboardForm: React.FC = () => {
-  const { user, userRole } = useAuth();
-  
-  // Only allow admins to access this page for now
-  // Later this will be replaced with the token-based public route
-  if (userRole !== "Admin") {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const { token } = useParams();
   
   return (
-    <div className="p-8 w-full bg-premium-dark">
+    <div className="p-8 w-full bg-premium-dark min-h-screen">
       <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <Link to="/login">
+            <Button variant="ghost" size="sm" className="text-white">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Button>
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold mb-2 text-white">Creator Onboarding</h1>
-        <p className="text-muted-foreground">Use this form to onboard a new creator to the system.</p>
+        <p className="text-muted-foreground">
+          {token ? "Complete your creator onboarding using the invitation link." : "Join our platform as a creator by filling out this form."}
+        </p>
       </div>
       
       <div className="max-w-5xl mx-auto">
-        <MultiStepForm />
+        <MultiStepForm token={token} />
       </div>
     </div>
   );

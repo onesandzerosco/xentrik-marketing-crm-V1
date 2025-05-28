@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, UserPlus } from 'lucide-react';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -103,7 +104,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-6">
         <Card>
           <div className="text-center pt-6">
             <img src={logoUrl} alt="XENTRIK MARKETING" className="h-44 mx-auto" />
@@ -173,6 +174,26 @@ const Login = () => {
           <CardFooter className="flex justify-center">
             <p className="text-xs text-muted-foreground">Powered by Ones &amp; Zeros AI</p>
           </CardFooter>
+        </Card>
+
+        {/* Creator Onboarding Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              New Creator?
+            </CardTitle>
+            <CardDescription>
+              Start your creator onboarding journey
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link to="/onboarding-form">
+              <Button variant="outline" className="w-full">
+                Creator Onboarding
+              </Button>
+            </Link>
+          </CardContent>
         </Card>
       </div>
     </div>
