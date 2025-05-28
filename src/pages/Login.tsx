@@ -14,7 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, isAuthenticated } = useSupabaseAuth();
+  const { signInWithEmail, isAuthenticated } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,25 +32,17 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      await signInWithEmail(email, password);
       
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: error.message,
-        });
-      } else {
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-      }
-    } catch (error) {
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: error.message || "An unexpected error occurred. Please try again.",
       });
     } finally {
       setIsLoading(false);
