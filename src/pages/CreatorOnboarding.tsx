@@ -23,23 +23,14 @@ const CreatorOnboarding = () => {
       }
       
       toast({
-        title: "Application submitted successfully",
-        description: `Thank you ${formState.name}! Your application has been submitted and is being reviewed.`,
+        title: "Creator saved successfully",
+        description: `${formState.name} has been added to your creators.`,
       });
-      
-      // Reset form after successful submission
-      Object.values(formActions).forEach(setter => {
-        if (typeof setter === 'function') {
-          setter('');
-        }
-      });
-      
-      // Optional: redirect to a thank you page or login
-      // navigate("/login");
+      navigate("/creators");
     } catch (error: any) {
       console.error("Error during creator submission:", error);
       toast({
-        title: "Error submitting application",
+        title: "Error saving creator",
         description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });

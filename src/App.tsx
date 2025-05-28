@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -93,11 +94,6 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
-      
-      {/* Public Creator Onboarding - no authentication required */}
-      <Route path="/onboard" element={<CreatorOnboarding />} />
-      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
-      
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
       <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
@@ -118,11 +114,16 @@ const AppRoutes = () => {
       <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
       <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
-      <Route path="/upload/:id" element={<ProtectedRoute><CreatorUpload /></ProtectedRoute>} />
+      <Route path="/upload/:id" element={<CreatorUpload />} />
       
-      {/* Admin only routes */}
-      <Route path="/onboard-form" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
+      {/* New creator onboarding form - Admin only */}
+      <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
+      
+      {/* New admin onboard queue - Admin only */}
       <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
+      
+      {/* Public route for creator onboarding from invitation */}
+      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       
       {/* Add redirects for old route patterns */}
       <Route path="/creator-analytics/:id" element={<CreatorAnalyticsRedirect />} />
