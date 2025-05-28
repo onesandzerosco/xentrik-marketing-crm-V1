@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +8,13 @@ import { formatDate } from "@/utils/fileUtils";
 
 interface Invitation {
   id: string;
-  email: string;
+  model_name: string | null;
   stage_name: string | null;
   status: string;
   created_at: string;
   expires_at: string;
   submission_path: string | null;
+  token: string;
 }
 
 const InvitationsList: React.FC = () => {
@@ -130,10 +130,12 @@ const InvitationsList: React.FC = () => {
                 className="flex items-center justify-between border rounded-md p-3"
               >
                 <div className="flex flex-col">
-                  <div className="font-medium">{invitation.email}</div>
-                  {invitation.stage_name && (
+                  <div className="font-medium">
+                    {invitation.model_name || invitation.stage_name || "Unnamed Creator"}
+                  </div>
+                  {invitation.stage_name && invitation.model_name && (
                     <div className="text-sm text-muted-foreground">
-                      {invitation.stage_name}
+                      Stage name: {invitation.stage_name}
                     </div>
                   )}
                   <div className="flex items-center gap-1 mt-1">
