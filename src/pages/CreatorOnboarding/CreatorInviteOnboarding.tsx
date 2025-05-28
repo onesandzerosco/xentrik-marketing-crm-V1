@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -8,12 +9,11 @@ import {
   defaultOnboardingValues
 } from "@/schemas/creatorOnboardingSchema";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { saveOnboardingData } from "@/utils/onboardingUtils";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -36,23 +36,22 @@ const CreatorInviteOnboarding = () => {
     defaultValues: defaultOnboardingValues,
   });
 
-  // Fetch invitation data and validate token
+  // Fetch and validate invitation only when component mounts
   useEffect(() => {
-    const fetchInvitation = async () => {
+    const validateInvitation = async () => {
       try {
         if (!token) {
-          throw new Error("Invalid invitation token");
+          throw new Error("No invitation token provided");
         }
 
-        console.log("Fetching invitation for token:", token);
+        console.log("Validating invitation for token:", token);
 
-        // Query creator_invitations table directly using maybeSingle to handle no results
+        // Fetch invitation data directly
         const { data, error } = await supabase
           .from("creator_invitations")
           .select("*")
           .eq("token", token)
-          .eq("status", "pending") // Only fetch pending invitations
-          .maybeSingle(); // Use maybeSingle instead of single to handle no results
+          .maybeSingle();
 
         if (error) {
           console.error("Supabase error:", error);
@@ -60,31 +59,8 @@ const CreatorInviteOnboarding = () => {
         }
 
         if (!data) {
-          console.error("No pending invitation found for token:", token);
-          // Check if the token exists but with different status
-          const { data: existingInvitation, error: checkError } = await supabase
-            .from("creator_invitations")
-            .select("status, expires_at")
-            .eq("token", token)
-            .maybeSingle();
-          
-          if (checkError) {
-            console.error("Error checking invitation:", checkError);
-            throw new Error("Invalid invitation token");
-          }
-          
-          if (existingInvitation) {
-            if (existingInvitation.status === "completed") {
-              throw new Error("This invitation has already been used");
-            } else {
-              throw new Error("This invitation is no longer available");
-            }
-          } else {
-            throw new Error("Invitation not found");
-          }
+          throw new Error("Invitation not found or invalid");
         }
-
-        console.log("Found invitation data:", data);
 
         // Check if invitation has expired
         const now = new Date();
@@ -93,9 +69,19 @@ const CreatorInviteOnboarding = () => {
           throw new Error("This invitation has expired");
         }
 
+        // Check if invitation has already been used
+        if (data.status !== 'pending') {
+          if (data.status === 'completed') {
+            throw new Error("This invitation has already been used");
+          } else {
+            throw new Error("This invitation is no longer available");
+          }
+        }
+
+        console.log("Valid invitation found:", data);
         setInvitationData(data);
         
-        // Pre-fill form with invitation data using correct schema paths
+        // Pre-fill form with invitation data
         if (data.model_name) {
           form.setValue("personalInfo.fullName", data.model_name);
         }
@@ -103,11 +89,11 @@ const CreatorInviteOnboarding = () => {
           form.setValue("personalInfo.nickname", data.stage_name);
         }
       } catch (error: any) {
-        console.error("Error fetching invitation:", error);
+        console.error("Error validating invitation:", error);
         toast({
           variant: "destructive",
           title: "Invalid invitation",
-          description: error.message || "This onboarding link is invalid or has expired. Please contact an administrator for a new link.",
+          description: error.message || "This onboarding link is invalid or has expired.",
         });
         navigate("/");
       } finally {
@@ -115,43 +101,37 @@ const CreatorInviteOnboarding = () => {
       }
     };
 
-    fetchInvitation();
+    validateInvitation();
   }, [token, navigate, toast, form]);
 
   const handleSubmit = async (formData: CreatorOnboardingFormValues) => {
-    if (!token || !invitationData) return;
+    if (!token || !invitationData) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid invitation data",
+      });
+      return;
+    }
     
     try {
       setIsSubmitting(true);
+      console.log("Submitting onboarding data with token:", token);
       
-      // Save submission to onboarding_submissions table
-      const { error: submissionError } = await supabase
-        .from("onboarding_submissions")
-        .insert({
-          token: token,
-          name: formData.personalInfo?.fullName || "Unknown",
-          email: formData.personalInfo?.email || "no-email@example.com",
-          data: formData,
-          status: "pending"
-        });
-
-      if (submissionError) {
-        throw submissionError;
+      // Use the utility function to save the data
+      const result = await saveOnboardingData(formData, token);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to submit onboarding data");
       }
 
-      // Update invitation status to completed
-      const { error: updateError } = await supabase
-        .from("creator_invitations")
-        .update({
-          status: "completed"
-        })
-        .eq("id", invitationData.id);
-
-      if (updateError) {
-        throw updateError;
-      }
-
+      console.log("Onboarding submission successful:", result.submissionId);
       setIsSubmitted(true);
+      
+      toast({
+        title: "Success!",
+        description: "Your profile has been submitted successfully.",
+      });
       
       // Redirect after a delay
       setTimeout(() => {
@@ -231,8 +211,6 @@ const CreatorInviteOnboarding = () => {
                 
                 <TabsContent value="basic">
                   <div className="space-y-4">
-                    {/* Basic form fields would go here - 
-                    Creating a placeholder for brevity as the full form would be too long */}
                     <p className="text-center text-muted-foreground py-8">
                       This is where the Basic Info form fields would be rendered.
                       For this example, we're keeping it simple.
@@ -249,7 +227,6 @@ const CreatorInviteOnboarding = () => {
                 
                 <TabsContent value="social">
                   <div className="space-y-4">
-                    {/* Social media form fields would go here */}
                     <p className="text-center text-muted-foreground py-8">
                       This is where the Social Media form fields would be rendered.
                       For this example, we're keeping it simple.
@@ -268,7 +245,6 @@ const CreatorInviteOnboarding = () => {
                 
                 <TabsContent value="additional">
                   <div className="space-y-4">
-                    {/* Additional form fields would go here */}
                     <p className="text-center text-muted-foreground py-8">
                       This is where the Additional Info form fields would be rendered.
                       For this example, we're keeping it simple.

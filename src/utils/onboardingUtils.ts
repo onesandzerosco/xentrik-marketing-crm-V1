@@ -7,11 +7,13 @@ import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
  */
 export const validateToken = async (token: string): Promise<boolean> => {
   try {
+    console.log("Validating token:", token);
+    
     const { data, error } = await supabase
       .from('creator_invitations')
       .select('expires_at, status')
       .eq('token', token)
-      .maybeSingle(); // Changed from .single() to .maybeSingle()
+      .maybeSingle();
     
     if (error) {
       console.error('Error validating token:', error);
@@ -19,15 +21,24 @@ export const validateToken = async (token: string): Promise<boolean> => {
     }
     
     if (!data) {
-      console.error('Token not found:', token);
+      console.log('No invitation found for token:', token);
       return false;
     }
+    
+    console.log('Found invitation data:', data);
     
     // Check if token is still pending and not expired
     const now = new Date();
     const expiresAt = new Date(data.expires_at);
     
-    return data.status === 'pending' && expiresAt > now;
+    const isValid = data.status === 'pending' && expiresAt > now;
+    console.log('Token validation result:', { 
+      status: data.status, 
+      expired: expiresAt <= now, 
+      isValid 
+    });
+    
+    return isValid;
   } catch (error) {
     console.error('Error validating token:', error);
     return false;
@@ -36,16 +47,13 @@ export const validateToken = async (token: string): Promise<boolean> => {
 
 /**
  * Save the creator onboarding data to the onboarding_submissions table
- * @param data The form data to save
- * @param token Optional token from invitation link
- * @returns Success status and submission ID or error message
  */
 export const saveOnboardingData = async (
   data: CreatorOnboardingFormValues, 
   token?: string
 ): Promise<{ success: boolean; submissionId?: string; error?: string }> => {
   try {
-    console.log("Starting saveOnboardingData with form data and token:", token);
+    console.log("Starting saveOnboardingData with token:", token);
     
     // Extract basic required fields
     const name = data.personalInfo?.fullName || "New Creator";
@@ -57,7 +65,7 @@ export const saveOnboardingData = async (
       if (!isValid) {
         return { 
           success: false, 
-          error: "Invalid or expired invitation link" 
+          error: "Invalid, expired, or already used invitation link" 
         };
       }
     }
@@ -66,7 +74,7 @@ export const saveOnboardingData = async (
     const { data: submission, error: submissionError } = await supabase
       .from('onboarding_submissions')
       .insert({
-        token: token || `manual-${Date.now()}`, // Generate token if not provided
+        token: token || `manual-${Date.now()}`,
         name,
         email,
         data: data,
@@ -109,6 +117,8 @@ export const saveOnboardingData = async (
  */
 export const generateInvitationToken = async (modelName: string): Promise<{ success: boolean; token?: string; error?: string }> => {
   try {
+    console.log("Generating invitation for model:", modelName);
+    
     const { data, error } = await supabase
       .from('creator_invitations')
       .insert({
@@ -119,9 +129,11 @@ export const generateInvitationToken = async (modelName: string): Promise<{ succ
       .single();
     
     if (error) {
+      console.error("Error generating invitation:", error);
       throw error;
     }
     
+    console.log("Generated invitation token:", data.token);
     return { success: true, token: data.token };
   } catch (error) {
     console.error('Error generating invitation token:', error);
