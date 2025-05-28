@@ -46,10 +46,12 @@ const CreatorInviteOnboarding = () => {
 
         console.log("Fetching invitation for token:", token);
 
+        // Query creator_invitations table directly
         const { data, error } = await supabase
           .from("creator_invitations")
           .select("*")
           .eq("token", token)
+          .eq("status", "pending") // Only fetch pending invitations
           .single();
 
         if (error) {
@@ -58,6 +60,7 @@ const CreatorInviteOnboarding = () => {
         }
 
         if (!data) {
+          console.error("No invitation found for token:", token);
           throw new Error("Invitation not found");
         }
 
@@ -68,11 +71,6 @@ const CreatorInviteOnboarding = () => {
         const expiryDate = new Date(data.expires_at);
         if (now > expiryDate) {
           throw new Error("This invitation has expired");
-        }
-
-        // Check if already completed
-        if (data.status === "completed") {
-          throw new Error("This invitation has already been used");
         }
 
         setInvitationData(data);
@@ -119,7 +117,7 @@ const CreatorInviteOnboarding = () => {
         throw uploadError;
       }
 
-      // Update invitation status
+      // Update invitation status to completed
       const { error: updateError } = await supabase
         .from("creator_invitations")
         .update({
