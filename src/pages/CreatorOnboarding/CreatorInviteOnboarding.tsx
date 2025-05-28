@@ -71,12 +71,10 @@ const CreatorInviteOnboarding = () => {
 
         setInvitationData(data);
         
-        // Pre-fill form with invitation data if available
-        if (data.model_name) {
-          form.setValue("personalInfo.fullName", data.model_name);
-        }
+        // Pre-fill form with invitation data
+        form.setValue("email", data.email);
         if (data.stage_name) {
-          form.setValue("personalInfo.stageName", data.stage_name);
+          form.setValue("name", data.stage_name);
         }
       } catch (error: any) {
         console.error("Error fetching invitation:", error);
@@ -192,10 +190,7 @@ const CreatorInviteOnboarding = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Complete Your Creator Profile</CardTitle>
             <CardDescription>
-              {invitationData?.model_name 
-                ? `Welcome ${invitationData.model_name}! Please provide your information to set up your creator account`
-                : "Please provide your information to set up your creator account"
-              }
+              Please provide your information to set up your creator account
             </CardDescription>
           </CardHeader>
           <CardContent>
