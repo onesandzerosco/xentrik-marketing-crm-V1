@@ -50,31 +50,43 @@ export const validateToken = async (token: string): Promise<boolean> => {
  */
 export const saveOnboardingData = async (
   data: CreatorOnboardingFormValues, 
-  token?: string
+  token: string
 ): Promise<{ success: boolean; submissionId?: string; error?: string }> => {
   try {
     console.log("Starting saveOnboardingData with token:", token);
+    
+    // First validate the token exists and is still valid
+    const isValid = await validateToken(token);
+    if (!isValid) {
+      return { 
+        success: false, 
+        error: "Invalid, expired, or already used invitation link" 
+      };
+    }
     
     // Extract basic required fields
     const name = data.personalInfo?.fullName || "New Creator";
     const email = data.personalInfo?.email || "noemail@example.com";
     
-    // If token is provided, validate it first
-    if (token) {
-      const isValid = await validateToken(token);
-      if (!isValid) {
-        return { 
-          success: false, 
-          error: "Invalid, expired, or already used invitation link" 
-        };
-      }
+    // Check if this token has already been submitted
+    const { data: existingSubmission } = await supabase
+      .from('onboarding_submissions')
+      .select('id')
+      .eq('token', token)
+      .maybeSingle();
+    
+    if (existingSubmission) {
+      return { 
+        success: false, 
+        error: "This invitation has already been used" 
+      };
     }
     
     // Save to onboarding_submissions table
     const { data: submission, error: submissionError } = await supabase
       .from('onboarding_submissions')
       .insert({
-        token: token || `manual-${Date.now()}`,
+        token: token,
         name,
         email,
         data: data,
@@ -88,17 +100,15 @@ export const saveOnboardingData = async (
       throw submissionError;
     }
     
-    // If token was provided, mark the invitation as completed
-    if (token) {
-      const { error: updateError } = await supabase
-        .from('creator_invitations')
-        .update({ status: 'completed' })
-        .eq('token', token);
-      
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-        // Don't fail the submission if we can't update the invitation
-      }
+    // Mark the invitation as completed
+    const { error: updateError } = await supabase
+      .from('creator_invitations')
+      .update({ status: 'completed' })
+      .eq('token', token);
+    
+    if (updateError) {
+      console.error("Error updating invitation status:", updateError);
+      // Don't fail the submission if we can't update the invitation
     }
     
     console.log("Submission successful with ID:", submission?.id);
@@ -166,6 +176,30 @@ export const getPendingInvitations = async () => {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch invitations',
       invitations: []
+    };
+  }
+};
+
+/**
+ * Cancel/revoke an invitation token
+ */
+export const cancelInvitationToken = async (token: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase
+      .from('creator_invitations')
+      .update({ status: 'cancelled' })
+      .eq('token', token);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error cancelling invitation token:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to cancel token' 
     };
   }
 };

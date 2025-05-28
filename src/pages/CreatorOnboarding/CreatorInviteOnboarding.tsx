@@ -9,8 +9,7 @@ import {
   defaultOnboardingValues
 } from "@/schemas/creatorOnboardingSchema";
 import { useToast } from "@/hooks/use-toast";
-import { saveOnboardingData } from "@/utils/onboardingUtils";
-import { supabase } from "@/integrations/supabase/client";
+import { saveOnboardingData, validateToken } from "@/utils/onboardingUtils";
 import {
   Card,
   CardContent,
@@ -37,58 +36,27 @@ const CreatorInviteOnboarding = () => {
     defaultValues: defaultOnboardingValues,
   });
 
-  // Fetch and validate invitation only when component mounts
+  // Validate invitation only when component mounts
   useEffect(() => {
-    const validateInvitation = async () => {
+    const checkInvitation = async () => {
       try {
         if (!token) {
           throw new Error("No invitation token provided");
         }
 
-        console.log("Validating invitation for token:", token);
+        console.log("Checking invitation for token:", token);
 
-        // Fetch invitation data directly
-        const { data, error } = await supabase
-          .from("creator_invitations")
-          .select("*")
-          .eq("token", token)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Supabase error:", error);
-          throw new Error("Error fetching invitation details");
-        }
-
-        if (!data) {
-          throw new Error("Invitation not found or invalid");
-        }
-
-        // Check if invitation has expired
-        const now = new Date();
-        const expiryDate = new Date(data.expires_at);
-        if (now > expiryDate) {
-          throw new Error("This invitation has expired");
-        }
-
-        // Check if invitation has already been used
-        if (data.status !== 'pending') {
-          if (data.status === 'completed') {
-            throw new Error("This invitation has already been used");
-          } else {
-            throw new Error("This invitation is no longer available");
-          }
-        }
-
-        console.log("Valid invitation found:", data);
-        setInvitationData(data);
+        // Validate the token using our utility function
+        const isValid = await validateToken(token);
         
-        // Pre-fill form with invitation data
-        if (data.model_name) {
-          form.setValue("personalInfo.fullName", data.model_name);
+        if (!isValid) {
+          throw new Error("This invitation is invalid, expired, or has already been used");
         }
-        if (data.stage_name) {
-          form.setValue("personalInfo.nickname", data.stage_name);
-        }
+
+        // If token is valid, we can proceed
+        console.log("Valid invitation found for token:", token);
+        setInvitationData({ token, valid: true });
+        
       } catch (error: any) {
         console.error("Error validating invitation:", error);
         toast({
@@ -102,8 +70,8 @@ const CreatorInviteOnboarding = () => {
       }
     };
 
-    validateInvitation();
-  }, [token, navigate, toast, form]);
+    checkInvitation();
+  }, [token, navigate, toast]);
 
   const handleSubmit = async (formData: CreatorOnboardingFormValues) => {
     if (!token || !invitationData) {
