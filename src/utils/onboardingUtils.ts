@@ -11,7 +11,7 @@ export const validateToken = async (token: string): Promise<boolean> => {
     
     const { data, error } = await supabase
       .from('creator_invitations')
-      .select('expires_at, status')
+      .select('expires_at, status, token, created_at')
       .eq('token', token)
       .maybeSingle();
     
@@ -22,6 +22,15 @@ export const validateToken = async (token: string): Promise<boolean> => {
     
     if (!data) {
       console.log('No invitation found for token:', token);
+      // Let's also check if there are any invitations at all for debugging
+      const { data: allInvitations, error: debugError } = await supabase
+        .from('creator_invitations')
+        .select('token, status, created_at')
+        .limit(5);
+      
+      if (!debugError) {
+        console.log('Recent invitations in database:', allInvitations);
+      }
       return false;
     }
     
@@ -35,7 +44,9 @@ export const validateToken = async (token: string): Promise<boolean> => {
     console.log('Token validation result:', { 
       status: data.status, 
       expired: expiresAt <= now, 
-      isValid 
+      isValid,
+      expiresAt: data.expires_at,
+      now: now.toISOString()
     });
     
     return isValid;
@@ -144,7 +155,12 @@ export const generateInvitationToken = async (modelName: string): Promise<{ succ
     }
     
     console.log("Generated invitation token:", data.token);
-    return { success: true, token: data.token };
+    
+    // Convert UUID to string for consistency
+    const tokenString = data.token.toString();
+    console.log("Token as string:", tokenString);
+    
+    return { success: true, token: tokenString };
   } catch (error) {
     console.error('Error generating invitation token:', error);
     return { 

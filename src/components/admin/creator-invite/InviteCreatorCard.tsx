@@ -35,6 +35,7 @@ const InviteCreatorCard: React.FC = () => {
   const handleGenerateLink = async (data: InviteFormValues) => {
     try {
       setIsLoading(true);
+      console.log("Generating link for model:", data.modelName);
       
       // Generate invitation token with model name
       const result = await generateInvitationToken(data.modelName);
@@ -43,10 +44,13 @@ const InviteCreatorCard: React.FC = () => {
         throw new Error(result.error || "Failed to generate invitation token");
       }
 
+      console.log("Received token from generation:", result.token);
+
       // Generate the onboarding link
       const appUrl = window.location.origin;
       const onboardingLink = `${appUrl}/onboarding-form/${result.token}`;
       
+      console.log("Generated onboarding link:", onboardingLink);
       setGeneratedLink(onboardingLink);
 
       toast({
