@@ -29,10 +29,10 @@ export const useZipProcessor = () => {
       
       // SOP Step 4: Create a folder name based on the ZIP file name (remove .zip extension)
       const baseFolderName = zipFile.name.replace(/\.zip$/i, '');
-      // Create a unique folder ID with the name and a unique identifier
-      const folderId = `${baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-8)}`;
+      // Use just the base name as the folder name - no timestamp suffix for folder names
+      const folderName = baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       
-      console.log(`Creating folder: ${folderId} under category: ${categoryId} as per SOP step 4`);
+      console.log(`Creating folder: ${folderName} under category: ${categoryId} as per SOP step 4`);
       
       // Keep track of total files for progress calculation
       const files = Object.values(zipContents.files).filter(file => !file.dir);
@@ -45,6 +45,56 @@ export const useZipProcessor = () => {
       }
       
       console.log(`Found ${totalFiles} files in ZIP`);
+      
+      // First, check if a folder with this name already exists in this category
+      let existingFolder = null;
+      try {
+        const { data: folderCheck, error: folderCheckError } = await supabase
+          .from('file_folders')
+          .select('folder_id, folder_name')
+          .eq('creator_id', creatorId)
+          .eq('category_id', categoryId)
+          .eq('folder_name', folderName)
+          .maybeSingle();
+        
+        if (folderCheckError) {
+          console.warn('Error checking for existing folder:', folderCheckError);
+        } else if (folderCheck) {
+          existingFolder = folderCheck;
+          console.log(`Using existing folder: ${folderCheck.folder_name} (ID: ${folderCheck.folder_id})`);
+        }
+      } catch (error) {
+        console.warn('Could not check for existing folder:', error);
+      }
+      
+      // Create folder in database if it doesn't exist
+      let folderId: string;
+      if (existingFolder) {
+        folderId = existingFolder.folder_id;
+      } else {
+        console.log(`Creating new folder: ${folderName} in category: ${categoryId}`);
+        
+        const { data: newFolder, error: createFolderError } = await supabase
+          .from('file_folders')
+          .insert({
+            folder_name: folderName,
+            creator_id: creatorId,
+            category_id: categoryId
+          })
+          .select('folder_id')
+          .single();
+        
+        if (createFolderError) {
+          console.error('Error creating folder in database:', createFolderError);
+          updateFileStatus(zipFile.name, 'error', `Failed to create folder: ${createFolderError.message}`);
+          return [];
+        }
+        
+        folderId = newFolder.folder_id;
+        console.log(`Created folder with ID: ${folderId}`);
+      }
+      
+      updateFileProgress(zipFile.name, 30, 'processing');
       
       // Process each file in the ZIP
       for (const file of files) {
@@ -63,10 +113,10 @@ export const useZipProcessor = () => {
           const content = await file.async('arraybuffer');
           const fileBlob = new Blob([content]);
           
-          // Construct file path in storage - SOP Step 4: under the category folder
-          const filePath = `${creatorId}/${folderId}/${fileName}`;
+          // Construct file path in storage - use the folder name for storage path
+          const filePath = `${creatorId}/${folderName}/${fileName}`;
           
-          console.log(`Uploading file: ${filePath} under category folder as per SOP`);
+          console.log(`Uploading file: ${filePath} to folder: ${folderName}`);
           
           // Use chunked upload for large files (>10MB), regular upload for smaller files
           const fileSize = fileBlob.size;
@@ -82,7 +132,7 @@ export const useZipProcessor = () => {
               filePath,
               (progress) => {
                 const overallProgress = Math.floor(((processedFiles + (progress / 100)) / totalFiles) * 100);
-                updateFileProgress(zipFile.name, overallProgress);
+                updateFileProgress(zipFile.name, 30 + Math.floor(overallProgress * 0.6)); // Scale to 30-90%
               },
               supabase
             );
@@ -111,10 +161,11 @@ export const useZipProcessor = () => {
                            : 'application/octet-stream';
           
           // SOP Step 4: Add file to database with proper folder and category organization
-          const foldersList = ['all', folderId]; // Include both 'all' and the specific folder
+          // Use the folderId (UUID) for the folders array, not the folder name
+          const foldersList = ['all', folderId]; // Include both 'all' and the specific folder ID
           const categoriesList = categoryId ? [categoryId] : [];
           
-          console.log(`Creating media record for ${fileName} with folders: ${foldersList} and categories: ${categoriesList} as per SOP`);
+          console.log(`Creating media record for ${fileName} with folder ID: ${folderId} and categories: ${categoriesList} as per SOP`);
           
           const { data: fileData, error: fileError } = await supabase
             .from('media')
@@ -141,7 +192,7 @@ export const useZipProcessor = () => {
           
           // Update progress
           processedFiles++;
-          const progress = Math.floor((processedFiles / totalFiles) * 100);
+          const progress = 30 + Math.floor((processedFiles / totalFiles) * 60); // Scale from 30% to 90%
           updateFileProgress(zipFile.name, progress);
           
           // Mark file as complete
@@ -155,9 +206,10 @@ export const useZipProcessor = () => {
       }
       
       // Mark the ZIP file as complete
+      updateFileProgress(zipFile.name, 100);
       updateFileStatus(zipFile.name, 'complete');
       
-      console.log(`SOP completed: ZIP processing complete. Created ${uploadedFileIds.length} files in folder ${folderId} under category ${categoryId}`);
+      console.log(`SOP completed: ZIP processing complete. Created ${uploadedFileIds.length} files in folder ${folderName} (ID: ${folderId}) under category ${categoryId}`);
       
       return uploadedFileIds;
       
