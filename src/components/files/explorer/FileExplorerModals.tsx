@@ -59,11 +59,11 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={fileExplorerState.isUploadModalOpen}
         onOpenChange={fileExplorerState.setIsUploadModalOpen}
         creatorId={creatorId}
-        creatorName=""  // Added missing required prop
+        creatorName=""
         currentFolder={currentFolder}
         availableCategories={[]} 
         onUploadComplete={onUploadComplete}
-        onFilesChanged={onUploadStart ? () => onUploadStart() : undefined}  // Use onFilesChanged instead of onUploadStart
+        onFilesChanged={onUploadStart ? () => onUploadStart() : undefined}
       />
       
       <AddToFolderModal
@@ -86,8 +86,6 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onOpenChange={fileExplorerState.setIsCreateFolderModalOpen}
         newFolderName=""
         setNewFolderName={() => {}}
-        selectedCategoryForNewFolder={currentCategory || ""}
-        setSelectedCategoryForNewFolder={() => {}}
         handleCreateFolderSubmit={(e) => { e.preventDefault(); onRefresh(); }}
       />
       
