@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ZipProcessingOptions } from '@/types/uploadTypes';
 import { getFileExtension, getFileType, uploadFileInChunks } from '@/utils/fileUtils';
@@ -94,7 +95,7 @@ export const useZipProcessor = () => {
         console.log(`Created folder with ID: ${folderId}`);
       }
       
-      updateFileProgress(zipFile.name, 30, 'processing');
+      updateFileProgress(zipFile.name, 30);
       
       // Process each file in the ZIP
       for (const file of files) {
