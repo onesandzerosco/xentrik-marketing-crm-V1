@@ -5,13 +5,7 @@ import { FileUploadOptions } from '@/types/uploadTypes';
 import { isZipFile } from '@/utils/zipUtils';
 import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
 import { useFileProcessor } from '@/hooks/useFileProcessor';
-
-interface FileUploadStatus {
-  file: File;
-  progress: number;
-  status: 'uploading' | 'processing' | 'complete' | 'error';
-  error?: string;
-}
+import { FileUploadStatus } from '@/hooks/useFileUploader';
 
 export const useDragDropUploader = ({ 
   creatorId, 
@@ -32,7 +26,7 @@ export const useDragDropUploader = ({
   const updateFileProgress = useCallback((fileName: string, progress: number) => {
     setUploadingFiles(prevFiles => {
       const updatedFiles = prevFiles.map(item => 
-        item.file.name === fileName ? { 
+        item.name === fileName ? { 
           ...item, 
           progress 
         } : item
@@ -49,7 +43,7 @@ export const useDragDropUploader = ({
   const updateFileStatus = useCallback((fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
     setUploadingFiles(prevFiles => 
       prevFiles.map(item => 
-        item.file.name === fileName ? { ...item, status, error } : item
+        item.name === fileName ? { ...item, status, error } : item
       )
     );
   }, []);
@@ -67,7 +61,7 @@ export const useDragDropUploader = ({
     setIsUploading(true);
     setUploadingFiles(
       acceptedFiles.map(file => ({
-        file,
+        name: file.name,
         progress: 0,
         status: 'uploading' as const
       }))
