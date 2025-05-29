@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { 
   Dialog, 
@@ -12,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 // Create Folder Modal Interface and Component
@@ -132,20 +130,6 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
     setTargetFolderId('');
   }, [targetCategoryId, setTargetFolderId]);
 
-  const handleCreateNewCategoryClick = () => {
-    if (onCreateCategory) {
-      onOpenChange(false);
-      onCreateCategory();
-    }
-  };
-
-  const handleCreateNewFolderClick = () => {
-    if (onCreateFolder && targetCategoryId) {
-      onOpenChange(false);
-      onCreateFolder();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -159,92 +143,84 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
         </DialogHeader>
         <form onSubmit={onSubmit}>
           <div className="grid gap-4 py-4">
-            {/* Category Selection */}
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Category</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCreateNewCategoryClick}
-                  className="h-8 px-2 text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  New Category
-                </Button>
-              </div>
-              
-              {categories.length === 0 ? (
-                <div className="text-sm text-muted-foreground italic p-2 border rounded">
-                  No categories available. Create a category first.
-                </div>
-              ) : (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="category" className="text-right">
+                Category
+              </Label>
+              <div className="col-span-3 space-y-2">
                 <Select
                   value={targetCategoryId}
                   onValueChange={setTargetCategoryId}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-            </div>
-
-            {/* Folder Selection */}
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Folder</Label>
-                {targetCategoryId && (
+                {onCreateCategory && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleCreateNewFolderClick}
-                    className="h-8 px-2 text-xs"
+                    onClick={onCreateCategory}
+                    className="w-full"
                   >
-                    <Plus className="h-3 w-3 mr-1" />
-                    New Folder
+                    Create New Category
                   </Button>
                 )}
               </div>
-              
-              <Select
-                value={targetFolderId}
-                onValueChange={setTargetFolderId}
-                disabled={!targetCategoryId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={
-                    !targetCategoryId 
-                      ? "Select a category first" 
-                      : filteredFolders.length === 0 
-                        ? "No folders in this category - create one" 
-                        : "Select folder"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredFolders.map(folder => (
-                    <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="folder" className="text-right">
+                Folder
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <Select
+                  value={targetFolderId}
+                  onValueChange={setTargetFolderId}
+                  disabled={!targetCategoryId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      !targetCategoryId
+                        ? "Select a category first"
+                        : "Select a folder" 
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredFolders.map((folder) => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {targetCategoryId && filteredFolders.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No folders available in this category.
+                  </p>
+                )}
+                {onCreateFolder && targetCategoryId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onCreateFolder}
+                    className="w-full"
+                  >
+                    Create New Folder
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-          
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
             <Button
               type="submit"
               disabled={!targetFolderId || selectedFileIds.length === 0}

@@ -3,9 +3,9 @@ import { useState, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { FileUploadOptions } from '@/types/uploadTypes';
 import { isZipFile } from '@/utils/zipUtils';
-import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
+import { useFileProgress } from '@/hooks/useFileProgress';
+import { useZipProcessor } from '@/hooks/useZipProcessor';
 import { useFileProcessor } from '@/hooks/useFileProcessor';
-import { FileUploadStatus } from '@/hooks/useFileUploader';
 
 export const useDragDropUploader = ({ 
   creatorId, 
@@ -14,46 +14,26 @@ export const useDragDropUploader = ({
 }: FileUploadOptions) => {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<FileUploadStatus[]>([]);
-  const [overallProgress, setOverallProgress] = useState(0);
-
-  const calculateOverallProgress = useCallback(() => {
-    if (uploadingFiles.length === 0) return 0;
-    const totalProgress = uploadingFiles.reduce((sum, file) => sum + file.progress, 0);
-    return totalProgress / uploadingFiles.length;
-  }, [uploadingFiles]);
-
-  const updateFileProgress = useCallback((fileName: string, progress: number) => {
-    setUploadingFiles(prevFiles => {
-      const updatedFiles = prevFiles.map(item => 
-        item.name === fileName ? { 
-          ...item, 
-          progress 
-        } : item
-      );
-      
-      // Calculate and set overall progress
-      const totalProgress = updatedFiles.reduce((sum, file) => sum + file.progress, 0);
-      setOverallProgress(updatedFiles.length > 0 ? totalProgress / updatedFiles.length : 0);
-      
-      return updatedFiles;
-    });
-  }, []);
-
-  const updateFileStatus = useCallback((fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
-    setUploadingFiles(prevFiles => 
-      prevFiles.map(item => 
-        item.name === fileName ? { ...item, status, error } : item
-      )
-    );
-  }, []);
   
-  const { processZipFile } = useZipFileProcessor({
-    creatorId,
-    updateFileProgress,
-    setFileStatuses: setUploadingFiles
-  });
+  const {
+    uploadingFiles,
+    overallProgress,
+    setUploadingFiles,
+    updateFileProgress: updateProgress,
+    updateFileStatus: updateStatus
+  } = useFileProgress();
+  
+  const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
+  
+  // Wrapper functions that match the expected signatures
+  const updateFileProgress = (fileName: string, progress: number) => {
+    updateProgress(fileName, progress);
+  };
+  
+  const updateFileStatus = (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => {
+    updateStatus(fileName, status, error);
+  };
 
   const handleUpload = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -61,9 +41,9 @@ export const useDragDropUploader = ({
     setIsUploading(true);
     setUploadingFiles(
       acceptedFiles.map(file => ({
-        name: file.name,
+        file,
         progress: 0,
-        status: 'uploading' as const
+        status: 'uploading'
       }))
     );
     
@@ -73,7 +53,12 @@ export const useDragDropUploader = ({
       // Process files by type (ZIP vs regular)
       for (const file of acceptedFiles) {
         if (isZipFile(file.name)) {
-          const extractedFileIds = await processZipFile(file);
+          const extractedFileIds = await processZipFile(file, {
+            creatorId,
+            currentFolder,
+            updateFileProgress,
+            updateFileStatus
+          });
           uploadedFileIds.push(...extractedFileIds);
           continue;
         }

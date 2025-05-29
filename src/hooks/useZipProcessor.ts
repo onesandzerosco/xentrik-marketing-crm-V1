@@ -1,241 +1,226 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { getZipBaseName, extractZipFiles } from '@/utils/zipUtils';
-import { FileUploadStatus } from './useFileUploader';
-import { generateVideoThumbnail, getUniqueFileName } from '@/utils/fileUtils';
+import { ZipProcessingOptions } from '@/types/uploadTypes';
+import { getFileExtension, getFileType, uploadFileInChunks } from '@/utils/fileUtils';
 
-interface UseZipFileProcessorProps {
-  creatorId: string;
-  updateFileProgress: (fileName: string, progress: number, status?: 'uploading' | 'processing' | 'complete' | 'error') => void;
-  setFileStatuses: React.Dispatch<React.SetStateAction<FileUploadStatus[]>>;
-}
-
-export const useZipFileProcessor = ({ 
-  creatorId, 
-  updateFileProgress,
-  setFileStatuses
-}: UseZipFileProcessorProps) => {
-
-  const processZipFile = async (zipFile: File): Promise<string[]> => {
-    const zipFileName = zipFile.name;
-    const folderName = getZipBaseName(zipFileName);
-    const extractedFileIds: string[] = [];
+export const useZipProcessor = () => {
+  // Process a ZIP file by extracting its contents and uploading each file
+  const processZipFile = async (
+    zipFile: File,
+    options: ZipProcessingOptions
+  ): Promise<string[]> => {
+    const { 
+      creatorId, 
+      currentFolder,
+      categoryId,
+      updateFileProgress, 
+      updateFileStatus 
+    } = options;
+    
+    const uploadedFileIds: string[] = [];
     
     try {
-      updateFileProgress(zipFileName, 10, 'processing');
+      console.log(`Starting ZIP processing for ${zipFile.name} with category: ${categoryId}`);
+      updateFileStatus(zipFile.name, 'processing');
       
-      // Extract the files from the ZIP
-      const extractedFiles = await extractZipFiles(zipFile);
-      updateFileProgress(zipFileName, 30, 'processing');
+      // Load the ZIP file using dynamic import for JSZip
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      const zipContents = await zip.loadAsync(zipFile);
       
-      // Create a new folder with the ZIP file name
-      const folderIdSafe = folderName.toLowerCase().replace(/\s+/g, '-');
+      // SOP Step 4: Create a folder name based on the ZIP file name (remove .zip extension)
+      const baseFolderName = zipFile.name.replace(/\.zip$/i, '');
+      // Use just the base name as the folder name - no timestamp suffix for folder names
+      const folderName = baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       
-      // Update progress
-      updateFileProgress(zipFileName, 50, 'processing');
+      console.log(`Creating folder: ${folderName} under category: ${categoryId} as per SOP step 4`);
       
-      // Get the user session to ensure we have auth context
-      const { data: { session } } = await supabase.auth.getSession();
+      // Keep track of total files for progress calculation
+      const files = Object.values(zipContents.files).filter(file => !file.dir);
+      const totalFiles = files.length;
+      let processedFiles = 0;
       
-      if (!session) {
-        console.error("User is not authenticated for folder creation");
-        updateFileProgress(zipFileName, 0, 'error');
-        setFileStatuses(prev => 
-          prev.map(status => 
-            status.name === zipFileName
-              ? { ...status, error: 'Authentication required for ZIP processing' }
-              : status
-          )
-        );
+      if (totalFiles === 0) {
+        updateFileStatus(zipFile.name, 'error', 'ZIP file contains no files');
         return [];
       }
       
-      console.log("Creating folder:", folderIdSafe, "for creator:", creatorId);
+      console.log(`Found ${totalFiles} files in ZIP`);
       
+      // First, check if a folder with this name already exists in this category
+      let existingFolder = null;
       try {
-        // First try to check if the folder already exists
-        const { data: existingFolder } = await supabase.storage
-          .from('creator_files')
-          .list(`${creatorId}/${folderIdSafe}`);
-          
-        if (!existingFolder || existingFolder.length === 0) {
-          // Create an empty file in the folder to "create" the folder in storage
-          const { error: storageError } = await supabase.storage
-            .from('creator_files')
-            .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
-          
-          if (storageError) {
-            console.error("Error creating folder in creator_files:", storageError);
-            
-            // Try to create the folder in raw_uploads instead
-            const { error: rawUploadsError } = await supabase.storage
-              .from('raw_uploads')
-              .upload(`${creatorId}/${folderIdSafe}/.folder`, new Blob(['']));
-              
-            if (rawUploadsError) {
-              console.error("Error creating folder in raw_uploads:", rawUploadsError);
-              updateFileProgress(zipFileName, 0, 'error');
-              setFileStatuses(prev => 
-                prev.map(status => 
-                  status.name === zipFileName
-                    ? { ...status, error: `Failed to create folder: ${rawUploadsError.message}` }
-                    : status
-                )
-              );
-              return [];
-            }
-          }
+        const { data: folderCheck, error: folderCheckError } = await supabase
+          .from('file_folders')
+          .select('folder_id, folder_name')
+          .eq('creator_id', creatorId)
+          .eq('category_id', categoryId)
+          .eq('folder_name', folderName)
+          .maybeSingle();
+        
+        if (folderCheckError) {
+          console.warn('Error checking for existing folder:', folderCheckError);
+        } else if (folderCheck) {
+          existingFolder = folderCheck;
+          console.log(`Using existing folder: ${folderCheck.folder_name} (ID: ${folderCheck.folder_id})`);
         }
-      } catch (folderError) {
-        console.error("Exception creating folder:", folderError);
-        // Continue anyway, since the folder might already exist
+      } catch (error) {
+        console.warn('Could not check for existing folder:', error);
       }
       
-      updateFileProgress(zipFileName, 60, 'uploading');
-      
-      // Upload each extracted file to the newly created folder
-      let processedFiles = 0;
-      
-      console.log(`Processing ${extractedFiles.length} files from ZIP`);
-      
-      for (const extractedFile of extractedFiles) {
-        console.log(`Processing file: ${extractedFile.name}`);
+      // Create folder in database if it doesn't exist
+      let folderId: string;
+      if (existingFolder) {
+        folderId = existingFolder.folder_id;
+      } else {
+        console.log(`Creating new folder: ${folderName} in category: ${categoryId}`);
         
-        // Generate thumbnail for videos from zip
-        let thumbnailUrl = null;
-        if (extractedFile.isVideo) {
-          try {
-            // Convert the Blob to File for thumbnail generation
-            const videoFile = new File(
-              [extractedFile.content], 
-              extractedFile.name, 
-              { type: extractedFile.content.type || 'video/mp4' }
-            );
-            thumbnailUrl = await generateVideoThumbnail(videoFile);
-            console.log(`Generated thumbnail for ${extractedFile.name}:`, thumbnailUrl ? "Success" : "Failed");
-          } catch (err) {
-            console.error('Error generating video thumbnail for zip file:', err);
-            // Continue without thumbnail
-          }
+        const { data: newFolder, error: createFolderError } = await supabase
+          .from('file_folders')
+          .insert({
+            folder_name: folderName,
+            creator_id: creatorId,
+            category_id: categoryId
+          })
+          .select('folder_id')
+          .single();
+        
+        if (createFolderError) {
+          console.error('Error creating folder in database:', createFolderError);
+          updateFileStatus(zipFile.name, 'error', `Failed to create folder: ${createFolderError.message}`);
+          return [];
         }
         
-        // Use getUniqueFileName to handle duplicate files
-        const uniqueFileName = await getUniqueFileName(
-          extractedFile.name, 
-          folderIdSafe, 
-          creatorId, 
-          'raw_uploads',
-          supabase
-        );
-        
-        const filePath = `${creatorId}/${folderIdSafe}/${uniqueFileName}`;
-        
+        folderId = newFolder.folder_id;
+        console.log(`Created folder with ID: ${folderId}`);
+      }
+      
+      updateFileProgress(zipFile.name, 30, 'processing');
+      
+      // Process each file in the ZIP
+      for (const file of files) {
         try {
-          // Store metadata in the media table first to establish the record
-          console.log("Creating media record for:", uniqueFileName, "in folder:", folderIdSafe);
+          // Skip directories
+          if (file.dir) {
+            continue;
+          }
           
-          const { data: mediaRecord, error: mediaError } = await supabase
+          const fileName = file.name.split('/').pop() || `file-${Date.now().toString().slice(-8)}`;
+          
+          // Update status to show we're working on this file
+          updateFileStatus(`${zipFile.name} -> ${fileName}`, 'processing');
+          
+          // Get the file content as array buffer
+          const content = await file.async('arraybuffer');
+          const fileBlob = new Blob([content]);
+          
+          // Construct file path in storage - use the folder name for storage path
+          const filePath = `${creatorId}/${folderName}/${fileName}`;
+          
+          console.log(`Uploading file: ${filePath} to folder: ${folderName}`);
+          
+          // Use chunked upload for large files (>10MB), regular upload for smaller files
+          const fileSize = fileBlob.size;
+          const useChunkedUpload = fileSize > 10 * 1024 * 1024; // 10MB threshold
+          
+          if (useChunkedUpload) {
+            console.log(`Using chunked upload for large file: ${fileName} (${Math.round(fileSize / 1024 / 1024)}MB)`);
+            
+            // Upload using chunked upload for large files
+            await uploadFileInChunks(
+              new File([fileBlob], fileName, { type: fileBlob.type }),
+              'raw_uploads',
+              filePath,
+              (progress) => {
+                const overallProgress = Math.floor(((processedFiles + (progress / 100)) / totalFiles) * 100);
+                updateFileProgress(zipFile.name, 30 + Math.floor(overallProgress * 0.6)); // Scale to 30-90%
+              },
+              supabase
+            );
+          } else {
+            // Use regular upload for smaller files
+            const { error: uploadError } = await supabase.storage
+              .from('raw_uploads')
+              .upload(filePath, fileBlob, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+            
+            if (uploadError) {
+              console.error(`Error uploading ${fileName}:`, uploadError);
+              updateFileStatus(`${zipFile.name} -> ${fileName}`, 'error', uploadError.message);
+              continue;
+            }
+          }
+          
+          // Determine file type
+          const extension = getFileExtension(fileName);
+          const fileType = getFileType(extension);
+          const mimeType = fileType === 'image' ? `image/${extension}` 
+                           : fileType === 'video' ? `video/${extension}`
+                           : fileType === 'audio' ? `audio/${extension}`
+                           : 'application/octet-stream';
+          
+          // SOP Step 4: Add file to database with proper folder and category organization
+          // Use the folderId (UUID) for the folders array, not the folder name
+          const foldersList = ['all', folderId]; // Include both 'all' and the specific folder ID
+          const categoriesList = categoryId ? [categoryId] : [];
+          
+          console.log(`Creating media record for ${fileName} with folder ID: ${folderId} and categories: ${categoriesList} as per SOP`);
+          
+          const { data: fileData, error: fileError } = await supabase
             .from('media')
             .insert({
               creator_id: creatorId,
+              filename: fileName,
+              file_size: fileBlob.size,
+              mime: mimeType,
               bucket_key: filePath,
-              filename: uniqueFileName,
-              mime: extractedFile.content.type || 'application/octet-stream',
-              file_size: extractedFile.content.size,
-              status: 'uploading',
-              folders: [folderIdSafe], // Folder array
-              thumbnail_url: thumbnailUrl
+              folders: foldersList,
+              categories: categoriesList
             })
-            .select('id');
+            .select('id')
+            .single();
           
-          if (mediaError) {
-            console.error('Media record creation error:', mediaError);
-            console.log('Full media insert payload:', {
-              creator_id: creatorId,
-              bucket_key: filePath,
-              filename: uniqueFileName,
-              mime: extractedFile.content.type || 'application/octet-stream',
-              file_size: extractedFile.content.size,
-              status: 'uploading',
-              folders: [folderIdSafe],
-              thumbnail_url: thumbnailUrl
-            });
+          if (fileError) {
+            console.error(`Error saving ${fileName} metadata:`, fileError);
+            updateFileStatus(`${zipFile.name} -> ${fileName}`, 'error', fileError.message);
             continue;
           }
           
-          if (!mediaRecord || mediaRecord.length === 0) {
-            console.error('Failed to create media record');
-            continue;
-          }
+          // Add file ID to the list
+          uploadedFileIds.push(fileData.id);
           
-          const fileId = mediaRecord[0].id;
-          extractedFileIds.push(fileId);
-          
-          console.log("Media record created, ID:", fileId, "now uploading file content");
-          
-          // Upload the file content
-          const { error: uploadError } = await supabase.storage
-            .from('raw_uploads')
-            .upload(filePath, extractedFile.content, {
-              cacheControl: '3600',
-              upsert: true
-            });
-            
-          if (uploadError) {
-            console.error(`Upload error for ${uniqueFileName}:`, uploadError);
-            
-            // Update the media record to mark as error
-            await supabase
-              .from('media')
-              .update({ status: 'error' })
-              .eq('id', fileId);
-              
-            continue;
-          }
-          
-          // Update the media record to mark as complete
-          const { error: updateError } = await supabase
-            .from('media')
-            .update({ 
-              status: 'complete',
-              folders: [folderIdSafe], // Ensure folder ID is saved
-              thumbnail_url: thumbnailUrl // Ensure thumbnail URL is saved
-            })
-            .eq('id', fileId);
-            
-          if (updateError) {
-            console.error('Error updating media record:', updateError);
-          }
-          
+          // Update progress
           processedFiles++;
-          const zipProgress = 60 + Math.floor((processedFiles / extractedFiles.length) * 40);
-          updateFileProgress(zipFileName, zipProgress, 'uploading');
-        } catch (fileError) {
-          console.error(`Error processing file ${extractedFile.name}:`, fileError);
-          // Continue with next file
+          const progress = 30 + Math.floor((processedFiles / totalFiles) * 60); // Scale from 30% to 90%
+          updateFileProgress(zipFile.name, progress);
+          
+          // Mark file as complete
+          updateFileStatus(`${zipFile.name} -> ${fileName}`, 'complete');
+          
+          console.log(`Successfully processed ${fileName} as per SOP workflow`);
+        } catch (error) {
+          console.error(`Error processing file from ZIP:`, error);
+          updateFileStatus(`${zipFile.name} -> ${file.name}`, 'error', error instanceof Error ? error.message : 'Unknown error');
         }
       }
       
-      // Mark ZIP file as complete when all extracted files are processed
-      updateFileProgress(zipFileName, 100, 'complete');
+      // Mark the ZIP file as complete
+      updateFileProgress(zipFile.name, 100);
+      updateFileStatus(zipFile.name, 'complete');
       
-      console.log(`ZIP processing complete. Created ${extractedFileIds.length} files in folder ${folderIdSafe}`);
+      console.log(`SOP completed: ZIP processing complete. Created ${uploadedFileIds.length} files in folder ${folderName} (ID: ${folderId}) under category ${categoryId}`);
       
-      return extractedFileIds;
+      return uploadedFileIds;
       
     } catch (error) {
-      console.error(`Error processing ZIP file ${zipFileName}:`, error);
-      updateFileProgress(zipFileName, 0, 'error');
-      setFileStatuses(prev => 
-        prev.map(status => 
-          status.name === zipFileName
-            ? { ...status, error: error instanceof Error ? error.message : 'Failed to process ZIP file' }
-            : status
-        )
-      );
-      return [];
+      console.error('Error processing ZIP file:', error);
+      updateFileStatus(zipFile.name, 'error', error instanceof Error ? error.message : 'Unknown error');
+      return uploadedFileIds;
     }
   };
-
-  return { processZipFile };
+  
+  return {
+    processZipFile
+  };
 };

@@ -1,6 +1,6 @@
 
 import { useFileUploader } from "@/hooks/useFileUploader";
-import { useZipFileProcessor } from "@/hooks/useZipFileProcessor";
+import { useZipProcessor } from "@/hooks/useZipProcessor";
 import { useFileProcessor } from "@/hooks/useFileProcessor";
 import { useFileValidation } from "./FileValidation";
 import { useToast } from "@/components/ui/use-toast";
@@ -45,11 +45,7 @@ export const useFileUploadHandler = ({
   const { validateFiles, showValidationToasts } = useFileValidation(MAX_FILE_SIZE_GB);
   
   // Use hooks for file processing
-  const { processZipFile } = useZipFileProcessor({
-    creatorId,
-    updateFileProgress,
-    setFileStatuses
-  });
+  const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
 
   // Main file change handler
@@ -154,7 +150,30 @@ export const useFileUploadHandler = ({
     for (const zipFile of zipFiles) {
       console.log(`Processing ZIP file: ${zipFile.name} with category: ${zipCategoryId}`);
       
-      const extractedFileIds = await processZipFile(zipFile);
+      const extractedFileIds = await processZipFile(zipFile, {
+        creatorId,
+        currentFolder,
+        categoryId: zipCategoryId, // Pass the selected category ID for ZIP files
+        updateFileProgress: (fileName, progress) => {
+          console.log(`ZIP progress: ${fileName} - ${progress}%`);
+          updateFileProgress(fileName, progress);
+        },
+        updateFileStatus: (fileName, status, error) => {
+          console.log(`ZIP status: ${fileName} - ${status}`, error || '');
+          const newStatus = status === 'uploading' ? 'uploading' 
+            : status === 'processing' ? 'processing'
+            : status === 'complete' ? 'complete' 
+            : 'error';
+          updateFileProgress(fileName, 100, newStatus);
+          if (error) {
+            setFileStatuses(prev => 
+              prev.map(s => 
+                s.name === fileName ? { ...s, error } : s
+              )
+            );
+          }
+        }
+      });
       uploadedFileIds.push(...extractedFileIds);
       
       // Show success message for ZIP processing
