@@ -26,15 +26,17 @@ const UserManagement = () => {
         Manage team members and creator onboarding links
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <InviteCreatorCard />
-        <PendingLinksCard />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Add Team Member - Top Section */}
+      <div className="mb-6">
         <Card className="p-6">
           <AddTeamMemberForm />
         </Card>
+      </div>
+
+      {/* Onboarding Links - Side by Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InviteCreatorCard />
+        <PendingLinksCard />
       </div>
     </div>
   );
