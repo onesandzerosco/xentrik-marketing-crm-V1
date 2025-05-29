@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { DropZone } from './DropZone';
 import { UploadActions } from './UploadActions';
 import { CategorySelector } from './CategorySelector';
@@ -10,6 +10,7 @@ import { useFileUploadHandler } from './FileUploadHandler';
 import { isZipFile } from '@/utils/zipUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StandaloneDropUploaderProps {
   creatorId: string;
@@ -24,12 +25,43 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
   onUploadComplete,
   onCancel,
   currentFolder,
-  availableCategories
+  availableCategories: initialCategories
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [availableCategories, setAvailableCategories] = useState<Category[]>(initialCategories);
   const { toast } = useToast();
+
+  // Load categories when component mounts or creatorId changes
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (!creatorId) return;
+      
+      try {
+        const { data: categories, error } = await supabase
+          .from('file_categories')
+          .select('category_id as id, category_name as name')
+          .eq('creator', creatorId);
+        
+        if (error) {
+          console.error('Error loading categories:', error);
+          return;
+        }
+        
+        if (categories && categories.length > 0) {
+          setAvailableCategories(categories);
+        } else {
+          setAvailableCategories(initialCategories);
+        }
+      } catch (error) {
+        console.error('Error in loadCategories:', error);
+        setAvailableCategories(initialCategories);
+      }
+    };
+    
+    loadCategories();
+  }, [creatorId, initialCategories]);
 
   // Get the upload handler
   const {
@@ -81,15 +113,33 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
     if (!newCategoryName.trim()) return;
     
     try {
-      // Here you would typically call your category creation API
-      // For now, we'll create a temporary category object
-      const newCategory: Category = {
-        id: `temp-${Date.now()}`,
-        name: newCategoryName
+      // Create category in database
+      const { data: newCategory, error } = await supabase
+        .from('file_categories')
+        .insert({
+          category_name: newCategoryName,
+          creator: creatorId
+        })
+        .select('category_id as id, category_name as name')
+        .single();
+      
+      if (error) {
+        console.error('Error creating category:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create category.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add to available categories
+      const categoryToAdd: Category = {
+        id: newCategory.id,
+        name: newCategory.name
       };
       
-      // Add to available categories (this would be handled by the parent component in real implementation)
-      availableCategories.push(newCategory);
+      setAvailableCategories(prev => [...prev, categoryToAdd]);
       setSelectedCategoryId(newCategory.id);
       
       toast({
@@ -100,6 +150,7 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
       setNewCategoryName('');
       setIsCreateCategoryModalOpen(false);
     } catch (error) {
+      console.error('Error creating category:', error);
       toast({
         title: "Error",
         description: "Failed to create category.",

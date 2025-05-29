@@ -1,8 +1,7 @@
-import JSZip from 'jszip';
-import { v4 as uuidv4 } from 'uuid';
+
 import { supabase } from '@/integrations/supabase/client';
 import { ZipProcessingOptions } from '@/types/uploadTypes';
-import { getFileExtension, getFileType } from '@/utils/fileUtils';
+import { getFileExtension, getFileType, uploadFileInChunks } from '@/utils/fileUtils';
 
 export const useZipProcessor = () => {
   // Process a ZIP file by extracting its contents and uploading each file
@@ -24,14 +23,15 @@ export const useZipProcessor = () => {
       console.log(`Starting ZIP processing for ${zipFile.name} with category: ${categoryId}`);
       updateFileStatus(zipFile.name, 'processing');
       
-      // Load the ZIP file
+      // Load the ZIP file using dynamic import for JSZip
+      const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(zipFile);
       
       // Create a folder name based on the ZIP file name (remove .zip extension)
       const baseFolderName = zipFile.name.replace(/\.zip$/i, '');
       // Create a unique folder ID with the name and a unique identifier
-      const folderId = `${baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${uuidv4().slice(0, 8)}`;
+      const folderId = `${baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-8)}`;
       
       console.log(`Creating folder: ${folderId} under category: ${categoryId}`);
       
@@ -55,7 +55,7 @@ export const useZipProcessor = () => {
             continue;
           }
           
-          const fileName = file.name.split('/').pop() || `file-${uuidv4().slice(0, 8)}`;
+          const fileName = file.name.split('/').pop() || `file-${Date.now().toString().slice(-8)}`;
           
           // Update status to show we're working on this file
           updateFileStatus(`${zipFile.name} -> ${fileName}`, 'processing');
@@ -69,18 +69,38 @@ export const useZipProcessor = () => {
           
           console.log(`Uploading file: ${filePath}`);
           
-          // Upload the file to storage
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('raw_uploads')
-            .upload(filePath, fileBlob, {
-              cacheControl: '3600',
-              upsert: false,
-            });
+          // Use chunked upload for large files (>10MB), regular upload for smaller files
+          const fileSize = fileBlob.size;
+          const useChunkedUpload = fileSize > 10 * 1024 * 1024; // 10MB threshold
           
-          if (uploadError) {
-            console.error(`Error uploading ${fileName}:`, uploadError);
-            updateFileStatus(`${zipFile.name} -> ${fileName}`, 'error', uploadError.message);
-            continue;
+          if (useChunkedUpload) {
+            console.log(`Using chunked upload for large file: ${fileName} (${Math.round(fileSize / 1024 / 1024)}MB)`);
+            
+            // Upload using chunked upload
+            await uploadFileInChunks(
+              new File([fileBlob], fileName, { type: fileBlob.type }),
+              'raw_uploads',
+              filePath,
+              (progress) => {
+                const overallProgress = Math.floor(((processedFiles + (progress / 100)) / totalFiles) * 100);
+                updateFileProgress(zipFile.name, overallProgress);
+              },
+              supabase
+            );
+          } else {
+            // Use regular upload for smaller files
+            const { error: uploadError } = await supabase.storage
+              .from('raw_uploads')
+              .upload(filePath, fileBlob, {
+                cacheControl: '3600',
+                upsert: false,
+              });
+            
+            if (uploadError) {
+              console.error(`Error uploading ${fileName}:`, uploadError);
+              updateFileStatus(`${zipFile.name} -> ${fileName}`, 'error', uploadError.message);
+              continue;
+            }
           }
           
           // Determine file type

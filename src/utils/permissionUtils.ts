@@ -24,6 +24,16 @@ export const hasPermission = (permissions: RolePermission[], userRole: string, u
 };
 
 /**
+ * Checks if a user can manage tags (create, edit, delete tags)
+ */
+export const canManageTags = (userRole: string, userRoles: string[]): boolean => {
+  // Allow Admin, VA, Creator, and Manager to manage tags
+  const allowedRoles = ["Admin", "VA", "Creator", "Manager"];
+  return userRole && allowedRoles.includes(userRole) || 
+         userRoles.some(role => allowedRoles.includes(role));
+};
+
+/**
  * Hook to get user permissions for file operations
  * @returns Object with permission flags
  */
@@ -60,6 +70,7 @@ export const useFilePermissions = () => {
     canUpload: hasPermission(permissions, userRole, userRoles, 'upload'),
     canManageFolders: canManageFoldersByRole || hasPermission(permissions, userRole, userRoles, 'upload'),
     canDownload: hasPermission(permissions, userRole, userRoles, 'download'),
-    canPreview: hasPermission(permissions, userRole, userRoles, 'preview')
+    canPreview: hasPermission(permissions, userRole, userRoles, 'preview'),
+    canManageTags: canManageTags(userRole, userRoles)
   };
 };

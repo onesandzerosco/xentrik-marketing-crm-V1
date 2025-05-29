@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
+import { useFilePermissions } from '@/utils/permissionUtils';
 
 export interface FileTag {
   id: string;
@@ -17,6 +18,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const [availableTags, setAvailableTags] = useState<FileTag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { canManageTags } = useFilePermissions();
   
   // Fetch tags from the database, filtered by creator if specified
   const fetchTags = async () => {
@@ -72,7 +74,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   
   // Function to add a tag to files
   const addTagToFiles = async (fileIds: string[], tagName: string) => {
-    if (!fileIds.length || !tagName) return Promise.resolve();
+    if (!fileIds.length || !tagName || !canManageTags) return Promise.resolve();
     
     try {
       // Process each file
@@ -113,7 +115,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   
   // Function to remove a tag from files
   const removeTagFromFiles = async (fileIds: string[], tagName: string) => {
-    if (!fileIds.length || !tagName) return Promise.resolve();
+    if (!fileIds.length || !tagName || !canManageTags) return Promise.resolve();
     
     try {
       // Process each file
@@ -152,7 +154,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   
   // Function to create a new tag
   const createTag = async (name: string, color: string = 'gray') => {
-    if (!name.trim()) return Promise.reject(new Error('Tag name cannot be empty'));
+    if (!name.trim() || !canManageTags) return Promise.reject(new Error('Tag name cannot be empty or insufficient permissions'));
     
     try {
       // Create tag with the current creator ID if provided
@@ -187,6 +189,8 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   
   // Function to delete a tag
   const deleteTag = async (tagId: string) => {
+    if (!canManageTags) return Promise.reject(new Error('Insufficient permissions to delete tags'));
+    
     try {
       // Get the tag name first for cleanup
       const { data: tagData, error: getError } = await supabase
@@ -294,6 +298,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     createTag,
     deleteTag,
     filterFilesByTags,
-    fetchTags
+    fetchTags,
+    canManageTags
   };
 };
