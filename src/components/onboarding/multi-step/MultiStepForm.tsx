@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { ChevronLeft, ChevronRight, Save, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Upload, CheckCircle2 } from "lucide-react";
 import { 
   creatorOnboardingSchema,
   defaultOnboardingValues,
@@ -26,6 +26,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   const [currentStep, setCurrentStep] = useState<string>("personalInfo");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
   
   const methods = useForm<CreatorOnboardingFormValues>({
@@ -103,6 +104,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           description: "Your onboarding information has been submitted successfully.",
           variant: "default",
         });
+        setIsSubmitted(true);
       } else {
         throw new Error(result.error || "Failed to submit form");
       }
@@ -140,6 +142,26 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           <div className="text-center">
             <p className="text-red-400 mb-4">This onboarding link is invalid or has expired.</p>
             <p className="text-gray-400">Please contact an administrator for a new link.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show success state after submission
+  if (isSubmitted) {
+    return (
+      <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-white mb-4">Form Successfully Submitted!</h2>
+            <p className="text-gray-300 mb-4">
+              Thank you for completing the onboarding process. Your information has been received and will be reviewed by our team.
+            </p>
+            <p className="text-gray-400 text-sm">
+              You can now close this page. We'll be in touch soon!
+            </p>
           </div>
         </CardContent>
       </Card>

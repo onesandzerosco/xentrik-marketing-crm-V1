@@ -24,6 +24,7 @@ interface NavItem {
   roles?: string[]; // Specific roles that can access this item
   allowCreator?: boolean; // Allow Creator role to access this item
   hideForCreator?: boolean; // Hide this item for Creator role
+  hidden?: boolean; // Hide this item completely
 }
 
 interface SidebarNavProps {
@@ -71,7 +72,7 @@ const navItems: NavItem[] = [
     path: '/onboard',
     label: 'Creator Onboarding',
     icon: <UserPlus className="h-5 w-5" />,
-    adminOnly: true,
+    hidden: true, // Hide from all users - only accessible via direct links
   },
   {
     path: '/onboard-queue',
@@ -99,6 +100,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
     <nav className="grid gap-1 pt-2 z-30 relative">
       {navItems.map((item) => {
+        // Skip items that are completely hidden
+        if (item.hidden) return null;
+        
         // Skip adminOnly items if user is not admin
         if (item.adminOnly && !isAdmin) return null;
         
