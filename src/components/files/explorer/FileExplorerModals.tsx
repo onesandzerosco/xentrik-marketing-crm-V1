@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileUploadModal } from './FileUploadModal';
 import { AddToFolderModal } from './AddToFolderModal';
@@ -8,6 +7,8 @@ import { DeleteFolderModal } from './DeleteFolderModal';
 import { DeleteCategoryModal } from './DeleteCategoryModal';
 import { EditNoteModal } from './EditNoteModal';
 import { AddTagModal } from './modals/TagModals';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface FileExplorerModalsProps {
   onRefresh: () => void;
@@ -65,6 +66,15 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
 }) => {
   const [targetFolderId, setTargetFolderId] = React.useState('');
   const [targetCategoryId, setTargetCategoryId] = React.useState('');
+  const [editingNote, setEditingNote] = React.useState('');
+  const { toast } = useToast();
+
+  // Initialize editing note when file changes
+  React.useEffect(() => {
+    if (fileExplorerState.fileToEdit) {
+      setEditingNote(fileExplorerState.fileToEdit.description || '');
+    }
+  }, [fileExplorerState.fileToEdit]);
 
   const handleAddToFolderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +124,41 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
           setTargetFolderId(newFolder.id);
         }
       }, 100);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!fileExplorerState.fileToEdit) return;
+    
+    try {
+      // Update the file's description in the database
+      const { error } = await supabase
+        .from('media')
+        .update({ description: editingNote })
+        .eq('id', fileExplorerState.fileToEdit.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Note updated",
+        description: "File description has been updated successfully.",
+      });
+      
+      // Close the modal and refresh the files list
+      fileExplorerState.setIsFileNoteModalOpen(false);
+      fileExplorerState.setFileToEdit(null);
+      setEditingNote('');
+      onRefresh();
+      
+    } catch (error) {
+      console.error("Error updating note:", error);
+      toast({
+        title: "Error updating note",
+        description: "An error occurred while updating the file description.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -182,9 +227,9 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={fileExplorerState.isFileNoteModalOpen}
         onOpenChange={fileExplorerState.setIsFileNoteModalOpen}
         file={fileExplorerState.fileToEdit}
-        note={fileExplorerState.fileToEdit?.note || ""}
-        setNote={() => {}}
-        onSave={() => onRefresh()}
+        note={editingNote}
+        setNote={setEditingNote}
+        onSave={handleSaveNote}
       />
       
       {/* Add Tag Modal */}
