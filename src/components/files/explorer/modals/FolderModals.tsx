@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { 
   Dialog, 
@@ -91,7 +90,7 @@ export const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   );
 };
 
-// Add to Folder Modal Interface and Component
+// Updated Add to Folder Modal Interface and Component
 interface AddToFolderModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -103,6 +102,7 @@ interface AddToFolderModalProps {
   targetCategoryId: string;
   setTargetCategoryId: (categoryId: string) => void;
   onCreateFolder?: () => void;
+  onCreateCategory?: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
@@ -117,6 +117,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   targetCategoryId,
   setTargetCategoryId,
   onCreateFolder,
+  onCreateCategory,
   onSubmit
 }) => {
   // Filter folders by selected category
@@ -146,27 +147,40 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
               <Label htmlFor="category" className="text-right">
                 Category
               </Label>
-              <Select
-                value={targetCategoryId}
-                onValueChange={setTargetCategoryId}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="col-span-3 space-y-2">
+                <Select
+                  value={targetCategoryId}
+                  onValueChange={setTargetCategoryId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {onCreateCategory && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onCreateCategory}
+                    className="w-full"
+                  >
+                    Create New Category
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="folder" className="text-right">
                 Folder
               </Label>
-              <div className="col-span-3">
+              <div className="col-span-3 space-y-2">
                 <Select
                   value={targetFolderId}
                   onValueChange={setTargetFolderId}
@@ -188,20 +202,25 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                   </SelectContent>
                 </Select>
                 {targetCategoryId && filteredFolders.length === 0 && (
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-sm text-muted-foreground">
                     No folders available in this category.
                   </p>
+                )}
+                {onCreateFolder && targetCategoryId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onCreateFolder}
+                    className="w-full"
+                  >
+                    Create New Folder
+                  </Button>
                 )}
               </div>
             </div>
           </div>
-          <DialogFooter className="flex justify-between">
-            {onCreateFolder && (
-              <Button type="button" variant="outline" onClick={onCreateFolder} 
-                     disabled={!targetCategoryId}>
-                Create New Folder
-              </Button>
-            )}
+          <DialogFooter>
             <Button
               type="submit"
               disabled={!targetFolderId || selectedFileIds.length === 0}
@@ -242,6 +261,7 @@ interface FolderModalsProps {
   handleDeleteFolder: (folderId: string | null, setIsDeleteFolderModalOpen: (open: boolean) => void, setFolderToDelete: (id: string | null) => void) => void;
   handleRenameFolder: (folderId: string | null, newName: string, setIsRenameFolderModalOpen: (open: boolean) => void, setFolderToRename: (id: string | null) => void) => void;
   handleCreateNewFolder: () => void;
+  handleCreateNewCategory?: () => void;
 }
 
 export const FolderModals: React.FC<FolderModalsProps> = ({
@@ -269,7 +289,8 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
   handleAddToFolderSubmit,
   handleDeleteFolder,
   handleRenameFolder,
-  handleCreateNewFolder
+  handleCreateNewFolder,
+  handleCreateNewCategory
 }) => {
   const [folderToDelete, setFolderToDelete] = React.useState<string | null>(null);
   const [folderToRename, setFolderToRename] = React.useState<string | null>(null);
@@ -316,6 +337,7 @@ export const FolderModals: React.FC<FolderModalsProps> = ({
         categories={categories}
         onSubmit={handleAddToFolderSubmit}
         onCreateFolder={handleCreateNewFolder}
+        onCreateCategory={handleCreateNewCategory}
       />
       
       {/* Delete Folder Modal */}

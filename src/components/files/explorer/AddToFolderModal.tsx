@@ -17,7 +17,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Plus } from 'lucide-react';
 import { Category } from '@/types/fileTypes';
 
 interface AddToFolderModalProps {
@@ -32,6 +32,7 @@ interface AddToFolderModalProps {
   categories: Category[];
   handleSubmit: (e: React.FormEvent) => void;
   onCreateNewFolder?: () => void;
+  onCreateNewCategory?: () => void;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -46,6 +47,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   categories,
   handleSubmit,
   onCreateNewFolder,
+  onCreateNewCategory,
 }) => {
   // Filter folders by selected category
   const filteredFolders = targetCategoryId
@@ -66,6 +68,15 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
     }
   };
 
+  const handleCreateNewCategoryClick = () => {
+    if (onCreateNewCategory) {
+      // Close this modal
+      onOpenChange(false);
+      // Open the create category modal
+      onCreateNewCategory();
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] w-full">
@@ -79,26 +90,60 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
         <form onSubmit={handleSubmit} className="py-4">
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={targetCategoryId}
-                onValueChange={setTargetCategoryId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(category => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Category</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCreateNewCategoryClick}
+                  className="h-8 px-2 text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  New Category
+                </Button>
+              </div>
+              
+              {categories.length === 0 ? (
+                <div className="text-sm text-muted-foreground italic p-2 border rounded">
+                  No categories available. Create a category first.
+                </div>
+              ) : (
+                <Select
+                  value={targetCategoryId}
+                  onValueChange={setTargetCategoryId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             
             <div className="grid gap-2">
-              <Label htmlFor="folder">Folder</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Folder</Label>
+                {targetCategoryId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCreateNewFolderClick}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    New Folder
+                  </Button>
+                )}
+              </div>
+              
               <Select
                 value={targetFolderId}
                 onValueChange={setTargetFolderId}
@@ -109,7 +154,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                     !targetCategoryId 
                       ? "Select a category first" 
                       : filteredFolders.length === 0 
-                        ? "No folders in this category" 
+                        ? "No folders in this category - create one" 
                         : "Select folder"
                   } />
                 </SelectTrigger>
@@ -121,19 +166,6 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Add Create New Folder button */}
-              {targetCategoryId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-2 w-full"
-                  onClick={handleCreateNewFolderClick}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create New Folder
-                </Button>
-              )}
             </div>
           </div>
           
@@ -153,4 +185,3 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
     </Dialog>
   );
 };
-
