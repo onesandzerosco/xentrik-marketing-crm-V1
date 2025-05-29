@@ -188,6 +188,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         availableCategories={availableCategories}
         onCreateCategory={onCreateCategory}
         onCreateFolder={onCreateFolder}
+        onAddFilesToFolder={onAddFilesToFolder}
         fileExplorerState={fileExplorerState}
       />
 

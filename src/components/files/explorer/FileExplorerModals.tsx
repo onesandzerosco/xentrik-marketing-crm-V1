@@ -20,6 +20,7 @@ interface FileExplorerModalsProps {
   availableCategories: Array<{ id: string; name: string }>;
   onCreateCategory?: (name: string) => Promise<void>;
   onCreateFolder?: (name: string, fileIds: string[], categoryId: string) => Promise<void>;
+  onAddFilesToFolder?: (fileIds: string[], folderId: string, categoryId: string) => Promise<void>;
   fileExplorerState: {
     isUploadModalOpen: boolean;
     setIsUploadModalOpen: (isOpen: boolean) => void;
@@ -59,17 +60,24 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   availableCategories,
   onCreateCategory,
   onCreateFolder,
+  onAddFilesToFolder,
   fileExplorerState
 }) => {
   const [targetFolderId, setTargetFolderId] = React.useState('');
   const [targetCategoryId, setTargetCategoryId] = React.useState('');
 
-  const handleAddToFolderSubmit = (e: React.FormEvent) => {
+  const handleAddToFolderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Add to folder:', { targetFolderId, targetCategoryId, selectedFiles: fileExplorerState.selectedFileIds });
-    // This will be handled by the parent component
-    fileExplorerState.setIsAddToFolderModalOpen(false);
-    onRefresh();
+    if (!targetFolderId || !targetCategoryId || fileExplorerState.selectedFileIds.length === 0 || !onAddFilesToFolder) return;
+    
+    try {
+      await onAddFilesToFolder(fileExplorerState.selectedFileIds, targetFolderId, targetCategoryId);
+      fileExplorerState.setIsAddToFolderModalOpen(false);
+      setTargetFolderId('');
+      onRefresh();
+    } catch (error) {
+      console.error('Error adding files to folder:', error);
+    }
   };
 
   const handleCreateNewFolder = () => {
@@ -91,9 +99,21 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   };
 
   const handleInlineCreateFolder = async (name: string, categoryId: string) => {
-    if (onCreateFolder) {
-      await onCreateFolder(name, [], categoryId);
+    if (onCreateFolder && onAddFilesToFolder) {
+      // First create the folder with the selected files
+      await onCreateFolder(name, fileExplorerState.selectedFileIds, categoryId);
       onRefresh();
+      
+      // Find the newly created folder and set it as the target
+      // We'll need to wait a moment for the folder to be created and available
+      setTimeout(() => {
+        const newFolder = availableFolders.find(folder => 
+          folder.name === name && folder.categoryId === categoryId
+        );
+        if (newFolder) {
+          setTargetFolderId(newFolder.id);
+        }
+      }, 100);
     }
   };
 
