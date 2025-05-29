@@ -154,30 +154,7 @@ export const useFileUploadHandler = ({
     for (const zipFile of zipFiles) {
       console.log(`Processing ZIP file: ${zipFile.name} with category: ${zipCategoryId}`);
       
-      const extractedFileIds = await processZipFile(zipFile, {
-        creatorId,
-        currentFolder,
-        categoryId: zipCategoryId, // Pass the selected category ID for ZIP files
-        updateFileProgress: (fileName, progress) => {
-          console.log(`ZIP progress: ${fileName} - ${progress}%`);
-          updateFileProgress(fileName, progress);
-        },
-        updateFileStatus: (fileName, status, error) => {
-          console.log(`ZIP status: ${fileName} - ${status}`, error || '');
-          const newStatus = status === 'uploading' ? 'uploading' 
-            : status === 'processing' ? 'processing'
-            : status === 'complete' ? 'complete' 
-            : 'error';
-          updateFileProgress(fileName, 100, newStatus);
-          if (error) {
-            setFileStatuses(prev => 
-              prev.map(s => 
-                s.name === fileName ? { ...s, error } : s
-              )
-            );
-          }
-        }
-      });
+      const extractedFileIds = await processZipFile(zipFile);
       uploadedFileIds.push(...extractedFileIds);
       
       // Show success message for ZIP processing

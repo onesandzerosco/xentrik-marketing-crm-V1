@@ -86,7 +86,6 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         onOpenChange={fileExplorerState.setIsCreateFolderModalOpen}
         newFolderName=""
         setNewFolderName={() => {}}
-        categories={[]}
         selectedCategoryForNewFolder={currentCategory || ""}
         setSelectedCategoryForNewFolder={() => {}}
         handleCreateFolderSubmit={(e) => { e.preventDefault(); onRefresh(); }}

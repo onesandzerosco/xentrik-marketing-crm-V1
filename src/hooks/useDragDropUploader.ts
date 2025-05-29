@@ -57,12 +57,7 @@ export const useDragDropUploader = ({
       // Process files by type (ZIP vs regular)
       for (const file of acceptedFiles) {
         if (isZipFile(file.name)) {
-          const extractedFileIds = await processZipFile(file, {
-            creatorId,
-            currentFolder,
-            updateFileProgress,
-            updateFileStatus
-          });
+          const extractedFileIds = await processZipFile(file);
           uploadedFileIds.push(...extractedFileIds);
           continue;
         }
