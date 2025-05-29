@@ -11,7 +11,7 @@ import {
   CardDescription 
 } from "@/components/ui/card";
 import { Shield, Users } from "lucide-react";
-import UserRolesList from "@/components/admin/users/UserRolesList";
+import RoleBasedUsersList from "@/components/admin/users/RoleBasedUsersList";
 import PermissionsSettings from "@/components/admin/permissions/PermissionsSettings";
 
 const AccessControlPanel: React.FC = () => {
@@ -64,13 +64,13 @@ const AccessControlPanel: React.FC = () => {
           <div>
             <CardTitle>User Roles Management</CardTitle>
             <CardDescription>
-              View and manage roles for all team members
+              View and manage roles for all team members organized by role type
             </CardDescription>
           </div>
           <Users className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <UserRolesList />
+          <RoleBasedUsersList />
         </CardContent>
       </Card>
     </div>
