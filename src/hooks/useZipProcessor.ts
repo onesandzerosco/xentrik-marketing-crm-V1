@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ZipProcessingOptions } from '@/types/uploadTypes';
 import { getFileExtension, getFileType, uploadFileInChunks } from '@/utils/fileUtils';
@@ -28,12 +27,12 @@ export const useZipProcessor = () => {
       const zip = new JSZip();
       const zipContents = await zip.loadAsync(zipFile);
       
-      // Create a folder name based on the ZIP file name (remove .zip extension)
+      // SOP Step 4: Create a folder name based on the ZIP file name (remove .zip extension)
       const baseFolderName = zipFile.name.replace(/\.zip$/i, '');
       // Create a unique folder ID with the name and a unique identifier
       const folderId = `${baseFolderName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString().slice(-8)}`;
       
-      console.log(`Creating folder: ${folderId} under category: ${categoryId}`);
+      console.log(`Creating folder: ${folderId} under category: ${categoryId} as per SOP step 4`);
       
       // Keep track of total files for progress calculation
       const files = Object.values(zipContents.files).filter(file => !file.dir);
@@ -64,10 +63,10 @@ export const useZipProcessor = () => {
           const content = await file.async('arraybuffer');
           const fileBlob = new Blob([content]);
           
-          // Construct file path in storage
+          // Construct file path in storage - SOP Step 4: under the category folder
           const filePath = `${creatorId}/${folderId}/${fileName}`;
           
-          console.log(`Uploading file: ${filePath}`);
+          console.log(`Uploading file: ${filePath} under category folder as per SOP`);
           
           // Use chunked upload for large files (>10MB), regular upload for smaller files
           const fileSize = fileBlob.size;
@@ -76,7 +75,7 @@ export const useZipProcessor = () => {
           if (useChunkedUpload) {
             console.log(`Using chunked upload for large file: ${fileName} (${Math.round(fileSize / 1024 / 1024)}MB)`);
             
-            // Upload using chunked upload
+            // Upload using chunked upload for large files
             await uploadFileInChunks(
               new File([fileBlob], fileName, { type: fileBlob.type }),
               'raw_uploads',
@@ -111,11 +110,11 @@ export const useZipProcessor = () => {
                            : fileType === 'audio' ? `audio/${extension}`
                            : 'application/octet-stream';
           
-          // Add file to database
+          // SOP Step 4: Add file to database with proper folder and category organization
           const foldersList = ['all', folderId]; // Include both 'all' and the specific folder
           const categoriesList = categoryId ? [categoryId] : [];
           
-          console.log(`Creating media record for ${fileName} with folders: ${foldersList} and categories: ${categoriesList}`);
+          console.log(`Creating media record for ${fileName} with folders: ${foldersList} and categories: ${categoriesList} as per SOP`);
           
           const { data: fileData, error: fileError } = await supabase
             .from('media')
@@ -148,7 +147,7 @@ export const useZipProcessor = () => {
           // Mark file as complete
           updateFileStatus(`${zipFile.name} -> ${fileName}`, 'complete');
           
-          console.log(`Successfully processed ${fileName}`);
+          console.log(`Successfully processed ${fileName} as per SOP workflow`);
         } catch (error) {
           console.error(`Error processing file from ZIP:`, error);
           updateFileStatus(`${zipFile.name} -> ${file.name}`, 'error', error instanceof Error ? error.message : 'Unknown error');
@@ -158,7 +157,7 @@ export const useZipProcessor = () => {
       // Mark the ZIP file as complete
       updateFileStatus(zipFile.name, 'complete');
       
-      console.log(`ZIP processing complete. Created ${uploadedFileIds.length} files in folder ${folderId} under category ${categoryId}`);
+      console.log(`SOP completed: ZIP processing complete. Created ${uploadedFileIds.length} files in folder ${folderId} under category ${categoryId}`);
       
       return uploadedFileIds;
       

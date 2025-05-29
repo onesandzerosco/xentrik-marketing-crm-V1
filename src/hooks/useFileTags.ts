@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useFilePermissions } from '@/utils/permissionUtils';
@@ -20,8 +20,15 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const { canManageTags } = useFilePermissions();
   
+  // Simple function to assign colors based on tag name - memoized to prevent re-creation
+  const getTagColor = useCallback((tagName: string): string => {
+    const colors = ['red', 'green', 'blue', 'purple', 'pink', 'amber', 'gray'];
+    const hash = tagName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
+  }, []);
+  
   // Fetch tags from the database, filtered by creator if specified
-  const fetchTags = async () => {
+  const fetchTags = useCallback(async () => {
     setIsLoading(true);
     try {
       let query = supabase
@@ -50,7 +57,7 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       const formattedTags = data.map(tag => ({
         id: tag.id,
         name: tag.tag_name,
-        color: getTagColor(tag.tag_name) // Assign a color based on the tag name
+        color: getTagColor(tag.tag_name)
       }));
       
       setAvailableTags(formattedTags);
@@ -59,21 +66,14 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [creatorId, getTagColor]); // Only re-create when creatorId changes
   
   useEffect(() => {
     fetchTags();
-  }, [creatorId]); // Re-fetch tags when creator ID changes
-  
-  // Simple function to assign colors based on tag name
-  const getTagColor = (tagName: string): string => {
-    const colors = ['red', 'green', 'blue', 'purple', 'pink', 'amber', 'gray'];
-    const hash = tagName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return colors[hash % colors.length];
-  };
+  }, [fetchTags]); // Now fetchTags is stable
   
   // Function to add a tag to files
-  const addTagToFiles = async (fileIds: string[], tagName: string) => {
+  const addTagToFiles = useCallback(async (fileIds: string[], tagName: string) => {
     if (!fileIds.length || !tagName || !canManageTags) return Promise.resolve();
     
     try {
@@ -111,10 +111,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       console.error('Error adding tag to files:', error);
       return Promise.reject(error);
     }
-  };
+  }, [canManageTags]);
   
   // Function to remove a tag from files
-  const removeTagFromFiles = async (fileIds: string[], tagName: string) => {
+  const removeTagFromFiles = useCallback(async (fileIds: string[], tagName: string) => {
     if (!fileIds.length || !tagName || !canManageTags) return Promise.resolve();
     
     try {
@@ -150,10 +150,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       console.error('Error removing tag from files:', error);
       return Promise.reject(error);
     }
-  };
+  }, [canManageTags]);
   
   // Function to create a new tag
-  const createTag = async (name: string, color: string = 'gray') => {
+  const createTag = useCallback(async (name: string, color: string = 'gray') => {
     if (!name.trim() || !canManageTags) return Promise.reject(new Error('Tag name cannot be empty or insufficient permissions'));
     
     try {
@@ -185,10 +185,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       console.error('Error in createTag:', error);
       return Promise.reject(error);
     }
-  };
+  }, [canManageTags, creatorId]);
   
   // Function to delete a tag
-  const deleteTag = async (tagId: string) => {
+  const deleteTag = useCallback(async (tagId: string) => {
     if (!canManageTags) return Promise.reject(new Error('Insufficient permissions to delete tags'));
     
     try {
@@ -242,10 +242,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
       console.error('Error in deleteTag:', error);
       return Promise.reject(error);
     }
-  };
+  }, [canManageTags]);
   
-  // Function to filter files by tags
-  const filterFilesByTags = (files: CreatorFileType[], tagNames: string[]) => {
+  // Function to filter files by tags - memoized to prevent infinite re-renders
+  const filterFilesByTags = useCallback((files: CreatorFileType[], tagNames: string[]) => {
     if (tagNames.length === 0) return files;
     
     // Output debugging information to the browser console
@@ -286,9 +286,10 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     });
     
     return filtered;
-  };
-  
-  return {
+  }, []);
+
+  // Memoize the return object to prevent unnecessary re-renders
+  const returnValue = useMemo(() => ({
     availableTags,
     selectedTags,
     setSelectedTags,
@@ -300,5 +301,18 @@ export const useFileTags = ({ creatorId }: UseFileTagsProps = {}) => {
     filterFilesByTags,
     fetchTags,
     canManageTags
-  };
+  }), [
+    availableTags,
+    selectedTags,
+    isLoading,
+    addTagToFiles,
+    removeTagFromFiles,
+    createTag,
+    deleteTag,
+    filterFilesByTags,
+    fetchTags,
+    canManageTags
+  ]);
+
+  return returnValue;
 };
