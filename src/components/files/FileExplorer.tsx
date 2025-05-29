@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { FileExplorerHeader } from './explorer/FileExplorerHeader';
@@ -168,7 +167,7 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           setSelectedTypes={fileExplorerState.setSelectedTypes}
           selectedTags={fileExplorerState.selectedTags}
           setSelectedTags={fileExplorerState.setSelectedTags}
-          availableTags={fileExplorerState.availableTags}
+          availableTags={availableTags}
           onTagCreate={fileExplorerState.onTagCreate}
           onAddTagClick={fileExplorerState.handleAddTagClick}
           onAddTagToFile={fileExplorerState.handleAddTagToFile}
@@ -186,6 +185,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         currentCategory={currentCategory}
         availableFolders={availableFolders}
         availableCategories={availableCategories}
+        onCreateCategory={onCreateCategory}
+        onCreateFolder={onCreateFolder}
         fileExplorerState={fileExplorerState}
       />
 

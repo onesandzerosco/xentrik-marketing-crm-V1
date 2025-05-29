@@ -9,6 +9,7 @@ import {
   DialogFooter 
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
   Select, 
@@ -33,6 +34,8 @@ interface AddToFolderModalProps {
   handleSubmit: (e: React.FormEvent) => void;
   onCreateNewFolder?: () => void;
   onCreateNewCategory?: () => void;
+  onCreateCategory?: (name: string) => Promise<void>;
+  onCreateFolder?: (name: string, categoryId: string) => Promise<void>;
 }
 
 export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
@@ -48,7 +51,16 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
   handleSubmit,
   onCreateNewFolder,
   onCreateNewCategory,
+  onCreateCategory,
+  onCreateFolder,
 }) => {
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [showNewFolderInput, setShowNewFolderInput] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+
   // Filter folders by selected category
   const filteredFolders = targetCategoryId
     ? customFolders.filter(folder => folder.categoryId === targetCategoryId)
@@ -59,21 +71,43 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
     setTargetFolderId('');
   }, [targetCategoryId, setTargetFolderId]);
 
-  const handleCreateNewFolderClick = () => {
-    if (onCreateNewFolder && targetCategoryId) {
-      // Close this modal
-      onOpenChange(false);
-      // Open the create folder modal with the selected category
-      onCreateNewFolder();
+  // Reset inputs when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowNewCategoryInput(false);
+      setShowNewFolderInput(false);
+      setNewCategoryName('');
+      setNewFolderName('');
+    }
+  }, [isOpen]);
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim() || !onCreateCategory) return;
+    
+    setIsCreatingCategory(true);
+    try {
+      await onCreateCategory(newCategoryName.trim());
+      setShowNewCategoryInput(false);
+      setNewCategoryName('');
+    } catch (error) {
+      console.error('Error creating category:', error);
+    } finally {
+      setIsCreatingCategory(false);
     }
   };
 
-  const handleCreateNewCategoryClick = () => {
-    if (onCreateNewCategory) {
-      // Close this modal
-      onOpenChange(false);
-      // Open the create category modal
-      onCreateNewCategory();
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim() || !targetCategoryId || !onCreateFolder) return;
+    
+    setIsCreatingFolder(true);
+    try {
+      await onCreateFolder(newFolderName.trim(), targetCategoryId);
+      setShowNewFolderInput(false);
+      setNewFolderName('');
+    } catch (error) {
+      console.error('Error creating folder:', error);
+    } finally {
+      setIsCreatingFolder(false);
     }
   };
 
@@ -96,7 +130,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={handleCreateNewCategoryClick}
+                  onClick={() => setShowNewCategoryInput(true)}
                   className="h-8 px-2 text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
@@ -104,7 +138,44 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 </Button>
               </div>
               
-              {categories.length === 0 ? (
+              {showNewCategoryInput ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter category name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateCategory();
+                      } else if (e.key === 'Escape') {
+                        setShowNewCategoryInput(false);
+                        setNewCategoryName('');
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateCategory}
+                    disabled={!newCategoryName.trim() || isCreatingCategory}
+                  >
+                    {isCreatingCategory ? 'Creating...' : 'Create'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowNewCategoryInput(false);
+                      setNewCategoryName('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : categories.length === 0 ? (
                 <div className="text-sm text-muted-foreground italic p-2 border rounded">
                   No categories available. Create a category first.
                 </div>
@@ -135,7 +206,7 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleCreateNewFolderClick}
+                    onClick={() => setShowNewFolderInput(true)}
                     className="h-8 px-2 text-xs"
                   >
                     <Plus className="h-3 w-3 mr-1" />
@@ -144,28 +215,67 @@ export const AddToFolderModal: React.FC<AddToFolderModalProps> = ({
                 )}
               </div>
               
-              <Select
-                value={targetFolderId}
-                onValueChange={setTargetFolderId}
-                disabled={!targetCategoryId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={
-                    !targetCategoryId 
-                      ? "Select a category first" 
-                      : filteredFolders.length === 0 
-                        ? "No folders in this category - create one" 
-                        : "Select folder"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredFolders.map(folder => (
-                    <SelectItem key={folder.id} value={folder.id}>
-                      {folder.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {showNewFolderInput ? (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter folder name"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateFolder();
+                      } else if (e.key === 'Escape') {
+                        setShowNewFolderInput(false);
+                        setNewFolderName('');
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleCreateFolder}
+                    disabled={!newFolderName.trim() || !targetCategoryId || isCreatingFolder}
+                  >
+                    {isCreatingFolder ? 'Creating...' : 'Create'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowNewFolderInput(false);
+                      setNewFolderName('');
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Select
+                  value={targetFolderId}
+                  onValueChange={setTargetFolderId}
+                  disabled={!targetCategoryId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={
+                      !targetCategoryId 
+                        ? "Select a category first" 
+                        : filteredFolders.length === 0 
+                          ? "No folders in this category - create one" 
+                          : "Select folder"
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredFolders.map(folder => (
+                      <SelectItem key={folder.id} value={folder.id}>
+                        {folder.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           

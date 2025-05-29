@@ -18,6 +18,8 @@ interface FileExplorerModalsProps {
   currentCategory: string | null;
   availableFolders: Array<{ id: string; name: string; categoryId: string }>;
   availableCategories: Array<{ id: string; name: string }>;
+  onCreateCategory?: (name: string) => Promise<void>;
+  onCreateFolder?: (name: string, fileIds: string[], categoryId: string) => Promise<void>;
   fileExplorerState: {
     isUploadModalOpen: boolean;
     setIsUploadModalOpen: (isOpen: boolean) => void;
@@ -55,6 +57,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   currentCategory,
   availableFolders,
   availableCategories,
+  onCreateCategory,
+  onCreateFolder,
   fileExplorerState
 }) => {
   const [targetFolderId, setTargetFolderId] = React.useState('');
@@ -76,6 +80,21 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
   const handleCreateNewCategory = () => {
     fileExplorerState.setIsAddToFolderModalOpen(false);
     fileExplorerState.setIsAddCategoryModalOpen(true);
+  };
+
+  // Inline creation handlers for the AddToFolderModal
+  const handleInlineCreateCategory = async (name: string) => {
+    if (onCreateCategory) {
+      await onCreateCategory(name);
+      onRefresh();
+    }
+  };
+
+  const handleInlineCreateFolder = async (name: string, categoryId: string) => {
+    if (onCreateFolder) {
+      await onCreateFolder(name, [], categoryId);
+      onRefresh();
+    }
   };
 
   return (
@@ -104,6 +123,8 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         handleSubmit={handleAddToFolderSubmit}
         onCreateNewFolder={handleCreateNewFolder}
         onCreateNewCategory={handleCreateNewCategory}
+        onCreateCategory={handleInlineCreateCategory}
+        onCreateFolder={handleInlineCreateFolder}
       />
       
       <CreateFolderModal
