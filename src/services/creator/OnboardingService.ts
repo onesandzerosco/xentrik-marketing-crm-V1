@@ -85,30 +85,23 @@ export class OnboardingService {
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
-      // Create a user in the auth system using the authenticated client
-      // This should include the API key by default
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password: defaultPassword,
-        options: {
-          data: {
-            name: creatorInfo.name,
-            role: 'Employee',
-            roles: ['Creator']
-          }
+      // Create the user via the create_team_member edge function to ensure proper role assignment
+      const { data: teamMemberResponse, error: teamMemberError } = await supabase.functions.invoke('create_team_member', {
+        body: {
+          email,
+          password: defaultPassword,
+          name: creatorInfo.name,
+          primary_role: 'Employee',  // Set primary role as Employee
+          additional_roles: ['Creator']  // Set additional role as Creator
         }
       });
       
-      if (authError) {
-        console.error("Auth error details:", authError);
-        throw new Error(`Failed to create auth user: ${authError.message}`);
+      if (teamMemberError || !teamMemberResponse?.success) {
+        console.error("Team member creation error:", teamMemberError || teamMemberResponse);
+        throw new Error(`Failed to create user account: ${teamMemberError?.message || 'Unknown error'}`);
       }
       
-      if (!authData.user?.id) {
-        throw new Error("Failed to retrieve user ID from authentication");
-      }
-      
-      const userId = authData.user.id;
+      const userId = teamMemberResponse.user.id;
       
       // Map the gender value from the onboarding form to our database enum
       let genderValue: GenderEnum = "Female";
@@ -143,15 +136,7 @@ export class OnboardingService {
         .single();
       
       if (creatorError) {
-        // If there was an error creating the creator, try to delete the auth user
-        if (userId) {
-          try {
-            // NOTE: Delete functionality is disabled here since it would require admin privileges
-            console.error("Failed to create creator record, but cannot delete auth user due to permissions");
-          } catch (deleteError) {
-            console.error("Error deleting auth user after creator creation failed:", deleteError);
-          }
-        }
+        console.error("Creator record creation error:", creatorError);
         throw creatorError;
       }
       
