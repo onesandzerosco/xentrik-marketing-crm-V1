@@ -1,22 +1,11 @@
+
 import React from 'react';
 import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { useFileExplorer } from './explorer/useFileExplorer';
-import { useFolderModals } from './explorer/hooks/useFolderModals';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Edit, Trash2, Plus, FolderPlus, Folder, Tag, StickyNote } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus, FolderPlus, StickyNote, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,538 +13,35 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableFooter,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import {
-  Menubar,
-  MenubarContent,
-  MenubarMenu,
-  MenubarItem,
-  MenubarSeparator,
-  MenubarTrigger,
-} from "@/components/ui/menubar"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import {
-  AspectRatio,
-} from "@/components/ui/aspect-ratio"
-import {
-  Skeleton,
-} from "@/components/ui/skeleton"
-import {
-  Switch,
-} from "@/components/ui/switch"
-import {
-  Textarea,
-} from "@/components/ui/textarea"
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group"
-import {
-  Progress,
-} from "@/components/ui/progress"
-import {
-  Calendar,
-} from "@/components/ui/calendar"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
-import {
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import {
-  Resizable,
-} from "@/components/ui/resizable"
-import {
-  CommandDialog,
-} from "@/components/ui/command"
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  NavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  Slider,
-} from "@/components/ui/slider"
-import {
-  DialogHeader as AlertDialogHeader,
-  DialogTitle as AlertDialogTitle,
-  DialogDescription as AlertDialogDescription,
-  DialogContent as AlertDialogContent,
-  DialogFooter as AlertDialogFooter,
-  DialogClose as AlertDialogClose,
-  DialogCancel as AlertDialogCancel,
-  DialogTrigger as AlertDialogTrigger,
-  DialogAction as AlertDialogAction,
-} from "@/components/ui/dialog"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  ContextMenuCheckboxItem,
-} from "@/components/ui/context-menu"
-import {
-  HoverCard as ActionHoverCard,
-  HoverCardContent as ActionHoverCardContent,
-  HoverCardTrigger as ActionHoverCardTrigger,
-} from "@/components/ui/hover-card"
-import {
-  Command as ActionCommand,
-  CommandEmpty as ActionCommandEmpty,
-  CommandGroup as ActionCommandGroup,
-  CommandInput as ActionCommandInput,
-  CommandItem as ActionCommandItem,
-  CommandList as ActionCommandList,
-  CommandSeparator as ActionCommandSeparator,
-  CommandShortcut as ActionCommandShortcut,
-} from "@/components/ui/command"
-import {
-  NavigationMenu as ActionNavigationMenu,
-  NavigationMenuContent as ActionNavigationMenuContent,
-  NavigationMenuItem as ActionNavigationMenuItem,
-  NavigationMenuLink as ActionNavigationMenuLink,
-  NavigationMenuList as ActionNavigationMenuList,
-  NavigationMenuTrigger as ActionNavigationMenuTrigger,
-  NavigationMenuViewport as ActionNavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
-import {
-  Sheet as ActionSheet,
-  SheetClose as ActionSheetClose,
-  SheetContent as ActionSheetContent,
-  SheetDescription as ActionSheetDescription,
-  SheetFooter as ActionSheetFooter,
-  SheetHeader as ActionSheetHeader,
-  SheetTitle as ActionSheetTitle,
-  SheetTrigger as ActionSheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  Collapsible as ActionCollapsible,
-  CollapsibleContent as ActionCollapsibleContent,
-  CollapsibleTrigger as ActionCollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  ContextMenu as ActionContextMenu,
-  ContextMenuContent as ActionContextMenuContent,
-  ContextMenuItem as ActionContextMenuItem,
-  ContextMenuSeparator as ActionContextMenuSeparator,
-  ContextMenuTrigger as ActionContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import {
-  Dialog as ActionDialog,
-  DialogHeader as ActionDialogHeader,
-  DialogTitle as ActionDialogTitle,
-  DialogDescription as ActionDialogDescription,
-  DialogContent as ActionDialogContent,
-  DialogFooter as ActionDialogFooter,
-  DialogClose as ActionDialogClose,
-  DialogCancel as ActionDialogCancel,
-  DialogTrigger as ActionDialogTrigger,
-  DialogAction as ActionDialogAction,
-} from "@/components/ui/dialog"
-import {
-  AlertDialog as ActionAlertDialog,
-  AlertDialogHeader as ActionAlertDialogHeader,
-  AlertDialogTitle as ActionAlertDialogTitle,
-  AlertDialogDescription as ActionAlertDialogDescription,
-  AlertDialogContent as ActionAlertDialogContent,
-  AlertDialogFooter as ActionAlertDialogFooter,
-  AlertDialogClose as ActionAlertDialogClose,
-  AlertDialogCancel as ActionAlertDialogCancel,
-  AlertDialogTrigger as ActionAlertDialogTrigger,
-  AlertDialogAction as ActionAlertDialogAction,
-} from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu as ActionDropdownMenu,
-  DropdownMenuContent as ActionDropdownMenuContent,
-  DropdownMenuItem as ActionDropdownMenuItem,
-  DropdownMenuLabel as ActionDropdownMenuLabel,
-  DropdownMenuSeparator as ActionDropdownMenuSeparator,
-  DropdownMenuTrigger as ActionDropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Card as ActionCard,
-  CardContent as ActionCardContent,
-  CardDescription as ActionCardDescription,
-  CardFooter as ActionCardFooter,
-  CardHeader as ActionCardHeader,
-  CardTitle as ActionCardTitle,
-} from "@/components/ui/card"
-import {
-  Popover as ActionPopover,
-  PopoverContent as ActionPopoverContent,
-  PopoverTrigger as ActionPopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Table as ActionTable,
-  TableBody as ActionTableBody,
-  TableCaption as ActionTableCaption,
-  TableCell as ActionTableCell,
-  TableHead as ActionTableHead,
-  TableFooter as ActionTableFooter,
-  TableHeader as ActionTableHeader,
-  TableRow as ActionTableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip as ActionTooltip,
-  TooltipContent as ActionTooltipContent,
-  TooltipProvider as ActionTooltipProvider,
-  TooltipTrigger as ActionTooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Menubar as ActionMenubar,
-  MenubarContent as ActionMenubarContent,
-  MenubarMenu as ActionMenubarMenu,
-  MenubarItem as ActionMenubarItem,
-  MenubarSeparator as ActionMenubarSeparator,
-  MenubarTrigger as ActionMenubarTrigger,
-} from "@/components/ui/menubar"
-import {
-  CommandDialog as ActionCommandDialog,
-} from "@/components/ui/command"
-import {
-  Drawer as ActionDrawer,
-  DrawerClose as ActionDrawerClose,
-  DrawerContent as ActionDrawerContent,
-  DrawerDescription as ActionDrawerDescription,
-  DrawerFooter as ActionDrawerFooter,
-  DrawerHeader as ActionDrawerHeader,
-  DrawerTitle as ActionDrawerTitle,
-  DrawerTrigger as ActionDrawerTrigger,
-} from "@/components/ui/drawer"
-import {
-  AspectRatio as ActionAspectRatio,
-} from "@/components/ui/aspect-ratio"
-import {
-  Skeleton as ActionSkeleton,
-} from "@/components/ui/skeleton"
-import {
-  Switch as ActionSwitch,
-} from "@/components/ui/switch"
-import {
-  Textarea as ActionTextarea,
-} from "@/components/ui/textarea"
-import {
-  Select as ActionSelect,
-  SelectContent as ActionSelectContent,
-  SelectItem as ActionSelectItem,
-  SelectTrigger as ActionSelectTrigger,
-  SelectValue as ActionSelectValue,
-} from "@/components/ui/select"
-import {
-  RadioGroup as ActionRadioGroup,
-  RadioGroupItem as ActionRadioGroupItem,
-} from "@/components/ui/radio-group"
-import {
-  Progress as ActionProgress,
-} from "@/components/ui/progress"
-import {
-  Calendar as ActionCalendar,
-} from "@/components/ui/calendar"
-import {
-  Form as ActionForm,
-  FormControl as ActionFormControl,
-  FormDescription as ActionFormDescription,
-  FormField as ActionFormField,
-  FormItem as ActionFormItem,
-  FormLabel as ActionFormLabel,
-  FormMessage as ActionFormMessage,
-} from "@/components/ui/form"
-import {
-  Slider as ActionSlider,
-} from "@/components/ui/slider"
-import {
-  Resizable as ActionResizable,
-} from "@/components/ui/resizable"
-import {
-  ResizableHandle as ActionResizableHandle,
-  ResizablePanel as ActionResizablePanel,
-  ResizablePanelGroup as ActionResizablePanelGroup,
-} from "@/components/ui/resizable"
-import {
-  DropdownMenuCheckboxItem as ActionDropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu"
-import {
-  Command as FileCommand,
-  CommandEmpty as FileCommandEmpty,
-  CommandGroup as FileCommandGroup,
-  CommandInput as FileCommandInput,
-  CommandItem as FileCommandItem,
-  CommandList as FileCommandList,
-  CommandSeparator as FileCommandSeparator,
-  CommandShortcut as FileCommandShortcut,
-} from "@/components/ui/command"
-import {
-  NavigationMenu as FileNavigationMenu,
-  NavigationMenuContent as FileNavigationMenuContent,
-  NavigationMenuItem as FileNavigationMenuItem,
-  NavigationMenuLink as FileNavigationMenuLink,
-  NavigationMenuList as FileNavigationMenuList,
-  NavigationMenuTrigger as FileNavigationMenuTrigger,
-  NavigationMenuViewport as FileNavigationMenuViewport,
-} from "@/components/ui/navigation-menu"
-import {
-  Sheet as FileSheet,
-  SheetClose as FileSheetClose,
-  SheetContent as FileSheetContent,
-  SheetDescription as FileSheetDescription,
-  SheetFooter as FileSheetFooter,
-  SheetHeader as FileSheetHeader,
-  SheetTitle as FileSheetTitle,
-  SheetTrigger as FileSheetTrigger,
-} from "@/components/ui/sheet"
-import {
-  Collapsible as FileCollapsible,
-  CollapsibleContent as FileCollapsibleContent,
-  CollapsibleTrigger as FileCollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  ContextMenu as FileContextMenu,
-  ContextMenuContent as FileContextMenuContent,
-  ContextMenuItem as FileContextMenuItem,
-  ContextMenuSeparator as FileContextMenuSeparator,
-  ContextMenuTrigger as FileContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import {
-  Dialog as FileDialog,
-  DialogHeader as FileDialogHeader,
-  DialogTitle as FileDialogTitle,
-  DialogDescription as FileDialogDescription,
-  DialogContent as FileDialogContent,
-  DialogFooter as FileDialogFooter,
-  DialogClose as FileDialogClose,
-  DialogCancel as FileDialogCancel,
-  DialogTrigger as FileDialogTrigger,
-  DialogAction as FileDialogAction,
-} from "@/components/ui/dialog"
-import {
-  AlertDialog as FileAlertDialog,
-  AlertDialogHeader as FileAlertDialogHeader,
-  AlertDialogTitle as FileAlertDialogTitle,
-  AlertDialogDescription as FileAlertDialogDescription,
-  AlertDialogContent as FileAlertDialogContent,
-  AlertDialogFooter as FileAlertDialogFooter,
-  AlertDialogClose as FileAlertDialogClose,
-  AlertDialogCancel as FileAlertDialogCancel,
-  AlertDialogTrigger as FileAlertDialogTrigger,
-  AlertDialogAction as FileAlertDialogAction,
-} from "@/components/ui/alert-dialog"
-import {
-  DropdownMenu as FileDropdownMenu,
-  DropdownMenuContent as FileDropdownMenuContent,
-  DropdownMenuItem as FileDropdownMenuItem,
-  DropdownMenuLabel as FileDropdownMenuLabel,
-  DropdownMenuSeparator as FileDropdownMenuSeparator,
-  DropdownMenuTrigger as FileDropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Card as FileCard,
-  CardContent as FileCardContent,
-  CardDescription as FileCardDescription,
-  CardFooter as FileCardFooter,
-  CardHeader as FileCardHeader,
-  CardTitle as FileCardTitle,
-} from "@/components/ui/card"
-import {
-  Popover as FilePopover,
-  PopoverContent as FilePopoverContent,
-  PopoverTrigger as FilePopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Table as FileTable,
-  TableBody as FileTableBody,
-  TableCaption as FileTableCaption,
-  TableCell as FileTableCell,
-  TableHead as FileTableHead,
-  TableFooter as FileTableFooter,
-  TableHeader as FileTableHeader,
-  TableRow as FileTableRow,
-} from "@/components/ui/table"
-import {
-  Tooltip as FileTooltip,
-  TooltipContent as FileTooltipContent,
-  TooltipProvider as FileTooltipProvider,
-  TooltipTrigger as FileTooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Menubar as FileMenubar,
-  MenubarContent as FileMenubarContent,
-  MenubarMenu as FileMenubarMenu,
-  MenubarItem as FileMenubarItem,
-  MenubarSeparator as FileMenubarSeparator,
-  MenubarTrigger as FileMenubarTrigger,
-} from "@/components/ui/menubar"
-import {
-  CommandDialog as FileCommandDialog,
-} from "@/components/ui/command"
-import {
-  Drawer as FileDrawer,
-  DrawerClose as FileDrawerClose,
-  DrawerContent as FileDrawerContent,
-  DrawerDescription as FileDrawerDescription,
-  DrawerFooter as FileDrawerFooter,
-  DrawerHeader as FileDrawerHeader,
-  DrawerTitle as FileDrawerTitle,
-  DrawerTrigger as FileDrawerTrigger,
-} from "@/components/ui/drawer"
-import {
-  AspectRatio as FileAspectRatio,
-} from "@/components/ui/aspect-ratio"
-import {
-  Skeleton as FileSkeleton,
-} from "@/components/ui/skeleton"
-import {
-  Switch as FileSwitch,
-} from "@/components/ui/switch"
-import {
-  Textarea as FileTextarea,
-} from "@/components/ui/textarea"
-import {
-  Select as FileSelect,
-  SelectContent as FileSelectContent,
-  SelectItem as FileSelectItem,
-  SelectTrigger as FileSelectTrigger,
-  SelectValue as FileSelectValue,
-} from "@/components/ui/select"
-import {
-  RadioGroup as FileRadioGroup,
-  RadioGroupItem as FileRadioGroupItem,
-} from "@/components/ui/radio-group"
-import {
-  Progress as FileProgress,
-} from "@/components/ui/progress"
-import {
-  Calendar as FileCalendar,
-} from "@/components/ui/calendar"
-import {
-  Form as FileForm,
-  FormControl as FileFormControl,
-  FormDescription as FileFormDescription,
-  FormField as FileFormField,
-  FormItem as FileFormItem,
-  FormLabel as FileFormLabel,
-  FormMessage as FileFormMessage,
-} from "@/components/ui/form"
-import {
-  Slider as FileSlider,
-} from "@/components/ui/slider"
-import {
-  Resizable as FileResizable,
-} from "@/components/ui/resizable"
-import {
-  ResizableHandle as FileResizableHandle,
-  ResizablePanel as FileResizablePanel,
-  ResizablePanelGroup as FileResizablePanelGroup,
-} from "@/components/ui/resizable"
-import {
-  DropdownMenuCheckboxItem as FileDropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 
 interface FileExplorerProps {
@@ -926,7 +412,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         </div>
       </div>
       
-      {/* Updated FileExplorerModals with actual data */}
       <FileExplorerModals
         onRefresh={onRefresh}
         onUploadComplete={onUploadComplete}
@@ -937,29 +422,29 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         availableCategories={availableCategories}
         availableFolders={availableFolders}
         fileExplorerState={{
-          isUploadModalOpen: fileExplorerState.isUploadModalOpen,
-          setIsUploadModalOpen: fileExplorerState.setIsUploadModalOpen,
-          isAddToFolderModalOpen: fileExplorerState.isAddToFolderModalOpen,
-          setIsAddToFolderModalOpen: fileExplorerState.setIsAddToFolderModalOpen,
-          isCreateFolderModalOpen: fileExplorerState.isCreateFolderModalOpen,
-          setIsCreateFolderModalOpen: fileExplorerState.setIsCreateFolderModalOpen,
-          isAddCategoryModalOpen: fileExplorerState.isAddCategoryModalOpen,
-          setIsAddCategoryModalOpen: fileExplorerState.setIsAddCategoryModalOpen,
-          isDeleteFolderModalOpen: fileExplorerState.isDeleteFolderModalOpen,
-          setIsDeleteFolderModalOpen: fileExplorerState.setIsDeleteFolderModalOpen,
-          isDeleteCategoryModalOpen: fileExplorerState.isDeleteCategoryModalOpen,
-          setIsDeleteCategoryModalOpen: fileExplorerState.setIsDeleteCategoryModalOpen,
-          isFileNoteModalOpen: fileExplorerState.isFileNoteModalOpen,
-          setIsFileNoteModalOpen: fileExplorerState.setIsFileNoteModalOpen,
-          fileToEdit: fileExplorerState.fileToEdit,
-          setFileToEdit: fileExplorerState.setFileToEdit,
-          selectedFileIds: fileExplorerState.selectedFileIds,
-          isAddTagModalOpen: fileExplorerState.isAddTagModalOpen,
-          setIsAddTagModalOpen: fileExplorerState.setIsAddTagModalOpen,
-          availableTags: fileExplorerState.availableTags,
-          onAddTagToFiles: fileExplorerState.onAddTagToFiles,
-          onRemoveTagFromFiles: fileExplorerState.onRemoveTagFromFiles,
-          onTagCreate: fileExplorerState.onTagCreate
+          isUploadModalOpen: isUploadModalOpen,
+          setIsUploadModalOpen: setIsUploadModalOpen,
+          isAddToFolderModalOpen: isAddToFolderModalOpen,
+          setIsAddToFolderModalOpen: setIsAddToFolderModalOpen,
+          isCreateFolderModalOpen: isCreateFolderModalOpen,
+          setIsCreateFolderModalOpen: setIsCreateFolderModalOpen,
+          isAddCategoryModalOpen: isAddCategoryModalOpen,
+          setIsAddCategoryModalOpen: setIsAddCategoryModalOpen,
+          isDeleteFolderModalOpen: isDeleteFolderModalOpen,
+          setIsDeleteFolderModalOpen: setIsDeleteFolderModalOpen,
+          isDeleteCategoryModalOpen: isDeleteCategoryModalOpen,
+          setIsDeleteCategoryModalOpen: setIsDeleteCategoryModalOpen,
+          isFileNoteModalOpen: isFileNoteModalOpen,
+          setIsFileNoteModalOpen: setIsFileNoteModalOpen,
+          fileToEdit: fileToEdit,
+          setFileToEdit: setFileToEdit,
+          selectedFileIds: selectedFileIds,
+          isAddTagModalOpen: isAddTagModalOpen,
+          setIsAddTagModalOpen: setIsAddTagModalOpen,
+          availableTags: availableTags,
+          onAddTagToFiles: onAddTagToFiles,
+          onRemoveTagFromFiles: onRemoveTagFromFiles,
+          onTagCreate: onTagCreate
         }}
       />
     </div>
