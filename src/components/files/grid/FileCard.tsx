@@ -109,16 +109,23 @@ export const FileCard: React.FC<FileCardProps> = ({
             </Button>
             
             {/* Download button - available for all users */}
-            <a href={file.url} download={file.name}>
-              <Button 
-                variant="secondary" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </a>
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Create a temporary anchor element for download
+                const link = document.createElement('a');
+                link.href = file.url;
+                link.download = file.name;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
             
             {/* Add Tag button - available for creators and admins */}
             {canEdit && onAddTagToFile && (
