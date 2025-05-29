@@ -21,15 +21,16 @@ export const DropZone: React.FC<DropZoneProps> = ({
     onDrop,
     disabled,
     accept: accept || {
-      'image/*': [],
-      'video/*': [],
-      'audio/*': [],
-      'application/pdf': [],
-      'application/msword': [],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [],
-      'application/vnd.ms-excel': [],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [],
-      'application/zip': [],
+      'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'],
+      'video/*': ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.mpg', '.mpeg', '.m4v'],
+      'audio/*': ['.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac'],
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'application/vnd.ms-excel': ['.xls'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'text/plain': ['.txt'],
+      'application/zip': ['.zip'], // Explicitly add ZIP file support
     },
     maxSize,
   };
@@ -54,6 +55,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
         <div className="space-y-2">
           <div className="text-lg font-medium">Drag & drop files here</div>
           <div className="text-sm text-muted-foreground">Or click to select files</div>
+          <div className="text-xs text-muted-foreground mt-2">
+            Supports: Images, Videos, Audio, Documents, ZIP files
+          </div>
           {maxSize && (
             <div className="text-xs text-muted-foreground mt-2">
               Max file size: {Math.round(maxSize / (1024 * 1024 * 1024))}GB

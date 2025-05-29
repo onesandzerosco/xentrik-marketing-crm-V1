@@ -6,6 +6,7 @@ import { useFileValidation } from "./FileValidation";
 import { useToast } from "@/components/ui/use-toast";
 import { FileUploadStatus } from "@/hooks/useFileUploader";
 import { Category } from "@/types/fileTypes";
+import { isZipFile } from "@/utils/zipUtils";
 
 interface FileUploadHandlerProps {
   creatorId: string;
@@ -52,6 +53,21 @@ export const useFileUploadHandler = ({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Check if any files are ZIP files
+    const fileArray = Array.from(files);
+    const zipFiles = fileArray.filter(file => isZipFile(file.name));
+    const hasZipFiles = zipFiles.length > 0;
+
+    // If there are ZIP files, check if category is selected
+    if (hasZipFiles && !e.zipCategoryId) {
+      toast({
+        title: "Category Required for ZIP Files",
+        description: "Please select a category before uploading ZIP files.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsUploading(true);
     setShowProgress(true);
     setFileStatuses([]);
@@ -60,6 +76,8 @@ export const useFileUploadHandler = ({
     try {
       // Get the category ID for zip files
       const zipCategoryId = e.zipCategoryId;
+      
+      console.log(`Starting upload with ${files.length} files, ZIP category: ${zipCategoryId}`);
       
       // Validate files and get results
       const validationResult = validateFiles(files);
@@ -126,14 +144,22 @@ export const useFileUploadHandler = ({
   ): Promise<string[]> => {
     const uploadedFileIds: string[] = [];
 
+    console.log(`Processing ${zipFiles.length} ZIP files and ${regularFiles.length} regular files`);
+
     // First handle the ZIP files
     for (const zipFile of zipFiles) {
+      console.log(`Processing ZIP file: ${zipFile.name} with category: ${zipCategoryId}`);
+      
       const extractedFileIds = await processZipFile(zipFile, {
         creatorId,
         currentFolder,
         categoryId: zipCategoryId, // Pass the selected category ID for ZIP files
-        updateFileProgress: (fileName, progress) => updateFileProgress(fileName, progress),
+        updateFileProgress: (fileName, progress) => {
+          console.log(`ZIP progress: ${fileName} - ${progress}%`);
+          updateFileProgress(fileName, progress);
+        },
         updateFileStatus: (fileName, status, error) => {
+          console.log(`ZIP status: ${fileName} - ${status}`, error || '');
           const newStatus = status === 'uploading' ? 'uploading' 
             : status === 'processing' ? 'processing'
             : status === 'complete' ? 'complete' 
@@ -150,8 +176,8 @@ export const useFileUploadHandler = ({
       });
       uploadedFileIds.push(...extractedFileIds);
       
-      // Add the newly created folder to available folders list (will be picked up on refresh)
-      const folderName = zipFile.name.split('.')[0];
+      // Show success message for ZIP processing
+      const folderName = zipFile.name.replace(/\.zip$/i, '');
       toast({
         title: "ZIP file processed",
         description: `Created folder "${folderName}" with ${extractedFileIds.length} files`,
@@ -163,14 +189,18 @@ export const useFileUploadHandler = ({
       // Skip files that are too large (already warned)
       if (file.size > MAX_FILE_SIZE_GB * 1024 * 1024 * 1024) continue;
       
-      console.log(`Processing file ${file.name} for folder: ${currentFolder}`);
+      console.log(`Processing regular file ${file.name} for folder: ${currentFolder}`);
       
       const fileId = await processRegularFile(
         file,
         creatorId,
         currentFolder,
-        (fileName) => updateFileProgress(fileName, 100),
+        (fileName) => {
+          console.log(`Regular file complete: ${fileName}`);
+          updateFileProgress(fileName, 100);
+        },
         (fileName, status, error) => {
+          console.log(`Regular file status: ${fileName} - ${status}`, error || '');
           const newStatus = status === 'uploading' ? 'uploading' 
             : status === 'processing' ? 'processing'
             : status === 'complete' ? 'complete' 
@@ -191,6 +221,7 @@ export const useFileUploadHandler = ({
       }
     }
 
+    console.log(`Upload processing complete. Total files uploaded: ${uploadedFileIds.length}`);
     return uploadedFileIds;
   };
 
