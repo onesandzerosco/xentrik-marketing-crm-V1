@@ -52,10 +52,17 @@ export const validateToken = async (token: string): Promise<boolean> => {
  */
 export const saveOnboardingData = async (
   data: CreatorOnboardingFormValues, 
-  token: string
+  token: string | undefined
 ): Promise<{ success: boolean; submissionId?: string; error?: string }> => {
   try {
     console.log("Starting saveOnboardingData with token:", token);
+    
+    if (!token) {
+      return { 
+        success: false, 
+        error: "No invitation token provided" 
+      };
+    }
     
     // First validate the token exists and is still valid
     const isValid = await validateToken(token);
