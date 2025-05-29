@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileUploadModal } from './FileUploadModal';
 import { CreateFolderModal } from './CreateFolderModal';
@@ -83,12 +84,12 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
       <CreateFolderModal
         isOpen={fileExplorerState.isCreateFolderModalOpen}
         onOpenChange={fileExplorerState.setIsCreateFolderModalOpen}
-        folderName=""
-        setFolderName={() => {}}
+        newFolderName=""
+        setNewFolderName={() => {}}
         categories={[]}
-        selectedCategoryId={currentCategory || ""}
-        setSelectedCategoryId={() => {}}
-        onSubmit={(e) => { e.preventDefault(); onRefresh(); }}
+        selectedCategoryForNewFolder={currentCategory || ""}
+        setSelectedCategoryForNewFolder={() => {}}
+        handleCreateFolderSubmit={(e) => { e.preventDefault(); onRefresh(); }}
       />
       
       <CreateCategoryModal
@@ -104,16 +105,12 @@ export const FileExplorerModals: React.FC<FileExplorerModalsProps> = ({
         isOpen={fileExplorerState.isDeleteFolderModalOpen}
         onOpenChange={fileExplorerState.setIsDeleteFolderModalOpen}
         onConfirm={() => onRefresh()}
-        title=""
-        description=""
       />
       
       <DeleteCategoryModal
         isOpen={fileExplorerState.isDeleteCategoryModalOpen}
         onOpenChange={fileExplorerState.setIsDeleteCategoryModalOpen}
         onConfirm={() => onRefresh()}
-        title=""
-        description=""
       />
       
       <EditNoteModal

@@ -4,7 +4,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { FileUploadOptions } from '@/types/uploadTypes';
 import { isZipFile } from '@/utils/zipUtils';
 import { useFileProgress } from '@/hooks/useFileProgress';
-import { useZipProcessor } from '@/hooks/useZipProcessor';
+import { useZipFileProcessor } from '@/hooks/useZipFileProcessor';
 import { useFileProcessor } from '@/hooks/useFileProcessor';
 
 export const useDragDropUploader = ({ 
@@ -23,7 +23,11 @@ export const useDragDropUploader = ({
     updateFileStatus: updateStatus
   } = useFileProgress();
   
-  const { processZipFile } = useZipProcessor();
+  const { processZipFile } = useZipFileProcessor({
+    creatorId,
+    updateFileProgress: updateProgress,
+    setFileStatuses: setUploadingFiles
+  });
   const { processRegularFile } = useFileProcessor();
   
   // Wrapper functions that match the expected signatures

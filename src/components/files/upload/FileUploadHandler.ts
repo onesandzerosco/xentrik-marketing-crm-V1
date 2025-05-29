@@ -1,6 +1,6 @@
 
 import { useFileUploader } from "@/hooks/useFileUploader";
-import { useZipProcessor } from "@/hooks/useZipProcessor";
+import { useZipFileProcessor } from "@/hooks/useZipFileProcessor";
 import { useFileProcessor } from "@/hooks/useFileProcessor";
 import { useFileValidation } from "./FileValidation";
 import { useToast } from "@/components/ui/use-toast";
@@ -45,7 +45,11 @@ export const useFileUploadHandler = ({
   const { validateFiles, showValidationToasts } = useFileValidation(MAX_FILE_SIZE_GB);
   
   // Use hooks for file processing
-  const { processZipFile } = useZipProcessor();
+  const { processZipFile } = useZipFileProcessor({
+    creatorId,
+    updateFileProgress,
+    setFileStatuses
+  });
   const { processRegularFile } = useFileProcessor();
 
   // Main file change handler
