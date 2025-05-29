@@ -41,6 +41,9 @@ serve(async (req) => {
       }
     );
 
+    // Ensure additional_roles is an array and includes the additional roles properly
+    const rolesArray = Array.isArray(additional_roles) ? additional_roles : [];
+    
     // Create the user with admin privileges to ensure all fields are properly set
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email,
@@ -49,7 +52,7 @@ serve(async (req) => {
       user_metadata: {
         name: name,
         role: primary_role || 'Employee',
-        roles: additional_roles || []
+        roles: rolesArray
       }
     });
 
@@ -77,7 +80,7 @@ serve(async (req) => {
       .single();
 
     if (!existingProfile) {
-      // Create profile if it doesn't exist
+      // Create profile if it doesn't exist with both primary role and additional roles
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert({
@@ -85,13 +88,27 @@ serve(async (req) => {
           name: name,
           email: email,
           role: primary_role || 'Employee',
-          roles: additional_roles || [],
+          roles: rolesArray, // This should include ['Creator'] for creators
           status: 'Active'
         });
 
       if (profileError) {
         console.error("Error creating profile:", profileError);
         // Don't fail the whole operation, just log the error
+      }
+    } else {
+      // Update existing profile to ensure roles are set correctly
+      const { error: updateError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          role: primary_role || 'Employee',
+          roles: rolesArray, // This should include ['Creator'] for creators
+          status: 'Active'
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error("Error updating profile roles:", updateError);
       }
     }
 
