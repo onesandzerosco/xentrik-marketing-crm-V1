@@ -41,7 +41,7 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
       try {
         const { data: categories, error } = await supabase
           .from('file_categories')
-          .select('category_id as id, category_name as name')
+          .select('category_id, category_name')
           .eq('creator', creatorId);
         
         if (error) {
@@ -50,7 +50,11 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
         }
         
         if (categories && categories.length > 0) {
-          setAvailableCategories(categories);
+          const formattedCategories: Category[] = categories.map(cat => ({
+            id: cat.category_id,
+            name: cat.category_name
+          }));
+          setAvailableCategories(formattedCategories);
         } else {
           setAvailableCategories(initialCategories);
         }
@@ -120,7 +124,7 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
           category_name: newCategoryName,
           creator: creatorId
         })
-        .select('category_id as id, category_name as name')
+        .select('category_id, category_name')
         .single();
       
       if (error) {
@@ -135,12 +139,12 @@ export const StandaloneDropUploader: React.FC<StandaloneDropUploaderProps> = ({
       
       // Add to available categories
       const categoryToAdd: Category = {
-        id: newCategory.id,
-        name: newCategory.name
+        id: newCategory.category_id,
+        name: newCategory.category_name
       };
       
       setAvailableCategories(prev => [...prev, categoryToAdd]);
-      setSelectedCategoryId(newCategory.id);
+      setSelectedCategoryId(newCategory.category_id);
       
       toast({
         title: "Category Created",

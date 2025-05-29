@@ -8,6 +8,8 @@ export interface RolePermission {
   delete: boolean;
 }
 
+export const PERMISSION_ROLES = ['Admin', 'VA', 'Creator', 'Manager', 'Employee'];
+
 export const DEFAULT_PERMISSIONS: RolePermission[] = [
   {
     rolename: 'Admin',
