@@ -12,8 +12,11 @@ const OtherRolesUsersTable: React.FC<OtherRolesUsersTableProps> = ({
   users,
   onEditUser
 }) => {
-  // Filter users who have other additional roles (not Admin primary, not Creator additional)
+  // Filter users who have Manager primary role OR other additional roles (not Admin primary, not Creator only)
   const otherRoleUsers = users.filter(user => {
+    // Include Manager primary role users
+    if (user.role === "Manager") return true;
+    
     // Exclude Admin primary role users
     if (user.role === "Admin") return false;
     
