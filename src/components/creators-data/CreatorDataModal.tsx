@@ -69,16 +69,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
     if (!data || typeof data !== 'object') return [];
     
-    const entries = Object.entries(data).filter(([key, value]) => {
-      // Special handling for nested objects and arrays
-      if (key === 'pets' && Array.isArray(value)) {
-        return value.length > 0;
-      }
-      if (key === 'socialMediaHandles' && typeof value === 'object') {
-        return Object.values(value).some(v => v && v !== '');
-      }
-      return value !== null && value !== undefined && value !== '';
-    });
+    // Include ALL fields from the data, not just non-empty ones
+    const entries = Object.entries(data);
 
     // Sort by priority order, then alphabetically for remaining fields
     return entries.sort(([keyA], [keyB]) => {
@@ -122,27 +114,27 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             </div>
             <div className="md:col-span-2 text-muted-foreground break-words">
               {key === 'pets' && Array.isArray(value) ? (
-                <div className="space-y-2">
-                  {value.map((pet: any, index: number) => (
-                    <div key={index} className="bg-muted/30 p-2 rounded text-sm">
-                      {Object.entries(pet).map(([petKey, petValue]) => (
-                        petValue && (
+                value.length > 0 ? (
+                  <div className="space-y-2">
+                    {value.map((pet: any, index: number) => (
+                      <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                        {Object.entries(pet).map(([petKey, petValue]) => (
                           <div key={petKey}>
                             <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
                           </div>
-                        )
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  formatValue(value)
+                )
               ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
                 <div className="space-y-1">
                   {Object.entries(value).map(([platform, handle]) => (
-                    handle && handle !== '' && (
-                      <div key={platform}>
-                        <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
-                      </div>
-                    )
+                    <div key={platform}>
+                      <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                    </div>
                   ))}
                 </div>
               ) : (
