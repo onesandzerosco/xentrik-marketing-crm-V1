@@ -5,10 +5,14 @@ import { Navigate } from "react-router-dom";
 import CreatorsDataTable from "@/components/creators-data/CreatorsDataTable";
 
 const CreatorsData: React.FC = () => {
-  const { userRole } = useAuth();
+  const { userRole, userRoles } = useAuth();
   
-  // Only allow admins to access this page
-  if (userRole !== "Admin") {
+  // Allow admins, VAs, and chatters to access this page
+  const allowedRoles = ["Admin", "VA", "Chatter"];
+  const hasAccess = allowedRoles.includes(userRole) || 
+                   (userRoles && userRoles.some(role => allowedRoles.includes(role)));
+  
+  if (!hasAccess) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useLocation, NavLink } from "react-router-dom";
 import {
@@ -12,7 +13,6 @@ import {
   Folder,
   Image,
   Video,
-  Audio,
   LucideIcon
 } from "lucide-react";
 
@@ -64,12 +64,6 @@ const SidebarNav = ({ isAdmin }: { isAdmin: boolean }) => {
         icon: UserPlus,
         section: "admin"
       },
-      {
-        title: "Creators Data",
-        url: "/creators-data",
-        icon: Database,
-        section: "admin"
-      },
     ] : []),
   ];
 
@@ -91,6 +85,21 @@ const SidebarNav = ({ isAdmin }: { isAdmin: boolean }) => {
           {item.title}
         </NavLink>
       ))}
+      
+      {/* Creators Data - Available for Admin, VA, and Chatter roles */}
+      <NavLink
+        to="/creators-data"
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-secondary hover:text-accent-foreground ${
+            isActive
+              ? "bg-secondary text-accent-foreground"
+              : "text-muted-foreground"
+          }`
+        }
+      >
+        <Database className="h-4 w-4" />
+        Creators Data
+      </NavLink>
     </nav>
   );
 };
