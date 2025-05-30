@@ -8,7 +8,8 @@ export interface RolePermission {
   delete: boolean;
 }
 
-export const PERMISSION_ROLES = ['Admin', 'VA', 'Creator', 'Manager', 'Employee'];
+// Only additional roles should be shown in Permission Settings
+export const PERMISSION_ROLES = ['Admin', 'VA', 'Chatter', 'Developer'];
 
 export const DEFAULT_PERMISSIONS: RolePermission[] = [
   {
@@ -28,26 +29,18 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     delete: false
   },
   {
-    rolename: 'Creator',
+    rolename: 'Chatter',
     preview: true,
-    edit: true,
-    upload: true,
-    download: true,
-    delete: true
-  },
-  {
-    rolename: 'Manager',
-    preview: true,
-    edit: true,
-    upload: true,
+    edit: false,
+    upload: false,
     download: true,
     delete: false
   },
   {
-    rolename: 'Employee',
+    rolename: 'Developer',
     preview: true,
-    edit: false,
-    upload: false,
+    edit: true,
+    upload: true,
     download: true,
     delete: false
   }
