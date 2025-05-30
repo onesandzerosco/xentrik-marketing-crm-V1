@@ -16,26 +16,27 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <BrowserRouter>
-      <HttpsEnforcer />
-      <AuthProvider>
-        <SupabaseAuthProvider>
-          <QueryClientProvider client={queryClient}>
-            <SidebarProvider>
-              <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#1a1a33] to-[#2d1b45] flex w-full">
-                <Sidebar />
-                <main className="flex-1 overflow-auto">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/onboard-queue" element={<CreatorOnboardQueue />} />
-                    <Route path="/creators-data" element={<CreatorsData />} />
-                  </Routes>
-                </main>
-              </div>
-            </SidebarProvider>
-          </QueryClientProvider>
-        </SupabaseAuthProvider>
-      </AuthProvider>
+      <HttpsEnforcer>
+        <AuthProvider>
+          <SupabaseAuthProvider>
+            <QueryClientProvider client={queryClient}>
+              <SidebarProvider>
+                <div className="min-h-screen bg-gradient-to-br from-[#0a0a1a] via-[#1a1a33] to-[#2d1b45] flex w-full">
+                  <Sidebar />
+                  <main className="flex-1 overflow-auto">
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/onboard-queue" element={<CreatorOnboardQueue />} />
+                      <Route path="/creators-data" element={<CreatorsData />} />
+                    </Routes>
+                  </main>
+                </div>
+              </SidebarProvider>
+            </QueryClientProvider>
+          </SupabaseAuthProvider>
+        </AuthProvider>
+      </HttpsEnforcer>
     </BrowserRouter>
   );
 }
