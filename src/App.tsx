@@ -36,6 +36,7 @@ import AccessControlPanel from './pages/AccessControlPanel';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
 import CreatorOnboardForm from './pages/CreatorOnboardForm';
 import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
+import CreatorsData from './pages/CreatorsData';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -121,6 +122,9 @@ const AppRoutes = () => {
       
       {/* New admin onboard queue - Admin only */}
       <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
+      
+      {/* New creators data module - VA, Chatter, Admin */}
+      <Route path="/creators-data" element={<ProtectedRoute><CreatorsData /></ProtectedRoute>} />
       
       {/* Public Creator Onboarding Form - No authentication required */}
       <Route path="/onboarding-form" element={<CreatorOnboardForm />} />

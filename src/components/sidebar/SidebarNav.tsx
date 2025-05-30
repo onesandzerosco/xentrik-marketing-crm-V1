@@ -12,7 +12,8 @@ import {
   Mic,
   Shield,
   UserPlus,
-  ListCheck
+  ListCheck,
+  Database
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -69,6 +70,12 @@ const navItems: NavItem[] = [
     icon: <Mic className="h-5 w-5" />,
   },
   {
+    path: '/creators-data',
+    label: 'Creators Data',
+    icon: <Database className="h-5 w-5" />,
+    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
+  },
+  {
     path: '/onboard',
     label: 'Creator Onboarding',
     icon: <UserPlus className="h-5 w-5" />,
@@ -108,6 +115,14 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         // Skip items that should be hidden for creators if the user is a creator
         if (item.hideForCreator && isCreator) return null;
+        
+        // Check specific roles if defined
+        if (item.roles) {
+          const hasRequiredRole = item.roles.some(role => 
+            userRole === role || (userRoles && userRoles.includes(role))
+          );
+          if (!hasRequiredRole) return null;
+        }
         
         return (
           <NavLink
