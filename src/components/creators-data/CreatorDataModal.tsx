@@ -60,16 +60,16 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/_/g, ' ');
   };
 
-  const renderDataSection = (sectionData: any, title: string) => {
-    if (!sectionData || typeof sectionData !== 'object') {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
-        </div>
-      );
-    }
+  // Define field priority orders for each section
+  const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
+  const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
+  const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
+  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals'];
 
-    const dataEntries = Object.entries(sectionData).filter(([key, value]) => {
+  const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
+    if (!data || typeof data !== 'object') return [];
+    
+    const entries = Object.entries(data).filter(([key, value]) => {
       // Special handling for nested objects and arrays
       if (key === 'pets' && Array.isArray(value)) {
         return value.length > 0;
@@ -80,7 +80,32 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       return value !== null && value !== undefined && value !== '';
     });
 
-    if (dataEntries.length === 0) {
+    // Sort by priority order, then alphabetically for remaining fields
+    return entries.sort(([keyA], [keyB]) => {
+      const priorityA = priorityOrder.indexOf(keyA);
+      const priorityB = priorityOrder.indexOf(keyB);
+      
+      if (priorityA !== -1 && priorityB !== -1) {
+        return priorityA - priorityB;
+      }
+      if (priorityA !== -1) return -1;
+      if (priorityB !== -1) return 1;
+      return keyA.localeCompare(keyB);
+    });
+  };
+
+  const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
+    if (!sectionData || typeof sectionData !== 'object') {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
+
+    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+
+    if (sortedEntries.length === 0) {
       return (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
@@ -90,7 +115,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
     return (
       <div className="space-y-4">
-        {dataEntries.map(([key, value]) => (
+        {sortedEntries.map(([key, value]) => (
           <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-b border-border/50">
             <div className="font-medium text-foreground">
               {formatFieldName(key)}:
@@ -155,22 +180,22 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <div className="mt-6">
               <TabsContent value="personal" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                {renderDataSection(submission.data?.personalInfo, 'Personal Information')}
+                {renderDataSection(submission.data?.personalInfo, 'Personal Information', personalInfoPriority)}
               </TabsContent>
               
               <TabsContent value="physical" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
-                {renderDataSection(submission.data?.physicalAttributes, 'Physical Attributes')}
+                {renderDataSection(submission.data?.physicalAttributes, 'Physical Attributes', physicalPriority)}
               </TabsContent>
               
               <TabsContent value="preferences" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
-                {renderDataSection(submission.data?.personalPreferences, 'Personal Preferences')}
+                {renderDataSection(submission.data?.personalPreferences, 'Personal Preferences', preferencesPriority)}
               </TabsContent>
               
               <TabsContent value="content" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
-                {renderDataSection(submission.data?.contentAndService, 'Content & Service')}
+                {renderDataSection(submission.data?.contentAndService, 'Content & Service', contentPriority)}
               </TabsContent>
             </div>
           </Tabs>
