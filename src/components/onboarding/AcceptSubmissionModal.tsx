@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import ProfileImageUploader from '@/components/team/ProfileImageUploader';
 import type { Database } from "@/integrations/supabase/types";
 
 // Define the enum types from Supabase
@@ -30,6 +31,7 @@ interface CreatorData {
   name: string;
   team: TeamEnum;
   creatorType: CreatorTypeEnum;
+  profileImage?: string;
 }
 
 interface AcceptSubmissionModalProps {
@@ -50,6 +52,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
   const [name, setName] = useState(defaultName);
   const [team, setTeam] = useState<TeamEnum>("A Team");
   const [creatorType, setCreatorType] = useState<CreatorTypeEnum>("Real");
+  const [profileImage, setProfileImage] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Use refs to prevent duplicate submissions
@@ -61,6 +64,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
       setName(defaultName);
       setTeam("A Team");
       setCreatorType("Real");
+      setProfileImage('');
       setIsSubmitting(false);
       hasSubmittedRef.current = false;
     }
@@ -88,6 +92,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
         name,
         team,
         creatorType,
+        profileImage,
       });
     } catch (error) {
       console.error("Error in modal during submission:", error);
@@ -111,7 +116,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] bg-[#1a1a33] text-white border-[#252538]">
+      <DialogContent className="sm:max-w-[500px] bg-[#1a1a33] text-white border-[#252538]">
         <DialogHeader>
           <DialogTitle>Accept Creator Submission</DialogTitle>
           <DialogDescription className="text-gray-300">
@@ -167,6 +172,18 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
                 <SelectItem value="AI">AI</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right pt-2">
+              Profile Image
+            </Label>
+            <div className="col-span-3">
+              <ProfileImageUploader
+                value={profileImage}
+                onChange={setProfileImage}
+                name={name}
+              />
+            </div>
           </div>
         </div>
         <DialogFooter>

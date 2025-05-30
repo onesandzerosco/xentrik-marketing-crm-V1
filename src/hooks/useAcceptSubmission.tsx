@@ -15,6 +15,7 @@ interface CreatorData {
   name: string;
   team: TeamEnum;
   creatorType: CreatorTypeEnum;
+  profileImage?: string;
 }
 
 export const useAcceptSubmission = (

@@ -71,6 +71,7 @@ export class OnboardingService {
       name: string;
       team: TeamEnum;
       creatorType: CreatorTypeEnum;
+      profileImage?: string;
     }
   ): Promise<string | undefined> {
     try {
@@ -128,6 +129,7 @@ export class OnboardingService {
           notes: personalInfo.notes || null,
           telegram_username: personalInfo.telegramUsername || null,
           whatsapp_number: personalInfo.whatsappNumber || null,
+          profile_image: creatorInfo.profileImage || null,
           needs_review: false, // Mark as reviewed since it's approved
           active: true,
           model_profile: formData
