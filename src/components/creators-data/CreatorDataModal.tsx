@@ -9,6 +9,14 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { format } from 'date-fns';
 
 interface CreatorSubmission {
@@ -41,79 +49,63 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     }
   };
 
-  const renderJsonValue = (key: string, value: any, level: number = 0): React.ReactNode => {
-    const indent = '  '.repeat(level);
-    
-    if (value === null || value === undefined) {
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined) return 'Not provided';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) return value.join(', ');
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+  };
+
+  const formatFieldName = (key: string): string => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .replace(/_/g, ' ');
+  };
+
+  const renderDataTable = () => {
+    if (!submission.data || typeof submission.data !== 'object') {
       return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: 
-          <span className="text-gray-500 ml-2">null</span>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No data available</p>
         </div>
       );
     }
-    
-    if (typeof value === 'boolean') {
+
+    const dataEntries = Object.entries(submission.data).filter(([key, value]) => 
+      value !== null && value !== undefined && value !== ''
+    );
+
+    if (dataEntries.length === 0) {
       return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: 
-          <span className="text-orange-600 ml-2">{value.toString()}</span>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No data available</p>
         </div>
       );
     }
-    
-    if (typeof value === 'number') {
-      return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: 
-          <span className="text-green-600 ml-2">{value}</span>
-        </div>
-      );
-    }
-    
-    if (typeof value === 'string') {
-      return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: 
-          <span className="text-red-600 ml-2">"{value}"</span>
-        </div>
-      );
-    }
-    
-    if (Array.isArray(value)) {
-      return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: [
-          {value.map((item, index) => (
-            <div key={index} className="ml-4">
-              {typeof item === 'object' && item !== null ? 
-                Object.entries(item).map(([k, v]) => renderJsonValue(k, v, level + 2)) :
-                <span className="text-red-600">"{item}"</span>
-              }
-            </div>
-          ))}
-          <div className="font-mono text-sm">{indent}]</div>
-        </div>
-      );
-    }
-    
-    if (typeof value === 'object') {
-      return (
-        <div key={key} className="font-mono text-sm">
-          <span className="text-blue-600">{indent}"{key}"</span>: {'{'}
-          <div className="ml-4">
-            {Object.entries(value).map(([k, v]) => renderJsonValue(k, v, level + 1))}
-          </div>
-          <div className="font-mono text-sm">{indent}{'}'}</div>
-        </div>
-      );
-    }
-    
+
     return (
-      <div key={key} className="font-mono text-sm">
-        <span className="text-blue-600">{indent}"{key}"</span>: 
-        <span className="ml-2">{String(value)}</span>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-1/3">Field</TableHead>
+            <TableHead>Value</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {dataEntries.map(([key, value]) => (
+            <TableRow key={key}>
+              <TableCell className="font-medium">
+                {formatFieldName(key)}
+              </TableCell>
+              <TableCell className="break-words">
+                {formatValue(value)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     );
   };
 
@@ -122,28 +114,17 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            Creator JSON Data
+            Creator Submission Data
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
-            Viewing JSON data for {submission.name} (submitted {formatDate(submission.submitted_at)})
+            Viewing submission data for {submission.name} (submitted {formatDate(submission.submitted_at)})
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="h-[60vh] w-full rounded-md border p-4">
-          <div className="space-y-2">
-            <div className="font-mono text-sm text-gray-600 mb-4">
-              {'{'} 
-            </div>
-            <div className="ml-2">
-              {submission.data && typeof submission.data === 'object' ? 
-                Object.entries(submission.data).map(([key, value]) => renderJsonValue(key, value, 1)) :
-                <div className="text-gray-500 italic">No JSON data available</div>
-              }
-            </div>
-            <div className="font-mono text-sm text-gray-600">
-              {'}'}
-            </div>
+        <ScrollArea className="h-[60vh] w-full rounded-md border">
+          <div className="p-4">
+            {renderDataTable()}
           </div>
         </ScrollArea>
       </DialogContent>
