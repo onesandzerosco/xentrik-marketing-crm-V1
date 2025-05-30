@@ -45,6 +45,12 @@ const navItems: NavItem[] = [
     hideForCreator: true, // Hide only for Creator role
   },
   {
+    path: '/creators-data',
+    label: 'Creators Data',
+    icon: <Database className="h-5 w-5" />,
+    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
+  },
+  {
     path: '/shared-files',
     label: 'Shared Files',
     icon: <FileUp className="h-5 w-5" />,
@@ -68,12 +74,6 @@ const navItems: NavItem[] = [
     path: '/voice-generation',
     label: 'Voice Generator',
     icon: <Mic className="h-5 w-5" />,
-  },
-  {
-    path: '/creators-data',
-    label: 'Creators Data',
-    icon: <Database className="h-5 w-5" />,
-    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
   },
   {
     path: '/onboard',
