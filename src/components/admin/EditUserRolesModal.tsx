@@ -30,6 +30,10 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const defaultPrimaryRole: PrimaryRole = "Employee"; 
   const defaultAdditionalRoles: string[] = [];
   
+  // Use the user's actual roles, or fallback to defaults
+  const userPrimaryRole = user?.role || defaultPrimaryRole;
+  const userAdditionalRoles = user?.roles || defaultAdditionalRoles;
+  
   const {
     primaryRole,
     additionalRoles,
@@ -40,17 +44,20 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     handleConfirmAdminChange,
     handleCancelAdminChange,
     toggleAdditionalRole
-  } = useRolesManagement(
-    user?.role as PrimaryRole || defaultPrimaryRole,
-    user?.roles || defaultAdditionalRoles
-  );
+  } = useRolesManagement(userPrimaryRole, userAdditionalRoles);
 
-  // Reset state when user or open state changes
+  // Log for debugging when user or modal state changes
   useEffect(() => {
     if (user && open) {
-      console.log("Setting initial roles from user:", { role: user.role, roles: user.roles });
+      console.log("EditUserRolesModal opened for user:", { 
+        name: user.name,
+        role: user.role, 
+        roles: user.roles,
+        userPrimaryRole,
+        userAdditionalRoles
+      });
     }
-  }, [user, open]);
+  }, [user, open, userPrimaryRole, userAdditionalRoles]);
 
   const handleSubmit = async () => {
     if (user) {

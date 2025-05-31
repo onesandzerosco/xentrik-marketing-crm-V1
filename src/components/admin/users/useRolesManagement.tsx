@@ -1,8 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PrimaryRole } from "@/types/employee";
-import { EXCLUSIVE_ROLES } from "./constants";
-import { useToast } from "@/hooks/use-toast";
 
 export const useRolesManagement = (
   initialPrimaryRole: PrimaryRole,
@@ -10,56 +8,56 @@ export const useRolesManagement = (
 ) => {
   const [primaryRole, setPrimaryRole] = useState<PrimaryRole>(initialPrimaryRole);
   const [additionalRoles, setAdditionalRoles] = useState<string[]>(initialAdditionalRoles);
-  const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [pendingRoleChange, setPendingRoleChange] = useState<PrimaryRole | null>(null);
-  const { toast } = useToast();
+  const [showAdminAlert, setShowAdminAlert] = useState(false);
 
-  const handlePrimaryRoleChange = (role: PrimaryRole) => {
-    // If changing to or from Admin, show confirmation
-    if (role === "Admin" || primaryRole === "Admin") {
-      setPendingRoleChange(role);
+  // Update state when initial values change (when modal opens with new user)
+  useEffect(() => {
+    setPrimaryRole(initialPrimaryRole);
+    setAdditionalRoles(initialAdditionalRoles);
+  }, [initialPrimaryRole, initialAdditionalRoles]);
+
+  const handlePrimaryRoleChange = (newRole: PrimaryRole) => {
+    // If changing to Admin, show confirmation dialog
+    if (newRole === "Admin") {
+      setPendingRoleChange(newRole);
       setShowAdminAlert(true);
     } else {
-      setPrimaryRole(role);
+      setPrimaryRole(newRole);
     }
   };
 
   const handleConfirmAdminChange = () => {
     if (pendingRoleChange) {
       setPrimaryRole(pendingRoleChange);
-      setPendingRoleChange(null);
+      // Clear additional roles when becoming Admin (exclusive role)
+      setAdditionalRoles([]);
     }
     setShowAdminAlert(false);
+    setPendingRoleChange(null);
   };
 
   const handleCancelAdminChange = () => {
-    setPendingRoleChange(null);
     setShowAdminAlert(false);
+    setPendingRoleChange(null);
   };
 
   const toggleAdditionalRole = (role: string) => {
     setAdditionalRoles(prev => {
-      // Create a copy of the current roles
-      let updatedRoles = [...prev];
-      
-      // If role is being added
-      if (!prev.includes(role)) {
-        // Check if the role to add is an exclusive role
-        if (EXCLUSIVE_ROLES.includes(role)) {
-          // If adding an exclusive role, clear all other roles and only add this one
+      if (prev.includes(role)) {
+        // Remove role
+        return prev.filter(r => r !== role);
+      } else {
+        // Add role - but first check if it's an exclusive role
+        if (role === "Admin") {
+          // Admin is exclusive - replace all roles
           return [role];
         } else {
-          // If adding a non-exclusive role, remove any exclusive roles first
-          updatedRoles = updatedRoles.filter(r => !EXCLUSIVE_ROLES.includes(r));
-          // Then add the new role
-          updatedRoles.push(role);
+          // Regular role - add to existing roles (but remove Admin if present)
+          const filteredRoles = prev.filter(r => r !== "Admin");
+          return [...filteredRoles, role];
         }
-      } else {
-        // If removing a role, just filter it out
-        updatedRoles = updatedRoles.filter(r => r !== role);
       }
-      
-      return updatedRoles;
     });
   };
 
