@@ -13,4 +13,4 @@ export const ADDITIONAL_ROLES: string[] = [
 ];
 
 // Define exclusive roles that cannot be combined with other roles
-export const EXCLUSIVE_ROLES = ["Admin"];
+export const EXCLUSIVE_ROLES = ["Admin", "Creator"];
