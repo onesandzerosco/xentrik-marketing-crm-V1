@@ -11,7 +11,18 @@ import './App.css';
 // Get these values from your Auth0 dashboard
 const domain = import.meta.env.VITE_AUTH0_DOMAIN || "dev-j4xj7bggmr0zhlid.uk.auth0.com";
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || "GwJvkk5BrTg3dilIeJaMS4hiVgK7xpNr";
-const redirectUri = window.location.origin;
+
+// Use Vercel domain for production, fallback to current origin for development
+const getRedirectUri = () => {
+  // If we're in development (localhost), use the current origin
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return window.location.origin;
+  }
+  // For production, use the Vercel domain
+  return 'https://xentrik-marketing.vercel.app';
+};
+
+const redirectUri = getRedirectUri();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element not found');

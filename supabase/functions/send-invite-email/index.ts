@@ -1,85 +1,72 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-interface EmailPayload {
-  email: string;
-  stageName?: string;
-  token: string;
-  appUrl: string;
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const { modelName, stageName } = await req.json();
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Missing Supabase environment variables");
-    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
-    // Create Supabase admin client
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
+    // Create invitation record
+    const { data: invitation, error: inviteError } = await supabase
+      .from('creator_invitations')
+      .insert({
+        model_name: modelName,
+        stage_name: stageName,
+        status: 'pending'
+      })
+      .select()
+      .single();
     
-    if (!email || !token || !appUrl) {
-      throw new Error("Missing required fields");
+    if (inviteError) {
+      throw inviteError;
     }
     
-    // Format name for email greeting
-    const nameToGreet = stageName || email.split('@')[0];
+    // Use Vercel domain for production, localhost for development
+    const baseUrl = Deno.env.get("ENVIRONMENT") === "development" 
+      ? "http://localhost:8080" 
+      : "https://xentrik-marketing.vercel.app";
     
-    console.log("Sending email to:", email);
-    console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
+    const inviteUrl = `${baseUrl}/onboard/${invitation.token}`;
     
-    // Use Supabase's built-in email invitation system
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${appUrl}/onboard/${token}`,
-      data: {
-        name: nameToGreet,
-        onboard_link: `${appUrl}/onboard/${token}`,
-        agency_name: "Your Agency",
-        token: token
-      }
-    });
-    
-    if (error) {
-      console.error("Error sending email via Supabase:", error);
-      throw new Error(`Failed to send invitation email: ${error.message}`);
-    }
-    
-    console.log("Email sent successfully via Supabase templates");
+    console.log(`Invitation created for ${modelName} (${stageName}): ${inviteUrl}`);
     
     return new Response(
-      JSON.stringify({ success: true, data }),
-      { 
-        status: 200,
+      JSON.stringify({ 
+        success: true, 
+        inviteUrl,
+        token: invitation.token 
+      }),
+      {
         headers: { 
           "Content-Type": "application/json",
-          ...corsHeaders
-        }
+          ...corsHeaders 
+        },
       }
     );
   } catch (error) {
-    console.error("Error in send-invite-email function:", error.message);
+    console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
+      { 
         status: 500,
-        headers: {
+        headers: { 
           "Content-Type": "application/json",
-          ...corsHeaders
+          ...corsHeaders 
         }
       }
     );
