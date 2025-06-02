@@ -11,8 +11,8 @@ import {
 } from '@/utils/fileUtils';
 import { isZipFile, extractZipFiles, getZipBaseName } from '@/utils/zipUtils';
 
-// Maximum file size in GB
-const MAX_FILE_SIZE_GB = 1;
+// Maximum file size in GB - Updated to 2GB
+const MAX_FILE_SIZE_GB = 2;
 // 10MB chunks for large files
 const CHUNK_SIZE = 10 * 1024 * 1024;
 

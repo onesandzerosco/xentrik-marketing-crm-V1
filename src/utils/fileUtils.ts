@@ -1,4 +1,3 @@
-
 export const formatFileSize = (bytes: number) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -231,8 +230,8 @@ export const uploadFileInChunks = async (
   }
 };
 
-// Helper function to check if a file exceeds the maximum size (1GB by default)
-export const isFileTooLarge = (file: File, maxSizeGB: number = 1): boolean => {
+// Helper function to check if a file exceeds the maximum size (2GB by default)
+export const isFileTooLarge = (file: File, maxSizeGB: number = 2): boolean => {
   const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
   return file.size > maxSizeBytes;
 };

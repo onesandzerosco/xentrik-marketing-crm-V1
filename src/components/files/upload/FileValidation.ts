@@ -1,4 +1,3 @@
-
 import { useToast } from "@/components/ui/use-toast";
 import { isZipFile } from "@/utils/zipUtils";
 import { isFileTooLarge } from "@/utils/fileUtils";
@@ -25,8 +24,8 @@ export interface FileValidationResult {
   };
 }
 
-// Helper for validating files before upload
-export const useFileValidation = (maxFileSizeGB: number = 1) => {
+// Helper for validating files before upload - Updated default to 2GB
+export const useFileValidation = (maxFileSizeGB: number = 2) => {
   const { toast } = useToast();
   
   const validateFiles = (files: FileList): FileValidationResult => {
