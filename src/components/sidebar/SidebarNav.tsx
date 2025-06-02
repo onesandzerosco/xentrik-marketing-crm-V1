@@ -37,12 +37,13 @@ const navItems: NavItem[] = [
     path: '/dashboard',
     label: 'Dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
+    allowCreator: true, // Explicitly allow Creators to see Dashboard
   },
   {
     path: '/creators',
     label: 'Creators',
     icon: <Users className="h-5 w-5" />,
-    hideForCreator: true, // Hide only for Creator role
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/creators-data',
@@ -54,26 +55,31 @@ const navItems: NavItem[] = [
     path: '/shared-files',
     label: 'Shared Files',
     icon: <FileUp className="h-5 w-5" />,
+    allowCreator: true, // Explicitly allow Creators to see Shared Files
   },
   {
     path: '/team',
     label: 'Team',
     icon: <UserCog className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/secure-logins',
     label: 'Secure Logins',
     icon: <Lock className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/voice-generation',
     label: 'Voice Generator',
     icon: <Mic className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/onboard',
@@ -112,6 +118,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         // Skip adminOnly items if user is not admin
         if (item.adminOnly && !isAdmin) return null;
+        
+        // For Creator role users, only show items that explicitly allow Creator
+        if (isCreator && userRole === 'Creator') {
+          if (!item.allowCreator) return null;
+        }
         
         // Skip items that should be hidden for creators if the user is a creator
         if (item.hideForCreator && isCreator) return null;
