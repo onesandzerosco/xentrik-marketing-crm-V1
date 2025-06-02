@@ -36,15 +36,27 @@ serve(async (req) => {
       throw inviteError;
     }
     
-    // Support both domains - prefer Vercel for production, fallback to Lovable
+    // Detect the referring domain from the request or use default
     const getBaseUrl = () => {
       const environment = Deno.env.get("ENVIRONMENT");
+      const referer = req.headers.get("referer");
       
       if (environment === "development") {
         return "http://localhost:8080";
       }
       
-      // For production, use Vercel as primary, but both will work
+      // If called from Lovable domain, use Lovable
+      if (referer && referer.includes("lovable.app")) {
+        const url = new URL(referer);
+        return url.origin;
+      }
+      
+      // If called from Vercel domain, use Vercel
+      if (referer && referer.includes("vercel.app")) {
+        return "https://xentrik-marketing.vercel.app";
+      }
+      
+      // Default to Vercel for production
       return "https://xentrik-marketing.vercel.app";
     };
     
@@ -52,6 +64,7 @@ serve(async (req) => {
     const inviteUrl = `${baseUrl}/onboard/${invitation.token}`;
     
     console.log(`Invitation created for ${modelName} (${stageName}): ${inviteUrl}`);
+    console.log(`Using base URL: ${baseUrl} (detected from referer: ${req.headers.get("referer")})`);
     
     return new Response(
       JSON.stringify({ 

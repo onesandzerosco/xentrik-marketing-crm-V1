@@ -21,17 +21,7 @@ const getRedirectUri = () => {
     return currentOrigin;
   }
   
-  // If we're on Lovable domain, use that
-  if (currentOrigin.includes('lovable.app')) {
-    return currentOrigin;
-  }
-  
-  // If we're on Vercel domain, use that
-  if (currentOrigin.includes('vercel.app')) {
-    return currentOrigin;
-  }
-  
-  // Default to current origin for any other domain
+  // Always use the current origin to support both domains
   return currentOrigin;
 };
 
