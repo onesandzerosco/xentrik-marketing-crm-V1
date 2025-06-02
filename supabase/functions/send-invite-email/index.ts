@@ -36,11 +36,19 @@ serve(async (req) => {
       throw inviteError;
     }
     
-    // Use Vercel domain for production, localhost for development
-    const baseUrl = Deno.env.get("ENVIRONMENT") === "development" 
-      ? "http://localhost:8080" 
-      : "https://xentrik-marketing.vercel.app";
+    // Support both domains - prefer Vercel for production, fallback to Lovable
+    const getBaseUrl = () => {
+      const environment = Deno.env.get("ENVIRONMENT");
+      
+      if (environment === "development") {
+        return "http://localhost:8080";
+      }
+      
+      // For production, use Vercel as primary, but both will work
+      return "https://xentrik-marketing.vercel.app";
+    };
     
+    const baseUrl = getBaseUrl();
     const inviteUrl = `${baseUrl}/onboard/${invitation.token}`;
     
     console.log(`Invitation created for ${modelName} (${stageName}): ${inviteUrl}`);

@@ -12,14 +12,27 @@ import './App.css';
 const domain = import.meta.env.VITE_AUTH0_DOMAIN || "dev-j4xj7bggmr0zhlid.uk.auth0.com";
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || "GwJvkk5BrTg3dilIeJaMS4hiVgK7xpNr";
 
-// Use Vercel domain for production, fallback to current origin for development
+// Support both Lovable and Vercel domains
 const getRedirectUri = () => {
-  // If we're in development (localhost), use the current origin
+  const currentOrigin = window.location.origin;
+  
+  // If we're on localhost, use current origin
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return window.location.origin;
+    return currentOrigin;
   }
-  // For production, use the Vercel domain
-  return 'https://xentrik-marketing.vercel.app';
+  
+  // If we're on Lovable domain, use that
+  if (currentOrigin.includes('lovable.app')) {
+    return currentOrigin;
+  }
+  
+  // If we're on Vercel domain, use that
+  if (currentOrigin.includes('vercel.app')) {
+    return currentOrigin;
+  }
+  
+  // Default to current origin for any other domain
+  return currentOrigin;
 };
 
 const redirectUri = getRedirectUri();
