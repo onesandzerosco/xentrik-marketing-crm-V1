@@ -1,93 +1,85 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface EmailPayload {
+  email: string;
+  stageName?: string;
+  token: string;
+  appUrl: string;
+}
+
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
+  
   try {
-    const { modelName, stageName } = await req.json();
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Create invitation record
-    const { data: invitation, error: inviteError } = await supabase
-      .from('creator_invitations')
-      .insert({
-        model_name: modelName,
-        stage_name: stageName,
-        status: 'pending'
-      })
-      .select()
-      .single();
-    
-    if (inviteError) {
-      throw inviteError;
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Missing Supabase environment variables");
     }
     
-    // Detect the referring domain from the request or use default
-    const getBaseUrl = () => {
-      const environment = Deno.env.get("ENVIRONMENT");
-      const referer = req.headers.get("referer");
-      
-      if (environment === "development") {
-        return "http://localhost:8080";
-      }
-      
-      // If called from Lovable domain, use Lovable
-      if (referer && referer.includes("lovable.app")) {
-        const url = new URL(referer);
-        return url.origin;
-      }
-      
-      // If called from Vercel domain, use Vercel
-      if (referer && referer.includes("vercel.app")) {
-        return "https://xentrik-marketing.vercel.app";
-      }
-      
-      // Default to Vercel for production
-      return "https://xentrik-marketing.vercel.app";
-    };
+    // Create Supabase admin client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    const baseUrl = getBaseUrl();
-    const inviteUrl = `${baseUrl}/onboard/${invitation.token}`;
+    const { email, stageName, token, appUrl } = await req.json() as EmailPayload;
     
-    console.log(`Invitation created for ${modelName} (${stageName}): ${inviteUrl}`);
-    console.log(`Using base URL: ${baseUrl} (detected from referer: ${req.headers.get("referer")})`);
+    if (!email || !token || !appUrl) {
+      throw new Error("Missing required fields");
+    }
+    
+    // Format name for email greeting
+    const nameToGreet = stageName || email.split('@')[0];
+    
+    console.log("Sending email to:", email);
+    console.log("With onboarding link:", `${appUrl}/onboard/${token}`);
+    
+    // Use Supabase's built-in email invitation system
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${appUrl}/onboard/${token}`,
+      data: {
+        name: nameToGreet,
+        onboard_link: `${appUrl}/onboard/${token}`,
+        agency_name: "Your Agency",
+        token: token
+      }
+    });
+    
+    if (error) {
+      console.error("Error sending email via Supabase:", error);
+      throw new Error(`Failed to send invitation email: ${error.message}`);
+    }
+    
+    console.log("Email sent successfully via Supabase templates");
     
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        inviteUrl,
-        token: invitation.token 
-      }),
-      {
+      JSON.stringify({ success: true, data }),
+      { 
+        status: 200,
         headers: { 
           "Content-Type": "application/json",
-          ...corsHeaders 
-        },
+          ...corsHeaders
+        }
       }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in send-invite-email function:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
+      {
         status: 500,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          ...corsHeaders 
+          ...corsHeaders
         }
       }
     );
