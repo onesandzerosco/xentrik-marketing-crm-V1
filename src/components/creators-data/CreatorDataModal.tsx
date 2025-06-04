@@ -86,6 +86,43 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     });
   };
 
+  // New function to render all sections combined in one view
+  const renderAllData = () => {
+    const sections = [
+      { 
+        title: 'Personal Information', 
+        data: submission.data?.personalInfo,
+        priority: personalInfoPriority 
+      },
+      { 
+        title: 'Physical Attributes', 
+        data: submission.data?.physicalAttributes,
+        priority: physicalPriority 
+      },
+      { 
+        title: 'Personal Preferences', 
+        data: submission.data?.personalPreferences,
+        priority: preferencesPriority 
+      },
+      { 
+        title: 'Content & Service', 
+        data: submission.data?.contentAndService,
+        priority: contentPriority 
+      }
+    ];
+
+    return (
+      <div className="space-y-6">
+        {sections.map((section, index) => (
+          <div key={index} className="mb-6">
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">{section.title}</h3>
+            {renderDataSection(section.data, section.title, section.priority)}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
     if (!sectionData || typeof sectionData !== 'object') {
       return (
@@ -152,7 +189,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       <DialogContent className="max-w-5xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            Creator Biodata
+            {submission.name}'s Model Profile
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
@@ -161,8 +198,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         </DialogHeader>
         
         <ScrollArea className="h-[65vh] w-full">
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="all">All Data</TabsTrigger>
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
               <TabsTrigger value="physical">Physical</TabsTrigger>
               <TabsTrigger value="preferences">Preferences</TabsTrigger>
@@ -170,6 +208,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             </TabsList>
             
             <div className="mt-6">
+              <TabsContent value="all" className="space-y-4">
+                {renderAllData()}
+              </TabsContent>
+
               <TabsContent value="personal" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
                 {renderDataSection(submission.data?.personalInfo, 'Personal Information', personalInfoPriority)}

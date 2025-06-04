@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -98,7 +97,7 @@ const CreatorsDataTable: React.FC = () => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Accepted Creators Data ({submissions.length})
+            Model Profiles ({submissions.length})
           </CardTitle>
           <Button onClick={fetchAcceptedCreators} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -109,7 +108,7 @@ const CreatorsDataTable: React.FC = () => {
           {submissions.length === 0 ? (
             <div className="text-center py-8">
               <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Accepted Creators</h3>
+              <h3 className="text-lg font-semibold mb-2">No Model Profiles</h3>
               <p className="text-muted-foreground">
                 No accepted creator submissions found in the database.
               </p>

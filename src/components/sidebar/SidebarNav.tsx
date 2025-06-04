@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   },
   {
     path: '/creators-data',
-    label: 'Creators Data',
+    label: 'Model Profile',
     icon: <Database className="h-5 w-5" />,
     roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
   },
