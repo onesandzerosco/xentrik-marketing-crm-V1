@@ -50,6 +50,146 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     
     return tokens;
   }, [processingTokens, clickedButtons, handlingTokens]);
+
+  // Formatting functions adapted from CreatorDataModal
+  const formatValue = (value: any): string => {
+    if (value === null || value === undefined || value === '') return 'Not provided';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return 'Not provided';
+      return value.join(', ');
+    }
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+  };
+
+  const formatFieldName = (key: string): string => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .replace(/_/g, ' ');
+  };
+
+  // Define field priority orders for each section
+  const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
+  const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
+  const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
+  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals'];
+
+  const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
+    if (!data || typeof data !== 'object') return [];
+    
+    const entries = Object.entries(data);
+
+    return entries.sort(([keyA], [keyB]) => {
+      const priorityA = priorityOrder.indexOf(keyA);
+      const priorityB = priorityOrder.indexOf(keyB);
+      
+      if (priorityA !== -1 && priorityB !== -1) {
+        return priorityA - priorityB;
+      }
+      if (priorityA !== -1) return -1;
+      if (priorityB !== -1) return 1;
+      return keyA.localeCompare(keyB);
+    });
+  };
+
+  const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
+    if (!sectionData || typeof sectionData !== 'object') {
+      return (
+        <div className="text-center py-4">
+          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
+
+    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+
+    if (sortedEntries.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {sortedEntries.map(([key, value]) => (
+          <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-b border-border/30">
+            <div className="font-medium text-foreground text-sm">
+              {formatFieldName(key)}:
+            </div>
+            <div className="md:col-span-2 text-muted-foreground break-words text-sm">
+              {key === 'pets' && Array.isArray(value) ? (
+                value.length > 0 ? (
+                  <div className="space-y-2">
+                    {value.map((pet: any, index: number) => (
+                      <div key={index} className="bg-muted/30 p-2 rounded text-xs">
+                        {Object.entries(pet).map(([petKey, petValue]) => (
+                          <div key={petKey}>
+                            <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  formatValue(value)
+                )
+              ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
+                <div className="space-y-1">
+                  {Object.entries(value).map(([platform, handle]) => (
+                    <div key={platform} className="text-xs">
+                      <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                formatValue(value)
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderFormattedPreview = (data: any) => {
+    const sections = [
+      { 
+        title: 'Personal Information', 
+        data: data?.personalInfo,
+        priority: personalInfoPriority 
+      },
+      { 
+        title: 'Physical Attributes', 
+        data: data?.physicalAttributes,
+        priority: physicalPriority 
+      },
+      { 
+        title: 'Personal Preferences', 
+        data: data?.personalPreferences,
+        priority: preferencesPriority 
+      },
+      { 
+        title: 'Content & Service', 
+        data: data?.contentAndService,
+        priority: contentPriority 
+      }
+    ];
+
+    return (
+      <div className="space-y-4">
+        {sections.map((section, index) => (
+          <div key={index} className="mb-4">
+            <h4 className="text-base font-semibold mb-3 border-b pb-1 text-white">{section.title}</h4>
+            {renderDataSection(section.data, section.title, section.priority)}
+          </div>
+        ))}
+      </div>
+    );
+  };
   
   const handleDeclineClick = async (token: string) => {
     if (disabledTokens.has(token)) {
@@ -163,10 +303,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
             {submission.showPreview && (
               <TableRow>
                 <TableCell colSpan={4} className="bg-muted/10">
-                  <div className="p-2 rounded overflow-auto max-h-96">
-                    <pre className="text-xs text-white/80">
-                      {JSON.stringify(submission.data, null, 2)}
-                    </pre>
+                  <div className="p-4 rounded overflow-auto max-h-96">
+                    <div className="max-w-4xl">
+                      {renderFormattedPreview(submission.data)}
+                    </div>
                   </div>
                 </TableCell>
               </TableRow>
