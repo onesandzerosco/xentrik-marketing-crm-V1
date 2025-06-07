@@ -63,25 +63,62 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/_/g, ' ');
   };
 
-  // Define field priority orders for each section - ONLY ACTUAL FIELDS FROM SCHEMA
-  const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
-  const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
-  const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
+  // Updated field priority orders based on user specifications
+  const personalInfoPriority = [
+    'fullName', 
+    'nickname', 
+    'age', 
+    'birthday', 
+    'location', 
+    'hometown', 
+    'ethnicity',
+    // AI-suggested logical grouping for remaining personal fields:
+    'nationality', 
+    'languages', 
+    'email', 
+    'phoneNumber', 
+    'socialMediaHandles', 
+    'pets'
+  ];
+  
+  const physicalPriority = [
+    'bodyType', 
+    'height', 
+    'weight', 
+    'eyeColor',
+    // AI-suggested logical grouping for remaining physical fields:
+    'hairColor', 
+    'tattoos', 
+    'piercings'
+  ];
+  
+  const preferencesPriority = [
+    'hobbies', 
+    'favoriteFood', 
+    'favoriteMusic', 
+    'favoriteMovies',
+    // AI-suggested logical grouping for remaining preference fields:
+    'interests', 
+    'personalityTraits', 
+    'sexualOrientation', 
+    'relationshipStatus'
+  ];
+  
   const contentPriority = [
+    'pricePerMinute', 
+    'videoCallPrice', 
+    'sellsUnderwear',
+    // AI-suggested logical grouping for remaining content/service fields:
+    'fanHandlingPreference',
     'bodyCount',
-    'craziestSexPlace',
+    'favoritePosition',
+    'doesAnal',
+    'lovesThreesomes',
+    'hasTriedOrgy',
     'hasFetish',
     'fetishDetails',
-    'doesAnal',
-    'hasTriedOrgy',
-    'lovesThreesomes',
-    'sellsUnderwear',
     'sexToysCount',
-    'favoritePosition',
-    'fanHandlingPreference',
-    'pricePerMinute',
-    'videoCallPrice',
-    'socialMediaHandles'
+    'craziestSexPlace'
   ];
 
   const getAllFieldsFromPriority = (data: any, priorityOrder: string[]) => {
