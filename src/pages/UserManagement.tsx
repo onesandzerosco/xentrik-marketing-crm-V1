@@ -30,7 +30,7 @@ const UserManagement: React.FC = () => {
   }
 
   return (
-    <ProtectedRoute requiredRole="Admin">
+    <ProtectedRoute>
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">User Management</h1>
