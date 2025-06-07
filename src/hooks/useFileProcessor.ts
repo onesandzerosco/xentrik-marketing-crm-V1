@@ -1,111 +1,91 @@
 
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  getUniqueFileName,
-  isVideoFile,
-  generateVideoThumbnail,
-  uploadFileInChunks,
-} from '@/utils/fileUtils';
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { uploadFileToStorage } from "@/utils/storageHelpers";
+import { generateVideoThumbnail, isVideoFile, getUniqueFileName } from "@/utils/fileUtils";
 
 export const useFileProcessor = () => {
-  // Process a regular (non-zip) file upload
+  const { toast } = useToast();
+
   const processRegularFile = async (
     file: File,
     creatorId: string,
     currentFolder: string,
     onComplete: (fileName: string) => void,
-    onStatus: (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void,
+    onStatusUpdate: (fileName: string, status: 'uploading' | 'processing' | 'complete' | 'error', error?: string) => void
   ): Promise<string | null> => {
     try {
-      onStatus(file.name, 'uploading');
-
-      // Generate a thumbnail for video files
-      let thumbnailUrl: string | null = null;
-      if (isVideoFile(file.name)) {
-        try {
-          thumbnailUrl = await generateVideoThumbnail(file);
-        } catch (error) {
-          console.error('Error generating video thumbnail:', error);
-        }
-      }
-
-      // Get a unique file name to prevent collisions
+      console.log(`Starting to process regular file: ${file.name}`);
+      
+      onStatusUpdate(file.name, 'uploading');
+      
+      // Generate unique filename if needed
       const uniqueFileName = await getUniqueFileName(
-        file.name, 
-        `${creatorId}/${currentFolder || 'unsorted'}`, 
+        file.name,
+        currentFolder,
         creatorId,
         'raw_uploads',
         supabase
       );
       
-      // Construct the file path for storage
-      const filePath = `${creatorId}/${currentFolder || 'unsorted'}/${uniqueFileName}`;
-      
-      // Upload the file to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('raw_uploads')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError);
-        onStatus(file.name, 'error', `Upload failed: ${uploadError.message}`);
-        return null;
+      // Generate thumbnail for video files
+      let thumbnailUrl: string | undefined;
+      if (isVideoFile(file.name)) {
+        try {
+          onStatusUpdate(file.name, 'processing');
+          thumbnailUrl = await generateVideoThumbnail(file);
+          console.log(`Generated thumbnail for video: ${file.name}`);
+        } catch (error) {
+          console.warn(`Failed to generate thumbnail for ${file.name}:`, error);
+        }
       }
-
-      // Create a public URL for the uploaded file
-      const { data: publicUrlData } = await supabase.storage
-        .from('raw_uploads')
-        .getPublicUrl(filePath);
       
-      if (!publicUrlData?.publicUrl) {
-        console.error('Error getting public URL for file');
-        onStatus(file.name, 'error', 'Failed to get public URL for uploaded file');
-        return null;
+      onStatusUpdate(file.name, 'uploading');
+      
+      // Upload file using our storage helper
+      const uploadResult = await uploadFileToStorage(file, creatorId, uniqueFileName);
+      
+      // Update the media record with additional metadata if needed
+      const updateData: any = {};
+      
+      if (thumbnailUrl) {
+        updateData.thumbnail_url = thumbnailUrl;
       }
-
-      // Save the file metadata to the database
-      const folderList = currentFolder === 'all' || currentFolder === 'unsorted' 
-        ? [currentFolder]
-        : ['all', currentFolder];
       
-      console.log(`Saving file to database with folders: ${folderList} and current folder: ${currentFolder}`);
-      
-      const { data: fileData, error: fileError } = await supabase
-        .from('media')
-        .insert({
-          creator_id: creatorId,
-          filename: uniqueFileName,
-          file_size: file.size,
-          mime: file.type,
-          bucket_key: filePath,
-          folders: folderList,
-          thumbnail_url: thumbnailUrl
-        })
-        .select('id')
-        .single();
-
-      if (fileError) {
-        console.error('Error saving file metadata:', fileError);
-        onStatus(file.name, 'error', `Database error: ${fileError.message}`);
-        return null;
+      if (currentFolder !== 'all') {
+        updateData.folders = [currentFolder];
       }
-
-      onStatus(file.name, 'complete');
+      
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateError } = await supabase
+          .from('media')
+          .update(updateData)
+          .eq('id', uploadResult.fileId);
+          
+        if (updateError) {
+          console.error('Error updating file metadata:', updateError);
+        }
+      }
+      
+      onStatusUpdate(file.name, 'complete');
       onComplete(file.name);
       
-      return fileData.id;
+      console.log(`Successfully processed file: ${file.name} with ID: ${uploadResult.fileId}`);
+      return uploadResult.fileId;
+      
     } catch (error) {
-      console.error('Error processing file:', error);
-      onStatus(file.name, 'error', error instanceof Error ? error.message : 'Unknown error');
+      console.error(`Error processing file ${file.name}:`, error);
+      onStatusUpdate(file.name, 'error', error instanceof Error ? error.message : 'Unknown error');
+      
+      toast({
+        title: "Upload failed",
+        description: `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive"
+      });
+      
       return null;
     }
   };
 
-  return {
-    processRegularFile
-  };
+  return { processRegularFile };
 };
