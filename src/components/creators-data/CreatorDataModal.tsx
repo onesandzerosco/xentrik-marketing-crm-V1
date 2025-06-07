@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -67,7 +68,29 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
   const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
   const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
-  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals', 'pricePerMinute', 'videoCallPrice'];
+  // Updated contentPriority to ensure pricing fields are included and prioritized
+  const contentPriority = [
+    'experienceLevel', 
+    'contentTypes', 
+    'availability', 
+    'specialSkills', 
+    'equipment', 
+    'workEnvironment', 
+    'goals', 
+    'pricePerMinute', 
+    'videoCallPrice',
+    'bodyCount',
+    'craziestSexPlace',
+    'hasFetish',
+    'fetishDetails',
+    'doesAnal',
+    'hasTriedOrgy',
+    'lovesThreesomes',
+    'sellsUnderwear',
+    'sexToysCount',
+    'favoritePosition',
+    'fanHandlingPreference'
+  ];
 
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
     if (!data || typeof data !== 'object') return [];
@@ -177,6 +200,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                     </div>
                   ))}
                 </div>
+              ) : (key === 'pricePerMinute' || key === 'videoCallPrice') && value ? (
+                <span>${formatValue(value)}</span>
               ) : (
                 formatValue(value)
               )}
