@@ -70,18 +70,51 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
       .replace(/_/g, ' ');
   };
 
-  // Define field priority orders for each section
-  const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
-  const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
-  const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
-  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals'];
+  // Updated field priority orders to match CreatorDataModal exactly
+  const personalInfoPriority = [
+    'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
+    // AI-suggested logical ordering for remaining fields
+    'email', 'phoneNumber', 'sex', 'nationality', 'religion', 'relationshipStatus', 
+    'handedness', 'languages', 'occupation', 'workplace', 'placesVisited',
+    'hasPets', 'pets', 'hasKids', 'numberOfKids'
+  ];
+
+  const physicalPriority = [
+    'bodyType', 'height', 'weight', 'eyeColor',
+    // AI-suggested logical ordering for remaining fields
+    'hairColor', 'bustWaistHip', 'favoriteColor', 'dislikedColor',
+    'hasTattoos', 'tattooDetails', 'allergies', 'dickSize', 'isCircumcised', 'isTopOrBottom'
+  ];
+
+  const preferencesPriority = [
+    'hobbies', 'favoriteFood', 'favoriteDrink', 'favoriteMusic', 'favoriteMovies',
+    // AI-suggested logical ordering for remaining fields
+    'favoriteExpression', 'interests', 'personalityTraits', 'canSing', 'smokes', 'drinks',
+    'isSexual', 'homeActivities', 'morningRoutine', 'likeInPerson', 'dislikeInPerson', 'turnOffs'
+  ];
+
+  const contentPriority = [
+    'pricePerMinute', 'videoCallPrice', 'sellsUnderwear',
+    // AI-suggested logical ordering for remaining fields
+    'experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals',
+    'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
+    'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
+  ];
 
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
     if (!data || typeof data !== 'object') return [];
     
-    const entries = Object.entries(data);
+    // Get ALL fields from the data object and priority list, regardless of whether they have values
+    const allPossibleFields = new Set([
+      ...priorityOrder,
+      ...Object.keys(data)
+    ]);
 
-    return entries.sort(([keyA], [keyB]) => {
+    // Create entries for ALL fields, using actual data or undefined for missing fields
+    const allEntries = Array.from(allPossibleFields).map(key => [key, data[key]]);
+
+    // Sort by priority order, then alphabetically for remaining fields
+    return allEntries.sort(([keyA], [keyB]) => {
       const priorityA = priorityOrder.indexOf(keyA);
       const priorityB = priorityOrder.indexOf(keyB);
       
@@ -95,23 +128,8 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
-    if (!sectionData || typeof sectionData !== 'object') {
-      return (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
-        </div>
-      );
-    }
-
-    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
-
-    if (sortedEntries.length === 0) {
-      return (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
-        </div>
-      );
-    }
+    // Always render fields, even if sectionData is null/undefined
+    const sortedEntries = sortFieldsByPriority(sectionData || {}, priorityOrder);
 
     return (
       <div className="space-y-3">
@@ -137,7 +155,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                 ) : (
                   formatValue(value)
                 )
-              ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
+              ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
                 <div className="space-y-1">
                   {Object.entries(value).map(([platform, handle]) => (
                     <div key={platform} className="text-xs">
