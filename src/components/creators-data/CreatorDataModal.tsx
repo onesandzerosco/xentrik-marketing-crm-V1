@@ -97,6 +97,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     
     // Include ALL fields from the data, not just non-empty ones
     const entries = Object.entries(data);
+    
+    console.log('Data entries:', entries); // Debug log to see what fields exist
+    console.log('Priority order:', priorityOrder); // Debug log to see priority order
 
     // Sort by priority order, then alphabetically for remaining fields
     return entries.sort(([keyA], [keyB]) => {
@@ -159,6 +162,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     }
 
     const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+    
+    console.log(`Sorted entries for ${title}:`, sortedEntries); // Debug log
 
     if (sortedEntries.length === 0) {
       return (
@@ -200,7 +205,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                     </div>
                   ))}
                 </div>
-              ) : key === 'pricePerMinute' || key === 'videoCallPrice' ? (
+              ) : key === 'pricePerMinute' ? (
+                <span>
+                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
+                </span>
+              ) : key === 'videoCallPrice' ? (
                 <span>
                   {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
                 </span>
