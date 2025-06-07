@@ -154,7 +154,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     });
   };
 
-  // New function to render all sections combined in one view
+  // Updated function to render all sections with consistent ordering
   const renderAllData = () => {
     const sections = [
       { 
