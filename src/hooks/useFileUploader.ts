@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -7,6 +6,7 @@ export interface FileUploadStatus {
   progress: number;
   status: 'uploading' | 'processing' | 'complete' | 'error';
   error?: string;
+  thumbnail?: string; // Added thumbnail property
 }
 
 interface UseFileUploaderProps {
