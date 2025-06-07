@@ -1,4 +1,3 @@
-
 import React, { useMemo } from "react";
 import { 
   Table, 
@@ -74,20 +73,11 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
       .replace(/_/g, ' ');
   };
 
-  // Define field priority orders for each section - ALL FIELDS MUST BE INCLUDED
+  // Define field priority orders for each section - ONLY ACTUAL FIELDS FROM SCHEMA
   const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
   const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
   const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
   const contentPriority = [
-    'experienceLevel', 
-    'contentTypes', 
-    'availability', 
-    'specialSkills', 
-    'equipment', 
-    'workEnvironment', 
-    'goals', 
-    'pricePerMinute', 
-    'videoCallPrice',
     'bodyCount',
     'craziestSexPlace',
     'hasFetish',
@@ -98,7 +88,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     'sellsUnderwear',
     'sexToysCount',
     'favoritePosition',
-    'fanHandlingPreference'
+    'fanHandlingPreference',
+    'pricePerMinute',
+    'videoCallPrice',
+    'socialMediaHandles'
   ];
 
   const getAllFieldsFromPriority = (data: any, priorityOrder: string[]) => {
