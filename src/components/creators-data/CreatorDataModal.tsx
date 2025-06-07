@@ -60,33 +60,31 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/_/g, ' ');
   };
 
-  // Updated field priority orders based on user requirements
+  // Updated field priority orders based on actual schema fields only
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
-    // AI-suggested logical ordering for remaining fields
-    'email', 'phoneNumber', 'sex', 'nationality', 'religion', 'relationshipStatus', 
-    'handedness', 'languages', 'occupation', 'workplace', 'placesVisited',
-    'hasPets', 'pets', 'hasKids', 'numberOfKids'
+    // Logical ordering for remaining actual fields
+    'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
+    'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
   ];
 
   const physicalPriority = [
     'bodyType', 'height', 'weight', 'eyeColor',
-    // AI-suggested logical ordering for remaining fields
-    'hairColor', 'bustWaistHip', 'favoriteColor', 'dislikedColor',
-    'hasTattoos', 'tattooDetails', 'allergies', 'dickSize', 'isCircumcised', 'isTopOrBottom'
+    // Logical ordering for remaining actual fields
+    'hairColor', 'favoriteColor', 'dislikedColor', 'allergies',
+    'hasTattoos', 'tattooDetails', 'bustWaistHip', 'dickSize', 'isCircumcised', 'isTopOrBottom'
   ];
 
   const preferencesPriority = [
     'hobbies', 'favoriteFood', 'favoriteDrink', 'favoriteMusic', 'favoriteMovies',
-    // AI-suggested logical ordering for remaining fields
-    'favoriteExpression', 'interests', 'personalityTraits', 'canSing', 'smokes', 'drinks',
-    'isSexual', 'homeActivities', 'morningRoutine', 'likeInPerson', 'dislikeInPerson', 'turnOffs'
+    // Logical ordering for remaining actual fields
+    'favoriteExpression', 'canSing', 'smokes', 'drinks', 'isSexual',
+    'homeActivities', 'morningRoutine', 'likeInPerson', 'dislikeInPerson', 'turnOffs'
   ];
 
   const contentPriority = [
     'pricePerMinute', 'videoCallPrice', 'sellsUnderwear',
-    // AI-suggested logical ordering for remaining fields
-    'experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals',
+    // Logical ordering for remaining actual fields
     'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
     'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
   ];
