@@ -200,10 +200,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                     </div>
                   ))}
                 </div>
-              ) : key === 'pricePerMinute' ? (
-                <span>${formatValue(value)}</span>
-              ) : key === 'videoCallPrice' ? (
-                <span>${formatValue(value)}</span>
+              ) : key === 'pricePerMinute' || key === 'videoCallPrice' ? (
+                <span>
+                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
+                </span>
               ) : (
                 formatValue(value)
               )}
