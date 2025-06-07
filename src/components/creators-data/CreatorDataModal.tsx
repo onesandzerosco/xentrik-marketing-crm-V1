@@ -54,6 +54,18 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const formatFieldName = (key: string): string => {
+    // Handle specific field name mappings
+    const fieldMappings: Record<string, string> = {
+      'pricePerMinute': 'Custom Price per Minute',
+      'videoCallPrice': 'Video Call Price per Minute'
+    };
+    
+    // Return custom mapping if it exists
+    if (fieldMappings[key]) {
+      return fieldMappings[key];
+    }
+    
+    // Default formatting for other fields
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase())
