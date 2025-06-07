@@ -64,11 +64,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/_/g, ' ');
   };
 
-  // Define field priority orders for each section
+  // Define field priority orders for each section - ALL FIELDS MUST BE INCLUDED
   const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
   const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
   const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
-  // Updated contentPriority to ensure pricing fields are included and prioritized
   const contentPriority = [
     'experienceLevel', 
     'contentTypes', 
@@ -92,17 +91,27 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     'fanHandlingPreference'
   ];
 
-  const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
-    if (!data || typeof data !== 'object') return [];
+  const getAllFieldsFromPriority = (data: any, priorityOrder: string[]) => {
+    if (!data || typeof data !== 'object') {
+      // If no data exists, create entries for all priority fields with empty values
+      return priorityOrder.map(field => [field, '']);
+    }
     
-    // Include ALL fields from the data, not just non-empty ones
-    const entries = Object.entries(data);
+    const existingEntries = Object.entries(data);
+    const existingKeys = new Set(existingEntries.map(([key]) => key));
     
-    console.log('Data entries:', entries); // Debug log to see what fields exist
-    console.log('Priority order:', priorityOrder); // Debug log to see priority order
+    // Add missing fields from priority list with empty values
+    const missingFields = priorityOrder
+      .filter(field => !existingKeys.has(field))
+      .map(field => [field, '']);
+    
+    const allEntries = [...existingEntries, ...missingFields];
+    
+    console.log('All entries (existing + missing):', allEntries);
+    console.log('Priority order:', priorityOrder);
 
     // Sort by priority order, then alphabetically for remaining fields
-    return entries.sort(([keyA], [keyB]) => {
+    return allEntries.sort(([keyA], [keyB]) => {
       const priorityA = priorityOrder.indexOf(keyA);
       const priorityB = priorityOrder.indexOf(keyB);
       
@@ -153,25 +162,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
-    if (!sectionData || typeof sectionData !== 'object') {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
-        </div>
-      );
-    }
-
-    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+    const sortedEntries = getAllFieldsFromPriority(sectionData, priorityOrder);
     
-    console.log(`Sorted entries for ${title}:`, sortedEntries); // Debug log
-
-    if (sortedEntries.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
-        </div>
-      );
-    }
+    console.log(`Sorted entries for ${title}:`, sortedEntries);
 
     return (
       <div className="space-y-4">
@@ -197,7 +190,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 ) : (
                   formatValue(value)
                 )
-              ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
+              ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
                 <div className="space-y-1">
                   {Object.entries(value).map(([platform, handle]) => (
                     <div key={platform}>
