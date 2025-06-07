@@ -174,7 +174,7 @@ const PendingLinksCard: React.FC = () => {
                 return (
                   <div 
                     key={invitation.token} 
-                    className={`border rounded-lg p-3 ${expired ? 'border-red-200 bg-red-50' : 'border-border'}`}
+                    className="border rounded-lg p-3 border-border"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
