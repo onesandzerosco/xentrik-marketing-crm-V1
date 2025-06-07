@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -53,95 +54,26 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const formatFieldName = (key: string): string => {
-    // Special case for price fields
-    if (key === 'pricePerMinute') return 'Custom Video Price per Minute';
-    if (key === 'videoCallPrice') return 'Price for Video Call';
-    
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase())
       .replace(/_/g, ' ');
   };
 
-  // Updated field priority orders based on user specifications
-  const personalInfoPriority = [
-    'fullName', 
-    'nickname', 
-    'age', 
-    'birthday', 
-    'location', 
-    'hometown', 
-    'ethnicity',
-    // AI-suggested logical grouping for remaining personal fields:
-    'nationality', 
-    'languages', 
-    'email', 
-    'phoneNumber', 
-    'socialMediaHandles', 
-    'pets'
-  ];
-  
-  const physicalPriority = [
-    'bodyType', 
-    'height', 
-    'weight', 
-    'eyeColor',
-    // AI-suggested logical grouping for remaining physical fields:
-    'hairColor', 
-    'tattoos', 
-    'piercings'
-  ];
-  
-  const preferencesPriority = [
-    'hobbies', 
-    'favoriteFood', 
-    'favoriteMusic', 
-    'favoriteMovies',
-    // AI-suggested logical grouping for remaining preference fields:
-    'interests', 
-    'personalityTraits', 
-    'sexualOrientation', 
-    'relationshipStatus'
-  ];
-  
-  const contentPriority = [
-    'pricePerMinute', 
-    'videoCallPrice', 
-    'sellsUnderwear',
-    // AI-suggested logical grouping for remaining content/service fields:
-    'fanHandlingPreference',
-    'bodyCount',
-    'favoritePosition',
-    'doesAnal',
-    'lovesThreesomes',
-    'hasTriedOrgy',
-    'hasFetish',
-    'fetishDetails',
-    'sexToysCount',
-    'craziestSexPlace'
-  ];
+  // Define field priority orders for each section
+  const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
+  const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
+  const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
+  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals'];
 
-  const getAllFieldsFromPriority = (data: any, priorityOrder: string[]) => {
-    if (!data || typeof data !== 'object') {
-      // If no data exists, create entries for all priority fields with empty values
-      return priorityOrder.map(field => [field, '']);
-    }
+  const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
+    if (!data || typeof data !== 'object') return [];
     
-    const existingEntries = Object.entries(data);
-    const existingKeys = new Set(existingEntries.map(([key]) => key));
-    
-    // Add missing fields from priority list with empty values
-    const missingFields = priorityOrder
-      .filter(field => !existingKeys.has(field))
-      .map(field => [field, '']);
-    
-    const allEntries = [...existingEntries, ...missingFields];
-    
-    console.log('All entries (existing + missing):', allEntries);
-    console.log('Priority order:', priorityOrder);
+    // Include ALL fields from the data, not just non-empty ones
+    const entries = Object.entries(data);
 
     // Sort by priority order, then alphabetically for remaining fields
-    return allEntries.sort(([keyA], [keyB]) => {
+    return entries.sort(([keyA], [keyB]) => {
       const priorityA = priorityOrder.indexOf(keyA);
       const priorityB = priorityOrder.indexOf(keyB);
       
@@ -154,7 +86,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     });
   };
 
-  // Updated function to render all sections with consistent ordering
+  // New function to render all sections combined in one view
   const renderAllData = () => {
     const sections = [
       { 
@@ -192,9 +124,23 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
-    const sortedEntries = getAllFieldsFromPriority(sectionData, priorityOrder);
-    
-    console.log(`Sorted entries for ${title}:`, sortedEntries);
+    if (!sectionData || typeof sectionData !== 'object') {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
+
+    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+
+    if (sortedEntries.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-4">
@@ -220,7 +166,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 ) : (
                   formatValue(value)
                 )
-              ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
+              ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
                 <div className="space-y-1">
                   {Object.entries(value).map(([platform, handle]) => (
                     <div key={platform}>
@@ -228,14 +174,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                     </div>
                   ))}
                 </div>
-              ) : key === 'pricePerMinute' ? (
-                <span>
-                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
-                </span>
-              ) : key === 'videoCallPrice' ? (
-                <span>
-                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
-                </span>
               ) : (
                 formatValue(value)
               )}

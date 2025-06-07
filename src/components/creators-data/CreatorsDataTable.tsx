@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -13,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, RefreshCw, Database, Search } from 'lucide-react';
+import { Eye, RefreshCw, Database } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
 
@@ -28,11 +26,9 @@ interface CreatorSubmission {
 
 const CreatorsDataTable: React.FC = () => {
   const [submissions, setSubmissions] = useState<CreatorSubmission[]>([]);
-  const [filteredSubmissions, setFilteredSubmissions] = useState<CreatorSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<CreatorSubmission | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const fetchAcceptedCreators = async () => {
@@ -53,7 +49,6 @@ const CreatorsDataTable: React.FC = () => {
 
       console.log('Accepted creators found:', data?.length || 0);
       setSubmissions(data || []);
-      setFilteredSubmissions(data || []);
     } catch (error) {
       console.error('Error loading accepted creators:', error);
       toast({
@@ -69,18 +64,6 @@ const CreatorsDataTable: React.FC = () => {
   useEffect(() => {
     fetchAcceptedCreators();
   }, []);
-
-  // Filter submissions based on search query
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredSubmissions(submissions);
-    } else {
-      const filtered = submissions.filter(submission =>
-        submission.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredSubmissions(filtered);
-    }
-  }, [searchQuery, submissions]);
 
   const handleViewData = (submission: CreatorSubmission) => {
     setSelectedSubmission(submission);
@@ -114,7 +97,7 @@ const CreatorsDataTable: React.FC = () => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Model Profiles ({filteredSubmissions.length})
+            Model Profiles ({submissions.length})
           </CardTitle>
           <Button onClick={fetchAcceptedCreators} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -122,30 +105,12 @@ const CreatorsDataTable: React.FC = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search by model name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          {filteredSubmissions.length === 0 ? (
+          {submissions.length === 0 ? (
             <div className="text-center py-8">
               <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                {searchQuery ? 'No matches found' : 'No Model Profiles'}
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">No Model Profiles</h3>
               <p className="text-muted-foreground">
-                {searchQuery 
-                  ? `No models found matching "${searchQuery}"`
-                  : 'No accepted creator submissions found in the database.'
-                }
+                No accepted creator submissions found in the database.
               </p>
             </div>
           ) : (
@@ -161,7 +126,7 @@ const CreatorsDataTable: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSubmissions.map((submission) => (
+                  {submissions.map((submission) => (
                     <TableRow key={submission.id}>
                       <TableCell className="font-medium">
                         {submission.name}

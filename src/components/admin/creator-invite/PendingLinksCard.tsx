@@ -1,115 +1,124 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Clock, Copy, Check, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Trash2, RefreshCw, Clock, CheckCircle, XCircle } from "lucide-react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
-interface CreatorInvitation {
-  id: string;
+interface PendingInvitation {
   token: string;
-  model_name: string;
-  stage_name: string;
-  status: string;
+  model_name: string | null;
   created_at: string;
   expires_at: string;
 }
 
-interface PendingLinksCardProps {
-  refreshTrigger: number;
-}
-
-const PendingLinksCard: React.FC<PendingLinksCardProps> = ({ refreshTrigger }) => {
-  const [invitations, setInvitations] = useState<CreatorInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+const PendingLinksCard: React.FC = () => {
   const { toast } = useToast();
+  const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [copiedToken, setCopiedToken] = useState<string>("");
 
-  const fetchInvitations = async () => {
+  const fetchPendingInvitations = async () => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase
+      // Get all pending invitations
+      const { data: pendingInvitations, error: invitationsError } = await supabase
         .from('creator_invitations')
-        .select('*')
+        .select('token, model_name, created_at, expires_at')
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setInvitations(data || []);
+      if (invitationsError) {
+        console.error("Error fetching invitations:", invitationsError);
+        throw invitationsError;
+      }
+
+      if (!pendingInvitations || pendingInvitations.length === 0) {
+        setInvitations([]);
+        return;
+      }
+
+      // Get all tokens that have been submitted
+      const { data: submittedTokens, error: submissionsError } = await supabase
+        .from('onboarding_submissions')
+        .select('token');
+
+      if (submissionsError) {
+        console.error("Error fetching submissions:", submissionsError);
+        // Continue without filtering if we can't get submissions
+        setInvitations(pendingInvitations);
+        return;
+      }
+
+      // Filter out invitations that have been submitted
+      const submittedTokenSet = new Set(submittedTokens?.map(s => s.token) || []);
+      const filteredInvitations = pendingInvitations.filter(
+        invitation => !submittedTokenSet.has(invitation.token)
+      );
+
+      setInvitations(filteredInvitations);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      console.error("Error fetching invitations:", error);
       toast({
-        title: "Error",
-        description: "Failed to load invitations",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Failed to load pending links",
+        description: "Could not load pending invitation links",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInvitations();
-  }, [refreshTrigger]);
+    fetchPendingInvitations();
+  }, []);
 
-  const copyInviteLink = async (token: string) => {
-    const inviteLink = `${window.location.origin}/creator-onboard-form?token=${token}`;
-    await navigator.clipboard.writeText(inviteLink);
-    toast({
-      title: "Link Copied",
-      description: "Invitation link has been copied to clipboard",
-    });
+  const copyLink = async (token: string) => {
+    try {
+      const appUrl = window.location.origin;
+      const link = `${appUrl}/onboarding-form/${token}`;
+      await navigator.clipboard.writeText(link);
+      setCopiedToken(token);
+      toast({
+        title: "Link copied",
+        description: "The onboarding link has been copied to your clipboard",
+      });
+      setTimeout(() => setCopiedToken(""), 2000);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to copy",
+        description: "Could not copy the link to clipboard",
+      });
+    }
   };
 
-  const deleteInvitation = async (id: string) => {
+  const deleteInvitation = async (token: string) => {
     try {
       const { error } = await supabase
         .from('creator_invitations')
-        .delete()
-        .eq('id', id);
+        .update({ status: 'cancelled' })
+        .eq('token', token);
 
       if (error) throw error;
 
       toast({
-        title: "Invitation Deleted",
-        description: "The invitation has been removed",
+        title: "Link cancelled",
+        description: "The invitation link has been cancelled",
       });
 
-      fetchInvitations();
+      // Refresh the list
+      fetchPendingInvitations();
     } catch (error) {
-      console.error('Error deleting invitation:', error);
+      console.error("Error cancelling invitation:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete invitation",
-        variant: "destructive"
+        variant: "destructive",
+        title: "Failed to cancel link",
+        description: "Could not cancel the invitation link",
       });
-    }
-  };
-
-  const getStatusBadge = (status: string, expiresAt: string) => {
-    const isExpired = new Date(expiresAt) < new Date();
-    
-    if (isExpired) {
-      return <Badge variant="destructive" className="flex items-center gap-1">
-        <XCircle className="h-3 w-3" />
-        Expired
-      </Badge>;
-    }
-
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          Pending
-        </Badge>;
-      case 'completed':
-        return <Badge variant="default" className="flex items-center gap-1 bg-green-500">
-          <CheckCircle className="h-3 w-3" />
-          Completed
-        </Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -117,78 +126,110 @@ const PendingLinksCard: React.FC<PendingLinksCardProps> = ({ refreshTrigger }) =
     return new Date(expiresAt) < new Date();
   };
 
-  if (isLoading) {
-    return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading invitations...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const getHoursLeft = (expiresAt: string) => {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    const hoursLeft = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60)));
+    return hoursLeft;
+  };
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Pending Invitations ({invitations.length})
-        </CardTitle>
+    <Card className="flex flex-col h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 flex-shrink-0">
+        <div>
+          <CardTitle>Pending Invitation Links</CardTitle>
+          <CardDescription>
+            Manage pending creator onboarding links (not yet submitted)
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          <Clock className="h-5 w-5 text-muted-foreground" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fetchPendingInvitations}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        {invitations.length === 0 ? (
+      <CardContent className="flex-1 min-h-0">
+        {loading ? (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground">Loading pending links...</p>
+          </div>
+        ) : invitations.length === 0 ? (
           <div className="text-center py-8">
-            <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Pending Invitations</h3>
-            <p className="text-muted-foreground">
-              Create an invitation link to get started.
-            </p>
+            <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">No pending invitation links</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {invitations.map((invitation) => (
-              <div 
-                key={invitation.id} 
-                className="bg-card/50 backdrop-blur-sm border border-border/50 p-4 rounded-lg"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h4 className="font-semibold">{invitation.model_name}</h4>
-                    <p className="text-sm text-muted-foreground">Stage: {invitation.stage_name}</p>
-                  </div>
-                  {getStatusBadge(invitation.status, invitation.expires_at)}
-                </div>
+          <ScrollArea className="h-[400px] w-full">
+            <div className="space-y-3 pr-4">
+              {invitations.map((invitation) => {
+                const expired = isExpired(invitation.expires_at);
+                const hoursLeft = getHoursLeft(invitation.expires_at);
                 
-                <div className="text-xs text-muted-foreground mb-3">
-                  <p>Created: {format(new Date(invitation.created_at), 'MMM d, yyyy h:mm a')}</p>
-                  <p>Expires: {format(new Date(invitation.expires_at), 'MMM d, yyyy h:mm a')}</p>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyInviteLink(invitation.token)}
-                    disabled={isExpired(invitation.expires_at)}
+                return (
+                  <div 
+                    key={invitation.token} 
+                    className={`border rounded-lg p-3 ${expired ? 'border-red-200 bg-red-50' : 'border-border'}`}
                   >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Link
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteInvitation(invitation.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-sm">
+                            {invitation.model_name || 'Unnamed Model'}
+                          </p>
+                          {expired ? (
+                            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                              Expired
+                            </span>
+                          ) : (
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                              {hoursLeft}h left
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Created {formatDistanceToNow(new Date(invitation.created_at))} ago
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {expired ? 
+                            `Expired ${formatDistanceToNow(new Date(invitation.expires_at))} ago` :
+                            `Expires in ${hoursLeft} hours`
+                          }
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => copyLink(invitation.token)}
+                          disabled={copiedToken === invitation.token}
+                        >
+                          {copiedToken === invitation.token ? 
+                            <Check className="h-3 w-3" /> : 
+                            <Copy className="h-3 w-3" />
+                          }
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => deleteInvitation(invitation.token)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
         )}
       </CardContent>
     </Card>

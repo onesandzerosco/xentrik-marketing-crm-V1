@@ -1,3 +1,4 @@
+
 import React, { useMemo } from "react";
 import { 
   Table, 
@@ -63,55 +64,24 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   };
 
   const formatFieldName = (key: string): string => {
-    // Special case for price fields
-    if (key === 'pricePerMinute') return 'Custom Video Price per Minute';
-    if (key === 'videoCallPrice') return 'Price for Video Call';
-    
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase())
       .replace(/_/g, ' ');
   };
 
-  // Define field priority orders for each section - ONLY ACTUAL FIELDS FROM SCHEMA
+  // Define field priority orders for each section
   const personalInfoPriority = ['fullName', 'age', 'email', 'phoneNumber', 'location', 'birthday', 'nationality', 'languages', 'pets', 'socialMediaHandles'];
   const physicalPriority = ['height', 'weight', 'bodyType', 'ethnicity', 'hairColor', 'eyeColor', 'tattoos', 'piercings'];
   const preferencesPriority = ['sexualOrientation', 'relationshipStatus', 'interests', 'hobbies', 'favoriteFood', 'favoriteMusic', 'favoriteMovies', 'personalityTraits'];
-  const contentPriority = [
-    'bodyCount',
-    'craziestSexPlace',
-    'hasFetish',
-    'fetishDetails',
-    'doesAnal',
-    'hasTriedOrgy',
-    'lovesThreesomes',
-    'sellsUnderwear',
-    'sexToysCount',
-    'favoritePosition',
-    'fanHandlingPreference',
-    'pricePerMinute',
-    'videoCallPrice',
-    'socialMediaHandles'
-  ];
+  const contentPriority = ['experienceLevel', 'contentTypes', 'availability', 'specialSkills', 'equipment', 'workEnvironment', 'goals'];
 
-  const getAllFieldsFromPriority = (data: any, priorityOrder: string[]) => {
-    if (!data || typeof data !== 'object') {
-      // If no data exists, create entries for all priority fields with empty values
-      return priorityOrder.map(field => [field, '']);
-    }
+  const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
+    if (!data || typeof data !== 'object') return [];
     
-    const existingEntries = Object.entries(data);
-    const existingKeys = new Set(existingEntries.map(([key]) => key));
-    
-    // Add missing fields from priority list with empty values
-    const missingFields = priorityOrder
-      .filter(field => !existingKeys.has(field))
-      .map(field => [field, '']);
-    
-    const allEntries = [...existingEntries, ...missingFields];
+    const entries = Object.entries(data);
 
-    // Sort by priority order, then alphabetically for remaining fields
-    return allEntries.sort(([keyA], [keyB]) => {
+    return entries.sort(([keyA], [keyB]) => {
       const priorityA = priorityOrder.indexOf(keyA);
       const priorityB = priorityOrder.indexOf(keyB);
       
@@ -125,7 +95,23 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
-    const sortedEntries = getAllFieldsFromPriority(sectionData, priorityOrder);
+    if (!sectionData || typeof sectionData !== 'object') {
+      return (
+        <div className="text-center py-4">
+          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
+
+    const sortedEntries = sortFieldsByPriority(sectionData, priorityOrder);
+
+    if (sortedEntries.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <p className="text-muted-foreground text-sm">No {title.toLowerCase()} data available</p>
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-3">
@@ -151,7 +137,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                 ) : (
                   formatValue(value)
                 )
-              ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
+              ) : key === 'socialMediaHandles' && typeof value === 'object' ? (
                 <div className="space-y-1">
                   {Object.entries(value).map(([platform, handle]) => (
                     <div key={platform} className="text-xs">
@@ -159,14 +145,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     </div>
                   ))}
                 </div>
-              ) : key === 'pricePerMinute' ? (
-                <span>
-                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
-                </span>
-              ) : key === 'videoCallPrice' ? (
-                <span>
-                  {value !== null && value !== undefined && value !== '' ? `$${value}` : '$Not provided'}
-                </span>
               ) : (
                 formatValue(value)
               )}
