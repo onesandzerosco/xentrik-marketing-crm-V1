@@ -152,9 +152,23 @@ export const useSecureSocialMedia = () => {
 
       // Type assertion and safe update of the socialMediaHandles in the data
       const currentData = submissionData.data as Record<string, any>;
+      const socialMediaToSave = socialMediaData[creatorId];
+      
+      // Convert to plain object to ensure JSON compatibility
       const updatedData = {
         ...currentData,
-        socialMediaHandles: socialMediaData[creatorId]
+        socialMediaHandles: {
+          instagram: socialMediaToSave.instagram,
+          tiktok: socialMediaToSave.tiktok,
+          twitter: socialMediaToSave.twitter,
+          reddit: socialMediaToSave.reddit,
+          chaturbate: socialMediaToSave.chaturbate,
+          youtube: socialMediaToSave.youtube,
+          other: socialMediaToSave.other.map(item => ({
+            platform: item.platform,
+            url: item.url
+          }))
+        }
       };
 
       // Save back to database
