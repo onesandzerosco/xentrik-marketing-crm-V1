@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -127,18 +126,19 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       const existingData = (currentData?.data as Record<string, any>) || {};
       
+      // Build the socialMediaHandles object maintaining the existing structure
+      // Predefined platforms are saved in their existing structure
+      // New/other platforms are saved in the "other" array as requested
       const socialMediaHandlesForSave = {
+        // Keep predefined platform usernames in their original location
         tiktok: socialMediaData.tiktokAccount?.username || '',
         twitter: socialMediaData.twitterAccount?.username || '',
         onlyfans: socialMediaData.onlyfansAccount?.username || '',
         snapchat: socialMediaData.snapchatAccount?.username || '',
         instagram: socialMediaData.instagramAccount?.username || '',
-        other: socialMediaData.other.map(account => ({
-          platform: account.platform,
-          username: account.username,
-          password: account.password,
-          notes: account.notes || ''
-        })),
+        // Save "other" platforms in the "other" array as requested
+        other: socialMediaData.other,
+        // Keep the detailed account info for predefined platforms
         tiktokAccount: socialMediaData.tiktokAccount,
         twitterAccount: socialMediaData.twitterAccount,
         onlyfansAccount: socialMediaData.onlyfansAccount,
@@ -153,6 +153,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           socialMediaHandles: socialMediaHandlesForSave
         }
       };
+
+      console.log('=== SAVING SOCIAL MEDIA DATA ===');
+      console.log('Data structure being saved:', updatedData);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
@@ -210,25 +213,34 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }));
   };
 
-  // Add new platform
+  // Add new platform - this goes directly into the "other" array as requested
   const addNewPlatform = () => {
     if (!newPlatformName.trim()) return;
 
-    setSocialMediaData(prev => ({
-      ...prev,
-      other: [...prev.other, {
+    console.log('=== ADDING NEW PLATFORM ===');
+    console.log('Platform name:', newPlatformName);
+    
+    setSocialMediaData(prev => {
+      const newOtherArray = [...prev.other, {
         platform: newPlatformName,
         username: '',
         password: '',
         notes: ''
-      }]
-    }));
+      }];
+      
+      console.log('New other array:', newOtherArray);
+      
+      return {
+        ...prev,
+        other: newOtherArray
+      };
+    });
 
     setNewPlatformName('');
     setShowAddPlatform(false);
   };
 
-  // Remove platform from other
+  // Remove platform from other array
   const removePlatform = (index: number) => {
     setSocialMediaData(prev => ({
       ...prev,
@@ -392,7 +404,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     ) : (
                       <div className="flex items-center">
                         <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
-                          {platform.username || 'Not set'}
+                          {platform.username || 'Not provided'}
                         </span>
                       </div>
                     )}
@@ -427,7 +439,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     ) : (
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                          {platform.password ? (showPasswords[platform.id] ? platform.password : '••••••••') : 'Not set'}
+                          {platform.password ? (showPasswords[platform.id] ? platform.password : '••••••••') : 'Not provided'}
                         </span>
                         {platform.password && (
                           <Button
@@ -459,7 +471,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                         className="rounded-[15px] h-9 border-muted-foreground/20"
                       />
                     ) : (
-                      <span className="text-sm text-muted-foreground">{platform.notes || '-'}</span>
+                      <span className="text-sm text-muted-foreground">{platform.notes || 'Not provided'}</span>
                     )}
                   </TableCell>
                   
