@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, RefreshCw, Database } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
-import InsertFayeSocialMediaButton from './InsertFayeSocialMediaButton';
 
 interface CreatorSubmission {
   id: string;
@@ -100,13 +99,10 @@ const CreatorsDataTable: React.FC = () => {
             <Database className="h-5 w-5" />
             Model Profiles ({submissions.length})
           </CardTitle>
-          <div className="flex gap-2">
-            <InsertFayeSocialMediaButton />
-            <Button onClick={fetchAcceptedCreators} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
+          <Button onClick={fetchAcceptedCreators} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </CardHeader>
         <CardContent>
           {submissions.length === 0 ? (
