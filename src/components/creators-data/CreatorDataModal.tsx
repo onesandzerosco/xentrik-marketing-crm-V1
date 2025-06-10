@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -17,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Edit, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreatorSubmission {
   id: string;
@@ -31,17 +31,20 @@ interface CreatorDataModalProps {
   submission: CreatorSubmission | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
 
 const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   submission,
   open,
   onOpenChange,
+  onDataUpdate,
 }) => {
   const { toast } = useToast();
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<any>('');
   const [submissionData, setSubmissionData] = useState<any>(submission?.data || {});
+  const [isSaving, setIsSaving] = useState(false);
 
   // Update submissionData when submission changes
   React.useEffect(() => {
@@ -96,7 +99,38 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     setEditValue(currentValue || '');
   };
 
-  const handleSaveClick = (section: string, fieldKey: string) => {
+  const updateDatabase = async (updatedData: any) => {
+    try {
+      setIsSaving(true);
+      
+      const { error } = await supabase
+        .from('onboarding_submissions')
+        .update({ data: updatedData })
+        .eq('id', submission.id);
+
+      if (error) {
+        console.error('Database update error:', error);
+        throw error;
+      }
+
+      // Call the parent component's update handler if provided
+      if (onDataUpdate) {
+        onDataUpdate({
+          ...submission,
+          data: updatedData
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to update database:', error);
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveClick = async (section: string, fieldKey: string) => {
     const editKey = `${section}.${fieldKey}`;
     
     // Update the submission data
@@ -117,13 +151,27 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     
     newData[section][fieldKey] = processedValue;
     setSubmissionData(newData);
-    setEditingField(null);
-    setEditValue('');
     
-    toast({
-      title: "Field Updated",
-      description: `${formatFieldName(fieldKey)} has been updated successfully.`,
-    });
+    // Save to database
+    const success = await updateDatabase(newData);
+    
+    if (success) {
+      setEditingField(null);
+      setEditValue('');
+      
+      toast({
+        title: "Field Updated",
+        description: `${formatFieldName(fieldKey)} has been updated successfully.`,
+      });
+    } else {
+      // Revert local changes if database update failed
+      setSubmissionData(submission.data);
+      toast({
+        title: "Update Failed",
+        description: `Failed to update ${formatFieldName(fieldKey)}. Please try again.`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancelEdit = () => {
@@ -149,7 +197,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="false">No</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
               <Save className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -173,7 +221,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Transgender">Transgender</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
               <Save className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -196,7 +244,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
               <Save className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -219,7 +267,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Versatile">Versatile</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
               <Save className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -239,7 +287,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               className="min-h-[60px]"
             />
             <div className="flex flex-col gap-1">
-              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
                 <Save className="h-3 w-3" />
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -258,7 +306,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             onChange={(e) => setEditValue(e.target.value)}
             className="flex-1"
           />
-          <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+          <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
             <Save className="h-3 w-3" />
           </Button>
           <Button size="sm" variant="outline" onClick={handleCancelEdit}>
@@ -326,6 +374,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             variant="ghost" 
             className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
             onClick={() => handleEditClick(section, fieldKey, value)}
+            disabled={isSaving}
           >
             <Edit className="h-3 w-3" />
           </Button>

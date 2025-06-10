@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -10,8 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, RefreshCw, Database } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
 
@@ -25,17 +26,12 @@ interface CreatorSubmission {
 }
 
 const CreatorsDataTable: React.FC = () => {
-  const [submissions, setSubmissions] = useState<CreatorSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<CreatorSubmission | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const { toast } = useToast();
 
-  const fetchAcceptedCreators = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching accepted creator submissions...');
-      
+  const { data: submissions = [], isLoading, refetch } = useQuery({
+    queryKey: ['accepted-creator-submissions'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('onboarding_submissions')
         .select('*')
@@ -43,31 +39,17 @@ const CreatorsDataTable: React.FC = () => {
         .order('submitted_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching accepted creators:', error);
+        console.error('Error fetching accepted submissions:', error);
         throw error;
       }
 
-      console.log('Accepted creators found:', data?.length || 0);
-      setSubmissions(data || []);
-    } catch (error) {
-      console.error('Error loading accepted creators:', error);
-      toast({
-        title: "Error loading data",
-        description: "Failed to load accepted creator submissions.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data as CreatorSubmission[];
+    },
+  });
 
-  useEffect(() => {
-    fetchAcceptedCreators();
-  }, []);
-
-  const handleViewData = (submission: CreatorSubmission) => {
-    setSelectedSubmission(submission);
-    setModalOpen(true);
+  const handleDataUpdate = (updatedSubmission: CreatorSubmission) => {
+    // Refresh the table data after successful update
+    refetch();
   };
 
   const formatDate = (dateString: string) => {
@@ -78,87 +60,73 @@ const CreatorsDataTable: React.FC = () => {
     }
   };
 
-  if (loading) {
+  const handleViewData = (submission: CreatorSubmission) => {
+    setSelectedSubmission(submission);
+    setModalOpen(true);
+  };
+
+  if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading accepted creators...</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading creator data...</div>
+      </div>
+    );
+  }
+
+  if (submissions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">No Data Available</h3>
+          <p className="text-sm text-muted-foreground">No accepted creator submissions found.</p>
+        </div>
+      </div>
     );
   }
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Model Profiles ({submissions.length})
-          </CardTitle>
-          <Button onClick={fetchAcceptedCreators} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {submissions.length === 0 ? (
-            <div className="text-center py-8">
-              <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Model Profiles</h3>
-              <p className="text-muted-foreground">
-                No accepted creator submissions found in the database.
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Submitted At</TableHead>
-                    <TableHead>Token</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {submissions.map((submission) => (
-                    <TableRow key={submission.id}>
-                      <TableCell className="font-medium">
-                        {submission.name}
-                      </TableCell>
-                      <TableCell>{submission.email}</TableCell>
-                      <TableCell>{formatDate(submission.submitted_at)}</TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {submission.token.substring(0, 8)}...
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() => handleViewData(submission)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View JSON
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Submitted</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {submissions.map((submission) => (
+              <TableRow key={submission.id}>
+                <TableCell className="font-medium">{submission.name}</TableCell>
+                <TableCell>{submission.email}</TableCell>
+                <TableCell>{formatDate(submission.submitted_at)}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">Accepted</Badge>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewData(submission)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Data
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <CreatorDataModal
         submission={selectedSubmission}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        onDataUpdate={handleDataUpdate}
       />
     </>
   );
