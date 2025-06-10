@@ -14,8 +14,9 @@ export interface SocialMediaHandles {
   reddit: string;
   chaturbate: string;
   youtube: string;
+  onlyfans: string;
+  snapchat: string;
   other: SocialMediaAccount[];
-  // Allow for any additional platforms from the database
   [key: string]: string | SocialMediaAccount[];
 }
 
@@ -24,12 +25,10 @@ export const useSecureSocialMedia = () => {
   const [loading, setLoading] = useState(false);
 
   const fetchSocialMediaForCreator = useCallback(async (creatorId: string) => {
-    // Always fetch fresh data, don't use cache
     setLoading(true);
     try {
       console.log('Fetching social media data for creator:', creatorId);
       
-      // First get the creator's email from the creators table
       const { data: creatorData, error: creatorError } = await supabase
         .from('creators')
         .select('email')
@@ -48,7 +47,6 @@ export const useSecureSocialMedia = () => {
 
       console.log('Found creator email:', creatorData.email);
 
-      // Then fetch from onboarding_submissions using the email
       const { data: submissionData, error: submissionError } = await supabase
         .from('onboarding_submissions')
         .select('data')
@@ -78,7 +76,6 @@ export const useSecureSocialMedia = () => {
         return emptyData;
       }
 
-      // Type assertion and safe access to socialMediaHandles
       const submissionJsonData = submissionData.data as Record<string, any>;
       const socialMediaHandles = submissionJsonData.socialMediaHandles || {};
       const processedData = processSocialMediaData(socialMediaHandles);
@@ -110,11 +107,6 @@ export const useSecureSocialMedia = () => {
     setSocialMediaData(prev => {
       const currentData = prev[creatorId] || getEmptySocialMediaHandles();
       
-      if (platform === 'other') {
-        // Handle 'other' platform differently - this shouldn't happen with current UI
-        return prev;
-      }
-
       const updatedData = {
         ...currentData,
         [platform]: url
@@ -129,8 +121,8 @@ export const useSecureSocialMedia = () => {
     });
   }, []);
 
-  const addCustomSocialMedia = useCallback((creatorId: string, platform: string, url: string) => {
-    console.log('Adding custom social media:', creatorId, platform, url);
+  const addOtherSocialMedia = useCallback((creatorId: string, platform: string, url: string) => {
+    console.log('Adding other social media:', creatorId, platform, url);
     setSocialMediaData(prev => {
       const currentData = prev[creatorId] || getEmptySocialMediaHandles();
       
@@ -144,8 +136,8 @@ export const useSecureSocialMedia = () => {
     });
   }, []);
 
-  const removeCustomSocialMedia = useCallback((creatorId: string, index: number) => {
-    console.log('Removing custom social media:', creatorId, index);
+  const removeOtherSocialMedia = useCallback((creatorId: string, index: number) => {
+    console.log('Removing other social media:', creatorId, index);
     setSocialMediaData(prev => {
       const currentData = prev[creatorId] || getEmptySocialMediaHandles();
       
@@ -164,7 +156,6 @@ export const useSecureSocialMedia = () => {
       console.log('Saving social media for creator:', creatorId);
       console.log('Current social media data:', socialMediaData[creatorId]);
 
-      // Get the creator's email
       const { data: creatorData, error: creatorError } = await supabase
         .from('creators')
         .select('email')
@@ -178,7 +169,6 @@ export const useSecureSocialMedia = () => {
 
       console.log('Creator email for saving:', creatorData.email);
 
-      // Get the current submission data
       const { data: submissionData, error: fetchError } = await supabase
         .from('onboarding_submissions')
         .select('data, id')
@@ -195,39 +185,35 @@ export const useSecureSocialMedia = () => {
 
       console.log('Current submission data:', submissionData);
 
-      // Type assertion and safe update of the socialMediaHandles in the data
       const currentData = submissionData.data as Record<string, any>;
-      const currentSocialMediaHandles = (currentData.socialMediaHandles || {}) as Record<string, any>;
       const socialMediaToSave = socialMediaData[creatorId];
       
       if (!socialMediaToSave) {
         throw new Error('No social media data to save');
       }
       
-      // Merge the current data with the updated data, preserving existing fields
-      const mergedSocialMediaHandles = {
-        ...currentSocialMediaHandles, // Keep existing data from DB
-        ...Object.fromEntries(
-          Object.entries(socialMediaToSave).filter(([key, value]) => {
-            // Only include non-empty values and the 'other' array
-            return key === 'other' || (typeof value === 'string' && value.trim() !== '');
-          })
-        )
+      // Create the socialMediaHandles object with the exact structure we want
+      const updatedSocialMediaHandles = {
+        instagram: socialMediaToSave.instagram || '',
+        tiktok: socialMediaToSave.tiktok || '',
+        twitter: socialMediaToSave.twitter || '',
+        reddit: socialMediaToSave.reddit || '',
+        chaturbate: socialMediaToSave.chaturbate || '',
+        youtube: socialMediaToSave.youtube || '',
+        onlyfans: socialMediaToSave.onlyfans || '',
+        snapchat: socialMediaToSave.snapchat || '',
+        other: socialMediaToSave.other || []
       };
 
-      console.log('Original DB social media handles:', currentSocialMediaHandles);
-      console.log('Data to save:', socialMediaToSave);
-      console.log('Merged social media handles:', mergedSocialMediaHandles);
+      console.log('Social media handles to save:', updatedSocialMediaHandles);
       
-      // Convert to plain object to ensure JSON compatibility
       const updatedData = {
         ...currentData,
-        socialMediaHandles: mergedSocialMediaHandles
+        socialMediaHandles: updatedSocialMediaHandles
       };
 
       console.log('Updated data to save:', updatedData);
 
-      // Save back to database
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData })
@@ -240,7 +226,6 @@ export const useSecureSocialMedia = () => {
 
       console.log('Successfully saved social media data');
       
-      // Refresh the data after saving to show the updated state
       await fetchSocialMediaForCreator(creatorId);
       
       return { success: true };
@@ -253,13 +238,12 @@ export const useSecureSocialMedia = () => {
   return {
     fetchSocialMediaForCreator,
     updateSocialMediaForCreator,
-    addCustomSocialMedia,
-    removeCustomSocialMedia,
+    addOtherSocialMedia,
+    removeOtherSocialMedia,
     saveSocialMediaForCreator,
     getSocialMediaForCreator: (creatorId: string) => {
       const data = socialMediaData[creatorId];
       if (!data) {
-        // Return empty data if no data exists for this creator
         return getEmptySocialMediaHandles();
       }
       return data;
@@ -276,12 +260,13 @@ function getEmptySocialMediaHandles(): SocialMediaHandles {
     reddit: '',
     chaturbate: '',
     youtube: '',
+    onlyfans: '',
+    snapchat: '',
     other: []
   };
 }
 
 function processSocialMediaData(data: any): SocialMediaHandles {
-  // Start with empty structure
   const result: SocialMediaHandles = {
     instagram: '',
     tiktok: '',
@@ -289,6 +274,8 @@ function processSocialMediaData(data: any): SocialMediaHandles {
     reddit: '',
     chaturbate: '',
     youtube: '',
+    onlyfans: '',
+    snapchat: '',
     other: []
   };
 
@@ -296,15 +283,19 @@ function processSocialMediaData(data: any): SocialMediaHandles {
     return result;
   }
 
-  // Process each field from the database
-  Object.entries(data).forEach(([key, value]) => {
-    if (key === 'other' && Array.isArray(value)) {
-      result.other = value;
-    } else if (typeof value === 'string') {
-      // Add all string fields to the result, whether they're predefined or not
-      result[key] = value;
+  // Handle predefined platforms
+  const predefinedPlatforms = ['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'onlyfans', 'snapchat'];
+  
+  predefinedPlatforms.forEach(platform => {
+    if (typeof data[platform] === 'string') {
+      result[platform] = data[platform];
     }
   });
+
+  // Handle the 'other' array
+  if (Array.isArray(data.other)) {
+    result.other = data.other;
+  }
 
   console.log('Processed social media data result:', result);
   return result;

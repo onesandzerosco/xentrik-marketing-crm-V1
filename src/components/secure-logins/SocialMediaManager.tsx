@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Trash2, Save, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, Save, ExternalLink, Edit, Check, X } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
 import { useSecureSocialMedia } from '@/hooks/useSecureSocialMedia';
@@ -19,18 +19,19 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const {
     fetchSocialMediaForCreator,
     updateSocialMediaForCreator,
-    addCustomSocialMedia,
-    removeCustomSocialMedia,
+    addOtherSocialMedia,
+    removeOtherSocialMedia,
     saveSocialMediaForCreator,
     getSocialMediaForCreator,
     loading
   } = useSecureSocialMedia();
 
-  const [newCustomPlatform, setNewCustomPlatform] = useState('');
-  const [newCustomUrl, setNewCustomUrl] = useState('');
+  const [newOtherPlatform, setNewOtherPlatform] = useState('');
+  const [newOtherUrl, setNewOtherUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
 
-  // Fetch data whenever creator changes
   useEffect(() => {
     console.log('Creator changed, fetching data for:', creator.id, creator.name);
     fetchSocialMediaForCreator(creator.id);
@@ -38,30 +39,43 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   const socialMediaData = getSocialMediaForCreator(creator.id);
 
-  const handleInputChange = (platform: string, value: string) => {
-    console.log('Input changed:', platform, value, 'for creator:', creator.id);
-    updateSocialMediaForCreator(creator.id, platform, value);
+  const handleStartEdit = (platform: string, currentValue: string) => {
+    setEditingField(platform);
+    setEditValue(currentValue);
   };
 
-  const handleAddCustomPlatform = () => {
-    if (newCustomPlatform.trim() && newCustomUrl.trim()) {
-      console.log('Adding custom platform:', newCustomPlatform, newCustomUrl);
-      addCustomSocialMedia(creator.id, newCustomPlatform.trim(), newCustomUrl.trim());
-      setNewCustomPlatform('');
-      setNewCustomUrl('');
+  const handleSaveEdit = () => {
+    if (editingField) {
+      updateSocialMediaForCreator(creator.id, editingField, editValue);
+      setEditingField(null);
+      setEditValue('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const handleAddOtherPlatform = () => {
+    if (newOtherPlatform.trim() && newOtherUrl.trim()) {
+      console.log('Adding other platform:', newOtherPlatform, newOtherUrl);
+      addOtherSocialMedia(creator.id, newOtherPlatform.trim(), newOtherUrl.trim());
+      setNewOtherPlatform('');
+      setNewOtherUrl('');
       toast({
-        title: "Custom Platform Added",
-        description: `Added ${newCustomPlatform} to social media accounts`,
+        title: "Platform Added",
+        description: `Added ${newOtherPlatform} to other platforms`,
       });
     }
   };
 
-  const handleRemoveCustomPlatform = (index: number) => {
-    console.log('Removing custom platform at index:', index);
-    removeCustomSocialMedia(creator.id, index);
+  const handleRemoveOtherPlatform = (index: number) => {
+    console.log('Removing other platform at index:', index);
+    removeOtherSocialMedia(creator.id, index);
     toast({
       title: "Platform Removed",
-      description: "Custom platform has been removed",
+      description: "Platform has been removed",
     });
   };
 
@@ -102,21 +116,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     { key: 'twitter', label: 'Twitter/X', icon: '🐦' },
     { key: 'reddit', label: 'Reddit', icon: '🤖' },
     { key: 'chaturbate', label: 'Chaturbate', icon: '💬' },
-    { key: 'youtube', label: 'YouTube', icon: '📺' }
+    { key: 'youtube', label: 'YouTube', icon: '📺' },
+    { key: 'onlyfans', label: 'OnlyFans', icon: '🔞' },
+    { key: 'snapchat', label: 'Snapchat', icon: '👻' }
   ];
-
-  // Get all platforms from the database (excluding predefined ones and 'other')
-  const additionalPlatforms = Object.keys(socialMediaData)
-    .filter(key => 
-      key !== 'other' && 
-      !predefinedPlatforms.some(p => p.key === key) &&
-      typeof socialMediaData[key] === 'string'
-    )
-    .map(key => ({
-      key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
-      icon: '🔗'
-    }));
 
   if (loading) {
     return (
@@ -129,7 +132,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   }
 
   console.log('Rendering social media data for creator:', creator.name, socialMediaData);
-  console.log('Additional platforms found:', additionalPlatforms);
 
   return (
     <Card>
@@ -145,13 +147,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
             <TabsTrigger value="predefined" className="rounded-[15px]">
               Standard Platforms
             </TabsTrigger>
-            {additionalPlatforms.length > 0 && (
-              <TabsTrigger value="additional" className="rounded-[15px]">
-                Other Platforms
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="custom" className="rounded-[15px]">
-              Custom Platforms
+            <TabsTrigger value="other" className="rounded-[15px]">
+              Other Platforms
             </TabsTrigger>
           </TabsList>
           
@@ -159,6 +156,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
             <div className="space-y-4">
               {predefinedPlatforms.map((platform) => {
                 const value = socialMediaData[platform.key as keyof typeof socialMediaData] as string || '';
+                const isEditing = editingField === platform.key;
+                
                 return (
                   <div key={platform.key} className="space-y-2">
                     <Label className="flex items-center gap-2">
@@ -166,83 +165,74 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                       {platform.label}
                     </Label>
                     <div className="flex gap-2">
-                      <Input 
-                        placeholder={`Enter ${platform.label} URL or username`}
-                        value={value}
-                        onChange={(e) => handleInputChange(platform.key, e.target.value)}
-                        className="rounded-[15px]"
-                      />
-                      {value && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => window.open(value.startsWith('http') ? value : `https://${value}`, '_blank')}
-                          className="rounded-[15px]"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
+                      {isEditing ? (
+                        <>
+                          <Input 
+                            placeholder={`Enter ${platform.label} URL or username`}
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="rounded-[15px]"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={handleSaveEdit}
+                            className="rounded-[15px]"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={handleCancelEdit}
+                            className="rounded-[15px]"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex-1 p-2 border rounded-[15px] bg-muted/30 min-h-[40px] flex items-center">
+                            {value || <span className="text-muted-foreground">Not provided</span>}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleStartEdit(platform.key, value)}
+                            className="rounded-[15px]"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {value && (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => window.open(value.startsWith('http') ? value : `https://${value}`, '_blank')}
+                              className="rounded-[15px]"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
-                    {!value && (
-                      <p className="text-sm text-muted-foreground">Not provided</p>
-                    )}
                   </div>
                 );
               })}
             </div>
           </TabsContent>
-
-          {additionalPlatforms.length > 0 && (
-            <TabsContent value="additional">
-              <div className="space-y-4">
-                <h4 className="font-medium">Additional Platforms from Database</h4>
-                {additionalPlatforms.map((platform) => {
-                  const value = socialMediaData[platform.key] as string || '';
-                  return (
-                    <div key={platform.key} className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <span>{platform.icon}</span>
-                        {platform.label}
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder={`Enter ${platform.label} URL or username`}
-                          value={value}
-                          onChange={(e) => handleInputChange(platform.key, e.target.value)}
-                          className="rounded-[15px]"
-                        />
-                        {value && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => window.open(value.startsWith('http') ? value : `https://${value}`, '_blank')}
-                            className="rounded-[15px]"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      {!value && (
-                        <p className="text-sm text-muted-foreground">Not provided</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          )}
           
-          <TabsContent value="custom">
+          <TabsContent value="other">
             <div className="space-y-4">
               <div className="p-4 border rounded-[15px] bg-muted/30">
-                <h4 className="font-medium mb-3">Add Custom Platform</h4>
+                <h4 className="font-medium mb-3">Add New Platform</h4>
                 <div className="space-y-3">
                   <div>
                     <Label>Platform Name</Label>
                     <Input 
                       placeholder="e.g., OnlyFans, Twitch, etc."
-                      value={newCustomPlatform}
-                      onChange={(e) => setNewCustomPlatform(e.target.value)}
+                      value={newOtherPlatform}
+                      onChange={(e) => setNewOtherPlatform(e.target.value)}
                       className="rounded-[15px]"
                     />
                   </div>
@@ -250,26 +240,26 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     <Label>URL</Label>
                     <Input 
                       placeholder="https://..."
-                      value={newCustomUrl}
-                      onChange={(e) => setNewCustomUrl(e.target.value)}
+                      value={newOtherUrl}
+                      onChange={(e) => setNewOtherUrl(e.target.value)}
                       className="rounded-[15px]"
                     />
                   </div>
                   <Button 
-                    onClick={handleAddCustomPlatform}
-                    disabled={!newCustomPlatform.trim() || !newCustomUrl.trim()}
+                    onClick={handleAddOtherPlatform}
+                    disabled={!newOtherPlatform.trim() || !newOtherUrl.trim()}
                     className="w-full rounded-[15px]"
                     variant="outline"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Custom Platform
+                    Add Platform
                   </Button>
                 </div>
               </div>
               
               {socialMediaData.other && socialMediaData.other.length > 0 ? (
                 <div className="space-y-3">
-                  <h4 className="font-medium">Custom Platforms</h4>
+                  <h4 className="font-medium">Other Platforms</h4>
                   {socialMediaData.other.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 p-3 border rounded-[15px]">
                       <div className="flex-1">
@@ -287,7 +277,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => handleRemoveCustomPlatform(index)}
+                        onClick={() => handleRemoveOtherPlatform(index)}
                         className="rounded-[15px] text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -297,7 +287,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </div>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  No custom platforms added yet
+                  No other platforms added yet
                 </div>
               )}
             </div>
