@@ -22,6 +22,34 @@ interface LoginDetailsEditorProps {
   onSaveLoginDetails: (platform: string) => void;
 }
 
+interface OnboardingData {
+  personalInfo?: any;
+  contentAndService?: {
+    socialMediaHandles?: {
+      instagram?: string;
+      twitter?: string;
+      tiktok?: string;
+      onlyfans?: string;
+      snapchat?: string;
+      other?: Array<{
+        platform: string;
+        handle: string;
+      }>;
+    };
+  };
+  socialMediaHandles?: {
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    onlyfans?: string;
+    snapchat?: string;
+    other?: Array<{
+      platform: string;
+      handle: string;
+    }>;
+  };
+}
+
 const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
   creator,
   loginDetails,
@@ -55,7 +83,7 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
         }
 
         if (submissions && submissions.length > 0) {
-          const submissionData = submissions[0].data;
+          const submissionData = submissions[0].data as OnboardingData;
           console.log('Found submission data:', submissionData);
           
           // Extract social media handles from the submission data
@@ -108,7 +136,10 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
       const { error: submissionError } = await supabase
         .from('onboarding_submissions')
         .update({ 
-          data: supabase.raw(`jsonb_set(data, '{socialMediaHandles}', '${JSON.stringify(updatedHandles)}'::jsonb)`)
+          data: {
+            ...socialMediaHandles,
+            socialMediaHandles: updatedHandles
+          }
         })
         .or(`name.eq.${creator.name},email.eq.${creator.email}`);
 
