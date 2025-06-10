@@ -110,13 +110,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
+  // Only the predefined platforms that should be in Standard Platforms
   const predefinedPlatforms = [
     { key: 'instagram', label: 'Instagram', icon: '📷' },
     { key: 'tiktok', label: 'TikTok', icon: '🎵' },
     { key: 'twitter', label: 'Twitter/X', icon: '🐦' },
-    { key: 'reddit', label: 'Reddit', icon: '🤖' },
-    { key: 'chaturbate', label: 'Chaturbate', icon: '💬' },
-    { key: 'youtube', label: 'YouTube', icon: '📺' },
     { key: 'onlyfans', label: 'OnlyFans', icon: '🔞' },
     { key: 'snapchat', label: 'Snapchat', icon: '👻' }
   ];
@@ -230,7 +228,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                   <div>
                     <Label>Platform Name</Label>
                     <Input 
-                      placeholder="e.g., OnlyFans, Twitch, etc."
+                      placeholder="e.g., Reddit, YouTube, etc."
                       value={newOtherPlatform}
                       onChange={(e) => setNewOtherPlatform(e.target.value)}
                       className="rounded-[15px]"
@@ -269,7 +267,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => window.open(item.url, '_blank')}
+                        onClick={() => window.open(item.url.startsWith('http') ? item.url : `https://${item.url}`, '_blank')}
                         className="rounded-[15px]"
                       >
                         <ExternalLink className="h-4 w-4" />

@@ -11,9 +11,6 @@ export interface SocialMediaHandles {
   instagram: string;
   tiktok: string;
   twitter: string;
-  reddit: string;
-  chaturbate: string;
-  youtube: string;
   onlyfans: string;
   snapchat: string;
   other: SocialMediaAccount[];
@@ -198,14 +195,11 @@ export const useSecureSocialMedia = () => {
         url: item.url
       }));
       
-      // Create the socialMediaHandles object with the exact structure we want
+      // Create the socialMediaHandles object with the exact structure we want - only predefined platforms
       const updatedSocialMediaHandles = {
         instagram: socialMediaToSave.instagram || '',
         tiktok: socialMediaToSave.tiktok || '',
         twitter: socialMediaToSave.twitter || '',
-        reddit: socialMediaToSave.reddit || '',
-        chaturbate: socialMediaToSave.chaturbate || '',
-        youtube: socialMediaToSave.youtube || '',
         onlyfans: socialMediaToSave.onlyfans || '',
         snapchat: socialMediaToSave.snapchat || '',
         other: otherForSaving
@@ -263,9 +257,6 @@ function getEmptySocialMediaHandles(): SocialMediaHandles {
     instagram: '',
     tiktok: '',
     twitter: '',
-    reddit: '',
-    chaturbate: '',
-    youtube: '',
     onlyfans: '',
     snapchat: '',
     other: []
@@ -277,9 +268,6 @@ function processSocialMediaData(data: any): SocialMediaHandles {
     instagram: '',
     tiktok: '',
     twitter: '',
-    reddit: '',
-    chaturbate: '',
-    youtube: '',
     onlyfans: '',
     snapchat: '',
     other: []
@@ -289,8 +277,8 @@ function processSocialMediaData(data: any): SocialMediaHandles {
     return result;
   }
 
-  // Handle predefined platforms
-  const predefinedPlatforms = ['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'onlyfans', 'snapchat'];
+  // Handle predefined platforms only - the ones that should be in Standard Platforms
+  const predefinedPlatforms = ['instagram', 'tiktok', 'twitter', 'onlyfans', 'snapchat'];
   
   predefinedPlatforms.forEach(platform => {
     if (typeof data[platform] === 'string') {
