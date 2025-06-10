@@ -110,10 +110,25 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       // Properly handle the existing data
       const existingData = (currentData?.data as Record<string, any>) || {};
       
+      // Convert socialMediaData to a JSON-compatible format
+      const socialMediaHandlesForSave = {
+        tiktok: socialMediaData.tiktok,
+        twitter: socialMediaData.twitter,
+        onlyfans: socialMediaData.onlyfans,
+        snapchat: socialMediaData.snapchat,
+        instagram: socialMediaData.instagram,
+        other: socialMediaData.other.map(account => ({
+          platform: account.platform,
+          username: account.username,
+          password: account.password,
+          notes: account.notes || ''
+        }))
+      };
+      
       // Update the socialMediaHandles in the existing data
       const updatedData = {
         ...existingData,
-        socialMediaHandles: socialMediaData
+        socialMediaHandles: socialMediaHandlesForSave
       };
 
       const { error: updateError } = await supabase
