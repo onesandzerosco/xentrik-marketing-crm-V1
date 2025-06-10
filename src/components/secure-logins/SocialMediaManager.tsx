@@ -475,21 +475,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          {/* Empty div to maintain spacing */}
-        </div>
-        <Button 
-          variant="destructive" 
-          size="sm"
-          className="flex items-center gap-2 rounded-[15px] shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90"
-          onClick={handleLock}
-        >
-          <Lock className="h-4 w-4" />
-          Lock Secure Area
-        </Button>
-      </div>
-
-      <div className="flex items-center justify-between">
         <div className="flex gap-2">
           {canEdit && !isEditing && (
             <>
@@ -532,6 +517,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
             </div>
           )}
         </div>
+        <Button 
+          variant="destructive" 
+          size="sm"
+          className="flex items-center gap-2 rounded-[15px] shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90"
+          onClick={handleLock}
+        >
+          <Lock className="h-4 w-4" />
+          Lock Secure Area
+        </Button>
       </div>
 
       <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
