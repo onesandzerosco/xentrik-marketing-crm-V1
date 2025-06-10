@@ -41,10 +41,17 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   });
 
   useEffect(() => {
+    console.log('=== COMPONENT LOADING DATA ===');
     console.log('Creator changed, fetching data for:', creator.id, creator.name);
     const loadData = async () => {
-      const data = await getSocialMediaForCreator(creator.id);
-      setSocialMediaData(data);
+      try {
+        const data = await getSocialMediaForCreator(creator.id);
+        console.log('=== COMPONENT RECEIVED DATA ===');
+        console.log('Data received in component:', data);
+        setSocialMediaData(data);
+      } catch (error) {
+        console.error('Error loading data in component:', error);
+      }
     };
     loadData();
   }, [creator.id, getSocialMediaForCreator]);
@@ -57,7 +64,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const handleSaveEdit = () => {
     if (editingField) {
       updateSocialMediaForCreator(creator.id, editingField, editValue);
-      // Update local state
+      // Update local state immediately for UI responsiveness
       setSocialMediaData(prev => ({
         ...prev,
         [editingField]: editValue
@@ -76,7 +83,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     if (newOtherPlatform.trim() && newOtherUrl.trim()) {
       console.log('Adding other platform:', newOtherPlatform, newOtherUrl);
       addOtherSocialMedia(creator.id, newOtherPlatform.trim(), newOtherUrl.trim());
-      // Update local state
+      // Update local state immediately for UI responsiveness
       setSocialMediaData(prev => ({
         ...prev,
         other: [...prev.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
@@ -93,7 +100,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const handleRemoveOtherPlatform = (index: number) => {
     console.log('Removing other platform at index:', index);
     removeOtherSocialMedia(creator.id, index);
-    // Update local state
+    // Update local state immediately for UI responsiveness
     setSocialMediaData(prev => ({
       ...prev,
       other: prev.other.filter((_, i) => i !== index)
@@ -105,13 +112,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleSave = async () => {
+    console.log('=== COMPONENT SAVE PROCESS ===');
     console.log('Starting save process for creator:', creator.id);
     setIsSaving(true);
     try {
       const result = await saveSocialMediaForCreator(creator.id);
       if (result.success) {
-        // Refresh data after save
+        // Refresh data after save to show what's actually in the database
         const freshData = await getSocialMediaForCreator(creator.id);
+        console.log('Fresh data after save in component:', freshData);
         setSocialMediaData(freshData);
         toast({
           title: "Social Media Saved",
@@ -138,7 +147,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
-  // Only the predefined platforms that should be in Standard Platforms
+  // Predefined platforms that should be in Standard Platforms
   const predefinedPlatforms = [
     { key: 'instagram', label: 'Instagram', icon: '📷' },
     { key: 'tiktok', label: 'TikTok', icon: '🎵' },
@@ -157,6 +166,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     );
   }
 
+  console.log('=== COMPONENT RENDERING ===');
   console.log('Rendering social media data for creator:', creator.name, socialMediaData);
 
   return (
