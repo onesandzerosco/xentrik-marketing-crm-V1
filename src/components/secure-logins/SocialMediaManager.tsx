@@ -35,6 +35,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
+  // Predefined platforms that should always be visible
+  const predefinedPlatforms = ['TikTok', 'Twitter', 'OnlyFans', 'Snapchat', 'Instagram'];
+
   // Fetch social media logins from the new table
   const fetchSocialMediaLogins = async () => {
     try {
@@ -60,7 +63,35 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       }
 
       console.log('Social media logins found:', data);
-      setSocialMediaLogins(data || []);
+      
+      // Ensure all predefined platforms exist, even if empty
+      const existingPlatforms = new Set((data || []).map(login => login.platform));
+      const missingPredefinedPlatforms = predefinedPlatforms.filter(platform => !existingPlatforms.has(platform));
+      
+      // Create placeholder entries for missing predefined platforms
+      const placeholderLogins: SocialMediaLogin[] = missingPredefinedPlatforms.map(platform => ({
+        id: `placeholder-${platform.toLowerCase()}`,
+        creator_email: creator.email,
+        platform,
+        username: '',
+        password: '',
+        notes: '',
+        is_predefined: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+
+      // Combine existing data with placeholders
+      const allLogins = [...(data || []), ...placeholderLogins];
+      
+      // Sort: predefined first, then alphabetically
+      allLogins.sort((a, b) => {
+        if (a.is_predefined && !b.is_predefined) return -1;
+        if (!a.is_predefined && b.is_predefined) return 1;
+        return a.platform.localeCompare(b.platform);
+      });
+
+      setSocialMediaLogins(allLogins);
     } catch (error) {
       console.error('Error in fetchSocialMediaLogins:', error);
       toast({
@@ -80,7 +111,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       console.log('=== SAVING SOCIAL MEDIA LOGIN ===');
       console.log('Login data:', login);
 
-      if (login.id) {
+      if (login.id && !login.id.startsWith('placeholder-')) {
         // Update existing login
         const { error } = await supabase
           .from('social_media_logins')
@@ -101,7 +132,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           return;
         }
       } else {
-        // Create new login
+        // Create new login (for placeholders or new platforms)
         const { error } = await supabase
           .from('social_media_logins')
           .insert({
@@ -110,7 +141,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
             username: login.username || '',
             password: login.password || '',
             notes: login.notes || '',
-            is_predefined: false
+            is_predefined: login.is_predefined || false
           });
 
         if (error) {
@@ -149,8 +180,14 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     try {
       setSaving(true);
       
-      // Update all existing logins
-      const updatePromises = socialMediaLogins.map(login => 
+      // Filter out placeholders and prepare updates/inserts
+      const realLogins = socialMediaLogins.filter(login => !login.id.startsWith('placeholder-'));
+      const placeholderLogins = socialMediaLogins.filter(login => 
+        login.id.startsWith('placeholder-') && (login.username || login.password || login.notes)
+      );
+
+      // Update existing logins
+      const updatePromises = realLogins.map(login => 
         supabase
           .from('social_media_logins')
           .update({
@@ -161,7 +198,22 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           .eq('id', login.id)
       );
 
-      const results = await Promise.all(updatePromises);
+      // Insert new logins from placeholders that have data
+      const insertPromises = placeholderLogins.map(login =>
+        supabase
+          .from('social_media_logins')
+          .insert({
+            creator_email: creator.email,
+            platform: login.platform,
+            username: login.username || '',
+            password: login.password || '',
+            notes: login.notes || '',
+            is_predefined: login.is_predefined
+          })
+      );
+
+      const allPromises = [...updatePromises, ...insertPromises];
+      const results = await Promise.all(allPromises);
       
       const hasErrors = results.some(result => result.error);
       if (hasErrors) {
@@ -245,6 +297,14 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Remove platform
   const removePlatform = async (id: string, platform: string) => {
+    // Don't allow removal of predefined platforms, just clear their data
+    if (predefinedPlatforms.includes(platform)) {
+      updateLogin(id, 'username', '');
+      updateLogin(id, 'password', '');
+      updateLogin(id, 'notes', '');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('social_media_logins')
@@ -293,8 +353,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       </div>
     );
   }
-
-  const predefinedPlatforms = ['TikTok', 'Twitter', 'OnlyFans', 'Snapchat', 'Instagram'];
   
   const getPlatformColor = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -357,127 +415,118 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         </div>
       </div>
 
-      {socialMediaLogins.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg bg-muted/30">
-          <div className="text-muted-foreground">
-            <p className="text-lg font-medium mb-2">No social media accounts found</p>
-            <p className="text-sm">Add platforms to manage login credentials</p>
-          </div>
-        </div>
-      ) : (
-        <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="font-semibold text-foreground">Platform</TableHead>
-                <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
-                <TableHead className="font-semibold text-foreground">Login Password</TableHead>
-                <TableHead className="font-semibold text-foreground">Notes</TableHead>
-                {isEditing && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {socialMediaLogins.map((login) => (
-                <TableRow key={login.id} className="hover:bg-muted/20">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
-                        {login.platform.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="font-medium text-foreground">{login.platform}</span>
+      <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="font-semibold text-foreground">Platform</TableHead>
+              <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
+              <TableHead className="font-semibold text-foreground">Login Password</TableHead>
+              <TableHead className="font-semibold text-foreground">Notes</TableHead>
+              {isEditing && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {socialMediaLogins.map((login) => (
+              <TableRow key={login.id} className="hover:bg-muted/20">
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                      {login.platform.charAt(0).toUpperCase()}
                     </div>
-                  </TableCell>
-                  
-                  <TableCell>
-                    {isEditing ? (
+                    <span className="font-medium text-foreground">{login.platform}</span>
+                  </div>
+                </TableCell>
+                
+                <TableCell>
+                  {isEditing ? (
+                    <Input
+                      value={login.username}
+                      onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
+                      placeholder="username"
+                      className="rounded-[15px] h-9 border-muted-foreground/20"
+                    />
+                  ) : (
+                    <div className="flex items-center">
+                      <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                        {login.username || 'Not provided'}
+                      </span>
+                    </div>
+                  )}
+                </TableCell>
+                
+                <TableCell>
+                  {isEditing ? (
+                    <div className="flex gap-1">
                       <Input
-                        value={login.username}
-                        onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
-                        placeholder="username"
-                        className="rounded-[15px] h-9 border-muted-foreground/20"
+                        type={showPasswords[login.id] ? 'text' : 'password'}
+                        value={login.password}
+                        onChange={(e) => updateLogin(login.id, 'password', e.target.value)}
+                        placeholder="Enter password"
+                        className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
                       />
-                    ) : (
-                      <div className="flex items-center">
-                        <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
-                          {login.username || 'Not provided'}
-                        </span>
-                      </div>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell>
-                    {isEditing ? (
-                      <div className="flex gap-1">
-                        <Input
-                          type={showPasswords[login.id] ? 'text' : 'password'}
-                          value={login.password}
-                          onChange={(e) => updateLogin(login.id, 'password', e.target.value)}
-                          placeholder="Enter password"
-                          className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
-                        />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => togglePasswordVisibility(login.id)}
+                        className="h-9 w-9 p-0"
+                      >
+                        {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : 'Not provided'}
+                      </span>
+                      {login.password && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => togglePasswordVisibility(login.id)}
-                          className="h-9 w-9 p-0"
+                          className="h-6 w-6 p-0"
                         >
                           {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                         </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : 'Not provided'}
-                        </span>
-                        {login.password && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => togglePasswordVisibility(login.id)}
-                            className="h-6 w-6 p-0"
-                          >
-                            {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell>
-                    {isEditing ? (
-                      <Input
-                        value={login.notes}
-                        onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
-                        placeholder="Additional notes"
-                        className="rounded-[15px] h-9 border-muted-foreground/20"
-                      />
-                    ) : (
-                      <span className="text-sm text-muted-foreground">{login.notes || 'Not provided'}</span>
-                    )}
-                  </TableCell>
-                  
-                  {isEditing && (
-                    <TableCell>
-                      {!login.is_predefined && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removePlatform(login.id, login.platform)}
-                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
                       )}
-                    </TableCell>
+                    </div>
                   )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                </TableCell>
+                
+                <TableCell>
+                  {isEditing ? (
+                    <Input
+                      value={login.notes}
+                      onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
+                      placeholder="Additional notes"
+                      className="rounded-[15px] h-9 border-muted-foreground/20"
+                    />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{login.notes || 'Not provided'}</span>
+                  )}
+                </TableCell>
+                
+                {isEditing && (
+                  <TableCell>
+                    {!login.is_predefined && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePlatform(login.id, login.platform)}
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Add New Platform Form */}
       {showAddPlatform && (

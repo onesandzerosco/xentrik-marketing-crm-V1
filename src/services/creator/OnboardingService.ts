@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -70,44 +69,36 @@ export class OnboardingService {
       console.log("Creator email:", creatorEmail);
       
       const socialMediaHandles = formData.contentAndService?.socialMediaHandles;
-      if (!socialMediaHandles) {
-        console.log("No social media handles found in submission data");
-        return;
-      }
-
-      console.log("Social media handles data:", socialMediaHandles);
-
       const socialMediaRecords: any[] = [];
 
-      // Process predefined platforms
+      // Process predefined platforms - always create entries for these
       const predefinedPlatforms = ['tiktok', 'twitter', 'onlyfans', 'snapchat', 'instagram'];
       
       for (const platform of predefinedPlatforms) {
-        const username = socialMediaHandles[platform];
-        if (username && username.trim() !== '') {
-          const platformAccount = socialMediaHandles[`${platform}Account`] || {};
-          
-          socialMediaRecords.push({
-            creator_email: creatorEmail,
-            platform: platform.charAt(0).toUpperCase() + platform.slice(1), // Capitalize first letter
-            username: username,
-            password: platformAccount.password || null,
-            notes: platformAccount.notes || null,
-            is_predefined: true
-          });
-        }
+        const username = socialMediaHandles?.[platform] || '';
+        const platformAccount = socialMediaHandles?.[`${platform}Account`] || {};
+        
+        // Always create a record for predefined platforms, even if empty
+        socialMediaRecords.push({
+          creator_email: creatorEmail,
+          platform: platform.charAt(0).toUpperCase() + platform.slice(1), // Capitalize first letter
+          username: username,
+          password: platformAccount.password || '',
+          notes: platformAccount.notes || '',
+          is_predefined: true
+        });
       }
 
-      // Process "other" platforms
-      if (socialMediaHandles.other && Array.isArray(socialMediaHandles.other)) {
+      // Process "other" platforms - only if they have data
+      if (socialMediaHandles?.other && Array.isArray(socialMediaHandles.other)) {
         for (const otherPlatform of socialMediaHandles.other) {
           if (otherPlatform.platform && otherPlatform.username) {
             socialMediaRecords.push({
               creator_email: creatorEmail,
               platform: otherPlatform.platform,
               username: otherPlatform.username,
-              password: otherPlatform.password || null,
-              notes: otherPlatform.notes || null,
+              password: otherPlatform.password || '',
+              notes: otherPlatform.notes || '',
               is_predefined: false
             });
           }
