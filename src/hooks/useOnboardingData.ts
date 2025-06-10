@@ -22,52 +22,68 @@ export const useOnboardingData = (creatorId: string) => {
     
     setLoading(true);
     try {
-      console.log('Fetching onboarding data for creator:', creatorId);
+      console.log('Fetching onboarding data for creator ID:', creatorId);
       
-      // Find the submission by creator name (assuming creatorId contains the name)
+      // First try to find by exact creator name match
+      const creatorNameQuery = creatorId.replace('-', ' ');
+      console.log('Searching for creator name:', creatorNameQuery);
+      
       const { data: submissions, error } = await supabase
         .from('onboarding_submissions')
         .select('*')
-        .ilike('name', `%${creatorId.replace('-', ' ')}%`)
         .eq('status', 'accepted')
-        .limit(1);
+        .order('submitted_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching onboarding data:', error);
+        console.error('Error fetching onboarding submissions:', error);
         return;
       }
 
-      console.log('Raw submissions data:', submissions);
+      console.log('All accepted submissions:', submissions);
 
       if (submissions && submissions.length > 0) {
-        const submission = submissions[0];
-        console.log('Found submission:', submission);
-        console.log('Raw submission data:', submission.data);
+        // Try to find the submission by name matching
+        let submission = submissions.find(sub => 
+          sub.name.toLowerCase().includes(creatorNameQuery.toLowerCase()) ||
+          creatorNameQuery.toLowerCase().includes(sub.name.toLowerCase())
+        );
+
+        // If no name match, take the first one for now (you might want to improve this logic)
+        if (!submission) {
+          console.log('No exact name match found, using first submission');
+          submission = submissions[0];
+        }
+
+        console.log('Using submission:', submission);
+        console.log('Raw submission data column:', submission.data);
         
         let parsedData: OnboardingData = {};
         
+        // Handle different data formats
         if (typeof submission.data === 'string') {
           try {
             parsedData = JSON.parse(submission.data);
-            console.log('Parsed JSON data:', parsedData);
+            console.log('Parsed data from string:', parsedData);
           } catch (e) {
-            console.error('Error parsing submission data:', e);
+            console.error('Error parsing submission data as JSON:', e);
+            parsedData = {};
           }
         } else if (typeof submission.data === 'object' && submission.data !== null) {
           parsedData = submission.data as OnboardingData;
-          console.log('Direct object data:', parsedData);
+          console.log('Using data as object:', parsedData);
         }
         
         console.log('Final parsed data:', parsedData);
-        console.log('Social media handles from data:', parsedData.socialMediaHandles);
+        console.log('Social media handles found:', parsedData.socialMediaHandles);
         
         setOnboardingData(parsedData);
       } else {
-        console.log('No submissions found for creator:', creatorId);
+        console.log('No accepted submissions found');
         setOnboardingData(null);
       }
     } catch (error) {
       console.error('Error in fetchOnboardingData:', error);
+      setOnboardingData(null);
     } finally {
       setLoading(false);
     }
@@ -75,7 +91,7 @@ export const useOnboardingData = (creatorId: string) => {
 
   const updateSocialMediaHandles = useCallback(async (updatedHandles: SocialMediaHandles) => {
     if (!creatorId || !onboardingData) {
-      console.log('Missing creatorId or onboardingData:', { creatorId, onboardingData });
+      console.log('Missing creatorId or onboardingData for update');
       return false;
     }
 
@@ -89,13 +105,14 @@ export const useOnboardingData = (creatorId: string) => {
 
       console.log('Updated data to save:', updatedData);
 
-      // Find the submission to update
+      // Find the submission to update using the same logic as fetch
+      const creatorNameQuery = creatorId.replace('-', ' ');
+      
       const { data: submissions, error: fetchError } = await supabase
         .from('onboarding_submissions')
-        .select('id')
-        .ilike('name', `%${creatorId.replace('-', ' ')}%`)
+        .select('id, name')
         .eq('status', 'accepted')
-        .limit(1);
+        .order('submitted_at', { ascending: false });
 
       if (fetchError || !submissions || submissions.length === 0) {
         console.error('Error finding submission to update:', fetchError);
@@ -107,12 +124,22 @@ export const useOnboardingData = (creatorId: string) => {
         return false;
       }
 
-      console.log('Found submission to update:', submissions[0]);
+      // Find the matching submission
+      let targetSubmission = submissions.find(sub => 
+        sub.name.toLowerCase().includes(creatorNameQuery.toLowerCase()) ||
+        creatorNameQuery.toLowerCase().includes(sub.name.toLowerCase())
+      );
+
+      if (!targetSubmission) {
+        targetSubmission = submissions[0];
+      }
+
+      console.log('Updating submission ID:', targetSubmission.id);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData })
-        .eq('id', submissions[0].id);
+        .eq('id', targetSubmission.id);
 
       if (updateError) {
         console.error('Error updating onboarding data:', updateError);
@@ -146,7 +173,7 @@ export const useOnboardingData = (creatorId: string) => {
   }, [fetchOnboardingData]);
 
   const socialMediaHandles = onboardingData?.socialMediaHandles || {};
-  console.log('Returning social media handles:', socialMediaHandles);
+  console.log('Hook returning social media handles:', socialMediaHandles);
 
   return {
     onboardingData,

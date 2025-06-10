@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, Save, Trash2, RefreshCw } from 'lucide-react';
 import { Creator } from '../../types';
 
 interface SocialMediaManagerProps {
@@ -25,7 +25,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
   // Update editedHandles when socialMediaHandles prop changes
   useEffect(() => {
     console.log('SocialMediaManager - received socialMediaHandles:', socialMediaHandles);
-    setEditedHandles(socialMediaHandles);
+    console.log('SocialMediaManager - socialMediaHandles type:', typeof socialMediaHandles);
+    console.log('SocialMediaManager - socialMediaHandles keys:', Object.keys(socialMediaHandles));
+    
+    // Ensure we have a valid object
+    const validHandles = socialMediaHandles && typeof socialMediaHandles === 'object' 
+      ? socialMediaHandles 
+      : {};
+    
+    setEditedHandles(validHandles);
   }, [socialMediaHandles]);
 
   const handleUpdateHandle = (platform: string, handle: string) => {
@@ -63,8 +71,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
 
   const hasChanges = JSON.stringify(editedHandles) !== JSON.stringify(socialMediaHandles);
 
-  console.log('SocialMediaManager render - editedHandles:', editedHandles);
-  console.log('SocialMediaManager render - hasChanges:', hasChanges);
+  console.log('SocialMediaManager render state:');
+  console.log('- editedHandles:', editedHandles);
+  console.log('- socialMediaHandles:', socialMediaHandles);
+  console.log('- hasChanges:', hasChanges);
+  console.log('- editedHandles entries:', Object.entries(editedHandles));
 
   return (
     <Card>
@@ -75,42 +86,45 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Display current data for debugging */}
+        {/* Debug information */}
         <div className="text-xs text-muted-foreground border-l-2 border-muted pl-2">
           <p>Debug: Found {Object.keys(editedHandles).length} social media handles</p>
-          {Object.keys(editedHandles).length === 0 && (
+          <p>Original data: {Object.keys(socialMediaHandles).length} handles</p>
+          {Object.keys(editedHandles).length === 0 && Object.keys(socialMediaHandles).length === 0 && (
             <p className="text-amber-600">No social media handles found in onboarding data</p>
+          )}
+          {Object.keys(socialMediaHandles).length > 0 && (
+            <p className="text-green-600">Social media data loaded from onboarding submission</p>
           )}
         </div>
 
         {/* Existing handles */}
-        {Object.entries(editedHandles).map(([platform, handle]) => (
-          <div key={platform} className="flex items-center space-x-2">
-            <div className="flex-1">
-              <Label className="capitalize">{platform}</Label>
-              <Input
-                value={handle}
-                onChange={(e) => handleUpdateHandle(platform, e.target.value)}
-                placeholder={`Enter ${platform} handle`}
-                className="rounded-[15px]"
-              />
+        {Object.entries(editedHandles).length > 0 ? (
+          Object.entries(editedHandles).map(([platform, handle]) => (
+            <div key={platform} className="flex items-center space-x-2">
+              <div className="flex-1">
+                <Label className="capitalize">{platform}</Label>
+                <Input
+                  value={handle || ''}
+                  onChange={(e) => handleUpdateHandle(platform, e.target.value)}
+                  placeholder={`Enter ${platform} handle`}
+                  className="rounded-[15px]"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => handleRemove(platform)}
+                className="rounded-[15px] mt-6"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => handleRemove(platform)}
-              className="rounded-[15px] mt-6"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-
-        {/* Show message if no handles exist */}
-        {Object.keys(editedHandles).length === 0 && (
+          ))
+        ) : (
           <div className="text-center py-4 text-muted-foreground">
             <p>No social media accounts found in onboarding data.</p>
-            <p className="text-xs">Add new platforms below.</p>
+            <p className="text-xs">Add new platforms below or check if the creator has completed onboarding.</p>
           </div>
         )}
 
@@ -119,7 +133,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
           <Label>Add New Platform</Label>
           <div className="flex space-x-2 mt-2">
             <Input
-              placeholder="Platform name"
+              placeholder="Platform name (e.g., Instagram)"
               value={newPlatform}
               onChange={(e) => setNewPlatform(e.target.value)}
               className="rounded-[15px]"
