@@ -58,6 +58,85 @@ export class OnboardingService {
       return undefined;
     }
   }
+
+  /**
+   * Extract and save social media handles from submission data
+   * @param formData The onboarding form data
+   * @param creatorEmail The creator's email address
+   */
+  private static async saveSocialMediaHandles(formData: any, creatorEmail: string): Promise<void> {
+    try {
+      console.log("=== SAVING SOCIAL MEDIA HANDLES ===");
+      console.log("Creator email:", creatorEmail);
+      
+      const socialMediaHandles = formData.contentAndService?.socialMediaHandles;
+      if (!socialMediaHandles) {
+        console.log("No social media handles found in submission data");
+        return;
+      }
+
+      console.log("Social media handles data:", socialMediaHandles);
+
+      const socialMediaRecords: any[] = [];
+
+      // Process predefined platforms
+      const predefinedPlatforms = ['tiktok', 'twitter', 'onlyfans', 'snapchat', 'instagram'];
+      
+      for (const platform of predefinedPlatforms) {
+        const username = socialMediaHandles[platform];
+        if (username && username.trim() !== '') {
+          const platformAccount = socialMediaHandles[`${platform}Account`] || {};
+          
+          socialMediaRecords.push({
+            creator_email: creatorEmail,
+            platform: platform.charAt(0).toUpperCase() + platform.slice(1), // Capitalize first letter
+            username: username,
+            password: platformAccount.password || null,
+            notes: platformAccount.notes || null,
+            is_predefined: true
+          });
+        }
+      }
+
+      // Process "other" platforms
+      if (socialMediaHandles.other && Array.isArray(socialMediaHandles.other)) {
+        for (const otherPlatform of socialMediaHandles.other) {
+          if (otherPlatform.platform && otherPlatform.username) {
+            socialMediaRecords.push({
+              creator_email: creatorEmail,
+              platform: otherPlatform.platform,
+              username: otherPlatform.username,
+              password: otherPlatform.password || null,
+              notes: otherPlatform.notes || null,
+              is_predefined: false
+            });
+          }
+        }
+      }
+
+      // Insert all social media records
+      if (socialMediaRecords.length > 0) {
+        console.log("Inserting social media records:", socialMediaRecords);
+        
+        const { error } = await supabase
+          .from('social_media_logins')
+          .insert(socialMediaRecords);
+
+        if (error) {
+          console.error("Error saving social media handles:", error);
+          throw error;
+        }
+
+        console.log(`Successfully saved ${socialMediaRecords.length} social media handles for ${creatorEmail}`);
+      } else {
+        console.log("No social media handles to save");
+      }
+    } catch (error) {
+      console.error("Error in saveSocialMediaHandles:", error);
+      // Don't throw the error to avoid breaking the main flow
+      // Just log it since social media handles are not critical for account creation
+    }
+  }
   
   /**
    * Accept a creator onboarding submission
@@ -152,6 +231,9 @@ export class OnboardingService {
       if (socialLinksError) {
         console.error('Error creating social links:', socialLinksError);
       }
+
+      // Save social media handles to the social_media_logins table
+      await this.saveSocialMediaHandles(formData, email);
       
       console.log("Successfully created creator with ID:", userId);
       
