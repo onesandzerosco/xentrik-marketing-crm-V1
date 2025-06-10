@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Save, Trash2, Edit, Eye, EyeOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { Creator } from '../../types';
 
 interface SocialMediaLogin {
@@ -24,7 +26,6 @@ interface SocialMediaManagerProps {
   creator: Creator;
 }
 
-// Type for the onboarding submission data structure
 interface OnboardingSubmissionData {
   personalInfo?: any;
   physicalAttributes?: any;
@@ -55,16 +56,19 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+  const { userRole, isCreator, creatorId } = useAuth();
 
   // Predefined platforms that should always be visible
   const predefinedPlatforms = ['TikTok', 'Twitter', 'OnlyFans', 'Snapchat', 'Instagram'];
+
+  // Check if current user can edit this creator's data
+  const canEdit = userRole === 'Admin' || (isCreator && creatorId === creator.id);
 
   // Helper function to update onboarding submission JSON data
   const updateOnboardingSubmissionData = async (updatedLogins: SocialMediaLogin[]) => {
     try {
       console.log('=== UPDATING ONBOARDING SUBMISSION JSON ===');
       
-      // First, get the current onboarding submission data
       const { data: submissionData, error: fetchError } = await supabase
         .from('onboarding_submissions')
         .select('data')
@@ -76,10 +80,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
-      // Cast to our expected type
       const currentData = submissionData.data as OnboardingSubmissionData;
       
-      // Build the updated socialMediaHandles object
       const socialMediaHandles: any = {
         instagram: '',
         twitter: '',
@@ -89,14 +91,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         other: []
       };
 
-      // Update with current login data
       updatedLogins.forEach(login => {
         const platformKey = login.platform.toLowerCase();
         
         if (['instagram', 'twitter', 'tiktok', 'onlyfans', 'snapchat'].includes(platformKey)) {
           socialMediaHandles[platformKey] = login.username || '';
         } else if (login.username) {
-          // Add to other array for non-predefined platforms
           socialMediaHandles.other.push({
             platform: login.platform,
             handle: login.username
@@ -104,7 +104,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }
       });
 
-      // Update the JSON structure
       const updatedData: OnboardingSubmissionData = {
         ...currentData,
         contentAndService: {
@@ -113,7 +112,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }
       };
 
-      // Save back to the database - cast as any to satisfy Supabase Json type
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData as any })
@@ -160,13 +158,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       console.log('Social media logins found:', data);
       
-      // Create a map of existing platforms
       const existingPlatforms = new Map((data || []).map(login => [login.platform, login]));
-      
-      // Start with existing data
       const allLogins = [...(data || [])];
       
-      // Fetch additional "other" platforms from onboarding submission if they don't exist in social_media_logins
+      // Fetch additional "other" platforms from onboarding submission if they don't exist
       try {
         const { data: submissionData, error: submissionError } = await supabase
           .from('onboarding_submissions')
@@ -175,11 +170,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           .single();
 
         if (!submissionError && submissionData?.data) {
-          // Cast the Json data to our expected type structure
           const typedData = submissionData.data as OnboardingSubmissionData;
           const otherPlatforms = typedData.contentAndService?.socialMediaHandles?.other;
           
-          // Add "other" platforms that don't already exist in social_media_logins
           if (otherPlatforms && Array.isArray(otherPlatforms)) {
             otherPlatforms.forEach((otherPlatform: { platform: string; handle: string }) => {
               if (!existingPlatforms.has(otherPlatform.platform) && otherPlatform.platform && otherPlatform.handle) {
@@ -202,7 +195,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         console.warn('Could not fetch onboarding submission data:', submissionError);
       }
       
-      // Always ensure predefined platforms are present - create placeholders for missing ones
+      // Always ensure predefined platforms are present
       const finalLogins = [...allLogins];
       const currentPlatforms = new Set(finalLogins.map(login => login.platform));
       
@@ -222,7 +215,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }
       });
       
-      // Sort: predefined first, then alphabetically
       finalLogins.sort((a, b) => {
         if (a.is_predefined && !b.is_predefined) return -1;
         if (!a.is_predefined && b.is_predefined) return 1;
@@ -242,84 +234,20 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
-  // Save/update a social media login
-  const saveSocialMediaLogin = async (login: Partial<SocialMediaLogin>) => {
-    try {
-      setSaving(true);
-      console.log('=== SAVING SOCIAL MEDIA LOGIN ===');
-      console.log('Login data:', login);
-
-      if (login.id && !login.id.startsWith('placeholder-') && !login.id.startsWith('onboarding-')) {
-        // Update existing login
-        const { error } = await supabase
-          .from('social_media_logins')
-          .update({
-            username: login.username || '',
-            password: login.password || '',
-            notes: login.notes || ''
-          })
-          .eq('id', login.id);
-
-        if (error) {
-          console.error('Error updating social media login:', error);
-          toast({
-            title: "Error",
-            description: "Failed to update social media account",
-            variant: "destructive",
-          });
-          return;
-        }
-      } else {
-        // Create new login (for placeholders, onboarding data, or new platforms)
-        const { error } = await supabase
-          .from('social_media_logins')
-          .insert({
-            creator_email: creator.email,
-            platform: login.platform!,
-            username: login.username || '',
-            password: login.password || '',
-            notes: login.notes || '',
-            is_predefined: login.is_predefined || false
-          });
-
-        if (error) {
-          console.error('Error creating social media login:', error);
-          toast({
-            title: "Error",
-            description: "Failed to create social media account",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      console.log('=== SAVE SUCCESSFUL ===');
-      toast({
-        title: "Success",
-        description: "Social media account saved successfully",
-      });
-
-      // Refresh data and update onboarding submission
-      await fetchSocialMediaLogins();
-      await updateOnboardingSubmissionData(socialMediaLogins);
-    } catch (error) {
-      console.error('Error in saveSocialMediaLogin:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // Save all changes
   const saveAllChanges = async () => {
+    if (!canEdit) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to edit this creator's data",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSaving(true);
       
-      // Filter out placeholders and onboarding-sourced entries, prepare updates/inserts
       const realLogins = socialMediaLogins.filter(login => 
         !login.id.startsWith('placeholder-') && !login.id.startsWith('onboarding-')
       );
@@ -328,7 +256,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         (login.username || login.password || login.notes)
       );
 
-      // Update existing logins
       const updatePromises = realLogins.map(login => 
         supabase
           .from('social_media_logins')
@@ -340,7 +267,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           .eq('id', login.id)
       );
 
-      // Insert new logins from placeholders/onboarding data that have been modified
       const insertPromises = virtualLogins.map(login =>
         supabase
           .from('social_media_logins')
@@ -374,8 +300,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       setIsEditing(false);
       await fetchSocialMediaLogins();
-      
-      // Update onboarding submission JSON data
       await updateOnboardingSubmissionData(socialMediaLogins);
     } catch (error) {
       console.error('Error saving all changes:', error);
@@ -391,6 +315,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Update login in local state
   const updateLogin = (id: string, field: keyof SocialMediaLogin, value: string) => {
+    if (!canEdit) return;
+    
     setSocialMediaLogins(prev => 
       prev.map(login => 
         login.id === id ? { ...login, [field]: value } : login
@@ -400,7 +326,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Add new platform
   const addNewPlatform = async () => {
-    if (!newPlatformName.trim()) return;
+    if (!canEdit || !newPlatformName.trim()) return;
 
     console.log('=== ADDING NEW PLATFORM ===');
     console.log('Platform name:', newPlatformName);
@@ -442,7 +368,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Remove platform
   const removePlatform = async (id: string, platform: string) => {
-    // Don't allow removal of predefined platforms, just clear their data
+    if (!canEdit) return;
+
     if (predefinedPlatforms.includes(platform)) {
       updateLogin(id, 'username', '');
       updateLogin(id, 'password', '');
@@ -450,7 +377,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       return;
     }
 
-    // If it's a virtual entry (onboarding-sourced), just remove from local state
     if (id.startsWith('onboarding-')) {
       setSocialMediaLogins(prev => prev.filter(login => login.id !== id));
       return;
@@ -493,8 +419,16 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Start editing mode
   const startEditing = () => {
+    if (!canEdit) {
+      toast({
+        title: "Access Denied", 
+        description: "You don't have permission to edit this creator's data",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsEditing(true);
-    // Refetch to include placeholders for missing predefined platforms
     fetchSocialMediaLogins();
   };
 
@@ -528,49 +462,53 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-foreground">Social Media Accounts</h3>
-          <p className="text-sm text-muted-foreground">View and manage social media login credentials</p>
+          <p className="text-sm text-muted-foreground">
+            {canEdit ? "View and manage social media login credentials" : "View social media login credentials"}
+          </p>
         </div>
-        <div className="flex gap-2">
-          {!isEditing ? (
-            <>
-              <Button 
-                onClick={startEditing}
-                variant="outline"
-                className="rounded-[15px]"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddPlatform(true)}
-                className="rounded-[15px]"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Platform
-              </Button>
-            </>
-          ) : (
-            <div className="flex gap-2">
-              <Button 
-                onClick={saveAllChanges}
-                disabled={saving}
-                className="rounded-[15px]"
-                variant="premium"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save All'}
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => setIsEditing(false)}
-                className="rounded-[15px]"
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-        </div>
+        {canEdit && (
+          <div className="flex gap-2">
+            {!isEditing ? (
+              <>
+                <Button 
+                  onClick={startEditing}
+                  variant="outline"
+                  className="rounded-[15px]"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddPlatform(true)}
+                  className="rounded-[15px]"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Platform
+                </Button>
+              </>
+            ) : (
+              <div className="flex gap-2">
+                <Button 
+                  onClick={saveAllChanges}
+                  disabled={saving}
+                  className="rounded-[15px]"
+                  variant="premium"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saving ? 'Saving...' : 'Save All'}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                  className="rounded-[15px]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
@@ -581,7 +519,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
               <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
               <TableHead className="font-semibold text-foreground">Login Password</TableHead>
               <TableHead className="font-semibold text-foreground">Notes</TableHead>
-              {isEditing && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
+              {isEditing && canEdit && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -597,7 +535,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </TableCell>
                 
                 <TableCell>
-                  {isEditing ? (
+                  {isEditing && canEdit ? (
                     <Input
                       value={login.username}
                       onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
@@ -614,7 +552,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </TableCell>
                 
                 <TableCell>
-                  {isEditing ? (
+                  {isEditing && canEdit ? (
                     <div className="flex gap-1">
                       <Input
                         type={showPasswords[login.id] ? 'text' : 'password'}
@@ -654,7 +592,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </TableCell>
                 
                 <TableCell>
-                  {isEditing ? (
+                  {isEditing && canEdit ? (
                     <Input
                       value={login.notes}
                       onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
@@ -666,7 +604,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                   )}
                 </TableCell>
                 
-                {isEditing && (
+                {isEditing && canEdit && (
                   <TableCell>
                     {!login.is_predefined && (
                       <Button
@@ -687,7 +625,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       </div>
 
       {/* Add New Platform Form */}
-      {showAddPlatform && (
+      {showAddPlatform && canEdit && (
         <div className="border rounded-lg p-4 bg-muted/30 border-dashed">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Add New Platform</Label>
