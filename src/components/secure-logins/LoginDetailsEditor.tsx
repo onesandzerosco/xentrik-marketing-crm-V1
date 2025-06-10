@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LoginDetail } from '@/hooks/useSecureLogins';
 import SocialMediaAccountsEditor from './SocialMediaAccountsEditor';
 import { useCreators } from '@/context/creator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginDetailsEditorProps {
   creator: Creator;
@@ -28,70 +29,60 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
   onSaveLoginDetails
 }) => {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [socialMediaHandles, setSocialMediaHandles] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { creators, updateCreator } = useCreators();
+  const { updateCreator } = useCreators();
 
-  // Get the full creator data with model profile
-  const fullCreator = creators.find(c => c.id === creator.id);
-  
-  // Parse the model_profile properly - it might be wrapped in a structure
-  const parseModelProfile = () => {
-    if (!fullCreator?.model_profile) return null;
-    
-    const modelProfile = fullCreator.model_profile;
-    
-    // Handle different possible structures
-    if (typeof modelProfile === 'string') {
+  // Fetch social media handles from onboarding_submissions
+  useEffect(() => {
+    const fetchSocialMediaData = async () => {
       try {
-        return JSON.parse(modelProfile);
-      } catch (e) {
-        console.error('Failed to parse model_profile string:', e);
-        return null;
+        setLoading(true);
+        console.log('Fetching social media data for creator:', creator.name);
+        
+        // Try to find onboarding submission by creator name or email
+        const { data: submissions, error } = await supabase
+          .from('onboarding_submissions')
+          .select('data')
+          .or(`name.eq.${creator.name},email.eq.${creator.email}`)
+          .order('submitted_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error fetching onboarding submissions:', error);
+          return;
+        }
+
+        if (submissions && submissions.length > 0) {
+          const submissionData = submissions[0].data;
+          console.log('Found submission data:', submissionData);
+          
+          // Extract social media handles from the submission data
+          const handles = submissionData?.socialMediaHandles || 
+                         submissionData?.contentAndService?.socialMediaHandles ||
+                         null;
+          
+          console.log('Extracted social media handles:', handles);
+          setSocialMediaHandles(handles);
+        } else {
+          console.log('No onboarding submission found for creator');
+          setSocialMediaHandles(null);
+        }
+      } catch (error) {
+        console.error('Error fetching social media data:', error);
+        setSocialMediaHandles(null);
+      } finally {
+        setLoading(false);
       }
-    }
-    
-    // If it has a value property, try to parse that
-    if (modelProfile.value && typeof modelProfile.value === 'string') {
-      try {
-        return JSON.parse(modelProfile.value);
-      } catch (e) {
-        console.error('Failed to parse model_profile.value:', e);
-        return null;
-      }
-    }
-    
-    // If it's already an object, return it directly
-    if (typeof modelProfile === 'object') {
-      return modelProfile;
-    }
-    
-    return null;
-  };
+    };
 
-  const modelProfile = parseModelProfile();
-  
-  // Try multiple possible paths for social media handles in the onboarding data
-  const getSocialMediaHandles = () => {
-    if (!modelProfile) return null;
-    
-    console.log('Parsed model profile:', modelProfile);
-    
-    // Try different possible paths where social media data might be stored
-    const handles = modelProfile?.contentAndService?.socialMediaHandles || 
-                   modelProfile?.socialMediaHandles || 
-                   modelProfile?.socialMedia ||
-                   null;
-    
-    console.log('Found social media handles:', handles);
-    return handles;
-  };
-
-  const socialMediaHandles = getSocialMediaHandles();
-
-  console.log('Full creator data:', fullCreator);
-  console.log('Raw model_profile:', fullCreator?.model_profile);
-  console.log('Parsed model profile:', modelProfile);
-  console.log('Social media handles found:', socialMediaHandles);
+    if (creator.name || creator.email) {
+      fetchSocialMediaData();
+    } else {
+      setLoading(false);
+    }
+  }, [creator.name, creator.email]);
 
   const togglePasswordVisibility = (platform: string) => {
     setShowPasswords(prev => ({
@@ -111,43 +102,49 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
 
   const handleUpdateSocialMedia = async (updatedHandles: any) => {
     try {
-      // Create the updated model profile structure
-      let updatedModelProfile;
+      console.log('Updating social media handles:', updatedHandles);
       
-      if (fullCreator?.model_profile?.value) {
-        // If the original structure has a value property, maintain that structure
-        const parsedValue = parseModelProfile();
-        const newValue = {
-          ...parsedValue,
-          contentAndService: {
-            ...parsedValue?.contentAndService,
-            socialMediaHandles: updatedHandles
-          },
-          socialMediaHandles: updatedHandles
-        };
-        
-        updatedModelProfile = {
-          ...fullCreator.model_profile,
-          value: JSON.stringify(newValue)
-        };
-      } else {
-        // Direct object structure
-        updatedModelProfile = {
-          ...modelProfile,
-          contentAndService: {
-            ...modelProfile?.contentAndService,
-            socialMediaHandles: updatedHandles
-          },
-          socialMediaHandles: updatedHandles
-        };
+      // First, update the onboarding_submissions table
+      const { error: submissionError } = await supabase
+        .from('onboarding_submissions')
+        .update({ 
+          data: supabase.raw(`jsonb_set(data, '{socialMediaHandles}', '${JSON.stringify(updatedHandles)}'::jsonb)`)
+        })
+        .or(`name.eq.${creator.name},email.eq.${creator.email}`);
+
+      if (submissionError) {
+        console.error('Error updating onboarding submission:', submissionError);
+        throw submissionError;
       }
 
-      console.log('Updating with model profile:', updatedModelProfile);
+      // Also update the creator's model_profile if it exists
+      if (creator.model_profile) {
+        let updatedModelProfile;
+        
+        if (typeof creator.model_profile === 'string') {
+          try {
+            const parsed = JSON.parse(creator.model_profile);
+            updatedModelProfile = {
+              ...parsed,
+              socialMediaHandles: updatedHandles
+            };
+          } catch (e) {
+            updatedModelProfile = { socialMediaHandles: updatedHandles };
+          }
+        } else {
+          updatedModelProfile = {
+            ...creator.model_profile,
+            socialMediaHandles: updatedHandles
+          };
+        }
 
-      // Update the creator with the new model profile
-      await updateCreator(creator.id, {
-        model_profile: updatedModelProfile
-      });
+        await updateCreator(creator.id, {
+          model_profile: updatedModelProfile
+        });
+      }
+
+      // Update local state
+      setSocialMediaHandles(updatedHandles);
 
       toast({
         title: "Social Media Updated",
@@ -162,6 +159,16 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center p-8">
+          <div className="text-muted-foreground">Loading social media data...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
