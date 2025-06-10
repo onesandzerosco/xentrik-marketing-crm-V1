@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Save, Trash2, Edit, Eye, EyeOff } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Creator } from '../../types';
@@ -53,7 +52,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       setLoading(true);
       console.log('=== FETCHING SOCIAL MEDIA DATA ===');
       console.log('Creator email:', creator.email);
-      console.log('Creator name:', creator.name);
       
       const { data, error } = await supabase
         .from('onboarding_submissions')
@@ -61,31 +59,16 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         .eq('email', creator.email)
         .single();
 
-      console.log('Raw query result:', { data, error });
-
       if (error) {
         console.error('Error fetching social media data:', error);
         return;
       }
 
-      // Log the entire data structure
-      console.log('Full submission data:', data?.data);
-      
-      // Properly type cast the Json data
       const submissionData = data?.data as Record<string, any>;
-      console.log('Parsed submission data:', submissionData);
       
-      // Look for contentAndService.socialMediaHandles
       if (submissionData?.contentAndService?.socialMediaHandles) {
         const handles = submissionData.contentAndService.socialMediaHandles as SocialMediaHandles;
-        console.log('=== SOCIAL MEDIA HANDLES FOUND IN contentAndService ===');
-        console.log('Social media handles:', handles);
-        console.log('TikTok:', handles.tiktok);
-        console.log('Twitter:', handles.twitter);
-        console.log('OnlyFans:', handles.onlyfans);
-        console.log('Snapchat:', handles.snapchat);
-        console.log('Instagram:', handles.instagram);
-        console.log('Other platforms:', handles.other);
+        console.log('Social media handles found:', handles);
         
         setSocialMediaData({
           tiktok: handles.tiktok || '',
@@ -95,13 +78,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           instagram: handles.instagram || '',
           other: handles.other || []
         });
-      } else {
-        console.log('=== NO SOCIAL MEDIA HANDLES FOUND IN contentAndService ===');
-        console.log('Available keys in submission data:', submissionData ? Object.keys(submissionData) : 'No data');
-        console.log('contentAndService data:', submissionData?.contentAndService);
-        if (submissionData?.contentAndService) {
-          console.log('Keys in contentAndService:', Object.keys(submissionData.contentAndService));
-        }
       }
     } catch (error) {
       console.error('Error in fetchSocialMediaData:', error);
@@ -114,10 +90,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const saveSocialMediaData = async () => {
     try {
       setSaving(true);
-      console.log('=== SAVING SOCIAL MEDIA DATA ===');
-      console.log('Data to save:', socialMediaData);
-
-      // First, get current data
+      
       const { data: currentData, error: fetchError } = await supabase
         .from('onboarding_submissions')
         .select('data')
@@ -134,10 +107,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
-      // Properly handle the existing data
       const existingData = (currentData?.data as Record<string, any>) || {};
       
-      // Convert socialMediaData to a JSON-compatible format
       const socialMediaHandlesForSave = {
         tiktok: socialMediaData.tiktok,
         twitter: socialMediaData.twitter,
@@ -152,9 +123,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }))
       };
       
-      console.log('Social media data being saved:', socialMediaHandlesForSave);
-      
-      // Update the socialMediaHandles in contentAndService
       const updatedData = {
         ...existingData,
         contentAndService: {
@@ -162,8 +130,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           socialMediaHandles: socialMediaHandlesForSave
         }
       };
-
-      console.log('Full updated data structure:', updatedData);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
@@ -180,14 +146,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
-      console.log('Successfully saved social media data');
       toast({
         title: "Success",
         description: "Social media accounts saved successfully",
       });
 
       setIsEditing(false);
-      // Fetch fresh data after saving
       await fetchSocialMediaData();
     } catch (error) {
       console.error('Error in saveSocialMediaData:', error);
@@ -261,227 +225,265 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center">
-          <div className="text-sm text-muted-foreground">Loading social media data...</div>
-        </div>
+      <div className="p-6 text-center">
+        <div className="text-sm text-muted-foreground">Loading social media accounts...</div>
       </div>
     );
   }
 
   const predefinedPlatforms = [
-    { key: 'tiktok' as const, label: 'TikTok' },
-    { key: 'twitter' as const, label: 'Twitter' },
-    { key: 'onlyfans' as const, label: 'OnlyFans' },
-    { key: 'snapchat' as const, label: 'Snapchat' },
-    { key: 'instagram' as const, label: 'Instagram' }
+    { key: 'tiktok' as const, label: 'TikTok', color: 'from-gray-800 to-red-500' },
+    { key: 'twitter' as const, label: 'Twitter', color: 'from-blue-400 to-blue-600' },
+    { key: 'onlyfans' as const, label: 'OnlyFans', color: 'from-blue-500 to-cyan-400' },
+    { key: 'snapchat' as const, label: 'Snapchat', color: 'from-yellow-400 to-yellow-600' },
+    { key: 'instagram' as const, label: 'Instagram', color: 'from-purple-500 to-pink-500' }
+  ];
+
+  const allPlatforms = [
+    ...predefinedPlatforms
+      .filter(p => socialMediaData[p.key])
+      .map(p => ({
+        id: p.key,
+        name: p.label,
+        username: socialMediaData[p.key],
+        password: '',
+        notes: '',
+        color: p.color,
+        type: 'predefined' as const
+      })),
+    ...socialMediaData.other.map((account, index) => ({
+      id: `other-${index}`,
+      name: account.platform,
+      username: account.username,
+      password: account.password,
+      notes: account.notes || '',
+      color: 'from-gray-500 to-gray-700',
+      type: 'other' as const,
+      index
+    }))
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Social Media Accounts</h3>
-        {!isEditing ? (
-          <Button 
-            onClick={() => setIsEditing(true)}
-            variant="outline"
-            className="rounded-[15px]"
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button 
-              onClick={saveSocialMediaData}
-              disabled={saving}
-              className="rounded-[15px]"
-              variant="premium"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsEditing(false)}
-              className="rounded-[15px]"
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-foreground">Social Media Accounts</h3>
+          <p className="text-sm text-muted-foreground">View and manage social media login credentials</p>
+        </div>
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <>
+              <Button 
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                className="rounded-[15px]"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddPlatform(true)}
+                className="rounded-[15px]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Platform
+              </Button>
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <Button 
+                onClick={saveSocialMediaData}
+                disabled={saving}
+                className="rounded-[15px]"
+                variant="premium"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Saving...' : 'Save All'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="rounded-[15px]"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-        
-      <Tabs defaultValue="platforms">
-        <TabsList className="mb-4">
-          <TabsTrigger value="platforms" className="rounded-[15px]">
-            Platforms
-          </TabsTrigger>
-          <TabsTrigger value="other" className="rounded-[15px]">
-            Other Platforms ({socialMediaData.other.length})
-          </TabsTrigger>
-        </TabsList>
 
-        <TabsContent value="platforms">
-          <div className="space-y-4">
-            {predefinedPlatforms.map(({ key, label }) => (
-              <div key={key} className="space-y-2">
-                <Label>{label}</Label>
-                {isEditing ? (
-                  <Input
-                    placeholder={`${label} username`}
-                    value={socialMediaData[key]}
-                    onChange={(e) => updatePredefinedPlatform(key, e.target.value)}
-                    className="rounded-[15px]"
-                  />
-                ) : (
-                  <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
-                    {socialMediaData[key] ? `@${socialMediaData[key]}` : 'Not set'}
-                  </div>
-                )}
-              </div>
-            ))}
+      {allPlatforms.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg bg-muted/30">
+          <div className="text-muted-foreground">
+            <p className="text-lg font-medium mb-2">No social media accounts found</p>
+            <p className="text-sm">Add platforms to manage login credentials</p>
           </div>
-        </TabsContent>
-
-        <TabsContent value="other">
-          <div className="space-y-6">
-            {socialMediaData.other.map((account, index) => (
-              <div key={index} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium capitalize">{account.platform}</h4>
-                  {isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removePlatform(index)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Username</Label>
+        </div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="font-semibold text-foreground">Platform</TableHead>
+                <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
+                <TableHead className="font-semibold text-foreground">Login Password</TableHead>
+                <TableHead className="font-semibold text-foreground">Notes</TableHead>
+                {isEditing && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {allPlatforms.map((platform) => (
+                <TableRow key={platform.id} className="hover:bg-muted/20">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                        {platform.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium text-foreground">{platform.name}</span>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
                     {isEditing ? (
                       <Input
-                        placeholder="Username"
-                        value={account.username}
-                        onChange={(e) => updateOtherPlatform(index, 'username', e.target.value)}
-                        className="rounded-[15px]"
+                        value={platform.username}
+                        onChange={(e) => {
+                          if (platform.type === 'predefined') {
+                            updatePredefinedPlatform(platform.id as keyof Omit<SocialMediaHandles, 'other'>, e.target.value);
+                          } else {
+                            updateOtherPlatform(platform.index!, 'username', e.target.value);
+                          }
+                        }}
+                        placeholder="@username"
+                        className="rounded-[15px] h-9 border-muted-foreground/20"
                       />
                     ) : (
-                      <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
-                        {account.username ? `@${account.username}` : 'Not set'}
+                      <div className="flex items-center">
+                        <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                          @{platform.username || 'Not set'}
+                        </span>
                       </div>
                     )}
-                  </div>
+                  </TableCell>
                   
-                  <div className="space-y-2">
-                    <Label>Password</Label>
+                  <TableCell>
                     {isEditing ? (
-                      <div className="flex">
+                      <div className="flex gap-1">
                         <Input
-                          type={showPasswords[`${account.platform}-${index}`] ? 'text' : 'password'}
-                          placeholder="Password"
-                          value={account.password}
-                          onChange={(e) => updateOtherPlatform(index, 'password', e.target.value)}
-                          className="rounded-[15px] flex-1"
+                          type={showPasswords[platform.id] ? 'text' : 'password'}
+                          value={platform.password}
+                          onChange={(e) => {
+                            if (platform.type === 'other') {
+                              updateOtherPlatform(platform.index!, 'password', e.target.value);
+                            }
+                          }}
+                          placeholder="Enter password"
+                          className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
+                          disabled={platform.type === 'predefined'}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => togglePasswordVisibility(`${account.platform}-${index}`)}
-                          className="ml-2"
+                          onClick={() => togglePasswordVisibility(platform.id)}
+                          className="h-9 w-9 p-0"
                         >
-                          {showPasswords[`${account.platform}-${index}`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPasswords[platform.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                         </Button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div className="p-2 border rounded-[15px] mt-1 bg-muted/30 flex-1">
-                          {account.password ? (
-                            showPasswords[`${account.platform}-${index}`] ? account.password : '••••••••'
-                          ) : 'Not set'}
-                        </div>
-                        {account.password && (
+                        <span className="text-sm text-muted-foreground">
+                          {platform.password ? (showPasswords[platform.id] ? platform.password : '••••••••') : 'Not set'}
+                        </span>
+                        {platform.password && (
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => togglePasswordVisibility(`${account.platform}-${index}`)}
+                            onClick={() => togglePasswordVisibility(platform.id)}
+                            className="h-6 w-6 p-0"
                           >
-                            {showPasswords[`${account.platform}-${index}`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {showPasswords[platform.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                           </Button>
                         )}
                       </div>
                     )}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Notes</Label>
-                  {isEditing ? (
-                    <Input
-                      placeholder="Additional notes"
-                      value={account.notes || ''}
-                      onChange={(e) => updateOtherPlatform(index, 'notes', e.target.value)}
-                      className="rounded-[15px]"
-                    />
-                  ) : (
-                    <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
-                      {account.notes || 'No notes'}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {isEditing && (
-              <>
-                {showAddPlatform ? (
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <Label>Platform Name</Label>
-                    <div className="flex gap-2">
+                  </TableCell>
+                  
+                  <TableCell>
+                    {isEditing ? (
                       <Input
-                        placeholder="Enter platform name"
-                        value={newPlatformName}
-                        onChange={(e) => setNewPlatformName(e.target.value)}
-                        className="rounded-[15px]"
-                      />
-                      <Button onClick={addNewPlatform} className="rounded-[15px]">
-                        Add
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setShowAddPlatform(false);
-                          setNewPlatformName('');
+                        value={platform.notes}
+                        onChange={(e) => {
+                          if (platform.type === 'other') {
+                            updateOtherPlatform(platform.index!, 'notes', e.target.value);
+                          }
                         }}
-                        className="rounded-[15px]"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAddPlatform(true)}
-                    className="w-full rounded-[15px]"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Platform
-                  </Button>
-                )}
-              </>
-            )}
+                        placeholder="Additional notes"
+                        className="rounded-[15px] h-9 border-muted-foreground/20"
+                        disabled={platform.type === 'predefined'}
+                      />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{platform.notes || '-'}</span>
+                    )}
+                  </TableCell>
+                  
+                  {isEditing && (
+                    <TableCell>
+                      {platform.type === 'other' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePlatform(platform.index!)}
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Add New Platform Form */}
+      {showAddPlatform && (
+        <div className="border rounded-lg p-4 bg-muted/30 border-dashed">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Add New Platform</Label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter platform name (e.g., LinkedIn, YouTube)"
+                value={newPlatformName}
+                onChange={(e) => setNewPlatformName(e.target.value)}
+                className="rounded-[15px] border-muted-foreground/20"
+              />
+              <Button 
+                onClick={addNewPlatform} 
+                className="rounded-[15px]"
+                disabled={!newPlatformName.trim()}
+              >
+                Add
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddPlatform(false);
+                  setNewPlatformName('');
+                }}
+                className="rounded-[15px]"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 };
