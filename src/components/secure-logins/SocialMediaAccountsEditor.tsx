@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -168,7 +169,7 @@ const SocialMediaAccountsEditor: React.FC<SocialMediaAccountsEditorProps> = ({
       <CardContent className="space-y-4">
         {/* Main Platforms */}
         {mainPlatforms.map(platform => {
-          const value = isEditing ? editedHandles[platform.key as keyof typeof editedHandles] as string : socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles];
+          const value = isEditing ? editedHandles[platform.key as keyof typeof editedHandles] as string : socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles] as string;
           
           if (!value && !isEditing) return null;
           
