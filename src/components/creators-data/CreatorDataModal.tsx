@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,13 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 interface CreatorSubmission {
   id: string;
@@ -32,6 +38,18 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { toast } = useToast();
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<any>('');
+  const [submissionData, setSubmissionData] = useState<any>(submission?.data || {});
+
+  // Update submissionData when submission changes
+  React.useEffect(() => {
+    if (submission?.data) {
+      setSubmissionData(submission.data);
+    }
+  }, [submission]);
+
   if (!submission) return null;
 
   const formatDate = (dateString: string) => {
@@ -70,6 +88,250 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, str => str.toUpperCase())
       .replace(/_/g, ' ');
+  };
+
+  const handleEditClick = (section: string, fieldKey: string, currentValue: any) => {
+    const editKey = `${section}.${fieldKey}`;
+    setEditingField(editKey);
+    setEditValue(currentValue || '');
+  };
+
+  const handleSaveClick = (section: string, fieldKey: string) => {
+    const editKey = `${section}.${fieldKey}`;
+    
+    // Update the submission data
+    const newData = { ...submissionData };
+    if (!newData[section]) {
+      newData[section] = {};
+    }
+    
+    // Handle different value types
+    let processedValue = editValue;
+    if (fieldKey === 'age' || fieldKey === 'numberOfKids' || fieldKey === 'bodyCount' || fieldKey === 'sexToysCount' || fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
+      processedValue = editValue === '' ? null : Number(editValue);
+    } else if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
+      processedValue = editValue === 'true' || editValue === true;
+    } else if (fieldKey === 'hobbies' || fieldKey === 'placesVisited') {
+      processedValue = typeof editValue === 'string' ? editValue.split(',').map(item => item.trim()).filter(item => item !== '') : editValue;
+    }
+    
+    newData[section][fieldKey] = processedValue;
+    setSubmissionData(newData);
+    setEditingField(null);
+    setEditValue('');
+    
+    toast({
+      title: "Field Updated",
+      description: `${formatFieldName(fieldKey)} has been updated successfully.`,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const renderEditableField = (section: string, fieldKey: string, value: any) => {
+    const editKey = `${section}.${fieldKey}`;
+    const isEditing = editingField === editKey;
+    
+    if (isEditing) {
+      // Special handling for boolean fields
+      if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
+        return (
+          <div className="flex items-center gap-2">
+            <Select value={String(editValue)} onValueChange={setEditValue}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="true">Yes</SelectItem>
+                <SelectItem value="false">No</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+      
+      // Special handling for enum fields
+      if (fieldKey === 'sex') {
+        return (
+          <div className="flex items-center gap-2">
+            <Select value={editValue} onValueChange={setEditValue}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Female">Female</SelectItem>
+                <SelectItem value="Male">Male</SelectItem>
+                <SelectItem value="Transgender">Transgender</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+      
+      if (fieldKey === 'handedness') {
+        return (
+          <div className="flex items-center gap-2">
+            <Select value={editValue} onValueChange={setEditValue}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Left">Left</SelectItem>
+                <SelectItem value="Right">Right</SelectItem>
+                <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+      
+      if (fieldKey === 'isTopOrBottom') {
+        return (
+          <div className="flex items-center gap-2">
+            <Select value={editValue} onValueChange={setEditValue}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Top">Top</SelectItem>
+                <SelectItem value="Bottom">Bottom</SelectItem>
+                <SelectItem value="Versatile">Versatile</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+      
+      // For longer text fields, use textarea
+      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference') {
+        return (
+          <div className="flex items-start gap-2">
+            <Textarea 
+              value={editValue} 
+              onChange={(e) => setEditValue(e.target.value)}
+              className="min-h-[60px]"
+            />
+            <div className="flex flex-col gap-1">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+                <Save className="h-3 w-3" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        );
+      }
+      
+      // Default input field
+      return (
+        <div className="flex items-center gap-2">
+          <Input 
+            value={editValue} 
+            onChange={(e) => setEditValue(e.target.value)}
+            className="flex-1"
+          />
+          <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)}>
+            <Save className="h-3 w-3" />
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      );
+    }
+    
+    // Display mode with edit button
+    return (
+      <div className="flex items-center justify-between group">
+        <div className="flex-1 text-muted-foreground break-words">
+          {fieldKey === 'pets' && Array.isArray(value) ? (
+            value.length > 0 ? (
+              <div className="space-y-2">
+                {value.map((pet: any, index: number) => (
+                  <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                    {Object.entries(pet).map(([petKey, petValue]) => (
+                      <div key={petKey}>
+                        <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              formatValue(value)
+            )
+          ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
+            <div className="space-y-1">
+              {Object.entries(value).map(([platform, handle]) => {
+                // Special handling for the "other" platforms array
+                if (platform === 'other' && Array.isArray(handle)) {
+                  return (
+                    <div key={platform}>
+                      <span className="font-medium">Other Platforms:</span>
+                      <div className="ml-4 space-y-1">
+                        {handle.map((otherPlatform: any, index: number) => (
+                          <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                            <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                // Regular platform handling
+                return (
+                  <div key={platform}>
+                    <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            formatValue(value)
+          )}
+        </div>
+        {/* Only show edit button for non-complex fields */}
+        {!(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
+         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+            onClick={() => handleEditClick(section, fieldKey, value)}
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+    );
   };
 
   // Updated field priority orders based on actual schema fields only
@@ -132,39 +394,43 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     const sections = [
       { 
         title: 'Personal Information', 
-        data: submission.data?.personalInfo,
-        priority: personalInfoPriority 
+        data: submissionData?.personalInfo,
+        priority: personalInfoPriority,
+        section: 'personalInfo'
       },
       { 
         title: 'Physical Attributes', 
-        data: submission.data?.physicalAttributes,
-        priority: physicalPriority 
+        data: submissionData?.physicalAttributes,
+        priority: physicalPriority,
+        section: 'physicalAttributes'
       },
       { 
         title: 'Personal Preferences', 
-        data: submission.data?.personalPreferences,
-        priority: preferencesPriority 
+        data: submissionData?.personalPreferences,
+        priority: preferencesPriority,
+        section: 'personalPreferences'
       },
       { 
         title: 'Content & Service', 
-        data: submission.data?.contentAndService,
-        priority: contentPriority 
+        data: submissionData?.contentAndService,
+        priority: contentPriority,
+        section: 'contentAndService'
       }
     ];
 
     return (
       <div className="space-y-6">
-        {sections.map((section, index) => (
+        {sections.map((sectionInfo, index) => (
           <div key={index} className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">{section.title}</h3>
-            {renderDataSection(section.data, section.title, section.priority)}
+            <h3 className="text-lg font-semibold mb-4 border-b pb-2">{sectionInfo.title}</h3>
+            {renderDataSection(sectionInfo.data, sectionInfo.title, sectionInfo.priority, sectionInfo.section)}
           </div>
         ))}
       </div>
     );
   };
 
-  const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
+  const renderDataSection = (sectionData: any, title: string, priorityOrder: string[], section: string) => {
     // Always render fields, even if sectionData is null/undefined
     const sortedEntries = sortFieldsByPriority(sectionData || {}, priorityOrder);
 
@@ -175,52 +441,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <div className="font-medium text-foreground">
               {formatFieldName(key)}:
             </div>
-            <div className="md:col-span-2 text-muted-foreground break-words">
-              {key === 'pets' && Array.isArray(value) ? (
-                value.length > 0 ? (
-                  <div className="space-y-2">
-                    {value.map((pet: any, index: number) => (
-                      <div key={index} className="bg-muted/30 p-2 rounded text-sm">
-                        {Object.entries(pet).map(([petKey, petValue]) => (
-                          <div key={petKey}>
-                            <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  formatValue(value)
-                )
-              ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
-                <div className="space-y-1">
-                  {Object.entries(value).map(([platform, handle]) => {
-                    // Special handling for the "other" platforms array
-                    if (platform === 'other' && Array.isArray(handle)) {
-                      return (
-                        <div key={platform}>
-                          <span className="font-medium">Other Platforms:</span>
-                          <div className="ml-4 space-y-1">
-                            {handle.map((otherPlatform: any, index: number) => (
-                              <div key={index} className="bg-muted/30 p-2 rounded text-sm">
-                                <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }
-                    // Regular platform handling
-                    return (
-                      <div key={platform}>
-                        <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                formatValue(value)
-              )}
+            <div className="md:col-span-2">
+              {renderEditableField(section, key, value)}
             </div>
           </div>
         ))}
@@ -258,22 +480,22 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
               <TabsContent value="personal" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                {renderDataSection(submission.data?.personalInfo, 'Personal Information', personalInfoPriority)}
+                {renderDataSection(submissionData?.personalInfo, 'Personal Information', personalInfoPriority, 'personalInfo')}
               </TabsContent>
               
               <TabsContent value="physical" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
-                {renderDataSection(submission.data?.physicalAttributes, 'Physical Attributes', physicalPriority)}
+                {renderDataSection(submissionData?.physicalAttributes, 'Physical Attributes', physicalPriority, 'physicalAttributes')}
               </TabsContent>
               
               <TabsContent value="preferences" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
-                {renderDataSection(submission.data?.personalPreferences, 'Personal Preferences', preferencesPriority)}
+                {renderDataSection(submissionData?.personalPreferences, 'Personal Preferences', preferencesPriority, 'personalPreferences')}
               </TabsContent>
               
               <TabsContent value="content" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
-                {renderDataSection(submission.data?.contentAndService, 'Content & Service', contentPriority)}
+                {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
               </TabsContent>
             </div>
           </Tabs>
