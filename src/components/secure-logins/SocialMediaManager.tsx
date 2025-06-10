@@ -62,8 +62,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
-      if (data?.data?.socialMediaHandles) {
-        const handles = data.data.socialMediaHandles;
+      // Properly type cast the Json data
+      const submissionData = data?.data as Record<string, any>;
+      if (submissionData?.socialMediaHandles) {
+        const handles = submissionData.socialMediaHandles as SocialMediaHandles;
         console.log('Fetched social media handles:', handles);
         
         setSocialMediaData({
@@ -105,9 +107,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
+      // Properly handle the existing data
+      const existingData = (currentData?.data as Record<string, any>) || {};
+      
       // Update the socialMediaHandles in the existing data
       const updatedData = {
-        ...currentData.data,
+        ...existingData,
         socialMediaHandles: socialMediaData
       };
 
