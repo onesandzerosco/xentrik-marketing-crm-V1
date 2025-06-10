@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +8,7 @@ import { Eye, EyeOff, Save } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
 import { LoginDetail } from '@/hooks/useSecureLogins';
-import SocialMediaAccounts from './SocialMediaAccounts';
+import SocialMediaAccountsEditor from './SocialMediaAccountsEditor';
 import { useCreators } from '@/context/creator';
 
 interface LoginDetailsEditorProps {
@@ -29,7 +28,7 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
 }) => {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
-  const { creators } = useCreators();
+  const { creators, updateCreator } = useCreators();
 
   // Get the full creator data with model profile
   const fullCreator = creators.find(c => c.id === creator.id);
@@ -52,10 +51,43 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
     onUpdateLogin(platform, field, value);
   };
 
+  const handleUpdateSocialMedia = async (updatedHandles: any) => {
+    try {
+      // Update the creator's model_profile with new social media handles
+      const updatedModelProfile = {
+        ...modelProfile,
+        contentAndService: {
+          ...modelProfile?.contentAndService,
+          socialMediaHandles: updatedHandles
+        }
+      };
+
+      // Update the creator with the new model profile
+      await updateCreator(creator.id, {
+        model_profile: updatedModelProfile
+      });
+
+      toast({
+        title: "Social Media Updated",
+        description: "Social media accounts have been saved successfully",
+      });
+    } catch (error) {
+      console.error('Error updating social media:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update social media accounts",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Social Media Accounts Section */}
-      <SocialMediaAccounts socialMediaHandles={socialMediaHandles} />
+      <SocialMediaAccountsEditor 
+        socialMediaHandles={socialMediaHandles}
+        onUpdateSocialMedia={handleUpdateSocialMedia}
+      />
 
       {/* Login Details Section */}
       <Card>
