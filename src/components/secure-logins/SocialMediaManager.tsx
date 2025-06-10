@@ -123,33 +123,34 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         console.warn('Could not fetch onboarding submission data:', submissionError);
       }
       
-      // If we're in editing mode, create placeholders for missing predefined platforms
-      if (isEditing) {
-        const missingPredefinedPlatforms = predefinedPlatforms.filter(platform => !existingPlatforms.has(platform));
-        
-        const placeholderLogins: SocialMediaLogin[] = missingPredefinedPlatforms.map(platform => ({
-          id: `placeholder-${platform.toLowerCase()}`,
-          creator_email: creator.email,
-          platform,
-          username: '',
-          password: '',
-          notes: '',
-          is_predefined: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }));
-
-        allLogins.push(...placeholderLogins);
-      }
+      // Always ensure predefined platforms are present - create placeholders for missing ones
+      const finalLogins = [...allLogins];
+      const currentPlatforms = new Set(finalLogins.map(login => login.platform));
+      
+      predefinedPlatforms.forEach(platform => {
+        if (!currentPlatforms.has(platform)) {
+          finalLogins.push({
+            id: `placeholder-${platform.toLowerCase()}`,
+            creator_email: creator.email,
+            platform,
+            username: '',
+            password: '',
+            notes: '',
+            is_predefined: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      });
       
       // Sort: predefined first, then alphabetically
-      allLogins.sort((a, b) => {
+      finalLogins.sort((a, b) => {
         if (a.is_predefined && !b.is_predefined) return -1;
         if (!a.is_predefined && b.is_predefined) return 1;
         return a.platform.localeCompare(b.platform);
       });
 
-      setSocialMediaLogins(allLogins);
+      setSocialMediaLogins(finalLogins);
     } catch (error) {
       console.error('Error in fetchSocialMediaLogins:', error);
       toast({
@@ -523,7 +524,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                   ) : (
                     <div className="flex items-center">
                       <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
-                        {login.username || 'Not provided'}
+                        {login.username || '-'}
                       </span>
                     </div>
                   )}
@@ -552,7 +553,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground">
-                        {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : 'Not provided'}
+                        {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : '-'}
                       </span>
                       {login.password && (
                         <Button
@@ -578,7 +579,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                       className="rounded-[15px] h-9 border-muted-foreground/20"
                     />
                   ) : (
-                    <span className="text-sm text-muted-foreground">{login.notes || 'Not provided'}</span>
+                    <span className="text-sm text-muted-foreground">{login.notes || '-'}</span>
                   )}
                 </TableCell>
                 
