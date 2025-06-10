@@ -43,6 +43,7 @@ interface OnboardingSubmissionData {
     };
     [key: string]: any;
   };
+  [key: string]: any;
 }
 
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
@@ -112,10 +113,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }
       };
 
-      // Save back to the database
+      // Save back to the database - cast as any to satisfy Supabase Json type
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
-        .update({ data: updatedData })
+        .update({ data: updatedData as any })
         .eq('email', creator.email);
 
       if (updateError) {
