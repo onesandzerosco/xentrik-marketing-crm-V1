@@ -8,52 +8,152 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2, Save, ExternalLink, Edit, Check, X } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
-import { useSecureSocialMedia, SocialMediaHandles } from '@/hooks/useSecureSocialMedia';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SocialMediaManagerProps {
   creator: Creator;
 }
 
+interface SocialMediaAccount {
+  platform: string;
+  url: string;
+}
+
+interface SocialMediaHandles {
+  instagram: string;
+  tiktok: string;
+  twitter: string;
+  onlyfans: string;
+  snapchat: string;
+  other: SocialMediaAccount[];
+}
+
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const { toast } = useToast();
-  const {
-    getSocialMediaForCreator,
-    updateSocialMediaForCreator,
-    addOtherSocialMedia,
-    removeOtherSocialMedia,
-    saveSocialMediaForCreator,
-    loading
-  } = useSecureSocialMedia();
-
-  // Database state - this is what we display
-  const [databaseData, setDatabaseData] = useState<SocialMediaHandles | null>(null);
   
-  // UI state only
+  // ONLY database data - NO caching, NO local state
+  const [freshDatabaseData, setFreshDatabaseData] = useState<SocialMediaHandles | null>(null);
+  const [loading, setLoading] = useState(false);
+  
+  // UI-only state
   const [newOtherPlatform, setNewOtherPlatform] = useState('');
   const [newOtherUrl, setNewOtherUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  // ALWAYS fetch fresh data from database when creator changes
-  useEffect(() => {
-    console.log('=== COMPONENT EFFECT TRIGGERED ===');
-    console.log('Creator changed, fetching FRESH database data for:', creator.id, creator.name);
+  // ALWAYS fetch FRESH data from database
+  const fetchFreshDataFromDatabase = async () => {
+    console.log('=== FETCHING FRESH DATA FROM DATABASE ===');
+    console.log('Creator ID:', creator.id, 'Creator Name:', creator.name);
     
-    const loadFreshData = async () => {
-      try {
-        const freshData = await getSocialMediaForCreator(creator.id);
-        console.log('=== FRESH DATABASE DATA RECEIVED ===');
-        console.log('Fresh data from DB:', freshData);
-        setDatabaseData(freshData);
-      } catch (error) {
-        console.error('Error loading fresh data:', error);
-        setDatabaseData(null);
+    setLoading(true);
+    try {
+      // Step 1: Get creator email
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('creators')
+        .select('*')
+        .eq('id', creator.id)
+        .single();
+
+      console.log('Creator data from DB:', creatorData);
+      console.log('Creator error:', creatorError);
+
+      if (creatorError || !creatorData?.email) {
+        console.error('No creator found or no email');
+        setFreshDatabaseData({
+          instagram: '',
+          tiktok: '',
+          twitter: '',
+          onlyfans: '',
+          snapchat: '',
+          other: []
+        });
+        return;
       }
-    };
-    
-    loadFreshData();
-  }, [creator.id, getSocialMediaForCreator]);
+
+      // Step 2: Get submission data
+      const { data: submissions, error: submissionError } = await supabase
+        .from('onboarding_submissions')
+        .select('*')
+        .eq('email', creatorData.email)
+        .order('submitted_at', { ascending: false });
+
+      console.log('=== RAW DATABASE SUBMISSIONS ===');
+      console.log('All submissions from DB:', submissions);
+      console.log('Submission error:', submissionError);
+
+      if (submissionError || !submissions || submissions.length === 0) {
+        console.log('No submissions found');
+        setFreshDatabaseData({
+          instagram: '',
+          tiktok: '',
+          twitter: '',
+          onlyfans: '',
+          snapchat: '',
+          other: []
+        });
+        return;
+      }
+
+      // Find accepted submission or use most recent
+      const acceptedSubmission = submissions.find(sub => sub.status === 'accepted');
+      const submissionToUse = acceptedSubmission || submissions[0];
+
+      console.log('=== USING SUBMISSION FROM DATABASE ===');
+      console.log('Submission ID:', submissionToUse.id);
+      console.log('Submission status:', submissionToUse.status);
+      console.log('Raw data from DB:', submissionToUse.data);
+
+      // Extract social media data
+      const submissionData = submissionToUse.data as Record<string, any>;
+      let socialMediaHandles = null;
+
+      // Check different possible locations
+      if (submissionData.socialMediaHandles) {
+        socialMediaHandles = submissionData.socialMediaHandles;
+        console.log('Found socialMediaHandles directly:', socialMediaHandles);
+      } else if (submissionData.contentAndService?.socialMediaHandles) {
+        socialMediaHandles = submissionData.contentAndService.socialMediaHandles;
+        console.log('Found in contentAndService:', socialMediaHandles);
+      } else {
+        console.log('No socialMediaHandles found, using empty');
+        socialMediaHandles = {};
+      }
+
+      const processedData: SocialMediaHandles = {
+        instagram: socialMediaHandles.instagram || '',
+        tiktok: socialMediaHandles.tiktok || '',
+        twitter: socialMediaHandles.twitter || '',
+        onlyfans: socialMediaHandles.onlyfans || '',
+        snapchat: socialMediaHandles.snapchat || '',
+        other: Array.isArray(socialMediaHandles.other) ? socialMediaHandles.other : []
+      };
+
+      console.log('=== FRESH DATABASE DATA SET TO STATE ===');
+      console.log('Processed fresh data:', processedData);
+      
+      setFreshDatabaseData(processedData);
+    } catch (error) {
+      console.error('Database fetch error:', error);
+      setFreshDatabaseData({
+        instagram: '',
+        tiktok: '',
+        twitter: '',
+        onlyfans: '',
+        snapchat: '',
+        other: []
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch fresh data whenever creator changes
+  useEffect(() => {
+    console.log('=== CREATOR CHANGED - FETCHING FRESH DATA ===');
+    fetchFreshDataFromDatabase();
+  }, [creator.id]);
 
   const handleStartEdit = (platform: string, currentValue: string) => {
     setEditingField(platform);
@@ -61,19 +161,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleSaveEdit = async () => {
-    if (editingField && databaseData) {
-      console.log('=== SAVING EDIT ===');
-      console.log('Updating platform:', editingField, 'with value:', editValue);
-      
-      // Update in the hook's internal state
-      updateSocialMediaForCreator(creator.id, editingField, editValue);
-      
-      // Update our display data immediately
+    if (editingField && freshDatabaseData) {
+      // Update display immediately for UI responsiveness
       const updatedData = {
-        ...databaseData,
+        ...freshDatabaseData,
         [editingField]: editValue
       };
-      setDatabaseData(updatedData);
+      setFreshDatabaseData(updatedData);
       
       setEditingField(null);
       setEditValue('');
@@ -86,18 +180,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleAddOtherPlatform = () => {
-    if (newOtherPlatform.trim() && newOtherUrl.trim() && databaseData) {
-      console.log('Adding other platform:', newOtherPlatform, newOtherUrl);
-      
-      // Add to hook's internal state
-      addOtherSocialMedia(creator.id, newOtherPlatform.trim(), newOtherUrl.trim());
-      
-      // Update display data immediately
+    if (newOtherPlatform.trim() && newOtherUrl.trim() && freshDatabaseData) {
       const updatedData = {
-        ...databaseData,
-        other: [...databaseData.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
+        ...freshDatabaseData,
+        other: [...freshDatabaseData.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
       };
-      setDatabaseData(updatedData);
+      setFreshDatabaseData(updatedData);
       
       setNewOtherPlatform('');
       setNewOtherUrl('');
@@ -109,18 +197,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleRemoveOtherPlatform = (index: number) => {
-    if (databaseData) {
-      console.log('Removing other platform at index:', index);
-      
-      // Remove from hook's internal state
-      removeOtherSocialMedia(creator.id, index);
-      
-      // Update display data immediately
+    if (freshDatabaseData) {
       const updatedData = {
-        ...databaseData,
-        other: databaseData.other.filter((_, i) => i !== index)
+        ...freshDatabaseData,
+        other: freshDatabaseData.other.filter((_, i) => i !== index)
       };
-      setDatabaseData(updatedData);
+      setFreshDatabaseData(updatedData);
       
       toast({
         title: "Platform Removed",
@@ -130,30 +212,66 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleSave = async () => {
-    console.log('=== COMPONENT SAVE PROCESS ===');
-    console.log('Starting save process for creator:', creator.id);
+    console.log('=== SAVING TO DATABASE ===');
     setIsSaving(true);
     try {
-      const result = await saveSocialMediaForCreator(creator.id);
-      if (result.success) {
-        // ALWAYS fetch fresh data after save to show what's actually in the database
-        console.log('Save successful, fetching fresh data from database...');
-        const freshData = await getSocialMediaForCreator(creator.id);
-        console.log('Fresh data after save:', freshData);
-        setDatabaseData(freshData);
-        
-        toast({
-          title: "Social Media Saved",
-          description: "All social media accounts have been saved successfully",
-        });
-      } else {
-        console.error('Save failed:', result.error);
-        toast({
-          title: "Save Failed",
-          description: result.error || "Failed to save social media accounts",
-          variant: "destructive",
-        });
+      // Get creator email
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('creators')
+        .select('email')
+        .eq('id', creator.id)
+        .single();
+
+      if (creatorError || !creatorData?.email) {
+        throw new Error('Creator email not found');
       }
+
+      // Get current submission
+      const { data: submissionData, error: fetchError } = await supabase
+        .from('onboarding_submissions')
+        .select('data, id')
+        .eq('email', creatorData.email)
+        .eq('status', 'accepted')
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (fetchError || !submissionData) {
+        throw new Error('Submission data not found');
+      }
+
+      const currentData = submissionData.data as Record<string, any>;
+      const updatedData = {
+        ...currentData,
+        socialMediaHandles: {
+          instagram: freshDatabaseData?.instagram || '',
+          tiktok: freshDatabaseData?.tiktok || '',
+          twitter: freshDatabaseData?.twitter || '',
+          onlyfans: freshDatabaseData?.onlyfans || '',
+          snapchat: freshDatabaseData?.snapchat || '',
+          other: freshDatabaseData?.other || []
+        }
+      };
+
+      console.log('Saving updated data to DB:', updatedData);
+
+      const { error: updateError } = await supabase
+        .from('onboarding_submissions')
+        .update({ data: updatedData })
+        .eq('id', submissionData.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      console.log('Save successful - fetching fresh data from DB');
+      // ALWAYS fetch fresh data after save
+      await fetchFreshDataFromDatabase();
+      
+      toast({
+        title: "Social Media Saved",
+        description: "All social media accounts have been saved successfully",
+      });
     } catch (error) {
       console.error('Save error:', error);
       toast({
@@ -166,7 +284,6 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
-  // Predefined platforms that should be in Standard Platforms
   const predefinedPlatforms = [
     { key: 'instagram', label: 'Instagram', icon: '📷' },
     { key: 'tiktok', label: 'TikTok', icon: '🎵' },
@@ -175,25 +292,26 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     { key: 'snapchat', label: 'Snapchat', icon: '👻' }
   ];
 
-  if (loading || !databaseData) {
+  if (loading || !freshDatabaseData) {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center">Loading social media data for {creator.name}...</div>
+          <div className="text-center">Loading fresh data from database for {creator.name}...</div>
         </CardContent>
       </Card>
     );
   }
 
-  console.log('=== COMPONENT RENDERING DATABASE DATA ===');
-  console.log('Rendering social media data for creator:', creator.name, databaseData);
+  console.log('=== RENDERING FRESH DATABASE DATA ONLY ===');
+  console.log('Creator:', creator.name);
+  console.log('Fresh database data being displayed:', freshDatabaseData);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{creator.name}'s Social Media Accounts</CardTitle>
         <CardDescription>
-          Manage social media accounts from onboarding data
+          Displaying FRESH data from database only
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -210,7 +328,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           <TabsContent value="predefined">
             <div className="space-y-4">
               {predefinedPlatforms.map((platform) => {
-                const value = databaseData[platform.key as keyof SocialMediaHandles] as string || '';
+                const value = freshDatabaseData[platform.key as keyof SocialMediaHandles] as string || '';
                 const isEditing = editingField === platform.key;
                 
                 return (
@@ -312,10 +430,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </div>
               </div>
               
-              {databaseData.other && databaseData.other.length > 0 ? (
+              {freshDatabaseData.other && freshDatabaseData.other.length > 0 ? (
                 <div className="space-y-3">
                   <h4 className="font-medium">Other Platforms</h4>
-                  {databaseData.other.map((item, index) => (
+                  {freshDatabaseData.other.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 p-3 border rounded-[15px]">
                       <div className="flex-1">
                         <div className="font-medium">{item.platform}</div>
