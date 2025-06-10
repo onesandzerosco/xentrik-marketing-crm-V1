@@ -25,6 +25,23 @@ interface SocialMediaManagerProps {
   creator: Creator;
 }
 
+// Type for the onboarding submission data structure
+interface OnboardingSubmissionData {
+  contentAndService?: {
+    socialMediaHandles?: {
+      instagram?: string;
+      twitter?: string;
+      tiktok?: string;
+      onlyfans?: string;
+      snapchat?: string;
+      other?: Array<{
+        platform: string;
+        handle: string;
+      }>;
+    };
+  };
+}
+
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [socialMediaLogins, setSocialMediaLogins] = useState<SocialMediaLogin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,25 +95,29 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           .eq('email', creator.email)
           .single();
 
-        if (!submissionError && submissionData?.data?.contentAndService?.socialMediaHandles?.other) {
-          const otherPlatforms = submissionData.data.contentAndService.socialMediaHandles.other;
+        if (!submissionError && submissionData?.data) {
+          // Cast the Json data to our expected type structure
+          const typedData = submissionData.data as OnboardingSubmissionData;
+          const otherPlatforms = typedData.contentAndService?.socialMediaHandles?.other;
           
           // Add "other" platforms that don't already exist in social_media_logins
-          otherPlatforms.forEach((otherPlatform: { platform: string; handle: string }) => {
-            if (!existingPlatforms.has(otherPlatform.platform) && otherPlatform.platform && otherPlatform.handle) {
-              allLogins.push({
-                id: `onboarding-${otherPlatform.platform.toLowerCase()}`,
-                creator_email: creator.email,
-                platform: otherPlatform.platform,
-                username: otherPlatform.handle,
-                password: '',
-                notes: 'From onboarding submission',
-                is_predefined: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-            }
-          });
+          if (otherPlatforms && Array.isArray(otherPlatforms)) {
+            otherPlatforms.forEach((otherPlatform: { platform: string; handle: string }) => {
+              if (!existingPlatforms.has(otherPlatform.platform) && otherPlatform.platform && otherPlatform.handle) {
+                allLogins.push({
+                  id: `onboarding-${otherPlatform.platform.toLowerCase()}`,
+                  creator_email: creator.email,
+                  platform: otherPlatform.platform,
+                  username: otherPlatform.handle,
+                  password: '',
+                  notes: 'From onboarding submission',
+                  is_predefined: false,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                });
+              }
+            });
+          }
         }
       } catch (submissionError) {
         console.warn('Could not fetch onboarding submission data:', submissionError);

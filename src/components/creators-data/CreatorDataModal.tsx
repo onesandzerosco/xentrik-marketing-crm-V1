@@ -194,11 +194,29 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 )
               ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
                 <div className="space-y-1">
-                  {Object.entries(value).map(([platform, handle]) => (
-                    <div key={platform}>
-                      <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
-                    </div>
-                  ))}
+                  {Object.entries(value).map(([platform, handle]) => {
+                    // Special handling for the "other" platforms array
+                    if (platform === 'other' && Array.isArray(handle)) {
+                      return (
+                        <div key={platform}>
+                          <span className="font-medium">Other Platforms:</span>
+                          <div className="ml-4 space-y-1">
+                            {handle.map((otherPlatform: any, index: number) => (
+                              <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                                <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    // Regular platform handling
+                    return (
+                      <div key={platform}>
+                        <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 formatValue(value)
