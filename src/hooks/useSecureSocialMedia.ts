@@ -75,9 +75,16 @@ export const useSecureSocialMedia = () => {
 
       const submissionJsonData = submissionData.data as Record<string, any>;
       const socialMediaHandles = submissionJsonData.socialMediaHandles || {};
+      
+      // ADD CONSOLE LOGS TO DEBUG DB DATA
+      console.log('=== DATABASE DEBUG INFO ===');
+      console.log('Full submission data from DB:', submissionData.data);
+      console.log('socialMediaHandles field from DB:', socialMediaHandles);
+      console.log('Raw DB socialMediaHandles type:', typeof socialMediaHandles);
+      console.log('=== END DEBUG INFO ===');
+      
       const processedData = processSocialMediaData(socialMediaHandles);
       
-      console.log('Raw social media handles from DB:', socialMediaHandles);
       console.log('Processed social media data:', processedData);
       
       // Always update with fresh data from database
@@ -237,25 +244,25 @@ export const useSecureSocialMedia = () => {
     }
   }, [socialMediaData, fetchSocialMediaForCreator]);
 
+  // NEW: Make getSocialMediaForCreator async and fetch fresh data
+  const getSocialMediaForCreator = useCallback(async (creatorId: string) => {
+    console.log('=== getSocialMediaForCreator called ===');
+    console.log('CreatorId:', creatorId);
+    
+    // Fetch fresh data from database
+    const freshData = await fetchSocialMediaForCreator(creatorId);
+    console.log('Fresh data from DB:', freshData);
+    
+    return freshData;
+  }, [fetchSocialMediaForCreator]);
+
   return {
     fetchSocialMediaForCreator,
     updateSocialMediaForCreator,
     addOtherSocialMedia,
     removeOtherSocialMedia,
     saveSocialMediaForCreator,
-    getSocialMediaForCreator: (creatorId: string) => {
-      // Always fetch fresh data instead of relying on local state
-      console.log('Getting social media for creator:', creatorId);
-      console.log('Current socialMediaData state:', socialMediaData);
-      
-      const data = socialMediaData[creatorId];
-      console.log('Returning data for creator:', data);
-      
-      if (!data) {
-        return getEmptySocialMediaHandles();
-      }
-      return data;
-    },
+    getSocialMediaForCreator,
     loading
   };
 };

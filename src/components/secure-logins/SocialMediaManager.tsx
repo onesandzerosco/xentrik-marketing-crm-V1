@@ -31,13 +31,23 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  const [socialMediaData, setSocialMediaData] = useState({
+    instagram: '',
+    tiktok: '',
+    twitter: '',
+    onlyfans: '',
+    snapchat: '',
+    other: []
+  });
 
   useEffect(() => {
     console.log('Creator changed, fetching data for:', creator.id, creator.name);
-    fetchSocialMediaForCreator(creator.id);
-  }, [creator.id, fetchSocialMediaForCreator]);
-
-  const socialMediaData = getSocialMediaForCreator(creator.id);
+    const loadData = async () => {
+      const data = await getSocialMediaForCreator(creator.id);
+      setSocialMediaData(data);
+    };
+    loadData();
+  }, [creator.id, getSocialMediaForCreator]);
 
   const handleStartEdit = (platform: string, currentValue: string) => {
     setEditingField(platform);
@@ -47,6 +57,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const handleSaveEdit = () => {
     if (editingField) {
       updateSocialMediaForCreator(creator.id, editingField, editValue);
+      // Update local state
+      setSocialMediaData(prev => ({
+        ...prev,
+        [editingField]: editValue
+      }));
       setEditingField(null);
       setEditValue('');
     }
@@ -61,6 +76,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     if (newOtherPlatform.trim() && newOtherUrl.trim()) {
       console.log('Adding other platform:', newOtherPlatform, newOtherUrl);
       addOtherSocialMedia(creator.id, newOtherPlatform.trim(), newOtherUrl.trim());
+      // Update local state
+      setSocialMediaData(prev => ({
+        ...prev,
+        other: [...prev.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
+      }));
       setNewOtherPlatform('');
       setNewOtherUrl('');
       toast({
@@ -73,6 +93,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const handleRemoveOtherPlatform = (index: number) => {
     console.log('Removing other platform at index:', index);
     removeOtherSocialMedia(creator.id, index);
+    // Update local state
+    setSocialMediaData(prev => ({
+      ...prev,
+      other: prev.other.filter((_, i) => i !== index)
+    }));
     toast({
       title: "Platform Removed",
       description: "Platform has been removed",
@@ -85,6 +110,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     try {
       const result = await saveSocialMediaForCreator(creator.id);
       if (result.success) {
+        // Refresh data after save
+        const freshData = await getSocialMediaForCreator(creator.id);
+        setSocialMediaData(freshData);
         toast({
           title: "Social Media Saved",
           description: "All social media accounts have been saved successfully",
