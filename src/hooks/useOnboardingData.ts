@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface SocialMediaHandles {
-  [platform: string]: string;
+  [platform: string]: string | Array<{ platform: string; url: string }>;
 }
 
 interface OnboardingData {
@@ -81,28 +81,37 @@ export const useOnboardingData = (creatorId: string) => {
         
         // Process social media handles to extract "Other" array items
         if (parsedData.socialMediaHandles) {
-          const processedHandles = { ...parsedData.socialMediaHandles };
+          const processedHandles: Record<string, string> = {};
+          
+          // Copy all predefined platforms
+          predefinedPlatforms.forEach(platform => {
+            if (parsedData.socialMediaHandles![platform] && typeof parsedData.socialMediaHandles![platform] === 'string') {
+              processedHandles[platform] = parsedData.socialMediaHandles![platform] as string;
+            }
+          });
           
           // Extract items from "Other" array and add them as individual handles
-          if (processedHandles.other && Array.isArray(processedHandles.other)) {
-            console.log('Processing Other array:', processedHandles.other);
+          if (parsedData.socialMediaHandles.other && Array.isArray(parsedData.socialMediaHandles.other)) {
+            console.log('Processing Other array:', parsedData.socialMediaHandles.other);
             
-            processedHandles.other.forEach((item: any) => {
+            (parsedData.socialMediaHandles.other as Array<{ platform: string; url: string }>).forEach((item) => {
               if (typeof item === 'object' && item.platform && item.url) {
                 processedHandles[item.platform] = item.url;
                 console.log(`Added from Other array: ${item.platform} = ${item.url}`);
               }
             });
-            
-            // Remove the "other" field from the processed handles so it doesn't show in UI
-            delete processedHandles.other;
           }
           
           console.log('Processed social media handles:', processedHandles);
-          parsedData.socialMediaHandles = processedHandles;
+          
+          // Update the parsed data with flattened handles for UI display
+          setOnboardingData({
+            ...parsedData,
+            socialMediaHandles: processedHandles
+          });
+        } else {
+          setOnboardingData(parsedData);
         }
-        
-        setOnboardingData(parsedData);
       } else {
         console.log('No accepted submissions found');
         setOnboardingData(null);
@@ -113,9 +122,9 @@ export const useOnboardingData = (creatorId: string) => {
     } finally {
       setLoading(false);
     }
-  }, [creatorId]);
+  }, [creatorId, predefinedPlatforms]);
 
-  const updateSocialMediaHandles = useCallback(async (updatedHandles: SocialMediaHandles) => {
+  const updateSocialMediaHandles = useCallback(async (updatedHandles: Record<string, string>) => {
     if (!creatorId || !onboardingData) {
       console.log('Missing creatorId or onboardingData for update');
       return false;
@@ -125,7 +134,7 @@ export const useOnboardingData = (creatorId: string) => {
       console.log('Updating social media handles:', updatedHandles);
       
       // Separate predefined platforms from custom ones
-      const predefinedHandles: SocialMediaHandles = {};
+      const predefinedHandles: Record<string, string> = {};
       const customHandles: Array<{ platform: string; url: string }> = [];
       
       Object.entries(updatedHandles).forEach(([platform, url]) => {
@@ -199,7 +208,7 @@ export const useOnboardingData = (creatorId: string) => {
         return false;
       }
 
-      // Update local state with the new processed data (without "other" for UI)
+      // Update local state with the new processed data (flattened for UI)
       setOnboardingData({
         ...updatedData,
         socialMediaHandles: updatedHandles // Keep the flattened version for UI
