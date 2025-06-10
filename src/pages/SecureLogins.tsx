@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCreators } from '../context/creator';
@@ -179,14 +178,13 @@ const SecureLogins: React.FC = () => {
               loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
               onUpdateLogin={handleUpdateLogin}
               onSaveLoginDetails={handleSaveLoginDetails}
+              onLock={handleManualLock}
             />
           </div>
         ) : (
           <NoCreatorSelected />
         )}
       </div>
-      
-      <LockButton onLock={handleManualLock} />
     </div>
   );
 };
