@@ -14,7 +14,8 @@ interface SocialMediaManagerProps {
   creator: Creator;
 }
 
-interface SocialMediaAccount {
+// Simple interface for other platforms that matches Json type
+interface OtherPlatform {
   platform: string;
   url: string;
 }
@@ -25,7 +26,7 @@ interface SocialMediaHandles {
   twitter: string;
   onlyfans: string;
   snapchat: string;
-  other: SocialMediaAccount[];
+  other: OtherPlatform[];
 }
 
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
@@ -241,16 +242,23 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       }
 
       const currentData = submissionData.data as Record<string, any>;
+      
+      // Properly structure the data to match Supabase Json type
+      const socialMediaHandlesForDB = {
+        instagram: freshDatabaseData?.instagram || '',
+        tiktok: freshDatabaseData?.tiktok || '',
+        twitter: freshDatabaseData?.twitter || '',
+        onlyfans: freshDatabaseData?.onlyfans || '',
+        snapchat: freshDatabaseData?.snapchat || '',
+        other: freshDatabaseData?.other.map(item => ({
+          platform: item.platform,
+          url: item.url
+        })) || []
+      };
+
       const updatedData = {
         ...currentData,
-        socialMediaHandles: {
-          instagram: freshDatabaseData?.instagram || '',
-          tiktok: freshDatabaseData?.tiktok || '',
-          twitter: freshDatabaseData?.twitter || '',
-          onlyfans: freshDatabaseData?.onlyfans || '',
-          snapchat: freshDatabaseData?.snapchat || '',
-          other: freshDatabaseData?.other || []
-        }
+        socialMediaHandles: socialMediaHandlesForDB
       };
 
       console.log('Saving updated data to DB:', updatedData);
