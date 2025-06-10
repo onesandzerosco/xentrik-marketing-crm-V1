@@ -72,46 +72,75 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       .replace(/_/g, ' ');
   };
 
+  // Parse the submission data properly
+  const parseSubmissionData = () => {
+    let parsedData;
+    
+    try {
+      // If data is a string, parse it as JSON
+      if (typeof submission.data === 'string') {
+        parsedData = JSON.parse(submission.data);
+      } else {
+        parsedData = submission.data;
+      }
+      
+      console.log('Parsed submission data:', parsedData);
+      return parsedData;
+    } catch (error) {
+      console.error('Error parsing submission data:', error);
+      return submission.data;
+    }
+  };
+
+  const submissionData = parseSubmissionData();
+
   // Updated field priority orders based on actual schema fields only
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
-    // Logical ordering for remaining actual fields
     'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
   ];
 
   const physicalPriority = [
     'bodyType', 'height', 'weight', 'eyeColor',
-    // Logical ordering for remaining actual fields
     'hairColor', 'favoriteColor', 'dislikedColor', 'allergies',
     'hasTattoos', 'tattooDetails', 'bustWaistHip', 'dickSize', 'isCircumcised', 'isTopOrBottom'
   ];
 
   const preferencesPriority = [
     'hobbies', 'favoriteFood', 'favoriteDrink', 'favoriteMusic', 'favoriteMovies',
-    // Logical ordering for remaining actual fields
     'favoriteExpression', 'canSing', 'smokes', 'drinks', 'isSexual',
     'homeActivities', 'morningRoutine', 'likeInPerson', 'dislikeInPerson', 'turnOffs'
   ];
 
   const contentPriority = [
     'pricePerMinute', 'videoCallPrice', 'sellsUnderwear',
-    // Logical ordering for remaining actual fields
     'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
     'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
   ];
 
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
-    if (!data || typeof data !== 'object') return [];
+    if (!data || typeof data !== 'object') {
+      console.log('No data or data is not an object:', data);
+      return [];
+    }
     
-    // Get ALL fields from the data object, regardless of whether they have values
+    // Get ALL fields from the data object
+    const allDataKeys = Object.keys(data);
+    console.log('All data keys found:', allDataKeys);
+    
+    // Create a set of all possible fields
     const allPossibleFields = new Set([
       ...priorityOrder,
-      ...Object.keys(data)
+      ...allDataKeys
     ]);
 
     // Create entries for ALL fields, using actual data or undefined for missing fields
-    const allEntries = Array.from(allPossibleFields).map(key => [key, data[key]]);
+    const allEntries = Array.from(allPossibleFields).map(key => {
+      const value = data[key];
+      console.log(`Field ${key}:`, value);
+      return [key, value];
+    });
 
     // Sort by priority order, then alphabetically for remaining fields
     return allEntries.sort(([keyA], [keyB]) => {
@@ -132,41 +161,50 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     const sections = [
       { 
         title: 'Personal Information', 
-        data: submission.data?.personalInfo,
+        data: submissionData?.personalInfo,
         priority: personalInfoPriority 
       },
       { 
         title: 'Physical Attributes', 
-        data: submission.data?.physicalAttributes,
+        data: submissionData?.physicalAttributes,
         priority: physicalPriority 
       },
       { 
         title: 'Personal Preferences', 
-        data: submission.data?.personalPreferences,
+        data: submissionData?.personalPreferences,
         priority: preferencesPriority 
       },
       { 
         title: 'Content & Service', 
-        data: submission.data?.contentAndService,
+        data: submissionData?.contentAndService,
         priority: contentPriority 
       }
     ];
 
     return (
       <div className="space-y-6">
-        {sections.map((section, index) => (
-          <div key={index} className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">{section.title}</h3>
-            {renderDataSection(section.data, section.title, section.priority)}
-          </div>
-        ))}
+        {sections.map((section, index) => {
+          console.log(`Rendering section: ${section.title}`, section.data);
+          return (
+            <div key={index} className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">{section.title}</h3>
+              {renderDataSection(section.data, section.title, section.priority)}
+            </div>
+          );
+        })}
       </div>
     );
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
+    console.log(`Rendering data section for ${title}:`, sectionData);
+    
     // Always render fields, even if sectionData is null/undefined
     const sortedEntries = sortFieldsByPriority(sectionData || {}, priorityOrder);
+    
+    if (sortedEntries.length === 0) {
+      return <div className="text-muted-foreground">No data available for this section</div>;
+    }
 
     return (
       <div className="space-y-4">
@@ -201,7 +239,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                   ))}
                 </div>
               ) : (
-                formatValue(value)
+                <span className={value === undefined || value === null || value === '' ? 'text-red-400' : ''}>
+                  {formatValue(value)}
+                </span>
               )}
             </div>
           </div>
@@ -240,22 +280,22 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
               <TabsContent value="personal" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                {renderDataSection(submission.data?.personalInfo, 'Personal Information', personalInfoPriority)}
+                {renderDataSection(submissionData?.personalInfo, 'Personal Information', personalInfoPriority)}
               </TabsContent>
               
               <TabsContent value="physical" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
-                {renderDataSection(submission.data?.physicalAttributes, 'Physical Attributes', physicalPriority)}
+                {renderDataSection(submissionData?.physicalAttributes, 'Physical Attributes', physicalPriority)}
               </TabsContent>
               
               <TabsContent value="preferences" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
-                {renderDataSection(submission.data?.personalPreferences, 'Personal Preferences', preferencesPriority)}
+                {renderDataSection(submissionData?.personalPreferences, 'Personal Preferences', preferencesPriority)}
               </TabsContent>
               
               <TabsContent value="content" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
-                {renderDataSection(submission.data?.contentAndService, 'Content & Service', contentPriority)}
+                {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority)}
               </TabsContent>
             </div>
           </Tabs>
