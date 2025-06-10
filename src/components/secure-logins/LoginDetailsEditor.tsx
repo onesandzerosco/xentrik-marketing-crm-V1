@@ -163,22 +163,6 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
     }
   };
 
-  const togglePasswordVisibility = (platform: string) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [platform]: !prev[platform]
-    }));
-  };
-
-  const getLoginDetail = (platform: string, field: keyof LoginDetail) => {
-    if (!loginDetails[platform]) return "";
-    return loginDetails[platform][field] || "";
-  };
-
-  const handleInputChange = (platform: string, field: string, value: string) => {
-    onUpdateLogin(platform, field, value);
-  };
-
   return (
     <div className="space-y-6">
       {/* Social Media Accounts Section */}
