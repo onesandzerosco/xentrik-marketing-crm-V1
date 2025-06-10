@@ -80,6 +80,7 @@ export const useSecureSocialMedia = () => {
       console.log('Raw social media handles from DB:', socialMediaHandles);
       console.log('Processed social media data:', processedData);
       
+      // Always update with fresh data from database
       setSocialMediaData(prev => ({
         ...prev,
         [creatorId]: processedData
@@ -226,6 +227,7 @@ export const useSecureSocialMedia = () => {
 
       console.log('Successfully saved social media data');
       
+      // Refetch to get the latest data from database
       await fetchSocialMediaForCreator(creatorId);
       
       return { success: true };
