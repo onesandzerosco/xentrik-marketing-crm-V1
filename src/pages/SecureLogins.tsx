@@ -7,8 +7,10 @@ import { useToast } from '@/hooks/use-toast';
 import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
+import SocialMediaManager from '../components/secure-logins/SocialMediaManager';
 import NoCreatorSelected from '../components/secure-logins/NoCreatorSelected';
 import LockButton from '../components/secure-logins/LockButton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Creator } from '../types';
 import { useSecurePasswordManager } from '@/hooks/useSecurePasswordManager';
 
@@ -140,12 +142,29 @@ const SecureLogins: React.FC = () => {
         
         {selectedCreator ? (
           <div>
-            <LoginDetailsEditor 
-              creator={selectedCreator}
-              loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
-              onUpdateLogin={handleUpdateLogin}
-              onSaveLoginDetails={handleSaveLoginDetails}
-            />
+            <Tabs defaultValue="login-details" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="login-details" className="rounded-[15px]">
+                  Login Details
+                </TabsTrigger>
+                <TabsTrigger value="social-media" className="rounded-[15px]">
+                  Social Media
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login-details">
+                <LoginDetailsEditor 
+                  creator={selectedCreator}
+                  loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
+                  onUpdateLogin={handleUpdateLogin}
+                  onSaveLoginDetails={handleSaveLoginDetails}
+                />
+              </TabsContent>
+              
+              <TabsContent value="social-media">
+                <SocialMediaManager creator={selectedCreator} />
+              </TabsContent>
+            </Tabs>
           </div>
         ) : (
           <NoCreatorSelected />
@@ -159,4 +178,3 @@ const SecureLogins: React.FC = () => {
 };
 
 export default SecureLogins;
-
