@@ -234,12 +234,13 @@ export const useOnboardingData = (creatorId: string) => {
     fetchOnboardingData();
   }, [fetchOnboardingData]);
 
-  const socialMediaHandles = onboardingData?.socialMediaHandles || {};
+  // Return flattened social media handles for UI consumption
+  const socialMediaHandles: Record<string, string> = onboardingData?.socialMediaHandles || {};
   console.log('Hook returning social media handles:', socialMediaHandles);
 
   return {
     onboardingData,
-    socialMediaHandles,
+    socialMediaHandles, // This is now correctly typed as Record<string, string>
     loading,
     updateSocialMediaHandles,
     refetch: fetchOnboardingData
