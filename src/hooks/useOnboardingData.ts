@@ -17,6 +17,9 @@ export const useOnboardingData = (creatorId: string) => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Define predefined platforms
+  const predefinedPlatforms = ['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'onlyfans', 'snapchat'];
+
   const fetchOnboardingData = useCallback(async () => {
     if (!creatorId) return;
     
@@ -74,7 +77,30 @@ export const useOnboardingData = (creatorId: string) => {
         }
         
         console.log('Final parsed data:', parsedData);
-        console.log('Social media handles found:', parsedData.socialMediaHandles);
+        console.log('Raw social media handles:', parsedData.socialMediaHandles);
+        
+        // Process social media handles to extract "Other" array items
+        if (parsedData.socialMediaHandles) {
+          const processedHandles = { ...parsedData.socialMediaHandles };
+          
+          // Extract items from "Other" array and add them as individual handles
+          if (processedHandles.other && Array.isArray(processedHandles.other)) {
+            console.log('Processing Other array:', processedHandles.other);
+            
+            processedHandles.other.forEach((item: any) => {
+              if (typeof item === 'object' && item.platform && item.url) {
+                processedHandles[item.platform] = item.url;
+                console.log(`Added from Other array: ${item.platform} = ${item.url}`);
+              }
+            });
+            
+            // Remove the "other" field from the processed handles so it doesn't show in UI
+            delete processedHandles.other;
+          }
+          
+          console.log('Processed social media handles:', processedHandles);
+          parsedData.socialMediaHandles = processedHandles;
+        }
         
         setOnboardingData(parsedData);
       } else {
@@ -98,9 +124,31 @@ export const useOnboardingData = (creatorId: string) => {
     try {
       console.log('Updating social media handles:', updatedHandles);
       
+      // Separate predefined platforms from custom ones
+      const predefinedHandles: SocialMediaHandles = {};
+      const customHandles: Array<{ platform: string; url: string }> = [];
+      
+      Object.entries(updatedHandles).forEach(([platform, url]) => {
+        if (predefinedPlatforms.includes(platform.toLowerCase())) {
+          predefinedHandles[platform] = url;
+        } else {
+          // This is a custom platform, add it to the "Other" array
+          customHandles.push({ platform, url });
+        }
+      });
+      
+      // Reconstruct the social media handles with the "Other" array
+      const reconstructedHandles: SocialMediaHandles = {
+        ...predefinedHandles,
+        other: customHandles
+      };
+      
+      console.log('Reconstructed handles for saving:', reconstructedHandles);
+      console.log('Custom handles going to Other array:', customHandles);
+
       const updatedData = {
         ...onboardingData,
-        socialMediaHandles: updatedHandles
+        socialMediaHandles: reconstructedHandles
       };
 
       console.log('Updated data to save:', updatedData);
@@ -151,7 +199,12 @@ export const useOnboardingData = (creatorId: string) => {
         return false;
       }
 
-      setOnboardingData(updatedData);
+      // Update local state with the new processed data (without "other" for UI)
+      setOnboardingData({
+        ...updatedData,
+        socialMediaHandles: updatedHandles // Keep the flattened version for UI
+      });
+      
       toast({
         title: "Success",
         description: "Social media accounts updated successfully",
@@ -166,7 +219,7 @@ export const useOnboardingData = (creatorId: string) => {
       });
       return false;
     }
-  }, [creatorId, onboardingData, toast]);
+  }, [creatorId, onboardingData, toast, predefinedPlatforms]);
 
   useEffect(() => {
     fetchOnboardingData();

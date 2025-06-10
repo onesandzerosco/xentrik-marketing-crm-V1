@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,18 +23,29 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
   const [newHandle, setNewHandle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Define predefined platforms
+  const predefinedPlatforms = ['instagram', 'tiktok', 'twitter', 'reddit', 'chaturbate', 'youtube', 'onlyfans', 'snapchat'];
+
   // Update editedHandles when socialMediaHandles prop changes
   useEffect(() => {
     console.log('SocialMediaManager - received socialMediaHandles:', socialMediaHandles);
     console.log('SocialMediaManager - socialMediaHandles type:', typeof socialMediaHandles);
     console.log('SocialMediaManager - socialMediaHandles keys:', Object.keys(socialMediaHandles));
     
-    // Ensure we have a valid object
+    // Ensure we have a valid object and filter out the "other" field
     const validHandles = socialMediaHandles && typeof socialMediaHandles === 'object' 
       ? socialMediaHandles 
       : {};
     
-    setEditedHandles(validHandles);
+    // Remove the "other" field if it exists (it shouldn't at this point, but just in case)
+    const filteredHandles = { ...validHandles };
+    if (filteredHandles.other) {
+      console.log('Removing "other" field from UI handles:', filteredHandles.other);
+      delete filteredHandles.other;
+    }
+    
+    console.log('Filtered handles for UI:', filteredHandles);
+    setEditedHandles(filteredHandles);
   }, [socialMediaHandles]);
 
   const handleUpdateHandle = (platform: string, handle: string) => {
@@ -45,6 +57,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
 
   const handleAddNew = () => {
     if (newPlatform.trim() && newHandle.trim()) {
+      console.log(`Adding new platform: ${newPlatform.trim()} = ${newHandle.trim()}`);
       setEditedHandles(prev => ({
         ...prev,
         [newPlatform.trim()]: newHandle.trim()
@@ -55,6 +68,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
   };
 
   const handleRemove = (platform: string) => {
+    console.log(`Removing platform: ${platform}`);
     setEditedHandles(prev => {
       const updated = { ...prev };
       delete updated[platform];
@@ -69,13 +83,29 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
     setIsSaving(false);
   };
 
-  const hasChanges = JSON.stringify(editedHandles) !== JSON.stringify(socialMediaHandles);
+  // Compare handles excluding the "other" field for change detection
+  const originalHandlesWithoutOther = { ...socialMediaHandles };
+  if (originalHandlesWithoutOther.other) {
+    delete originalHandlesWithoutOther.other;
+  }
+  
+  const hasChanges = JSON.stringify(editedHandles) !== JSON.stringify(originalHandlesWithoutOther);
+
+  // Separate predefined and custom platforms for display
+  const predefinedHandles = Object.entries(editedHandles).filter(([platform]) => 
+    predefinedPlatforms.includes(platform.toLowerCase())
+  );
+  
+  const customHandles = Object.entries(editedHandles).filter(([platform]) => 
+    !predefinedPlatforms.includes(platform.toLowerCase())
+  );
 
   console.log('SocialMediaManager render state:');
   console.log('- editedHandles:', editedHandles);
   console.log('- socialMediaHandles:', socialMediaHandles);
   console.log('- hasChanges:', hasChanges);
-  console.log('- editedHandles entries:', Object.entries(editedHandles));
+  console.log('- predefinedHandles:', predefinedHandles);
+  console.log('- customHandles:', customHandles);
 
   return (
     <Card>
@@ -89,7 +119,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
         {/* Debug information */}
         <div className="text-xs text-muted-foreground border-l-2 border-muted pl-2">
           <p>Debug: Found {Object.keys(editedHandles).length} social media handles</p>
-          <p>Original data: {Object.keys(socialMediaHandles).length} handles</p>
+          <p>Predefined platforms: {predefinedHandles.length}</p>
+          <p>Custom platforms: {customHandles.length}</p>
           {Object.keys(editedHandles).length === 0 && Object.keys(socialMediaHandles).length === 0 && (
             <p className="text-amber-600">No social media handles found in onboarding data</p>
           )}
@@ -100,27 +131,67 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
 
         {/* Existing handles */}
         {Object.entries(editedHandles).length > 0 ? (
-          Object.entries(editedHandles).map(([platform, handle]) => (
-            <div key={platform} className="flex items-center space-x-2">
-              <div className="flex-1">
-                <Label className="capitalize">{platform}</Label>
-                <Input
-                  value={handle || ''}
-                  onChange={(e) => handleUpdateHandle(platform, e.target.value)}
-                  placeholder={`Enter ${platform} handle`}
-                  className="rounded-[15px]"
-                />
+          <div className="space-y-4">
+            {/* Predefined platforms */}
+            {predefinedHandles.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Standard Platforms</h4>
+                <div className="space-y-2">
+                  {predefinedHandles.map(([platform, handle]) => (
+                    <div key={platform} className="flex items-center space-x-2">
+                      <div className="flex-1">
+                        <Label className="capitalize">{platform}</Label>
+                        <Input
+                          value={handle || ''}
+                          onChange={(e) => handleUpdateHandle(platform, e.target.value)}
+                          placeholder={`Enter ${platform} handle`}
+                          className="rounded-[15px]"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRemove(platform)}
+                        className="rounded-[15px] mt-6"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => handleRemove(platform)}
-                className="rounded-[15px] mt-6"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))
+            )}
+            
+            {/* Custom platforms (from "Other" array) */}
+            {customHandles.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Custom Platforms</h4>
+                <div className="space-y-2">
+                  {customHandles.map(([platform, handle]) => (
+                    <div key={platform} className="flex items-center space-x-2">
+                      <div className="flex-1">
+                        <Label className="capitalize">{platform}</Label>
+                        <Input
+                          value={handle || ''}
+                          onChange={(e) => handleUpdateHandle(platform, e.target.value)}
+                          placeholder={`Enter ${platform} handle`}
+                          className="rounded-[15px]"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRemove(platform)}
+                        className="rounded-[15px] mt-6"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="text-center py-4 text-muted-foreground">
             <p>No social media accounts found in onboarding data.</p>
@@ -154,6 +225,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
               <Plus className="h-4 w-4" />
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            New platforms will be saved as custom entries in the database
+          </p>
         </div>
 
         {/* Save button */}
