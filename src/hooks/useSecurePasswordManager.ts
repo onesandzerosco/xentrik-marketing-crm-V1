@@ -13,7 +13,7 @@ export const useSecurePasswordManager = () => {
   const savePassword = useCallback(async (password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const hashedPassword = hashPassword(password);
+      const hashedPassword = await hashPassword(password);
       
       // First, deactivate all current passwords
       await supabase
@@ -79,11 +79,15 @@ export const useSecurePasswordManager = () => {
       const storedHash = await getActivePassword();
       
       if (!storedHash) {
-        // Hardcoded password for direct comparison - only "Ban4n4s1249s" is valid
-        return password === "Ban4n4s1249s";
+        console.log('No stored password found, checking against hardcoded fallback');
+        // Fallback: check against hardcoded password if no database password exists
+        return password === "BananaMoney$!";
       }
       
-      return verifyPassword(password, storedHash);
+      console.log('Verifying password against stored hash');
+      const isValid = await verifyPassword(password, storedHash);
+      console.log('Password verification result:', isValid);
+      return isValid;
     } catch (error) {
       console.error('Error verifying password:', error);
       return false;
