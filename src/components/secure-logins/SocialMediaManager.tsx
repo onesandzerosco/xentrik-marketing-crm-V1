@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Trash2, Save, ExternalLink, Edit, Check, X } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
-import { useSecureSocialMedia } from '@/hooks/useSecureSocialMedia';
+import { useSecureSocialMedia, SocialMediaHandles } from '@/hooks/useSecureSocialMedia';
 
 interface SocialMediaManagerProps {
   creator: Creator;
@@ -17,43 +17,42 @@ interface SocialMediaManagerProps {
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const { toast } = useToast();
   const {
-    fetchSocialMediaForCreator,
+    getSocialMediaForCreator,
     updateSocialMediaForCreator,
     addOtherSocialMedia,
     removeOtherSocialMedia,
     saveSocialMediaForCreator,
-    getSocialMediaForCreator,
     loading
   } = useSecureSocialMedia();
 
+  // Database state - this is what we display
+  const [databaseData, setDatabaseData] = useState<SocialMediaHandles | null>(null);
+  
+  // UI state only
   const [newOtherPlatform, setNewOtherPlatform] = useState('');
   const [newOtherUrl, setNewOtherUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
-  const [socialMediaData, setSocialMediaData] = useState({
-    instagram: '',
-    tiktok: '',
-    twitter: '',
-    onlyfans: '',
-    snapchat: '',
-    other: []
-  });
 
+  // ALWAYS fetch fresh data from database when creator changes
   useEffect(() => {
-    console.log('=== COMPONENT LOADING DATA ===');
-    console.log('Creator changed, fetching data for:', creator.id, creator.name);
-    const loadData = async () => {
+    console.log('=== COMPONENT EFFECT TRIGGERED ===');
+    console.log('Creator changed, fetching FRESH database data for:', creator.id, creator.name);
+    
+    const loadFreshData = async () => {
       try {
-        const data = await getSocialMediaForCreator(creator.id);
-        console.log('=== COMPONENT RECEIVED DATA ===');
-        console.log('Data received in component:', data);
-        setSocialMediaData(data);
+        const freshData = await getSocialMediaForCreator(creator.id);
+        console.log('=== FRESH DATABASE DATA RECEIVED ===');
+        console.log('Fresh data from DB:', freshData);
+        setDatabaseData(freshData);
       } catch (error) {
-        console.error('Error loading data in component:', error);
+        console.error('Error loading fresh data:', error);
+        setDatabaseData(null);
       }
     };
-    loadData();
+    
+    loadFreshData();
   }, [creator.id, getSocialMediaForCreator]);
 
   const handleStartEdit = (platform: string, currentValue: string) => {
@@ -61,14 +60,21 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     setEditValue(currentValue);
   };
 
-  const handleSaveEdit = () => {
-    if (editingField) {
+  const handleSaveEdit = async () => {
+    if (editingField && databaseData) {
+      console.log('=== SAVING EDIT ===');
+      console.log('Updating platform:', editingField, 'with value:', editValue);
+      
+      // Update in the hook's internal state
       updateSocialMediaForCreator(creator.id, editingField, editValue);
-      // Update local state immediately for UI responsiveness
-      setSocialMediaData(prev => ({
-        ...prev,
+      
+      // Update our display data immediately
+      const updatedData = {
+        ...databaseData,
         [editingField]: editValue
-      }));
+      };
+      setDatabaseData(updatedData);
+      
       setEditingField(null);
       setEditValue('');
     }
@@ -80,14 +86,19 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleAddOtherPlatform = () => {
-    if (newOtherPlatform.trim() && newOtherUrl.trim()) {
+    if (newOtherPlatform.trim() && newOtherUrl.trim() && databaseData) {
       console.log('Adding other platform:', newOtherPlatform, newOtherUrl);
+      
+      // Add to hook's internal state
       addOtherSocialMedia(creator.id, newOtherPlatform.trim(), newOtherUrl.trim());
-      // Update local state immediately for UI responsiveness
-      setSocialMediaData(prev => ({
-        ...prev,
-        other: [...prev.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
-      }));
+      
+      // Update display data immediately
+      const updatedData = {
+        ...databaseData,
+        other: [...databaseData.other, { platform: newOtherPlatform.trim(), url: newOtherUrl.trim() }]
+      };
+      setDatabaseData(updatedData);
+      
       setNewOtherPlatform('');
       setNewOtherUrl('');
       toast({
@@ -98,17 +109,24 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleRemoveOtherPlatform = (index: number) => {
-    console.log('Removing other platform at index:', index);
-    removeOtherSocialMedia(creator.id, index);
-    // Update local state immediately for UI responsiveness
-    setSocialMediaData(prev => ({
-      ...prev,
-      other: prev.other.filter((_, i) => i !== index)
-    }));
-    toast({
-      title: "Platform Removed",
-      description: "Platform has been removed",
-    });
+    if (databaseData) {
+      console.log('Removing other platform at index:', index);
+      
+      // Remove from hook's internal state
+      removeOtherSocialMedia(creator.id, index);
+      
+      // Update display data immediately
+      const updatedData = {
+        ...databaseData,
+        other: databaseData.other.filter((_, i) => i !== index)
+      };
+      setDatabaseData(updatedData);
+      
+      toast({
+        title: "Platform Removed",
+        description: "Platform has been removed",
+      });
+    }
   };
 
   const handleSave = async () => {
@@ -118,15 +136,16 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     try {
       const result = await saveSocialMediaForCreator(creator.id);
       if (result.success) {
-        // Refresh data after save to show what's actually in the database
+        // ALWAYS fetch fresh data after save to show what's actually in the database
+        console.log('Save successful, fetching fresh data from database...');
         const freshData = await getSocialMediaForCreator(creator.id);
-        console.log('Fresh data after save in component:', freshData);
-        setSocialMediaData(freshData);
+        console.log('Fresh data after save:', freshData);
+        setDatabaseData(freshData);
+        
         toast({
           title: "Social Media Saved",
           description: "All social media accounts have been saved successfully",
         });
-        console.log('Save successful');
       } else {
         console.error('Save failed:', result.error);
         toast({
@@ -156,7 +175,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     { key: 'snapchat', label: 'Snapchat', icon: '👻' }
   ];
 
-  if (loading) {
+  if (loading || !databaseData) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -166,8 +185,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     );
   }
 
-  console.log('=== COMPONENT RENDERING ===');
-  console.log('Rendering social media data for creator:', creator.name, socialMediaData);
+  console.log('=== COMPONENT RENDERING DATABASE DATA ===');
+  console.log('Rendering social media data for creator:', creator.name, databaseData);
 
   return (
     <Card>
@@ -191,7 +210,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           <TabsContent value="predefined">
             <div className="space-y-4">
               {predefinedPlatforms.map((platform) => {
-                const value = socialMediaData[platform.key as keyof typeof socialMediaData] as string || '';
+                const value = databaseData[platform.key as keyof SocialMediaHandles] as string || '';
                 const isEditing = editingField === platform.key;
                 
                 return (
@@ -293,10 +312,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </div>
               </div>
               
-              {socialMediaData.other && socialMediaData.other.length > 0 ? (
+              {databaseData.other && databaseData.other.length > 0 ? (
                 <div className="space-y-3">
                   <h4 className="font-medium">Other Platforms</h4>
-                  {socialMediaData.other.map((item, index) => (
+                  {databaseData.other.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 p-3 border rounded-[15px]">
                       <div className="flex-1">
                         <div className="font-medium">{item.platform}</div>
