@@ -30,18 +30,22 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [newCustomUrl, setNewCustomUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Fetch data whenever creator changes
   useEffect(() => {
+    console.log('Creator changed, fetching data for:', creator.id, creator.name);
     fetchSocialMediaForCreator(creator.id);
   }, [creator.id, fetchSocialMediaForCreator]);
 
   const socialMediaData = getSocialMediaForCreator(creator.id);
 
   const handleInputChange = (platform: string, value: string) => {
+    console.log('Input changed:', platform, value, 'for creator:', creator.id);
     updateSocialMediaForCreator(creator.id, platform, value);
   };
 
   const handleAddCustomPlatform = () => {
     if (newCustomPlatform.trim() && newCustomUrl.trim()) {
+      console.log('Adding custom platform:', newCustomPlatform, newCustomUrl);
       addCustomSocialMedia(creator.id, newCustomPlatform.trim(), newCustomUrl.trim());
       setNewCustomPlatform('');
       setNewCustomUrl('');
@@ -53,6 +57,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleRemoveCustomPlatform = (index: number) => {
+    console.log('Removing custom platform at index:', index);
     removeCustomSocialMedia(creator.id, index);
     toast({
       title: "Platform Removed",
@@ -61,6 +66,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   };
 
   const handleSave = async () => {
+    console.log('Starting save process for creator:', creator.id);
     setIsSaving(true);
     try {
       const result = await saveSocialMediaForCreator(creator.id);
@@ -69,7 +75,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           title: "Social Media Saved",
           description: "All social media accounts have been saved successfully",
         });
+        console.log('Save successful');
       } else {
+        console.error('Save failed:', result.error);
         toast({
           title: "Save Failed",
           description: result.error || "Failed to save social media accounts",
@@ -77,6 +85,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         });
       }
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: "Save Failed",
         description: "An error occurred while saving",
@@ -100,11 +109,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     return (
       <Card>
         <CardContent className="p-6">
-          <div className="text-center">Loading social media data...</div>
+          <div className="text-center">Loading social media data for {creator.name}...</div>
         </CardContent>
       </Card>
     );
   }
+
+  console.log('Rendering social media data for creator:', creator.name, socialMediaData);
 
   return (
     <Card>
@@ -127,32 +138,38 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           
           <TabsContent value="predefined">
             <div className="space-y-4">
-              {predefinedPlatforms.map((platform) => (
-                <div key={platform.key} className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <span>{platform.icon}</span>
-                    {platform.label}
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder={`Enter ${platform.label} URL`}
-                      value={socialMediaData[platform.key as keyof typeof socialMediaData] as string || ''}
-                      onChange={(e) => handleInputChange(platform.key, e.target.value)}
-                      className="rounded-[15px]"
-                    />
-                    {socialMediaData[platform.key as keyof typeof socialMediaData] && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => window.open(socialMediaData[platform.key as keyof typeof socialMediaData] as string, '_blank')}
+              {predefinedPlatforms.map((platform) => {
+                const value = socialMediaData[platform.key as keyof typeof socialMediaData] as string || '';
+                return (
+                  <div key={platform.key} className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <span>{platform.icon}</span>
+                      {platform.label}
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        placeholder={value ? value : `Enter ${platform.label} URL or "Not provided"`}
+                        value={value}
+                        onChange={(e) => handleInputChange(platform.key, e.target.value)}
                         className="rounded-[15px]"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
+                      />
+                      {value && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => window.open(value, '_blank')}
+                          className="rounded-[15px]"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {!value && (
+                      <p className="text-sm text-muted-foreground">Not provided</p>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
           
@@ -191,7 +208,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                 </div>
               </div>
               
-              {socialMediaData.other.length > 0 && (
+              {socialMediaData.other && socialMediaData.other.length > 0 ? (
                 <div className="space-y-3">
                   <h4 className="font-medium">Custom Platforms</h4>
                   {socialMediaData.other.map((item, index) => (
@@ -218,6 +235,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                       </Button>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  No custom platforms added yet
                 </div>
               )}
             </div>
