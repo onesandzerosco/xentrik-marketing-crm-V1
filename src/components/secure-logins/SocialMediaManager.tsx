@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -73,9 +72,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       const submissionData = data?.data as Record<string, any>;
       console.log('Parsed submission data:', submissionData);
       
-      if (submissionData?.socialMediaHandles) {
-        const handles = submissionData.socialMediaHandles as SocialMediaHandles;
-        console.log('=== SOCIAL MEDIA HANDLES FOUND ===');
+      // Look for contentAndService.socialMediaHandles
+      if (submissionData?.contentAndService?.socialMediaHandles) {
+        const handles = submissionData.contentAndService.socialMediaHandles as SocialMediaHandles;
+        console.log('=== SOCIAL MEDIA HANDLES FOUND IN contentAndService ===');
         console.log('Social media handles:', handles);
         console.log('TikTok:', handles.tiktok);
         console.log('Twitter:', handles.twitter);
@@ -93,8 +93,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           other: handles.other || []
         });
       } else {
-        console.log('=== NO SOCIAL MEDIA HANDLES FOUND ===');
+        console.log('=== NO SOCIAL MEDIA HANDLES FOUND IN contentAndService ===');
         console.log('Available keys in submission data:', submissionData ? Object.keys(submissionData) : 'No data');
+        console.log('contentAndService data:', submissionData?.contentAndService);
+        if (submissionData?.contentAndService) {
+          console.log('Keys in contentAndService:', Object.keys(submissionData.contentAndService));
+        }
       }
     } catch (error) {
       console.error('Error in fetchSocialMediaData:', error);
@@ -147,17 +151,20 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       
       console.log('Social media data being saved:', socialMediaHandlesForSave);
       
-      // Update the socialMediaHandles in the existing data
+      // Update the socialMediaHandles in contentAndService
       const updatedData = {
         ...existingData,
-        socialMediaHandles: socialMediaHandlesForSave
+        contentAndService: {
+          ...(existingData.contentAndService || {}),
+          socialMediaHandles: socialMediaHandlesForSave
+        }
       };
 
       console.log('Full updated data structure:', updatedData);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
-        .update({ data: updatedData })
+        .update({ data: updatedData as any })
         .eq('email', creator.email);
 
       if (updateError) {
