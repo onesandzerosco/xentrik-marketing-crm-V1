@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Creator } from '../../types';
@@ -40,8 +41,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
   const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Fetch social media data from onboarding_submissions
@@ -183,6 +186,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         description: "Social media accounts saved successfully",
       });
 
+      setIsEditing(false);
       // Fetch fresh data after saving
       await fetchSocialMediaData();
     } catch (error) {
@@ -241,6 +245,14 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }));
   };
 
+  // Toggle password visibility
+  const togglePasswordVisibility = (platform: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [platform]: !prev[platform]
+    }));
+  };
+
   useEffect(() => {
     if (creator?.email) {
       fetchSocialMediaData();
@@ -267,41 +279,78 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-4">Social Media Accounts</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Social Media Accounts</h3>
+        {!isEditing ? (
+          <Button 
+            onClick={() => setIsEditing(true)}
+            variant="outline"
+            className="rounded-[15px]"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button 
+              onClick={saveSocialMediaData}
+              disabled={saving}
+              className="rounded-[15px]"
+              variant="premium"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="rounded-[15px]"
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
         
-        <Tabs defaultValue="platforms">
-          <TabsList className="mb-4">
-            <TabsTrigger value="platforms" className="rounded-[15px]">
-              Platforms
-            </TabsTrigger>
-            <TabsTrigger value="other" className="rounded-[15px]">
-              Other Platforms ({socialMediaData.other.length})
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="platforms">
+        <TabsList className="mb-4">
+          <TabsTrigger value="platforms" className="rounded-[15px]">
+            Platforms
+          </TabsTrigger>
+          <TabsTrigger value="other" className="rounded-[15px]">
+            Other Platforms ({socialMediaData.other.length})
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="platforms">
-            <div className="space-y-4">
-              {predefinedPlatforms.map(({ key, label }) => (
-                <div key={key} className="space-y-2">
-                  <Label>{label}</Label>
+        <TabsContent value="platforms">
+          <div className="space-y-4">
+            {predefinedPlatforms.map(({ key, label }) => (
+              <div key={key} className="space-y-2">
+                <Label>{label}</Label>
+                {isEditing ? (
                   <Input
                     placeholder={`${label} username`}
                     value={socialMediaData[key]}
                     onChange={(e) => updatePredefinedPlatform(key, e.target.value)}
                     className="rounded-[15px]"
                   />
-                </div>
-              ))}
-            </div>
-          </TabsContent>
+                ) : (
+                  <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
+                    {socialMediaData[key] ? `@${socialMediaData[key]}` : 'Not set'}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </TabsContent>
 
-          <TabsContent value="other">
-            <div className="space-y-6">
-              {socialMediaData.other.map((account, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium capitalize">{account.platform}</h4>
+        <TabsContent value="other">
+          <div className="space-y-6">
+            {socialMediaData.other.map((account, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium capitalize">{account.platform}</h4>
+                  {isEditing && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -310,94 +359,129 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Username</Label>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Username</Label>
+                    {isEditing ? (
                       <Input
                         placeholder="Username"
                         value={account.username}
                         onChange={(e) => updateOtherPlatform(index, 'username', e.target.value)}
                         className="rounded-[15px]"
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Password</Label>
-                      <Input
-                        type="password"
-                        placeholder="Password"
-                        value={account.password}
-                        onChange={(e) => updateOtherPlatform(index, 'password', e.target.value)}
-                        className="rounded-[15px]"
-                      />
-                    </div>
+                    ) : (
+                      <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
+                        {account.username ? `@${account.username}` : 'Not set'}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
-                    <Label>Notes</Label>
+                    <Label>Password</Label>
+                    {isEditing ? (
+                      <div className="flex">
+                        <Input
+                          type={showPasswords[`${account.platform}-${index}`] ? 'text' : 'password'}
+                          placeholder="Password"
+                          value={account.password}
+                          onChange={(e) => updateOtherPlatform(index, 'password', e.target.value)}
+                          className="rounded-[15px] flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => togglePasswordVisibility(`${account.platform}-${index}`)}
+                          className="ml-2"
+                        >
+                          {showPasswords[`${account.platform}-${index}`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 border rounded-[15px] mt-1 bg-muted/30 flex-1">
+                          {account.password ? (
+                            showPasswords[`${account.platform}-${index}`] ? account.password : '••••••••'
+                          ) : 'Not set'}
+                        </div>
+                        {account.password && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => togglePasswordVisibility(`${account.platform}-${index}`)}
+                          >
+                            {showPasswords[`${account.platform}-${index}`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  {isEditing ? (
                     <Input
                       placeholder="Additional notes"
                       value={account.notes || ''}
                       onChange={(e) => updateOtherPlatform(index, 'notes', e.target.value)}
                       className="rounded-[15px]"
                     />
-                  </div>
+                  ) : (
+                    <div className="p-2 border rounded-[15px] mt-1 bg-muted/30">
+                      {account.notes || 'No notes'}
+                    </div>
+                  )}
                 </div>
-              ))}
+              </div>
+            ))}
 
-              {showAddPlatform ? (
-                <div className="border rounded-lg p-4 space-y-3">
-                  <Label>Platform Name</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Enter platform name"
-                      value={newPlatformName}
-                      onChange={(e) => setNewPlatformName(e.target.value)}
-                      className="rounded-[15px]"
-                    />
-                    <Button onClick={addNewPlatform} className="rounded-[15px]">
-                      Add
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowAddPlatform(false);
-                        setNewPlatformName('');
-                      }}
-                      className="rounded-[15px]"
-                    >
-                      Cancel
-                    </Button>
+            {isEditing && (
+              <>
+                {showAddPlatform ? (
+                  <div className="border rounded-lg p-4 space-y-3">
+                    <Label>Platform Name</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter platform name"
+                        value={newPlatformName}
+                        onChange={(e) => setNewPlatformName(e.target.value)}
+                        className="rounded-[15px]"
+                      />
+                      <Button onClick={addNewPlatform} className="rounded-[15px]">
+                        Add
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowAddPlatform(false);
+                          setNewPlatformName('');
+                        }}
+                        className="rounded-[15px]"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddPlatform(true)}
-                  className="w-full rounded-[15px]"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Platform
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="mt-6 pt-4 border-t">
-          <Button 
-            onClick={saveSocialMediaData}
-            disabled={saving}
-            className="w-full rounded-[15px]"
-            variant="premium"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save All Social Media Accounts'}
-          </Button>
-        </div>
-      </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddPlatform(true)}
+                    className="w-full rounded-[15px]"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Platform
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { Eye, EyeOff, Save } from 'lucide-react';
 import { Creator } from '../../types';
 import { useToast } from '@/hooks/use-toast';
 import { LoginDetail } from '@/hooks/useSecureLogins';
+import SocialMediaManager from './SocialMediaManager';
 
 interface LoginDetailsEditorProps {
   creator: Creator;
@@ -49,12 +50,15 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
       <CardHeader>
         <CardTitle>{creator.name}'s Login Details</CardTitle>
         <CardDescription>
-          Securely store login information for {creator.name}'s social media accounts
+          Securely store login information for {creator.name}'s accounts
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue={Object.keys(creator.socialLinks).find(key => creator.socialLinks[key as keyof typeof creator.socialLinks]) || "instagram"}>
+        <Tabs defaultValue="social-accounts">
           <TabsList className="mb-4">
+            <TabsTrigger value="social-accounts" className="rounded-[15px]">
+              Social Media Accounts
+            </TabsTrigger>
             {Object.entries(creator.socialLinks)
               .filter(([_, url]) => url)
               .map(([platform, _]) => (
@@ -63,6 +67,10 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
                 </TabsTrigger>
               ))}
           </TabsList>
+          
+          <TabsContent value="social-accounts">
+            <SocialMediaManager creator={creator} />
+          </TabsContent>
           
           {Object.entries(creator.socialLinks)
             .filter(([_, url]) => url)

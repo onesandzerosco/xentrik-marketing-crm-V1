@@ -1,13 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCreators } from '../context/creator'; // Updated import path
+import { useCreators } from '../context/creator';
 import { useSecureLogins } from '../hooks/useSecureLogins';
 import { useToast } from '@/hooks/use-toast';
 import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
-import SocialMediaManager from '../components/secure-logins/SocialMediaManager';
 import NoCreatorSelected from '../components/secure-logins/NoCreatorSelected';
 import LockButton from '../components/secure-logins/LockButton';
 import { Creator } from '../types';
@@ -147,8 +145,6 @@ const SecureLogins: React.FC = () => {
               onUpdateLogin={handleUpdateLogin}
               onSaveLoginDetails={handleSaveLoginDetails}
             />
-            
-            <SocialMediaManager creator={selectedCreator} />
           </div>
         ) : (
           <NoCreatorSelected />
