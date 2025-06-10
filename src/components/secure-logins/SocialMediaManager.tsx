@@ -67,11 +67,42 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       // Create a map of existing platforms
       const existingPlatforms = new Map((data || []).map(login => [login.platform, login]));
       
-      // Only create placeholders for missing predefined platforms if we're in editing mode
+      // Start with existing data
       const allLogins = [...(data || [])];
       
-      // If we don't have all predefined platforms and we're not editing, 
-      // we'll create them only when the user starts editing
+      // Fetch additional "other" platforms from onboarding submission if they don't exist in social_media_logins
+      try {
+        const { data: submissionData, error: submissionError } = await supabase
+          .from('onboarding_submissions')
+          .select('data')
+          .eq('email', creator.email)
+          .single();
+
+        if (!submissionError && submissionData?.data?.contentAndService?.socialMediaHandles?.other) {
+          const otherPlatforms = submissionData.data.contentAndService.socialMediaHandles.other;
+          
+          // Add "other" platforms that don't already exist in social_media_logins
+          otherPlatforms.forEach((otherPlatform: { platform: string; handle: string }) => {
+            if (!existingPlatforms.has(otherPlatform.platform) && otherPlatform.platform && otherPlatform.handle) {
+              allLogins.push({
+                id: `onboarding-${otherPlatform.platform.toLowerCase()}`,
+                creator_email: creator.email,
+                platform: otherPlatform.platform,
+                username: otherPlatform.handle,
+                password: '',
+                notes: 'From onboarding submission',
+                is_predefined: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            }
+          });
+        }
+      } catch (submissionError) {
+        console.warn('Could not fetch onboarding submission data:', submissionError);
+      }
+      
+      // If we're in editing mode, create placeholders for missing predefined platforms
       if (isEditing) {
         const missingPredefinedPlatforms = predefinedPlatforms.filter(platform => !existingPlatforms.has(platform));
         
@@ -117,7 +148,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       console.log('=== SAVING SOCIAL MEDIA LOGIN ===');
       console.log('Login data:', login);
 
-      if (login.id && !login.id.startsWith('placeholder-')) {
+      if (login.id && !login.id.startsWith('placeholder-') && !login.id.startsWith('onboarding-')) {
         // Update existing login
         const { error } = await supabase
           .from('social_media_logins')
@@ -138,7 +169,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           return;
         }
       } else {
-        // Create new login (for placeholders or new platforms)
+        // Create new login (for placeholders, onboarding data, or new platforms)
         const { error } = await supabase
           .from('social_media_logins')
           .insert({
@@ -186,10 +217,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     try {
       setSaving(true);
       
-      // Filter out placeholders and prepare updates/inserts
-      const realLogins = socialMediaLogins.filter(login => !login.id.startsWith('placeholder-'));
-      const placeholderLogins = socialMediaLogins.filter(login => 
-        login.id.startsWith('placeholder-') && (login.username || login.password || login.notes)
+      // Filter out placeholders and onboarding-sourced entries, prepare updates/inserts
+      const realLogins = socialMediaLogins.filter(login => 
+        !login.id.startsWith('placeholder-') && !login.id.startsWith('onboarding-')
+      );
+      const virtualLogins = socialMediaLogins.filter(login => 
+        (login.id.startsWith('placeholder-') || login.id.startsWith('onboarding-')) && 
+        (login.username || login.password || login.notes)
       );
 
       // Update existing logins
@@ -204,8 +238,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           .eq('id', login.id)
       );
 
-      // Insert new logins from placeholders that have data
-      const insertPromises = placeholderLogins.map(login =>
+      // Insert new logins from placeholders/onboarding data that have been modified
+      const insertPromises = virtualLogins.map(login =>
         supabase
           .from('social_media_logins')
           .insert({
@@ -308,6 +342,12 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       updateLogin(id, 'username', '');
       updateLogin(id, 'password', '');
       updateLogin(id, 'notes', '');
+      return;
+    }
+
+    // If it's a virtual entry (onboarding-sourced), just remove from local state
+    if (id.startsWith('onboarding-')) {
+      setSocialMediaLogins(prev => prev.filter(login => login.id !== id));
       return;
     }
 
