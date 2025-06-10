@@ -49,7 +49,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const fetchSocialMediaData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching social media data for creator:', creator.name);
+      console.log('=== FETCHING SOCIAL MEDIA DATA ===');
+      console.log('Creator email:', creator.email);
+      console.log('Creator name:', creator.name);
       
       const { data, error } = await supabase
         .from('onboarding_submissions')
@@ -57,16 +59,30 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         .eq('email', creator.email)
         .single();
 
+      console.log('Raw query result:', { data, error });
+
       if (error) {
         console.error('Error fetching social media data:', error);
         return;
       }
 
+      // Log the entire data structure
+      console.log('Full submission data:', data?.data);
+      
       // Properly type cast the Json data
       const submissionData = data?.data as Record<string, any>;
+      console.log('Parsed submission data:', submissionData);
+      
       if (submissionData?.socialMediaHandles) {
         const handles = submissionData.socialMediaHandles as SocialMediaHandles;
-        console.log('Fetched social media handles:', handles);
+        console.log('=== SOCIAL MEDIA HANDLES FOUND ===');
+        console.log('Social media handles:', handles);
+        console.log('TikTok:', handles.tiktok);
+        console.log('Twitter:', handles.twitter);
+        console.log('OnlyFans:', handles.onlyfans);
+        console.log('Snapchat:', handles.snapchat);
+        console.log('Instagram:', handles.instagram);
+        console.log('Other platforms:', handles.other);
         
         setSocialMediaData({
           tiktok: handles.tiktok || '',
@@ -76,6 +92,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           instagram: handles.instagram || '',
           other: handles.other || []
         });
+      } else {
+        console.log('=== NO SOCIAL MEDIA HANDLES FOUND ===');
+        console.log('Available keys in submission data:', submissionData ? Object.keys(submissionData) : 'No data');
       }
     } catch (error) {
       console.error('Error in fetchSocialMediaData:', error);
@@ -88,7 +107,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const saveSocialMediaData = async () => {
     try {
       setSaving(true);
-      console.log('Saving social media data for creator:', creator.name);
+      console.log('=== SAVING SOCIAL MEDIA DATA ===');
+      console.log('Data to save:', socialMediaData);
 
       // First, get current data
       const { data: currentData, error: fetchError } = await supabase
@@ -125,11 +145,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         }))
       };
       
+      console.log('Social media data being saved:', socialMediaHandlesForSave);
+      
       // Update the socialMediaHandles in the existing data
       const updatedData = {
         ...existingData,
         socialMediaHandles: socialMediaHandlesForSave
       };
+
+      console.log('Full updated data structure:', updatedData);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
@@ -218,13 +242,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="text-sm text-muted-foreground">Loading social media data...</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="p-6">
+        <div className="flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading social media data...</div>
+        </div>
+      </div>
     );
   }
 
@@ -237,11 +259,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   ];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Social Media Accounts - {creator.name}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium mb-4">Social Media Accounts</h3>
+        
         <Tabs defaultValue="platforms">
           <TabsList className="mb-4">
             <TabsTrigger value="platforms" className="rounded-[15px]">
@@ -369,8 +390,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
             {saving ? 'Saving...' : 'Save All Social Media Accounts'}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
