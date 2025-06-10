@@ -518,6 +518,42 @@ export type Database = {
         }
         Relationships: []
       }
+      social_media_logins: {
+        Row: {
+          created_at: string
+          creator_email: string
+          id: string
+          is_predefined: boolean
+          notes: string | null
+          password: string | null
+          platform: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator_email: string
+          id?: string
+          is_predefined?: boolean
+          notes?: string | null
+          password?: string | null
+          platform: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator_email?: string
+          id?: string
+          is_predefined?: boolean
+          notes?: string | null
+          password?: string | null
+          platform?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       team_assignments: {
         Row: {
           created_at: string | null

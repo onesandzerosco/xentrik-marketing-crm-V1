@@ -9,28 +9,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Creator } from '../../types';
 
-interface SocialMediaAccount {
+interface SocialMediaLogin {
+  id: string;
+  creator_email: string;
   platform: string;
   username: string;
   password: string;
-  notes?: string;
-}
-
-interface SocialMediaHandles {
-  tiktok: string;
-  twitter: string;
-  onlyfans: string;
-  snapchat: string;
-  instagram: string;
-  other: SocialMediaAccount[];
-}
-
-interface ExtendedSocialMediaHandles extends SocialMediaHandles {
-  tiktokAccount?: SocialMediaAccount;
-  twitterAccount?: SocialMediaAccount;
-  onlyfansAccount?: SocialMediaAccount;
-  snapchatAccount?: SocialMediaAccount;
-  instagramAccount?: SocialMediaAccount;
+  notes: string;
+  is_predefined: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface SocialMediaManagerProps {
@@ -38,19 +26,7 @@ interface SocialMediaManagerProps {
 }
 
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
-  const [socialMediaData, setSocialMediaData] = useState<ExtendedSocialMediaHandles>({
-    tiktok: '',
-    twitter: '',
-    onlyfans: '',
-    snapchat: '',
-    instagram: '',
-    other: [],
-    tiktokAccount: { platform: 'TikTok', username: '', password: '', notes: '' },
-    twitterAccount: { platform: 'Twitter', username: '', password: '', notes: '' },
-    onlyfansAccount: { platform: 'OnlyFans', username: '', password: '', notes: '' },
-    snapchatAccount: { platform: 'Snapchat', username: '', password: '', notes: '' },
-    instagramAccount: { platform: 'Instagram', username: '', password: '', notes: '' }
-  });
+  const [socialMediaLogins, setSocialMediaLogins] = useState<SocialMediaLogin[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -59,136 +35,105 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  // Fetch social media data from onboarding_submissions
-  const fetchSocialMediaData = async () => {
+  // Fetch social media logins from the new table
+  const fetchSocialMediaLogins = async () => {
     try {
       setLoading(true);
-      console.log('=== FETCHING SOCIAL MEDIA DATA ===');
+      console.log('=== FETCHING SOCIAL MEDIA LOGINS ===');
       console.log('Creator email:', creator.email);
       
       const { data, error } = await supabase
-        .from('onboarding_submissions')
-        .select('data')
-        .eq('email', creator.email)
-        .single();
+        .from('social_media_logins')
+        .select('*')
+        .eq('creator_email', creator.email)
+        .order('is_predefined', { ascending: false })
+        .order('platform');
 
       if (error) {
-        console.error('Error fetching social media data:', error);
+        console.error('Error fetching social media logins:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch social media accounts",
+          variant: "destructive",
+        });
         return;
       }
 
-      const submissionData = data?.data as Record<string, any>;
-      
-      if (submissionData?.contentAndService?.socialMediaHandles) {
-        const handles = submissionData.contentAndService.socialMediaHandles as ExtendedSocialMediaHandles;
-        console.log('Social media handles found:', handles);
-        
-        setSocialMediaData({
-          tiktok: handles.tiktok || '',
-          twitter: handles.twitter || '',
-          onlyfans: handles.onlyfans || '',
-          snapchat: handles.snapchat || '',
-          instagram: handles.instagram || '',
-          other: handles.other || [],
-          tiktokAccount: handles.tiktokAccount || { platform: 'TikTok', username: handles.tiktok || '', password: '', notes: '' },
-          twitterAccount: handles.twitterAccount || { platform: 'Twitter', username: handles.twitter || '', password: '', notes: '' },
-          onlyfansAccount: handles.onlyfansAccount || { platform: 'OnlyFans', username: handles.onlyfans || '', password: '', notes: '' },
-          snapchatAccount: handles.snapchatAccount || { platform: 'Snapchat', username: handles.snapchat || '', password: '', notes: '' },
-          instagramAccount: handles.instagramAccount || { platform: 'Instagram', username: handles.instagram || '', password: '', notes: '' }
-        });
-      }
+      console.log('Social media logins found:', data);
+      setSocialMediaLogins(data || []);
     } catch (error) {
-      console.error('Error in fetchSocialMediaData:', error);
+      console.error('Error in fetchSocialMediaLogins:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Save social media data back to onboarding_submissions
-  const saveSocialMediaData = async () => {
+  // Save/update a social media login
+  const saveSocialMediaLogin = async (login: Partial<SocialMediaLogin>) => {
     try {
       setSaving(true);
-      
-      console.log('=== STARTING SAVE PROCESS ===');
-      console.log('Current socialMediaData:', socialMediaData);
-      
-      // Fetch current data
-      const { data: currentData, error: fetchError } = await supabase
-        .from('onboarding_submissions')
-        .select('data')
-        .eq('email', creator.email)
-        .single();
+      console.log('=== SAVING SOCIAL MEDIA LOGIN ===');
+      console.log('Login data:', login);
 
-      if (fetchError) {
-        console.error('Error fetching current data:', fetchError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch current data",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (login.id) {
+        // Update existing login
+        const { error } = await supabase
+          .from('social_media_logins')
+          .update({
+            username: login.username || '',
+            password: login.password || '',
+            notes: login.notes || ''
+          })
+          .eq('id', login.id);
 
-      const existingData = (currentData?.data as Record<string, any>) || {};
-      
-      // Build the socialMediaHandles object following the exact structure you specified
-      const socialMediaHandlesForSave = {
-        // Save predefined platform usernames in their original location
-        tiktok: socialMediaData.tiktokAccount?.username || '',
-        twitter: socialMediaData.twitterAccount?.username || '',
-        onlyfans: socialMediaData.onlyfansAccount?.username || '',
-        snapchat: socialMediaData.snapchatAccount?.username || '',
-        instagram: socialMediaData.instagramAccount?.username || '',
-        // Save new/other platforms in the "other" array as requested
-        other: socialMediaData.other,
-        // Keep the detailed account info for predefined platforms
-        tiktokAccount: socialMediaData.tiktokAccount,
-        twitterAccount: socialMediaData.twitterAccount,
-        onlyfansAccount: socialMediaData.onlyfansAccount,
-        snapchatAccount: socialMediaData.snapchatAccount,
-        instagramAccount: socialMediaData.instagramAccount
-      };
-      
-      // Build the complete data structure
-      const updatedData = {
-        ...existingData,
-        contentAndService: {
-          ...(existingData.contentAndService || {}),
-          socialMediaHandles: socialMediaHandlesForSave
+        if (error) {
+          console.error('Error updating social media login:', error);
+          toast({
+            title: "Error",
+            description: "Failed to update social media account",
+            variant: "destructive",
+          });
+          return;
         }
-      };
+      } else {
+        // Create new login
+        const { error } = await supabase
+          .from('social_media_logins')
+          .insert({
+            creator_email: creator.email,
+            platform: login.platform!,
+            username: login.username || '',
+            password: login.password || '',
+            notes: login.notes || '',
+            is_predefined: false
+          });
 
-      console.log('=== SAVING SOCIAL MEDIA DATA ===');
-      console.log('Data structure being saved:', updatedData);
-
-      // ACTUALLY SAVE TO DATABASE - this was missing!
-      const { error: updateError } = await supabase
-        .from('onboarding_submissions')
-        .update({ data: updatedData as any })
-        .eq('email', creator.email);
-
-      if (updateError) {
-        console.error('Error updating social media data:', updateError);
-        toast({
-          title: "Error", 
-          description: "Failed to save social media data",
-          variant: "destructive",
-        });
-        return;
+        if (error) {
+          console.error('Error creating social media login:', error);
+          toast({
+            title: "Error",
+            description: "Failed to create social media account",
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       console.log('=== SAVE SUCCESSFUL ===');
       toast({
         title: "Success",
-        description: "Social media accounts saved successfully",
+        description: "Social media account saved successfully",
       });
 
-      setIsEditing(false);
-      // Refresh data to confirm save
-      await fetchSocialMediaData();
-      
+      // Refresh data
+      await fetchSocialMediaLogins();
     } catch (error) {
-      console.error('Error in saveSocialMediaData:', error);
+      console.error('Error in saveSocialMediaLogin:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -199,74 +144,145 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
-  // Update predefined platform account
-  const updatePredefinedPlatformAccount = (platform: string, field: keyof SocialMediaAccount, value: string) => {
-    const accountKey = `${platform}Account` as keyof ExtendedSocialMediaHandles;
-    setSocialMediaData(prev => ({
-      ...prev,
-      [accountKey]: {
-        ...((prev[accountKey] as SocialMediaAccount) || { platform: platform.charAt(0).toUpperCase() + platform.slice(1), username: '', password: '', notes: '' }),
-        [field]: value
+  // Save all changes
+  const saveAllChanges = async () => {
+    try {
+      setSaving(true);
+      
+      // Update all existing logins
+      const updatePromises = socialMediaLogins.map(login => 
+        supabase
+          .from('social_media_logins')
+          .update({
+            username: login.username || '',
+            password: login.password || '',
+            notes: login.notes || ''
+          })
+          .eq('id', login.id)
+      );
+
+      const results = await Promise.all(updatePromises);
+      
+      const hasErrors = results.some(result => result.error);
+      if (hasErrors) {
+        toast({
+          title: "Error",
+          description: "Failed to save some accounts",
+          variant: "destructive",
+        });
+        return;
       }
-    }));
+
+      toast({
+        title: "Success",
+        description: "All social media accounts saved successfully",
+      });
+
+      setIsEditing(false);
+      await fetchSocialMediaLogins();
+    } catch (error) {
+      console.error('Error saving all changes:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Update other platform
-  const updateOtherPlatform = (index: number, field: keyof SocialMediaAccount, value: string) => {
-    setSocialMediaData(prev => ({
-      ...prev,
-      other: prev.other.map((account, i) => 
-        i === index ? { ...account, [field]: value } : account
+  // Update login in local state
+  const updateLogin = (id: string, field: keyof SocialMediaLogin, value: string) => {
+    setSocialMediaLogins(prev => 
+      prev.map(login => 
+        login.id === id ? { ...login, [field]: value } : login
       )
-    }));
+    );
   };
 
-  // Add new platform - this goes directly into the "other" array as requested
-  const addNewPlatform = () => {
+  // Add new platform
+  const addNewPlatform = async () => {
     if (!newPlatformName.trim()) return;
 
     console.log('=== ADDING NEW PLATFORM ===');
     console.log('Platform name:', newPlatformName);
     
-    setSocialMediaData(prev => {
-      const newOtherArray = [...prev.other, {
-        platform: newPlatformName,
-        username: '',
-        password: '',
-        notes: ''
-      }];
-      
-      console.log('New other array:', newOtherArray);
-      
-      return {
-        ...prev,
-        other: newOtherArray
-      };
-    });
+    try {
+      const { error } = await supabase
+        .from('social_media_logins')
+        .insert({
+          creator_email: creator.email,
+          platform: newPlatformName,
+          username: '',
+          password: '',
+          notes: '',
+          is_predefined: false
+        });
 
-    setNewPlatformName('');
-    setShowAddPlatform(false);
+      if (error) {
+        console.error('Error adding new platform:', error);
+        toast({
+          title: "Error",
+          description: "Failed to add new platform",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: `${newPlatformName} platform added successfully`,
+      });
+
+      setNewPlatformName('');
+      setShowAddPlatform(false);
+      await fetchSocialMediaLogins();
+    } catch (error) {
+      console.error('Error in addNewPlatform:', error);
+    }
   };
 
-  // Remove platform from other array
-  const removePlatform = (index: number) => {
-    setSocialMediaData(prev => ({
-      ...prev,
-      other: prev.other.filter((_, i) => i !== index)
-    }));
+  // Remove platform
+  const removePlatform = async (id: string, platform: string) => {
+    try {
+      const { error } = await supabase
+        .from('social_media_logins')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error removing platform:', error);
+        toast({
+          title: "Error",
+          description: "Failed to remove platform",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: `${platform} platform removed successfully`,
+      });
+
+      await fetchSocialMediaLogins();
+    } catch (error) {
+      console.error('Error in removePlatform:', error);
+    }
   };
 
   // Toggle password visibility
-  const togglePasswordVisibility = (platform: string) => {
+  const togglePasswordVisibility = (id: string) => {
     setShowPasswords(prev => ({
       ...prev,
-      [platform]: !prev[platform]
+      [id]: !prev[id]
     }));
   };
 
   useEffect(() => {
     if (creator?.email) {
-      fetchSocialMediaData();
+      fetchSocialMediaLogins();
     }
   }, [creator?.email]);
 
@@ -278,41 +294,18 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     );
   }
 
-  const predefinedPlatforms = [
-    { key: 'tiktok', label: 'TikTok', color: 'from-gray-800 to-red-500' },
-    { key: 'twitter', label: 'Twitter', color: 'from-blue-400 to-blue-600' },
-    { key: 'onlyfans', label: 'OnlyFans', color: 'from-blue-500 to-cyan-400' },
-    { key: 'snapchat', label: 'Snapchat', color: 'from-yellow-400 to-yellow-600' },
-    { key: 'instagram', label: 'Instagram', color: 'from-purple-500 to-pink-500' }
-  ];
-
-  const allPlatforms = [
-    ...predefinedPlatforms
-      .map(p => {
-        const accountKey = `${p.key}Account` as keyof ExtendedSocialMediaHandles;
-        const account = socialMediaData[accountKey] as SocialMediaAccount;
-        return {
-          id: p.key,
-          name: p.label,
-          username: account?.username || '',
-          password: account?.password || '',
-          notes: account?.notes || '',
-          color: p.color,
-          type: 'predefined' as const
-        };
-      })
-      .filter(p => p.username), // Only show predefined platforms that have usernames
-    ...socialMediaData.other.map((account, index) => ({
-      id: `other-${index}`,
-      name: account.platform,
-      username: account.username,
-      password: account.password,
-      notes: account.notes || '',
-      color: 'from-gray-500 to-gray-700',
-      type: 'other' as const,
-      index
-    }))
-  ];
+  const predefinedPlatforms = ['TikTok', 'Twitter', 'OnlyFans', 'Snapchat', 'Instagram'];
+  
+  const getPlatformColor = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'tiktok': return 'from-gray-800 to-red-500';
+      case 'twitter': return 'from-blue-400 to-blue-600';
+      case 'onlyfans': return 'from-blue-500 to-cyan-400';
+      case 'snapchat': return 'from-yellow-400 to-yellow-600';
+      case 'instagram': return 'from-purple-500 to-pink-500';
+      default: return 'from-gray-500 to-gray-700';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -344,7 +337,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           ) : (
             <div className="flex gap-2">
               <Button 
-                onClick={saveSocialMediaData}
+                onClick={saveAllChanges}
                 disabled={saving}
                 className="rounded-[15px]"
                 variant="premium"
@@ -364,7 +357,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         </div>
       </div>
 
-      {allPlatforms.length === 0 ? (
+      {socialMediaLogins.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-muted/30">
           <div className="text-muted-foreground">
             <p className="text-lg font-medium mb-2">No social media accounts found</p>
@@ -384,35 +377,29 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {allPlatforms.map((platform) => (
-                <TableRow key={platform.id} className="hover:bg-muted/20">
+              {socialMediaLogins.map((login) => (
+                <TableRow key={login.id} className="hover:bg-muted/20">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
-                        {platform.name.charAt(0).toUpperCase()}
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                        {login.platform.charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-medium text-foreground">{platform.name}</span>
+                      <span className="font-medium text-foreground">{login.platform}</span>
                     </div>
                   </TableCell>
                   
                   <TableCell>
                     {isEditing ? (
                       <Input
-                        value={platform.username}
-                        onChange={(e) => {
-                          if (platform.type === 'predefined') {
-                            updatePredefinedPlatformAccount(platform.id, 'username', e.target.value);
-                          } else {
-                            updateOtherPlatform(platform.index!, 'username', e.target.value);
-                          }
-                        }}
+                        value={login.username}
+                        onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
                         placeholder="username"
                         className="rounded-[15px] h-9 border-muted-foreground/20"
                       />
                     ) : (
                       <div className="flex items-center">
                         <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
-                          {platform.username || 'Not provided'}
+                          {login.username || 'Not provided'}
                         </span>
                       </div>
                     )}
@@ -422,15 +409,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     {isEditing ? (
                       <div className="flex gap-1">
                         <Input
-                          type={showPasswords[platform.id] ? 'text' : 'password'}
-                          value={platform.password}
-                          onChange={(e) => {
-                            if (platform.type === 'predefined') {
-                              updatePredefinedPlatformAccount(platform.id, 'password', e.target.value);
-                            } else {
-                              updateOtherPlatform(platform.index!, 'password', e.target.value);
-                            }
-                          }}
+                          type={showPasswords[login.id] ? 'text' : 'password'}
+                          value={login.password}
+                          onChange={(e) => updateLogin(login.id, 'password', e.target.value)}
                           placeholder="Enter password"
                           className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
                         />
@@ -438,26 +419,26 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => togglePasswordVisibility(platform.id)}
+                          onClick={() => togglePasswordVisibility(login.id)}
                           className="h-9 w-9 p-0"
                         >
-                          {showPasswords[platform.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                         </Button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">
-                          {platform.password ? (showPasswords[platform.id] ? platform.password : '••••••••') : 'Not provided'}
+                          {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : 'Not provided'}
                         </span>
-                        {platform.password && (
+                        {login.password && (
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => togglePasswordVisibility(platform.id)}
+                            onClick={() => togglePasswordVisibility(login.id)}
                             className="h-6 w-6 p-0"
                           >
-                            {showPasswords[platform.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                           </Button>
                         )}
                       </div>
@@ -467,29 +448,23 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                   <TableCell>
                     {isEditing ? (
                       <Input
-                        value={platform.notes}
-                        onChange={(e) => {
-                          if (platform.type === 'predefined') {
-                            updatePredefinedPlatformAccount(platform.id, 'notes', e.target.value);
-                          } else {
-                            updateOtherPlatform(platform.index!, 'notes', e.target.value);
-                          }
-                        }}
+                        value={login.notes}
+                        onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
                         placeholder="Additional notes"
                         className="rounded-[15px] h-9 border-muted-foreground/20"
                       />
                     ) : (
-                      <span className="text-sm text-muted-foreground">{platform.notes || 'Not provided'}</span>
+                      <span className="text-sm text-muted-foreground">{login.notes || 'Not provided'}</span>
                     )}
                   </TableCell>
                   
                   {isEditing && (
                     <TableCell>
-                      {platform.type === 'other' && (
+                      {!login.is_predefined && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removePlatform(platform.index!)}
+                          onClick={() => removePlatform(login.id, login.platform)}
                           className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="h-3 w-3" />
