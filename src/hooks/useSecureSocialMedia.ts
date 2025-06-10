@@ -244,7 +244,13 @@ export const useSecureSocialMedia = () => {
     removeOtherSocialMedia,
     saveSocialMediaForCreator,
     getSocialMediaForCreator: (creatorId: string) => {
+      // Always fetch fresh data instead of relying on local state
+      console.log('Getting social media for creator:', creatorId);
+      console.log('Current socialMediaData state:', socialMediaData);
+      
       const data = socialMediaData[creatorId];
+      console.log('Returning data for creator:', data);
+      
       if (!data) {
         return getEmptySocialMediaHandles();
       }
