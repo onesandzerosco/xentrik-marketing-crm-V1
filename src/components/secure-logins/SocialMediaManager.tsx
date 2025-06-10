@@ -64,25 +64,31 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       console.log('Social media logins found:', data);
       
-      // Ensure all predefined platforms exist, even if empty
-      const existingPlatforms = new Set((data || []).map(login => login.platform));
-      const missingPredefinedPlatforms = predefinedPlatforms.filter(platform => !existingPlatforms.has(platform));
+      // Create a map of existing platforms
+      const existingPlatforms = new Map((data || []).map(login => [login.platform, login]));
       
-      // Create placeholder entries for missing predefined platforms
-      const placeholderLogins: SocialMediaLogin[] = missingPredefinedPlatforms.map(platform => ({
-        id: `placeholder-${platform.toLowerCase()}`,
-        creator_email: creator.email,
-        platform,
-        username: '',
-        password: '',
-        notes: '',
-        is_predefined: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
+      // Only create placeholders for missing predefined platforms if we're in editing mode
+      const allLogins = [...(data || [])];
+      
+      // If we don't have all predefined platforms and we're not editing, 
+      // we'll create them only when the user starts editing
+      if (isEditing) {
+        const missingPredefinedPlatforms = predefinedPlatforms.filter(platform => !existingPlatforms.has(platform));
+        
+        const placeholderLogins: SocialMediaLogin[] = missingPredefinedPlatforms.map(platform => ({
+          id: `placeholder-${platform.toLowerCase()}`,
+          creator_email: creator.email,
+          platform,
+          username: '',
+          password: '',
+          notes: '',
+          is_predefined: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
 
-      // Combine existing data with placeholders
-      const allLogins = [...(data || []), ...placeholderLogins];
+        allLogins.push(...placeholderLogins);
+      }
       
       // Sort: predefined first, then alphabetically
       allLogins.sort((a, b) => {
@@ -340,6 +346,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }));
   };
 
+  // Start editing mode
+  const startEditing = () => {
+    setIsEditing(true);
+    // Refetch to include placeholders for missing predefined platforms
+    fetchSocialMediaLogins();
+  };
+
   useEffect(() => {
     if (creator?.email) {
       fetchSocialMediaLogins();
@@ -376,7 +389,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
           {!isEditing ? (
             <>
               <Button 
-                onClick={() => setIsEditing(true)}
+                onClick={startEditing}
                 variant="outline"
                 className="rounded-[15px]"
               >
