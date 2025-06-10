@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
     path: '/secure-logins',
     label: 'Secure Logins',
     icon: <Lock className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
+    allowCreator: true, // Allow Creator role to access their own secure logins
   },
   {
     path: '/messages',
