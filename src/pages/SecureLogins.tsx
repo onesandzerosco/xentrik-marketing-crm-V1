@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
+import SocialMediaManager from '../components/secure-logins/SocialMediaManager';
 import NoCreatorSelected from '../components/secure-logins/NoCreatorSelected';
 import LockButton from '../components/secure-logins/LockButton';
 import { Creator } from '../types';
@@ -139,12 +140,16 @@ const SecureLogins: React.FC = () => {
         </div>
         
         {selectedCreator ? (
-          <div>
+          <div className="space-y-6">
             <LoginDetailsEditor 
               creator={selectedCreator}
               loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
               onUpdateLogin={handleUpdateLogin}
               onSaveLoginDetails={handleSaveLoginDetails}
+            />
+            
+            <SocialMediaManager 
+              creator={selectedCreator}
             />
           </div>
         ) : (
@@ -159,4 +164,3 @@ const SecureLogins: React.FC = () => {
 };
 
 export default SecureLogins;
-
