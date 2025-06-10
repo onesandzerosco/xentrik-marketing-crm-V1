@@ -33,22 +33,64 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
 
   // Get the full creator data with model profile
   const fullCreator = creators.find(c => c.id === creator.id);
-  const modelProfile = (fullCreator as any)?.model_profile;
+  
+  // Parse the model_profile properly - it might be wrapped in a structure
+  const parseModelProfile = () => {
+    if (!fullCreator?.model_profile) return null;
+    
+    const modelProfile = fullCreator.model_profile;
+    
+    // Handle different possible structures
+    if (typeof modelProfile === 'string') {
+      try {
+        return JSON.parse(modelProfile);
+      } catch (e) {
+        console.error('Failed to parse model_profile string:', e);
+        return null;
+      }
+    }
+    
+    // If it has a value property, try to parse that
+    if (modelProfile.value && typeof modelProfile.value === 'string') {
+      try {
+        return JSON.parse(modelProfile.value);
+      } catch (e) {
+        console.error('Failed to parse model_profile.value:', e);
+        return null;
+      }
+    }
+    
+    // If it's already an object, return it directly
+    if (typeof modelProfile === 'object') {
+      return modelProfile;
+    }
+    
+    return null;
+  };
+
+  const modelProfile = parseModelProfile();
   
   // Try multiple possible paths for social media handles in the onboarding data
   const getSocialMediaHandles = () => {
     if (!modelProfile) return null;
     
+    console.log('Parsed model profile:', modelProfile);
+    
     // Try different possible paths where social media data might be stored
-    return modelProfile?.contentAndService?.socialMediaHandles || 
-           modelProfile?.socialMediaHandles || 
-           modelProfile?.socialMedia ||
-           null;
+    const handles = modelProfile?.contentAndService?.socialMediaHandles || 
+                   modelProfile?.socialMediaHandles || 
+                   modelProfile?.socialMedia ||
+                   null;
+    
+    console.log('Found social media handles:', handles);
+    return handles;
   };
 
   const socialMediaHandles = getSocialMediaHandles();
 
-  console.log('Full model profile:', modelProfile);
+  console.log('Full creator data:', fullCreator);
+  console.log('Raw model_profile:', fullCreator?.model_profile);
+  console.log('Parsed model profile:', modelProfile);
   console.log('Social media handles found:', socialMediaHandles);
 
   const togglePasswordVisibility = (platform: string) => {
@@ -69,17 +111,38 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
 
   const handleUpdateSocialMedia = async (updatedHandles: any) => {
     try {
-      // Update the creator's model_profile with new social media handles
-      // Store in the same path where we found it, or default to contentAndService
-      const updatedModelProfile = {
-        ...modelProfile,
-        contentAndService: {
-          ...modelProfile?.contentAndService,
+      // Create the updated model profile structure
+      let updatedModelProfile;
+      
+      if (fullCreator?.model_profile?.value) {
+        // If the original structure has a value property, maintain that structure
+        const parsedValue = parseModelProfile();
+        const newValue = {
+          ...parsedValue,
+          contentAndService: {
+            ...parsedValue?.contentAndService,
+            socialMediaHandles: updatedHandles
+          },
           socialMediaHandles: updatedHandles
-        },
-        // Also update the root level in case it's stored there
-        socialMediaHandles: updatedHandles
-      };
+        };
+        
+        updatedModelProfile = {
+          ...fullCreator.model_profile,
+          value: JSON.stringify(newValue)
+        };
+      } else {
+        // Direct object structure
+        updatedModelProfile = {
+          ...modelProfile,
+          contentAndService: {
+            ...modelProfile?.contentAndService,
+            socialMediaHandles: updatedHandles
+          },
+          socialMediaHandles: updatedHandles
+        };
+      }
+
+      console.log('Updating with model profile:', updatedModelProfile);
 
       // Update the creator with the new model profile
       await updateCreator(creator.id, {
@@ -98,6 +161,22 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const togglePasswordVisibility = (platform: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [platform]: !prev[platform]
+    }));
+  };
+
+  const getLoginDetail = (platform: string, field: keyof LoginDetail) => {
+    if (!loginDetails[platform]) return "";
+    return loginDetails[platform][field] || "";
+  };
+
+  const handleInputChange = (platform: string, field: string, value: string) => {
+    onUpdateLogin(platform, field, value);
   };
 
   return (
