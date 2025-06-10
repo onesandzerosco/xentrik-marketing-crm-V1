@@ -192,6 +192,12 @@ export const useSecureSocialMedia = () => {
         throw new Error('No social media data to save');
       }
       
+      // Convert the other array to plain objects for Supabase compatibility
+      const otherForSaving = socialMediaToSave.other.map(item => ({
+        platform: item.platform,
+        url: item.url
+      }));
+      
       // Create the socialMediaHandles object with the exact structure we want
       const updatedSocialMediaHandles = {
         instagram: socialMediaToSave.instagram || '',
@@ -202,7 +208,7 @@ export const useSecureSocialMedia = () => {
         youtube: socialMediaToSave.youtube || '',
         onlyfans: socialMediaToSave.onlyfans || '',
         snapchat: socialMediaToSave.snapchat || '',
-        other: socialMediaToSave.other || []
+        other: otherForSaving
       };
 
       console.log('Social media handles to save:', updatedSocialMediaHandles);
@@ -294,7 +300,10 @@ function processSocialMediaData(data: any): SocialMediaHandles {
 
   // Handle the 'other' array
   if (Array.isArray(data.other)) {
-    result.other = data.other;
+    result.other = data.other.map((item: any) => ({
+      platform: item.platform || '',
+      url: item.url || ''
+    }));
   }
 
   console.log('Processed social media data result:', result);
