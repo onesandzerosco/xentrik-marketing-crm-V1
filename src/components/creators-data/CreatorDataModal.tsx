@@ -102,16 +102,21 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const updateDatabase = async (updatedData: any) => {
     try {
       setIsSaving(true);
+      console.log('Updating database with data:', updatedData);
+      console.log('Submission ID:', submission.id);
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData })
-        .eq('id', submission.id);
+        .eq('id', submission.id)
+        .select();
 
       if (error) {
         console.error('Database update error:', error);
         throw error;
       }
+
+      console.log('Database update successful:', data);
 
       // Call the parent component's update handler if provided
       if (onDataUpdate) {
@@ -133,8 +138,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const handleSaveClick = async (section: string, fieldKey: string) => {
     const editKey = `${section}.${fieldKey}`;
     
-    // Update the submission data
-    const newData = { ...submissionData };
+    // Create a deep copy of the submission data
+    const newData = JSON.parse(JSON.stringify(submissionData));
+    
+    // Ensure the section exists
     if (!newData[section]) {
       newData[section] = {};
     }
@@ -149,7 +156,13 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       processedValue = typeof editValue === 'string' ? editValue.split(',').map(item => item.trim()).filter(item => item !== '') : editValue;
     }
     
+    // Update the field
     newData[section][fieldKey] = processedValue;
+    
+    console.log('Saving field:', fieldKey, 'with value:', processedValue);
+    console.log('New data structure:', newData);
+    
+    // Update local state first
     setSubmissionData(newData);
     
     // Save to database
