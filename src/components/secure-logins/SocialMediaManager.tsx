@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +26,9 @@ interface SocialMediaManagerProps {
 
 // Type for the onboarding submission data structure
 interface OnboardingSubmissionData {
+  personalInfo?: any;
+  physicalAttributes?: any;
+  personalPreferences?: any;
   contentAndService?: {
     socialMediaHandles?: {
       instagram?: string;
@@ -39,6 +41,7 @@ interface OnboardingSubmissionData {
         handle: string;
       }>;
     };
+    [key: string]: any;
   };
 }
 
@@ -54,6 +57,81 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
   // Predefined platforms that should always be visible
   const predefinedPlatforms = ['TikTok', 'Twitter', 'OnlyFans', 'Snapchat', 'Instagram'];
+
+  // Helper function to update onboarding submission JSON data
+  const updateOnboardingSubmissionData = async (updatedLogins: SocialMediaLogin[]) => {
+    try {
+      console.log('=== UPDATING ONBOARDING SUBMISSION JSON ===');
+      
+      // First, get the current onboarding submission data
+      const { data: submissionData, error: fetchError } = await supabase
+        .from('onboarding_submissions')
+        .select('data')
+        .eq('email', creator.email)
+        .single();
+
+      if (fetchError) {
+        console.warn('No onboarding submission found to update:', fetchError);
+        return;
+      }
+
+      // Cast to our expected type
+      const currentData = submissionData.data as OnboardingSubmissionData;
+      
+      // Build the updated socialMediaHandles object
+      const socialMediaHandles: any = {
+        instagram: '',
+        twitter: '',
+        tiktok: '',
+        onlyfans: '',
+        snapchat: '',
+        other: []
+      };
+
+      // Update with current login data
+      updatedLogins.forEach(login => {
+        const platformKey = login.platform.toLowerCase();
+        
+        if (['instagram', 'twitter', 'tiktok', 'onlyfans', 'snapchat'].includes(platformKey)) {
+          socialMediaHandles[platformKey] = login.username || '';
+        } else if (login.username) {
+          // Add to other array for non-predefined platforms
+          socialMediaHandles.other.push({
+            platform: login.platform,
+            handle: login.username
+          });
+        }
+      });
+
+      // Update the JSON structure
+      const updatedData: OnboardingSubmissionData = {
+        ...currentData,
+        contentAndService: {
+          ...currentData.contentAndService,
+          socialMediaHandles
+        }
+      };
+
+      // Save back to the database
+      const { error: updateError } = await supabase
+        .from('onboarding_submissions')
+        .update({ data: updatedData })
+        .eq('email', creator.email);
+
+      if (updateError) {
+        console.error('Error updating onboarding submission:', updateError);
+        toast({
+          title: "Warning",
+          description: "Social media logins saved but failed to update onboarding data",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Successfully updated onboarding submission JSON');
+      }
+    } catch (error) {
+      console.error('Error in updateOnboardingSubmissionData:', error);
+    }
+  };
 
   // Fetch social media logins from the new table
   const fetchSocialMediaLogins = async () => {
@@ -220,8 +298,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         description: "Social media account saved successfully",
       });
 
-      // Refresh data
+      // Refresh data and update onboarding submission
       await fetchSocialMediaLogins();
+      await updateOnboardingSubmissionData(socialMediaLogins);
     } catch (error) {
       console.error('Error in saveSocialMediaLogin:', error);
       toast({
@@ -294,6 +373,9 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       setIsEditing(false);
       await fetchSocialMediaLogins();
+      
+      // Update onboarding submission JSON data
+      await updateOnboardingSubmissionData(socialMediaLogins);
     } catch (error) {
       console.error('Error saving all changes:', error);
       toast({
