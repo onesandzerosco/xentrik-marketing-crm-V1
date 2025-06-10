@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Creator } from '../../types';
@@ -14,6 +14,11 @@ interface SocialMediaAccount {
   username: string;
   password: string;
   notes?: string;
+}
+
+interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 interface SocialMediaHandles {
@@ -38,10 +43,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     instagram: '',
     other: []
   });
+  const [loginCredentials, setLoginCredentials] = useState<Record<string, LoginCredentials>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
   const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Fetch social media data from onboarding_submissions
@@ -215,6 +223,17 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }));
   };
 
+  // Update login credentials
+  const updateLoginCredentials = (platform: string, field: keyof LoginCredentials, value: string) => {
+    setLoginCredentials(prev => ({
+      ...prev,
+      [platform]: {
+        ...prev[platform],
+        [field]: value
+      }
+    }));
+  };
+
   // Add new platform
   const addNewPlatform = () => {
     if (!newPlatformName.trim()) return;
@@ -238,6 +257,14 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     setSocialMediaData(prev => ({
       ...prev,
       other: prev.other.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Toggle password visibility
+  const togglePasswordVisibility = (platform: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [platform]: !prev[platform]
     }));
   };
 
@@ -265,139 +292,291 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     { key: 'instagram' as const, label: 'Instagram' }
   ];
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium mb-4">Social Media Accounts</h3>
-        
-        <Tabs defaultValue="platforms">
-          <TabsList className="mb-4">
-            <TabsTrigger value="platforms" className="rounded-[15px]">
-              Platforms
-            </TabsTrigger>
-            <TabsTrigger value="other" className="rounded-[15px]">
-              Other Platforms ({socialMediaData.other.length})
-            </TabsTrigger>
-          </TabsList>
+  const renderPlatformCard = (platform: { key: keyof Omit<SocialMediaHandles, 'other'>, label: string }) => {
+    const username = socialMediaData[platform.key];
+    const credentials = loginCredentials[platform.key] || { email: '', password: '' };
+    
+    if (!username && !isEditing) return null;
 
-          <TabsContent value="platforms">
-            <div className="space-y-4">
-              {predefinedPlatforms.map(({ key, label }) => (
-                <div key={key} className="space-y-2">
-                  <Label>{label}</Label>
+    return (
+      <Card key={platform.key} className="mb-4">
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-lg">{platform.label} Account: @{username || 'Not set'}</h4>
+            </div>
+            
+            {isEditing ? (
+              <div className="space-y-3">
+                <div>
+                  <Label>Username/Handle</Label>
                   <Input
-                    placeholder={`${label} username`}
-                    value={socialMediaData[key]}
-                    onChange={(e) => updatePredefinedPlatform(key, e.target.value)}
+                    placeholder={`${platform.label} username`}
+                    value={username}
+                    onChange={(e) => updatePredefinedPlatform(platform.key, e.target.value)}
                     className="rounded-[15px]"
                   />
                 </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="other">
-            <div className="space-y-6">
-              {socialMediaData.other.map((account, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium capitalize">{account.platform}</h4>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removePlatform(index)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Username</Label>
-                      <Input
-                        placeholder="Username"
-                        value={account.username}
-                        onChange={(e) => updateOtherPlatform(index, 'username', e.target.value)}
-                        className="rounded-[15px]"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Password</Label>
-                      <Input
-                        type="password"
-                        placeholder="Password"
-                        value={account.password}
-                        onChange={(e) => updateOtherPlatform(index, 'password', e.target.value)}
-                        className="rounded-[15px]"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Notes</Label>
-                    <Input
-                      placeholder="Additional notes"
-                      value={account.notes || ''}
-                      onChange={(e) => updateOtherPlatform(index, 'notes', e.target.value)}
-                      className="rounded-[15px]"
-                    />
-                  </div>
+                <div>
+                  <Label>Login User/Email</Label>
+                  <Input
+                    placeholder="Email or username for login"
+                    value={credentials.email}
+                    onChange={(e) => updateLoginCredentials(platform.key, 'email', e.target.value)}
+                    className="rounded-[15px]"
+                  />
                 </div>
-              ))}
-
-              {showAddPlatform ? (
-                <div className="border rounded-lg p-4 space-y-3">
-                  <Label>Platform Name</Label>
+                <div>
+                  <Label>Password</Label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Enter platform name"
-                      value={newPlatformName}
-                      onChange={(e) => setNewPlatformName(e.target.value)}
+                      type={showPasswords[platform.key] ? 'text' : 'password'}
+                      placeholder="Password"
+                      value={credentials.password}
+                      onChange={(e) => updateLoginCredentials(platform.key, 'password', e.target.value)}
                       className="rounded-[15px]"
                     />
-                    <Button onClick={addNewPlatform} className="rounded-[15px]">
-                      Add
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setShowAddPlatform(false);
-                        setNewPlatformName('');
-                      }}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => togglePasswordVisibility(platform.key)}
                       className="rounded-[15px]"
                     >
-                      Cancel
+                      {showPasswords[platform.key] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddPlatform(true)}
-                  className="w-full rounded-[15px]"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Platform
-                </Button>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </div>
+            ) : (
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <div>
+                  <span className="font-medium">Login User/Email:</span> {credentials.email || 'Not set'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">Password:</span> 
+                  {credentials.password ? (
+                    <>
+                      <span>{showPasswords[platform.key] ? credentials.password : '••••••••'}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => togglePasswordVisibility(platform.key)}
+                        className="h-6 w-6 p-0"
+                      >
+                        {showPasswords[platform.key] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      </Button>
+                    </>
+                  ) : (
+                    'Not set'
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
-        <div className="mt-6 pt-4 border-t">
-          <Button 
-            onClick={saveSocialMediaData}
-            disabled={saving}
-            className="w-full rounded-[15px]"
-            variant="premium"
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">Social Media Login Details</h3>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsEditing(!isEditing)}
+            className="rounded-[15px]"
           >
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? 'Saving...' : 'Save All Social Media Accounts'}
+            <Edit className="h-4 w-4 mr-2" />
+            {isEditing ? 'Cancel' : 'Edit'}
           </Button>
+          {isEditing && (
+            <Button 
+              onClick={saveSocialMediaData}
+              disabled={saving}
+              className="rounded-[15px]"
+              variant="premium"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
         </div>
       </div>
+      
+      <Tabs defaultValue="platforms">
+        <TabsList className="mb-4">
+          <TabsTrigger value="platforms" className="rounded-[15px]">
+            Main Platforms
+          </TabsTrigger>
+          <TabsTrigger value="other" className="rounded-[15px]">
+            Other Platforms ({socialMediaData.other.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="platforms">
+          <div className="space-y-4">
+            {predefinedPlatforms.map((platform) => renderPlatformCard(platform))}
+            
+            {predefinedPlatforms.every(p => !socialMediaData[p.key]) && !isEditing && (
+              <div className="text-center py-8 text-muted-foreground">
+                No social media accounts configured yet.
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="other">
+          <div className="space-y-6">
+            {socialMediaData.other.map((account, index) => (
+              <Card key={index} className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-lg capitalize">{account.platform} Account: @{account.username || 'Not set'}</h4>
+                    {isEditing && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removePlatform(index)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {isEditing ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Username</Label>
+                        <Input
+                          placeholder="Username"
+                          value={account.username}
+                          onChange={(e) => updateOtherPlatform(index, 'username', e.target.value)}
+                          className="rounded-[15px]"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Password</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type={showPasswords[`other-${index}`] ? 'text' : 'password'}
+                            placeholder="Password"
+                            value={account.password}
+                            onChange={(e) => updateOtherPlatform(index, 'password', e.target.value)}
+                            className="rounded-[15px]"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => togglePasswordVisibility(`other-${index}`)}
+                            className="rounded-[15px]"
+                          >
+                            {showPasswords[`other-${index}`] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="md:col-span-2 space-y-2">
+                        <Label>Notes</Label>
+                        <Input
+                          placeholder="Additional notes"
+                          value={account.notes || ''}
+                          onChange={(e) => updateOtherPlatform(index, 'notes', e.target.value)}
+                          className="rounded-[15px]"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div>
+                        <span className="font-medium">Login User/Email:</span> {account.username || 'Not set'}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">Password:</span>
+                        {account.password ? (
+                          <>
+                            <span>{showPasswords[`other-${index}`] ? account.password : '••••••••'}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => togglePasswordVisibility(`other-${index}`)}
+                              className="h-6 w-6 p-0"
+                            >
+                              {showPasswords[`other-${index}`] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            </Button>
+                          </>
+                        ) : (
+                          'Not set'
+                        )}
+                      </div>
+                      {account.notes && (
+                        <div>
+                          <span className="font-medium">Notes:</span> {account.notes}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+
+            {isEditing && (
+              <>
+                {showAddPlatform ? (
+                  <Card className="p-4">
+                    <div className="space-y-3">
+                      <Label>Platform Name</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter platform name"
+                          value={newPlatformName}
+                          onChange={(e) => setNewPlatformName(e.target.value)}
+                          className="rounded-[15px]"
+                        />
+                        <Button onClick={addNewPlatform} className="rounded-[15px]">
+                          Add
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowAddPlatform(false);
+                            setNewPlatformName('');
+                          }}
+                          className="rounded-[15px]"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddPlatform(true)}
+                    className="w-full rounded-[15px]"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Platform
+                  </Button>
+                )}
+              </>
+            )}
+
+            {socialMediaData.other.length === 0 && !isEditing && (
+              <div className="text-center py-8 text-muted-foreground">
+                No additional platforms configured yet.
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
