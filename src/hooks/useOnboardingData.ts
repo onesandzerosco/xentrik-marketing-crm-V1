@@ -14,6 +14,7 @@ interface OnboardingData {
 
 export const useOnboardingData = (creatorId: string) => {
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
+  const [flattenedSocialMediaHandles, setFlattenedSocialMediaHandles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -104,21 +105,22 @@ export const useOnboardingData = (creatorId: string) => {
           
           console.log('Processed social media handles:', processedHandles);
           
-          // Update the parsed data with flattened handles for UI display
-          setOnboardingData({
-            ...parsedData,
-            socialMediaHandles: processedHandles
-          });
+          // Update both the original data and the flattened handles
+          setOnboardingData(parsedData);
+          setFlattenedSocialMediaHandles(processedHandles);
         } else {
           setOnboardingData(parsedData);
+          setFlattenedSocialMediaHandles({});
         }
       } else {
         console.log('No accepted submissions found');
         setOnboardingData(null);
+        setFlattenedSocialMediaHandles({});
       }
     } catch (error) {
       console.error('Error in fetchOnboardingData:', error);
       setOnboardingData(null);
+      setFlattenedSocialMediaHandles({});
     } finally {
       setLoading(false);
     }
@@ -208,11 +210,9 @@ export const useOnboardingData = (creatorId: string) => {
         return false;
       }
 
-      // Update local state with the new processed data (flattened for UI)
-      setOnboardingData({
-        ...updatedData,
-        socialMediaHandles: updatedHandles // Keep the flattened version for UI
-      });
+      // Update local state with the new data
+      setOnboardingData(updatedData);
+      setFlattenedSocialMediaHandles(updatedHandles); // Keep the flattened version for UI
       
       toast({
         title: "Success",
@@ -234,13 +234,11 @@ export const useOnboardingData = (creatorId: string) => {
     fetchOnboardingData();
   }, [fetchOnboardingData]);
 
-  // Return flattened social media handles for UI consumption
-  const socialMediaHandles: Record<string, string> = onboardingData?.socialMediaHandles || {};
-  console.log('Hook returning social media handles:', socialMediaHandles);
+  console.log('Hook returning social media handles:', flattenedSocialMediaHandles);
 
   return {
     onboardingData,
-    socialMediaHandles, // This is now correctly typed as Record<string, string>
+    socialMediaHandles: flattenedSocialMediaHandles, // This is now correctly typed as Record<string, string>
     loading,
     updateSocialMediaHandles,
     refetch: fetchOnboardingData
