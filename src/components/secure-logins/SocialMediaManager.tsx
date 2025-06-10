@@ -1,13 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Trash2, Edit, Eye, EyeOff, X } from 'lucide-react';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff, X, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Creator } from '../../types';
 
 interface SocialMediaLogin {
@@ -24,6 +24,7 @@ interface SocialMediaLogin {
 
 interface SocialMediaManagerProps {
   creator: Creator;
+  onLock?: () => void;
 }
 
 interface OnboardingSubmissionData {
@@ -47,7 +48,8 @@ interface OnboardingSubmissionData {
   [key: string]: any;
 }
 
-const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
+const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock }) => {
+  const navigate = useNavigate();
   const [socialMediaLogins, setSocialMediaLogins] = useState<SocialMediaLogin[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -457,58 +459,79 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     }
   };
 
+  const handleLock = () => {
+    if (onLock) {
+      onLock();
+    }
+    
+    toast({
+      title: "Secure Area Locked",
+      description: "You've successfully locked the secure area",
+    });
+    
+    navigate('/secure-logins');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Social Media Accounts</h3>
-          <p className="text-sm text-muted-foreground">
-            {canEdit ? "View and manage social media login credentials" : "View social media login credentials"}
-          </p>
+        <div className="flex-1">
+          {/* Empty div to maintain spacing */}
         </div>
-        {canEdit && (
-          <div className="flex gap-2">
-            {!isEditing ? (
-              <>
-                <Button 
-                  onClick={startEditing}
-                  variant="outline"
-                  className="rounded-[15px]"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAddPlatform(true)}
-                  className="rounded-[15px]"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Platform
-                </Button>
-              </>
-            ) : (
-              <div className="flex gap-2">
-                <Button 
-                  onClick={saveAllChanges}
-                  disabled={saving}
-                  className="rounded-[15px]"
-                  variant="premium"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save All'}
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-[15px]"
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+        <Button 
+          variant="destructive" 
+          size="sm"
+          className="flex items-center gap-2 rounded-[15px] shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90"
+          onClick={handleLock}
+        >
+          <Lock className="h-4 w-4" />
+          Lock Secure Area
+        </Button>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          {canEdit && !isEditing && (
+            <>
+              <Button 
+                onClick={startEditing}
+                variant="outline"
+                className="rounded-[15px]"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddPlatform(true)}
+                className="rounded-[15px]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Platform
+              </Button>
+            </>
+          )}
+          {canEdit && isEditing && (
+            <div className="flex gap-2">
+              <Button 
+                onClick={saveAllChanges}
+                disabled={saving}
+                className="rounded-[15px]"
+                variant="premium"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Saving...' : 'Save All'}
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsEditing(false)}
+                className="rounded-[15px]"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="border rounded-lg overflow-hidden bg-card shadow-sm">

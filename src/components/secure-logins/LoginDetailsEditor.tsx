@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -58,7 +57,7 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <SocialMediaManager creator={creator} />
+          <SocialMediaManager creator={creator} onLock={onLock} />
           
           {Object.entries(creator.socialLinks).filter(([_, url]) => url).length > 0 && (
             <div className="mt-8">
@@ -144,10 +143,6 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
           )}
         </CardContent>
       </Card>
-      
-      <div className="flex justify-end">
-        <LockButton onLock={onLock} />
-      </div>
     </div>
   );
 };
