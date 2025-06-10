@@ -107,14 +107,15 @@ export class OnboardingService {
       
       for (const platform of predefinedPlatforms) {
         const username = socialMediaHandles[platform] || '';
+        const platformAccount = socialMediaHandles[`${platform}Account`] || {};
         
         // Always create a record for predefined platforms, even if empty
         socialMediaRecords.push({
           creator_email: creatorEmail,
           platform: platform.charAt(0).toUpperCase() + platform.slice(1), // Capitalize first letter
           username: username,
-          password: '', // Empty password initially
-          notes: '', // Empty notes initially
+          password: platformAccount.password || '',
+          notes: platformAccount.notes || '',
           is_predefined: true
         });
       }
@@ -122,13 +123,13 @@ export class OnboardingService {
       // Process "other" platforms - only if they have data
       if (socialMediaHandles.other && Array.isArray(socialMediaHandles.other)) {
         for (const otherPlatform of socialMediaHandles.other) {
-          if (otherPlatform.platform && otherPlatform.handle) {
+          if (otherPlatform.platform && otherPlatform.username) {
             socialMediaRecords.push({
               creator_email: creatorEmail,
               platform: otherPlatform.platform,
-              username: otherPlatform.handle,
-              password: '', // Empty password initially
-              notes: '', // Empty notes initially
+              username: otherPlatform.username,
+              password: otherPlatform.password || '',
+              notes: otherPlatform.notes || '',
               is_predefined: false
             });
           }
