@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -108,6 +109,10 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     try {
       setSaving(true);
       
+      console.log('=== STARTING SAVE PROCESS ===');
+      console.log('Current socialMediaData:', socialMediaData);
+      
+      // Fetch current data
       const { data: currentData, error: fetchError } = await supabase
         .from('onboarding_submissions')
         .select('data')
@@ -126,17 +131,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
 
       const existingData = (currentData?.data as Record<string, any>) || {};
       
-      // Build the socialMediaHandles object maintaining the existing structure
-      // Predefined platforms are saved in their existing structure
-      // New/other platforms are saved in the "other" array as requested
+      // Build the socialMediaHandles object following the exact structure you specified
       const socialMediaHandlesForSave = {
-        // Keep predefined platform usernames in their original location
+        // Save predefined platform usernames in their original location
         tiktok: socialMediaData.tiktokAccount?.username || '',
         twitter: socialMediaData.twitterAccount?.username || '',
         onlyfans: socialMediaData.onlyfansAccount?.username || '',
         snapchat: socialMediaData.snapchatAccount?.username || '',
         instagram: socialMediaData.instagramAccount?.username || '',
-        // Save "other" platforms in the "other" array as requested
+        // Save new/other platforms in the "other" array as requested
         other: socialMediaData.other,
         // Keep the detailed account info for predefined platforms
         tiktokAccount: socialMediaData.tiktokAccount,
@@ -146,6 +149,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         instagramAccount: socialMediaData.instagramAccount
       };
       
+      // Build the complete data structure
       const updatedData = {
         ...existingData,
         contentAndService: {
@@ -157,6 +161,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
       console.log('=== SAVING SOCIAL MEDIA DATA ===');
       console.log('Data structure being saved:', updatedData);
 
+      // ACTUALLY SAVE TO DATABASE - this was missing!
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData as any })
@@ -172,13 +177,16 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
         return;
       }
 
+      console.log('=== SAVE SUCCESSFUL ===');
       toast({
         title: "Success",
         description: "Social media accounts saved successfully",
       });
 
       setIsEditing(false);
+      // Refresh data to confirm save
       await fetchSocialMediaData();
+      
     } catch (error) {
       console.error('Error in saveSocialMediaData:', error);
       toast({
