@@ -15,6 +15,8 @@ export interface SocialMediaHandles {
   chaturbate: string;
   youtube: string;
   other: SocialMediaAccount[];
+  // Allow for any additional platforms from the database
+  [key: string]: string | SocialMediaAccount[];
 }
 
 export const useSecureSocialMedia = () => {
@@ -81,6 +83,7 @@ export const useSecureSocialMedia = () => {
       const socialMediaHandles = submissionJsonData.socialMediaHandles || {};
       const processedData = processSocialMediaData(socialMediaHandles);
       
+      console.log('Raw social media handles from DB:', socialMediaHandles);
       console.log('Processed social media data:', processedData);
       
       setSocialMediaData(prev => ({
@@ -194,27 +197,32 @@ export const useSecureSocialMedia = () => {
 
       // Type assertion and safe update of the socialMediaHandles in the data
       const currentData = submissionData.data as Record<string, any>;
+      const currentSocialMediaHandles = (currentData.socialMediaHandles || {}) as Record<string, any>;
       const socialMediaToSave = socialMediaData[creatorId];
       
       if (!socialMediaToSave) {
         throw new Error('No social media data to save');
       }
       
+      // Merge the current data with the updated data, preserving existing fields
+      const mergedSocialMediaHandles = {
+        ...currentSocialMediaHandles, // Keep existing data from DB
+        ...Object.fromEntries(
+          Object.entries(socialMediaToSave).filter(([key, value]) => {
+            // Only include non-empty values and the 'other' array
+            return key === 'other' || (typeof value === 'string' && value.trim() !== '');
+          })
+        )
+      };
+
+      console.log('Original DB social media handles:', currentSocialMediaHandles);
+      console.log('Data to save:', socialMediaToSave);
+      console.log('Merged social media handles:', mergedSocialMediaHandles);
+      
       // Convert to plain object to ensure JSON compatibility
       const updatedData = {
         ...currentData,
-        socialMediaHandles: {
-          instagram: socialMediaToSave.instagram || '',
-          tiktok: socialMediaToSave.tiktok || '',
-          twitter: socialMediaToSave.twitter || '',
-          reddit: socialMediaToSave.reddit || '',
-          chaturbate: socialMediaToSave.chaturbate || '',
-          youtube: socialMediaToSave.youtube || '',
-          other: socialMediaToSave.other.map(item => ({
-            platform: item.platform || '',
-            url: item.url || ''
-          }))
-        }
+        socialMediaHandles: mergedSocialMediaHandles
       };
 
       console.log('Updated data to save:', updatedData);
@@ -231,12 +239,16 @@ export const useSecureSocialMedia = () => {
       }
 
       console.log('Successfully saved social media data');
+      
+      // Refresh the data after saving to show the updated state
+      await fetchSocialMediaForCreator(creatorId);
+      
       return { success: true };
     } catch (error) {
       console.error('Error saving social media data:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
-  }, [socialMediaData]);
+  }, [socialMediaData, fetchSocialMediaForCreator]);
 
   return {
     fetchSocialMediaForCreator,
@@ -269,13 +281,31 @@ function getEmptySocialMediaHandles(): SocialMediaHandles {
 }
 
 function processSocialMediaData(data: any): SocialMediaHandles {
-  return {
-    instagram: data?.instagram || '',
-    tiktok: data?.tiktok || '',
-    twitter: data?.twitter || '',
-    reddit: data?.reddit || '',
-    chaturbate: data?.chaturbate || '',
-    youtube: data?.youtube || '',
-    other: Array.isArray(data?.other) ? data.other : []
+  // Start with empty structure
+  const result: SocialMediaHandles = {
+    instagram: '',
+    tiktok: '',
+    twitter: '',
+    reddit: '',
+    chaturbate: '',
+    youtube: '',
+    other: []
   };
+
+  if (!data || typeof data !== 'object') {
+    return result;
+  }
+
+  // Process each field from the database
+  Object.entries(data).forEach(([key, value]) => {
+    if (key === 'other' && Array.isArray(value)) {
+      result.other = value;
+    } else if (typeof value === 'string') {
+      // Add all string fields to the result, whether they're predefined or not
+      result[key] = value;
+    }
+  });
+
+  console.log('Processed social media data result:', result);
+  return result;
 }

@@ -105,6 +105,19 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
     { key: 'youtube', label: 'YouTube', icon: '📺' }
   ];
 
+  // Get all platforms from the database (excluding predefined ones and 'other')
+  const additionalPlatforms = Object.keys(socialMediaData)
+    .filter(key => 
+      key !== 'other' && 
+      !predefinedPlatforms.some(p => p.key === key) &&
+      typeof socialMediaData[key] === 'string'
+    )
+    .map(key => ({
+      key,
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      icon: '🔗'
+    }));
+
   if (loading) {
     return (
       <Card>
@@ -116,6 +129,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
   }
 
   console.log('Rendering social media data for creator:', creator.name, socialMediaData);
+  console.log('Additional platforms found:', additionalPlatforms);
 
   return (
     <Card>
@@ -131,6 +145,11 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
             <TabsTrigger value="predefined" className="rounded-[15px]">
               Standard Platforms
             </TabsTrigger>
+            {additionalPlatforms.length > 0 && (
+              <TabsTrigger value="additional" className="rounded-[15px]">
+                Other Platforms
+              </TabsTrigger>
+            )}
             <TabsTrigger value="custom" className="rounded-[15px]">
               Custom Platforms
             </TabsTrigger>
@@ -148,7 +167,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                     </Label>
                     <div className="flex gap-2">
                       <Input 
-                        placeholder={value ? value : `Enter ${platform.label} URL or "Not provided"`}
+                        placeholder={`Enter ${platform.label} URL or username`}
                         value={value}
                         onChange={(e) => handleInputChange(platform.key, e.target.value)}
                         className="rounded-[15px]"
@@ -157,7 +176,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => window.open(value, '_blank')}
+                          onClick={() => window.open(value.startsWith('http') ? value : `https://${value}`, '_blank')}
                           className="rounded-[15px]"
                         >
                           <ExternalLink className="h-4 w-4" />
@@ -172,6 +191,46 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator }) => {
               })}
             </div>
           </TabsContent>
+
+          {additionalPlatforms.length > 0 && (
+            <TabsContent value="additional">
+              <div className="space-y-4">
+                <h4 className="font-medium">Additional Platforms from Database</h4>
+                {additionalPlatforms.map((platform) => {
+                  const value = socialMediaData[platform.key] as string || '';
+                  return (
+                    <div key={platform.key} className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <span>{platform.icon}</span>
+                        {platform.label}
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder={`Enter ${platform.label} URL or username`}
+                          value={value}
+                          onChange={(e) => handleInputChange(platform.key, e.target.value)}
+                          className="rounded-[15px]"
+                        />
+                        {value && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => window.open(value.startsWith('http') ? value : `https://${value}`, '_blank')}
+                            className="rounded-[15px]"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      {!value && (
+                        <p className="text-sm text-muted-foreground">Not provided</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          )}
           
           <TabsContent value="custom">
             <div className="space-y-4">
