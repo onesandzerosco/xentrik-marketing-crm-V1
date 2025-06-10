@@ -1,3 +1,4 @@
+
 export interface Creator {
   id: string;
   name: string;
@@ -21,7 +22,6 @@ export interface Creator {
   telegramUsername?: string;
   whatsappNumber?: string;
   notes?: string;
-  model_profile?: any; // Add model_profile field
 }
 
 export type Gender = "Male" | "Female" | "Trans";
