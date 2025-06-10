@@ -22,6 +22,8 @@ export const useOnboardingData = (creatorId: string) => {
     
     setLoading(true);
     try {
+      console.log('Fetching onboarding data for creator:', creatorId);
+      
       // Find the submission by creator name (assuming creatorId contains the name)
       const { data: submissions, error } = await supabase
         .from('onboarding_submissions')
@@ -35,22 +37,34 @@ export const useOnboardingData = (creatorId: string) => {
         return;
       }
 
+      console.log('Raw submissions data:', submissions);
+
       if (submissions && submissions.length > 0) {
         const submission = submissions[0];
+        console.log('Found submission:', submission);
+        console.log('Raw submission data:', submission.data);
+        
         let parsedData: OnboardingData = {};
         
         if (typeof submission.data === 'string') {
           try {
             parsedData = JSON.parse(submission.data);
+            console.log('Parsed JSON data:', parsedData);
           } catch (e) {
             console.error('Error parsing submission data:', e);
           }
         } else if (typeof submission.data === 'object' && submission.data !== null) {
           parsedData = submission.data as OnboardingData;
+          console.log('Direct object data:', parsedData);
         }
         
+        console.log('Final parsed data:', parsedData);
+        console.log('Social media handles from data:', parsedData.socialMediaHandles);
+        
         setOnboardingData(parsedData);
-        console.log('Fetched onboarding data:', parsedData);
+      } else {
+        console.log('No submissions found for creator:', creatorId);
+        setOnboardingData(null);
       }
     } catch (error) {
       console.error('Error in fetchOnboardingData:', error);
@@ -60,13 +74,20 @@ export const useOnboardingData = (creatorId: string) => {
   }, [creatorId]);
 
   const updateSocialMediaHandles = useCallback(async (updatedHandles: SocialMediaHandles) => {
-    if (!creatorId || !onboardingData) return;
+    if (!creatorId || !onboardingData) {
+      console.log('Missing creatorId or onboardingData:', { creatorId, onboardingData });
+      return false;
+    }
 
     try {
+      console.log('Updating social media handles:', updatedHandles);
+      
       const updatedData = {
         ...onboardingData,
         socialMediaHandles: updatedHandles
       };
+
+      console.log('Updated data to save:', updatedData);
 
       // Find the submission to update
       const { data: submissions, error: fetchError } = await supabase
@@ -78,8 +99,15 @@ export const useOnboardingData = (creatorId: string) => {
 
       if (fetchError || !submissions || submissions.length === 0) {
         console.error('Error finding submission to update:', fetchError);
+        toast({
+          title: "Error",
+          description: "Could not find creator's onboarding data to update",
+          variant: "destructive",
+        });
         return false;
       }
+
+      console.log('Found submission to update:', submissions[0]);
 
       const { error: updateError } = await supabase
         .from('onboarding_submissions')
@@ -104,6 +132,11 @@ export const useOnboardingData = (creatorId: string) => {
       return true;
     } catch (error) {
       console.error('Error in updateSocialMediaHandles:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
       return false;
     }
   }, [creatorId, onboardingData, toast]);
@@ -112,9 +145,12 @@ export const useOnboardingData = (creatorId: string) => {
     fetchOnboardingData();
   }, [fetchOnboardingData]);
 
+  const socialMediaHandles = onboardingData?.socialMediaHandles || {};
+  console.log('Returning social media handles:', socialMediaHandles);
+
   return {
     onboardingData,
-    socialMediaHandles: onboardingData?.socialMediaHandles || {},
+    socialMediaHandles,
     loading,
     updateSocialMediaHandles,
     refetch: fetchOnboardingData

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,10 +17,16 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
   socialMediaHandles,
   onUpdateSocialMedia
 }) => {
-  const [editedHandles, setEditedHandles] = useState<Record<string, string>>(socialMediaHandles);
+  const [editedHandles, setEditedHandles] = useState<Record<string, string>>({});
   const [newPlatform, setNewPlatform] = useState('');
   const [newHandle, setNewHandle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Update editedHandles when socialMediaHandles prop changes
+  useEffect(() => {
+    console.log('SocialMediaManager - received socialMediaHandles:', socialMediaHandles);
+    setEditedHandles(socialMediaHandles);
+  }, [socialMediaHandles]);
 
   const handleUpdateHandle = (platform: string, handle: string) => {
     setEditedHandles(prev => ({
@@ -50,18 +56,33 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
 
   const handleSave = async () => {
     setIsSaving(true);
+    console.log('Saving social media handles:', editedHandles);
     const success = await onUpdateSocialMedia(editedHandles);
     setIsSaving(false);
   };
 
   const hasChanges = JSON.stringify(editedHandles) !== JSON.stringify(socialMediaHandles);
 
+  console.log('SocialMediaManager render - editedHandles:', editedHandles);
+  console.log('SocialMediaManager render - hasChanges:', hasChanges);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Social Media Accounts</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Manage {creator.name}'s social media accounts from onboarding data
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Display current data for debugging */}
+        <div className="text-xs text-muted-foreground border-l-2 border-muted pl-2">
+          <p>Debug: Found {Object.keys(editedHandles).length} social media handles</p>
+          {Object.keys(editedHandles).length === 0 && (
+            <p className="text-amber-600">No social media handles found in onboarding data</p>
+          )}
+        </div>
+
         {/* Existing handles */}
         {Object.entries(editedHandles).map(([platform, handle]) => (
           <div key={platform} className="flex items-center space-x-2">
@@ -84,6 +105,14 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({
             </Button>
           </div>
         ))}
+
+        {/* Show message if no handles exist */}
+        {Object.keys(editedHandles).length === 0 && (
+          <div className="text-center py-4 text-muted-foreground">
+            <p>No social media accounts found in onboarding data.</p>
+            <p className="text-xs">Add new platforms below.</p>
+          </div>
+        )}
 
         {/* Add new platform */}
         <div className="border-t pt-4">
