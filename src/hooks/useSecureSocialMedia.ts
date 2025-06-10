@@ -57,7 +57,9 @@ export const useSecureSocialMedia = () => {
         return getEmptySocialMediaHandles();
       }
 
-      const socialMediaHandles = submissionData.data.socialMediaHandles || {};
+      // Type assertion and safe access to socialMediaHandles
+      const submissionJsonData = submissionData.data as Record<string, any>;
+      const socialMediaHandles = submissionJsonData.socialMediaHandles || {};
       const processedData = processSocialMediaData(socialMediaHandles);
       
       setSocialMediaData(prev => ({
@@ -148,9 +150,10 @@ export const useSecureSocialMedia = () => {
         throw new Error('Submission data not found');
       }
 
-      // Update the socialMediaHandles in the data
+      // Type assertion and safe update of the socialMediaHandles in the data
+      const currentData = submissionData.data as Record<string, any>;
       const updatedData = {
-        ...submissionData.data,
+        ...currentData,
         socialMediaHandles: socialMediaData[creatorId]
       };
 
