@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -67,16 +68,46 @@ export class OnboardingService {
     try {
       console.log("=== SAVING SOCIAL MEDIA HANDLES ===");
       console.log("Creator email:", creatorEmail);
+      console.log("Form data structure:", JSON.stringify(formData, null, 2));
       
-      const socialMediaHandles = formData.contentAndService?.socialMediaHandles;
+      // Check multiple possible locations for social media handles
+      let socialMediaHandles = null;
+      
+      // First check if it's directly in the root (from onboarding queue data)
+      if (formData.socialMediaHandles) {
+        socialMediaHandles = formData.socialMediaHandles;
+        console.log("Found social media handles in root:", socialMediaHandles);
+      }
+      // Also check for individual platform fields at root level
+      else if (formData.instagram || formData.tiktok || formData.twitter || formData.onlyfans || formData.snapchat) {
+        socialMediaHandles = {
+          instagram: formData.instagram || '',
+          tiktok: formData.tiktok || '',
+          twitter: formData.twitter || '',
+          onlyfans: formData.onlyfans || '',
+          snapchat: formData.snapchat || ''
+        };
+        console.log("Found individual platform fields in root:", socialMediaHandles);
+      }
+      // Then check in contentAndService (from multi-step form)
+      else if (formData.contentAndService?.socialMediaHandles) {
+        socialMediaHandles = formData.contentAndService.socialMediaHandles;
+        console.log("Found social media handles in contentAndService:", socialMediaHandles);
+      }
+      
+      if (!socialMediaHandles) {
+        console.log("No social media handles found in form data");
+        return;
+      }
+      
       const socialMediaRecords: any[] = [];
 
       // Process predefined platforms - always create entries for these
       const predefinedPlatforms = ['tiktok', 'twitter', 'onlyfans', 'snapchat', 'instagram'];
       
       for (const platform of predefinedPlatforms) {
-        const username = socialMediaHandles?.[platform] || '';
-        const platformAccount = socialMediaHandles?.[`${platform}Account`] || {};
+        const username = socialMediaHandles[platform] || '';
+        const platformAccount = socialMediaHandles[`${platform}Account`] || {};
         
         // Always create a record for predefined platforms, even if empty
         socialMediaRecords.push({
@@ -90,7 +121,7 @@ export class OnboardingService {
       }
 
       // Process "other" platforms - only if they have data
-      if (socialMediaHandles?.other && Array.isArray(socialMediaHandles.other)) {
+      if (socialMediaHandles.other && Array.isArray(socialMediaHandles.other)) {
         for (const otherPlatform of socialMediaHandles.other) {
           if (otherPlatform.platform && otherPlatform.username) {
             socialMediaRecords.push({
