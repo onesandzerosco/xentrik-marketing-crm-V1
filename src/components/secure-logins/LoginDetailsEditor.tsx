@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,7 +34,22 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
   // Get the full creator data with model profile
   const fullCreator = creators.find(c => c.id === creator.id);
   const modelProfile = (fullCreator as any)?.model_profile;
-  const socialMediaHandles = modelProfile?.contentAndService?.socialMediaHandles;
+  
+  // Try multiple possible paths for social media handles in the onboarding data
+  const getSocialMediaHandles = () => {
+    if (!modelProfile) return null;
+    
+    // Try different possible paths where social media data might be stored
+    return modelProfile?.contentAndService?.socialMediaHandles || 
+           modelProfile?.socialMediaHandles || 
+           modelProfile?.socialMedia ||
+           null;
+  };
+
+  const socialMediaHandles = getSocialMediaHandles();
+
+  console.log('Full model profile:', modelProfile);
+  console.log('Social media handles found:', socialMediaHandles);
 
   const togglePasswordVisibility = (platform: string) => {
     setShowPasswords(prev => ({
@@ -54,12 +70,15 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
   const handleUpdateSocialMedia = async (updatedHandles: any) => {
     try {
       // Update the creator's model_profile with new social media handles
+      // Store in the same path where we found it, or default to contentAndService
       const updatedModelProfile = {
         ...modelProfile,
         contentAndService: {
           ...modelProfile?.contentAndService,
           socialMediaHandles: updatedHandles
-        }
+        },
+        // Also update the root level in case it's stored there
+        socialMediaHandles: updatedHandles
       };
 
       // Update the creator with the new model profile

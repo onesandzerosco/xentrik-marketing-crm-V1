@@ -34,6 +34,13 @@ const SocialMediaAccountsEditor: React.FC<SocialMediaAccountsEditorProps> = ({
   const [showAddForm, setShowAddForm] = useState(false);
   const { toast } = useToast();
 
+  // Initialize editedHandles when socialMediaHandles changes
+  React.useEffect(() => {
+    if (socialMediaHandles) {
+      setEditedHandles(socialMediaHandles);
+    }
+  }, [socialMediaHandles]);
+
   const formatHandle = (handle: string) => {
     if (!handle) return '';
     return handle.startsWith('@') ? handle.slice(1) : handle;
@@ -120,8 +127,10 @@ const SocialMediaAccountsEditor: React.FC<SocialMediaAccountsEditorProps> = ({
     setShowAddForm(false);
   };
 
-  const hasAnyAccounts = mainPlatforms.some(platform => socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles]) || 
-                        (socialMediaHandles?.other && socialMediaHandles.other.length > 0);
+  const hasAnyAccounts = mainPlatforms.some(platform => {
+    const value = socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles];
+    return typeof value === 'string' && value.trim() !== '';
+  }) || (socialMediaHandles?.other && socialMediaHandles.other.length > 0);
 
   if (!hasAnyAccounts && !isEditing) {
     return (
@@ -169,7 +178,13 @@ const SocialMediaAccountsEditor: React.FC<SocialMediaAccountsEditorProps> = ({
       <CardContent className="space-y-4">
         {/* Main Platforms */}
         {mainPlatforms.map(platform => {
-          const value = isEditing ? editedHandles[platform.key as keyof typeof editedHandles] as string : socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles] as string;
+          const currentValue = socialMediaHandles?.[platform.key as keyof typeof socialMediaHandles];
+          const editValue = editedHandles[platform.key as keyof typeof editedHandles];
+          
+          // Ensure we're working with strings
+          const value = isEditing 
+            ? (typeof editValue === 'string' ? editValue : '') 
+            : (typeof currentValue === 'string' ? currentValue : '');
           
           if (!value && !isEditing) return null;
           
@@ -183,14 +198,14 @@ const SocialMediaAccountsEditor: React.FC<SocialMediaAccountsEditorProps> = ({
                   <div className="mt-2">
                     <Label className="text-xs">Handle</Label>
                     <Input
-                      value={value || ''}
+                      value={value}
                       onChange={(e) => handleMainPlatformChange(platform.key, e.target.value)}
                       placeholder={`Enter ${platform.label} handle`}
                       className="mt-1"
                     />
                   </div>
                 ) : (
-                  <p className="text-sm font-medium">@{formatHandle(value || '')}</p>
+                  <p className="text-sm font-medium">@{formatHandle(value)}</p>
                 )}
               </div>
               {!isEditing && value && (
