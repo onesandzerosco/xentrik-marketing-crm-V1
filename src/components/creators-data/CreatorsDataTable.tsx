@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,17 +34,12 @@ const CreatorsDataTable: React.FC = () => {
   const fetchAcceptedCreators = async () => {
     try {
       setLoading(true);
-      console.log('Fetching accepted creator submissions with active creators only...');
+      console.log('Fetching accepted creator submissions...');
       
-      // Join onboarding_submissions with creators table to filter out inactive creators
       const { data, error } = await supabase
         .from('onboarding_submissions')
-        .select(`
-          *,
-          creators!inner(active)
-        `)
+        .select('*')
         .eq('status', 'accepted')
-        .eq('creators.active', true)
         .order('submitted_at', { ascending: false });
 
       if (error) {
@@ -53,19 +47,8 @@ const CreatorsDataTable: React.FC = () => {
         throw error;
       }
 
-      console.log('Active accepted creators found:', data?.length || 0);
-      
-      // Transform the data to match our interface
-      const transformedData = data?.map(item => ({
-        id: item.id,
-        name: item.name,
-        email: item.email,
-        submitted_at: item.submitted_at,
-        data: item.data,
-        token: item.token
-      })) || [];
-      
-      setSubmissions(transformedData);
+      console.log('Accepted creators found:', data?.length || 0);
+      setSubmissions(data || []);
     } catch (error) {
       console.error('Error loading accepted creators:', error);
       toast({
@@ -127,7 +110,7 @@ const CreatorsDataTable: React.FC = () => {
               <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Model Profiles</h3>
               <p className="text-muted-foreground">
-                No active accepted creator submissions found in the database.
+                No accepted creator submissions found in the database.
               </p>
             </div>
           ) : (
