@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { ChevronLeft, ChevronRight, Save, Upload, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, Upload, CheckCircle2, Download } from "lucide-react";
 import { 
   creatorOnboardingSchema,
   defaultOnboardingValues,
@@ -74,6 +74,10 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
     if (currentStepIndex > 0) {
       setCurrentStep(steps[currentStepIndex - 1].id);
     }
+  };
+
+  const handleContentGuideDownload = () => {
+    window.open('https://docs.google.com/document/d/1LcUGvtlCQsZFGliXHTxCUcV8U6LARvKjDpKD55yKHqs/edit?usp=sharing', '_blank');
   };
 
   const handleFinalSubmit = async (data: CreatorOnboardingFormValues) => {
@@ -153,12 +157,22 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
     return (
       <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
         <CardContent className="flex items-center justify-center py-12">
-          <div className="text-center">
+          <div className="text-center max-w-md">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />
             <h2 className="text-2xl font-bold text-white mb-4">Form Successfully Submitted!</h2>
-            <p className="text-gray-300 mb-4">
+            <p className="text-gray-300 mb-6">
               Thank you for completing the onboarding process. Your information has been received and will be reviewed by our team.
             </p>
+            <p className="text-gray-300 mb-6">
+              To get started with creating content, download our comprehensive content guide below. This guide will help you understand our content requirements and best practices.
+            </p>
+            <Button 
+              onClick={handleContentGuideDownload}
+              className="mb-6 bg-gradient-premium-yellow text-black hover:shadow-premium-yellow"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Content Guide
+            </Button>
             <p className="text-gray-400 text-sm">
               You can now close this page. We'll be in touch soon!
             </p>
