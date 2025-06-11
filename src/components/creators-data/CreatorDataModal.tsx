@@ -102,21 +102,62 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const updateDatabase = async (updatedData: any) => {
     try {
       setIsSaving(true);
-      console.log('Updating database with data:', updatedData);
+      console.log('Updating both tables with data:', updatedData);
       console.log('Submission ID:', submission.id);
+      console.log('Submission email:', submission.email);
       
-      const { data, error } = await supabase
+      // Step 1: Update onboarding_submissions table
+      const { data: submissionUpdateData, error: submissionError } = await supabase
         .from('onboarding_submissions')
         .update({ data: updatedData })
         .eq('id', submission.id)
         .select();
 
-      if (error) {
-        console.error('Database update error:', error);
-        throw error;
+      if (submissionError) {
+        console.error('Onboarding submissions update error:', submissionError);
+        throw new Error(`Failed to update submission: ${submissionError.message}`);
       }
 
-      console.log('Database update successful:', data);
+      console.log('Onboarding submissions update successful:', submissionUpdateData);
+
+      // Step 2: Find and update the corresponding creator
+      const { data: creators, error: findCreatorError } = await supabase
+        .from('creators')
+        .select('id, email')
+        .eq('email', submission.email)
+        .limit(1);
+
+      if (findCreatorError) {
+        console.error('Error finding creator:', findCreatorError);
+        throw new Error(`Failed to find creator: ${findCreatorError.message}`);
+      }
+
+      if (!creators || creators.length === 0) {
+        console.warn('No creator found with email:', submission.email);
+        // Don't throw error here - submission update was successful
+        toast({
+          title: "Partial Update",
+          description: "Submission updated but no matching creator found to update model profile.",
+          variant: "default",
+        });
+      } else {
+        const creatorId = creators[0].id;
+        console.log('Found creator ID:', creatorId);
+
+        // Step 3: Update creators table model_profile
+        const { data: creatorUpdateData, error: creatorError } = await supabase
+          .from('creators')
+          .update({ model_profile: updatedData })
+          .eq('id', creatorId)
+          .select();
+
+        if (creatorError) {
+          console.error('Creator model_profile update error:', creatorError);
+          throw new Error(`Failed to update creator profile: ${creatorError.message}`);
+        }
+
+        console.log('Creator model_profile update successful:', creatorUpdateData);
+      }
 
       // Call the parent component's update handler if provided
       if (onDataUpdate) {
@@ -165,7 +206,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     // Update local state first
     setSubmissionData(newData);
     
-    // Save to database
+    // Save to both database tables
     const success = await updateDatabase(newData);
     
     if (success) {
@@ -174,7 +215,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       
       toast({
         title: "Field Updated",
-        description: `${formatFieldName(fieldKey)} has been updated successfully.`,
+        description: `${formatFieldName(fieldKey)} has been updated successfully in both submission and creator profile.`,
       });
     } else {
       // Revert local changes if database update failed
