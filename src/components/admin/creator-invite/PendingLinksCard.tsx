@@ -168,8 +168,8 @@ const PendingLinksCard: React.FC = () => {
                           <p className="font-medium text-sm">
                             {invitation.model_name || 'Unnamed Model'}
                           </p>
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                            Active
+                          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+                            Pending
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
