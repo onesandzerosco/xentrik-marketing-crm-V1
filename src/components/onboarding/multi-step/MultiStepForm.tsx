@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,7 +76,17 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   };
 
   const handleContentGuideDownload = () => {
-    window.open('https://docs.google.com/document/d/1LcUGvtlCQsZFGliXHTxCUcV8U6LARvKjDpKD55yKHqs/edit?usp=sharing', '_blank');
+    // Extract document ID from the Google Docs URL and create direct PDF export link
+    const docId = '1LcUGvtlCQsZFGliXHTxCUcV8U6LARvKjDpKD55yKHqs';
+    const pdfExportUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
+    
+    // Create a temporary link element to trigger download
+    const link = document.createElement('a');
+    link.href = pdfExportUrl;
+    link.download = 'Content-Guide.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleFinalSubmit = async (data: CreatorOnboardingFormValues) => {
