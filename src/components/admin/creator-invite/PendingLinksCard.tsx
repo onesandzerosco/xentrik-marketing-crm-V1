@@ -12,7 +12,7 @@ interface PendingInvitation {
   token: string;
   model_name: string | null;
   created_at: string;
-  expires_at: string;
+  expires_at: string | null;
 }
 
 const PendingLinksCard: React.FC = () => {
@@ -122,24 +122,13 @@ const PendingLinksCard: React.FC = () => {
     }
   };
 
-  const isExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date();
-  };
-
-  const getHoursLeft = (expiresAt: string) => {
-    const now = new Date();
-    const expiry = new Date(expiresAt);
-    const hoursLeft = Math.max(0, Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60)));
-    return hoursLeft;
-  };
-
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2 flex-shrink-0">
         <div>
           <CardTitle>Pending Invitation Links</CardTitle>
           <CardDescription>
-            Manage pending creator onboarding links (not yet submitted)
+            Manage pending creator onboarding links (active until submitted)
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
@@ -168,9 +157,6 @@ const PendingLinksCard: React.FC = () => {
           <ScrollArea className="h-[400px] w-full">
             <div className="space-y-3 pr-4">
               {invitations.map((invitation) => {
-                const expired = isExpired(invitation.expires_at);
-                const hoursLeft = getHoursLeft(invitation.expires_at);
-                
                 return (
                   <div 
                     key={invitation.token} 
@@ -182,24 +168,15 @@ const PendingLinksCard: React.FC = () => {
                           <p className="font-medium text-sm">
                             {invitation.model_name || 'Unnamed Model'}
                           </p>
-                          {expired ? (
-                            <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                              Expired
-                            </span>
-                          ) : (
-                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                              {hoursLeft}h left
-                            </span>
-                          )}
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                            Active
+                          </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Created {formatDistanceToNow(new Date(invitation.created_at))} ago
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {expired ? 
-                            `Expired ${formatDistanceToNow(new Date(invitation.expires_at))} ago` :
-                            `Expires in ${hoursLeft} hours`
-                          }
+                          Valid until submitted
                         </p>
                       </div>
                       <div className="flex gap-1">

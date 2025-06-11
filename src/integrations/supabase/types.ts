@@ -12,7 +12,7 @@ export type Database = {
       creator_invitations: {
         Row: {
           created_at: string
-          expires_at: string
+          expires_at: string | null
           id: string
           model_name: string | null
           stage_name: string | null
@@ -22,7 +22,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          expires_at?: string
+          expires_at?: string | null
           id?: string
           model_name?: string | null
           stage_name?: string | null
@@ -32,7 +32,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          expires_at?: string
+          expires_at?: string | null
           id?: string
           model_name?: string | null
           stage_name?: string | null

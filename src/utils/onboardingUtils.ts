@@ -1,9 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
 
 /**
- * Validate if a token exists and is still valid (not used and not expired)
+ * Validate if a token exists and is still valid (not used)
  */
 export const validateToken = async (token: string): Promise<boolean> => {
   try {
@@ -11,7 +10,7 @@ export const validateToken = async (token: string): Promise<boolean> => {
     
     const { data, error } = await supabase
       .from('creator_invitations')
-      .select('expires_at, status, token, created_at')
+      .select('status, token, created_at')
       .eq('token', token)
       .maybeSingle();
     
@@ -27,17 +26,11 @@ export const validateToken = async (token: string): Promise<boolean> => {
     
     console.log('Found invitation data:', data);
     
-    // Check if token is still pending and not expired
-    const now = new Date();
-    const expiresAt = new Date(data.expires_at);
-    
-    const isValid = data.status === 'pending' && expiresAt > now;
+    // Check if token is still pending (no time-based expiration anymore)
+    const isValid = data.status === 'pending';
     console.log('Token validation result:', { 
       status: data.status, 
-      expired: expiresAt <= now, 
-      isValid,
-      expiresAt: data.expires_at,
-      now: now.toISOString()
+      isValid
     });
     
     return isValid;
@@ -142,7 +135,8 @@ export const generateInvitationToken = async (modelName: string): Promise<{ succ
       .from('creator_invitations')
       .insert({
         model_name: modelName,
-        status: 'pending'
+        status: 'pending',
+        expires_at: null // No expiration date anymore
       })
       .select('token')
       .single();
