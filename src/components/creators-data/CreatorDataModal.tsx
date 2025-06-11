@@ -214,8 +214,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       setEditValue('');
       
       toast({
-        title: "Field Updated",
-        description: `${formatFieldName(fieldKey)} has been updated successfully in both submission and creator profile.`,
+        title: "Model Profile Updated",
+        description: `${formatFieldName(fieldKey)} has been updated successfully.`,
       });
     } else {
       // Revert local changes if database update failed
