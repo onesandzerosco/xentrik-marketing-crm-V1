@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,18 +95,41 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
       setIsSubmitting(true);
       console.log("Form data being submitted:", data);
 
+      // Format date of birth from YYYY-MM-DD to "March 08, 2002" format
+      if (data.personalInfo.dateOfBirth) {
+        const dateObject = new Date(data.personalInfo.dateOfBirth);
+        // Check if the date is valid
+        if (!isNaN(dateObject.getTime())) {
+          data.personalInfo.dateOfBirth = format(dateObject, "MMMM dd, yyyy");
+        }
+      }
+
       // Calculate age from date of birth if provided
       if (data.personalInfo.dateOfBirth) {
-        const birthDate = new Date(data.personalInfo.dateOfBirth);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDifference = today.getMonth() - birthDate.getMonth();
+        // Parse the formatted date back to calculate age
+        const dateString = data.personalInfo.dateOfBirth;
+        // Handle both old format (YYYY-MM-DD) and new format (Month DD, YYYY)
+        let birthDate: Date;
         
-        if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
+        if (dateString.includes('-')) {
+          // Old format: YYYY-MM-DD
+          birthDate = new Date(dateString);
+        } else {
+          // New format: "March 08, 2002"
+          birthDate = new Date(dateString);
         }
         
-        data.personalInfo.age = age;
+        if (!isNaN(birthDate.getTime())) {
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDifference = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+          
+          data.personalInfo.age = age;
+        }
       }
 
       // Save to Supabase with the provided token
