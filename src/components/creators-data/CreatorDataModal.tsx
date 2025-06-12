@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Save, X } from 'lucide-react';
+import { Edit, Save, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,92 @@ interface CreatorDataModalProps {
   onOpenChange: (open: boolean) => void;
   onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
+
+// Helper function to get timezone from location string
+const getTimezoneFromLocation = async (location: string): Promise<string | null> => {
+  if (!location) return null;
+  
+  try {
+    // First try to geocode the location
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+    );
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      const { lat, lon } = data[0];
+      
+      // Then get timezone from coordinates
+      const timezoneResponse = await fetch(
+        `https://api.timezonedb.com/v2.1/get-time-zone?key=demo&format=json&by=position&lat=${lat}&lng=${lon}`
+      );
+      const timezoneData = await timezoneResponse.json();
+      
+      if (timezoneData.status === 'OK') {
+        return timezoneData.zoneName;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting timezone for location:', error);
+    return null;
+  }
+};
+
+// Component to display location with local time
+const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezone, setTimezone] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (location) {
+      getTimezoneFromLocation(location).then(tz => {
+        setTimezone(tz);
+      });
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (timezone) {
+      const updateTime = () => {
+        try {
+          const now = new Date();
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+          setCurrentTime(formatter.format(now));
+        } catch (error) {
+          console.error('Error formatting time:', error);
+          setCurrentTime('');
+        }
+      };
+
+      updateTime();
+      const interval = setInterval(updateTime, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timezone]);
+
+  return (
+    <div>
+      <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
+      {currentTime && (
+        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>Local time: {currentTime}</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   submission,
@@ -374,7 +460,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     return (
       <div className="flex items-center justify-between group">
         <div className="flex-1 text-muted-foreground break-words">
-          {fieldKey === 'pets' && Array.isArray(value) ? (
+          {/* Special handling for location fields to show local time */}
+          {(fieldKey === 'location' || fieldKey === 'hometown') && value ? (
+            <LocationWithTime location={value} />
+          ) : fieldKey === 'pets' && Array.isArray(value) ? (
             value.length > 0 ? (
               <div className="space-y-2">
                 {value.map((pet: any, index: number) => (
@@ -422,7 +511,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         </div>
         {/* Only show edit button for non-complex fields */}
         {!(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
-         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
+         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) &&
+         !(fieldKey === 'location' || fieldKey === 'hometown') && (
           <Button 
             size="sm" 
             variant="ghost" 

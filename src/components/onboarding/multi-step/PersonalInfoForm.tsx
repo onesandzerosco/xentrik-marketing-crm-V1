@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import {
@@ -17,11 +18,12 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { LocationPicker } from "@/components/ui/location-picker";
 import PetsSection from './PetsSection';
 import { CreatorOnboardingFormValues } from "@/schemas/creatorOnboardingSchema";
 
 export const PersonalInfoForm = () => {
-  const { control, watch } = useFormContext<CreatorOnboardingFormValues>();
+  const { control, watch, setValue } = useFormContext<CreatorOnboardingFormValues>();
   const hasPets = watch('personalInfo.hasPets');
   const hasKids = watch('personalInfo.hasKids');
 
@@ -112,9 +114,31 @@ export const PersonalInfoForm = () => {
           name="personalInfo.location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Current Location</FormLabel>
               <FormControl>
-                <Input placeholder="City, Country" {...field} />
+                <LocationPicker
+                  value={field.value || ''}
+                  onChange={(location) => field.onChange(location)}
+                  placeholder="Search for your current location..."
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="personalInfo.hometown"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Hometown</FormLabel>
+              <FormControl>
+                <LocationPicker
+                  value={field.value || ''}
+                  onChange={(location) => field.onChange(location)}
+                  placeholder="Search for your hometown..."
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
