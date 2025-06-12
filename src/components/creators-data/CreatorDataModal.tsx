@@ -124,6 +124,59 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   );
 };
 
+// Component to display only local time for header
+const LocalTimeOnly: React.FC<{ location: string }> = ({ location }) => {
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezone, setTimezone] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (location) {
+      getTimezoneFromLocation(location).then(tz => {
+        setTimezone(tz);
+      });
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (timezone) {
+      const updateTime = () => {
+        try {
+          const now = new Date();
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: timezone,
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+          setCurrentTime(formatter.format(now));
+        } catch (error) {
+          console.error('Error formatting time:', error);
+          setCurrentTime('');
+        }
+      };
+
+      updateTime();
+      const interval = setInterval(updateTime, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timezone]);
+
+  if (!currentTime) {
+    return <span>Model's Local Time</span>;
+  }
+
+  return (
+    <div className="flex items-center gap-1">
+      <Clock className="h-3 w-3" />
+      <span>Local time: {currentTime}</span>
+    </div>
+  );
+};
+
 const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   submission,
   open,
@@ -742,7 +795,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
           </DialogTitle>
           <DialogDescription>
             {submissionData?.personalInfo?.location ? (
-              <LocationWithTime location={submissionData.personalInfo.location} />
+              <LocalTimeOnly location={submissionData.personalInfo.location} />
             ) : (
               "Model's Local Time"
             )}
