@@ -13,10 +13,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit, Save, X, Clock } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { LocationPicker } from '@/components/ui/location-picker';
+import { Edit, Save, X, Clock, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
 interface CreatorSubmission {
   id: string;
@@ -182,7 +186,19 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const handleEditClick = (section: string, fieldKey: string, currentValue: any) => {
     const editKey = `${section}.${fieldKey}`;
     setEditingField(editKey);
-    setEditValue(currentValue || '');
+    
+    // Special handling for date fields
+    if (fieldKey === 'dateOfBirth' && currentValue) {
+      try {
+        // Try to parse the existing date value
+        const dateValue = new Date(currentValue);
+        setEditValue(dateValue);
+      } catch (e) {
+        setEditValue(new Date());
+      }
+    } else {
+      setEditValue(currentValue || '');
+    }
   };
 
   const updateDatabase = async (updatedData: any) => {
@@ -275,7 +291,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     
     // Handle different value types
     let processedValue = editValue;
-    if (fieldKey === 'age' || fieldKey === 'numberOfKids' || fieldKey === 'bodyCount' || fieldKey === 'sexToysCount' || fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
+    if (fieldKey === 'dateOfBirth' && editValue instanceof Date) {
+      // Format date as YYYY-MM-DD for consistent storage
+      processedValue = format(editValue, 'yyyy-MM-dd');
+    } else if (fieldKey === 'age' || fieldKey === 'numberOfKids' || fieldKey === 'bodyCount' || fieldKey === 'sexToysCount' || fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
       processedValue = editValue === '' ? null : Number(editValue);
     } else if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
       processedValue = editValue === 'true' || editValue === true;
@@ -324,6 +343,68 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     const isEditing = editingField === editKey;
     
     if (isEditing) {
+      // Special handling for date of birth field
+      if (fieldKey === 'dateOfBirth') {
+        return (
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !editValue && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {editValue instanceof Date ? format(editValue, "MMMM dd, yyyy") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={editValue instanceof Date ? editValue : undefined}
+                  onSelect={(date) => setEditValue(date || new Date())}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+
+      // Special handling for location fields
+      if (fieldKey === 'location' || fieldKey === 'hometown') {
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <LocationPicker
+                value={editValue || ''}
+                onChange={(location) => setEditValue(location)}
+                placeholder={`Search for ${fieldKey === 'location' ? 'current location' : 'hometown'}...`}
+                showCurrentTime={fieldKey === 'location'}
+              />
+            </div>
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
+              <Save className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      }
+
       // Special handling for boolean fields
       if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
         return (
@@ -460,8 +541,17 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     return (
       <div className="flex items-center justify-between group">
         <div className="flex-1 text-muted-foreground break-words">
-          {/* Special handling for location fields to show local time */}
-          {(fieldKey === 'location' || fieldKey === 'hometown') && value ? (
+          {/* Special handling for date of birth display */}
+          {fieldKey === 'dateOfBirth' && value ? (
+            (() => {
+              try {
+                const date = new Date(value);
+                return format(date, "MMMM dd, yyyy");
+              } catch (e) {
+                return formatValue(value);
+              }
+            })()
+          ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
             <LocationWithTime location={value} />
           ) : fieldKey === 'pets' && Array.isArray(value) ? (
             value.length > 0 ? (
@@ -509,10 +599,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             formatValue(value)
           )}
         </div>
-        {/* Only show edit button for non-complex fields */}
+        {/* Show edit button for most fields, but exclude complex objects and location fields that need special handling */}
         {!(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
-         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) &&
-         !(fieldKey === 'location' || fieldKey === 'hometown') && (
+         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
           <Button 
             size="sm" 
             variant="ghost" 
