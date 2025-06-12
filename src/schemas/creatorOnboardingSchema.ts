@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const personalInfoSchema = z.object({
@@ -28,6 +27,7 @@ export const personalInfoSchema = z.object({
   occupation: z.string().optional().or(z.literal('')),
   workplace: z.string().optional().or(z.literal('')),
   placesVisited: z.array(z.string()).optional(),
+  preferredFanNickname: z.string().optional().or(z.literal('')),
 });
 
 export const physicalAttributesSchema = z.object({
@@ -122,6 +122,7 @@ export const defaultPersonalInfoValues: PersonalInfoFormValues = {
   occupation: "",
   workplace: "",
   placesVisited: [],
+  preferredFanNickname: "",
 };
 
 export const defaultPhysicalAttributesValues: PhysicalAttributesFormValues = {

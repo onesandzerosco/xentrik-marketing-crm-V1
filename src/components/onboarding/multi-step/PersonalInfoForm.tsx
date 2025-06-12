@@ -120,6 +120,7 @@ export const PersonalInfoForm = () => {
                   value={field.value || ''}
                   onChange={(location) => field.onChange(location)}
                   placeholder="Search for your current location..."
+                  showCurrentTime={true}
                 />
               </FormControl>
               <FormMessage />
@@ -205,6 +206,20 @@ export const PersonalInfoForm = () => {
                   <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
+          name="personalInfo.preferredFanNickname"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Preferred nickname to fans (baby/love/darling/etc.)</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. baby, love, darling" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
