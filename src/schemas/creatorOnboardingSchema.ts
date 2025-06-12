@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const personalInfoSchema = z.object({
@@ -8,6 +9,7 @@ export const personalInfoSchema = z.object({
   age: z.number().optional().nullable(),
   sex: z.enum(["Female", "Male", "Transgender"]).optional(),
   location: z.string().optional().or(z.literal('')),
+  additionalLocationNote: z.string().optional().or(z.literal('')),
   hometown: z.string().optional().or(z.literal('')),
   ethnicity: z.string().optional().or(z.literal('')),
   religion: z.string().optional().or(z.literal('')),
@@ -110,6 +112,7 @@ export const defaultPersonalInfoValues: PersonalInfoFormValues = {
   age: undefined,
   sex: undefined,
   location: "",
+  additionalLocationNote: "",
   hometown: "",
   ethnicity: "",
   religion: "",

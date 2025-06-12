@@ -130,6 +130,23 @@ export const PersonalInfoForm = () => {
 
         <FormField
           control={control}
+          name="personalInfo.additionalLocationNote"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes about current Location</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Any additional notes about your current location..."
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
           name="personalInfo.hometown"
           render={({ field }) => (
             <FormItem>

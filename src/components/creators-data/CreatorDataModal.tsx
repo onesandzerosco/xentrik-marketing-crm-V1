@@ -499,7 +499,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       }
       
       // For longer text fields, use textarea
-      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference') {
+      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote') {
         return (
           <div className="flex items-start gap-2">
             <Textarea 
@@ -618,7 +618,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
   // Updated field priority orders based on actual schema fields only
   const personalInfoPriority = [
-    'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
+    'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
     // Logical ordering for remaining actual fields
     'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
@@ -741,7 +741,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
-            Model's Local Time
+            {submissionData?.personalInfo?.location ? (
+              <LocationWithTime location={submissionData.personalInfo.location} />
+            ) : (
+              "Model's Local Time"
+            )}
           </DialogDescription>
         </DialogHeader>
         
