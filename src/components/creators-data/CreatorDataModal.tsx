@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -166,7 +167,7 @@ const LocalTimeOnly: React.FC<{ location: string }> = ({ location }) => {
   }, [timezone]);
 
   if (!currentTime) {
-    return <span>Model's Local Time</span>;
+    return null;
   }
 
   return (
@@ -794,10 +795,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
-            {submissionData?.personalInfo?.location ? (
+            {submissionData?.personalInfo?.location && (
               <LocalTimeOnly location={submissionData.personalInfo.location} />
-            ) : (
-              "Model's Local Time"
             )}
           </DialogDescription>
         </DialogHeader>
