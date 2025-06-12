@@ -652,7 +652,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
-            Viewing submission data for {submission.name} (submitted {formatDate(submission.submitted_at)})
+            Model's Local Time
           </DialogDescription>
         </DialogHeader>
         
