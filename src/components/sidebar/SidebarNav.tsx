@@ -25,6 +25,7 @@ interface NavItem {
   roles?: string[]; // Specific roles that can access this item
   allowCreator?: boolean; // Allow Creator role to access this item
   hideForCreator?: boolean; // Hide this item for Creator role
+  hideForChatter?: boolean; // Hide this item for Chatter role
   hidden?: boolean; // Hide this item completely
 }
 
@@ -56,6 +57,7 @@ const navItems: NavItem[] = [
     label: 'Shared Files',
     icon: <FileUp className="h-5 w-5" />,
     allowCreator: true, // Explicitly allow Creators to see Shared Files
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/team',
@@ -126,6 +128,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         // Skip items that should be hidden for creators if the user is a creator
         if (item.hideForCreator && isCreator) return null;
+        
+        // Skip items that should be hidden for chatters if the user is a chatter
+        if (item.hideForChatter && (userRole === 'Chatter' || userRoles?.includes('Chatter'))) return null;
         
         // Check specific roles if defined
         if (item.roles) {
