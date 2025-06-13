@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Folder, Category } from '@/types/fileTypes';
 import { FolderIcon } from 'lucide-react';
 import { CategorySidebar } from './CategorySidebar';
+import { ContentGuideDownloader } from '@/components/onboarding/ContentGuideDownloader';
+import { useAuth } from '@/context/AuthContext';
 
 interface FileExplorerSidebarProps {
   onFolderChange: (folderId: string) => void;
@@ -33,6 +36,7 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   onRenameCategory,
   isCreatorView
 }) => {
+  const { isCreator } = useAuth();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryForNewFolder, setCategoryForNewFolder] = useState<string | null>(null);
@@ -82,6 +86,13 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   return (
     <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0 h-full overflow-y-auto">
       <h2 className="text-lg font-semibold">Folders</h2>
+      
+      {/* Content Guide Download Button - Only show for Creators */}
+      {isCreator && (
+        <div className="pb-2">
+          <ContentGuideDownloader />
+        </div>
+      )}
       
       {isAddingCategory && (
         <div className="flex items-center space-x-2 mb-2">

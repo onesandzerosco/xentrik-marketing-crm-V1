@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { ContentGuideDownloader } from '@/components/onboarding/ContentGuideDownloader';
 import { useAuth } from '@/context/AuthContext';
 
 interface FileExplorerHeaderProps {
@@ -95,9 +95,6 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-          
-          {/* Content Guide Download Button - Only show for Creators */}
-          {isCreator && <ContentGuideDownloader />}
           
           {/* Upload button (only shown for creators) */}
           {isCreatorView && (
