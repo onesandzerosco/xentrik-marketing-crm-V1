@@ -19,6 +19,11 @@ const VOICE_TONES = [
   { id: 'whisper', name: 'Whisper' },
 ];
 
+const AI_TONES = [
+  { id: 'casual', name: 'Casual' },
+  { id: 'seductive', name: 'Seductive' },
+];
+
 const AMBIENCE_OPTIONS = [
   { id: 'none', name: 'None' },
   { id: 'coffee_shop', name: 'Coffee Shop' },
@@ -37,6 +42,8 @@ interface VoiceNote {
   settings: {
     voice: string;
     ambience: string;
+    aiTone?: string;
+    message?: string;
     quality?: number;
   };
   createdAt: string;
@@ -50,7 +57,9 @@ interface VoiceGeneratorLayoutProps {
 const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, toast }) => {
   const [selectedCreator, setSelectedCreator] = useState<string>('');
   const [text, setText] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
   const [voiceTone, setVoiceTone] = useState<string>('normal');
+  const [aiTone, setAiTone] = useState<string>('casual');
   const [ambience, setAmbience] = useState<string>('none');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -99,10 +108,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       return;
     }
 
-    if (!text.trim()) {
+    const textToGenerate = message.trim() || text.trim();
+    if (!textToGenerate) {
       toast({
         title: "Error",
-        description: "Please enter some text to generate",
+        description: "Please enter a message or text to generate",
         variant: "destructive",
       });
       return;
@@ -113,7 +123,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
       setGeneratedAudio(mockAudioBase64);
       
@@ -122,11 +132,13 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       const voiceNote = {
         id: `voice-${Date.now()}`,
-        text: text,
+        text: textToGenerate,
         audio: mockAudioBase64,
         settings: {
           voice: voiceTone,
           ambience: ambience,
+          aiTone: aiTone,
+          message: message || undefined,
         },
         createdAt: new Date().toISOString()
       };
@@ -253,7 +265,36 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
               <TabsContent value="generate" className="space-y-6">
                 <div className="space-y-6 w-full">
                   <div className="w-full space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium block">Message for AI Voice</Label>
+                      <Input 
+                        value={message} 
+                        onChange={(e) => setMessage(e.target.value)} 
+                        placeholder="Enter the message you want to generate in AI voice..."
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium block">AI Tone</Label>
+                        <Select 
+                          value={aiTone}
+                          onValueChange={setAiTone}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select AI tone" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {AI_TONES.map(tone => (
+                              <SelectItem key={tone.id} value={tone.id}>
+                                {tone.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="space-y-2">
                         <Label className="text-sm font-medium block">Voice Tone</Label>
                         <Select 
@@ -294,11 +335,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium block">Enter Text</Label>
+                      <Label className="text-sm font-medium block">Alternative Text (Optional)</Label>
                       <Textarea 
                         value={text} 
                         onChange={(e) => setText(e.target.value)} 
-                        placeholder="Type the text to convert to speech..."
+                        placeholder="Or type alternative text to convert to speech..."
                         className="min-h-[200px] resize-none w-full"
                       />
                     </div>
@@ -328,7 +369,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                         <div className="p-5 flex-1">
                           <h3 className="font-semibold mb-4 text-lg">Preview Generated Voice Note</h3>
                           <ScrollArea className="h-[160px] w-full">
-                            <p className="text-sm text-muted-foreground mb-4">{text}</p>
+                            <p className="text-sm text-muted-foreground mb-4">{message || text}</p>
                           </ScrollArea>
                           
                           <div className="flex flex-col gap-3">
@@ -340,7 +381,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                               <Copy className="mr-2 h-4 w-4" />
                               Copy
                             </Button>
-                            <Button onClick={() => downloadAudio(generatedAudio, text)} variant="outline" className="w-full">
+                            <Button onClick={() => downloadAudio(generatedAudio, message || text)} variant="outline" className="w-full">
                               <Download className="mr-2 h-4 w-4" />
                               Download
                             </Button>
@@ -359,7 +400,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                         ) : (
                           <div className="text-center">
                             <Mic className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>Enter text and click "Generate Voice" to create a voice note</p>
+                            <p>Enter a message and click "Generate Voice" to create a voice note</p>
                           </div>
                         )}
                       </div>
@@ -409,7 +450,8 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                                 </div>
                                 
                                 <div className="flex justify-between text-xs text-muted-foreground">
-                                  <span>Tone: {note.settings.voice}</span>
+                                  <span>Voice: {note.settings.voice}</span>
+                                  {note.settings.aiTone && <span>AI Tone: {note.settings.aiTone}</span>}
                                   <span>Ambience: {note.settings.ambience}</span>
                                 </div>
                                 
