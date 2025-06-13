@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { getTimezoneFromLocationName, formatTimeForTimezone } from '@/utils/timezoneUtils';
+import { getTimezoneFromLocationName, getTimezoneInfo } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -42,6 +42,11 @@ interface CreatorDataModalProps {
 // Component to display location with local time
 const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezoneInfo, setTimezoneInfo] = useState<{
+    observesDST: boolean;
+    currentlyInDST: boolean;
+    formattedTime: string;
+  } | null>(null);
   const [timezone, setTimezone] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,8 +60,13 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   useEffect(() => {
     if (timezone) {
       const updateTime = () => {
-        const formattedTime = formatTimeForTimezone(timezone);
-        setCurrentTime(formattedTime);
+        // SOP Implementation:
+        // 1. Check if timezone observes DST
+        // 2. If yes, check if currently in DST
+        // 3. Show time with DST label if applicable
+        const info = getTimezoneInfo(timezone);
+        setTimezoneInfo(info);
+        setCurrentTime(info.formattedTime);
       };
 
       updateTime();
@@ -65,13 +75,27 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
     }
   }, [timezone]);
 
+  const getDSTLabel = () => {
+    if (!timezoneInfo) return '';
+    
+    if (!timezoneInfo.observesDST) {
+      return ''; // No DST label for regions that don't observe DST
+    }
+    
+    if (timezoneInfo.currentlyInDST) {
+      return ' (DST)'; // Currently in daylight saving time
+    }
+    
+    return ' (Standard)'; // Observes DST but currently in standard time
+  };
+
   return (
     <div>
       <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
       {timezone && currentTime && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
-          <span>Local time: {currentTime}</span>
+          <span>Local time: {currentTime}{getDSTLabel()}</span>
         </div>
       )}
       {location && !timezone && (
@@ -86,7 +110,11 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
 
 // Component for the dialog header time display
 const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
-  const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezoneInfo, setTimezoneInfo] = useState<{
+    observesDST: boolean;
+    currentlyInDST: boolean;
+    formattedTime: string;
+  } | null>(null);
   const [timezone, setTimezone] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -105,8 +133,12 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   useEffect(() => {
     if (timezone) {
       const updateTime = () => {
-        const formattedTime = formatTimeForTimezone(timezone);
-        setCurrentTime(formattedTime);
+        // SOP Implementation for header:
+        // 1. Check if timezone observes DST
+        // 2. If yes, check if currently in DST
+        // 3. Show time with DST label if applicable
+        const info = getTimezoneInfo(timezone);
+        setTimezoneInfo(info);
       };
 
       updateTime();
@@ -114,6 +146,20 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
       return () => clearInterval(interval);
     }
   }, [timezone]);
+
+  const getDSTLabel = () => {
+    if (!timezoneInfo) return '';
+    
+    if (!timezoneInfo.observesDST) {
+      return ''; // No DST label for regions that don't observe DST
+    }
+    
+    if (timezoneInfo.currentlyInDST) {
+      return ' (DST)'; // Currently in daylight saving time
+    }
+    
+    return ' (Standard)'; // Observes DST but currently in standard time
+  };
 
   if (loading) {
     return <span>Loading local time...</span>;
@@ -127,14 +173,14 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
     return <span>Timezone not detected for {location}</span>;
   }
 
-  if (!currentTime) {
+  if (!timezoneInfo?.formattedTime) {
     return <span>Local time unavailable</span>;
   }
 
   return (
     <div className="flex items-center gap-1">
       <Clock className="h-3 w-3" />
-      <span>Local time: {currentTime}</span>
+      <span>Local time: {timezoneInfo.formattedTime}{getDSTLabel()}</span>
     </div>
   );
 };

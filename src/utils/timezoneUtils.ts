@@ -37,6 +37,29 @@ export const isDaylightSavingTime = (timezone: string): boolean => {
 };
 
 /**
+ * Checks if a timezone observes daylight saving time at all
+ */
+export const observesDaylightSavingTime = (timezone: string): boolean => {
+  try {
+    const now = new Date();
+    
+    // Create two dates: one in January (winter) and one in July (summer)
+    const january = new Date(now.getFullYear(), 0, 1);
+    const july = new Date(now.getFullYear(), 6, 1);
+    
+    // Get timezone offsets for both dates
+    const januaryOffset = getTimezoneOffset(january, timezone);
+    const julyOffset = getTimezoneOffset(july, timezone);
+    
+    // If the offsets are different, DST is observed in this timezone
+    return januaryOffset !== julyOffset;
+  } catch (error) {
+    console.error('Error checking if timezone observes DST:', timezone, error);
+    return false;
+  }
+};
+
+/**
  * Gets the timezone offset in minutes for a specific date and timezone
  */
 const getTimezoneOffset = (date: Date, timezone: string): number => {
@@ -184,6 +207,21 @@ export const formatTimeForTimezone = (timezone: string): string => {
 };
 
 /**
+ * Gets timezone info including DST status
+ */
+export const getTimezoneInfo = (timezone: string) => {
+  const observesDST = observesDaylightSavingTime(timezone);
+  const currentlyInDST = observesDST ? isDaylightSavingTime(timezone) : false;
+  const formattedTime = formatTimeForTimezone(timezone);
+  
+  return {
+    observesDST,
+    currentlyInDST,
+    formattedTime
+  };
+};
+
+/**
  * Get timezone from location name using a local mapping approach
  * This avoids external API calls and provides more reliable results
  */
@@ -239,7 +277,6 @@ export const getTimezoneFromLocationName = (locationName: string): string | null
     'china': 'Asia/Shanghai',
     'india': 'Asia/Kolkata',
     'australia': 'Australia/Sydney',
-    'singapore': 'Asia/Singapore',
     'thailand': 'Asia/Bangkok',
     'malaysia': 'Asia/Kuala_Lumpur',
     'indonesia': 'Asia/Jakarta',
