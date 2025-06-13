@@ -1,10 +1,16 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { Users, Filter, SlidersHorizontal, AlertCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { X, Search, Download } from "lucide-react";
-import { useCreators } from "@/context/creator";
-import ContentGuideDownloader from "@/components/onboarding/ContentGuideDownloader";
 
 interface SharedFilesHeaderProps {
   isLoading: boolean;
@@ -12,13 +18,17 @@ interface SharedFilesHeaderProps {
   selectedGenders: string[];
   selectedTeams: string[];
   selectedClasses: string[];
-  setSelectedGenders: (genders: string[]) => void;
-  setSelectedTeams: (teams: string[]) => void;
-  setSelectedClasses: (classes: string[]) => void;
+  setSelectedGenders: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedTeams: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedClasses: React.Dispatch<React.SetStateAction<string[]>>;
   handleClearFilters: () => void;
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
 }
+
+const genderTags = ["Male", "Female", "Trans"];
+const teamTags = ["A Team", "B Team", "C Team"];
+const classTags = ["Real", "AI"];
 
 const SharedFilesHeader: React.FC<SharedFilesHeaderProps> = ({
   isLoading,
@@ -31,135 +41,124 @@ const SharedFilesHeader: React.FC<SharedFilesHeaderProps> = ({
   setSelectedClasses,
   handleClearFilters,
   searchQuery,
-  setSearchQuery,
+  setSearchQuery
 }) => {
-  const { creators } = useCreators();
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
-  // Derive unique values from creators array
-  const teams = [...new Set(creators.map(creator => creator.team).filter(Boolean))];
-  const genders = [...new Set(creators.map(creator => creator.gender).filter(Boolean))];
-  const creatorTypes = [...new Set(creators.map(creator => creator.creatorType).filter(Boolean))];
+  const toggleGender = (g: string) => {
+    setSelectedGenders(selectedGenders.includes(g) ? selectedGenders.filter(x => x !== g) : [...selectedGenders, g]);
+  };
+  const toggleTeam = (t: string) => {
+    setSelectedTeams(selectedTeams.includes(t) ? selectedTeams.filter(x => x !== t) : [...selectedTeams, t]);
+  };
+  const toggleClass = (c: string) => {
+    setSelectedClasses(selectedClasses.includes(c) ? selectedClasses.filter(x => x !== c) : [...selectedClasses, c]);
+  };
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Files for Creators</h1>
-          <div className="flex items-center gap-4 mt-2">
-            <p className="text-muted-foreground">
-              {isLoading ? "Loading..." : `${creatorCount} creator${creatorCount !== 1 ? 's' : ''} available`}
-            </p>
-            <ContentGuideDownloader />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-3">
+        {/* Search field */}
+        <div className="relative flex-1">
           <Input
-            type="text"
-            placeholder="Search creators..."
+            placeholder="Search by name or email..."
+            className="pl-10 h-12 w-full bg-background border-white/20 text-white"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            onChange={handleSearchChange}
           />
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
+            <SlidersHorizontal className="h-5 w-5 text-white" />
+          </span>
         </div>
-
-        <div className="flex flex-wrap gap-2">
-          <select
-            value=""
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value && !selectedGenders.includes(value)) {
-                setSelectedGenders([...selectedGenders, value]);
-              }
-            }}
-            className="px-3 py-2 border rounded-md text-sm"
-          >
-            <option value="">Filter by Gender</option>
-            {genders.map((gender) => (
-              <option key={gender} value={gender}>
-                {gender}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value=""
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value && !selectedTeams.includes(value)) {
-                setSelectedTeams([...selectedTeams, value]);
-              }
-            }}
-            className="px-3 py-2 border rounded-md text-sm"
-          >
-            <option value="">Filter by Team</option>
-            {teams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value=""
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value && !selectedClasses.includes(value)) {
-                setSelectedClasses([...selectedClasses, value]);
-              }
-            }}
-            className="px-3 py-2 border rounded-md text-sm"
-          >
-            <option value="">Filter by Class</option>
-            {creatorTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-
-          {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
-            <Button onClick={handleClearFilters} variant="outline" size="sm">
-              Clear Filters
+        {/* Gender Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
+              <SlidersHorizontal className="h-5 w-5 text-white" />
+              Gender
+              {selectedGenders.length > 0 && (
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedGenders.length}</span>
+              )}
             </Button>
-          )}
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by gender</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
+            {genderTags.map((g) => (
+              <DropdownMenuCheckboxItem
+                key={g}
+                checked={selectedGenders.includes(g)}
+                onCheckedChange={() => toggleGender(g)}
+                className="text-white"
+              >
+                {g}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Team Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
+              <Users className="h-5 w-5 text-white" />
+              Teams
+              {selectedTeams.length > 0 && (
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedTeams.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by team</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
+            {teamTags.map((t) => (
+              <DropdownMenuCheckboxItem
+                key={t}
+                checked={selectedTeams.includes(t)}
+                onCheckedChange={() => toggleTeam(t)}
+                className="text-white"
+              >
+                {t}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Class Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
+              <AlertCircle className="h-5 w-5 text-white" />
+              Class
+              {selectedClasses.length > 0 && (
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedClasses.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by class</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
+            {classTags.map((c) => (
+              <DropdownMenuCheckboxItem
+                key={c}
+                checked={selectedClasses.includes(c)}
+                onCheckedChange={() => toggleClass(c)}
+                className="text-white"
+              >
+                {c}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {/* Clear button if any filters are active */}
+        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || searchQuery) && (
+          <Button variant="ghost" size="sm" className="h-12 text-white hover:text-white/80" onClick={handleClearFilters}>
+            <span className="mr-1">Clear</span>
+            <Filter className="h-4 w-4 text-white" />
+          </Button>
+        )}
       </div>
-
-      {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0) && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {selectedGenders.map((gender) => (
-            <Badge key={`gender-${gender}`} variant="secondary" className="flex items-center gap-1">
-              {gender}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => setSelectedGenders(selectedGenders.filter(g => g !== gender))}
-              />
-            </Badge>
-          ))}
-          {selectedTeams.map((team) => (
-            <Badge key={`team-${team}`} variant="secondary" className="flex items-center gap-1">
-              {team}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => setSelectedTeams(selectedTeams.filter(t => t !== team))}
-              />
-            </Badge>
-          ))}
-          {selectedClasses.map((creatorClass) => (
-            <Badge key={`class-${creatorClass}`} variant="secondary" className="flex items-center gap-1">
-              {creatorClass}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => setSelectedClasses(selectedClasses.filter(c => c !== creatorClass))}
-              />
-            </Badge>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

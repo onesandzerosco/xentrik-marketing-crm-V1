@@ -5,7 +5,6 @@ import { MultiStepForm } from "@/components/onboarding/multi-step/MultiStepForm"
 import { ArrowLeft } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ContentGuideDownloader from "@/components/onboarding/ContentGuideDownloader";
 
 const CreatorOnboardForm: React.FC = () => {
   const { token } = useParams();
@@ -21,10 +20,7 @@ const CreatorOnboardForm: React.FC = () => {
             </Button>
           </Link>
         </div>
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-white">Creator Onboarding</h1>
-          <ContentGuideDownloader className="text-white" />
-        </div>
+        <h1 className="text-3xl font-bold mb-2 text-white">Creator Onboarding</h1>
         <p className="text-muted-foreground">
           {token ? "Complete your creator onboarding using the invitation link." : "Join our platform as a creator by filling out this form."}
         </p>
