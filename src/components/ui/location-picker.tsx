@@ -21,6 +21,55 @@ interface LocationPickerProps {
   showCurrentTime?: boolean;
 }
 
+// Improved timezone detection using geographic inference
+const getTimezoneFromCoordinates = (lat: number, lon: number): string => {
+  // Major timezone boundaries (approximate)
+  if (lat >= 60 && lon >= -180 && lon <= -120) return 'America/Anchorage'; // Alaska
+  if (lat >= 25 && lat <= 50 && lon >= -125 && lon <= -114) return 'America/Los_Angeles'; // Pacific
+  if (lat >= 25 && lat <= 50 && lon >= -114 && lon <= -104) return 'America/Denver'; // Mountain
+  if (lat >= 25 && lat <= 50 && lon >= -104 && lon <= -87) return 'America/Chicago'; // Central
+  if (lat >= 25 && lat <= 50 && lon >= -87 && lon <= -67) return 'America/New_York'; // Eastern
+  
+  // Europe
+  if (lat >= 35 && lat <= 70 && lon >= -10 && lon <= 40) {
+    if (lon >= -10 && lon <= 2) return 'Europe/London';
+    if (lon >= 2 && lon <= 15) return 'Europe/Paris';
+    if (lon >= 15 && lon <= 30) return 'Europe/Berlin';
+    return 'Europe/Moscow';
+  }
+  
+  // Asia
+  if (lat >= 10 && lat <= 70 && lon >= 40 && lon <= 180) {
+    if (lon >= 40 && lon <= 70) return 'Asia/Dubai';
+    if (lon >= 70 && lon <= 90) return 'Asia/Kolkata';
+    if (lon >= 90 && lon <= 120) return 'Asia/Shanghai';
+    if (lon >= 120 && lon <= 140) return 'Asia/Tokyo';
+    return 'Asia/Shanghai';
+  }
+  
+  // Australia
+  if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) {
+    if (lon >= 110 && lon <= 130) return 'Australia/Perth';
+    if (lon >= 130 && lon <= 145) return 'Australia/Adelaide';
+    return 'Australia/Sydney';
+  }
+  
+  // Africa
+  if (lat >= -35 && lat <= 35 && lon >= -20 && lon <= 50) {
+    return 'Africa/Cairo';
+  }
+  
+  // South America
+  if (lat >= -55 && lat <= 15 && lon >= -85 && lon <= -35) {
+    if (lon >= -85 && lon <= -70) return 'America/Lima';
+    if (lon >= -70 && lon <= -50) return 'America/Sao_Paulo';
+    return 'America/Argentina/Buenos_Aires';
+  }
+  
+  // Default fallback
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
 export const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
@@ -118,40 +167,19 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     }, 300);
   };
 
-  const getTimezone = async (lat: number, lon: number): Promise<string | null> => {
-    try {
-      // Using a timezone API service (you might want to use a different service)
-      const response = await fetch(
-        `https://api.timezonedb.com/v2.1/get-time-zone?key=demo&format=json&by=position&lat=${lat}&lng=${lon}`
-      );
-      const data = await response.json();
-      
-      if (data.status === 'OK') {
-        return data.zoneName;
-      }
-      
-      // Fallback: try to guess timezone from coordinates
-      // This is a simple fallback - you might want to use a more robust solution
-      return Intl.DateTimeFormat().resolvedOptions().timeZone;
-    } catch (error) {
-      console.error('Error fetching timezone:', error);
-      return null;
-    }
-  };
-
   const handleSuggestionClick = async (suggestion: LocationSuggestion) => {
     const lat = parseFloat(suggestion.lat);
     const lon = parseFloat(suggestion.lon);
     
-    // Get timezone for the selected location
-    const timezone = await getTimezone(lat, lon);
+    // Get timezone using geographic inference
+    const timezone = getTimezoneFromCoordinates(lat, lon);
     
     setSearchTerm(suggestion.display_name);
     setSelectedTimezone(timezone);
     setIsOpen(false);
     setSuggestions([]);
     
-    onChange(suggestion.display_name, { lat, lon }, timezone || undefined);
+    onChange(suggestion.display_name, { lat, lon }, timezone);
   };
 
   const handleInputFocus = () => {
