@@ -4,4 +4,6 @@ Requested features after MVP deployment:
 - Editing function for admin in Model Profile module (DONE)
 - Downloading of Content Guide for post-Onboarding Form submission screen (DONE)
 - Token Expiry removed (DONE)
-- Local Time of model displayed in Model Profile
+- Local Time of model displayed in Model Profile (DONE)
+- Content Guide inside Shared Files module
+- Announcement from Models feature (inside Model Profile module)
