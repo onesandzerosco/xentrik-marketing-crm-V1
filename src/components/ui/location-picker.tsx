@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin, Search, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { getTimezoneFromCoordinates, getTimezoneInfo } from '@/utils/timezoneUtils';
+import { getTimezoneFromCoordinates, formatTimeForTimezone } from '@/utils/timezoneUtils';
 
 interface LocationSuggestion {
   display_name: string;
@@ -33,32 +34,16 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(value);
   const [selectedTimezone, setSelectedTimezone] = useState<string | null>(null);
-  const [timezoneInfo, setTimezoneInfo] = useState<{
-    currentTime: string;
-    observesDST: boolean;
-    currentlyInDST: boolean;
-  } | null>(null);
+  const [currentTime, setCurrentTime] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
-  // Update current time with proper DST handling
+  // Update current time if timezone is available
   useEffect(() => {
     if (selectedTimezone && showCurrentTime) {
       const updateTime = () => {
-        try {
-          const tzInfo = getTimezoneInfo(selectedTimezone);
-          setTimezoneInfo({
-            currentTime: tzInfo.currentTime,
-            observesDST: tzInfo.observesDST,
-            currentlyInDST: tzInfo.currentlyInDST
-          });
-          
-          // Log DST information for debugging
-          console.log(`Timezone: ${selectedTimezone}, Observes DST: ${tzInfo.observesDST}, Currently in DST: ${tzInfo.currentlyInDST}, Time: ${tzInfo.currentTime}`);
-        } catch (error) {
-          console.error('Error formatting time:', error);
-          setTimezoneInfo(null);
-        }
+        const formattedTime = formatTimeForTimezone(selectedTimezone);
+        setCurrentTime(formattedTime);
       };
 
       updateTime();
@@ -123,7 +108,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     const lat = parseFloat(suggestion.lat);
     const lon = parseFloat(suggestion.lon);
     
-    // Get timezone using improved geographic inference
+    // Get timezone using improved geographic inference with DST awareness
     const timezone = getTimezoneFromCoordinates(lat, lon);
     
     setSearchTerm(suggestion.display_name);
@@ -166,15 +151,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
         </div>
       </div>
       
-      {showCurrentTime && timezoneInfo && (
+      {showCurrentTime && currentTime && (
         <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
           <Clock className="h-3 w-3" />
-          <span>Local time: {timezoneInfo.currentTime}</span>
-          {timezoneInfo.observesDST && (
-            <span className="text-xs">
-              ({timezoneInfo.currentlyInDST ? 'DST' : 'Standard'})
-            </span>
-          )}
+          <span>Local time: {currentTime}</span>
         </div>
       )}
       

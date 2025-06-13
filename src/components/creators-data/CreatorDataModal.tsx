@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { getTimezoneFromLocation, getTimezoneInfo } from '@/utils/timezoneUtils';
+import { getTimezoneFromCoordinates, formatTimeForTimezone } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -39,67 +39,65 @@ interface CreatorDataModalProps {
   onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
 
-// Component to display location with local time using proper DST detection
+// Enhanced timezone detection from location with DST awareness
+const getTimezoneFromLocation = async (location: string): Promise<string | null> => {
+  if (!location) return null;
+  
+  try {
+    // First try to geocode the location
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
+    );
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      const { lat, lon } = data[0];
+      
+      // Use improved geographic inference for timezone with DST awareness
+      const timezone = getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon));
+      return timezone;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error getting timezone for location:', error);
+    return null;
+  }
+};
+
+// Component to display location with local time
 const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
-  const [timezoneInfo, setTimezoneInfo] = useState<{
-    currentTime: string;
-    observesDST: boolean;
-    currentlyInDST: boolean;
-  } | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezone, setTimezone] = useState<string | null>(null);
 
   useEffect(() => {
     if (location) {
-      setLoading(true);
-      getTimezoneFromLocation(location).then(tzInfo => {
-        if (tzInfo) {
-          setTimezoneInfo({
-            currentTime: tzInfo.currentTime,
-            observesDST: tzInfo.observesDST,
-            currentlyInDST: tzInfo.currentlyInDST
-          });
-        } else {
-          setTimezoneInfo(null);
-        }
-        setLoading(false);
+      getTimezoneFromLocation(location).then(tz => {
+        setTimezone(tz);
       });
-    } else {
-      setLoading(false);
     }
   }, [location]);
 
   useEffect(() => {
-    if (timezoneInfo && location) {
-      // Update time every second
-      const interval = setInterval(() => {
-        getTimezoneFromLocation(location).then(tzInfo => {
-          if (tzInfo) {
-            setTimezoneInfo({
-              currentTime: tzInfo.currentTime,
-              observesDST: tzInfo.observesDST,
-              currentlyInDST: tzInfo.currentlyInDST
-            });
-          }
-        });
-      }, 1000);
+    if (timezone) {
+      const updateTime = () => {
+        const formattedTime = formatTimeForTimezone(timezone);
+        setCurrentTime(formattedTime);
+      };
+
+      updateTime();
+      const interval = setInterval(updateTime, 1000);
       return () => clearInterval(interval);
     }
-  }, [timezoneInfo, location]);
-
-  if (loading) {
-    return <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>;
-  }
+  }, [timezone]);
 
   return (
     <div>
       <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
-      {timezoneInfo && (
+      {currentTime && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
-          <span>Local time: {timezoneInfo.currentTime}</span>
-          {timezoneInfo.observesDST && (
-            <span>({timezoneInfo.currentlyInDST ? 'DST' : 'Standard'})</span>
-          )}
+          <span>Local time: {currentTime}</span>
         </div>
       )}
     </div>
@@ -108,26 +106,15 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
 
 // Component for the dialog header time display
 const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
-  const [timezoneInfo, setTimezoneInfo] = useState<{
-    currentTime: string;
-    observesDST: boolean;
-    currentlyInDST: boolean;
-  } | null>(null);
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [timezone, setTimezone] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (location) {
       setLoading(true);
-      getTimezoneFromLocation(location).then(tzInfo => {
-        if (tzInfo) {
-          setTimezoneInfo({
-            currentTime: tzInfo.currentTime,
-            observesDST: tzInfo.observesDST,
-            currentlyInDST: tzInfo.currentlyInDST
-          });
-        } else {
-          setTimezoneInfo(null);
-        }
+      getTimezoneFromLocation(location).then(tz => {
+        setTimezone(tz);
         setLoading(false);
       });
     } else {
@@ -136,22 +123,17 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   }, [location]);
 
   useEffect(() => {
-    if (timezoneInfo && location) {
-      // Update time every second
-      const interval = setInterval(() => {
-        getTimezoneFromLocation(location).then(tzInfo => {
-          if (tzInfo) {
-            setTimezoneInfo({
-              currentTime: tzInfo.currentTime,
-              observesDST: tzInfo.observesDST,
-              currentlyInDST: tzInfo.currentlyInDST
-            });
-          }
-        });
-      }, 1000);
+    if (timezone) {
+      const updateTime = () => {
+        const formattedTime = formatTimeForTimezone(timezone);
+        setCurrentTime(formattedTime);
+      };
+
+      updateTime();
+      const interval = setInterval(updateTime, 1000);
       return () => clearInterval(interval);
     }
-  }, [timezoneInfo, location]);
+  }, [timezone]);
 
   if (loading) {
     return <span>Loading local time...</span>;
@@ -161,19 +143,14 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
     return <span>No location provided</span>;
   }
 
-  if (!timezoneInfo) {
+  if (!currentTime) {
     return <span>Local time unavailable</span>;
   }
 
   return (
     <div className="flex items-center gap-1">
       <Clock className="h-3 w-3" />
-      <span>Local time: {timezoneInfo.currentTime}</span>
-      {timezoneInfo.observesDST && (
-        <span className="text-xs">
-          ({timezoneInfo.currentlyInDST ? 'DST' : 'Standard'})
-        </span>
-      )}
+      <span>Local time: {currentTime}</span>
     </div>
   );
 };
@@ -670,7 +647,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     );
   };
 
-  // Updated field priority orders based on actual schema fields only
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
     // Logical ordering for remaining actual fields
