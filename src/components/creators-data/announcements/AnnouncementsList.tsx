@@ -2,11 +2,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash2 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { Edit, Trash2, Clock } from 'lucide-react';
+import { format, isAfter, subHours } from 'date-fns';
 
 interface Announcement {
   id: string;
@@ -16,9 +16,6 @@ interface Announcement {
   created_at: string;
   updated_at: string;
   is_active: boolean;
-  profiles?: {
-    name: string;
-  };
 }
 
 interface AnnouncementsListProps {
@@ -27,26 +24,17 @@ interface AnnouncementsListProps {
   onDelete?: (announcementId: string) => void;
 }
 
-const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
-  creatorId,
-  onEdit,
-  onDelete,
+const AnnouncementsList: React.FC<AnnouncementsListProps> = ({ 
+  creatorId, 
+  onEdit, 
+  onDelete 
 }) => {
-  const { userRole, userRoles } = useAuth();
-  
-  const canEdit = userRole === 'Admin' || userRoles?.includes('Admin');
-
-  const { data: announcements = [], isLoading } = useQuery({
+  const { data: announcements, isLoading, error } = useQuery({
     queryKey: ['model-announcements', creatorId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('model_announcements')
-        .select(`
-          *,
-          profiles:created_by (
-            name
-          )
-        `)
+        .select('*')
         .eq('creator_id', creatorId)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
@@ -58,17 +46,35 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
       return data as Announcement[];
     },
+    enabled: !!creatorId,
   });
+
+  // Helper function to check if announcement is less than 24 hours old
+  const isRecent = (createdAt: string) => {
+    const announcementDate = new Date(createdAt);
+    const twentyFourHoursAgo = subHours(new Date(), 24);
+    return isAfter(announcementDate, twentyFourHoursAgo);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-muted-foreground">Loading announcements...</div>
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+        ))}
       </div>
     );
   }
 
-  if (announcements.length === 0) {
+  if (error) {
+    return (
+      <div className="text-center py-8 text-destructive">
+        Error loading announcements. Please try again.
+      </div>
+    );
+  }
+
+  if (!announcements || announcements.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No announcements yet.
@@ -78,45 +84,64 @@ const AnnouncementsList: React.FC<AnnouncementsListProps> = ({
 
   return (
     <div className="space-y-4">
-      {announcements.map((announcement) => (
-        <div key={announcement.id} className="border rounded-lg p-4 bg-card/50">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-medium text-foreground">{announcement.title}</h4>
-            {canEdit && (
-              <div className="flex gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onEdit?.(announcement)}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onDelete?.(announcement.id)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+      {announcements.map((announcement) => {
+        const recent = isRecent(announcement.created_at);
+        
+        return (
+          <Card 
+            key={announcement.id} 
+            className={recent ? "border-brand-yellow shadow-md" : ""}
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                    {recent && (
+                      <Badge variant="secondary" className="text-xs bg-brand-yellow/10 text-brand-yellow border-brand-yellow/20">
+                        <Clock className="h-3 w-3 mr-1" />
+                        New
+                      </Badge>
+                    )}
+                  </div>
+                  <CardDescription>
+                    Posted {format(new Date(announcement.created_at), 'MMM d, yyyy h:mm a')}
+                  </CardDescription>
+                </div>
+                
+                {(onEdit || onDelete) && (
+                  <div className="flex gap-2">
+                    {onEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onEdit(announcement)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDelete(announcement.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          
-          <p className="text-muted-foreground mb-3 whitespace-pre-wrap">
-            {announcement.content}
-          </p>
-          
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              By {announcement.profiles?.name || 'Unknown'} on{' '}
-              {format(new Date(announcement.created_at), 'MMM d, yyyy h:mm a')}
-            </span>
-            <Badge variant="secondary" className="text-xs">
-              Active
-            </Badge>
-          </div>
-        </div>
-      ))}
+            </CardHeader>
+            
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-wrap">
+                {announcement.content}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };
