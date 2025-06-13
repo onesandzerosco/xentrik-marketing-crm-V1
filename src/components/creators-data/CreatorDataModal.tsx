@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { getTimezoneInfo } from '@/utils/timezoneUtils';
 import { useAuth } from '@/context/AuthContext';
+import AnnouncementsTab from './announcements/AnnouncementsTab';
 
 interface CreatorSubmission {
   id: string;
@@ -785,12 +786,13 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         
         <ScrollArea className="h-[65vh] w-full">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="all">All Data</TabsTrigger>
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
               <TabsTrigger value="physical">Physical</TabsTrigger>
               <TabsTrigger value="preferences">Preferences</TabsTrigger>
               <TabsTrigger value="content">Content & Service</TabsTrigger>
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
             </TabsList>
             
             <div className="mt-6">
@@ -816,6 +818,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               <TabsContent value="content" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
                 {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
+              </TabsContent>
+
+              <TabsContent value="announcements" className="space-y-4">
+                <AnnouncementsTab creatorId={submission.email} />
               </TabsContent>
             </div>
           </Tabs>
