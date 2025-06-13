@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus } from 'lucide-react';
@@ -54,18 +53,16 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
   return (
     <div className="w-full border-b">
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center space-x-4">
-          <div>
-            <h1 className="text-xl font-semibold">Files for {creatorName}</h1>
-          </div>
-          
+        <div>
+          <h1 className="text-xl font-semibold">Files for {creatorName}</h1>
+        </div>
+        
+        <div className="flex items-center space-x-2">
           {/* Content Guide Download Button - Only show for Creators */}
           {isCreator && (
             <ContentGuideDownloader />
           )}
-        </div>
-        
-        <div className="flex items-center space-x-2">
+          
           {/* Show Add to Folder button only when files are selected */}
           {selectedFileIds.length > 0 && (
             <Button 
