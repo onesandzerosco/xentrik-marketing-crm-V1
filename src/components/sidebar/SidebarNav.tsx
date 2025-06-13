@@ -39,12 +39,14 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     icon: <LayoutDashboard className="h-5 w-5" />,
     allowCreator: true, // Explicitly allow Creators to see Dashboard
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/creators',
     label: 'Creators',
     icon: <Users className="h-5 w-5" />,
     hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/creators-data',
@@ -64,18 +66,21 @@ const navItems: NavItem[] = [
     label: 'Team',
     icon: <UserCog className="h-5 w-5" />,
     hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/secure-logins',
     label: 'Secure Logins',
     icon: <Lock className="h-5 w-5" />,
     allowCreator: true, // Allow Creator role to access their own secure logins
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
     hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
   },
   {
     path: '/voice-generation',
