@@ -74,6 +74,15 @@ const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({ creatorId }) => {
     }
   };
 
+  // Don't render anything if creatorId is not provided
+  if (!creatorId) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Unable to load announcements: Creator ID not found.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {canEdit && (

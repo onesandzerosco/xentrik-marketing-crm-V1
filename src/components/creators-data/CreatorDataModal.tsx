@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils';
 import { getTimezoneInfo } from '@/utils/timezoneUtils';
 import { useAuth } from '@/context/AuthContext';
 import AnnouncementsTab from './announcements/AnnouncementsTab';
+import { useQuery } from '@tanstack/react-query';
 
 interface CreatorSubmission {
   id: string;
@@ -171,6 +172,28 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                   userRoles?.includes('Admin') ||
                   userRole === 'VA' || 
                   userRoles?.includes('VA');
+
+  // Fetch creator ID based on email
+  const { data: creatorData } = useQuery({
+    queryKey: ['creator-by-email', submission?.email],
+    queryFn: async () => {
+      if (!submission?.email) return null;
+      
+      const { data, error } = await supabase
+        .from('creators')
+        .select('id')
+        .eq('email', submission.email)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching creator:', error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!submission?.email,
+  });
 
   // Update submissionData when submission changes
   React.useEffect(() => {
@@ -785,17 +808,27 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         </DialogHeader>
         
         <ScrollArea className="h-[65vh] w-full">
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="announcements" className="w-full">
             <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="announcements">Announcements</TabsTrigger>
               <TabsTrigger value="all">All Data</TabsTrigger>
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
               <TabsTrigger value="physical">Physical</TabsTrigger>
               <TabsTrigger value="preferences">Preferences</TabsTrigger>
               <TabsTrigger value="content">Content & Service</TabsTrigger>
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
             </TabsList>
             
             <div className="mt-6">
+              <TabsContent value="announcements" className="space-y-4">
+                {creatorData?.id ? (
+                  <AnnouncementsTab creatorId={creatorData.id} />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Creator not found in database. Cannot load announcements.
+                  </div>
+                )}
+              </TabsContent>
+
               <TabsContent value="all" className="space-y-4">
                 {renderAllData()}
               </TabsContent>
@@ -818,10 +851,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               <TabsContent value="content" className="space-y-4">
                 <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
                 {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
-              </TabsContent>
-
-              <TabsContent value="announcements" className="space-y-4">
-                <AnnouncementsTab creatorId={submission.email} />
               </TabsContent>
             </div>
           </Tabs>
