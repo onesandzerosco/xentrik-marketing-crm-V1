@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { getTimezoneFromCoordinates, formatTimeForTimezone } from '@/utils/timezoneUtils';
+import { getTimezoneFromLocationName, formatTimeForTimezone } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -39,32 +39,6 @@ interface CreatorDataModalProps {
   onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
 
-// Enhanced timezone detection from location with DST awareness
-const getTimezoneFromLocation = async (location: string): Promise<string | null> => {
-  if (!location) return null;
-  
-  try {
-    // First try to geocode the location
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
-    );
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      const { lat, lon } = data[0];
-      
-      // Use improved geographic inference for timezone with DST awareness
-      const timezone = getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon));
-      return timezone;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error getting timezone for location:', error);
-    return null;
-  }
-};
-
 // Component to display location with local time
 const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -72,9 +46,9 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
 
   useEffect(() => {
     if (location) {
-      getTimezoneFromLocation(location).then(tz => {
-        setTimezone(tz);
-      });
+      const detectedTimezone = getTimezoneFromLocationName(location);
+      setTimezone(detectedTimezone);
+      console.log('Detected timezone for', location, ':', detectedTimezone);
     }
   }, [location]);
 
@@ -94,10 +68,16 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   return (
     <div>
       <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
-      {currentTime && (
+      {timezone && currentTime && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>Local time: {currentTime}</span>
+        </div>
+      )}
+      {location && !timezone && (
+        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>Timezone not detected</span>
         </div>
       )}
     </div>
@@ -113,10 +93,10 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   useEffect(() => {
     if (location) {
       setLoading(true);
-      getTimezoneFromLocation(location).then(tz => {
-        setTimezone(tz);
-        setLoading(false);
-      });
+      const detectedTimezone = getTimezoneFromLocationName(location);
+      setTimezone(detectedTimezone);
+      setLoading(false);
+      console.log('Header detected timezone for', location, ':', detectedTimezone);
     } else {
       setLoading(false);
     }
@@ -141,6 +121,10 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
 
   if (!location) {
     return <span>No location provided</span>;
+  }
+
+  if (!timezone) {
+    return <span>Timezone not detected for {location}</span>;
   }
 
   if (!currentTime) {

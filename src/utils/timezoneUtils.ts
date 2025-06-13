@@ -182,3 +182,76 @@ export const formatTimeForTimezone = (timezone: string): string => {
     return '';
   }
 };
+
+/**
+ * Get timezone from location name using a local mapping approach
+ * This avoids external API calls and provides more reliable results
+ */
+export const getTimezoneFromLocationName = (locationName: string): string | null => {
+  if (!locationName) return null;
+  
+  const location = locationName.toLowerCase();
+  
+  // City to timezone mapping for major cities
+  const cityTimezoneMap: Record<string, string> = {
+    // Philippines
+    'manila': 'Asia/Manila',
+    'cebu': 'Asia/Manila',
+    'davao': 'Asia/Manila',
+    'quezon city': 'Asia/Manila',
+    'philippines': 'Asia/Manila',
+    
+    // Major world cities
+    'new york': 'America/New_York',
+    'los angeles': 'America/Los_Angeles',
+    'chicago': 'America/Chicago',
+    'london': 'Europe/London',
+    'paris': 'Europe/Paris',
+    'berlin': 'Europe/Berlin',
+    'tokyo': 'Asia/Tokyo',
+    'seoul': 'Asia/Seoul',
+    'beijing': 'Asia/Shanghai',
+    'shanghai': 'Asia/Shanghai',
+    'mumbai': 'Asia/Kolkata',
+    'delhi': 'Asia/Kolkata',
+    'dubai': 'Asia/Dubai',
+    'sydney': 'Australia/Sydney',
+    'melbourne': 'Australia/Melbourne',
+    'toronto': 'America/Toronto',
+    'vancouver': 'America/Vancouver',
+    'moscow': 'Europe/Moscow',
+    'singapore': 'Asia/Singapore',
+    'hong kong': 'Asia/Hong_Kong',
+    'bangkok': 'Asia/Bangkok',
+    'jakarta': 'Asia/Jakarta',
+    'kuala lumpur': 'Asia/Kuala_Lumpur',
+    
+    // Countries
+    'united states': 'America/New_York',
+    'usa': 'America/New_York',
+    'canada': 'America/Toronto',
+    'united kingdom': 'Europe/London',
+    'uk': 'Europe/London',
+    'france': 'Europe/Paris',
+    'germany': 'Europe/Berlin',
+    'japan': 'Asia/Tokyo',
+    'south korea': 'Asia/Seoul',
+    'china': 'Asia/Shanghai',
+    'india': 'Asia/Kolkata',
+    'australia': 'Australia/Sydney',
+    'singapore': 'Asia/Singapore',
+    'thailand': 'Asia/Bangkok',
+    'malaysia': 'Asia/Kuala_Lumpur',
+    'indonesia': 'Asia/Jakarta',
+    'russia': 'Europe/Moscow'
+  };
+  
+  // Check for exact matches first
+  for (const [city, timezone] of Object.entries(cityTimezoneMap)) {
+    if (location.includes(city)) {
+      return timezone;
+    }
+  }
+  
+  return null;
+};
