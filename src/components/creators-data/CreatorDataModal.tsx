@@ -52,7 +52,7 @@ const getTimezoneFromLocation = async (location: string): Promise<string | null>
     if (data && data.length > 0) {
       const { lat, lon } = data[0];
       
-      // Then get timezone from coordinates
+      // Then get timezone from coordinates using TimeZoneDB API
       const timezoneResponse = await fetch(
         `https://api.timezonedb.com/v2.1/get-time-zone?key=demo&format=json&by=position&lat=${lat}&lng=${lon}`
       );
@@ -124,16 +124,21 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   );
 };
 
-// Component to display only local time for header
-const LocalTimeOnly: React.FC<{ location: string }> = ({ location }) => {
+// Component for the dialog header time display
+const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [timezone, setTimezone] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (location) {
+      setLoading(true);
       getTimezoneFromLocation(location).then(tz => {
         setTimezone(tz);
+        setLoading(false);
       });
+    } else {
+      setLoading(false);
     }
   }, [location]);
 
@@ -165,8 +170,16 @@ const LocalTimeOnly: React.FC<{ location: string }> = ({ location }) => {
     }
   }, [timezone]);
 
+  if (loading) {
+    return <span>Loading local time...</span>;
+  }
+
+  if (!location) {
+    return <span>No location provided</span>;
+  }
+
   if (!currentTime) {
-    return <span>Model's Local Time</span>;
+    return <span>Local time unavailable</span>;
   }
 
   return (
@@ -794,11 +807,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             <Badge variant="secondary">Accepted</Badge>
           </DialogTitle>
           <DialogDescription>
-            {submissionData?.personalInfo?.location ? (
-              <LocalTimeOnly location={submissionData.personalInfo.location} />
-            ) : (
-              "Model's Local Time"
-            )}
+            <HeaderTimeDisplay location={submissionData?.personalInfo?.location || ''} />
           </DialogDescription>
         </DialogHeader>
         
