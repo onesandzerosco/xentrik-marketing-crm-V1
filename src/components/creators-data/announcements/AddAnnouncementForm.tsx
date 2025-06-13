@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface AddAnnouncementFormProps {
   creatorId: string;
@@ -22,15 +23,21 @@ const AddAnnouncementForm: React.FC<AddAnnouncementFormProps> = ({
   const [content, setContent] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const createAnnouncementMutation = useMutation({
     mutationFn: async ({ title, content }: { title: string; content: string }) => {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+
       const { data, error } = await supabase
         .from('model_announcements')
         .insert({
           creator_id: creatorId,
           title,
           content,
+          created_by: user.id,
         })
         .select()
         .single();
