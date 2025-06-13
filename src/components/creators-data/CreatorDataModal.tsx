@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { getTimezoneFromLocationName, getTimezoneInfo } from '@/utils/timezoneUtils';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreatorSubmission {
   id: string;
@@ -192,10 +193,17 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   onDataUpdate,
 }) => {
   const { toast } = useToast();
+  const { userRole, userRoles } = useAuth();
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<any>('');
   const [submissionData, setSubmissionData] = useState<any>(submission?.data || {});
   const [isSaving, setIsSaving] = useState(false);
+
+  // Check if user has editing permissions (exclude Chatter role)
+  const canEdit = userRole === 'Admin' || 
+                  userRoles?.includes('Admin') ||
+                  userRole === 'VA' || 
+                  userRoles?.includes('VA');
 
   // Update submissionData when submission changes
   React.useEffect(() => {
@@ -245,6 +253,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const handleEditClick = (section: string, fieldKey: string, currentValue: any) => {
+    if (!canEdit) return; // Prevent editing for non-authorized users
+    
     const editKey = `${section}.${fieldKey}`;
     setEditingField(editKey);
     
@@ -403,7 +413,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     const editKey = `${section}.${fieldKey}`;
     const isEditing = editingField === editKey;
     
-    if (isEditing) {
+    if (isEditing && canEdit) {
       // Special handling for date of birth field
       if (fieldKey === 'dateOfBirth') {
         return (
@@ -598,7 +608,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       );
     }
     
-    // Display mode with edit button
+    // Display mode with conditional edit button
     return (
       <div className="flex items-center justify-between group">
         <div className="flex-1 text-muted-foreground break-words">
@@ -660,8 +670,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             formatValue(value)
           )}
         </div>
-        {/* Show edit button for most fields, but exclude complex objects and location fields that need special handling */}
-        {!(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
+        {/* Show edit button only for authorized users and exclude complex objects */}
+        {canEdit && 
+         !(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
          !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
           <Button 
             size="sm" 
@@ -679,28 +690,24 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
-    // Logical ordering for remaining actual fields
     'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
   ];
 
   const physicalPriority = [
     'bodyType', 'height', 'weight', 'eyeColor',
-    // Logical ordering for remaining actual fields
     'hairColor', 'favoriteColor', 'dislikedColor', 'allergies',
     'hasTattoos', 'tattooDetails', 'bustWaistHip', 'dickSize', 'isCircumcised', 'isTopOrBottom'
   ];
 
   const preferencesPriority = [
     'hobbies', 'favoriteFood', 'favoriteDrink', 'favoriteMusic', 'favoriteMovies',
-    // Logical ordering for remaining actual fields
     'favoriteExpression', 'canSing', 'smokes', 'drinks', 'isSexual',
     'homeActivities', 'morningRoutine', 'likeInPerson', 'dislikeInPerson', 'turnOffs'
   ];
 
   const contentPriority = [
     'pricePerMinute', 'videoCallPrice', 'sellsUnderwear',
-    // Logical ordering for remaining actual fields
     'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
     'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
   ];
@@ -708,16 +715,13 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {
     if (!data || typeof data !== 'object') return [];
     
-    // Get ALL fields from the data object, regardless of whether they have values
     const allPossibleFields = new Set([
       ...priorityOrder,
       ...Object.keys(data)
     ]);
 
-    // Create entries for ALL fields, using actual data or undefined for missing fields
     const allEntries = Array.from(allPossibleFields).map(key => [key, data[key]]);
 
-    // Sort by priority order, then alphabetically for remaining fields
     return allEntries.sort(([keyA], [keyB]) => {
       const priorityA = priorityOrder.indexOf(keyA);
       const priorityB = priorityOrder.indexOf(keyB);
@@ -731,7 +735,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     });
   };
 
-  // New function to render all sections combined in one view
   const renderAllData = () => {
     const sections = [
       { 
@@ -773,7 +776,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const renderDataSection = (sectionData: any, title: string, priorityOrder: string[], section: string) => {
-    // Always render fields, even if sectionData is null/undefined
     const sortedEntries = sortFieldsByPriority(sectionData || {}, priorityOrder);
 
     return (
@@ -798,7 +800,14 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             {submission.name}'s Model Profile
-            <Badge variant="secondary">Accepted</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">Accepted</Badge>
+              {!canEdit && (
+                <Badge variant="outline" className="text-muted-foreground">
+                  View Only
+                </Badge>
+              )}
+            </div>
           </DialogTitle>
           <DialogDescription>
             <HeaderTimeDisplay location={submissionData?.personalInfo?.location || ''} />
