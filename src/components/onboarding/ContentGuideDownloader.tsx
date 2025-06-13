@@ -21,7 +21,7 @@ export const ContentGuideDownloader: React.FC = () => {
       className="flex items-center"
     >
       <Download className="mr-1 h-4 w-4" />
-      Download Content Guide
+      Content Guide
     </Button>
   );
 };
