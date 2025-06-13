@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { getTimezoneFromLocation, getTimezoneInfo } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -38,177 +39,28 @@ interface CreatorDataModalProps {
   onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
 
-// Improved timezone detection with proper DST handling
-const getTimezoneFromLocation = async (location: string): Promise<string | null> => {
-  if (!location) return null;
-  
-  try {
-    // First try to geocode the location
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`
-    );
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      const { lat, lon } = data[0];
-      
-      // Use improved geographic inference for timezone based on coordinates
-      const timezone = getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon));
-      return timezone;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error getting timezone for location:', error);
-    return null;
-  }
-};
-
-// Improved geographic timezone inference function with proper DST handling
-const getTimezoneFromCoordinates = (lat: number, lon: number): string => {
-  // More precise timezone boundaries with proper DST considerations
-  
-  // United States (with DST considerations)
-  if (lat >= 60 && lon >= -180 && lon <= -120) return 'America/Anchorage'; // Alaska (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -125 && lon <= -114) return 'America/Los_Angeles'; // Pacific (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -114 && lon <= -104) return 'America/Denver'; // Mountain (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -104 && lon <= -87) return 'America/Chicago'; // Central (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -87 && lon <= -67) return 'America/New_York'; // Eastern (observes DST)
-  
-  // Europe (most observe DST, but some don't)
-  if (lat >= 35 && lat <= 70 && lon >= -10 && lon <= 40) {
-    if (lon >= -10 && lon <= 2) return 'Europe/London'; // UK observes DST
-    if (lon >= 2 && lon <= 15) return 'Europe/Paris'; // Most of Western Europe observes DST
-    if (lon >= 15 && lon <= 30) return 'Europe/Berlin'; // Central Europe observes DST
-    return 'Europe/Moscow'; // Russia doesn't observe DST since 2014
-  }
-  
-  // Asia (most countries don't observe DST)
-  if (lat >= 10 && lat <= 70 && lon >= 40 && lon <= 180) {
-    // Middle East
-    if (lon >= 40 && lon <= 70) return 'Asia/Dubai'; // UAE doesn't observe DST
-    
-    // South Asia
-    if (lon >= 70 && lon <= 90) return 'Asia/Kolkata'; // India doesn't observe DST
-    
-    // East Asia
-    if (lon >= 90 && lon <= 120) {
-      // China
-      if (lat >= 18 && lat <= 54) return 'Asia/Shanghai'; // China doesn't observe DST
-      // Southeast Asia
-      if (lat >= 10 && lat <= 25) {
-        // Philippines
-        if (lon >= 116 && lon <= 127 && lat >= 4.5 && lat <= 21) return 'Asia/Manila'; // Philippines doesn't observe DST
-        // Thailand, Vietnam
-        if (lon >= 100 && lon <= 110) return 'Asia/Bangkok'; // Thailand doesn't observe DST
-        // Malaysia, Singapore
-        if (lon >= 100 && lon <= 120 && lat >= 0 && lat <= 7) return 'Asia/Kuala_Lumpur'; // Malaysia doesn't observe DST
-      }
-      return 'Asia/Shanghai';
-    }
-    
-    // Japan, Korea
-    if (lon >= 120 && lon <= 140) {
-      if (lat >= 30 && lat <= 46) return 'Asia/Tokyo'; // Japan doesn't observe DST
-      if (lat >= 33 && lat <= 43) return 'Asia/Seoul'; // South Korea doesn't observe DST
-      return 'Asia/Tokyo';
-    }
-    
-    return 'Asia/Shanghai';
-  }
-  
-  // Australia (some states observe DST, some don't)
-  if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) {
-    if (lon >= 110 && lon <= 130) return 'Australia/Perth'; // Western Australia doesn't observe DST
-    if (lon >= 130 && lon <= 138) return 'Australia/Darwin'; // Northern Territory doesn't observe DST
-    if (lon >= 138 && lon <= 142) return 'Australia/Adelaide'; // South Australia observes DST
-    if (lon >= 142 && lon <= 154) return 'Australia/Sydney'; // Eastern Australia observes DST
-    return 'Australia/Sydney';
-  }
-  
-  // Africa (most countries don't observe DST)
-  if (lat >= -35 && lat <= 35 && lon >= -20 && lon <= 50) {
-    // Most African countries don't observe DST
-    if (lat >= 0 && lat <= 35) return 'Africa/Cairo'; // Egypt doesn't observe DST
-    return 'Africa/Johannesburg'; // South Africa doesn't observe DST
-  }
-  
-  // South America (limited DST observance)
-  if (lat >= -55 && lat <= 15 && lon >= -85 && lon <= -35) {
-    if (lon >= -85 && lon <= -70) return 'America/Lima'; // Peru doesn't observe DST
-    if (lon >= -70 && lon <= -50) return 'America/Sao_Paulo'; // Brazil has complex DST rules
-    return 'America/Argentina/Buenos_Aires'; // Argentina doesn't observe DST
-  }
-  
-  // Default fallback to user's system timezone
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-};
-
-// Component to display location with local time
+// Component to display location with local time using proper DST detection
 const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [timezone, setTimezone] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (location) {
-      getTimezoneFromLocation(location).then(tz => {
-        setTimezone(tz);
-      });
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (timezone) {
-      const updateTime = () => {
-        try {
-          const now = new Date();
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          });
-          setCurrentTime(formatter.format(now));
-        } catch (error) {
-          console.error('Error formatting time:', error);
-          setCurrentTime('');
-        }
-      };
-
-      updateTime();
-      const interval = setInterval(updateTime, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timezone]);
-
-  return (
-    <div>
-      <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
-      {currentTime && (
-        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>Local time: {currentTime}</span>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Component for the dialog header time display
-const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
-  const [currentTime, setCurrentTime] = useState<string>('');
-  const [timezone, setTimezone] = useState<string | null>(null);
+  const [timezoneInfo, setTimezoneInfo] = useState<{
+    currentTime: string;
+    observesDST: boolean;
+    currentlyInDST: boolean;
+  } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (location) {
       setLoading(true);
-      getTimezoneFromLocation(location).then(tz => {
-        setTimezone(tz);
+      getTimezoneFromLocation(location).then(tzInfo => {
+        if (tzInfo) {
+          setTimezoneInfo({
+            currentTime: tzInfo.currentTime,
+            observesDST: tzInfo.observesDST,
+            currentlyInDST: tzInfo.currentlyInDST
+          });
+        } else {
+          setTimezoneInfo(null);
+        }
         setLoading(false);
       });
     } else {
@@ -217,32 +69,89 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   }, [location]);
 
   useEffect(() => {
-    if (timezone) {
-      const updateTime = () => {
-        try {
-          const now = new Date();
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          });
-          setCurrentTime(formatter.format(now));
-        } catch (error) {
-          console.error('Error formatting time:', error);
-          setCurrentTime('');
-        }
-      };
-
-      updateTime();
-      const interval = setInterval(updateTime, 1000);
+    if (timezoneInfo && location) {
+      // Update time every second
+      const interval = setInterval(() => {
+        getTimezoneFromLocation(location).then(tzInfo => {
+          if (tzInfo) {
+            setTimezoneInfo({
+              currentTime: tzInfo.currentTime,
+              observesDST: tzInfo.observesDST,
+              currentlyInDST: tzInfo.currentlyInDST
+            });
+          }
+        });
+      }, 1000);
       return () => clearInterval(interval);
     }
-  }, [timezone]);
+  }, [timezoneInfo, location]);
+
+  if (loading) {
+    return <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>;
+  }
+
+  return (
+    <div>
+      <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
+      {timezoneInfo && (
+        <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>Local time: {timezoneInfo.currentTime}</span>
+          {timezoneInfo.observesDST && (
+            <span>({timezoneInfo.currentlyInDST ? 'DST' : 'Standard'})</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Component for the dialog header time display
+const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
+  const [timezoneInfo, setTimezoneInfo] = useState<{
+    currentTime: string;
+    observesDST: boolean;
+    currentlyInDST: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (location) {
+      setLoading(true);
+      getTimezoneFromLocation(location).then(tzInfo => {
+        if (tzInfo) {
+          setTimezoneInfo({
+            currentTime: tzInfo.currentTime,
+            observesDST: tzInfo.observesDST,
+            currentlyInDST: tzInfo.currentlyInDST
+          });
+        } else {
+          setTimezoneInfo(null);
+        }
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (timezoneInfo && location) {
+      // Update time every second
+      const interval = setInterval(() => {
+        getTimezoneFromLocation(location).then(tzInfo => {
+          if (tzInfo) {
+            setTimezoneInfo({
+              currentTime: tzInfo.currentTime,
+              observesDST: tzInfo.observesDST,
+              currentlyInDST: tzInfo.currentlyInDST
+            });
+          }
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timezoneInfo, location]);
 
   if (loading) {
     return <span>Loading local time...</span>;
@@ -252,14 +161,19 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
     return <span>No location provided</span>;
   }
 
-  if (!currentTime) {
+  if (!timezoneInfo) {
     return <span>Local time unavailable</span>;
   }
 
   return (
     <div className="flex items-center gap-1">
       <Clock className="h-3 w-3" />
-      <span>Local time: {currentTime}</span>
+      <span>Local time: {timezoneInfo.currentTime}</span>
+      {timezoneInfo.observesDST && (
+        <span className="text-xs">
+          ({timezoneInfo.currentlyInDST ? 'DST' : 'Standard'})
+        </span>
+      )}
     </div>
   );
 };
