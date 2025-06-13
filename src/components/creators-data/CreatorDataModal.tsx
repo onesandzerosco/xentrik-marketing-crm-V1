@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { getTimezoneFromLocationName, getTimezoneInfo } from '@/utils/timezoneUtils';
+import { getTimezoneInfo } from '@/utils/timezoneUtils';
 import { useAuth } from '@/context/AuthContext';
 
 interface CreatorSubmission {
@@ -31,6 +31,7 @@ interface CreatorSubmission {
   submitted_at: string;
   data: any;
   token: string;
+  timezone?: string;
 }
 
 interface CreatorDataModalProps {
@@ -41,31 +42,18 @@ interface CreatorDataModalProps {
 }
 
 // Component to display location with local time
-const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
+const LocationWithTime: React.FC<{ location: string; preloadedTimezone?: string }> = ({ location, preloadedTimezone }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [timezoneInfo, setTimezoneInfo] = useState<{
     observesDST: boolean;
     currentlyInDST: boolean;
     formattedTime: string;
   } | null>(null);
-  const [timezone, setTimezone] = useState<string | null>(null);
 
   useEffect(() => {
-    if (location) {
-      const detectedTimezone = getTimezoneFromLocationName(location);
-      setTimezone(detectedTimezone);
-      console.log('Detected timezone for', location, ':', detectedTimezone);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (timezone) {
+    if (preloadedTimezone) {
       const updateTime = () => {
-        // SOP Implementation:
-        // 1. Check if timezone observes DST
-        // 2. If yes, check if currently in DST
-        // 3. Show time with DST label if applicable
-        const info = getTimezoneInfo(timezone);
+        const info = getTimezoneInfo(preloadedTimezone);
         setTimezoneInfo(info);
         setCurrentTime(info.formattedTime);
       };
@@ -74,7 +62,7 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
       const interval = setInterval(updateTime, 1000);
       return () => clearInterval(interval);
     }
-  }, [timezone]);
+  }, [preloadedTimezone]);
 
   const getDSTLabel = () => {
     if (!timezoneInfo) return '';
@@ -93,13 +81,13 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   return (
     <div>
       <div className="text-muted-foreground break-words">{location || 'Not provided'}</div>
-      {timezone && currentTime && (
+      {preloadedTimezone && currentTime && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>Local time: {currentTime}{getDSTLabel()}</span>
         </div>
       )}
-      {location && !timezone && (
+      {location && !preloadedTimezone && (
         <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           <span>Timezone not detected</span>
@@ -110,35 +98,17 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
 };
 
 // Component for the dialog header time display
-const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
+const HeaderTimeDisplay: React.FC<{ location: string; preloadedTimezone?: string }> = ({ location, preloadedTimezone }) => {
   const [timezoneInfo, setTimezoneInfo] = useState<{
     observesDST: boolean;
     currentlyInDST: boolean;
     formattedTime: string;
   } | null>(null);
-  const [timezone, setTimezone] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (location) {
-      setLoading(true);
-      const detectedTimezone = getTimezoneFromLocationName(location);
-      setTimezone(detectedTimezone);
-      setLoading(false);
-      console.log('Header detected timezone for', location, ':', detectedTimezone);
-    } else {
-      setLoading(false);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    if (timezone) {
+    if (preloadedTimezone) {
       const updateTime = () => {
-        // SOP Implementation for header:
-        // 1. Check if timezone observes DST
-        // 2. If yes, check if currently in DST
-        // 3. Show time with DST label if applicable
-        const info = getTimezoneInfo(timezone);
+        const info = getTimezoneInfo(preloadedTimezone);
         setTimezoneInfo(info);
       };
 
@@ -146,7 +116,7 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
       const interval = setInterval(updateTime, 1000);
       return () => clearInterval(interval);
     }
-  }, [timezone]);
+  }, [preloadedTimezone]);
 
   const getDSTLabel = () => {
     if (!timezoneInfo) return '';
@@ -162,15 +132,11 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
     return ' (Standard)'; // Observes DST but currently in standard time
   };
 
-  if (loading) {
-    return <span>Loading local time...</span>;
-  }
-
   if (!location) {
     return <span>No location provided</span>;
   }
 
-  if (!timezone) {
+  if (!preloadedTimezone) {
     return <span>Timezone not detected for {location}</span>;
   }
 
@@ -623,7 +589,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               }
             })()
           ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
-            <LocationWithTime location={value} />
+            <LocationWithTime location={value} preloadedTimezone={submission.timezone} />
           ) : fieldKey === 'pets' && Array.isArray(value) ? (
             value.length > 0 ? (
               <div className="space-y-2">
@@ -810,7 +776,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             </div>
           </DialogTitle>
           <DialogDescription>
-            <HeaderTimeDisplay location={submissionData?.personalInfo?.location || ''} />
+            <HeaderTimeDisplay 
+              location={submissionData?.personalInfo?.location || ''} 
+              preloadedTimezone={submission.timezone} 
+            />
           </DialogDescription>
         </DialogHeader>
         

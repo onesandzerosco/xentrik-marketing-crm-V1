@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
+import { getTimezoneFromLocationName } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -25,9 +26,14 @@ interface CreatorSubmission {
   token: string;
 }
 
+interface CreatorWithTimezone extends CreatorSubmission {
+  timezone?: string;
+}
+
 const CreatorsDataTable: React.FC = () => {
-  const [selectedSubmission, setSelectedSubmission] = useState<CreatorSubmission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<CreatorWithTimezone | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [creatorsWithTimezones, setCreatorsWithTimezones] = useState<CreatorWithTimezone[]>([]);
 
   const { data: submissions = [], isLoading, refetch } = useQuery({
     queryKey: ['accepted-creator-submissions'],
@@ -47,6 +53,32 @@ const CreatorsDataTable: React.FC = () => {
     },
   });
 
+  // Preload timezone data for all creators
+  useEffect(() => {
+    if (submissions.length > 0) {
+      const processTimezones = async () => {
+        const processedCreators = submissions.map((submission) => {
+          const location = submission.data?.personalInfo?.location;
+          let timezone = null;
+          
+          if (location) {
+            timezone = getTimezoneFromLocationName(location);
+            console.log('Preloaded timezone for', submission.name, ':', timezone);
+          }
+          
+          return {
+            ...submission,
+            timezone
+          };
+        });
+        
+        setCreatorsWithTimezones(processedCreators);
+      };
+
+      processTimezones();
+    }
+  }, [submissions]);
+
   const handleDataUpdate = (updatedSubmission: CreatorSubmission) => {
     // Refresh the table data after successful update
     refetch();
@@ -60,7 +92,7 @@ const CreatorsDataTable: React.FC = () => {
     }
   };
 
-  const handleViewData = (submission: CreatorSubmission) => {
+  const handleViewData = (submission: CreatorWithTimezone) => {
     setSelectedSubmission(submission);
     setModalOpen(true);
   };
@@ -98,7 +130,7 @@ const CreatorsDataTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {submissions.map((submission) => (
+            {creatorsWithTimezones.map((submission) => (
               <TableRow key={submission.id}>
                 <TableCell className="font-medium">{submission.name}</TableCell>
                 <TableCell>{submission.email}</TableCell>
