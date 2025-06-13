@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,12 @@ const SharedFilesHeader: React.FC<SharedFilesHeaderProps> = ({
   searchQuery,
   setSearchQuery,
 }) => {
-  const { teams, genders, creatorTypes } = useCreators();
+  const { creators } = useCreators();
+
+  // Derive unique values from creators array
+  const teams = [...new Set(creators.map(creator => creator.team).filter(Boolean))];
+  const genders = [...new Set(creators.map(creator => creator.gender).filter(Boolean))];
+  const creatorTypes = [...new Set(creators.map(creator => creator.creatorType).filter(Boolean))];
 
   const handleDownloadContentGuide = () => {
     // Create a simple content guide document
