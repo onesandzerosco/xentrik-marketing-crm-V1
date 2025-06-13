@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus } from 'lucide-react';
@@ -97,6 +96,9 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
             <RefreshCw className="h-4 w-4" />
           </Button>
           
+          {/* Content Guide Download Button - Only show for Creators */}
+          {isCreator && <ContentGuideDownloader />}
+          
           {/* Upload button (only shown for creators) */}
           {isCreatorView && (
             <Button 
@@ -109,13 +111,6 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
           )}
         </div>
       </div>
-      
-      {/* Content Guide Download Button - Only show for Creators */}
-      {isCreator && (
-        <div className="px-4 pb-4">
-          <ContentGuideDownloader />
-        </div>
-      )}
     </div>
   );
 };
