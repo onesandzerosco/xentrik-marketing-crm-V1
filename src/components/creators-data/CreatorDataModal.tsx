@@ -21,6 +21,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { getTimezoneFromCoordinates, formatTimeForTimezone } from '@/utils/timezoneUtils';
 
 interface CreatorSubmission {
   id: string;
@@ -38,7 +39,7 @@ interface CreatorDataModalProps {
   onDataUpdate?: (updatedSubmission: CreatorSubmission) => void;
 }
 
-// Improved timezone detection with proper DST handling
+// Enhanced timezone detection from location with DST awareness
 const getTimezoneFromLocation = async (location: string): Promise<string | null> => {
   if (!location) return null;
   
@@ -52,7 +53,7 @@ const getTimezoneFromLocation = async (location: string): Promise<string | null>
     if (data && data.length > 0) {
       const { lat, lon } = data[0];
       
-      // Use improved geographic inference for timezone based on coordinates
+      // Use improved geographic inference for timezone with DST awareness
       const timezone = getTimezoneFromCoordinates(parseFloat(lat), parseFloat(lon));
       return timezone;
     }
@@ -62,86 +63,6 @@ const getTimezoneFromLocation = async (location: string): Promise<string | null>
     console.error('Error getting timezone for location:', error);
     return null;
   }
-};
-
-// Improved geographic timezone inference function with proper DST handling
-const getTimezoneFromCoordinates = (lat: number, lon: number): string => {
-  // More precise timezone boundaries with proper DST considerations
-  
-  // United States (with DST considerations)
-  if (lat >= 60 && lon >= -180 && lon <= -120) return 'America/Anchorage'; // Alaska (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -125 && lon <= -114) return 'America/Los_Angeles'; // Pacific (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -114 && lon <= -104) return 'America/Denver'; // Mountain (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -104 && lon <= -87) return 'America/Chicago'; // Central (observes DST)
-  if (lat >= 25 && lat <= 50 && lon >= -87 && lon <= -67) return 'America/New_York'; // Eastern (observes DST)
-  
-  // Europe (most observe DST, but some don't)
-  if (lat >= 35 && lat <= 70 && lon >= -10 && lon <= 40) {
-    if (lon >= -10 && lon <= 2) return 'Europe/London'; // UK observes DST
-    if (lon >= 2 && lon <= 15) return 'Europe/Paris'; // Most of Western Europe observes DST
-    if (lon >= 15 && lon <= 30) return 'Europe/Berlin'; // Central Europe observes DST
-    return 'Europe/Moscow'; // Russia doesn't observe DST since 2014
-  }
-  
-  // Asia (most countries don't observe DST)
-  if (lat >= 10 && lat <= 70 && lon >= 40 && lon <= 180) {
-    // Middle East
-    if (lon >= 40 && lon <= 70) return 'Asia/Dubai'; // UAE doesn't observe DST
-    
-    // South Asia
-    if (lon >= 70 && lon <= 90) return 'Asia/Kolkata'; // India doesn't observe DST
-    
-    // East Asia
-    if (lon >= 90 && lon <= 120) {
-      // China
-      if (lat >= 18 && lat <= 54) return 'Asia/Shanghai'; // China doesn't observe DST
-      // Southeast Asia
-      if (lat >= 10 && lat <= 25) {
-        // Philippines
-        if (lon >= 116 && lon <= 127 && lat >= 4.5 && lat <= 21) return 'Asia/Manila'; // Philippines doesn't observe DST
-        // Thailand, Vietnam
-        if (lon >= 100 && lon <= 110) return 'Asia/Bangkok'; // Thailand doesn't observe DST
-        // Malaysia, Singapore
-        if (lon >= 100 && lon <= 120 && lat >= 0 && lat <= 7) return 'Asia/Kuala_Lumpur'; // Malaysia doesn't observe DST
-      }
-      return 'Asia/Shanghai';
-    }
-    
-    // Japan, Korea
-    if (lon >= 120 && lon <= 140) {
-      if (lat >= 30 && lat <= 46) return 'Asia/Tokyo'; // Japan doesn't observe DST
-      if (lat >= 33 && lat <= 43) return 'Asia/Seoul'; // South Korea doesn't observe DST
-      return 'Asia/Tokyo';
-    }
-    
-    return 'Asia/Shanghai';
-  }
-  
-  // Australia (some states observe DST, some don't)
-  if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) {
-    if (lon >= 110 && lon <= 130) return 'Australia/Perth'; // Western Australia doesn't observe DST
-    if (lon >= 130 && lon <= 138) return 'Australia/Darwin'; // Northern Territory doesn't observe DST
-    if (lon >= 138 && lon <= 142) return 'Australia/Adelaide'; // South Australia observes DST
-    if (lon >= 142 && lon <= 154) return 'Australia/Sydney'; // Eastern Australia observes DST
-    return 'Australia/Sydney';
-  }
-  
-  // Africa (most countries don't observe DST)
-  if (lat >= -35 && lat <= 35 && lon >= -20 && lon <= 50) {
-    // Most African countries don't observe DST
-    if (lat >= 0 && lat <= 35) return 'Africa/Cairo'; // Egypt doesn't observe DST
-    return 'Africa/Johannesburg'; // South Africa doesn't observe DST
-  }
-  
-  // South America (limited DST observance)
-  if (lat >= -55 && lat <= 15 && lon >= -85 && lon <= -35) {
-    if (lon >= -85 && lon <= -70) return 'America/Lima'; // Peru doesn't observe DST
-    if (lon >= -70 && lon <= -50) return 'America/Sao_Paulo'; // Brazil has complex DST rules
-    return 'America/Argentina/Buenos_Aires'; // Argentina doesn't observe DST
-  }
-  
-  // Default fallback to user's system timezone
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
 
 // Component to display location with local time
@@ -160,23 +81,8 @@ const LocationWithTime: React.FC<{ location: string }> = ({ location }) => {
   useEffect(() => {
     if (timezone) {
       const updateTime = () => {
-        try {
-          const now = new Date();
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          });
-          setCurrentTime(formatter.format(now));
-        } catch (error) {
-          console.error('Error formatting time:', error);
-          setCurrentTime('');
-        }
+        const formattedTime = formatTimeForTimezone(timezone);
+        setCurrentTime(formattedTime);
       };
 
       updateTime();
@@ -219,23 +125,8 @@ const HeaderTimeDisplay: React.FC<{ location: string }> = ({ location }) => {
   useEffect(() => {
     if (timezone) {
       const updateTime = () => {
-        try {
-          const now = new Date();
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: timezone,
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: true,
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-          });
-          setCurrentTime(formatter.format(now));
-        } catch (error) {
-          console.error('Error formatting time:', error);
-          setCurrentTime('');
-        }
+        const formattedTime = formatTimeForTimezone(timezone);
+        setCurrentTime(formattedTime);
       };
 
       updateTime();
@@ -756,7 +647,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     );
   };
 
-  // Updated field priority orders based on actual schema fields only
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
     // Logical ordering for remaining actual fields
