@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useAuth } from '@/context/AuthContext';
+import { ContentGuideDownloader } from '@/components/onboarding/ContentGuideDownloader';
 
 interface FileExplorerHeaderProps {
   creatorName: string;
@@ -53,8 +54,15 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
   return (
     <div className="w-full border-b">
       <div className="flex items-center justify-between p-4">
-        <div>
-          <h1 className="text-xl font-semibold">Files for {creatorName}</h1>
+        <div className="flex items-center space-x-4">
+          <div>
+            <h1 className="text-xl font-semibold">Files for {creatorName}</h1>
+          </div>
+          
+          {/* Content Guide Download Button - Only show for Creators */}
+          {isCreator && (
+            <ContentGuideDownloader />
+          )}
         </div>
         
         <div className="flex items-center space-x-2">
