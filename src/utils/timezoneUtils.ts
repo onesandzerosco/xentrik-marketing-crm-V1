@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for timezone and daylight saving time detection
  */
@@ -64,34 +63,17 @@ export const observesDaylightSavingTime = (timezone: string): boolean => {
  */
 const getTimezoneOffset = (date: Date, timezone: string): number => {
   try {
-    // Create formatters for UTC and the target timezone
-    const utcFormatter = new Intl.DateTimeFormat('en', {
-      timeZone: 'UTC',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
+    // Use the built-in Intl.DateTimeFormat to get the timezone offset
+    // This is more reliable than manual calculation
+    const utc1 = date.getTime() + (date.getTimezoneOffset() * 60000);
+    const utc2 = new Date(utc1 + (date.getTimezoneOffset() * 60000));
     
-    const targetFormatter = new Intl.DateTimeFormat('en', {
-      timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-    
-    const utcTime = new Date(utcFormatter.format(date));
-    const targetTime = new Date(targetFormatter.format(date));
+    // Get the date in the target timezone
+    const targetDate = new Date(date.toLocaleString("en-US", {timeZone: timezone}));
+    const utcDate = new Date(date.toLocaleString("en-US", {timeZone: "UTC"}));
     
     // Calculate the difference in minutes
-    return (utcTime.getTime() - targetTime.getTime()) / (1000 * 60);
+    return (utcDate.getTime() - targetDate.getTime()) / (1000 * 60);
   } catch (error) {
     console.error('Error getting timezone offset:', error);
     return 0;
