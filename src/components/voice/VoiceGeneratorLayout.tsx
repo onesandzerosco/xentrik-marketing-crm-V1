@@ -123,7 +123,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
       setGeneratedAudio(mockAudioBase64);
       
@@ -212,6 +212,21 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
         variant: "destructive",
       });
     }
+  };
+
+  const getAiToneName = (aiToneId: string) => {
+    const tone = AI_TONES.find(t => t.id === aiToneId);
+    return tone ? tone.name : aiToneId;
+  };
+
+  const getVoiceToneName = (voiceToneId: string) => {
+    const tone = VOICE_TONES.find(t => t.id === voiceToneId);
+    return tone ? tone.name : voiceToneId;
+  };
+
+  const getAmbienceName = (ambienceId: string) => {
+    const ambience = AMBIENCE_OPTIONS.find(a => a.id === ambienceId);
+    return ambience ? ambience.name : ambienceId;
   };
 
   const filteredNotes = searchTerm 
@@ -437,7 +452,12 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                               <div className="p-4 space-y-3">
                                 <div className="flex justify-between items-start">
                                   <div className="w-4/5">
-                                    <p className="line-clamp-2 text-sm">{note.text}</p>
+                                    <p className="line-clamp-2 text-sm font-medium mb-2">{note.text}</p>
+                                    {note.settings.message && note.settings.message !== note.text && (
+                                      <p className="text-xs text-muted-foreground mb-2">
+                                        Original message: {note.settings.message}
+                                      </p>
+                                    )}
                                   </div>
                                   <Button 
                                     variant="ghost" 
@@ -449,10 +469,14 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                                   </Button>
                                 </div>
                                 
-                                <div className="flex justify-between text-xs text-muted-foreground">
-                                  <span>Voice: {note.settings.voice}</span>
-                                  {note.settings.aiTone && <span>AI Tone: {note.settings.aiTone}</span>}
-                                  <span>Ambience: {note.settings.ambience}</span>
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Voice: {getVoiceToneName(note.settings.voice)}</span>
+                                    <span>Ambience: {getAmbienceName(note.settings.ambience)}</span>
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    <span>AI Tone: {getAiToneName(note.settings.aiTone || 'casual')}</span>
+                                  </div>
                                 </div>
                                 
                                 <p className="text-xs text-muted-foreground">
