@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Creator } from '@/types';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,9 +17,6 @@ const VOICE_TONES = [
   { id: 'sexy', name: 'Sexy' },
   { id: 'excited', name: 'Excited' },
   { id: 'whisper', name: 'Whisper' },
-];
-
-const AI_TONES = [
   { id: 'casual', name: 'Casual' },
   { id: 'seductive', name: 'Seductive' },
 ];
@@ -39,7 +37,7 @@ interface VoiceNote {
   text: string;
   audio: string;
   settings: {
-    voice: string;
+    model: string;
     ambience: string;
     aiTone?: string;
     message?: string;
@@ -54,10 +52,9 @@ interface VoiceGeneratorLayoutProps {
 }
 
 const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, toast }) => {
-  const [selectedCreator, setSelectedCreator] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [message, setMessage] = useState<string>('');
-  const [voiceTone, setVoiceTone] = useState<string>('normal');
-  const [aiTone, setAiTone] = useState<string>('casual');
+  const [aiTone, setAiTone] = useState<string>('normal');
   const [ambience, setAmbience] = useState<string>('none');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -69,22 +66,22 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
   React.useEffect(() => {
-    if (selectedCreator) {
+    if (selectedModel) {
       setIsLoading(true);
       setTimeout(() => {
-        loadVoiceNotes(selectedCreator);
+        loadVoiceNotes(selectedModel);
         setIsLoading(false);
       }, 500);
     } else {
       setVoiceNotes([]);
     }
-  }, [selectedCreator]);
+  }, [selectedModel]);
 
-  const loadVoiceNotes = (creatorId: string) => {
+  const loadVoiceNotes = (modelId: string) => {
     try {
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
-      const creatorCache = voiceGenerationCache[creatorId] || [];
-      setVoiceNotes(creatorCache);
+      const modelCache = voiceGenerationCache[modelId] || [];
+      setVoiceNotes(modelCache);
     } catch (error) {
       console.error('Error loading voice notes:', error);
       toast({
@@ -97,10 +94,10 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
   };
 
   const handleVoiceGeneration = async () => {
-    if (!selectedCreator) {
+    if (!selectedModel) {
       toast({
         title: "Error",
-        description: "Please select a creator",
+        description: "Please select a model",
         variant: "destructive",
       });
       return;
@@ -121,19 +118,19 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
       setGeneratedAudio(mockAudioBase64);
       
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
-      const creatorCache = voiceGenerationCache[selectedCreator] || [];
+      const modelCache = voiceGenerationCache[selectedModel] || [];
       
       const voiceNote = {
         id: `voice-${Date.now()}`,
         text: textToGenerate,
         audio: mockAudioBase64,
         settings: {
-          voice: voiceTone,
+          model: selectedModel,
           ambience: ambience,
           aiTone: aiTone,
           message: message,
@@ -141,13 +138,13 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
         createdAt: new Date().toISOString()
       };
       
-      creatorCache.unshift(voiceNote);
-      if (creatorCache.length > 30) creatorCache.pop();
+      modelCache.unshift(voiceNote);
+      if (modelCache.length > 30) modelCache.pop();
       
-      voiceGenerationCache[selectedCreator] = creatorCache;
+      voiceGenerationCache[selectedModel] = modelCache;
       localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
       
-      setVoiceNotes(creatorCache);
+      setVoiceNotes(modelCache);
       
       toast({
         title: "Success",
@@ -191,9 +188,9 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
   const deleteVoiceNote = (id: string) => {
     try {
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
-      const creatorCache = voiceGenerationCache[selectedCreator] || [];
-      const updatedCache = creatorCache.filter((note: VoiceNote) => note.id !== id);
-      voiceGenerationCache[selectedCreator] = updatedCache;
+      const modelCache = voiceGenerationCache[selectedModel] || [];
+      const updatedCache = modelCache.filter((note: VoiceNote) => note.id !== id);
+      voiceGenerationCache[selectedModel] = updatedCache;
       localStorage.setItem('voiceGenerationCache', JSON.stringify(voiceGenerationCache));
       
       setVoiceNotes(updatedCache);
@@ -213,13 +210,8 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
   };
 
   const getAiToneName = (aiToneId: string) => {
-    const tone = AI_TONES.find(t => t.id === aiToneId);
+    const tone = VOICE_TONES.find(t => t.id === aiToneId);
     return tone ? tone.name : aiToneId;
-  };
-
-  const getVoiceToneName = (voiceToneId: string) => {
-    const tone = VOICE_TONES.find(t => t.id === voiceToneId);
-    return tone ? tone.name : voiceToneId;
   };
 
   const getAmbienceName = (ambienceId: string) => {
@@ -249,27 +241,27 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       <CardContent className="p-6">
         <div className="space-y-8">
-          {/* Step 1: Creator Selection */}
+          {/* Step 1: Model Selection */}
           <div className="w-full">
-            <Label className="text-sm font-medium block">Step 1: Select Creator</Label>
+            <Label className="text-sm font-medium block">Step 1: Select Model</Label>
             <Select 
-              value={selectedCreator} 
-              onValueChange={setSelectedCreator}
+              value={selectedModel} 
+              onValueChange={setSelectedModel}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a creator" />
+                <SelectValue placeholder="Choose a model" />
               </SelectTrigger>
               <SelectContent>
                 {creators.map(creator => (
                   <SelectItem key={creator.id} value={creator.id}>
-                    {creator.name}
+                    {creator.name} Model
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {selectedCreator && (
+          {selectedModel && (
             <Tabs defaultValue="generate" className="w-full">
               <TabsList className="w-full mb-6">
                 <TabsTrigger value="generate" className="flex-1">Generate Voice</TabsTrigger>
@@ -278,8 +270,8 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
 
               <TabsContent value="generate" className="space-y-6">
                 <div className="space-y-6 w-full">
-                  {/* Step 2: Tone Selection */}
-                  <div className="grid grid-cols-3 gap-4">
+                  {/* Step 2: AI Tone Selection */}
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm font-medium block">Step 2: AI Tone</Label>
                       <Select 
@@ -288,25 +280,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select AI tone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {AI_TONES.map(tone => (
-                            <SelectItem key={tone.id} value={tone.id}>
-                              {tone.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium block">Voice Tone</Label>
-                      <Select 
-                        value={voiceTone}
-                        onValueChange={setVoiceTone}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select voice tone" />
                         </SelectTrigger>
                         <SelectContent>
                           {VOICE_TONES.map(tone => (
@@ -460,11 +433,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                                 
                                 <div className="space-y-1">
                                   <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Voice: {getVoiceToneName(note.settings.voice)}</span>
+                                    <span>Model: {creators.find(c => c.id === note.settings.model)?.name || 'Unknown'}</span>
                                     <span>Ambience: {getAmbienceName(note.settings.ambience)}</span>
                                   </div>
                                   <div className="text-xs text-muted-foreground">
-                                    <span>AI Tone: {getAiToneName(note.settings.aiTone || 'casual')}</span>
+                                    <span>AI Tone: {getAiToneName(note.settings.aiTone || 'normal')}</span>
                                   </div>
                                 </div>
                                 
@@ -512,7 +485,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                       </ScrollArea>
                     ) : (
                       <div className="text-center py-12 bg-accent/5 rounded-xl border border-dashed border-premium-border/30">
-                        <p className="text-muted-foreground">No voice notes found for this creator.</p>
+                        <p className="text-muted-foreground">No voice notes found for this model.</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           Generate some voice notes in the "Generate Voice" tab.
                         </p>
