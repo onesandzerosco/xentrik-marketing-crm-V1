@@ -3,7 +3,6 @@ import { Creator } from '@/types';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mic, Play, Copy, Download, Loader2, Search, Trash2 } from 'lucide-react';
@@ -56,7 +55,6 @@ interface VoiceGeneratorLayoutProps {
 
 const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, toast }) => {
   const [selectedCreator, setSelectedCreator] = useState<string>('');
-  const [text, setText] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [voiceTone, setVoiceTone] = useState<string>('normal');
   const [aiTone, setAiTone] = useState<string>('casual');
@@ -108,11 +106,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       return;
     }
 
-    const textToGenerate = message.trim() || text.trim();
+    const textToGenerate = message.trim();
     if (!textToGenerate) {
       toast({
         title: "Error",
-        description: "Please enter a message or text to generate",
+        description: "Please enter a message to generate",
         variant: "destructive",
       });
       return;
@@ -123,7 +121,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
       
       setGeneratedAudio(mockAudioBase64);
       
@@ -138,7 +136,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
           voice: voiceTone,
           ambience: ambience,
           aiTone: aiTone,
-          message: message || undefined,
+          message: message,
         },
         createdAt: new Date().toISOString()
       };
@@ -251,8 +249,9 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       <CardContent className="p-6">
         <div className="space-y-8">
+          {/* Step 1: Creator Selection */}
           <div className="w-full">
-            <Label className="text-sm font-medium block">Select Creator</Label>
+            <Label className="text-sm font-medium block">Step 1: Select Creator</Label>
             <Select 
               value={selectedCreator} 
               onValueChange={setSelectedCreator}
@@ -279,104 +278,94 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
 
               <TabsContent value="generate" className="space-y-6">
                 <div className="space-y-6 w-full">
-                  <div className="w-full space-y-6">
+                  {/* Step 2: Tone Selection */}
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium block">Message for AI Voice</Label>
-                      <Input 
-                        value={message} 
-                        onChange={(e) => setMessage(e.target.value)} 
-                        placeholder="Enter the message you want to generate in AI voice..."
-                        className="w-full"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium block">AI Tone</Label>
-                        <Select 
-                          value={aiTone}
-                          onValueChange={setAiTone}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select AI tone" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {AI_TONES.map(tone => (
-                              <SelectItem key={tone.id} value={tone.id}>
-                                {tone.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium block">Voice Tone</Label>
-                        <Select 
-                          value={voiceTone}
-                          onValueChange={setVoiceTone}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select voice tone" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {VOICE_TONES.map(tone => (
-                              <SelectItem key={tone.id} value={tone.id}>
-                                {tone.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium block">Background Ambience</Label>
-                        <Select 
-                          value={ambience}
-                          onValueChange={setAmbience}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select ambience" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {AMBIENCE_OPTIONS.map(option => (
-                              <SelectItem key={option.id} value={option.id}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Label className="text-sm font-medium block">Step 2: AI Tone</Label>
+                      <Select 
+                        value={aiTone}
+                        onValueChange={setAiTone}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select AI tone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AI_TONES.map(tone => (
+                            <SelectItem key={tone.id} value={tone.id}>
+                              {tone.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium block">Alternative Text (Optional)</Label>
-                      <Textarea 
-                        value={text} 
-                        onChange={(e) => setText(e.target.value)} 
-                        placeholder="Or type alternative text to convert to speech..."
-                        className="min-h-[200px] resize-none w-full"
-                      />
+                      <Label className="text-sm font-medium block">Voice Tone</Label>
+                      <Select 
+                        value={voiceTone}
+                        onValueChange={setVoiceTone}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select voice tone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {VOICE_TONES.map(tone => (
+                            <SelectItem key={tone.id} value={tone.id}>
+                              {tone.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    <Button 
-                      onClick={handleVoiceGeneration} 
-                      className="w-full" 
-                      disabled={isGenerating}
-                    >
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Mic className="mr-2 h-4 w-4" />
-                          Generate Voice
-                        </>
-                      )}
-                    </Button>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium block">Background Ambience</Label>
+                      <Select 
+                        value={ambience}
+                        onValueChange={setAmbience}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select ambience" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AMBIENCE_OPTIONS.map(option => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
+
+                  {/* Step 3: Message Input */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium block">Step 3: Message for AI Voice</Label>
+                    <Input 
+                      value={message} 
+                      onChange={(e) => setMessage(e.target.value)} 
+                      placeholder="Enter the message you want to generate in AI voice..."
+                      className="w-full"
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleVoiceGeneration} 
+                    className="w-full" 
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="mr-2 h-4 w-4" />
+                        Generate Voice
+                      </>
+                    )}
+                  </Button>
 
                   <div className="w-full">
                     {generatedAudio && !isGenerating ? (
@@ -384,7 +373,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                         <div className="p-5 flex-1">
                           <h3 className="font-semibold mb-4 text-lg">Preview Generated Voice Note</h3>
                           <ScrollArea className="h-[160px] w-full">
-                            <p className="text-sm text-muted-foreground mb-4">{message || text}</p>
+                            <p className="text-sm text-muted-foreground mb-4">{message}</p>
                           </ScrollArea>
                           
                           <div className="flex flex-col gap-3">
@@ -396,7 +385,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                               <Copy className="mr-2 h-4 w-4" />
                               Copy
                             </Button>
-                            <Button onClick={() => downloadAudio(generatedAudio, message || text)} variant="outline" className="w-full">
+                            <Button onClick={() => downloadAudio(generatedAudio, message)} variant="outline" className="w-full">
                               <Download className="mr-2 h-4 w-4" />
                               Download
                             </Button>
@@ -415,7 +404,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                         ) : (
                           <div className="text-center">
                             <Mic className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>Enter a message and click "Generate Voice" to create a voice note</p>
+                            <p>Follow the steps above to generate a voice note</p>
                           </div>
                         )}
                       </div>
