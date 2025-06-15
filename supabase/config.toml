@@ -1,8 +1,4 @@
 
-# This file determines how your Supabase instance will be configured.
-# For more information on these values, please see:
-# https://supabase.com/docs/guides/platform/functions/project-config
-
 project_id = "rdzwpiokpyssqhnfiqrt"
 
 [api]
@@ -31,6 +27,8 @@ enabled = true
 [realtime]
 enabled = true
 
-# Outline the Edge Functions that should be available locally
 [functions.unzip-files]
 verify_jwt = true
+
+[functions.telegram-bot]
+verify_jwt = false
