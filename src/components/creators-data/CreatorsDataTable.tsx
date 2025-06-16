@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +15,7 @@ import { Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
 import { getTimezoneFromLocationName } from '@/utils/timezoneUtils';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreatorSubmission {
   id: string;
@@ -31,9 +31,13 @@ interface CreatorWithTimezone extends CreatorSubmission {
 }
 
 const CreatorsDataTable: React.FC = () => {
+  const { userRole, userRoles } = useAuth();
   const [selectedSubmission, setSelectedSubmission] = useState<CreatorWithTimezone | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [creatorsWithTimezones, setCreatorsWithTimezones] = useState<CreatorWithTimezone[]>([]);
+
+  // Check if user is a Chatter (hide sensitive info like email)
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
 
   const { data: submissions = [], isLoading, refetch } = useQuery({
     queryKey: ['accepted-creator-submissions'],
@@ -123,7 +127,7 @@ const CreatorsDataTable: React.FC = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
+              {!isChatter && <TableHead>Email</TableHead>}
               <TableHead>Submitted</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
@@ -133,7 +137,7 @@ const CreatorsDataTable: React.FC = () => {
             {creatorsWithTimezones.map((submission) => (
               <TableRow key={submission.id}>
                 <TableCell className="font-medium">{submission.name}</TableCell>
-                <TableCell>{submission.email}</TableCell>
+                {!isChatter && <TableCell>{submission.email}</TableCell>}
                 <TableCell>{formatDate(submission.submitted_at)}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">Accepted</Badge>
