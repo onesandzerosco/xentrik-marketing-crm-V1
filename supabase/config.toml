@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.telegram-bot]
 verify_jwt = false
+
+[functions.generate-voice]
+verify_jwt = true

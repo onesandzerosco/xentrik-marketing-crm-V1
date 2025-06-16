@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Creator } from '@/types';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { Mic, Play, Copy, Download, Loader2, Search, Trash2 } from 'lucide-react
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
+import { supabase } from '@/integrations/supabase/client';
 
 const VOICE_TONES = [
   { id: 'normal', name: 'Normal' },
@@ -113,22 +113,49 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       return;
     }
 
+    if (textToGenerate.length > 2500) {
+      toast({
+        title: "Error",
+        description: "Message too long. Maximum 2500 characters allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Generating voice with ElevenLabs...');
       
-      const mockAudioBase64 = "data:audio/mp3;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzUAVFNTRQAAAA8AAANMYXZmNTcuODMuMTAwAAAAAAAAAAAAAAD/80DEAAAAA0gAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV";
+      const { data, error } = await supabase.functions.invoke('generate-voice', {
+        body: {
+          creatorId: selectedModel,
+          message: textToGenerate,
+          tone: aiTone,
+          ambience: ambience
+        }
+      });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || 'Failed to generate voice');
+      }
+
+      if (!data || !data.audio) {
+        throw new Error('No audio data received from voice generation service');
+      }
+
+      const audioBase64 = data.audio;
+      setGeneratedAudio(audioBase64);
       
-      setGeneratedAudio(mockAudioBase64);
-      
+      // Store in local cache
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
       const modelCache = voiceGenerationCache[selectedModel] || [];
       
       const voiceNote = {
         id: `voice-${Date.now()}`,
         text: textToGenerate,
-        audio: mockAudioBase64,
+        audio: audioBase64,
         settings: {
           model: selectedModel,
           ambience: ambience,
@@ -148,13 +175,13 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       toast({
         title: "Success",
-        description: "Voice note generated successfully!",
+        description: `Voice note generated successfully! Cost: $${data.cost?.toFixed(4) || '0.0000'}`,
       });
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
         title: "Error",
-        description: "Failed to generate voice. Please try again.",
+        description: error.message || "Failed to generate voice. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -319,7 +346,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                       onChange={(e) => setMessage(e.target.value)} 
                       placeholder="Enter the message you want to generate in AI voice..."
                       className="w-full"
+                      maxLength={2500}
                     />
+                    <div className="text-xs text-muted-foreground">
+                      {message.length}/2500 characters
+                    </div>
                   </div>
 
                   <Button 
@@ -372,7 +403,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                         {isGenerating ? (
                           <div className="text-center">
                             <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-                            <p>Generating voice note...</p>
+                            <p>Generating voice note with ElevenLabs...</p>
                           </div>
                         ) : (
                           <div className="text-center">
