@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Voice settings mapping similar to your Telegram bot
+// Voice settings mapping
 const VOICE_SETTINGS = {
   normal: { stability: 0.5, similarity_boost: 0.5 },
   tired: { stability: 0.3, similarity_boost: 0.4 },
@@ -94,7 +94,7 @@ serve(async (req) => {
     // Generate voice using ElevenLabs
     const audioBase64 = await generateVoiceWithElevenLabs(voiceId, message, tone);
 
-    // Calculate cost (same as your Telegram bot)
+    // Calculate cost
     const characterCount = message.length;
     const costPerCharacter = 0.0002;
     const totalCost = characterCount * costPerCharacter;
