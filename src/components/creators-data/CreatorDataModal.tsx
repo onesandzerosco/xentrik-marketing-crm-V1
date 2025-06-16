@@ -173,6 +173,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                   userRole === 'VA' || 
                   userRoles?.includes('VA');
 
+  // Check if user is a Chatter (hide sensitive info like email)
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
+
   // Fetch creator ID based on email
   const { data: creatorData } = useQuery({
     queryKey: ['creator-by-email', submission?.email],
@@ -680,7 +683,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
   const personalInfoPriority = [
     'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
-    'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
+    ...(isChatter ? [] : ['email']), // Hide email for Chatter role
+    'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
   ];
 
@@ -770,16 +774,23 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
     return (
       <div className="space-y-4">
-        {sortedEntries.map(([key, value]) => (
-          <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-b border-border/50">
-            <div className="font-medium text-foreground">
-              {formatFieldName(key)}:
+        {sortedEntries.map(([key, value]) => {
+          // Skip email field for Chatter users
+          if (key === 'email' && isChatter) {
+            return null;
+          }
+          
+          return (
+            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-b border-border/50">
+              <div className="font-medium text-foreground">
+                {formatFieldName(key)}:
+              </div>
+              <div className="md:col-span-2">
+                {renderEditableField(section, key, value)}
+              </div>
             </div>
-            <div className="md:col-span-2">
-              {renderEditableField(section, key, value)}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
