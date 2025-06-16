@@ -1,18 +1,11 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Initialize Supabase client
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-);
 
 // Voice settings mapping similar to your Telegram bot
 const VOICE_SETTINGS = {
@@ -24,29 +17,6 @@ const VOICE_SETTINGS = {
   casual: { stability: 0.5, similarity_boost: 0.6 },
   seductive: { stability: 0.7, similarity_boost: 0.8 },
 };
-
-async function getCreatorVoiceId(creatorId: string) {
-  const { data: creator, error } = await supabase
-    .from('creators')
-    .select('model_profile')
-    .eq('id', creatorId)
-    .single();
-
-  if (error || !creator) {
-    console.error('Error fetching creator:', error);
-    return null;
-  }
-
-  // Check if the creator has ElevenLabs voice ID in their model profile
-  const voiceId = creator.model_profile?.elevenlabs_voice_id;
-  
-  if (!voiceId) {
-    // Return a default voice ID if none is configured
-    return "9BWtsMINqrJLrRacOk9x"; // Aria voice as default
-  }
-  
-  return voiceId;
-}
 
 async function generateVoiceWithElevenLabs(voiceId: string, text: string, tone: string) {
   const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
@@ -97,13 +67,13 @@ serve(async (req) => {
   }
 
   try {
-    const { creatorId, message, tone, ambience } = await req.json();
+    const { voiceId, message, tone, ambience } = await req.json();
 
-    console.log('Voice generation request:', { creatorId, message: message?.substring(0, 50) + '...', tone, ambience });
+    console.log('Voice generation request:', { voiceId, message: message?.substring(0, 50) + '...', tone, ambience });
 
-    if (!creatorId || !message || !tone) {
+    if (!voiceId || !message || !tone) {
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters: creatorId, message, and tone' }),
+        JSON.stringify({ error: 'Missing required parameters: voiceId, message, and tone' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -121,48 +91,26 @@ serve(async (req) => {
       );
     }
 
-    // Get the voice ID for this creator
-    const voiceId = await getCreatorVoiceId(creatorId);
-    
-    if (!voiceId) {
-      return new Response(
-        JSON.stringify({ error: 'Voice ID not found for this creator' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     // Generate voice using ElevenLabs
     const audioBase64 = await generateVoiceWithElevenLabs(voiceId, message, tone);
 
-    // Record the usage (similar to your Telegram bot's record_request function)
-    const { error: insertError } = await supabase
-      .from('voice_generation_requests')
-      .insert({
-        creator_id: creatorId,
-        message: message,
-        tone: tone,
-        ambience: ambience,
-        voice_id: voiceId,
-        character_count: message.length,
-        cost_per_character: 0.0002, // Same as your Telegram bot
-        total_cost: message.length * 0.0002,
-        generated_at: new Date().toISOString()
-      });
+    // Calculate cost (same as your Telegram bot)
+    const characterCount = message.length;
+    const costPerCharacter = 0.0002;
+    const totalCost = characterCount * costPerCharacter;
 
-    if (insertError) {
-      console.error('Error recording voice generation request:', insertError);
-      // Don't fail the request if logging fails
-    }
+    console.log('Voice generated successfully:', { 
+      voiceId, 
+      characterCount, 
+      cost: totalCost 
+    });
 
     return new Response(
       JSON.stringify({ 
         audio: audioBase64,
         voiceId: voiceId,
-        characterCount: message.length,
-        cost: message.length * 0.0002
+        characterCount: characterCount,
+        cost: totalCost
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

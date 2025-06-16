@@ -1,5 +1,5 @@
+
 import React, { useState } from 'react';
-import { Creator } from '@/types';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,30 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { supabase } from '@/integrations/supabase/client';
+
+// ElevenLabs default voices - standalone, no database dependency
+const ELEVENLABS_VOICES = [
+  { id: '9BWtsMINqrJLrRacOk9x', name: 'Aria' },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah' },
+  { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura' },
+  { id: 'IKne3meq5aSn9XLyUdCD', name: 'Charlie' },
+  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George' },
+  { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Callum' },
+  { id: 'SAz9YHcvj6GT2YYXdXww', name: 'River' },
+  { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam' },
+  { id: 'XB0fDUnXU5powFXDhCwa', name: 'Charlotte' },
+  { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice' },
+  { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda' },
+  { id: 'bIHbv24MWmeRgasZH58o', name: 'Will' },
+  { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica' },
+  { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric' },
+  { id: 'iP95p4xoKVk53GoZ742B', name: 'Chris' },
+  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel' },
+  { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily' },
+  { id: 'pqHfZKP75CvOlQylNhV4', name: 'Bill' },
+];
 
 const VOICE_TONES = [
   { id: 'normal', name: 'Normal' },
@@ -47,11 +71,10 @@ interface VoiceNote {
 }
 
 interface VoiceGeneratorLayoutProps {
-  creators: Creator[];
   toast: any;
 }
 
-const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, toast }) => {
+const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) => {
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [aiTone, setAiTone] = useState<string>('normal');
@@ -97,7 +120,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     if (!selectedModel) {
       toast({
         title: "Error",
-        description: "Please select a model",
+        description: "Please select a voice model",
         variant: "destructive",
       });
       return;
@@ -129,7 +152,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       const { data, error } = await supabase.functions.invoke('generate-voice', {
         body: {
-          creatorId: selectedModel,
+          voiceId: selectedModel,
           message: textToGenerate,
           tone: aiTone,
           ambience: ambience
@@ -246,6 +269,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
     return ambience ? ambience.name : ambienceId;
   };
 
+  const getVoiceName = (voiceId: string) => {
+    const voice = ELEVENLABS_VOICES.find(v => v.id === voiceId);
+    return voice ? voice.name : voiceId;
+  };
+
   const filteredNotes = searchTerm 
     ? voiceNotes.filter(note => 
         note.text.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -268,20 +296,20 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
       
       <CardContent className="p-6">
         <div className="space-y-8">
-          {/* Step 1: Model Selection */}
+          {/* Step 1: Voice Model Selection */}
           <div className="w-full">
-            <Label className="text-sm font-medium block">Step 1: Select Model</Label>
+            <Label className="text-sm font-medium block">Step 1: Select ElevenLabs Voice</Label>
             <Select 
               value={selectedModel} 
               onValueChange={setSelectedModel}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a model" />
+                <SelectValue placeholder="Choose an ElevenLabs voice" />
               </SelectTrigger>
               <SelectContent>
-                {creators.map(creator => (
-                  <SelectItem key={creator.id} value={creator.id}>
-                    {creator.name} Model
+                {ELEVENLABS_VOICES.map(voice => (
+                  <SelectItem key={voice.id} value={voice.id}>
+                    {voice.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -344,7 +372,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                     <Input 
                       value={message} 
                       onChange={(e) => setMessage(e.target.value)} 
-                      placeholder="Enter the message you want to generate in AI voice..."
+                      placeholder="Enter the message you want to convert to speech..."
                       className="w-full"
                       maxLength={2500}
                     />
@@ -464,7 +492,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                                 
                                 <div className="space-y-1">
                                   <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Model: {creators.find(c => c.id === note.settings.model)?.name || 'Unknown'}</span>
+                                    <span>Voice: {getVoiceName(note.settings.model)}</span>
                                     <span>Ambience: {getAmbienceName(note.settings.ambience)}</span>
                                   </div>
                                   <div className="text-xs text-muted-foreground">
@@ -516,7 +544,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ creators, t
                       </ScrollArea>
                     ) : (
                       <div className="text-center py-12 bg-accent/5 rounded-xl border border-dashed border-premium-border/30">
-                        <p className="text-muted-foreground">No voice notes found for this model.</p>
+                        <p className="text-muted-foreground">No voice notes found for this voice.</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           Generate some voice notes in the "Generate Voice" tab.
                         </p>
