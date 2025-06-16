@@ -10,11 +10,23 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { supabase } from '@/integrations/supabase/client';
 
-// Your custom ElevenLabs voices
+// Your custom ElevenLabs voices with their available tones
 const ELEVENLABS_VOICES = [
-  { id: 'puU1eXVwhHYVUrgX2AMX', name: 'Maddy' },
-  { id: 'aEO01A4wXwd1O8GPgGlF', name: 'Tash' },
-  { id: 'gXh9cw4Q1mk45fJJeQQC', name: 'Molly' },
+  { 
+    id: 'puU1eXVwhHYVUrgX2AMX', 
+    name: 'Maddy',
+    availableTones: ['normal', 'seductive']
+  },
+  { 
+    id: 'aEO01A4wXwd1O8GPgGlF', 
+    name: 'Tash',
+    availableTones: ['normal']
+  },
+  { 
+    id: 'gXh9cw4Q1mk45fJJeQQC', 
+    name: 'Molly',
+    availableTones: ['normal']
+  },
 ];
 
 const VOICE_TONES = [
@@ -69,6 +81,27 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const audioRef = React.useRef<HTMLAudioElement>(null);
+
+  // Get available tones for the selected voice
+  const getAvailableTonesForVoice = (voiceId: string) => {
+    const voice = ELEVENLABS_VOICES.find(v => v.id === voiceId);
+    if (!voice) return [];
+    
+    return VOICE_TONES.filter(tone => voice.availableTones.includes(tone.id));
+  };
+
+  // Handle voice selection change
+  const handleVoiceChange = (voiceId: string) => {
+    setSelectedModel(voiceId);
+    
+    // Get available tones for the new voice
+    const availableTones = getAvailableTonesForVoice(voiceId);
+    
+    // If current tone is not available for the new voice, reset to the first available tone
+    if (availableTones.length > 0 && !availableTones.some(tone => tone.id === aiTone)) {
+      setAiTone(availableTones[0].id);
+    }
+  };
 
   React.useEffect(() => {
     if (selectedModel) {
@@ -270,6 +303,9 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     }
   };
 
+  // Get available tones for the currently selected voice
+  const availableTones = selectedModel ? getAvailableTonesForVoice(selectedModel) : [];
+
   return (
     <>
       <CardHeader className="border-b border-premium-border/30">
@@ -283,7 +319,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
             <Label className="text-sm font-medium block">Step 1: Select Voice</Label>
             <Select 
               value={selectedModel} 
-              onValueChange={setSelectedModel}
+              onValueChange={handleVoiceChange}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose a voice" />
@@ -319,7 +355,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
                           <SelectValue placeholder="Select AI tone" />
                         </SelectTrigger>
                         <SelectContent>
-                          {VOICE_TONES.map(tone => (
+                          {availableTones.map(tone => (
                             <SelectItem key={tone.id} value={tone.id}>
                               {tone.name}
                             </SelectItem>
