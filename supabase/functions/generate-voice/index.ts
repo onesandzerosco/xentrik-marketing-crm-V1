@@ -18,6 +18,20 @@ const VOICE_SETTINGS = {
   seductive: { stability: 0.7, similarity_boost: 0.8 },
 };
 
+// Safe base64 encoding function to prevent stack overflow
+function safeBase64Encode(arrayBuffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  const chunkSize = 8192; // Process in chunks to avoid stack overflow
+  
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+  
+  return btoa(binary);
+}
+
 async function generateVoiceWithElevenLabs(voiceId: string, text: string, tone: string) {
   const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
   
@@ -54,10 +68,9 @@ async function generateVoiceWithElevenLabs(voiceId: string, text: string, tone: 
   }
 
   const audioArrayBuffer = await response.arrayBuffer();
-  const audioBytes = new Uint8Array(audioArrayBuffer);
   
-  // Convert to base64
-  const base64Audio = btoa(String.fromCharCode(...audioBytes));
+  // Use safe base64 encoding to prevent stack overflow
+  const base64Audio = safeBase64Encode(audioArrayBuffer);
   return `data:audio/mp3;base64,${base64Audio}`;
 }
 
