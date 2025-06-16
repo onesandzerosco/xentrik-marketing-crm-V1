@@ -163,7 +163,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     setIsGenerating(true);
 
     try {
-      console.log('Generating voice with ElevenLabs...');
+      console.log('Generating voice...');
       
       const { data, error } = await supabase.functions.invoke('generate-voice', {
         body: {
@@ -213,7 +213,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       
       toast({
         title: "Success",
-        description: `Voice note generated successfully! Cost: $${data.cost?.toFixed(4) || '0.0000'}`,
+        description: "Voice note generated successfully!",
       });
     } catch (error) {
       console.error('Error generating voice:', error);
@@ -449,7 +449,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
                         {isGenerating ? (
                           <div className="text-center">
                             <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-                            <p>Generating voice note with ElevenLabs...</p>
+                            <p>Generating voice note...</p>
                           </div>
                         ) : (
                           <div className="text-center">
