@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Eye, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
 import { getTimezoneFromLocationName } from '@/utils/timezoneUtils';
@@ -35,6 +37,7 @@ const CreatorsDataTable: React.FC = () => {
   const [selectedSubmission, setSelectedSubmission] = useState<CreatorWithTimezone | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [creatorsWithTimezones, setCreatorsWithTimezones] = useState<CreatorWithTimezone[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Check if user is a Chatter (hide sensitive info like email)
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
@@ -83,6 +86,17 @@ const CreatorsDataTable: React.FC = () => {
     }
   }, [submissions]);
 
+  // Filter creators based on search query
+  const filteredCreators = creatorsWithTimezones.filter((submission) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const matchName = submission.name.toLowerCase().includes(query);
+    const matchEmail = !isChatter && submission.email.toLowerCase().includes(query);
+    
+    return matchName || matchEmail;
+  });
+
   const handleDataUpdate = (updatedSubmission: CreatorSubmission) => {
     // Refresh the table data after successful update
     refetch();
@@ -122,6 +136,18 @@ const CreatorsDataTable: React.FC = () => {
 
   return (
     <>
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search creators by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -134,7 +160,7 @@ const CreatorsDataTable: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {creatorsWithTimezones.map((submission) => (
+            {filteredCreators.map((submission) => (
               <TableRow key={submission.id}>
                 <TableCell className="font-medium">{submission.name}</TableCell>
                 {!isChatter && <TableCell>{submission.email}</TableCell>}
@@ -157,6 +183,12 @@ const CreatorsDataTable: React.FC = () => {
           </TableBody>
         </Table>
       </div>
+
+      {filteredCreators.length === 0 && searchQuery.trim() && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No creators found matching "{searchQuery}"</p>
+        </div>
+      )}
 
       <CreatorDataModal
         submission={selectedSubmission}
