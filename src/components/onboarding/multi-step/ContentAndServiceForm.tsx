@@ -226,55 +226,95 @@ export const ContentAndServiceForm: React.FC = () => {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          control={control}
-          name="contentAndService.pricePerMinute"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price per minute in custom vids</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
-                  <Input 
-                    type="number" 
-                    min={0}
-                    step="0.01"
-                    className="pl-6"
-                    {...field} 
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <FormField
+            control={control}
+            name="contentAndService.pricePerMinute"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price per minute in custom vids</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
+                    <Input 
+                      type="number" 
+                      min={0}
+                      step="0.01"
+                      className="pl-6"
+                      {...field} 
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={control}
-          name="contentAndService.videoCallPrice"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price for video call</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
-                  <Input 
-                    type="number" 
-                    min={0}
-                    step="0.01"
-                    className="pl-6"
+          <FormField
+            control={control}
+            name="contentAndService.customVideoNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Notes for Custom Videos</FormLabel>
+                <FormControl>
+                  <Textarea 
                     {...field} 
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder="Any additional notes about custom video pricing or preferences..."
+                    className="min-h-[80px]"
                   />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <FormField
+            control={control}
+            name="contentAndService.videoCallPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price for video call</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
+                    <Input 
+                      type="number" 
+                      min={0}
+                      step="0.01"
+                      className="pl-6"
+                      {...field} 
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="contentAndService.videoCallNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Notes for Video Calls</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    placeholder="Any additional notes about video call pricing or preferences..."
+                    className="min-h-[80px]"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
     </div>
   );

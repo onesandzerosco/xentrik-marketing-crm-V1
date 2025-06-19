@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -197,7 +198,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">Creator Onboarding</CardTitle>
             <CardDescription>
-              Complete the form to save information about how you want to be marketed. We promise to save this data securely.
+              Complete the form to save information about <span className="bg-gradient-premium-yellow bg-clip-text text-transparent font-semibold">how you want to be marketed</span>. We promise to save this data securely.
             </CardDescription>
           </CardHeader>
           <CardContent>
