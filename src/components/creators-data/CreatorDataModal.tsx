@@ -230,7 +230,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     // Handle specific field name mappings
     const fieldMappings: Record<string, string> = {
       'pricePerMinute': 'Custom Price per Minute',
-      'videoCallPrice': 'Video Call Price per Minute'
+      'videoCallPrice': 'Video Call Price per Minute',
+      'customVideoNotes': 'Custom Video Notes',
+      'videoCallNotes': 'Video Call Notes'
     };
     
     // Return custom mapping if it exists
@@ -563,7 +565,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       }
       
       // For longer text fields, use textarea
-      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote') {
+      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote' || fieldKey === 'customVideoNotes' || fieldKey === 'videoCallNotes') {
         return (
           <div className="flex items-start gap-2">
             <Textarea 
@@ -701,7 +703,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   ];
 
   const contentPriority = [
-    'pricePerMinute', 'videoCallPrice', 'sellsUnderwear',
+    'pricePerMinute', 'customVideoNotes', 'videoCallPrice', 'videoCallNotes', 'sellsUnderwear',
     'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
     'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
   ];
