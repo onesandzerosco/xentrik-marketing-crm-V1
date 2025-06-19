@@ -215,7 +215,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     }
   };
 
-  const formatValue = (value: any): string => {
+  const formatValue = (value: any, fieldKey?: string): string => {
     if (value === null || value === undefined || value === '') return 'Not provided';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
     if (Array.isArray(value)) {
@@ -223,6 +223,15 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       return value.join(', ');
     }
     if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    
+    // Add dollar sign for price fields
+    if (fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
+      const numValue = Number(value);
+      if (!isNaN(numValue) && numValue > 0) {
+        return `$${numValue}`;
+      }
+    }
+    
     return String(value);
   };
 
@@ -614,7 +623,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 const date = new Date(value);
                 return format(date, "MMMM dd, yyyy");
               } catch (e) {
-                return formatValue(value);
+                return formatValue(value, fieldKey);
               }
             })()
           ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
@@ -633,7 +642,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 ))}
               </div>
             ) : (
-              formatValue(value)
+              formatValue(value, fieldKey)
             )
           ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
             <div className="space-y-1">
@@ -662,7 +671,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               })}
             </div>
           ) : (
-            formatValue(value)
+            formatValue(value, fieldKey)
           )}
         </div>
         {/* Show edit button only for authorized users and exclude complex objects */}
