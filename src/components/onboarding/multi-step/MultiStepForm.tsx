@@ -197,7 +197,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white">Creator Onboarding</CardTitle>
             <CardDescription>
-              Complete the form to onboard a new creator. All information will be saved securely.
+              Complete the form to save information about how you want to be marketed. We promise to save this data securely.
             </CardDescription>
           </CardHeader>
           <CardContent>

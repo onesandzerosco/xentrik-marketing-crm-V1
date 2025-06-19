@@ -91,7 +91,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.age"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Age (Optional)</FormLabel>
+              <FormLabel>Age</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
