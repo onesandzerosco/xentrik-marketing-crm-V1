@@ -85,6 +85,28 @@ export const PersonalInfoForm = () => {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={control}
+          name="personalInfo.age"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Age (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  type="number" 
+                  min={18} 
+                  max={100}
+                  placeholder="Enter age"
+                  {...field} 
+                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  value={field.value || ''}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <FormField
           control={control}

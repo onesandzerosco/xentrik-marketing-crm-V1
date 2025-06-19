@@ -104,33 +104,8 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
         }
       }
 
-      // Calculate age from date of birth if provided
-      if (data.personalInfo.dateOfBirth) {
-        // Parse the formatted date back to calculate age
-        const dateString = data.personalInfo.dateOfBirth;
-        // Handle both old format (YYYY-MM-DD) and new format (Month DD, YYYY)
-        let birthDate: Date;
-        
-        if (dateString.includes('-')) {
-          // Old format: YYYY-MM-DD
-          birthDate = new Date(dateString);
-        } else {
-          // New format: "March 08, 2002"
-          birthDate = new Date(dateString);
-        }
-        
-        if (!isNaN(birthDate.getTime())) {
-          const today = new Date();
-          let age = today.getFullYear() - birthDate.getFullYear();
-          const monthDifference = today.getMonth() - birthDate.getMonth();
-          
-          if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-          }
-          
-          data.personalInfo.age = age;
-        }
-      }
+      // Age is now manually entered by the user, no automatic calculation needed
+      // The age field will be saved as provided by the user (or undefined if not provided)
 
       // Save to Supabase with the provided token
       const result = await saveOnboardingData(data, token);
