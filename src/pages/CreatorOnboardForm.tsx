@@ -20,10 +20,6 @@ const CreatorOnboardForm: React.FC = () => {
             </Button>
           </Link>
         </div>
-        <h1 className="text-3xl font-bold mb-2 text-white">Creator Onboarding</h1>
-        <p className="text-muted-foreground">
-          {token ? "Complete your creator onboarding using the invitation link." : "Join our platform as a creator by filling out this form."}
-        </p>
       </div>
       
       <div className="max-w-5xl mx-auto">
