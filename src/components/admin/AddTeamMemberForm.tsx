@@ -26,30 +26,20 @@ const AddTeamMemberForm: React.FC = () => {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Two-column layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-6">
-              <EmailField control={form.control} />
-              
-              <GeographicRestrictionsField 
-                selectedRestrictions={form.watch("geographicRestrictions") || []}
-                handleRestrictionChange={handleGeographicRestrictionChange}
-              />
-            </div>
+          <EmailField control={form.control} />
+          <PrimaryRoleField control={form.control} />
+          
+          <AdditionalRolesField 
+            availableRoles={availableAdditionalRoles}
+            selectedRoles={form.watch("additionalRoles")}
+            isRoleDisabled={isRoleDisabled}
+            handleRoleChange={handleAdditionalRoleChange}
+          />
 
-            {/* Right Column */}
-            <div className="space-y-6">
-              <PrimaryRoleField control={form.control} />
-              
-              <AdditionalRolesField 
-                availableRoles={availableAdditionalRoles}
-                selectedRoles={form.watch("additionalRoles")}
-                isRoleDisabled={isRoleDisabled}
-                handleRoleChange={handleAdditionalRoleChange}
-              />
-            </div>
-          </div>
+          <GeographicRestrictionsField 
+            selectedRestrictions={form.watch("geographicRestrictions") || []}
+            handleRestrictionChange={handleGeographicRestrictionChange}
+          />
 
           <FormActions isSubmitting={isSubmitting} />
         </form>
