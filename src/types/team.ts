@@ -1,37 +1,36 @@
+export type TeamMemberRole = "Chatter" | "VA" | "Manager" | "Developer" | "Admin" | "Employee" | "Creator";
+export type EmployeeStatus = "Active" | "Inactive" | "Paused";
+export type EmployeeTeam = "A" | "B" | "C";
 
-import { TeamMemberRole } from "./employee";
+// Alias for backward compatibility with existing code
+export type EmployeeRole = TeamMemberRole;
 
-export interface TeamMember {
+// Define what is allowed as primary roles and additional roles
+export type PrimaryRole = "Admin" | "Manager" | "Employee";
+
+export interface Employee {
   id: string;
   name: string;
   email: string;
-  roles: TeamMemberRole[];
-  status: "Active" | "Inactive" | "Paused";
-  teams: ("A" | "B" | "C")[];
+  role: PrimaryRole;
+  roles?: string[];
+  status: EmployeeStatus;
   telegram?: string;
-  phoneNumber?: string;
-  lastLogin?: string;
   profileImage?: string;
-  department?: string;
+  lastLogin: string;
   createdAt: string;
+  department?: string;
+  teams?: EmployeeTeam[];
+  assignedCreators?: string[]; // IDs of creators assigned to this team member
+  geographicRestrictions?: string[]; // Add this field
 }
 
-export type TeamMemberFormValues = {
-  email: string;
-  password: string;
-  confirmPassword: string;
-  name: string;
+export type EmployeeFilters = {
   roles: TeamMemberRole[];
-  teams: ("A" | "B" | "C")[];
-  telegram?: string;
-  phoneNumber?: string;
-  department?: string;
-  profileImage?: string;
+  statuses: EmployeeStatus[];
+  searchQuery: string;
+  sortOption: string;
 };
 
-export interface TeamFilters {
-  roles: TeamMemberRole[];
-  teams: ("A" | "B" | "C")[];
-  status: ("Active" | "Inactive" | "Paused")[];
-  searchQuery: string;
-}
+// This is the type needed for the filter components
+export type FilterRole = TeamMemberRole | "Active" | "Inactive";
