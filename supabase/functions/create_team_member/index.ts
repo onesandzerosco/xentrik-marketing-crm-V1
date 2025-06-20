@@ -1,138 +1,83 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { email, password, name, primary_role, additional_roles } = await req.json();
-
-    // Validate input
-    if (!email || !password || !name) {
-      return new Response(
-        JSON.stringify({
-          error: "Missing required parameters: email, password, and name are required",
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Initialize Supabase admin client
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    // Ensure additional_roles is an array and includes the additional roles properly
-    const rolesArray = Array.isArray(additional_roles) ? additional_roles : [];
-    
-    // Create the user with admin privileges to ensure all fields are properly set
-    const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: password,
-      email_confirm: true, // Auto-confirm email
+    const { email, password, name, primary_role, additional_roles, geographic_restrictions } = await req.json()
+
+    console.log('Creating team member with:', { email, name, primary_role, additional_roles, geographic_restrictions })
+
+    // Create the user in auth
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
       user_metadata: {
-        name: name,
-        role: primary_role || 'Employee',
-        roles: rolesArray
+        name,
+        role: primary_role,
+        roles: additional_roles || [],
+        geographic_restrictions: geographic_restrictions || []
       }
-    });
+    })
 
-    if (createError) {
-      console.error("Error creating auth user:", createError);
-      return new Response(
-        JSON.stringify({
-          error: `Failed to create user: ${createError.message}`,
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (userError) {
+      console.error('Error creating user:', userError)
+      throw userError
     }
 
-    // If the user was successfully created, ensure they have a profile
-    const userId = userData.user.id;
+    console.log('User created:', userData.user?.id)
 
-    // Check if profile already exists
-    const { data: existingProfile } = await supabaseAdmin
+    // Update the profile with all the role information
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id')
-      .eq('id', userId)
-      .single();
+      .update({
+        name,
+        role: primary_role,
+        roles: additional_roles || [],
+        geographic_restrictions: geographic_restrictions || [],
+        status: 'Active'
+      })
+      .eq('id', userData.user?.id)
 
-    if (!existingProfile) {
-      // Create profile if it doesn't exist with both primary role and additional roles
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert({
-          id: userId,
-          name: name,
-          email: email,
-          role: primary_role || 'Employee',
-          roles: rolesArray, // This should include ['Creator'] for creators
-          status: 'Active'
-        });
-
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        // Don't fail the whole operation, just log the error
-      }
-    } else {
-      // Update existing profile to ensure roles are set correctly
-      const { error: updateError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          role: primary_role || 'Employee',
-          roles: rolesArray, // This should include ['Creator'] for creators
-          status: 'Active'
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error("Error updating profile roles:", updateError);
-      }
+    if (profileError) {
+      console.error('Error updating profile:', profileError)
+      throw profileError
     }
 
+    console.log('Profile updated successfully')
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        user: userData.user,
-        message: "User and profile created successfully" 
-      }),
+      JSON.stringify({ success: true, user_id: userData.user?.id }),
       {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+      },
+    )
+
   } catch (error) {
-    console.error("Unexpected error:", error);
+    console.error('Error in create_team_member function:', error)
     return new Response(
-      JSON.stringify({
-        error: `An unexpected error occurred: ${error.message}`,
-      }),
+      JSON.stringify({ error: error.message }),
       {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    )
   }
-});
+})

@@ -19,7 +19,8 @@ export const useTeamMemberForm = () => {
     defaultValues: {
       email: "",
       primaryRole: "Employee",
-      additionalRoles: []
+      additionalRoles: [],
+      geographicRestrictions: []
     }
   });
 
@@ -29,14 +30,15 @@ export const useTeamMemberForm = () => {
     try {
       console.log("Form data:", data);
       
-      // Call the edge function instead of the RPC function
+      // Call the edge function to create the team member
       const { data: userData, error: userError } = await supabase.functions.invoke('create_team_member', {
         body: {
           email: data.email,
           password: 'XentrikBananas',
           name: data.email.split('@')[0],
           primary_role: data.primaryRole,
-          additional_roles: data.additionalRoles
+          additional_roles: data.additionalRoles,
+          geographic_restrictions: data.geographicRestrictions || []
         }
       });
 
@@ -57,7 +59,8 @@ export const useTeamMemberForm = () => {
       form.reset({
         email: "",
         primaryRole: "Employee",
-        additionalRoles: []
+        additionalRoles: [],
+        geographicRestrictions: []
       });
     } catch (error: any) {
       console.error("Error creating team member:", error);
@@ -102,12 +105,27 @@ export const useTeamMemberForm = () => {
     }
   };
 
+  // Handle checkbox change for geographic restrictions
+  const handleGeographicRestrictionChange = (checked: boolean | string, restriction: string) => {
+    const currentRestrictions = form.getValues("geographicRestrictions") || [];
+    
+    if (checked) {
+      form.setValue("geographicRestrictions", [...currentRestrictions, restriction]);
+    } else {
+      form.setValue(
+        "geographicRestrictions", 
+        currentRestrictions.filter(r => r !== restriction)
+      );
+    }
+  };
+
   return {
     form,
     isSubmitting,
     availableAdditionalRoles,
     isRoleDisabled,
     handleAdditionalRoleChange,
+    handleGeographicRestrictionChange,
     onSubmit,
   };
 };

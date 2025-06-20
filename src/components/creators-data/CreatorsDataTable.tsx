@@ -17,6 +17,7 @@ import { Eye, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
 import { getTimezoneFromLocationName } from '@/utils/timezoneUtils';
+import { shouldFilterCreator } from '@/utils/geographicFiltering';
 import { useAuth } from '@/context/AuthContext';
 
 interface CreatorSubmission {
@@ -33,14 +34,34 @@ interface CreatorWithTimezone extends CreatorSubmission {
 }
 
 const CreatorsDataTable: React.FC = () => {
-  const { userRole, userRoles } = useAuth();
+  const { userRole, userRoles, user } = useAuth();
   const [selectedSubmission, setSelectedSubmission] = useState<CreatorWithTimezone | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [creatorsWithTimezones, setCreatorsWithTimezones] = useState<CreatorWithTimezone[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userGeographicRestrictions, setUserGeographicRestrictions] = useState<string[]>([]);
 
   // Check if user is a Chatter (hide sensitive info like email)
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
+
+  // Fetch user's geographic restrictions
+  useEffect(() => {
+    const fetchUserRestrictions = async () => {
+      if (user?.id) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('geographic_restrictions')
+          .eq('id', user.id)
+          .single();
+
+        if (data && !error) {
+          setUserGeographicRestrictions(data.geographic_restrictions || []);
+        }
+      }
+    };
+
+    fetchUserRestrictions();
+  }, [user?.id]);
 
   const { data: submissions = [], isLoading, refetch } = useQuery({
     queryKey: ['accepted-creator-submissions'],
@@ -60,31 +81,36 @@ const CreatorsDataTable: React.FC = () => {
     },
   });
 
-  // Preload timezone data for all creators
+  // Preload timezone data for all creators and apply geographic filtering
   useEffect(() => {
     if (submissions.length > 0) {
       const processTimezones = async () => {
-        const processedCreators = submissions.map((submission) => {
-          const location = submission.data?.personalInfo?.location;
-          let timezone = null;
-          
-          if (location) {
-            timezone = getTimezoneFromLocationName(location);
-            console.log('Preloaded timezone for', submission.name, ':', timezone);
-          }
-          
-          return {
-            ...submission,
-            timezone
-          };
-        });
+        const processedCreators = submissions
+          .filter((submission) => {
+            // Apply geographic filtering
+            return !shouldFilterCreator(submission, userGeographicRestrictions);
+          })
+          .map((submission) => {
+            const location = submission.data?.personalInfo?.location;
+            let timezone = null;
+            
+            if (location) {
+              timezone = getTimezoneFromLocationName(location);
+              console.log('Preloaded timezone for', submission.name, ':', timezone);
+            }
+            
+            return {
+              ...submission,
+              timezone
+            };
+          });
         
         setCreatorsWithTimezones(processedCreators);
       };
 
       processTimezones();
     }
-  }, [submissions]);
+  }, [submissions, userGeographicRestrictions]);
 
   // Filter creators based on search query
   const filteredCreators = creatorsWithTimezones.filter((submission) => {

@@ -8,7 +8,8 @@ export const teamMemberFormSchema = z.object({
     message: "Please enter a valid email address.",
   }),
   primaryRole: z.enum(["Admin", "Manager", "Employee"] as [PrimaryRole, ...PrimaryRole[]]),
-  additionalRoles: z.array(z.string())
+  additionalRoles: z.array(z.string()),
+  geographicRestrictions: z.array(z.string()).optional()
 });
 
 export type TeamMemberFormData = z.infer<typeof teamMemberFormSchema>;

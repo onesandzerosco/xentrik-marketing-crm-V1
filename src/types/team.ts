@@ -14,6 +14,7 @@ export interface TeamMember {
   profileImage?: string;
   department?: string;
   createdAt: string;
+  geographicRestrictions?: string[];
 }
 
 export type TeamMemberFormValues = {
@@ -27,6 +28,7 @@ export type TeamMemberFormValues = {
   phoneNumber?: string;
   department?: string;
   profileImage?: string;
+  geographicRestrictions?: string[];
 };
 
 export interface TeamFilters {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -57,7 +56,8 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastLogin: profile.last_login || 'Never',
           profileImage: profile.profile_image,
           department: profile.department,
-          createdAt: profile.created_at
+          createdAt: profile.created_at,
+          geographicRestrictions: profile.geographic_restrictions || []
         }))
         // Filter out team members who only have the "Creator" role
         .filter((member: TeamMember) => {
@@ -134,7 +134,8 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         telegram: updates.telegram,
         phone_number: updates.phoneNumber,
         department: updates.department,
-        profile_image: updates.profileImage
+        profile_image: updates.profileImage,
+        geographic_restrictions: updates.geographicRestrictions
       };
       
       // Filter out undefined values

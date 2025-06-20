@@ -6,6 +6,7 @@ import FormHeader from "./team-member/FormHeader";
 import EmailField from "./team-member/EmailField";
 import PrimaryRoleField from "./team-member/PrimaryRoleField";
 import AdditionalRolesField from "./team-member/AdditionalRolesField";
+import GeographicRestrictionsField from "./team-member/GeographicRestrictionsField";
 import FormActions from "./team-member/FormActions";
 
 const AddTeamMemberForm: React.FC = () => {
@@ -15,6 +16,7 @@ const AddTeamMemberForm: React.FC = () => {
     availableAdditionalRoles,
     isRoleDisabled,
     handleAdditionalRoleChange,
+    handleGeographicRestrictionChange,
     onSubmit
   } = useTeamMemberForm();
 
@@ -32,6 +34,11 @@ const AddTeamMemberForm: React.FC = () => {
             selectedRoles={form.watch("additionalRoles")}
             isRoleDisabled={isRoleDisabled}
             handleRoleChange={handleAdditionalRoleChange}
+          />
+
+          <GeographicRestrictionsField 
+            selectedRestrictions={form.watch("geographicRestrictions") || []}
+            handleRestrictionChange={handleGeographicRestrictionChange}
           />
 
           <FormActions isSubmitting={isSubmitting} />

@@ -472,6 +472,7 @@ export type Database = {
           created_at: string | null
           department: string | null
           email: string
+          geographic_restrictions: string[] | null
           id: string
           last_login: string | null
           name: string
@@ -488,6 +489,7 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           email: string
+          geographic_restrictions?: string[] | null
           id: string
           last_login?: string | null
           name: string
@@ -504,6 +506,7 @@ export type Database = {
           created_at?: string | null
           department?: string | null
           email?: string
+          geographic_restrictions?: string[] | null
           id?: string
           last_login?: string | null
           name?: string
