@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -97,10 +98,23 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: newMember.name,
         primary_role: newMember.roles[0] || 'Employee',
         additional_roles: newMember.roles.slice(1),
-        geographic_restrictions: newMember.geographicRestrictions || [] // Pass geographic restrictions
+        // Note: The RPC function doesn't support geographic_restrictions yet
+        // We'll need to update the profile after creation
       });
       
       if (error) throw error;
+      
+      // If we have geographic restrictions, update the profile
+      if (newMember.geographicRestrictions && newMember.geographicRestrictions.length > 0 && data) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ geographic_restrictions: newMember.geographicRestrictions })
+          .eq('id', data);
+          
+        if (updateError) {
+          console.warn('Could not update geographic restrictions:', updateError);
+        }
+      }
       
       // Refetch to get the updated list with the new member
       await fetchTeamMembers();
@@ -251,7 +265,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return teamMembers.filter(member => {
       // Filter by roles
       const roleMatch = filters.roles.length === 0 || 
-        member.roles.some(role => filters.roles.includes(role));
+        member.roles.some(role => filters.roles.includes(role as TeamMemberRole));
       
       // Filter by teams
       const teamMatch = filters.teams.length === 0 || 

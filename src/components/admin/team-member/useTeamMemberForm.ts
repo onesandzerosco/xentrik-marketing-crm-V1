@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,6 +53,7 @@ export const useTeamMemberForm = () => {
         roles: [values.primaryRole, ...values.additionalRoles],
         status: 'Active',
         teams: [],
+        lastLogin: 'Never', // Add required lastLogin field
         geographicRestrictions: values.geographicRestrictions, // Include in team member data
       }, password);
       

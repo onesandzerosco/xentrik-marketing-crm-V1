@@ -58,5 +58,19 @@ export type EmployeeFilters = {
   sortOption: string;
 };
 
+// Add missing TeamMemberFormValues type
+export interface TeamMemberFormValues {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  roles: string[];
+  teams: string[];
+  department: string;
+  telegram: string;
+  phoneNumber: string;
+  profileImage: string;
+}
+
 // This is the type needed for the filter components
 export type FilterRole = TeamMemberRole | "Active" | "Inactive";
