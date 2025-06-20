@@ -21,25 +21,34 @@ const AddTeamMemberForm: React.FC = () => {
   } = useTeamMemberForm();
 
   return (
-    <div>
+    <div className="px-8">
       <FormHeader />
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <EmailField control={form.control} />
-          <PrimaryRoleField control={form.control} />
-          
-          <AdditionalRolesField 
-            availableRoles={availableAdditionalRoles}
-            selectedRoles={form.watch("additionalRoles")}
-            isRoleDisabled={isRoleDisabled}
-            handleRoleChange={handleAdditionalRoleChange}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column */}
+            <div className="space-y-6">
+              <EmailField control={form.control} />
+              
+              <GeographicRestrictionsField 
+                selectedRestrictions={form.watch("geographicRestrictions") || []}
+                handleRestrictionChange={handleGeographicRestrictionChange}
+              />
+            </div>
 
-          <GeographicRestrictionsField 
-            selectedRestrictions={form.watch("geographicRestrictions") || []}
-            handleRestrictionChange={handleGeographicRestrictionChange}
-          />
+            {/* Right Column */}
+            <div className="space-y-6">
+              <PrimaryRoleField control={form.control} />
+              
+              <AdditionalRolesField 
+                availableRoles={availableAdditionalRoles}
+                selectedRoles={form.watch("additionalRoles")}
+                isRoleDisabled={isRoleDisabled}
+                handleRoleChange={handleAdditionalRoleChange}
+              />
+            </div>
+          </div>
 
           <FormActions isSubmitting={isSubmitting} />
         </form>
