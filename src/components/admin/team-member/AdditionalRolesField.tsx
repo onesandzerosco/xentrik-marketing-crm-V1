@@ -9,8 +9,8 @@ import { TeamMemberFormData } from "./schema";
 interface AdditionalRolesFieldProps {
   availableRoles: string[];
   selectedRoles: string[];
-  isRoleDisabled: (role: string, selectedRoles: string[]) => boolean;
-  handleRoleChange: (role: string, checked: boolean) => void;
+  isRoleDisabled: (role: string) => boolean;
+  handleRoleChange: (checked: boolean | string, role: string) => void;
 }
 
 const AdditionalRolesField: React.FC<AdditionalRolesFieldProps> = ({
@@ -35,13 +35,13 @@ const AdditionalRolesField: React.FC<AdditionalRolesFieldProps> = ({
             <Checkbox 
               id={`role-${role}`}
               checked={selectedRoles.includes(role)}
-              onCheckedChange={(checked) => handleRoleChange(role, !!checked)}
-              disabled={isRoleDisabled(role, selectedRoles)}
-              className={isRoleDisabled(role, selectedRoles) ? "opacity-50" : ""}
+              onCheckedChange={(checked) => handleRoleChange(checked, role)}
+              disabled={isRoleDisabled(role)}
+              className={isRoleDisabled(role) ? "opacity-50" : ""}
             />
             <label 
               htmlFor={`role-${role}`}
-              className={`text-sm cursor-pointer ${isRoleDisabled(role, selectedRoles) ? "text-muted-foreground" : ""}`}
+              className={`text-sm cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
             >
               {role}
             </label>

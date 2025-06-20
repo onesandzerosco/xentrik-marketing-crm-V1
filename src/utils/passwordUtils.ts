@@ -4,13 +4,6 @@
  */
 
 /**
- * Generates a random password
- */
-export const generatePassword = (): string => {
-  return "XentrikBananas"; // Using the default password as specified in the forms
-};
-
-/**
  * Generates a SHA256 hash of the password with a prefix to identify it as our hash
  */
 export const hashPassword = async (password: string): Promise<string> => {

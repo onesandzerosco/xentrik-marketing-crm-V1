@@ -1,20 +1,22 @@
+
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Eye, Search } from 'lucide-react';
+import { format } from 'date-fns';
 import CreatorDataModal from './CreatorDataModal';
-import { supabase } from '@/integrations/supabase/client';
-import { filterCreatorsByGeographicRestrictions } from '@/utils/geographicUtils';
+import { getTimezoneFromLocationName } from '@/utils/timezoneUtils';
 import { useAuth } from '@/context/AuthContext';
 
 interface CreatorSubmission {
@@ -24,26 +26,33 @@ interface CreatorSubmission {
   submitted_at: string;
   data: any;
   token: string;
+}
+
+interface CreatorWithTimezone extends CreatorSubmission {
   timezone?: string;
 }
 
 const CreatorsDataTable: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [open, setOpen] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<CreatorSubmission | null>(null);
-  const [submissions, setSubmissions] = useState<CreatorSubmission[] | null>(null);
-  const { user } = useAuth();
+  const { userRole, userRoles } = useAuth();
+  const [selectedSubmission, setSelectedSubmission] = useState<CreatorWithTimezone | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [creatorsWithTimezones, setCreatorsWithTimezones] = useState<CreatorWithTimezone[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { isLoading, error, data } = useQuery({
-    queryKey: ['onboarding-submissions'],
+  // Check if user is a Chatter (hide sensitive info like email)
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
+
+  const { data: submissions = [], isLoading, refetch } = useQuery({
+    queryKey: ['accepted-creator-submissions'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('onboarding_submissions')
         .select('*')
+        .eq('status', 'accepted')
         .order('submitted_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching onboarding submissions:', error);
+        console.error('Error fetching accepted submissions:', error);
         throw error;
       }
 
@@ -51,132 +60,143 @@ const CreatorsDataTable: React.FC = () => {
     },
   });
 
+  // Preload timezone data for all creators
   useEffect(() => {
-    if (data) {
-      setSubmissions(data);
+    if (submissions.length > 0) {
+      const processTimezones = async () => {
+        const processedCreators = submissions.map((submission) => {
+          const location = submission.data?.personalInfo?.location;
+          let timezone = null;
+          
+          if (location) {
+            timezone = getTimezoneFromLocationName(location);
+            console.log('Preloaded timezone for', submission.name, ':', timezone);
+          }
+          
+          return {
+            ...submission,
+            timezone
+          };
+        });
+        
+        setCreatorsWithTimezones(processedCreators);
+      };
+
+      processTimezones();
     }
-  }, [data]);
+  }, [submissions]);
 
-  const handleOpenModal = (submission: CreatorSubmission) => {
-    setSelectedSubmission(submission);
-    setOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setOpen(false);
-    setSelectedSubmission(null);
-  };
+  // Filter creators based on search query
+  const filteredCreators = creatorsWithTimezones.filter((submission) => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const matchName = submission.name.toLowerCase().includes(query);
+    const matchEmail = !isChatter && submission.email.toLowerCase().includes(query);
+    
+    return matchName || matchEmail;
+  });
 
   const handleDataUpdate = (updatedSubmission: CreatorSubmission) => {
-    // Optimistically update the submissions state
-    setSubmissions((prevSubmissions) => {
-      if (!prevSubmissions) return [updatedSubmission]; // If no previous submissions, start with the updated one
-      return prevSubmissions.map((sub) =>
-        sub.id === updatedSubmission.id ? updatedSubmission : sub
-      );
-    });
+    // Refresh the table data after successful update
+    refetch();
   };
 
-  // Filter creators based on user's geographic restrictions
-  const filteredSubmissions = React.useMemo(() => {
-    if (!submissions) return [];
-    
-    // Get current user's geographic restrictions from their profile
-    // You'll need to fetch this from the user's profile data
-    const userRestrictions = user?.geographicRestrictions; // Assuming this is available in auth context
-    
-    return filterCreatorsByGeographicRestrictions(submissions, userRestrictions);
-  }, [submissions, user]);
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
+  const handleViewData = (submission: CreatorWithTimezone) => {
+    setSelectedSubmission(submission);
+    setModalOpen(true);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2 text-muted-foreground">Loading submissions...</span>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading creator data...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (submissions.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Error loading submissions: {error.message}</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">No Data Available</h3>
+          <p className="text-sm text-muted-foreground">No accepted creator submissions found.</p>
+        </div>
       </div>
     );
   }
-
-  const displaySubmissions = filteredSubmissions || [];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Input
-          type="text"
-          placeholder="Search by name or email..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-md"
-        />
-        <h2 className="text-2xl font-bold">
-          {displaySubmissions?.length} Model Profile Submissions
-        </h2>
+    <>
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search creators by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Submitted At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Name</TableHead>
+              {!isChatter && <TableHead>Email</TableHead>}
+              <TableHead>Submitted</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {displaySubmissions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  No submissions found
+            {filteredCreators.map((submission) => (
+              <TableRow key={submission.id}>
+                <TableCell className="font-medium">{submission.name}</TableCell>
+                {!isChatter && <TableCell>{submission.email}</TableCell>}
+                <TableCell>{formatDate(submission.submitted_at)}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary">Accepted</Badge>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewData(submission)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View Data
+                  </Button>
                 </TableCell>
               </TableRow>
-            ) : (
-              displaySubmissions
-                .filter(submission => 
-                  searchTerm === '' || 
-                  submission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  submission.email.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell className="font-medium">{submission.name}</TableCell>
-                    <TableCell>{submission.email}</TableCell>
-                    <TableCell>
-                      {new Date(submission.submitted_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenModal(submission)}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>
 
+      {filteredCreators.length === 0 && searchQuery.trim() && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No creators found matching "{searchQuery}"</p>
+        </div>
+      )}
+
       <CreatorDataModal
         submission={selectedSubmission}
-        open={open}
-        onOpenChange={setOpen}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
         onDataUpdate={handleDataUpdate}
       />
-    </div>
+    </>
   );
 };
 

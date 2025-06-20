@@ -57,8 +57,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastLogin: profile.last_login || 'Never',
           profileImage: profile.profile_image,
           department: profile.department,
-          createdAt: profile.created_at,
-          geographicRestrictions: profile.geographic_restrictions || []
+          createdAt: profile.created_at
         }))
         // Filter out team members who only have the "Creator" role
         .filter((member: TeamMember) => {
@@ -91,30 +90,16 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // Call the stored procedure to create a team member with geographic restrictions
+      // Call the stored procedure to create a team member with correct parameter names
       const { data, error } = await supabase.rpc('create_team_member', {
         email: newMember.email,
         password: password,
         name: newMember.name,
-        primary_role: newMember.roles[0] || 'Employee',
-        additional_roles: newMember.roles.slice(1),
-        // Note: The RPC function doesn't support geographic_restrictions yet
-        // We'll need to update the profile after creation
+        primary_role: newMember.roles[0] || 'Employee', // Take first role as primary
+        additional_roles: newMember.roles.slice(1) // Rest as additional roles
       });
       
       if (error) throw error;
-      
-      // If we have geographic restrictions, update the profile
-      if (newMember.geographicRestrictions && newMember.geographicRestrictions.length > 0 && data) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ geographic_restrictions: newMember.geographicRestrictions })
-          .eq('id', data);
-          
-        if (updateError) {
-          console.warn('Could not update geographic restrictions:', updateError);
-        }
-      }
       
       // Refetch to get the updated list with the new member
       await fetchTeamMembers();
@@ -265,7 +250,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return teamMembers.filter(member => {
       // Filter by roles
       const roleMatch = filters.roles.length === 0 || 
-        member.roles.some(role => filters.roles.includes(role as TeamMemberRole));
+        member.roles.some(role => filters.roles.includes(role));
       
       // Filter by teams
       const teamMatch = filters.teams.length === 0 || 
