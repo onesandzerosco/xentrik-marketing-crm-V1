@@ -1,3 +1,4 @@
+
 export type TeamMemberRole = "Chatter" | "VA" | "Manager" | "Developer" | "Admin" | "Employee" | "Creator";
 export type EmployeeStatus = "Active" | "Inactive" | "Paused";
 export type EmployeeTeam = "A" | "B" | "C";
@@ -23,6 +24,31 @@ export interface Employee {
   teams?: EmployeeTeam[];
   assignedCreators?: string[]; // IDs of creators assigned to this team member
   geographicRestrictions?: string[]; // Add this field
+}
+
+// Add missing TeamMember interface
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  roles: string[];
+  status: EmployeeStatus;
+  teams?: EmployeeTeam[];
+  telegram?: string;
+  phoneNumber?: string;
+  lastLogin: string;
+  profileImage?: string;
+  department?: string;
+  createdAt: string;
+  geographicRestrictions?: string[];
+}
+
+// Add missing TeamFilters interface
+export interface TeamFilters {
+  roles: TeamMemberRole[];
+  teams: EmployeeTeam[];
+  status: EmployeeStatus[];
+  searchQuery: string;
 }
 
 export type EmployeeFilters = {
