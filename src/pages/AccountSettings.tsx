@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, ArrowLeft, UserCircle } from "lucide-react";
+import { Mail, ArrowLeft, UserCircle, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfilePicture from "@/components/profile/ProfilePicture";
 
@@ -52,7 +53,7 @@ const AccountSettings = () => {
     });
   };
 
-  const handleUpdateAccount = () => {
+  const handleUpdateProfile = () => {
     // Validate inputs
     if (!username) {
       toast({
@@ -63,7 +64,38 @@ const AccountSettings = () => {
       return;
     }
 
-    if (newPassword && newPassword !== confirmPassword) {
+    // Fix: Pass a credentials object instead of multiple arguments
+    const success = updateCredentials({ 
+      email: email !== user.email ? email : undefined,
+      displayName,
+      profileImage
+    });
+    
+    if (success) {
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: "There was an error updating your profile",
+      });
+    }
+  };
+
+  const handleChangePassword = () => {
+    if (!newPassword) {
+      toast({
+        variant: "destructive",
+        title: "Missing password",
+        description: "Please enter a new password",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
         title: "Passwords don't match",
@@ -86,7 +118,7 @@ const AccountSettings = () => {
     const isEmailVerified = userData.emailVerified || false;
 
     // Check if trying to change password without verified email
-    if (newPassword && !isEmailVerified) {
+    if (!isEmailVerified) {
       toast({
         variant: "destructive",
         title: "Email not verified",
@@ -95,23 +127,19 @@ const AccountSettings = () => {
       return;
     }
 
-    // Fix: Pass a credentials object instead of multiple arguments
     const success = updateCredentials({ 
-      email: email !== user.email ? email : undefined,
-      password: newPassword ? newPassword : undefined,
-      currentPassword,
-      displayName,
-      profileImage
+      password: newPassword,
+      currentPassword
     });
     
     if (success) {
       toast({
-        title: "Account updated",
-        description: "Your account details have been updated successfully",
+        title: "Password changed",
+        description: "Your password has been updated successfully",
       });
 
       // Send email notification if password was changed
-      if (newPassword && email) {
+      if (email) {
         // In a real application, this would make an API call to send an email
         // For now, we'll just show another toast to simulate email notification
         setTimeout(() => {
@@ -129,7 +157,7 @@ const AccountSettings = () => {
     } else {
       toast({
         variant: "destructive",
-        title: "Update failed",
+        title: "Password change failed",
         description: "Current password is incorrect or there was a system error",
       });
     }
@@ -258,13 +286,31 @@ const AccountSettings = () => {
               );
             })()}
           </CardContent>
+          <CardFooter className="flex justify-between border-t px-6 py-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate(-1)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateProfile} 
+              className="bg-brand text-black hover:bg-brand/80"
+            >
+              Save Profile
+            </Button>
+          </CardFooter>
         </Card>
 
+        {/* Change Password Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Password</CardTitle>
+            <CardTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2" />
+              Change Password
+            </CardTitle>
             <CardDescription>
-              Update your password
+              Update your account password for enhanced security
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -278,6 +324,7 @@ const AccountSettings = () => {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="md:col-span-3"
+                placeholder="Enter your current password"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
@@ -290,6 +337,7 @@ const AccountSettings = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="md:col-span-3"
+                placeholder="Enter your new password"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
@@ -302,21 +350,26 @@ const AccountSettings = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="md:col-span-3"
+                placeholder="Confirm your new password"
               />
             </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t px-6 py-4">
             <Button 
               variant="outline" 
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+              }}
             >
-              Cancel
+              Clear
             </Button>
             <Button 
-              onClick={handleUpdateAccount} 
-              className="bg-brand text-black hover:bg-brand/80"
+              onClick={handleChangePassword} 
+              className="bg-red-600 text-white hover:bg-red-700"
             >
-              Save Changes
+              Change Password
             </Button>
           </CardFooter>
         </Card>
