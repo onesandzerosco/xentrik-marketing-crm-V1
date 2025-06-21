@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, ArrowLeft, UserCircle, Lock } from "lucide-react";
+import { Mail, ArrowLeft, UserCircle, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProfilePicture from "@/components/profile/ProfilePicture";
 
@@ -23,6 +23,11 @@ const AccountSettings = () => {
   const [email, setEmail] = useState("");
   const [verificationSent, setVerificationSent] = useState(false);
   const [profileImage, setProfileImage] = useState("");
+  
+  // Password visibility states
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Initialize form with user data
   useEffect(() => {
@@ -280,7 +285,7 @@ const AccountSettings = () => {
             </Button>
             <Button 
               onClick={handleUpdateProfile} 
-              className="bg-brand text-black hover:bg-brand/80"
+              className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
             >
               Save Profile
             </Button>
@@ -303,40 +308,82 @@ const AccountSettings = () => {
               <Label htmlFor="currentPassword" className="md:text-right">
                 Current Password
               </Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="md:col-span-3"
-                placeholder="Enter your current password"
-              />
+              <div className="md:col-span-3 relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter your current password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
               <Label htmlFor="newPassword" className="md:text-right">
                 New Password
               </Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="md:col-span-3"
-                placeholder="Enter your new password"
-              />
+              <div className="md:col-span-3 relative">
+                <Input
+                  id="newPassword"
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter your new password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
               <Label htmlFor="confirmPassword" className="md:text-right">
                 Confirm Password
               </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="md:col-span-3"
-                placeholder="Confirm your new password"
-              />
+              <div className="md:col-span-3 relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your new password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t px-6 py-4">
@@ -352,7 +399,7 @@ const AccountSettings = () => {
             </Button>
             <Button 
               onClick={handleChangePassword} 
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-brand-yellow text-black hover:bg-brand-yellow/90"
             >
               Change Password
             </Button>
