@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -109,20 +108,6 @@ const AccountSettings = () => {
         variant: "destructive",
         title: "Current password required",
         description: "Please enter your current password",
-      });
-      return;
-    }
-
-    // Get the current user's email verification status
-    const userData = JSON.parse(localStorage.getItem("user") || '{}');
-    const isEmailVerified = userData.emailVerified || false;
-
-    // Check if trying to change password without verified email
-    if (!isEmailVerified) {
-      toast({
-        variant: "destructive",
-        title: "Email not verified",
-        description: "You must verify your email before changing your password",
       });
       return;
     }
@@ -278,8 +263,8 @@ const AccountSettings = () => {
                     </AlertTitle>
                     <AlertDescription>
                       {isEmailVerified 
-                        ? "Your email is verified. You can change your password." 
-                        : "You must verify your email before you can change your password."}
+                        ? "Your email is verified." 
+                        : "Your email is not verified, but you can still change your password."}
                     </AlertDescription>
                   </Alert>
                 </div>
