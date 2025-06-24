@@ -50,24 +50,68 @@ export const useFileUploadHandler = ({
   const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
 
-  // Add function to trigger webhook after upload completion
-  const triggerUploadWebhook = async (uploadedFileIds: string[], creatorId: string) => {
+  // Function to get the destination string based on current folder and category
+  const getDestinationString = async (currentFolder: string, zipCategoryId?: string) => {
     try {
-      // Get creator name for destination
-      const { data: creatorData, error: creatorError } = await supabase
-        .from('creators')
-        .select('name')
-        .eq('id', creatorId)
-        .single();
+      let categoryName = null;
+      let folderName = null;
 
-      if (creatorError) {
-        console.error('Error fetching creator data:', creatorError);
-        return;
+      // If we have a ZIP category ID, get the category name
+      if (zipCategoryId) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('file_categories')
+          .select('category_name')
+          .eq('category_id', zipCategoryId)
+          .single();
+
+        if (!categoryError && categoryData) {
+          categoryName = categoryData.category_name;
+        }
       }
+
+      // If we have a current folder (not 'all' or 'unsorted'), get folder and category info
+      if (currentFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+        const { data: folderData, error: folderError } = await supabase
+          .from('file_folders')
+          .select(`
+            folder_name,
+            file_categories!inner(category_name)
+          `)
+          .eq('folder_id', currentFolder)
+          .single();
+
+        if (!folderError && folderData) {
+          folderName = folderData.folder_name;
+          if (!categoryName && folderData.file_categories) {
+            categoryName = folderData.file_categories.category_name;
+          }
+        }
+      }
+
+      // Format the destination string
+      if (categoryName && folderName) {
+        return `${categoryName}/${folderName}`;
+      } else if (categoryName) {
+        return categoryName;
+      } else if (folderName) {
+        return folderName;
+      } else {
+        return "All Files";
+      }
+    } catch (error) {
+      console.error('Error getting destination string:', error);
+      return "All Files";
+    }
+  };
+
+  // Add function to trigger webhook after upload completion
+  const triggerUploadWebhook = async (uploadedFileIds: string[], currentFolder: string, zipCategoryId?: string) => {
+    try {
+      const destination = await getDestinationString(currentFolder, zipCategoryId);
 
       const webhookData = {
         email: user?.email || 'unknown@email.com',
-        destination: creatorData?.name || creatorId,
+        destination: destination,
         media_quantity: uploadedFileIds.length,
         time_uploaded: new Date().toISOString()
       };
@@ -156,7 +200,7 @@ export const useFileUploadHandler = ({
       
       // Trigger webhook if files were uploaded successfully
       if (uploadedFileIds.length > 0) {
-        await triggerUploadWebhook(uploadedFileIds, creatorId);
+        await triggerUploadWebhook(uploadedFileIds, currentFolder, zipCategoryId);
       }
       
       // Call the callback if it exists
