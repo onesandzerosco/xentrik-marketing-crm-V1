@@ -5,33 +5,180 @@ project_id = "rdzwpiokpyssqhnfiqrt"
 enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://rdzwpiokpyssqhnfiqrt.supabase.co"]
+jwt_expiry = 3600
+enable_signup = true
+email_double_confirm_changes = true
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+template_path = "./supabase/templates"
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = false
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.azure]
+enabled = false
+client_id = ""
+secret = ""
+url = ""
+
+[auth.external.bitbucket]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.discord]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.facebook]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.github]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.gitlab]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.google]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.keycloak]
+enabled = false
+client_id = ""
+secret = ""
+url = ""
+
+[auth.external.linkedin]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.notion]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.twitch]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.twitter]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.slack]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.spotify]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.workos]
+enabled = false
+client_id = ""
+secret = ""
+
+[auth.external.zoom]
+enabled = false
+client_id = ""
+secret = ""
 
 [db]
 port = 54322
 
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+port = 54323
+ip_version = "ipv4"
+
 [studio]
 enabled = true
 port = 54323
-api_url = "http://localhost"
+api_url = "http://127.0.0.1:54321"
 
 [inbucket]
 enabled = true
 port = 54324
+smtp_port = 54325
+pop3_port = 54326
 
 [storage]
 enabled = true
+port = 54325
+file_size_limit = "50MiB"
+image_transformation = { enabled = true }
 
-[auth]
-enabled = true
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+gql_port = 54329
 
-[realtime]
-enabled = true
+[functions.create-onboard-submissions-bucket]
+verify_jwt = false
 
-[functions.unzip-files]
+[functions.create_team_member]
 verify_jwt = true
+
+[functions.delete-team-member]
+verify_jwt = true
+
+[functions.generate-voice]
+verify_jwt = true
+
+[functions.send-invite-email]
+verify_jwt = false
 
 [functions.telegram-bot]
 verify_jwt = false
 
-[functions.generate-voice]
+[functions.unzip-files]
 verify_jwt = true
+
+[functions.media-upload-webhook]
+verify_jwt = true
+
+[edge_runtime]
+enabled = true
+ip_version = "ipv4"
+policy = "per_request"
+inspector_port = 8083

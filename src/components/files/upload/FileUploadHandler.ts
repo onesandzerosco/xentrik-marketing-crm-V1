@@ -1,4 +1,3 @@
-
 import { useFileUploader } from "@/hooks/useFileUploader";
 import { useZipProcessor } from "@/hooks/useZipProcessor";
 import { useFileProcessor } from "@/hooks/useFileProcessor";
@@ -7,6 +6,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { FileUploadStatus } from "@/hooks/useFileUploader";
 import { Category } from "@/types/fileTypes";
 import { isZipFile } from "@/utils/zipUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface FileUploadHandlerProps {
   creatorId: string;
@@ -22,6 +23,7 @@ export const useFileUploadHandler = ({
   availableCategories = []
 }: FileUploadHandlerProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const {
     isUploading,
     setIsUploading,
@@ -47,6 +49,44 @@ export const useFileUploadHandler = ({
   // Use hooks for file processing
   const { processZipFile } = useZipProcessor();
   const { processRegularFile } = useFileProcessor();
+
+  // Add function to trigger webhook after upload completion
+  const triggerUploadWebhook = async (uploadedFileIds: string[], creatorId: string) => {
+    try {
+      // Get creator name for destination
+      const { data: creatorData, error: creatorError } = await supabase
+        .from('creators')
+        .select('name')
+        .eq('id', creatorId)
+        .single();
+
+      if (creatorError) {
+        console.error('Error fetching creator data:', creatorError);
+        return;
+      }
+
+      const webhookData = {
+        email: user?.email || 'unknown@email.com',
+        destination: creatorData?.name || creatorId,
+        media_quantity: uploadedFileIds.length,
+        time_uploaded: new Date().toISOString()
+      };
+
+      console.log('Triggering media upload webhook with data:', webhookData);
+
+      const { error: webhookError } = await supabase.functions.invoke('media-upload-webhook', {
+        body: webhookData
+      });
+
+      if (webhookError) {
+        console.error('Error calling webhook:', webhookError);
+      } else {
+        console.log('Media upload webhook triggered successfully');
+      }
+    } catch (error) {
+      console.error('Error in triggerUploadWebhook:', error);
+    }
+  };
 
   // Main file change handler
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> & { zipCategoryId?: string }) => {
@@ -112,6 +152,11 @@ export const useFileUploadHandler = ({
       // Reset the input
       if (e.target.value) {
         e.target.value = '';
+      }
+      
+      // Trigger webhook if files were uploaded successfully
+      if (uploadedFileIds.length > 0) {
+        await triggerUploadWebhook(uploadedFileIds, creatorId);
       }
       
       // Call the callback if it exists
