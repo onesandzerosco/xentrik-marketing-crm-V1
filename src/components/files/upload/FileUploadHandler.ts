@@ -90,7 +90,7 @@ export const useFileUploadHandler = ({
 
       // Format the destination string
       if (categoryName && folderName) {
-        return `${categoryName}/${folderName}`;
+        return `${categoryName}>${folderName}`;
       } else if (categoryName) {
         return categoryName;
       } else if (folderName) {
