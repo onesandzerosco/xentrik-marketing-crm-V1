@@ -82,18 +82,31 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
       return;
     } 
     
+    if (!name.trim()) {
+      console.log("Name is required");
+      return;
+    }
+    
     try {
       // Set flags to prevent re-entry
       setIsSubmitting(true);
       hasSubmittedRef.current = true;
       
-      console.log("AcceptSubmissionModal: Accepting submission with name:", name);
-      await onAccept({
+      console.log("AcceptSubmissionModal: Accepting submission with data:", {
         name,
         team,
         creatorType,
         profileImage,
       });
+      
+      await onAccept({
+        name: name.trim(),
+        team,
+        creatorType,
+        profileImage,
+      });
+      
+      console.log("AcceptSubmissionModal: Submission accepted successfully");
     } catch (error) {
       console.error("Error in modal during submission:", error);
       // Only reset the flags on error to allow retrying
@@ -134,6 +147,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               className="col-span-3 bg-[#252538] border-[#383854] text-white"
               disabled={isSubmitting || isLoading}
+              placeholder="Enter creator name"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">

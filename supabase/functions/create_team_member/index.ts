@@ -63,7 +63,10 @@ serve(async (req) => {
     console.log('Profile updated successfully')
 
     return new Response(
-      JSON.stringify({ success: true, user_id: userData.user?.id }),
+      JSON.stringify({ 
+        success: true, 
+        user: { id: userData.user?.id }  // Fixed: Changed user_id to user.id to match expected structure
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

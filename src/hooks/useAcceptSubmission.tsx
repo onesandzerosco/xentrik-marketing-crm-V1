@@ -102,18 +102,24 @@ export const useAcceptSubmission = (
       );
       
       if (!creatorId) {
-        throw new Error("Failed to create creator account");
+        throw new Error("Failed to create creator account - no ID returned");
       }
       
-      // 2. Update the submission status in the database to "accepted" instead of "approved"
-      const { error } = await supabase
+      console.log("Creator account created successfully with ID:", creatorId);
+      
+      // 2. Update the submission status in the database to "accepted"
+      console.log("Updating submission status to accepted...");
+      const { error: updateError } = await supabase
         .from('onboarding_submissions')
         .update({ status: 'accepted' })
         .eq('token', token);
       
-      if (error) {
-        throw error;
+      if (updateError) {
+        console.error("Error updating submission status:", updateError);
+        throw new Error(`Failed to update submission status: ${updateError.message}`);
       }
+      
+      console.log("Submission status updated successfully");
 
       toast({
         title: "Creator account created",
@@ -121,20 +127,27 @@ export const useAcceptSubmission = (
       });
       
       // 3. Close the modal and remove the submission from the view
+      console.log("Closing modal and removing submission from view");
       closeModal();
-      // Use removeSubmissionFromView instead of deleteSubmission to prevent declining the submission
+      
+      // Use removeSubmissionFromView to immediately remove from UI
       removeSubmissionFromView(token);
+      
+      console.log("Accept submission process completed successfully");
       
     } catch (error) {
       console.error("Error accepting submission:", error);
+      
+      // Show specific error message
+      const errorMessage = error instanceof Error ? error.message : "Failed to create creator account";
+      
       toast({
         title: "Error accepting submission",
-        description: "Failed to create creator account.",
+        description: errorMessage,
         variant: "destructive"
       });
       
-      // If there was an error, remove the token from processed set
-      // to allow retrying
+      // If there was an error, remove the token from processed set to allow retrying
       setProcessedTokens(prev => {
         const newSet = new Set(prev);
         newSet.delete(token);
@@ -147,7 +160,7 @@ export const useAcceptSubmission = (
       console.log("Resetting processing flags for token:", token);
       setIsProcessing(false);
       isProcessingRef.current = false;
-      // Don't clear currentTokenRef here to prevent immediate reprocessing
+      currentTokenRef.current = null;
     }
   }, [selectedSubmission, closeModal, removeSubmissionFromView, isProcessing, processedTokens, setProcessingTokens, toast]);
 

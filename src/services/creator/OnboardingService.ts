@@ -176,6 +176,8 @@ export class OnboardingService {
     }
   ): Promise<string | undefined> {
     try {
+      console.log("=== STARTING ACCEPTANCE PROCESS ===");
+      
       // Map personal info from the form data
       const personalInfo = formData.personalInfo || {};
       const email = personalInfo.email;
@@ -184,10 +186,13 @@ export class OnboardingService {
         throw new Error("Email is required for creator registration");
       }
       
+      console.log("Processing creator:", creatorInfo.name, "with email:", email);
+      
       // The default password for all creators
       const defaultPassword = "XentrikBananas";
       
       // Create the user via the create_team_member edge function to ensure proper role assignment
+      console.log("Calling create_team_member edge function...");
       const { data: teamMemberResponse, error: teamMemberError } = await supabase.functions.invoke('create_team_member', {
         body: {
           email,
@@ -198,12 +203,26 @@ export class OnboardingService {
         }
       });
       
-      if (teamMemberError || !teamMemberResponse?.success) {
-        console.error("Team member creation error:", teamMemberError || teamMemberResponse);
-        throw new Error(`Failed to create user account: ${teamMemberError?.message || 'Unknown error'}`);
+      console.log("Edge function response:", teamMemberResponse);
+      console.log("Edge function error:", teamMemberError);
+      
+      if (teamMemberError) {
+        console.error("Team member creation error:", teamMemberError);
+        throw new Error(`Failed to create user account: ${teamMemberError.message}`);
       }
       
-      const userId = teamMemberResponse.user.id;
+      if (!teamMemberResponse?.success) {
+        console.error("Edge function returned failure:", teamMemberResponse);
+        throw new Error(`Failed to create user account: ${teamMemberResponse?.error || 'Unknown error'}`);
+      }
+      
+      const userId = teamMemberResponse.user?.id;
+      if (!userId) {
+        console.error("No user ID returned from edge function");
+        throw new Error("Failed to get user ID from account creation");
+      }
+      
+      console.log("User created successfully with ID:", userId);
       
       // Map the gender value from the onboarding form to our database enum
       let genderValue: GenderEnum = "Female";
@@ -215,6 +234,8 @@ export class OnboardingService {
       } else if (personalInfo.sex === "Transgender") {
         genderValue = "Trans";
       }
+      
+      console.log("Creating creator record...");
       
       // Create creator record with the same ID as the auth user
       const { data: creatorData, error: creatorError } = await supabase
@@ -240,10 +261,13 @@ export class OnboardingService {
       
       if (creatorError) {
         console.error("Creator record creation error:", creatorError);
-        throw creatorError;
+        throw new Error(`Failed to create creator record: ${creatorError.message}`);
       }
       
+      console.log("Creator record created successfully");
+      
       // Create empty social links record for the creator
+      console.log("Creating social links record...");
       const { error: socialLinksError } = await supabase
         .from('creator_social_links')
         .insert({
@@ -252,17 +276,21 @@ export class OnboardingService {
       
       if (socialLinksError) {
         console.error('Error creating social links:', socialLinksError);
+        // Don't throw here as it's not critical
       }
 
       // Save social media handles to the social_media_logins table
+      console.log("Saving social media handles...");
       await this.saveSocialMediaHandles(formData, email);
       
-      console.log("Successfully created creator with ID:", userId);
+      console.log("=== ACCEPTANCE PROCESS COMPLETED SUCCESSFULLY ===");
+      console.log("Final creator ID:", userId);
       
       return userId;
     } catch (error) {
+      console.error("=== ACCEPTANCE PROCESS FAILED ===");
       console.error("Error accepting submission:", error);
-      return undefined;
+      throw error; // Re-throw the error so it can be handled by the calling code
     }
   }
 }
