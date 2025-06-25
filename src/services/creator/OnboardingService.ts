@@ -208,11 +208,25 @@ export class OnboardingService {
       
       if (teamMemberError) {
         console.error("Team member creation error:", teamMemberError);
+        
+        // Check for specific error messages from the edge function
+        if (teamMemberError.message?.includes('email address has already been registered') || 
+            teamMemberError.message?.includes('email_exists')) {
+          throw new Error("Email already exists");
+        }
+        
         throw new Error(`Failed to create user account: ${teamMemberError.message}`);
       }
       
       if (!teamMemberResponse?.success) {
         console.error("Edge function returned failure:", teamMemberResponse);
+        
+        // Check for specific error in the response
+        if (teamMemberResponse?.error?.includes('email address has already been registered') || 
+            teamMemberResponse?.error?.includes('email_exists')) {
+          throw new Error("Email already exists");
+        }
+        
         throw new Error(`Failed to create user account: ${teamMemberResponse?.error || 'Unknown error'}`);
       }
       
