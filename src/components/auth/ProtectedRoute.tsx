@@ -40,6 +40,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     else if (path.includes('/secure-logins')) setPageTitle('Secure Logins');
     else if (path.includes('/account')) setPageTitle('Account Settings');
     else if (path.includes('/voice-generation')) setPageTitle('Voice Generation');
+    else if (path.includes('/customs-tracker')) setPageTitle('Customs Tracker');
     else setPageTitle('Dashboard');
   }, [location.pathname]);
   
@@ -68,7 +69,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           <SidebarContent className="pt-8">
             <SidebarLogo />
             <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
-              <SidebarNav isAdmin={isAdmin} />
+              <SidebarNav />
             </div>
             <div className="mt-auto p-3 border-t border-premium-border/20">
               {user && <SidebarUserSection />}
