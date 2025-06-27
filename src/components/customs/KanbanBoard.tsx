@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import CustomCard from './CustomCard';
-import CustomDetailsModal from './CustomDetailsModal';
+import CustomDetailsModal from './details/CustomDetailsModal';
 import DoneModal from './DoneModal';
 import { Custom } from '@/types/custom';
 
