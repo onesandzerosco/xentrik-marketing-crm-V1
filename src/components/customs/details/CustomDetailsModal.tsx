@@ -4,14 +4,14 @@ import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { Custom } from '@/types/custom';
-import CustomDetailsHeader from './details/CustomDetailsHeader';
-import FanInfoSection from './details/FanInfoSection';
-import CustomTypeSection from './details/CustomTypeSection';
-import DatesSection from './details/DatesSection';
-import PricingStatusSection from './details/PricingStatusSection';
-import TeamInfoSection from './details/TeamInfoSection';
-import AttachmentsSection from './details/AttachmentsSection';
-import TimestampsSection from './details/TimestampsSection';
+import CustomDetailsHeader from './CustomDetailsHeader';
+import FanInfoSection from './FanInfoSection';
+import CustomTypeSection from './CustomTypeSection';
+import DatesSection from './DatesSection';
+import PricingStatusSection from './PricingStatusSection';
+import TeamInfoSection from './TeamInfoSection';
+import AttachmentsSection from './AttachmentsSection';
+import TimestampsSection from './TimestampsSection';
 
 interface CustomDetailsModalProps {
   isOpen: boolean;

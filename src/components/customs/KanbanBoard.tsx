@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { PremiumCard } from '@/components/ui/premium-card';
@@ -92,7 +93,13 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                             {...provided.dragHandleProps}
                             style={provided.draggableProps.style}
                           >
-                            <CustomCard custom={custom} onClick={() => setSelectedCustom(custom)} onComplete={() => handleCompleteCustom(custom)} />
+                            <CustomCard 
+                              custom={custom} 
+                              onDragStart={(e) => {}}
+                              onClick={() => setSelectedCustom(custom)}
+                              isDragging={false}
+                              isUpdating={isUpdating || false}
+                            />
                           </div>
                         )}
                       </Draggable>
