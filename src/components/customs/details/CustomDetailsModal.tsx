@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Custom } from '@/types/custom';
-import CustomDetailsHeader from './details/CustomDetailsHeader';
-import FanInfoSection from './details/FanInfoSection';
-import DescriptionSection from './details/DescriptionSection';
-import DatesSection from './details/DatesSection';
-import PricingStatusSection from './details/PricingStatusSection';
-import TeamInfoSection from './details/TeamInfoSection';
-import AttachmentsSection from './details/AttachmentsSection';
-import TimestampsSection from './details/TimestampsSection';
+import CustomDetailsHeader from './CustomDetailsHeader';
+import FanInfoSection from './FanInfoSection';
+import DescriptionSection from './DescriptionSection';
+import DatesSection from './DatesSection';
+import PricingStatusSection from './PricingStatusSection';
+import TeamInfoSection from './TeamInfoSection';
+import AttachmentsSection from './AttachmentsSection';
+import TimestampsSection from './TimestampsSection';
 
 interface CustomDetailsModalProps {
   isOpen: boolean;
