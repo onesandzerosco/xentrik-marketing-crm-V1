@@ -13,7 +13,8 @@ import {
   Shield,
   UserPlus,
   ListCheck,
-  Database
+  Database,
+  Kanban
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -53,6 +54,12 @@ const navItems: NavItem[] = [
     label: 'Model Profile',
     icon: <Database className="h-5 w-5" />,
     roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
+  },
+  {
+    path: '/customs-tracker',
+    label: 'Customs Tracker',
+    icon: <Kanban className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
   },
   {
     path: '/shared-files',

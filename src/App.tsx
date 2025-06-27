@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
@@ -37,6 +36,7 @@ import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnbo
 import CreatorOnboardForm from './pages/CreatorOnboardForm';
 import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
 import CreatorsData from './pages/CreatorsData';
+import CustomsTracker from './pages/CustomsTracker';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -116,24 +116,16 @@ const AppRoutes = () => {
       <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
-      
-      {/* New creator onboarding form - Admin only */}
-      <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
-      
-      {/* New admin onboard queue - Admin only */}
-      <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
-      
-      {/* New creators data module - VA, Chatter, Admin */}
-      <Route path="/creators-data" element={<ProtectedRoute><CreatorsData /></ProtectedRoute>} />
-      
-      {/* Public Creator Onboarding Form - No authentication required */}
-      <Route path="/onboarding-form" element={<CreatorOnboardForm />} />
-      <Route path="/onboarding-form/:token" element={<CreatorOnboardForm />} />
-      
-      {/* Public route for creator onboarding from invitation */}
-      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
+      <Route path="/customs-tracker" element={<ProtectedRoute><CustomsTracker /></ProtectedRoute>} />
       
       {/* Add redirects for old route patterns */}
+      
+      <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
+      <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
+      <Route path="/creators-data" element={<ProtectedRoute><CreatorsData /></ProtectedRoute>} />
+      <Route path="/onboarding-form" element={<CreatorOnboardForm />} />
+      <Route path="/onboarding-form/:token" element={<CreatorOnboardForm />} />
+      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
       <Route path="/creator-analytics/:id" element={<CreatorAnalyticsRedirect />} />
       <Route path="/creator-invoices/:id" element={<CreatorInvoicesRedirect />} />
       
