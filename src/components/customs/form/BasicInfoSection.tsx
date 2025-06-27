@@ -42,13 +42,16 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
         
         <div>
           <Label htmlFor="custom_type">Custom Type *</Label>
-          <Input
-            id="custom_type"
-            value={formData.custom_type}
-            onChange={(e) => onInputChange('custom_type', e.target.value)}
-            placeholder="Enter custom type (e.g., Video, Photo(s), Video Call)"
-            required
-          />
+          <Select value={formData.custom_type} onValueChange={(value) => onInputChange('custom_type', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select custom type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Video">Video</SelectItem>
+              <SelectItem value="Photo(s)">Photo(s)</SelectItem>
+              <SelectItem value="Video Call">Video Call</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
