@@ -80,7 +80,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
       <ScrollArea className="w-full">
         <div className="flex gap-4 h-full pb-4" style={{ display: 'flex', width: '100%' }}>
           {COLUMNS.map((column) => (
-            <div key={column.id} className="flex flex-col h-full" style={{ flex: '1 1 0%', minWidth: '0' }}>
+            <div key={column.id} className="flex flex-col h-full" style={{ flex: '1 1 0%', minWidth: '380px' }}>
               <PremiumCard className={`flex-1 ${column.color}`}>
                 <div className="p-2 border-b border-premium-border/20">
                   <h3 className="font-semibold text-white text-sm">{column.title}</h3>

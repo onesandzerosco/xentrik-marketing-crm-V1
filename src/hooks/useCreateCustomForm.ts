@@ -37,6 +37,10 @@ export const useCreateCustomForm = (onSuccess: () => void) => {
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
+    // Automatically remove @ character from fan_username field
+    if (field === 'fan_username') {
+      value = value.replace('@', '');
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -48,12 +52,15 @@ export const useCreateCustomForm = (onSuccess: () => void) => {
     setIsSubmitting(true);
 
     try {
+      // Ensure fan_username doesn't have @ character before saving
+      const cleanUsername = formData.fan_username.replace('@', '');
+
       const { error } = await supabase
         .from('customs')
         .insert([{
           model_name: formData.model_name,
           fan_display_name: formData.fan_display_name,
-          fan_username: formData.fan_username || null,
+          fan_username: cleanUsername || null,
           description: formData.description,
           sale_date: formData.sale_date,
           due_date: formData.due_date || null,

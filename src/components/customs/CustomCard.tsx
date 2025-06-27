@@ -2,7 +2,7 @@
 import React from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, DollarSign, User, AlertTriangle, Paperclip } from 'lucide-react';
+import { Calendar, User, AlertTriangle, Paperclip } from 'lucide-react';
 import { format, isAfter, parseISO } from 'date-fns';
 import { Custom } from '@/types/custom';
 
@@ -49,14 +49,13 @@ const CustomCard: React.FC<CustomCardProps> = ({
       } ${isOverdue ? 'border-red-500/50' : ''} ${
         isUpdating ? 'pointer-events-none opacity-70' : ''
       }`}
-      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
       draggable={!isUpdating}
       onDragStart={(e) => onDragStart(e, custom)}
       onClick={handleClick}
     >
-      <div className="p-2 space-y-2" style={{ width: '100%', minWidth: '0' }}>
+      <div className="p-2 space-y-2">
         {/* Header with Model Name and Overdue Indicator */}
-        <div className="flex items-center justify-between" style={{ minWidth: '0' }}>
+        <div className="flex items-center justify-between">
           <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs flex-shrink-0">
             {custom.model_name}
           </Badge>
@@ -77,7 +76,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         </div>
 
         {/* Fan Information */}
-        <div className="flex items-center text-xs text-muted-foreground" style={{ minWidth: '0' }}>
+        <div className="flex items-center text-xs text-muted-foreground">
           <User className="h-3 w-3 mr-1 flex-shrink-0" />
           <span className="font-medium text-white truncate">{custom.fan_display_name}</span>
           {custom.fan_username && (
@@ -86,16 +85,15 @@ const CustomCard: React.FC<CustomCardProps> = ({
         </div>
 
         {/* Description - Fixed alignment to left */}
-        <div style={{ minWidth: '0', width: '100%' }}>
-          <p className="text-xs text-gray-300 leading-relaxed text-left" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <div>
+          <p className="text-xs text-gray-300 leading-relaxed text-left break-words">
             {truncateDescription(custom.description)}
           </p>
         </div>
 
-        {/* Payment Information */}
-        <div className="flex items-center justify-between text-xs" style={{ minWidth: '0' }}>
+        {/* Payment Information - Removed DollarSign icon */}
+        <div className="flex items-center justify-between text-xs">
           <div className="flex items-center text-muted-foreground flex-shrink-0">
-            <DollarSign className="h-3 w-3 mr-1" />
             <span>
               {formatCurrency(custom.downpayment)} / {formatCurrency(custom.full_price)}
             </span>
@@ -116,7 +114,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         )}
 
         {/* Sale Information */}
-        <div className="text-xs text-muted-foreground" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <div className="text-xs text-muted-foreground break-words">
           <span>Sold by: {custom.sale_by}</span>
           {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
           {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
