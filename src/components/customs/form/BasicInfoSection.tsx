@@ -26,44 +26,41 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="model_name">Model Name *</Label>
-          <Input
-            id="model_name"
-            value={formData.model_name}
-            onChange={(e) => onInputChange('model_name', e.target.value)}
-            placeholder="Enter model name"
-            required
-          />
+          <Select value={formData.model_name} onValueChange={(value) => onInputChange('model_name', value)}>
+            <SelectTrigger>
+              <SelectValue placeholder={creatorsLoading ? "Loading..." : "Select model"} />
+            </SelectTrigger>
+            <SelectContent>
+              {creators.map((creator) => (
+                <SelectItem key={creator.id} value={creator.name}>
+                  {creator.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div>
           <Label htmlFor="custom_type">Custom Type *</Label>
-          <Select value={formData.custom_type} onValueChange={(value) => onInputChange('custom_type', value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select custom type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Video">Video</SelectItem>
-              <SelectItem value="Photo(s)">Photo(s)</SelectItem>
-              <SelectItem value="Video Call">Video Call</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            id="custom_type"
+            value={formData.custom_type}
+            onChange={(e) => onInputChange('custom_type', e.target.value)}
+            placeholder="Enter custom type (e.g., Video, Photo(s), Video Call)"
+            required
+          />
         </div>
       </div>
 
       <div>
         <Label htmlFor="sale_by">Sale Made By *</Label>
-        <Select value={formData.sale_by} onValueChange={(value) => onInputChange('sale_by', value)}>
-          <SelectTrigger>
-            <SelectValue placeholder={creatorsLoading ? "Loading..." : "Select creator"} />
-          </SelectTrigger>
-          <SelectContent>
-            {creators.map((creator) => (
-              <SelectItem key={creator.id} value={creator.name}>
-                {creator.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Input
+          id="sale_by"
+          value={formData.sale_by}
+          onChange={(e) => onInputChange('sale_by', e.target.value)}
+          placeholder="Enter who made the sale"
+          required
+        />
       </div>
     </>
   );

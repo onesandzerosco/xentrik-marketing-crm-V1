@@ -28,7 +28,7 @@ const initialFormData: CustomFormData = {
   full_price: '',
   status: 'partially_paid',
   sale_by: '',
-  custom_type: 'Video'
+  custom_type: ''
 };
 
 export const useCreateCustomForm = (onSuccess: () => void) => {
