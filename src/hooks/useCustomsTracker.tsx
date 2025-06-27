@@ -20,7 +20,14 @@ export const useCustomsTracker = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCustoms(data || []);
+      
+      // Type cast the data to ensure proper typing
+      const typedData = (data || []).map(item => ({
+        ...item,
+        status: item.status as CustomStatus
+      }));
+      
+      setCustoms(typedData);
     } catch (error) {
       console.error('Error fetching customs:', error);
       toast({
@@ -44,13 +51,19 @@ export const useCustomsTracker = () => {
 
       if (error) throw error;
 
-      setCustoms(prev => [data, ...prev]);
+      // Type cast the response data
+      const typedData = {
+        ...data,
+        status: data.status as CustomStatus
+      };
+
+      setCustoms(prev => [typedData, ...prev]);
       toast({
         title: 'Custom created',
         description: 'New custom has been added successfully.',
       });
       
-      return data;
+      return typedData;
     } catch (error) {
       console.error('Error creating custom:', error);
       toast({

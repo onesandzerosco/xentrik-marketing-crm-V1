@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,14 +10,9 @@ import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Sidebar from "./components/sidebar/Sidebar";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Team from "./pages/Team";
-import Onboarding from "./pages/Onboarding";
 import PageTransition from "./components/PageTransition";
-import SecureArea from "./pages/SecureArea";
-import FileManager from "./pages/FileManager";
-import ModelAnnouncements from "./pages/ModelAnnouncements";
 import CustomsTracker from "./pages/CustomsTracker";
 
 function App() {
@@ -33,14 +29,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <Dashboard />
-                    </PageTransition>
-                  </main>
-                </div>
+                <PageTransition>
+                  <Dashboard />
+                </PageTransition>
               </ProtectedRoute>
             }
           />
@@ -48,94 +39,22 @@ function App() {
             path="/team"
             element={
               <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <Team />
-                    </PageTransition>
-                  </main>
-                </div>
+                <PageTransition>
+                  <Team />
+                </PageTransition>
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/onboarding"
-            element={
-              <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <Onboarding />
-                    </PageTransition>
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/secure-area"
-            element={
-              <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <SecureArea />
-                    </PageTransition>
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/file-manager"
-            element={
-              <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <FileManager />
-                    </PageTransition>
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/model-announcements"
-            element={
-              <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <ModelAnnouncements />
-                    </PageTransition>
-                  </main>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          
           <Route 
             path="/customs-tracker" 
             element={
               <ProtectedRoute>
-                <div className="flex">
-                  <Sidebar />
-                  <main className="flex-1 ml-64">
-                    <PageTransition>
-                      <CustomsTracker />
-                    </PageTransition>
-                  </main>
-                </div>
+                <PageTransition>
+                  <CustomsTracker />
+                </PageTransition>
               </ProtectedRoute>
             } 
           />
-          
         </Routes>
       </Router>
     </div>
