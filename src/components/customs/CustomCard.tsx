@@ -48,18 +48,19 @@ const CustomCard: React.FC<CustomCardProps> = ({
         isDragging ? 'opacity-50 scale-95' : 'hover:scale-105'
       } ${isOverdue ? 'border-red-500/50' : ''} ${
         isUpdating ? 'pointer-events-none opacity-70' : ''
-      } overflow-hidden`}
+      }`}
+      style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
       draggable={!isUpdating}
       onDragStart={(e) => onDragStart(e, custom)}
       onClick={handleClick}
     >
-      <div className="p-2 space-y-2 w-full">
+      <div className="p-2 space-y-2" style={{ width: '100%', minWidth: '0' }}>
         {/* Header with Model Name and Overdue Indicator */}
-        <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs">
+        <div className="flex items-center justify-between" style={{ minWidth: '0' }}>
+          <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs flex-shrink-0">
             {custom.model_name}
           </Badge>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {custom.attachments && custom.attachments.length > 0 && (
               <div className="flex items-center text-muted-foreground text-xs">
                 <Paperclip className="h-3 w-3 mr-1" />
@@ -76,29 +77,31 @@ const CustomCard: React.FC<CustomCardProps> = ({
         </div>
 
         {/* Fan Information */}
-        <div className="flex items-center text-xs text-muted-foreground">
-          <User className="h-3 w-3 mr-1" />
-          <span className="font-medium text-white">{custom.fan_display_name}</span>
+        <div className="flex items-center text-xs text-muted-foreground" style={{ minWidth: '0' }}>
+          <User className="h-3 w-3 mr-1 flex-shrink-0" />
+          <span className="font-medium text-white truncate">{custom.fan_display_name}</span>
           {custom.fan_username && (
-            <span className="ml-1">(@{custom.fan_username})</span>
+            <span className="ml-1 truncate">(@{custom.fan_username})</span>
           )}
         </div>
 
         {/* Description - Fixed alignment to left */}
-        <p className="text-xs text-gray-300 leading-relaxed text-left break-words">
-          {truncateDescription(custom.description)}
-        </p>
+        <div style={{ minWidth: '0', width: '100%' }}>
+          <p className="text-xs text-gray-300 leading-relaxed text-left" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+            {truncateDescription(custom.description)}
+          </p>
+        </div>
 
         {/* Payment Information */}
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center text-muted-foreground">
+        <div className="flex items-center justify-between text-xs" style={{ minWidth: '0' }}>
+          <div className="flex items-center text-muted-foreground flex-shrink-0">
             <DollarSign className="h-3 w-3 mr-1" />
             <span>
               {formatCurrency(custom.downpayment)} / {formatCurrency(custom.full_price)}
             </span>
           </div>
           {isPaid && (
-            <Badge variant="outline" className="text-green-400 border-green-400 text-xs">
+            <Badge variant="outline" className="text-green-400 border-green-400 text-xs flex-shrink-0">
               Paid
             </Badge>
           )}
@@ -107,14 +110,14 @@ const CustomCard: React.FC<CustomCardProps> = ({
         {/* Due Date - only show if due_date exists */}
         {custom.due_date && (
           <div className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3 mr-1" />
-            <span>Due: {format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
+            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span>{format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
           </div>
         )}
 
         {/* Sale Information */}
-        <div className="text-xs text-muted-foreground break-words">
-          Sold by: {custom.sale_by}
+        <div className="text-xs text-muted-foreground" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          <span>Sold by: {custom.sale_by}</span>
           {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
           {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
         </div>
