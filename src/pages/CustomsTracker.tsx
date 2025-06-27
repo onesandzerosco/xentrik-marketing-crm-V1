@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,25 +8,7 @@ import { Plus, Search } from 'lucide-react';
 import KanbanBoard from '@/components/customs/KanbanBoard';
 import CreateCustomModal from '@/components/customs/CreateCustomModal';
 import { useToast } from '@/hooks/use-toast';
-
-interface Custom {
-  id: string;
-  model_name: string;
-  fan_display_name: string;
-  fan_username: string | null;
-  description: string;
-  sale_date: string;
-  due_date: string | null;
-  downpayment: number;
-  full_price: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  sale_by: string;
-  endorsed_by?: string;
-  sent_by?: string;
-  attachments?: string[] | null;
-}
+import { Custom } from '@/types/custom';
 
 const CustomsTracker = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

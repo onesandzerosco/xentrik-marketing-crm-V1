@@ -1,29 +1,9 @@
-
 import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import CustomCard from './CustomCard';
 import CustomDetailsModal from './CustomDetailsModal';
 import DoneModal from './DoneModal';
-
-interface Custom {
-  id: string;
-  model_name: string;
-  fan_display_name: string;
-  fan_username: string | null;
-  description: string;
-  sale_date: string;
-  due_date: string | null;
-  downpayment: number;
-  full_price: number;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  sale_by: string;
-  custom_type?: string | null;
-  endorsed_by?: string;
-  sent_by?: string;
-  attachments?: string[] | null;
-}
+import { Custom } from '@/types/custom';
 
 interface KanbanBoardProps {
   customs: Custom[];
