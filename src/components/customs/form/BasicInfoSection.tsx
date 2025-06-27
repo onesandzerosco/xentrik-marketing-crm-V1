@@ -50,6 +50,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
               <SelectItem value="Video">Video</SelectItem>
               <SelectItem value="Photo(s)">Photo(s)</SelectItem>
               <SelectItem value="Video Call">Video Call</SelectItem>
+              <SelectItem value="Fan Gift">Fan Gift</SelectItem>
             </SelectContent>
           </Select>
         </div>

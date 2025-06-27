@@ -89,12 +89,10 @@ const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom })
             </SelectTrigger>
             <SelectContent className="z-50 bg-background border border-border">
               <SelectItem value="none">None</SelectItem>
-              <SelectItem value="video">Video</SelectItem>
-              <SelectItem value="photo">Photo</SelectItem>
-              <SelectItem value="audio">Audio</SelectItem>
-              <SelectItem value="live_session">Live Session</SelectItem>
-              <SelectItem value="physical_item">Physical Item</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="Video">Video</SelectItem>
+              <SelectItem value="Photo(s)">Photo(s)</SelectItem>
+              <SelectItem value="Video Call">Video Call</SelectItem>
+              <SelectItem value="Fan Gift">Fan Gift</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex gap-2">
