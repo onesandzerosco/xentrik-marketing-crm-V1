@@ -271,7 +271,7 @@ export type Database = {
           custom_type: string | null
           description: string
           downpayment: number
-          due_date: string
+          due_date: string | null
           endorsed_by: string | null
           fan_display_name: string
           fan_username: string
@@ -290,7 +290,7 @@ export type Database = {
           custom_type?: string | null
           description: string
           downpayment?: number
-          due_date: string
+          due_date?: string | null
           endorsed_by?: string | null
           fan_display_name: string
           fan_username: string
@@ -309,7 +309,7 @@ export type Database = {
           custom_type?: string | null
           description?: string
           downpayment?: number
-          due_date?: string
+          due_date?: string | null
           endorsed_by?: string | null
           fan_display_name?: string
           fan_username?: string

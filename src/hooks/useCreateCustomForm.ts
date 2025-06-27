@@ -28,7 +28,7 @@ const initialFormData: CustomFormData = {
   full_price: '',
   status: 'partially_paid',
   sale_by: '',
-  custom_type: ''
+  custom_type: 'Video'
 };
 
 export const useCreateCustomForm = (onSuccess: () => void) => {
@@ -61,7 +61,7 @@ export const useCreateCustomForm = (onSuccess: () => void) => {
           full_price: parseFloat(formData.full_price),
           status: formData.status,
           sale_by: formData.sale_by,
-          custom_type: formData.custom_type || null,
+          custom_type: formData.custom_type,
           attachments: attachmentIds
         }]);
 
