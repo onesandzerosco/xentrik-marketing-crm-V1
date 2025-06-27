@@ -1,5 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit, Save, X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Custom } from '@/types/custom';
 
 interface AdditionalInfoSectionProps {
@@ -7,22 +13,115 @@ interface AdditionalInfoSectionProps {
 }
 
 const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom }) => {
+  const [isEditingCustomType, setIsEditingCustomType] = useState(false);
+  const [editedCustomType, setEditedCustomType] = useState(custom.custom_type || '');
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    setEditedCustomType(custom.custom_type || '');
+  }, [custom.custom_type]);
+
+  const updateCustomTypeMutation = useMutation({
+    mutationFn: async ({ customId, customType }: { customId: string; customType: string | null }) => {
+      const { error } = await supabase
+        .from('customs')
+        .update({ 
+          custom_type: customType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', customId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customs'] });
+      setIsEditingCustomType(false);
+      toast({
+        title: "Success",
+        description: "Custom type updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update custom type",
+        variant: "destructive",
+      });
+      console.error('Error updating custom type:', error);
+    }
+  });
+
+  const handleSaveCustomType = () => {
+    updateCustomTypeMutation.mutate({
+      customId: custom.id,
+      customType: editedCustomType || null
+    });
+  };
+
+  const handleCancelCustomType = () => {
+    setEditedCustomType(custom.custom_type || '');
+    setIsEditingCustomType(false);
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label className="text-sm font-medium text-muted-foreground">Sale Made By</label>
-        <div className="mt-1">
-          <span className="text-white">{custom.sale_by}</span>
-        </div>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="text-sm font-medium text-muted-foreground">Custom Type</label>
+        {!isEditingCustomType && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsEditingCustomType(true)}
+            disabled={updateCustomTypeMutation.isPending}
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-white"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+        )}
       </div>
       
-      {custom.custom_type && (
-        <div>
-          <label className="text-sm font-medium text-muted-foreground">Custom Type</label>
-          <div className="mt-1">
-            <span className="text-white">{custom.custom_type}</span>
+      {isEditingCustomType ? (
+        <div className="space-y-2">
+          <Select value={editedCustomType} onValueChange={setEditedCustomType}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select custom type" />
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-background border border-border">
+              <SelectItem value="">None</SelectItem>
+              <SelectItem value="video">Video</SelectItem>
+              <SelectItem value="photo">Photo</SelectItem>
+              <SelectItem value="audio">Audio</SelectItem>
+              <SelectItem value="live_session">Live Session</SelectItem>
+              <SelectItem value="physical_item">Physical Item</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSaveCustomType}
+              disabled={updateCustomTypeMutation.isPending}
+              className="h-8 w-8 p-0"
+            >
+              <Save className="h-4 w-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCancelCustomType}
+              disabled={updateCustomTypeMutation.isPending}
+              className="h-8 w-8 p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
         </div>
+      ) : (
+        <p className="text-white bg-secondary/20 p-3 rounded">
+          {custom.custom_type || 'Not specified'}
+        </p>
       )}
     </div>
   );

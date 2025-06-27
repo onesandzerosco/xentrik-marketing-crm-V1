@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit2, Save, X } from 'lucide-react';
+import { Edit, Save, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -72,13 +72,13 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ custom }) => {
         <label className="text-sm font-medium text-muted-foreground">Description</label>
         {canEdit && !isEditing && (
           <Button
-            variant="ghost"
             size="sm"
+            variant="ghost"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2"
+            disabled={updateDescriptionMutation.isPending}
+            className="h-6 w-6 p-0 text-muted-foreground hover:text-white"
           >
-            <Edit2 className="h-3 w-3" />
-            Edit
+            <Edit className="h-3 w-3" />
           </Button>
         )}
       </div>
@@ -90,26 +90,26 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ custom }) => {
             onChange={(e) => setEditedDescription(e.target.value)}
             rows={4}
             className="w-full"
+            disabled={updateDescriptionMutation.isPending}
           />
           <div className="flex gap-2">
             <Button
               size="sm"
+              variant="outline"
               onClick={handleSave}
               disabled={updateDescriptionMutation.isPending}
-              className="flex items-center gap-2"
+              className="h-8 w-8 p-0"
             >
-              <Save className="h-3 w-3" />
-              {updateDescriptionMutation.isPending ? 'Saving...' : 'Save'}
+              <Save className="h-4 w-4" />
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={handleCancel}
               disabled={updateDescriptionMutation.isPending}
-              className="flex items-center gap-2"
+              className="h-8 w-8 p-0"
             >
-              <X className="h-3 w-3" />
-              Cancel
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>

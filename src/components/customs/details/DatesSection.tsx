@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar, Edit2, Save, X } from 'lucide-react';
+import { Calendar, Edit, Save, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -80,13 +80,13 @@ const DatesSection: React.FC<DatesSectionProps> = ({ custom }) => {
           <label className="text-sm font-medium text-muted-foreground">Due Date</label>
           {!isEditingDueDate && (
             <Button
-              variant="ghost"
               size="sm"
+              variant="ghost"
               onClick={() => setIsEditingDueDate(true)}
-              className="flex items-center gap-2 h-6 px-2"
+              disabled={updateDueDateMutation.isPending}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-white"
             >
-              <Edit2 className="h-3 w-3" />
-              Edit
+              <Edit className="h-3 w-3" />
             </Button>
           )}
         </div>
@@ -98,26 +98,26 @@ const DatesSection: React.FC<DatesSectionProps> = ({ custom }) => {
               value={editedDueDate}
               onChange={(e) => setEditedDueDate(e.target.value)}
               className="w-full"
+              disabled={updateDueDateMutation.isPending}
             />
             <div className="flex gap-2">
               <Button
                 size="sm"
+                variant="outline"
                 onClick={handleSaveDueDate}
                 disabled={updateDueDateMutation.isPending}
-                className="flex items-center gap-2"
+                className="h-8 w-8 p-0"
               >
-                <Save className="h-3 w-3" />
-                {updateDueDateMutation.isPending ? 'Saving...' : 'Save'}
+                <Save className="h-4 w-4" />
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={handleCancelDueDate}
                 disabled={updateDueDateMutation.isPending}
-                className="flex items-center gap-2"
+                className="h-8 w-8 p-0"
               >
-                <X className="h-3 w-3" />
-                Cancel
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
