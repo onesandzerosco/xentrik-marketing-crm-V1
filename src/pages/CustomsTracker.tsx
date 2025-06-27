@@ -62,10 +62,44 @@ const CustomsTracker = () => {
     }
   });
 
+  // Update custom downpayment mutation
+  const updateDownpaymentMutation = useMutation({
+    mutationFn: async ({ customId, newDownpayment }: { customId: string; newDownpayment: number }) => {
+      const { error } = await supabase
+        .from('customs')
+        .update({ 
+          downpayment: newDownpayment,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', customId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customs'] });
+      toast({
+        title: "Success",
+        description: "Downpayment updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update downpayment",
+        variant: "destructive",
+      });
+      console.error('Error updating downpayment:', error);
+    }
+  });
+
   // Filter customs by model name
   const filteredCustoms = customs.filter(custom =>
     modelFilter === '' || custom.model_name.toLowerCase().includes(modelFilter.toLowerCase())
   );
+
+  const handleUpdateDownpayment = (customId: string, newDownpayment: number) => {
+    updateDownpaymentMutation.mutate({ customId, newDownpayment });
+  };
 
   if (isLoading) {
     return (
@@ -127,7 +161,8 @@ const CustomsTracker = () => {
         <KanbanBoard 
           customs={filteredCustoms} 
           onUpdateStatus={updateCustomMutation.mutate}
-          isUpdating={updateCustomMutation.isPending}
+          onUpdateDownpayment={handleUpdateDownpayment}
+          isUpdating={updateCustomMutation.isPending || updateDownpaymentMutation.isPending}
         />
       </div>
 

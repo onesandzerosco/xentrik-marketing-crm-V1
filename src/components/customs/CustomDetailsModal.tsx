@@ -19,6 +19,7 @@ interface CustomDetailsModalProps {
   onClose: () => void;
   custom: Custom | null;
   onUpdateStatus?: (data: { customId: string; newStatus: string; chatterName?: string }) => void;
+  onUpdateDownpayment?: (customId: string, newDownpayment: number) => void;
   isUpdating?: boolean;
 }
 
@@ -27,6 +28,7 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
   onClose, 
   custom, 
   onUpdateStatus,
+  onUpdateDownpayment,
   isUpdating 
 }) => {
   if (!custom) return null;
@@ -59,7 +61,11 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
             <DatesSection custom={custom} />
 
             {/* Right Column - Pricing and Status */}
-            <PricingStatusSection custom={custom} />
+            <PricingStatusSection 
+              custom={custom} 
+              onUpdateDownpayment={onUpdateDownpayment}
+              isUpdating={isUpdating}
+            />
           </div>
 
           {/* Additional Info */}
