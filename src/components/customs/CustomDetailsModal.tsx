@@ -9,7 +9,6 @@ import FanInfoSection from './details/FanInfoSection';
 import DescriptionSection from './details/DescriptionSection';
 import DatesSection from './details/DatesSection';
 import PricingStatusSection from './details/PricingStatusSection';
-import AdditionalInfoSection from './details/AdditionalInfoSection';
 import TeamInfoSection from './details/TeamInfoSection';
 import AttachmentsSection from './details/AttachmentsSection';
 import TimestampsSection from './details/TimestampsSection';
@@ -57,7 +56,7 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
 
           {/* Dates and Pricing - Reorganized Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column - Dates */}
+            {/* Left Column - Dates and Custom Type */}
             <DatesSection custom={custom} />
 
             {/* Right Column - Pricing and Status */}
@@ -67,9 +66,6 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
               isUpdating={isUpdating}
             />
           </div>
-
-          {/* Additional Info */}
-          <AdditionalInfoSection custom={custom} />
 
           {/* Team Info */}
           <TeamInfoSection custom={custom} />
