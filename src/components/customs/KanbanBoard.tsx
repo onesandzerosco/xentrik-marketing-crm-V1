@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -77,9 +78,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
   return (
     <>
       <ScrollArea className="w-full">
-        <div className="flex gap-4 h-full min-w-max pb-4">
+        <div className="flex gap-4 h-full pb-4">
           {COLUMNS.map((column) => (
-            <div key={column.id} className="flex flex-col h-full min-w-[400px]">
+            <div key={column.id} className="flex flex-col h-full flex-1">
               <PremiumCard className={`flex-1 ${column.color}`}>
                 <div className="p-2 border-b border-premium-border/20">
                   <h3 className="font-semibold text-white text-sm">{column.title}</h3>

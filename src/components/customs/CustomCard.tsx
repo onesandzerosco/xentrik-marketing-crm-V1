@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { Badge } from '@/components/ui/badge';
@@ -47,12 +48,12 @@ const CustomCard: React.FC<CustomCardProps> = ({
         isDragging ? 'opacity-50 scale-95' : 'hover:scale-105'
       } ${isOverdue ? 'border-red-500/50' : ''} ${
         isUpdating ? 'pointer-events-none opacity-70' : ''
-      }`}
+      } overflow-hidden`}
       draggable={!isUpdating}
       onDragStart={(e) => onDragStart(e, custom)}
       onClick={handleClick}
     >
-      <div className="p-2 space-y-2">
+      <div className="p-2 space-y-2 w-full">
         {/* Header with Model Name and Overdue Indicator */}
         <div className="flex items-center justify-between">
           <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs">
@@ -83,8 +84,8 @@ const CustomCard: React.FC<CustomCardProps> = ({
           )}
         </div>
 
-        {/* Description */}
-        <p className="text-xs text-gray-300 leading-relaxed">
+        {/* Description - Fixed alignment to left */}
+        <p className="text-xs text-gray-300 leading-relaxed text-left break-words">
           {truncateDescription(custom.description)}
         </p>
 
@@ -112,7 +113,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         )}
 
         {/* Sale Information */}
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground break-words">
           Sold by: {custom.sale_by}
           {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
           {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
