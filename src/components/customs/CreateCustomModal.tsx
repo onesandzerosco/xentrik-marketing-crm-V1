@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 
 interface CreateCustomModalProps {
   isOpen: boolean;
@@ -32,6 +33,21 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Fetch active creators for the dropdown
+  const { data: creators = [], isLoading: creatorsLoading } = useQuery({
+    queryKey: ['active-creators'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('creators')
+        .select('id, name')
+        .eq('active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -49,7 +65,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
           fan_username: formData.fan_username,
           description: formData.description,
           sale_date: formData.sale_date,
-          due_date: formData.due_date,
+          due_date: formData.due_date || null, // Allow null for optional due date
           downpayment: parseFloat(formData.downpayment),
           full_price: parseFloat(formData.full_price),
           status: formData.status,
@@ -117,12 +133,18 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="model_name">Model Name *</Label>
-              <Input
-                id="model_name"
-                value={formData.model_name}
-                onChange={(e) => handleInputChange('model_name', e.target.value)}
-                required
-              />
+              <Select value={formData.model_name} onValueChange={(value) => handleInputChange('model_name', value)} required>
+                <SelectTrigger>
+                  <SelectValue placeholder={creatorsLoading ? "Loading creators..." : "Select a model"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {creators.map((creator) => (
+                    <SelectItem key={creator.id} value={creator.name}>
+                      {creator.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
@@ -131,6 +153,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 id="fan_display_name"
                 value={formData.fan_display_name}
                 onChange={(e) => handleInputChange('fan_display_name', e.target.value)}
+                placeholder="Fan's display name (emojis supported 🎉)"
                 required
               />
             </div>
@@ -143,6 +166,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 id="fan_username"
                 value={formData.fan_username}
                 onChange={(e) => handleInputChange('fan_username', e.target.value)}
+                placeholder="@username (emojis supported 😊)"
                 required
               />
             </div>
@@ -169,6 +193,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Custom description (emojis supported 💝)"
               rows={3}
               required
             />
@@ -187,14 +212,16 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
             </div>
             
             <div>
-              <Label htmlFor="due_date">Due Date *</Label>
+              <Label htmlFor="due_date">Due Date (Optional)</Label>
               <Input
                 id="due_date"
                 type="datetime-local"
                 value={formData.due_date}
                 onChange={(e) => handleInputChange('due_date', e.target.value)}
-                required
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave empty if no specific due date is required
+              </p>
             </div>
           </div>
 
@@ -208,6 +235,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 min="0"
                 value={formData.downpayment}
                 onChange={(e) => handleInputChange('downpayment', e.target.value)}
+                placeholder="0.00"
                 required
               />
             </div>
@@ -221,6 +249,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 min="0"
                 value={formData.full_price}
                 onChange={(e) => handleInputChange('full_price', e.target.value)}
+                placeholder="0.00"
                 required
               />
             </div>
@@ -230,7 +259,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
             <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || creatorsLoading}>
               {isSubmitting ? 'Creating...' : 'Create Custom'}
             </Button>
           </div>

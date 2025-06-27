@@ -12,7 +12,7 @@ interface Custom {
   fan_username: string;
   description: string;
   sale_date: string;
-  due_date: string;
+  due_date: string | null;
   downpayment: number;
   full_price: number;
   status: string;
@@ -36,7 +36,8 @@ const CustomCard: React.FC<CustomCardProps> = ({
   isDragging, 
   isUpdating 
 }) => {
-  const isOverdue = isAfter(new Date(), parseISO(custom.due_date));
+  // Handle optional due date - only check for overdue if due_date exists
+  const isOverdue = custom.due_date ? isAfter(new Date(), parseISO(custom.due_date)) : false;
   const isPaid = custom.downpayment >= custom.full_price;
   
   const truncateDescription = (text: string, maxLength: number = 60) => {
@@ -102,11 +103,13 @@ const CustomCard: React.FC<CustomCardProps> = ({
           )}
         </div>
 
-        {/* Due Date */}
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Calendar className="h-3 w-3 mr-1" />
-          <span>Due: {format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
-        </div>
+        {/* Due Date - only show if due_date exists */}
+        {custom.due_date && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span>Due: {format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
+          </div>
+        )}
 
         {/* Sale Information */}
         <div className="text-xs text-muted-foreground">
