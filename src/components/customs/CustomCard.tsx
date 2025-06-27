@@ -99,13 +99,16 @@ const CustomCard: React.FC<CustomCardProps> = ({
           </div>
         </div>
 
-        {/* Due Date - only show if due_date exists */}
-        {custom.due_date && (
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-            <span>{format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
-          </div>
-        )}
+        {/* Due Date - always show, with fallback text */}
+        <div className="flex items-center text-xs text-muted-foreground">
+          <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+          <span>
+            {custom.due_date 
+              ? format(parseISO(custom.due_date), 'MMM dd, yyyy')
+              : 'Due Date not specified'
+            }
+          </span>
+        </div>
 
         {/* Sale Information */}
         <div className="text-xs text-muted-foreground break-words">
