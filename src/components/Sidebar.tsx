@@ -39,7 +39,7 @@ const Sidebar = () => {
           <SidebarLogo />
           
           <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
-            <SidebarNav />
+            <SidebarNav isAdmin={isAdmin} />
           </div>
 
           {user && <div className="mb-4"><SidebarUserSection /></div>}

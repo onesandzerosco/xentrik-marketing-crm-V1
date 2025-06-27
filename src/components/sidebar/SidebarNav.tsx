@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -9,8 +8,14 @@ import {
 } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { MainNavItem } from '@/types'
+import { Icons } from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+
+interface SidebarNavProps {
+  items: MainNavItem[]
+}
 
 const SidebarNav = () => {
   const location = useLocation()
@@ -44,7 +49,7 @@ const SidebarNav = () => {
     {
       name: 'Customs Tracker',
       href: '/customs-tracker',
-      icon: Package,
+      icon: Package, // You may want to import this icon from lucide-react
     },
   ]
 
