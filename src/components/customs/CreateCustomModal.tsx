@@ -28,7 +28,9 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
     due_date: '',
     downpayment: '',
     full_price: '',
-    status: 'partially_paid'
+    status: 'partially_paid',
+    sale_by: '',
+    custom_type: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -107,14 +109,15 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
         .insert([{
           model_name: formData.model_name,
           fan_display_name: formData.fan_display_name,
-          fan_username: formData.fan_username || null, // Make username optional
+          fan_username: formData.fan_username || null,
           description: formData.description,
           sale_date: formData.sale_date,
-          due_date: formData.due_date || null, // Allow null for optional due date
+          due_date: formData.due_date || null,
           downpayment: parseFloat(formData.downpayment),
           full_price: parseFloat(formData.full_price),
           status: formData.status,
-          sale_by: user?.name || user?.email || 'Unknown',
+          sale_by: formData.sale_by,
+          custom_type: formData.custom_type || null,
           attachments: attachmentIds
         }]);
 
@@ -135,7 +138,9 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
         due_date: '',
         downpayment: '',
         full_price: '',
-        status: 'partially_paid'
+        status: 'partially_paid',
+        sale_by: '',
+        custom_type: ''
       });
       setAttachments([]);
 
@@ -163,7 +168,9 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
         due_date: '',
         downpayment: '',
         full_price: '',
-        status: 'partially_paid'
+        status: 'partially_paid',
+        sale_by: '',
+        custom_type: ''
       });
       setAttachments([]);
       onClose();
@@ -196,6 +203,18 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
             </div>
             
             <div>
+              <Label htmlFor="custom_type">Custom Type</Label>
+              <Input
+                id="custom_type"
+                value={formData.custom_type}
+                onChange={(e) => handleInputChange('custom_type', e.target.value)}
+                placeholder="e.g., Video, Photo, Audio"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               <Label htmlFor="fan_display_name">Fan Display Name *</Label>
               <Input
                 id="fan_display_name"
@@ -205,9 +224,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 required
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
             <div>
               <Label htmlFor="fan_username">Fan Username</Label>
               <Input
@@ -215,6 +232,19 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
                 value={formData.fan_username}
                 onChange={(e) => handleInputChange('fan_username', e.target.value)}
                 placeholder="@username (emojis supported 😊)"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="sale_by">Sale Made By *</Label>
+              <Input
+                id="sale_by"
+                value={formData.sale_by}
+                onChange={(e) => handleInputChange('sale_by', e.target.value)}
+                placeholder="Who made this sale?"
+                required
               />
             </div>
             
