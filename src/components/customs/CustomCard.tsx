@@ -23,9 +23,8 @@ const CustomCard: React.FC<CustomCardProps> = ({
 }) => {
   // Handle optional due date - only check for overdue if due_date exists
   const isOverdue = custom.due_date ? isAfter(new Date(), parseISO(custom.due_date)) : false;
-  const isPaid = custom.downpayment >= custom.full_price;
   
-  const truncateDescription = (text: string, maxLength: number = 60) => {
+  const truncateDescription = (text: string, maxLength: number = 30) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
@@ -84,25 +83,20 @@ const CustomCard: React.FC<CustomCardProps> = ({
           )}
         </div>
 
-        {/* Description - Fixed alignment to left */}
+        {/* Description - Single line with ellipsis */}
         <div>
-          <p className="text-xs text-gray-300 leading-relaxed text-left break-words">
+          <p className="text-xs text-gray-300 text-left truncate">
             {truncateDescription(custom.description)}
           </p>
         </div>
 
-        {/* Payment Information - Removed DollarSign icon */}
-        <div className="flex items-center justify-between text-xs">
+        {/* Payment Information - Removed Paid badge */}
+        <div className="flex items-center text-xs">
           <div className="flex items-center text-muted-foreground flex-shrink-0">
             <span>
               {formatCurrency(custom.downpayment)} / {formatCurrency(custom.full_price)}
             </span>
           </div>
-          {isPaid && (
-            <Badge variant="outline" className="text-green-400 border-green-400 text-xs flex-shrink-0">
-              Paid
-            </Badge>
-          )}
         </div>
 
         {/* Due Date - only show if due_date exists */}
