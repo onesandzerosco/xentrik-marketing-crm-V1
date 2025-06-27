@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import CustomCard from './CustomCard';
+import CustomDetailsModal from './CustomDetailsModal';
 import DoneModal from './DoneModal';
 
 interface Custom {
@@ -17,6 +19,7 @@ interface Custom {
   created_at: string;
   updated_at: string;
   sale_by: string;
+  custom_type?: string | null;
   endorsed_by?: string;
   sent_by?: string;
   attachments?: string[] | null;
@@ -37,6 +40,7 @@ const COLUMNS = [
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUpdating }) => {
   const [doneModalOpen, setDoneModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedCustom, setSelectedCustom] = useState<Custom | null>(null);
   const [draggedCustom, setDraggedCustom] = useState<Custom | null>(null);
 
@@ -68,6 +72,11 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
     setDraggedCustom(null);
   };
 
+  const handleCardClick = (custom: Custom) => {
+    setSelectedCustom(custom);
+    setDetailsModalOpen(true);
+  };
+
   const handleDoneConfirm = (chatterName: string) => {
     if (selectedCustom) {
       onUpdateStatus({ 
@@ -86,19 +95,19 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 h-full">
         {COLUMNS.map((column) => (
           <div key={column.id} className="flex flex-col h-full">
             <PremiumCard className={`flex-1 ${column.color}`}>
-              <div className="p-4 border-b border-premium-border/20">
-                <h3 className="font-semibold text-white">{column.title}</h3>
-                <span className="text-sm text-muted-foreground">
+              <div className="p-2 border-b border-premium-border/20">
+                <h3 className="font-semibold text-white text-sm">{column.title}</h3>
+                <span className="text-xs text-muted-foreground">
                   {getCustomsByStatus(column.id).length} items
                 </span>
               </div>
               
               <div
-                className="flex-1 p-4 space-y-3 overflow-y-auto"
+                className="flex-1 p-2 space-y-2 overflow-y-auto"
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, column.id)}
               >
@@ -107,6 +116,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
                     <CustomCard
                       custom={custom}
                       onDragStart={handleDragStart}
+                      onClick={handleCardClick}
                       isDragging={draggedCustom?.id === custom.id}
                       isUpdating={isUpdating}
                     />
@@ -114,7 +124,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
                 ))}
                 
                 {getCustomsByStatus(column.id).length === 0 && (
-                  <div className="text-center text-muted-foreground py-8">
+                  <div className="text-center text-muted-foreground py-8 text-xs">
                     No customs in this stage
                   </div>
                 )}
@@ -123,6 +133,15 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
           </div>
         ))}
       </div>
+
+      <CustomDetailsModal
+        isOpen={detailsModalOpen}
+        onClose={() => {
+          setDetailsModalOpen(false);
+          setSelectedCustom(null);
+        }}
+        custom={selectedCustom}
+      />
 
       <DoneModal
         isOpen={doneModalOpen}

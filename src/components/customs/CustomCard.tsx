@@ -19,6 +19,7 @@ interface Custom {
   created_at: string;
   updated_at: string;
   sale_by: string;
+  custom_type?: string | null;
   endorsed_by?: string;
   sent_by?: string;
   attachments?: string[] | null;
@@ -27,6 +28,7 @@ interface Custom {
 interface CustomCardProps {
   custom: Custom;
   onDragStart: (e: React.DragEvent, custom: Custom) => void;
+  onClick: (custom: Custom) => void;
   isDragging: boolean;
   isUpdating: boolean;
 }
@@ -34,6 +36,7 @@ interface CustomCardProps {
 const CustomCard: React.FC<CustomCardProps> = ({ 
   custom, 
   onDragStart, 
+  onClick,
   isDragging, 
   isUpdating 
 }) => {
@@ -53,23 +56,29 @@ const CustomCard: React.FC<CustomCardProps> = ({
     }).format(amount);
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClick(custom);
+  };
+
   return (
     <PremiumCard
-      className={`cursor-move transition-all duration-200 ${
+      className={`cursor-pointer transition-all duration-200 ${
         isDragging ? 'opacity-50 scale-95' : 'hover:scale-105'
       } ${isOverdue ? 'border-red-500/50' : ''} ${
         isUpdating ? 'pointer-events-none opacity-70' : ''
       }`}
       draggable={!isUpdating}
       onDragStart={(e) => onDragStart(e, custom)}
+      onClick={handleClick}
     >
-      <div className="p-4 space-y-3">
+      <div className="p-2 space-y-2">
         {/* Header with Model Name and Overdue Indicator */}
         <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-brand-yellow border-brand-yellow">
+          <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs">
             {custom.model_name}
           </Badge>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {custom.attachments && custom.attachments.length > 0 && (
               <div className="flex items-center text-muted-foreground text-xs">
                 <Paperclip className="h-3 w-3 mr-1" />
@@ -86,7 +95,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         </div>
 
         {/* Fan Information */}
-        <div className="flex items-center text-sm text-muted-foreground">
+        <div className="flex items-center text-xs text-muted-foreground">
           <User className="h-3 w-3 mr-1" />
           <span className="font-medium text-white">{custom.fan_display_name}</span>
           {custom.fan_username && (
@@ -95,12 +104,12 @@ const CustomCard: React.FC<CustomCardProps> = ({
         </div>
 
         {/* Description */}
-        <p className="text-sm text-gray-300 leading-relaxed">
+        <p className="text-xs text-gray-300 leading-relaxed">
           {truncateDescription(custom.description)}
         </p>
 
         {/* Payment Information */}
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-xs">
           <div className="flex items-center text-muted-foreground">
             <DollarSign className="h-3 w-3 mr-1" />
             <span>
@@ -116,7 +125,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
 
         {/* Due Date - only show if due_date exists */}
         {custom.due_date && (
-          <div className="flex items-center text-sm text-muted-foreground">
+          <div className="flex items-center text-xs text-muted-foreground">
             <Calendar className="h-3 w-3 mr-1" />
             <span>Due: {format(parseISO(custom.due_date), 'MMM dd, yyyy')}</span>
           </div>
