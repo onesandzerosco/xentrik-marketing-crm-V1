@@ -1,82 +1,171 @@
-import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  FileText,
-  Settings,
-  Package
-} from 'lucide-react'
-import { useLocation, useNavigate } from 'react-router-dom'
 
-import { MainNavItem } from '@/types'
-import { Icons } from '@/components/icons'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { 
+  LayoutDashboard, 
+  Users, 
+  MessageSquare, 
+  UserCog, 
+  Lock,
+  FileUp,
+  Mic,
+  Shield,
+  UserPlus,
+  ListCheck,
+  Database
+} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+  adminOnly?: boolean;
+  roles?: string[]; // Specific roles that can access this item
+  allowCreator?: boolean; // Allow Creator role to access this item
+  hideForCreator?: boolean; // Hide this item for Creator role
+  hideForChatter?: boolean; // Hide this item for Chatter role
+  hidden?: boolean; // Hide this item completely
+}
 
 interface SidebarNavProps {
-  items: MainNavItem[]
+  isAdmin: boolean;
 }
 
-const SidebarNav = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
+const navItems: NavItem[] = [
+  {
+    path: '/dashboard',
+    label: 'Dashboard',
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    allowCreator: true, // Explicitly allow Creators to see Dashboard
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/creators',
+    label: 'Creators',
+    icon: <Users className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/creators-data',
+    label: 'Model Profile',
+    icon: <Database className="h-5 w-5" />,
+    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
+  },
+  {
+    path: '/shared-files',
+    label: 'Shared Files',
+    icon: <FileUp className="h-5 w-5" />,
+    allowCreator: true, // Explicitly allow Creators to see Shared Files
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/team',
+    label: 'Team',
+    icon: <UserCog className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/secure-logins',
+    label: 'Secure Logins',
+    icon: <Lock className="h-5 w-5" />,
+    allowCreator: true, // Allow Creator role to access their own secure logins
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/messages',
+    label: 'Messages',
+    icon: <MessageSquare className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
+    path: '/voice-generation',
+    label: 'Voice Generator',
+    icon: <Mic className="h-5 w-5" />,
+    hideForCreator: true, // Hide for Creator role
+  },
+  {
+    path: '/onboard',
+    label: 'Creator Onboarding',
+    icon: <UserPlus className="h-5 w-5" />,
+    hidden: true, // Hide from all users - only accessible via direct links
+  },
+  {
+    path: '/onboard-queue',
+    label: 'Onboard Queue',
+    icon: <ListCheck className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    path: '/access-control',
+    label: 'Access Control',
+    icon: <Shield className="h-5 w-5" />,
+    adminOnly: true,
+  },
+  {
+    path: '/users',
+    label: 'User Management',
+    icon: <Users className="h-5 w-5" />,
+    adminOnly: true,
+  },
+];
 
-  const isActive = (href: string) => {
-    return location.pathname === href
-  }
-
-  const navigationItems = [
-    {
-      name: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
-      name: 'Team',
-      href: '/team',
-      icon: Users,
-    },
-    {
-      name: 'Calendar',
-      href: '/calendar',
-      icon: Calendar,
-    },
-    {
-      name: 'Onboarding',
-      href: '/onboarding',
-      icon: FileText,
-    },
-    {
-      name: 'Customs Tracker',
-      href: '/customs-tracker',
-      icon: Package, // You may want to import this icon from lucide-react
-    },
-  ]
-
+const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
+  const { userRole, userRoles, isCreator } = useAuth();
+  
   return (
-    <div className="flex flex-col space-y-6 w-full">
-      {navigationItems.map((item) => (
-        <Button
-          key={item.href}
-          variant="ghost"
-          className={`h-9 w-full justify-start font-normal ${
-            isActive(item.href)
-              ? 'bg-accent bg-gradient-to-r from-purple-600 to-blue-600 hover:bg-secondary'
-              : 'hover:bg-secondary'
-          }`}
-          onClick={() => navigate(item.href)}
-        >
-          <item.icon className="mr-2 h-4 w-4" />
-          <span>{item.name}</span>
-        </Button>
-      ))}
-      <Separator />
-      <Button variant="ghost" className="h-9 w-full justify-start font-normal hover:bg-secondary">
-        <Settings className="mr-2 h-4 w-4" />
-        Settings
-      </Button>
-    </div>
-  )
-}
+    <nav className="grid gap-1 pt-2 z-30 relative">
+      {navItems.map((item) => {
+        // Skip items that are completely hidden
+        if (item.hidden) return null;
+        
+        // Skip adminOnly items if user is not admin
+        if (item.adminOnly && !isAdmin) return null;
+        
+        // For Creator role users, only show items that explicitly allow Creator
+        if (isCreator && userRole === 'Creator') {
+          if (!item.allowCreator) return null;
+        }
+        
+        // Skip items that should be hidden for creators if the user is a creator
+        if (item.hideForCreator && isCreator) return null;
+        
+        // Skip items that should be hidden for chatters if the user is a chatter
+        if (item.hideForChatter && (userRole === 'Chatter' || userRoles?.includes('Chatter'))) return null;
+        
+        // Check specific roles if defined
+        if (item.roles) {
+          const hasRequiredRole = item.roles.some(role => 
+            userRole === role || (userRoles && userRoles.includes(role))
+          );
+          if (!hasRequiredRole) return null;
+        }
+        
+        return (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-300",
+                {
+                  "bg-gradient-premium-yellow text-black": isActive,
+                  "hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5": !isActive
+                }
+              )
+            }
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
+};
 
-export default SidebarNav
+export default SidebarNav;
