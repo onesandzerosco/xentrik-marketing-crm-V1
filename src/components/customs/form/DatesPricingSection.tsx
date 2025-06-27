@@ -2,6 +2,7 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { PremiumInput } from '@/components/ui/premium-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface DatesPricingSectionProps {
@@ -47,7 +48,7 @@ const DatesPricingSection: React.FC<DatesPricingSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label htmlFor="downpayment">Downpayment *</Label>
-          <Input
+          <PremiumInput
             id="downpayment"
             type="number"
             step="0.01"
