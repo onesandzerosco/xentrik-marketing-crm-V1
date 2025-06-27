@@ -26,18 +26,18 @@ const FanInfoSection: React.FC<FanInfoSectionProps> = ({
             id="fan_display_name"
             value={formData.fan_display_name}
             onChange={(e) => onInputChange('fan_display_name', e.target.value)}
-            placeholder="Fan's display name (emojis supported 🎉)"
+            placeholder="Enter fan's display name"
             required
           />
         </div>
         
         <div>
-          <Label htmlFor="fan_username">Fan Username</Label>
+          <Label htmlFor="fan_username">Fan Username (Optional)</Label>
           <Input
             id="fan_username"
             value={formData.fan_username}
             onChange={(e) => onInputChange('fan_username', e.target.value)}
-            placeholder="@username (emojis supported 😊)"
+            placeholder="Enter fan's username (without @)"
           />
         </div>
       </div>
@@ -48,8 +48,8 @@ const FanInfoSection: React.FC<FanInfoSectionProps> = ({
           id="description"
           value={formData.description}
           onChange={(e) => onInputChange('description', e.target.value)}
-          placeholder="Custom description (emojis supported 💝)"
-          rows={3}
+          placeholder="Describe the custom request in detail"
+          rows={4}
           required
         />
       </div>
