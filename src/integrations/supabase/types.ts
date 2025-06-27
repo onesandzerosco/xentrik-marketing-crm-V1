@@ -266,6 +266,7 @@ export type Database = {
       }
       customs: {
         Row: {
+          attachments: string[] | null
           created_at: string
           description: string
           downpayment: number
@@ -283,6 +284,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attachments?: string[] | null
           created_at?: string
           description: string
           downpayment?: number
@@ -300,6 +302,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attachments?: string[] | null
           created_at?: string
           description?: string
           downpayment?: number

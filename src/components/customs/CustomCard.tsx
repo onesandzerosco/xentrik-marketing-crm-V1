@@ -2,14 +2,14 @@
 import React from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, DollarSign, User, AlertTriangle } from 'lucide-react';
+import { Calendar, DollarSign, User, AlertTriangle, Paperclip } from 'lucide-react';
 import { format, isAfter, parseISO } from 'date-fns';
 
 interface Custom {
   id: string;
   model_name: string;
   fan_display_name: string;
-  fan_username: string;
+  fan_username: string | null;
   description: string;
   sale_date: string;
   due_date: string | null;
@@ -21,6 +21,7 @@ interface Custom {
   sale_by: string;
   endorsed_by?: string;
   sent_by?: string;
+  attachments?: string[] | null;
 }
 
 interface CustomCardProps {
@@ -68,19 +69,29 @@ const CustomCard: React.FC<CustomCardProps> = ({
           <Badge variant="outline" className="text-brand-yellow border-brand-yellow">
             {custom.model_name}
           </Badge>
-          {isOverdue && (
-            <div className="flex items-center text-red-400 text-xs">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Overdue
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {custom.attachments && custom.attachments.length > 0 && (
+              <div className="flex items-center text-muted-foreground text-xs">
+                <Paperclip className="h-3 w-3 mr-1" />
+                {custom.attachments.length}
+              </div>
+            )}
+            {isOverdue && (
+              <div className="flex items-center text-red-400 text-xs">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Overdue
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Fan Information */}
         <div className="flex items-center text-sm text-muted-foreground">
           <User className="h-3 w-3 mr-1" />
           <span className="font-medium text-white">{custom.fan_display_name}</span>
-          <span className="ml-1">(@{custom.fan_username})</span>
+          {custom.fan_username && (
+            <span className="ml-1">(@{custom.fan_username})</span>
+          )}
         </div>
 
         {/* Description */}

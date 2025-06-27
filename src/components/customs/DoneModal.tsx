@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,10 +8,10 @@ interface Custom {
   id: string;
   model_name: string;
   fan_display_name: string;
-  fan_username: string;
+  fan_username: string | null;
   description: string;
   sale_date: string;
-  due_date: string;
+  due_date: string | null;
   downpayment: number;
   full_price: number;
   status: string;
@@ -21,6 +20,7 @@ interface Custom {
   sale_by: string;
   endorsed_by?: string;
   sent_by?: string;
+  attachments?: string[] | null;
 }
 
 interface DoneModalProps {
