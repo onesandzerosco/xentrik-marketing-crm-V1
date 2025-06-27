@@ -92,6 +92,33 @@ const CustomsTracker = () => {
     }
   });
 
+  // Delete custom mutation
+  const deleteCustomMutation = useMutation({
+    mutationFn: async (customId: string) => {
+      const { error } = await supabase
+        .from('customs')
+        .delete()
+        .eq('id', customId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customs'] });
+      toast({
+        title: "Success",
+        description: "Custom deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete custom",
+        variant: "destructive",
+      });
+      console.error('Error deleting custom:', error);
+    }
+  });
+
   // Filter customs by model name
   const filteredCustoms = customs.filter(custom =>
     modelFilter === '' || custom.model_name.toLowerCase().includes(modelFilter.toLowerCase())
@@ -99,6 +126,10 @@ const CustomsTracker = () => {
 
   const handleUpdateDownpayment = (customId: string, newDownpayment: number) => {
     updateDownpaymentMutation.mutate({ customId, newDownpayment });
+  };
+
+  const handleDeleteCustom = (customId: string) => {
+    deleteCustomMutation.mutate(customId);
   };
 
   if (isLoading) {
@@ -162,7 +193,8 @@ const CustomsTracker = () => {
           customs={filteredCustoms} 
           onUpdateStatus={updateCustomMutation.mutate}
           onUpdateDownpayment={handleUpdateDownpayment}
-          isUpdating={updateCustomMutation.isPending || updateDownpaymentMutation.isPending}
+          onDeleteCustom={handleDeleteCustom}
+          isUpdating={updateCustomMutation.isPending || updateDownpaymentMutation.isPending || deleteCustomMutation.isPending}
         />
       </div>
 

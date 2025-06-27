@@ -24,11 +24,6 @@ const CustomCard: React.FC<CustomCardProps> = ({
   // Handle optional due date - only check for overdue if due_date exists
   const isOverdue = custom.due_date ? isAfter(new Date(), parseISO(custom.due_date)) : false;
   
-  const truncateDescription = (text: string, maxLength: number = 30) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
-  };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -83,10 +78,10 @@ const CustomCard: React.FC<CustomCardProps> = ({
           )}
         </div>
 
-        {/* Description - Single line with ellipsis */}
+        {/* Custom Type - Single line with ellipsis */}
         <div>
           <p className="text-xs text-gray-300 text-left truncate">
-            {truncateDescription(custom.description)}
+            {custom.custom_type || 'Custom type not specified'}
           </p>
         </div>
 

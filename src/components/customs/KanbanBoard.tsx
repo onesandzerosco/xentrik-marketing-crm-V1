@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -10,6 +11,7 @@ interface KanbanBoardProps {
   customs: Custom[];
   onUpdateStatus: (data: { customId: string; newStatus: string; chatterName?: string }) => void;
   onUpdateDownpayment?: (customId: string, newDownpayment: number) => void;
+  onDeleteCustom?: (customId: string) => void;
   isUpdating: boolean;
 }
 
@@ -25,6 +27,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   customs, 
   onUpdateStatus, 
   onUpdateDownpayment,
+  onDeleteCustom,
   isUpdating 
 }) => {
   const [doneModalOpen, setDoneModalOpen] = useState(false);
@@ -134,6 +137,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
         custom={selectedCustom}
         onUpdateStatus={onUpdateStatus}
         onUpdateDownpayment={onUpdateDownpayment}
+        onDeleteCustom={onDeleteCustom}
         isUpdating={isUpdating}
       />
 
