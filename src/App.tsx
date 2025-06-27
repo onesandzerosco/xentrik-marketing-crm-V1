@@ -1,145 +1,145 @@
-
-import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
-import { AuthProvider } from './context/AuthContext';
-import { CreatorProvider } from './context/creator';
-import { ActivityProvider } from './context/ActivityContext';
-import { TeamProvider } from './context/TeamContext';
-import { AnimatePresence } from 'framer-motion';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Creators from './pages/Creators';
-import CreatorProfile from './pages/CreatorProfile';
-import CreatorAnalytics from './pages/CreatorAnalytics';
-import CreatorInvoice from './pages/CreatorInvoice';
-import CreatorOnboarding from './pages/CreatorOnboarding';
-import AccountSettings from './pages/AccountSettings';
-import Messages from './pages/Messages';
-import NotFound from './pages/NotFound';
-import UserManagement from './pages/UserManagement';
-import Team from './pages/Team';
-import TeamMemberProfile from './pages/TeamMemberProfile';
-import TeamMemberOnboarding from './pages/TeamMemberOnboarding';
-import SecureLogins from './pages/SecureLogins';
-import Index from './pages/Index';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { ensureStorageBucket } from "./utils/setupStorage";
-import SharedFiles from './pages/SharedFiles';
-import CreatorFiles from './pages/CreatorFiles';
-import TeamMemberEdit from './pages/TeamMemberEdit';
-import VoiceGeneration from './pages/VoiceGeneration';
-import CreatorUpload from './pages/CreatorUpload';
-import AccessControlPanel from './pages/AccessControlPanel';
-import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
-import CreatorOnboardForm from './pages/CreatorOnboardForm';
-import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
-import CreatorsData from './pages/CreatorsData';
-
-// Call the function to ensure our storage bucket exists
-// We're calling it here in a non-blocking way
-ensureStorageBucket().catch(err => {
-  console.error("Error setting up storage bucket:", err);
-});
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "./integrations/supabase/client";
+import "./App.css";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Sidebar from "./components/sidebar/Sidebar";
+import Team from "./pages/Team";
+import Onboarding from "./pages/Onboarding";
+import PageTransition from "./components/PageTransition";
+import SecureArea from "./pages/SecureArea";
+import FileManager from "./pages/FileManager";
+import ModelAnnouncements from "./pages/ModelAnnouncements";
+import CustomsTracker from "./pages/CustomsTracker";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <CreatorProvider>
-        <ActivityProvider>
-          <SupabaseAuthProvider>
-            <AuthProvider>
-              <TeamProvider>
-                <div className="app flex h-screen w-full bg-premium-dark">
-                  <Toaster />
-                  <AnimatePresence mode="wait">
-                    <AppRoutes />
-                  </AnimatePresence>
+    <div className="min-h-screen bg-gray-50">
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={<Navigate to="/dashboard" replace />}
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <Dashboard />
+                    </PageTransition>
+                  </main>
                 </div>
-              </TeamProvider>
-            </AuthProvider>
-          </SupabaseAuthProvider>
-        </ActivityProvider>
-      </CreatorProvider>
-    </QueryClientProvider>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <Team />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <Onboarding />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/secure-area"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <SecureArea />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/file-manager"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <FileManager />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/model-announcements"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <ModelAnnouncements />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route 
+            path="/customs-tracker" 
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <main className="flex-1 ml-64">
+                    <PageTransition>
+                      <CustomsTracker />
+                    </PageTransition>
+                  </main>
+                </div>
+              </ProtectedRoute>
+            } 
+          />
+          
+        </Routes>
+      </Router>
+    </div>
   );
 }
-
-// Create redirect components that extract the ID from the URL
-const CreatorAnalyticsRedirect = () => {
-  const location = useLocation();
-  const id = location.pathname.split('/').pop();
-  return <Navigate to={`/creators/${id}/analytics`} replace />;
-};
-
-const CreatorInvoicesRedirect = () => {
-  const location = useLocation();
-  const id = location.pathname.split('/').pop();
-  return <Navigate to={`/creators/${id}/invoices`} replace />;
-};
-
-const AppRoutes = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
-      <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
-      <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
-      <Route path="/team/onboard" element={<ProtectedRoute><TeamMemberOnboarding /></ProtectedRoute>} />
-      <Route path="/team/:id" element={<ProtectedRoute><TeamMemberProfile /></ProtectedRoute>} />
-      <Route path="/team/:id/edit" element={<ProtectedRoute><TeamMemberEdit /></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-      <Route path="/access-control" element={<ProtectedRoute><AccessControlPanel /></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />
-      <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
-      <Route path="/creators/:id" element={<ProtectedRoute><CreatorProfile /></ProtectedRoute>} />
-      <Route path="/creators/:id/analytics" element={<ProtectedRoute><CreatorAnalytics /></ProtectedRoute>} />
-      <Route path="/creators/:id/invoices" element={<ProtectedRoute><CreatorInvoice /></ProtectedRoute>} />
-      <Route path="/secure-logins" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/secure-logins/:id" element={<ProtectedRoute><SecureLogins /></ProtectedRoute>} />
-      <Route path="/account" element={<ProtectedRoute><AccountSettings /></ProtectedRoute>} />
-      <Route path="/shared/:shareCode" element={<SharedFiles />} />
-      <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
-      <Route path="/upload/:id" element={<CreatorUpload />} />
-      
-      {/* New creator onboarding form - Admin only */}
-      <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
-      
-      {/* New admin onboard queue - Admin only */}
-      <Route path="/onboard-queue" element={<ProtectedRoute><CreatorOnboardQueue /></ProtectedRoute>} />
-      
-      {/* New creators data module - VA, Chatter, Admin */}
-      <Route path="/creators-data" element={<ProtectedRoute><CreatorsData /></ProtectedRoute>} />
-      
-      {/* Public Creator Onboarding Form - No authentication required */}
-      <Route path="/onboarding-form" element={<CreatorOnboardForm />} />
-      <Route path="/onboarding-form/:token" element={<CreatorOnboardForm />} />
-      
-      {/* Public route for creator onboarding from invitation */}
-      <Route path="/onboard/:token" element={<CreatorInviteOnboarding />} />
-      
-      {/* Add redirects for old route patterns */}
-      <Route path="/creator-analytics/:id" element={<CreatorAnalyticsRedirect />} />
-      <Route path="/creator-invoices/:id" element={<CreatorInvoicesRedirect />} />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
 
 export default App;
