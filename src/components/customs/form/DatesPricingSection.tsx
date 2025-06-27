@@ -84,6 +84,7 @@ const DatesPricingSection: React.FC<DatesPricingSectionProps> = ({
               <SelectItem value="fully_paid">Fully Paid</SelectItem>
               <SelectItem value="endorsed">Endorsed</SelectItem>
               <SelectItem value="done">Done</SelectItem>
+              <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
         </div>

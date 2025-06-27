@@ -17,7 +17,8 @@ const COLUMNS = [
   { id: 'partially_paid', title: 'Partially Paid', color: 'bg-yellow-500/20 border-yellow-500/30' },
   { id: 'fully_paid', title: 'Fully Paid', color: 'bg-blue-500/20 border-blue-500/30' },
   { id: 'endorsed', title: 'Endorsed', color: 'bg-purple-500/20 border-purple-500/30' },
-  { id: 'done', title: 'Done', color: 'bg-green-500/20 border-green-500/30' }
+  { id: 'done', title: 'Done', color: 'bg-green-500/20 border-green-500/30' },
+  { id: 'refunded', title: 'Refunded', color: 'bg-red-500/20 border-red-500/30' }
 ];
 
 const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUpdating }) => {
@@ -126,6 +127,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({ customs, onUpdateStatus, isUp
           setSelectedCustom(null);
         }}
         custom={selectedCustom}
+        onUpdateStatus={onUpdateStatus}
+        isUpdating={isUpdating}
       />
 
       <DoneModal

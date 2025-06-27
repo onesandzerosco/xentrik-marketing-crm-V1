@@ -2,6 +2,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 import { Custom } from '@/types/custom';
 import CustomDetailsHeader from './details/CustomDetailsHeader';
 import FanInfoSection from './details/FanInfoSection';
@@ -17,10 +18,26 @@ interface CustomDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   custom: Custom | null;
+  onUpdateStatus?: (data: { customId: string; newStatus: string; chatterName?: string }) => void;
+  isUpdating?: boolean;
 }
 
-const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({ isOpen, onClose, custom }) => {
+const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  custom, 
+  onUpdateStatus,
+  isUpdating 
+}) => {
   if (!custom) return null;
+
+  const handleRefund = () => {
+    if (onUpdateStatus && custom) {
+      onUpdateStatus({ customId: custom.id, newStatus: 'refunded' });
+    }
+  };
+
+  const canRefund = custom.status !== 'refunded' && onUpdateStatus;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -58,7 +75,20 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({ isOpen, onClose
           <TimestampsSection custom={custom} />
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-between pt-4">
+          <div className="flex gap-2">
+            {canRefund && (
+              <Button 
+                variant="destructive" 
+                onClick={handleRefund}
+                disabled={isUpdating}
+                className="gap-2"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Mark as Refunded
+              </Button>
+            )}
+          </div>
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
