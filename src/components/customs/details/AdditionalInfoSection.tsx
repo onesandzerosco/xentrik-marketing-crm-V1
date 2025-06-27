@@ -14,12 +14,12 @@ interface AdditionalInfoSectionProps {
 
 const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom }) => {
   const [isEditingCustomType, setIsEditingCustomType] = useState(false);
-  const [editedCustomType, setEditedCustomType] = useState(custom.custom_type || '');
+  const [editedCustomType, setEditedCustomType] = useState(custom.custom_type || 'none');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   React.useEffect(() => {
-    setEditedCustomType(custom.custom_type || '');
+    setEditedCustomType(custom.custom_type || 'none');
   }, [custom.custom_type]);
 
   const updateCustomTypeMutation = useMutation({
@@ -27,7 +27,7 @@ const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom })
       const { error } = await supabase
         .from('customs')
         .update({ 
-          custom_type: customType,
+          custom_type: customType === 'none' ? null : customType,
           updated_at: new Date().toISOString()
         })
         .eq('id', customId);
@@ -55,12 +55,12 @@ const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom })
   const handleSaveCustomType = () => {
     updateCustomTypeMutation.mutate({
       customId: custom.id,
-      customType: editedCustomType || null
+      customType: editedCustomType === 'none' ? null : editedCustomType
     });
   };
 
   const handleCancelCustomType = () => {
-    setEditedCustomType(custom.custom_type || '');
+    setEditedCustomType(custom.custom_type || 'none');
     setIsEditingCustomType(false);
   };
 
@@ -88,7 +88,7 @@ const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({ custom })
               <SelectValue placeholder="Select custom type" />
             </SelectTrigger>
             <SelectContent className="z-50 bg-background border border-border">
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               <SelectItem value="video">Video</SelectItem>
               <SelectItem value="photo">Photo</SelectItem>
               <SelectItem value="audio">Audio</SelectItem>
