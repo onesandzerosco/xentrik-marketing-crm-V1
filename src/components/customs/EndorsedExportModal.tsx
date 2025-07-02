@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 import { Custom } from '@/types/custom';
 
 interface EndorsedExportModalProps {
@@ -18,6 +18,7 @@ interface EndorsedExportModalProps {
 const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClose }) => {
   const [selectedModel, setSelectedModel] = useState<string>('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState<'excel' | 'pdf' | 'both'>('both');
   const { toast } = useToast();
 
   // Fetch all endorsed customs
@@ -39,6 +40,121 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
   // Get unique model names
   const modelNames = Array.from(new Set(endorsedCustoms.map(custom => custom.model_name)));
 
+  const loadImageAsBase64 = async (url: string): Promise<string> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error loading image:', error);
+      return '';
+    }
+  };
+
+  const generatePDF = async (customs: Custom[]) => {
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.height;
+    let yPosition = 20;
+
+    // Title
+    pdf.setFontSize(20);
+    pdf.text('Endorsed Customs Report', 20, yPosition);
+    yPosition += 20;
+
+    for (let i = 0; i < customs.length; i++) {
+      const custom = customs[i];
+      
+      // Check if we need a new page
+      if (yPosition > pageHeight - 100) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+
+      // Custom details
+      pdf.setFontSize(16);
+      pdf.text(`Custom ${i + 1}`, 20, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(12);
+      const details = [
+        `Model: ${custom.model_name}`,
+        `Fan: ${custom.fan_display_name} (@${custom.fan_username})`,
+        `Type: ${custom.custom_type || 'Not specified'}`,
+        `Price: $${custom.downpayment.toFixed(2)} / $${custom.full_price.toFixed(2)}`,
+        `Sale Date: ${new Date(custom.sale_date).toLocaleDateString()}`,
+        `Due Date: ${custom.due_date ? new Date(custom.due_date).toLocaleDateString() : 'Not specified'}`,
+        `Sold by: ${custom.sale_by}`,
+        `Endorsed by: ${custom.endorsed_by || 'Not specified'}`
+      ];
+
+      details.forEach(detail => {
+        pdf.text(detail, 20, yPosition);
+        yPosition += 6;
+      });
+
+      // Description
+      if (custom.description) {
+        pdf.text('Description:', 20, yPosition);
+        yPosition += 6;
+        const splitDescription = pdf.splitTextToSize(custom.description, 170);
+        pdf.text(splitDescription, 20, yPosition);
+        yPosition += splitDescription.length * 6;
+      }
+
+      // Attachments
+      if (custom.attachments && custom.attachments.length > 0) {
+        pdf.text(`Attachments (${custom.attachments.length}):`, 20, yPosition);
+        yPosition += 10;
+
+        for (const attachmentPath of custom.attachments) {
+          try {
+            const { data } = await supabase.storage
+              .from('custom_attachments')
+              .getPublicUrl(attachmentPath);
+            
+            // Check if it's an image
+            const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(attachmentPath);
+            
+            if (isImage) {
+              const base64Image = await loadImageAsBase64(data.publicUrl);
+              if (base64Image) {
+                // Add image to PDF
+                const imgWidth = 80;
+                const imgHeight = 60;
+                
+                // Check if image fits on current page
+                if (yPosition + imgHeight > pageHeight - 20) {
+                  pdf.addPage();
+                  yPosition = 20;
+                }
+                
+                pdf.addImage(base64Image, 'JPEG', 20, yPosition, imgWidth, imgHeight);
+                yPosition += imgHeight + 5;
+              }
+            } else {
+              // For non-image files, just show the filename
+              pdf.text(`- ${attachmentPath.split('/').pop() || 'Attachment'}`, 25, yPosition);
+              yPosition += 6;
+            }
+          } catch (error) {
+            console.error('Error processing attachment:', error);
+            pdf.text(`- ${attachmentPath.split('/').pop() || 'Attachment'} (Error loading)`, 25, yPosition);
+            yPosition += 6;
+          }
+        }
+      }
+
+      yPosition += 15; // Space between customs
+    }
+
+    return pdf;
+  };
+
   const handleExport = async () => {
     try {
       setIsExporting(true);
@@ -57,51 +173,52 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
         return;
       }
 
-      // Prepare data for Excel export
-      const excelData = filteredCustoms.map(custom => ({
-        'Custom ID': custom.id,
-        'Model Name': custom.model_name,
-        'Fan Display Name': custom.fan_display_name,
-        'Fan Username': custom.fan_username,
-        'Custom Type': custom.custom_type || 'Not specified',
-        'Description': custom.description,
-        'Sale Date': new Date(custom.sale_date).toLocaleDateString(),
-        'Due Date': custom.due_date ? new Date(custom.due_date).toLocaleDateString() : 'Not specified',
-        'Downpayment': `$${custom.downpayment.toFixed(2)}`,
-        'Full Price': `$${custom.full_price.toFixed(2)}`,
-        'Status': custom.status,
-        'Sold By': custom.sale_by,
-        'Endorsed By': custom.endorsed_by || 'Not specified',
-        'Sent By': custom.sent_by || 'Not specified',
-        'Created At': new Date(custom.created_at).toLocaleString(),
-        'Updated At': new Date(custom.updated_at).toLocaleString(),
-        'Attachments Count': custom.attachments ? custom.attachments.length : 0,
-      }));
-
-      // Create workbook and worksheet
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Auto-size columns
-      const colWidths = Object.keys(excelData[0] || {}).map(key => ({
-        wch: Math.max(key.length, 15)
-      }));
-      ws['!cols'] = colWidths;
-
-      // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'Endorsed Customs');
-
-      // Generate filename
       const timestamp = new Date().toISOString().split('T')[0];
       const modelFilter = selectedModel === 'all' ? 'All-Models' : selectedModel.replace(/\s+/g, '-');
-      const filename = `Endorsed-Customs-${modelFilter}-${timestamp}.xlsx`;
 
-      // Download file
-      XLSX.writeFile(wb, filename);
+      // Generate Excel if needed
+      if (exportType === 'excel' || exportType === 'both') {
+        const excelData = filteredCustoms.map(custom => ({
+          'Custom ID': custom.id,
+          'Model Name': custom.model_name,
+          'Fan Display Name': custom.fan_display_name,
+          'Fan Username': custom.fan_username,
+          'Custom Type': custom.custom_type || 'Not specified',
+          'Description': custom.description,
+          'Sale Date': new Date(custom.sale_date).toLocaleDateString(),
+          'Due Date': custom.due_date ? new Date(custom.due_date).toLocaleDateString() : 'Not specified',
+          'Downpayment': `$${custom.downpayment.toFixed(2)}`,
+          'Full Price': `$${custom.full_price.toFixed(2)}`,
+          'Status': custom.status,
+          'Sold By': custom.sale_by,
+          'Endorsed By': custom.endorsed_by || 'Not specified',
+          'Sent By': custom.sent_by || 'Not specified',
+          'Created At': new Date(custom.created_at).toLocaleString(),
+          'Updated At': new Date(custom.updated_at).toLocaleString(),
+          'Attachments Count': custom.attachments ? custom.attachments.length : 0,
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const colWidths = Object.keys(excelData[0] || {}).map(key => ({
+          wch: Math.max(key.length, 15)
+        }));
+        ws['!cols'] = colWidths;
+        XLSX.utils.book_append_sheet(wb, ws, 'Endorsed Customs');
+        const excelFilename = `Endorsed-Customs-${modelFilter}-${timestamp}.xlsx`;
+        XLSX.writeFile(wb, excelFilename);
+      }
+
+      // Generate PDF if needed
+      if (exportType === 'pdf' || exportType === 'both') {
+        const pdf = await generatePDF(filteredCustoms);
+        const pdfFilename = `Endorsed-Customs-${modelFilter}-${timestamp}.pdf`;
+        pdf.save(pdfFilename);
+      }
 
       toast({
         title: "Export Successful",
-        description: `Downloaded ${filteredCustoms.length} endorsed customs to ${filename}`,
+        description: `Downloaded ${filteredCustoms.length} endorsed customs`,
       });
 
       onClose();
@@ -148,6 +265,20 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
             </Select>
           </div>
 
+          <div>
+            <label className="text-sm font-medium mb-2 block">Export Format</label>
+            <Select value={exportType} onValueChange={(value) => setExportType(value as 'excel' | 'pdf' | 'both')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose export format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="excel">Excel Only</SelectItem>
+                <SelectItem value="pdf">PDF with Images</SelectItem>
+                <SelectItem value="both">Both Excel & PDF</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {isLoading && (
             <div className="text-center text-sm text-muted-foreground">
               Loading endorsed customs...
@@ -170,8 +301,8 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
                 </>
               ) : (
                 <>
-                  <Download className="h-4 w-4" />
-                  Export to Excel
+                  {exportType === 'pdf' ? <FileText className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+                  Export {exportType === 'both' ? 'Files' : exportType === 'pdf' ? 'PDF' : 'Excel'}
                 </>
               )}
             </Button>
