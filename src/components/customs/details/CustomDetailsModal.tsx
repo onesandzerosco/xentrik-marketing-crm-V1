@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Custom } from '@/types/custom';
 import CustomDetailsHeader from './CustomDetailsHeader';
 import FanInfoSection from './FanInfoSection';
@@ -33,58 +35,80 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
   onDeleteCustom,
   isUpdating 
 }) => {
-  if (!custom) return null;
+  // Fetch the latest custom data when modal is open
+  const { data: currentCustom } = useQuery({
+    queryKey: ['custom', custom?.id],
+    queryFn: async () => {
+      if (!custom?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('customs')
+        .select('*')
+        .eq('id', custom.id)
+        .single();
+      
+      if (error) throw error;
+      return data as Custom;
+    },
+    enabled: isOpen && !!custom?.id,
+    refetchInterval: 1000, // Refetch every second when modal is open
+  });
+
+  // Use the fetched data if available, otherwise fall back to the passed custom
+  const displayCustom = currentCustom || custom;
+
+  if (!displayCustom) return null;
 
   const handleRefund = () => {
-    if (onUpdateStatus && custom) {
-      onUpdateStatus({ customId: custom.id, newStatus: 'refunded' });
+    if (onUpdateStatus && displayCustom) {
+      onUpdateStatus({ customId: displayCustom.id, newStatus: 'refunded' });
     }
   };
 
   const handleDelete = () => {
-    if (onDeleteCustom && custom) {
-      onDeleteCustom(custom.id);
+    if (onDeleteCustom && displayCustom) {
+      onDeleteCustom(displayCustom.id);
       onClose();
     }
   };
 
-  const canRefund = custom.status !== 'refunded' && onUpdateStatus;
+  const canRefund = displayCustom.status !== 'refunded' && onUpdateStatus;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <CustomDetailsHeader custom={custom} />
+          <CustomDetailsHeader custom={displayCustom} />
         </DialogHeader>
         
         <div className="space-y-4">
           {/* Fan Information */}
-          <FanInfoSection custom={custom} />
+          <FanInfoSection custom={displayCustom} />
 
           {/* Description */}
-          <DescriptionSection custom={custom} />
+          <DescriptionSection custom={displayCustom} />
 
           {/* Dates and Pricing - Reorganized Layout */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column - Dates and Custom Type */}
-            <DatesSection custom={custom} />
+            <DatesSection custom={displayCustom} />
 
             {/* Right Column - Pricing and Status */}
             <PricingStatusSection 
-              custom={custom} 
+              custom={displayCustom} 
               onUpdateDownpayment={onUpdateDownpayment}
               isUpdating={isUpdating}
             />
           </div>
 
           {/* Team Info */}
-          <TeamInfoSection custom={custom} />
+          <TeamInfoSection custom={displayCustom} />
 
           {/* Attachments */}
-          <AttachmentsSection custom={custom} />
+          <AttachmentsSection custom={displayCustom} />
 
           {/* Timestamps */}
-          <TimestampsSection custom={custom} />
+          <TimestampsSection custom={displayCustom} />
         </div>
 
         <div className="flex justify-between pt-4">
