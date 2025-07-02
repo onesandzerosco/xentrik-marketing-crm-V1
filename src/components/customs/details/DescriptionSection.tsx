@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -114,7 +113,7 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ custom }) => {
           </div>
         </div>
       ) : (
-        <p className="text-gray-300 leading-relaxed bg-secondary/20 p-3 rounded">
+        <p className="text-gray-300 leading-relaxed bg-secondary/20 p-3 rounded whitespace-pre-wrap">
           {custom.description}
         </p>
       )}
