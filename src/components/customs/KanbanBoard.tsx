@@ -5,11 +5,12 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import CustomCard from './CustomCard';
 import CustomDetailsModal from './details/CustomDetailsModal';
 import DoneModal from './DoneModal';
+import EndorsedModal from './EndorsedModal';
 import { Custom } from '@/types/custom';
 
 interface KanbanBoardProps {
   customs: Custom[];
-  onUpdateStatus: (data: { customId: string; newStatus: string; chatterName?: string }) => void;
+  onUpdateStatus: (data: { customId: string; newStatus: string; chatterName?: string; endorserName?: string }) => void;
   onUpdateDownpayment?: (customId: string, newDownpayment: number) => void;
   onDeleteCustom?: (customId: string) => void;
   isUpdating: boolean;
@@ -31,6 +32,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   isUpdating 
 }) => {
   const [doneModalOpen, setDoneModalOpen] = useState(false);
+  const [endorsedModalOpen, setEndorsedModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedCustom, setSelectedCustom] = useState<Custom | null>(null);
   const [draggedCustom, setDraggedCustom] = useState<Custom | null>(null);
@@ -56,6 +58,9 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     if (newStatus === 'done') {
       setSelectedCustom(draggedCustom);
       setDoneModalOpen(true);
+    } else if (newStatus === 'endorsed') {
+      setSelectedCustom(draggedCustom);
+      setEndorsedModalOpen(true);
     } else {
       onUpdateStatus({ customId: draggedCustom.id, newStatus });
     }
@@ -77,6 +82,18 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
       });
     }
     setDoneModalOpen(false);
+    setSelectedCustom(null);
+  };
+
+  const handleEndorsedConfirm = (endorserName: string) => {
+    if (selectedCustom) {
+      onUpdateStatus({ 
+        customId: selectedCustom.id, 
+        newStatus: 'endorsed', 
+        endorserName 
+      });
+    }
+    setEndorsedModalOpen(false);
     setSelectedCustom(null);
   };
 
@@ -148,6 +165,16 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
           setSelectedCustom(null);
         }}
         onConfirm={handleDoneConfirm}
+        custom={selectedCustom}
+      />
+
+      <EndorsedModal
+        isOpen={endorsedModalOpen}
+        onClose={() => {
+          setEndorsedModalOpen(false);
+          setSelectedCustom(null);
+        }}
+        onConfirm={handleEndorsedConfirm}
         custom={selectedCustom}
       />
     </>

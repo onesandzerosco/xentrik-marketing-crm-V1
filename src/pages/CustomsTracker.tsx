@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,14 +32,28 @@ const CustomsTracker = () => {
 
   // Update custom status mutation
   const updateCustomMutation = useMutation({
-    mutationFn: async ({ customId, newStatus, chatterName }: { customId: string; newStatus: string; chatterName?: string }) => {
+    mutationFn: async ({ customId, newStatus, chatterName, endorserName }: { 
+      customId: string; 
+      newStatus: string; 
+      chatterName?: string; 
+      endorserName?: string; 
+    }) => {
+      const updateData: any = { 
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+
+      if (chatterName) {
+        updateData.sent_by = chatterName;
+      }
+
+      if (endorserName) {
+        updateData.endorsed_by = endorserName;
+      }
+
       const { error } = await supabase
         .from('customs')
-        .update({ 
-          status: newStatus,
-          sent_by: chatterName || null,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', customId);
       
       if (error) throw error;
