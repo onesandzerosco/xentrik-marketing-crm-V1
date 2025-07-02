@@ -1,9 +1,11 @@
 
 import React, { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { PremiumInput } from '@/components/ui/premium-input';
-import { DollarSign, Edit, Check, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Edit2, Check, X } from 'lucide-react';
 import { Custom } from '@/types/custom';
 
 interface PricingStatusSectionProps {
@@ -12,108 +14,125 @@ interface PricingStatusSectionProps {
   isUpdating?: boolean;
 }
 
-const PricingStatusSection: React.FC<PricingStatusSectionProps> = ({ 
-  custom, 
+const PricingStatusSection: React.FC<PricingStatusSectionProps> = ({
+  custom,
   onUpdateDownpayment,
-  isUpdating 
+  isUpdating
 }) => {
   const [isEditingDownpayment, setIsEditingDownpayment] = useState(false);
-  const [editedDownpayment, setEditedDownpayment] = useState(custom.downpayment.toString());
+  const [newDownpayment, setNewDownpayment] = useState(custom.downpayment.toString());
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const handleEditDownpayment = () => {
-    setIsEditingDownpayment(true);
-    setEditedDownpayment(custom.downpayment.toString());
-  };
-
-  const handleSaveDownpayment = () => {
-    const newAmount = parseFloat(editedDownpayment);
-    if (!isNaN(newAmount) && newAmount >= 0 && onUpdateDownpayment) {
-      onUpdateDownpayment(custom.id, newAmount);
+  const handleUpdateDownpayment = () => {
+    const amount = parseFloat(newDownpayment);
+    if (!isNaN(amount) && amount >= 0 && onUpdateDownpayment) {
+      onUpdateDownpayment(custom.id, amount);
       setIsEditingDownpayment(false);
     }
   };
 
   const handleCancelEdit = () => {
+    setNewDownpayment(custom.downpayment.toString());
     setIsEditingDownpayment(false);
-    setEditedDownpayment(custom.downpayment.toString());
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'partially_paid':
+        return 'bg-yellow-500';
+      case 'fully_paid':
+        return 'bg-green-500';
+      case 'endorsed':
+        return 'bg-blue-500';
+      case 'done':
+        return 'bg-purple-500';
+      case 'refunded':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-muted-foreground">Downpayment</label>
-        <div className="flex items-center mt-1 gap-2">
-          <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          {isEditingDownpayment ? (
-            <div className="flex items-center gap-2 flex-1">
-              <PremiumInput
-                type="number"
-                step="0.01"
-                min="0"
-                value={editedDownpayment}
-                onChange={(e) => setEditedDownpayment(e.target.value)}
-                className="flex-1"
-                disabled={isUpdating}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleSaveDownpayment}
-                disabled={isUpdating}
-                className="h-8 w-8 p-0"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancelEdit}
-                disabled={isUpdating}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 flex-1">
-              <span className="text-white">{formatCurrency(custom.downpayment)}</span>
-              {onUpdateDownpayment && (
+        <Label className="text-sm font-medium text-muted-foreground">Custom Type</Label>
+        <Select value={custom.custom_type || 'Not specified'} disabled>
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Video">Video</SelectItem>
+            <SelectItem value="Photo(s)">Photo(s)</SelectItem>
+            <SelectItem value="Video Call">Video Call</SelectItem>
+            <SelectItem value="Fan Gift">Fan Gift</SelectItem>
+            <SelectItem value="Package">Package</SelectItem>
+            <SelectItem value="Not specified">Not specified</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <Label className="text-sm font-medium text-muted-foreground">Downpayment</Label>
+          <div className="flex items-center gap-2 mt-1">
+            {isEditingDownpayment ? (
+              <>
+                <Input
+                  type="number"
+                  value={newDownpayment}
+                  onChange={(e) => setNewDownpayment(e.target.value)}
+                  className="flex-1"
+                  step="0.01"
+                  min="0"
+                />
                 <Button
                   size="sm"
-                  variant="ghost"
-                  onClick={handleEditDownpayment}
+                  onClick={handleUpdateDownpayment}
                   disabled={isUpdating}
-                  className="h-6 w-6 p-0 text-muted-foreground hover:text-white"
+                  className="h-8 w-8 p-0"
                 >
-                  <Edit className="h-3 w-3" />
+                  <Check className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
-          )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isUpdating}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <span className="text-lg font-semibold">${custom.downpayment.toFixed(2)}</span>
+                {onUpdateDownpayment && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditingDownpayment(true)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <div>
-        <label className="text-sm font-medium text-muted-foreground">Full Price</label>
-        <div className="flex items-center mt-1">
-          <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="text-white">{formatCurrency(custom.full_price)}</span>
+
+        <div>
+          <Label className="text-sm font-medium text-muted-foreground">Full Price</Label>
+          <div className="text-lg font-semibold mt-1">${custom.full_price.toFixed(2)}</div>
         </div>
-      </div>
-      
-      <div>
-        <label className="text-sm font-medium text-muted-foreground">Status</label>
-        <div className="mt-1">
-          <Badge variant="outline" className="capitalize">
-            {custom.status.replace('_', ' ')}
-          </Badge>
+
+        <div>
+          <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+          <div className="mt-1">
+            <Badge className={`${getStatusColor(custom.status)} text-white`}>
+              {custom.status.replace('_', ' ').toUpperCase()}
+            </Badge>
+          </div>
         </div>
       </div>
     </div>
