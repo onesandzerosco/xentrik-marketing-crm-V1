@@ -56,6 +56,24 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
     }
   };
 
+  const getAttachmentUrls = async (attachments: string[]): Promise<string> => {
+    if (!attachments || attachments.length === 0) return '';
+    
+    const urls: string[] = [];
+    for (const attachmentPath of attachments) {
+      try {
+        const { data } = await supabase.storage
+          .from('custom_attachments')
+          .getPublicUrl(attachmentPath);
+        urls.push(data.publicUrl);
+      } catch (error) {
+        console.error('Error getting attachment URL:', error);
+        urls.push(`Error loading: ${attachmentPath}`);
+      }
+    }
+    return urls.join('\n');
+  };
+
   const generatePDF = async (customs: Custom[]) => {
     const pdf = new jsPDF();
     const pageHeight = pdf.internal.pageSize.height;
@@ -178,32 +196,47 @@ const EndorsedExportModal: React.FC<EndorsedExportModalProps> = ({ isOpen, onClo
 
       // Generate Excel if needed
       if (exportType === 'excel' || exportType === 'both') {
-        const excelData = filteredCustoms.map(custom => ({
-          'Custom ID': custom.id,
-          'Model Name': custom.model_name,
-          'Fan Display Name': custom.fan_display_name,
-          'Fan Username': custom.fan_username,
-          'Custom Type': custom.custom_type || 'Not specified',
-          'Description': custom.description,
-          'Sale Date': new Date(custom.sale_date).toLocaleDateString(),
-          'Due Date': custom.due_date ? new Date(custom.due_date).toLocaleDateString() : 'Not specified',
-          'Downpayment': `$${custom.downpayment.toFixed(2)}`,
-          'Full Price': `$${custom.full_price.toFixed(2)}`,
-          'Status': custom.status,
-          'Sold By': custom.sale_by,
-          'Endorsed By': custom.endorsed_by || 'Not specified',
-          'Sent By': custom.sent_by || 'Not specified',
-          'Created At': new Date(custom.created_at).toLocaleString(),
-          'Updated At': new Date(custom.updated_at).toLocaleString(),
-          'Attachments Count': custom.attachments ? custom.attachments.length : 0,
-        }));
+        // Process all customs with their attachment URLs
+        const excelDataPromises = filteredCustoms.map(async (custom) => {
+          const attachmentUrls = custom.attachments 
+            ? await getAttachmentUrls(custom.attachments)
+            : '';
+
+          return {
+            'Custom ID': custom.id,
+            'Model Name': custom.model_name,
+            'Fan Display Name': custom.fan_display_name,
+            'Fan Username': custom.fan_username,
+            'Custom Type': custom.custom_type || 'Not specified',
+            'Description': custom.description,
+            'Sale Date': new Date(custom.sale_date).toLocaleDateString(),
+            'Due Date': custom.due_date ? new Date(custom.due_date).toLocaleDateString() : 'Not specified',
+            'Downpayment': `$${custom.downpayment.toFixed(2)}`,
+            'Full Price': `$${custom.full_price.toFixed(2)}`,
+            'Status': custom.status,
+            'Sold By': custom.sale_by,
+            'Endorsed By': custom.endorsed_by || 'Not specified',
+            'Sent By': custom.sent_by || 'Not specified',
+            'Created At': new Date(custom.created_at).toLocaleString(),
+            'Updated At': new Date(custom.updated_at).toLocaleString(),
+            'Attachment URLs': attachmentUrls,
+          };
+        });
+
+        const excelData = await Promise.all(excelDataPromises);
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(excelData);
-        const colWidths = Object.keys(excelData[0] || {}).map(key => ({
-          wch: Math.max(key.length, 15)
-        }));
+        
+        // Set column widths - make attachment URLs column wider
+        const colWidths = Object.keys(excelData[0] || {}).map(key => {
+          if (key === 'Attachment URLs') {
+            return { wch: 50 }; // Wider column for URLs
+          }
+          return { wch: Math.max(key.length, 15) };
+        });
         ws['!cols'] = colWidths;
+        
         XLSX.utils.book_append_sheet(wb, ws, 'Endorsed Customs');
         const excelFilename = `Endorsed-Customs-${modelFilter}-${timestamp}.xlsx`;
         XLSX.writeFile(wb, excelFilename);
