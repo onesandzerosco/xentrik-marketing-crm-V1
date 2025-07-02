@@ -36,6 +36,36 @@ const CustomCard: React.FC<CustomCardProps> = ({
     onClick(custom);
   };
 
+  // Determine which team info to show based on status
+  const getTeamInfoContent = () => {
+    if (custom.status === 'done') {
+      // Done cards show: Sold by and Sent by
+      return (
+        <>
+          <span>Sold by: {custom.sale_by}</span>
+          {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
+        </>
+      );
+    } else if (custom.status === 'endorsed') {
+      // Endorsed cards show: Sold by and Endorsed by
+      return (
+        <>
+          <span>Sold by: {custom.sale_by}</span>
+          {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
+        </>
+      );
+    } else {
+      // All other statuses show all fields
+      return (
+        <>
+          <span>Sold by: {custom.sale_by}</span>
+          {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
+          {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
+        </>
+      );
+    }
+  };
+
   return (
     <PremiumCard
       className={`cursor-pointer transition-all duration-200 ${
@@ -105,11 +135,9 @@ const CustomCard: React.FC<CustomCardProps> = ({
           </span>
         </div>
 
-        {/* Sale Information */}
+        {/* Sale Information - Conditional based on status */}
         <div className="text-xs text-muted-foreground break-words">
-          <span>Sold by: {custom.sale_by}</span>
-          {custom.endorsed_by && <span className="ml-2">• Endorsed by: {custom.endorsed_by}</span>}
-          {custom.sent_by && <span className="ml-2">• Sent by: {custom.sent_by}</span>}
+          {getTeamInfoContent()}
         </div>
       </div>
     </PremiumCard>
