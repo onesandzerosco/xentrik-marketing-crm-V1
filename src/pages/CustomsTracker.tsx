@@ -1,17 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Download } from 'lucide-react';
 import KanbanBoard from '@/components/customs/KanbanBoard';
 import CreateCustomModal from '@/components/customs/CreateCustomModal';
+import EndorsedExportModal from '@/components/customs/EndorsedExportModal';
 import { useToast } from '@/hooks/use-toast';
 import { Custom } from '@/types/custom';
 
 const CustomsTracker = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [modelFilter, setModelFilter] = useState('');
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -176,10 +179,20 @@ const CustomsTracker = () => {
         <div>
           <h1 className="text-2xl font-bold text-white">Customs Tracker</h1>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Custom
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setIsExportModalOpen(true)} 
+            variant="outline" 
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export Endorsed
+          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Custom
+          </Button>
+        </div>
       </div>
 
       {/* Filter */}
@@ -219,6 +232,12 @@ const CustomsTracker = () => {
           queryClient.invalidateQueries({ queryKey: ['customs'] });
           setIsCreateModalOpen(false);
         }}
+      />
+
+      {/* Export Modal */}
+      <EndorsedExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
       />
     </div>
   );
