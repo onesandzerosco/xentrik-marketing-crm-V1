@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -36,6 +35,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedCustom, setSelectedCustom] = useState<Custom | null>(null);
   const [draggedCustom, setDraggedCustom] = useState<Custom | null>(null);
+  const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, custom: Custom) => {
     setDraggedCustom(custom);
@@ -47,8 +47,28 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragEnter = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    if (draggedCustom && draggedCustom.status !== columnId) {
+      setHoveredColumn(columnId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only clear hover state if leaving the drop zone entirely
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setHoveredColumn(null);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent, newStatus: string) => {
     e.preventDefault();
+    setHoveredColumn(null);
     
     if (!draggedCustom || draggedCustom.status === newStatus) {
       setDraggedCustom(null);
@@ -101,13 +121,21 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
     return customs.filter(custom => custom.status === status);
   };
 
+  const getColumnStyles = (columnId: string, baseColor: string) => {
+    if (hoveredColumn === columnId && draggedCustom) {
+      // Enhanced visual feedback when hovering during drag
+      return `${baseColor} ring-2 ring-brand-yellow ring-opacity-50 bg-opacity-40 scale-[1.02] transition-all duration-200`;
+    }
+    return baseColor;
+  };
+
   return (
     <>
       <ScrollArea className="w-full">
         <div className="flex gap-4 h-full pb-4" style={{ display: 'flex', width: '100%' }}>
           {COLUMNS.map((column) => (
             <div key={column.id} className="flex flex-col h-full" style={{ flex: '1 1 0%', minWidth: '380px' }}>
-              <PremiumCard className={`flex-1 ${column.color}`}>
+              <PremiumCard className={`flex-1 ${getColumnStyles(column.id, column.color)}`}>
                 <div className="p-2 border-b border-premium-border/20">
                   <h3 className="font-semibold text-white text-sm">{column.title}</h3>
                   <span className="text-xs text-muted-foreground">
@@ -118,6 +146,8 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
                 <div
                   className="flex-1 p-2 space-y-2 overflow-y-auto"
                   onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, column.id)}
+                  onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, column.id)}
                 >
                   {getCustomsByStatus(column.id).map((custom) => (
