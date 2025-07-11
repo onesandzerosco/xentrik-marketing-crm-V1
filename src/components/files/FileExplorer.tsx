@@ -5,7 +5,10 @@ import { FileExplorerHeader } from './explorer/FileExplorerHeader';
 import { FileExplorerContent } from './explorer/FileExplorerContent';
 import { FileExplorerModals } from './explorer/FileExplorerModals';
 import { FileExplorerSidebar } from './explorer/FileExplorerSidebar';
+import { DeleteCategoryModal } from './explorer/DeleteCategoryModal';
+import { DeleteFolderModal } from './explorer/DeleteFolderModal';
 import { useFileExplorer } from './explorer/useFileExplorer';
+import { useFileOperations } from '@/hooks/file-operations';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { RenameCategoryModal } from './explorer/RenameCategoryModal';
 import { RenameFolderModal } from './explorer/RenameFolderModal';
@@ -69,6 +72,16 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   const [categoryCurrentName, setCategoryCurrentName] = useState('');
   const [folderCurrentName, setFolderCurrentName] = useState('');
 
+  // File operations hook with confirmation modals
+  const fileOperations = useFileOperations({
+    creatorId,
+    onFilesChanged: () => onRefresh(),
+    setAvailableFolders: undefined,
+    setAvailableCategories: undefined,
+    setCurrentFolder: undefined,
+    setCurrentCategory: undefined
+  });
+
   const fileExplorerState = useFileExplorer({
     files,
     availableFolders,
@@ -116,6 +129,15 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     }
   };
 
+  // Handlers for confirmation-based deletions
+  const handleConfirmDeleteCategory = (categoryId: string) => {
+    fileOperations.confirmDeleteCategory(categoryId);
+  };
+
+  const handleConfirmDeleteFolder = (folderId: string) => {
+    fileOperations.confirmDeleteFolder(folderId);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <FileExplorerHeader
@@ -144,8 +166,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           availableFolders={availableFolders}
           availableCategories={availableCategories}
           onCreateCategory={onCreateCategory}
-          onDeleteFolder={onDeleteFolder}
-          onDeleteCategory={onDeleteCategory}
+          onDeleteFolder={handleConfirmDeleteFolder}
+          onDeleteCategory={handleConfirmDeleteCategory}
           onRenameFolder={onRenameFolder}
           onRenameCategory={onRenameCategory}
           isCreatorView={isCreatorView}
@@ -190,6 +212,21 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         onCreateFolder={onCreateFolder}
         onAddFilesToFolder={onAddFilesToFolder}
         fileExplorerState={fileExplorerState}
+      />
+
+      {/* Delete Confirmation Modals */}
+      <DeleteCategoryModal
+        isOpen={fileOperations.showCategoryDeleteConfirm}
+        onOpenChange={fileOperations.setShowCategoryDeleteConfirm}
+        onConfirm={() => fileOperations.handleDeleteCategory()}
+        isProcessing={fileOperations.isCategoryProcessing}
+      />
+
+      <DeleteFolderModal
+        isOpen={fileOperations.showFolderDeleteConfirm}
+        onOpenChange={fileOperations.setShowFolderDeleteConfirm}
+        onConfirm={() => fileOperations.handleDeleteFolder()}
+        isProcessing={fileOperations.isFolderProcessing}
       />
 
       {/* Separate modals for rename operations */}
