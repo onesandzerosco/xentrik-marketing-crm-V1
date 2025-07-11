@@ -36,7 +36,12 @@ export const useFileOperations = ({
   
   const {
     handleDeleteCategory,
-    handleRenameCategory
+    handleRenameCategory,
+    confirmDeleteCategory,
+    showDeleteConfirm: showCategoryDeleteConfirm,
+    setShowDeleteConfirm: setShowCategoryDeleteConfirm,
+    categoryToDelete,
+    isProcessing: isCategoryProcessing
   } = useCategoryOperations({
     creatorId,
     onFilesChanged,
@@ -49,7 +54,12 @@ export const useFileOperations = ({
     handleAddFilesToFolder,
     handleRemoveFromFolder,
     handleDeleteFolder,
-    handleRenameFolder
+    handleRenameFolder,
+    confirmDeleteFolder,
+    showDeleteConfirm: showFolderDeleteConfirm,
+    setShowDeleteConfirm: setShowFolderDeleteConfirm,
+    folderToDelete,
+    isProcessing: isFolderProcessing
   } = useFolderOperations({
     creatorId,
     onFilesChanged,
@@ -65,11 +75,21 @@ export const useFileOperations = ({
     // Category operations
     handleDeleteCategory,
     handleRenameCategory,
+    confirmDeleteCategory,
+    showCategoryDeleteConfirm,
+    setShowCategoryDeleteConfirm,
+    categoryToDelete,
+    isCategoryProcessing,
     
     // Folder operations
     handleAddFilesToFolder,
     handleRemoveFromFolder,
     handleDeleteFolder,
-    handleRenameFolder
+    handleRenameFolder,
+    confirmDeleteFolder,
+    showFolderDeleteConfirm,
+    setShowFolderDeleteConfirm,
+    folderToDelete,
+    isFolderProcessing
   };
 };

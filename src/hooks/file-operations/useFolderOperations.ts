@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +18,14 @@ export const useFolderOperations = ({
 }: FolderOperationsProps) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+
+  // Show confirmation dialog before deleting folder
+  const confirmDeleteFolder = (folderId: string) => {
+    setFolderToDelete(folderId);
+    setShowDeleteConfirm(true);
+  };
 
   // Add files to an existing folder
   const handleAddFilesToFolder = async (fileIds: string[], folderId: string, categoryId: string): Promise<void> => {
@@ -148,9 +155,11 @@ export const useFolderOperations = ({
     }
   };
 
-  // Delete a folder
-  const handleDeleteFolder = async (folderId: string): Promise<void> => {
-    if (!creatorId) {
+  // Delete a folder (called after confirmation)
+  const handleDeleteFolder = async (folderId?: string): Promise<void> => {
+    const targetFolderId = folderId || folderToDelete;
+    
+    if (!creatorId || !targetFolderId) {
       toast({
         title: "Error",
         description: "Creator ID is required to delete a folder",
@@ -166,7 +175,7 @@ export const useFolderOperations = ({
       const { data: folderData, error: fetchFolderError } = await supabase
         .from('file_folders')
         .select('folder_id, creator_id')
-        .eq('folder_id', folderId)
+        .eq('folder_id', targetFolderId)
         .eq('creator_id', creatorId)
         .single();
       
@@ -178,7 +187,7 @@ export const useFolderOperations = ({
       const { data: filesInFolder, error: fetchFilesError } = await supabase
         .from('media')
         .select('id, folders')
-        .contains('folders', [folderId]);
+        .contains('folders', [targetFolderId]);
       
       if (fetchFilesError) {
         throw new Error(`Failed to fetch files in folder: ${fetchFilesError.message}`);
@@ -187,7 +196,7 @@ export const useFolderOperations = ({
       // For each file, update it to remove the folder reference
       for (const file of filesInFolder || []) {
         const updatedFolders = (file.folders || []).filter(
-          (folder: string) => folder !== folderId
+          (folder: string) => folder !== targetFolderId
         );
         
         const { error: updateError } = await supabase
@@ -204,7 +213,7 @@ export const useFolderOperations = ({
       const { error: deleteFolderError } = await supabase
         .from('file_folders')
         .delete()
-        .eq('folder_id', folderId)
+        .eq('folder_id', targetFolderId)
         .eq('creator_id', creatorId);
       
       if (deleteFolderError) {
@@ -214,7 +223,7 @@ export const useFolderOperations = ({
       // Update the available folders list
       if (setAvailableFolders) {
         setAvailableFolders((prevFolders) => 
-          prevFolders.filter(folder => folder.id !== folderId)
+          prevFolders.filter(folder => folder.id !== targetFolderId)
         );
       }
       
@@ -229,6 +238,10 @@ export const useFolderOperations = ({
         title: "Folder deleted",
         description: "Folder has been deleted successfully. Files are still available in All Files."
       });
+      
+      // Clear confirmation state
+      setShowDeleteConfirm(false);
+      setFolderToDelete(null);
       
       return Promise.resolve();
     } catch (error) {
@@ -304,6 +317,10 @@ export const useFolderOperations = ({
     handleRemoveFromFolder,
     handleDeleteFolder,
     handleRenameFolder,
-    isProcessing
+    confirmDeleteFolder,
+    isProcessing,
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    folderToDelete
   };
 };

@@ -21,10 +21,20 @@ export const useCategoryOperations = ({
 }: CategoryOperationsProps) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
 
-  // Delete a category
-  const handleDeleteCategory = async (categoryId: string): Promise<void> => {
-    if (!creatorId) {
+  // Show confirmation dialog before deleting category
+  const confirmDeleteCategory = (categoryId: string) => {
+    setCategoryToDelete(categoryId);
+    setShowDeleteConfirm(true);
+  };
+
+  // Delete a category (called after confirmation)
+  const handleDeleteCategory = async (categoryId?: string): Promise<void> => {
+    const targetCategoryId = categoryId || categoryToDelete;
+    
+    if (!creatorId || !targetCategoryId) {
       toast({
         title: "Error",
         description: "Creator ID is required to delete a category",
@@ -40,7 +50,7 @@ export const useCategoryOperations = ({
       const { data: foldersInCategory, error: fetchFoldersError } = await supabase
         .from('file_folders')
         .select('folder_id')
-        .eq('category_id', categoryId);
+        .eq('category_id', targetCategoryId);
       
       if (fetchFoldersError) {
         throw new Error(`Failed to fetch folders in category: ${fetchFoldersError.message}`);
@@ -81,7 +91,7 @@ export const useCategoryOperations = ({
       const { error: deleteCategoryError } = await supabase
         .from('file_categories')
         .delete()
-        .eq('category_id', categoryId)
+        .eq('category_id', targetCategoryId)
         .eq('creator', creatorId);
       
       if (deleteCategoryError) {
@@ -91,14 +101,14 @@ export const useCategoryOperations = ({
       // Update the available categories list
       if (setAvailableCategories) {
         setAvailableCategories((prevCategories) => 
-          prevCategories.filter(category => category.id !== categoryId)
+          prevCategories.filter(category => category.id !== targetCategoryId)
         );
       }
       
       // Update the available folders list
       if (setAvailableFolders) {
         setAvailableFolders((prevFolders) => 
-          prevFolders.filter(folder => folder.categoryId !== categoryId)
+          prevFolders.filter(folder => folder.categoryId !== targetCategoryId)
         );
       }
       
@@ -113,6 +123,10 @@ export const useCategoryOperations = ({
         title: "Category deleted",
         description: "Category has been deleted successfully. Associated folders have been removed as well."
       });
+      
+      // Clear confirmation state
+      setShowDeleteConfirm(false);
+      setCategoryToDelete(null);
       
       return Promise.resolve();
     } catch (error) {
@@ -186,6 +200,10 @@ export const useCategoryOperations = ({
   return {
     handleDeleteCategory,
     handleRenameCategory,
-    isProcessing
+    confirmDeleteCategory,
+    isProcessing,
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    categoryToDelete
   };
 };

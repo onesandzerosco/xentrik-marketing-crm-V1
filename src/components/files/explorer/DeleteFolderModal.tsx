@@ -1,44 +1,29 @@
 
 import React from 'react';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from "@/components/ui/alert-dialog";
+import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
 
 interface DeleteFolderModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  isProcessing?: boolean;
 }
 
 export const DeleteFolderModal: React.FC<DeleteFolderModalProps> = ({
   isOpen,
   onOpenChange,
   onConfirm,
+  isProcessing = false
 }) => {
   return (
-    <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[500px] w-full">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete Folder</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this folder? The files inside will not be deleted, 
-            but they will be moved to unsorted files.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-500 hover:bg-red-600">
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <ConfirmDeleteModal
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+      title="Delete Folder"
+      description="Are you sure you want to delete this folder? The files inside will not be deleted, but they will be moved to unsorted files."
+      confirmText="Delete Folder"
+      isProcessing={isProcessing}
+    />
   );
 };
