@@ -5,9 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 interface UseCategorySidebarProps {
   currentCategory: string | null;
   onInitiateNewFolder: (categoryId: string) => void;
-  onDeleteCategory: (categoryId: string) => Promise<void>;
+  onDeleteCategory: (categoryId: string) => Promise<void>; // Keep as Promise<void>
   onRenameCategoryClick: (categoryId: string, currentName: string) => void; 
-  onDeleteFolder: (folderId: string) => Promise<void>;
+  onDeleteFolder: (folderId: string) => Promise<void>; // Keep as Promise<void>
   onRenameFolderClick: (folderId: string, currentName: string) => void; 
 }
 

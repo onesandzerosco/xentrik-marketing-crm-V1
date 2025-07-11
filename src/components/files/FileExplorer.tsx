@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { FileExplorerHeader } from './explorer/FileExplorerHeader';
@@ -130,11 +129,11 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   // Handlers for confirmation-based deletions
-  const handleConfirmDeleteCategory = (categoryId: string) => {
+  const handleConfirmDeleteCategory = async (categoryId: string): Promise<void> => {
     fileOperations.confirmDeleteCategory(categoryId);
   };
 
-  const handleConfirmDeleteFolder = (folderId: string) => {
+  const handleConfirmDeleteFolder = async (folderId: string): Promise<void> => {
     fileOperations.confirmDeleteFolder(folderId);
   };
 

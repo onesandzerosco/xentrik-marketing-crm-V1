@@ -25,9 +25,9 @@ interface CategorySidebarProps {
   onFolderChange: (folderId: string) => void;
   onInitiateNewCategory: () => void;
   onInitiateNewFolder: (categoryId: string) => void;
-  onDeleteCategory: (categoryId: string) => void; // Changed to use confirmation flow
+  onDeleteCategory: (categoryId: string) => Promise<void>; // Keep as Promise<void>
   onRenameCategory: (categoryId: string, currentName: string) => void;
-  onDeleteFolder: (folderId: string) => void; // Changed to use confirmation flow
+  onDeleteFolder: (folderId: string) => Promise<void>; // Keep as Promise<void>
   onRenameFolder: (folderId: string, currentName: string) => void;
 }
 
