@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, X } from 'lucide-react';
+import { Download, Trash2, X, FolderPlus, Tags, FolderMinus } from 'lucide-react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { useBatchFileOperations } from '@/hooks/useBatchFileOperations';
 import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
@@ -13,6 +13,10 @@ interface BatchActionsBarProps {
   onFileDeleted?: (fileId: string) => void;
   onClearSelection: () => void;
   isCreatorView: boolean;
+  onAddToFolderClick?: () => void;
+  onAddTagClick?: () => void;
+  currentFolder?: string;
+  onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
 }
 
 export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
@@ -21,7 +25,11 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
   onFilesChanged,
   onFileDeleted,
   onClearSelection,
-  isCreatorView
+  isCreatorView,
+  onAddToFolderClick,
+  onAddTagClick,
+  currentFolder = 'all',
+  onRemoveFromFolder
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   
@@ -46,6 +54,14 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
     onClearSelection();
   };
 
+  const handleRemoveFromFolder = () => {
+    if (onRemoveFromFolder && currentFolder !== 'all' && currentFolder !== 'unsorted') {
+      onRemoveFromFolder(selectedFileIds, currentFolder);
+    }
+  };
+
+  const showRemoveFromFolder = currentFolder !== 'all' && currentFolder !== 'unsorted' && onRemoveFromFolder;
+
   return (
     <>
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-background border rounded-lg shadow-lg py-3 px-6 z-50 flex items-center gap-4">
@@ -64,6 +80,45 @@ export const BatchActionsBar: React.FC<BatchActionsBarProps> = ({
             <Download className="h-4 w-4" />
             Download
           </Button>
+
+          {isCreatorView && onAddToFolderClick && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={onAddToFolderClick}
+              disabled={isProcessing}
+              className="flex items-center gap-2"
+            >
+              <FolderPlus className="h-4 w-4" />
+              Add to Folder
+            </Button>
+          )}
+
+          {isCreatorView && onAddTagClick && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={onAddTagClick}
+              disabled={isProcessing}
+              className="flex items-center gap-2"
+            >
+              <Tags className="h-4 w-4" />
+              Add Tags
+            </Button>
+          )}
+
+          {isCreatorView && showRemoveFromFolder && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleRemoveFromFolder}
+              disabled={isProcessing}
+              className="flex items-center gap-2 text-orange-600 border-orange-600/50 hover:bg-orange-600/10"
+            >
+              <FolderMinus className="h-4 w-4" />
+              Remove from Folder
+            </Button>
+          )}
           
           {isCreatorView && (
             <Button 

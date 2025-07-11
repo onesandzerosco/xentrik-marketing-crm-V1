@@ -108,29 +108,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             onTagCreate={onTagCreate}
           />
           
-          {selectedFileIds.length > 0 && isCreatorView && (
-            <div className="flex items-center space-x-2 p-2 bg-muted/40 rounded-md">
-              <span className="text-sm">{selectedFileIds.length} files selected</span>
-              <Button size="sm" onClick={onAddToFolderClick}>
-                Add to Folder
-              </Button>
-              {onAddTagClick && (
-                <Button size="sm" variant="outline" onClick={onAddTagClick}>
-                  Add Tags
-                </Button>
-              )}
-              {currentFolder !== 'all' && currentFolder !== 'unsorted' && onRemoveFromFolder && (
-                <Button 
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => onRemoveFromFolder(selectedFileIds, currentFolder)}
-                >
-                  Remove from Folder
-                </Button>
-              )}
-            </div>
-          )}
-          
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -198,6 +175,10 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
         onFileDeleted={onFileDeleted}
         onClearSelection={clearSelection}
         isCreatorView={isCreatorView}
+        onAddToFolderClick={onAddToFolderClick}
+        onAddTagClick={onAddTagClick}
+        currentFolder={currentFolder}
+        onRemoveFromFolder={onRemoveFromFolder}
       />
     </>
   );
