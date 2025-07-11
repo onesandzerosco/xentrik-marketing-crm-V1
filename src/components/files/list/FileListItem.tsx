@@ -28,7 +28,7 @@ interface FileListItemProps {
   isFileSelected: (fileId: string) => boolean;
   toggleFileSelection: (fileId: string) => void;
   handleFileClick: (file: CreatorFileType) => void;
-  handleDeleteFile: (fileId: string) => void;
+  handleDeleteFile: () => void; // Changed to just trigger confirmation
   showRemoveFromFolder: boolean;
   onRemoveFromFolder?: (fileIds: string[], folderId: string) => Promise<void>;
   currentFolder: string;
@@ -55,15 +55,6 @@ export const FileListItem: React.FC<FileListItemProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const selected = isFileSelected(file.id);
-  
-  const deleteFile = async () => {
-    setIsDeleting(true);
-    try {
-      await handleDeleteFile(file.id);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
   
   return (
     <TableRow className={selected ? "bg-muted/50" : ""}>
@@ -143,7 +134,7 @@ export const FileListItem: React.FC<FileListItemProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   className="text-destructive focus:text-destructive" 
-                  onClick={deleteFile}
+                  onClick={handleDeleteFile}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete

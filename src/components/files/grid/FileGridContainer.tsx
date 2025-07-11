@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
 import { useFilePermissions } from '@/utils/permissionUtils';
 import { FileCard } from './FileCard';
 import { FileSelection } from './FileSelection';
 import { useFileGrid } from './useFileGrid';
+import { ConfirmDeleteModal } from '../modals/ConfirmDeleteModal';
 
 interface FileGridContainerProps {
   files: CreatorFileType[];
@@ -32,6 +33,9 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
   onRemoveFromFolder
 }) => {
   const { canDelete, canEdit, canManageFolders } = useFilePermissions();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<CreatorFileType | null>(null);
+  
   const {
     isFileSelected,
     toggleFileSelection,
@@ -52,6 +56,25 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
   // Handle file click (placeholder function)
   const handleFileClick = (file: CreatorFileType) => {
     // This is just a stub to satisfy the interface - we have dedicated action buttons now
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = (file: CreatorFileType) => {
+    setFileToDelete(file);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (fileToDelete) {
+      await handleDeleteFile(fileToDelete.id, canDelete);
+      setShowDeleteConfirm(false);
+      setFileToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setFileToDelete(null);
   };
 
   return (
@@ -79,7 +102,7 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
               file={file}
               isCreatorView={isCreatorView}
               onFileClick={handleFileClick}
-              onDeleteFile={() => handleDeleteFile(file.id, canDelete)}
+              onDeleteFile={() => handleDeleteConfirm(file)}
               onEditNote={onEditNote}
               onAddTagToFile={onAddTagToFile}
               onRemoveFromFolder={() => handleRemoveFromFolder(file.id)}
@@ -94,6 +117,16 @@ export const FileGridContainer: React.FC<FileGridContainerProps> = ({
           </div>
         );
       })}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={confirmDelete}
+        title="Delete File"
+        description={`Are you sure you want to delete "${fileToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete File"
+      />
     </>
   );
 };
