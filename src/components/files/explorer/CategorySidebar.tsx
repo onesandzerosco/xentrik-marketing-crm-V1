@@ -29,9 +29,6 @@ interface CategorySidebarProps {
   onRenameCategory: (categoryId: string, currentName: string) => void;
   onDeleteFolder: (folderId: string) => Promise<void>;
   onRenameFolder: (folderId: string, currentName: string) => void;
-  // Add confirmation handlers
-  onConfirmDeleteCategory?: (categoryId: string) => void;
-  onConfirmDeleteFolder?: (folderId: string) => void;
 }
 
 export const CategorySidebar: React.FC<CategorySidebarProps> = ({
@@ -46,9 +43,7 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
   onDeleteCategory,
   onRenameCategory,
   onDeleteFolder,
-  onRenameFolder,
-  onConfirmDeleteCategory,
-  onConfirmDeleteFolder
+  onRenameFolder
 }) => {
   const { canManageFolders } = useFilePermissions();
   
@@ -63,9 +58,9 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
   } = useCategorySidebar({
     currentCategory,
     onInitiateNewFolder,
-    onDeleteCategory: onConfirmDeleteCategory || onDeleteCategory,
+    onDeleteCategory,
     onRenameCategoryClick: onRenameCategory,
-    onDeleteFolder: onConfirmDeleteFolder || onDeleteFolder,
+    onDeleteFolder,
     onRenameFolderClick: onRenameFolder
   });
 
