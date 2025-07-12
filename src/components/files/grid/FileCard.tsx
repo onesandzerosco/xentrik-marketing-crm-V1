@@ -74,203 +74,204 @@ export const FileCard: React.FC<FileCardProps> = ({
   const previewImage = getPreviewImage();
 
   return (
-    <Card 
-      className={`
-        relative group hover:shadow-md transition-all duration-200 cursor-pointer
-        ${isSelected ? 'ring-2 ring-primary' : ''} 
-        ${isNew ? 'ring-2 ring-green-500' : ''} 
-        ${isDeleting || isRemoving ? 'opacity-50' : ''}
-        ${isMobile ? 'h-auto' : 'h-48'}
-      `}
-      onClick={() => onFileClick(file)}
-    >
-      <CardContent className={`p-2 ${isMobile ? 'p-3' : 'p-4'} h-full flex flex-col`}>
-        {/* File Preview */}
+    <div className="relative">
+      {/* Action Buttons positioned above the card */}
+      {isCreatorView && (
         <div className={`
-          relative flex-shrink-0 rounded-md overflow-hidden bg-muted flex items-center justify-center
-          ${isMobile ? 'h-24 mb-2' : 'h-32 mb-3'}
+          absolute -top-2 right-2 z-20 transition-opacity duration-200
+          ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
         `}>
-          {previewImage ? (
-            <img 
-              src={previewImage} 
-              alt={file.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
-          ) : null}
-          <div className={`flex items-center justify-center text-muted-foreground ${previewImage ? 'hidden' : ''}`}>
-            {getFileIcon(file.type || '')}
-          </div>
-          
-          {/* Action Buttons Overlay */}
-          {isCreatorView && (
-            <div className={`
-              absolute inset-0 bg-black/50 transition-opacity duration-200 
-              flex items-center justify-center gap-1
-              ${isMobile ? 'opacity-100 bg-black/30' : 'opacity-0 group-hover:opacity-100'}
-            `}>
-              {isMobile ? (
-                // Mobile: Show menu button with dropdown
-                <div className="relative group/actions">
+          {isMobile ? (
+            // Mobile: Show menu button with dropdown
+            <div className="relative group/actions">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="h-8 w-8 p-0 bg-white/95 hover:bg-white shadow-md"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Menu className="h-4 w-4 text-black" />
+              </Button>
+              
+              {/* Mobile actions dropdown */}
+              <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/actions:opacity-100 transition-opacity duration-200 z-30 min-w-[120px]">
+                {onEditNote && (
                   <Button
-                    variant="secondary"
+                    variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditNote(file);
+                    }}
+                    className="w-full justify-start h-8 px-2 text-xs"
                   >
-                    <Menu className="h-4 w-4 text-black" />
+                    <Edit className="h-3 w-3 mr-2" />
+                    Edit
                   </Button>
-                  
-                  {/* Mobile actions dropdown */}
-                  <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/actions:opacity-100 transition-opacity duration-200 z-10 min-w-[120px]">
-                    {onEditNote && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditNote(file);
-                        }}
-                        className="w-full justify-start h-8 px-2 text-xs"
-                      >
-                        <Edit className="h-3 w-3 mr-2" />
-                        Edit
-                      </Button>
-                    )}
-                    
-                    {onAddTagToFile && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddTagToFile(file);
-                        }}
-                        className="w-full justify-start h-8 px-2 text-xs"
-                      >
-                        <Tag className="h-3 w-3 mr-2" />
-                        Tag
-                      </Button>
-                    )}
-                    
-                    {showRemoveFromFolder && onRemoveFromFolder && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveFromFolder();
-                        }}
-                        className="w-full justify-start h-8 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                      >
-                        <FolderMinus className="h-3 w-3 mr-2" />
-                        Remove
-                      </Button>
-                    )}
-                    
-                    {canDelete && onDeleteFile && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteFile();
-                        }}
-                        className="w-full justify-start h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3 mr-2" />
-                        Delete
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                // Desktop: Show individual buttons in a row
-                <div className="flex items-center justify-center gap-1">
-                  {onEditNote && (
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditNote(file);
-                      }}
-                      className="h-8 w-8 bg-white/90 hover:bg-white"
-                      title="Edit note"
-                    >
-                      <Edit className="h-4 w-4 text-black" />
-                    </Button>
-                  )}
-                  
-                  {onAddTagToFile && (
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddTagToFile(file);
-                      }}
-                      className="h-8 w-8 bg-white/90 hover:bg-white"
-                      title="Add tag"
-                    >
-                      <Tag className="h-4 w-4 text-black" />
-                    </Button>
-                  )}
-                  
-                  {showRemoveFromFolder && onRemoveFromFolder && (
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onRemoveFromFolder();
-                      }}
-                      className="h-8 w-8 bg-orange-500/90 hover:bg-orange-600"
-                      title="Remove from folder"
-                    >
-                      <FolderMinus className="h-4 w-4 text-white" />
-                    </Button>
-                  )}
-                  
-                  {canDelete && onDeleteFile && (
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteFile();
-                      }}
-                      className="h-8 w-8 bg-red-500/90 hover:bg-red-600"
-                      title="Delete file"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                )}
+                
+                {onAddTagToFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddTagToFile(file);
+                    }}
+                    className="w-full justify-start h-8 px-2 text-xs"
+                  >
+                    <Tag className="h-3 w-3 mr-2" />
+                    Tag
+                  </Button>
+                )}
+                
+                {showRemoveFromFolder && onRemoveFromFolder && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromFolder();
+                    }}
+                    className="w-full justify-start h-8 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  >
+                    <FolderMinus className="h-3 w-3 mr-2" />
+                    Remove
+                  </Button>
+                )}
+                
+                {canDelete && onDeleteFile && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteFile();
+                    }}
+                    className="w-full justify-start h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-3 w-3 mr-2" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Desktop: Show individual buttons in a row
+            <div className="flex items-center justify-center gap-1 bg-white/95 rounded-lg shadow-md p-1">
+              {onEditNote && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditNote(file);
+                  }}
+                  className="h-7 w-7"
+                  title="Edit note"
+                >
+                  <Edit className="h-3 w-3" />
+                </Button>
+              )}
+              
+              {onAddTagToFile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddTagToFile(file);
+                  }}
+                  className="h-7 w-7"
+                  title="Add tag"
+                >
+                  <Tag className="h-3 w-3" />
+                </Button>
+              )}
+              
+              {showRemoveFromFolder && onRemoveFromFolder && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemoveFromFolder();
+                  }}
+                  className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  title="Remove from folder"
+                >
+                  <FolderMinus className="h-3 w-3" />
+                </Button>
+              )}
+              
+              {canDelete && onDeleteFile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteFile();
+                  }}
+                  className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  title="Delete file"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               )}
             </div>
           )}
         </div>
+      )}
 
-        {/* File Info */}
-        <div className="flex-1 min-h-0">
-          <h3 className={`font-medium text-foreground line-clamp-2 mb-1 ${isMobile ? 'text-sm' : 'text-sm'}`}>
-            {file.name}
-          </h3>
-          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
-            {formatFileSize(file.size)}
-          </p>
-          
-          {file.description && (
-            <p className={`text-muted-foreground line-clamp-2 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
-              {file.description}
+      <Card 
+        className={`
+          relative group hover:shadow-md transition-all duration-200 cursor-pointer
+          ${isSelected ? 'ring-2 ring-primary' : ''} 
+          ${isNew ? 'ring-2 ring-green-500' : ''} 
+          ${isDeleting || isRemoving ? 'opacity-50' : ''}
+          ${isMobile ? 'h-auto' : 'h-48'}
+        `}
+        onClick={() => onFileClick(file)}
+      >
+        <CardContent className={`p-2 ${isMobile ? 'p-3' : 'p-4'} h-full flex flex-col`}>
+          {/* File Preview */}
+          <div className={`
+            relative flex-shrink-0 rounded-md overflow-hidden bg-muted flex items-center justify-center
+            ${isMobile ? 'h-24 mb-2' : 'h-32 mb-3'}
+          `}>
+            {previewImage ? (
+              <img 
+                src={previewImage} 
+                alt={file.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div className={`flex items-center justify-center text-muted-foreground ${previewImage ? 'hidden' : ''}`}>
+              {getFileIcon(file.type || '')}
+            </div>
+          </div>
+
+          {/* File Info */}
+          <div className="flex-1 min-h-0">
+            <h3 className={`font-medium text-foreground line-clamp-2 mb-1 ${isMobile ? 'text-sm' : 'text-sm'}`}>
+              {file.name}
+            </h3>
+            <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+              {formatFileSize(file.size)}
             </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            
+            {file.description && (
+              <p className={`text-muted-foreground line-clamp-2 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                {file.description}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
