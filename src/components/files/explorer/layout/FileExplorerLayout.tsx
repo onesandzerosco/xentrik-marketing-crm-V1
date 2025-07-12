@@ -5,6 +5,7 @@ import { FileExplorerSidebar } from '../FileExplorerSidebar';
 import { FileExplorerContent } from '../FileExplorerContent';
 import { useFileExplorerContext } from '../context/FileExplorerContext';
 import { FileTag } from '@/hooks/useFileTags';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerLayoutProps {
   children: React.ReactNode;
@@ -13,5 +14,11 @@ interface FileExplorerLayoutProps {
 export const FileExplorerLayout: React.FC<FileExplorerLayoutProps> = ({
   children
 }) => {
-  return <div className="flex h-full">{children}</div>;
+  const isMobile = useIsMobile();
+  
+  return (
+    <div className={`flex h-full ${isMobile ? 'flex-col' : 'flex-row'}`}>
+      {children}
+    </div>
+  );
 };

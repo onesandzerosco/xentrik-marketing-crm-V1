@@ -1,38 +1,37 @@
 
 import React from 'react';
 import { CreatorFileType } from '@/types/fileTypes';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
+  Trash2, 
+  Edit, 
+  Tag, 
+  FolderMinus, 
   FileText, 
-  FileImage, 
-  FileVideo, 
-  FileAudio, 
-  File, 
-  Download,
-  Trash2,
-  FolderMinus,
-  Pencil,
-  Eye,
-  Tag
+  Image, 
+  Video, 
+  Music, 
+  File 
 } from 'lucide-react';
-import { formatFileSize, formatDate } from '@/utils/fileUtils';
+import { formatFileSize } from '@/utils/fileUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileCardProps {
   file: CreatorFileType;
   isCreatorView: boolean;
   onFileClick: (file: CreatorFileType) => void;
-  onDeleteFile: (fileId: string) => void;
+  onDeleteFile?: () => void;
   onEditNote?: (file: CreatorFileType) => void;
-  onRemoveFromFolder?: (fileId: string) => void;
   onAddTagToFile?: (file: CreatorFileType) => void;
-  isDeleting: boolean;
-  isRemoving: boolean;
-  isSelected: boolean;
-  isNew: boolean;
-  showRemoveFromFolder: boolean;
-  canDelete: boolean;
-  canEdit: boolean;
+  onRemoveFromFolder?: () => void;
+  isDeleting?: boolean;
+  isRemoving?: boolean;
+  isSelected?: boolean;
+  isNew?: boolean;
+  showRemoveFromFolder?: boolean;
+  canDelete?: boolean;
+  canEdit?: boolean;
 }
 
 export const FileCard: React.FC<FileCardProps> = ({
@@ -41,185 +40,155 @@ export const FileCard: React.FC<FileCardProps> = ({
   onFileClick,
   onDeleteFile,
   onEditNote,
-  onRemoveFromFolder,
   onAddTagToFile,
-  isDeleting,
-  isRemoving,
-  isSelected,
-  isNew,
-  showRemoveFromFolder,
-  canDelete,
-  canEdit
+  onRemoveFromFolder,
+  isDeleting = false,
+  isRemoving = false,
+  isSelected = false,
+  isNew = false,
+  showRemoveFromFolder = false,
+  canDelete = false,
+  canEdit = false
 }) => {
-  let Icon = File;
-  if (file.type === 'image') Icon = FileImage;
-  if (file.type === 'video') Icon = FileVideo;
-  if (file.type === 'audio') Icon = FileAudio;
-  if (file.type === 'document') Icon = FileText;
+  const isMobile = useIsMobile();
 
-  // Ensure thumbnail URLs are being used if they exist
-  const hasThumbnail = file.type === 'video' && file.thumbnail_url;
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <Image className="h-6 w-6" />;
+    if (mimeType.startsWith('video/')) return <Video className="h-6 w-6" />;
+    if (mimeType.startsWith('audio/')) return <Music className="h-6 w-6" />;
+    if (mimeType.includes('text') || mimeType.includes('document')) return <FileText className="h-6 w-6" />;
+    return <File className="h-6 w-6" />;
+  };
+
+  const getPreviewImage = () => {
+    if (file.thumbnail_url) {
+      return file.thumbnail_url;
+    }
+    if (file.mime?.startsWith('image/')) {
+      return `https://rdzwpiokpyssqhnfiqrt.supabase.co/storage/v1/object/public/creator-files/${file.bucket_key}`;
+    }
+    return null;
+  };
+
+  const previewImage = getPreviewImage();
 
   return (
-    <Card className={`overflow-hidden h-full flex flex-col ${isNew ? 'border-2 border-green-500' : ''}`}>
-      <div className="relative">
-        {/* Thumbnail container that fills the available space */}
-        <div 
-          className="relative h-40 w-full"
-        >
-          {/* Default icon shown when no thumbnail */}
-          <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-            <Icon className="h-12 w-12 text-muted-foreground" />
-          </div>
-          
-          {/* Actual image or video thumbnail overlay */}
-          {file.type === 'image' && file.url && (
-            <img
-              src={file.url}
+    <Card className={`
+      relative group hover:shadow-md transition-all duration-200 
+      ${isSelected ? 'ring-2 ring-primary' : ''} 
+      ${isNew ? 'ring-2 ring-green-500' : ''} 
+      ${isDeleting || isRemoving ? 'opacity-50' : ''}
+      ${isMobile ? 'h-auto' : 'h-48'}
+    `}>
+      <CardContent className={`p-2 ${isMobile ? 'p-3' : 'p-4'} h-full flex flex-col`}>
+        {/* File Preview */}
+        <div className={`
+          relative flex-shrink-0 rounded-md overflow-hidden bg-muted flex items-center justify-center
+          ${isMobile ? 'h-24 mb-2' : 'h-32 mb-3'}
+        `}>
+          {previewImage ? (
+            <img 
+              src={previewImage} 
               alt={file.name}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
-          {hasThumbnail && (
-            <img
-              src={file.thumbnail_url}
-              alt={file.name}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="w-full h-full object-cover"
               onError={(e) => {
-                console.error("Error loading thumbnail:", file.thumbnail_url);
-                // Hide the broken image on error
-                (e.target as HTMLImageElement).style.display = 'none';
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-          )}
+          ) : null}
+          <div className={`flex items-center justify-center text-muted-foreground ${previewImage ? 'hidden' : ''}`}>
+            {getFileIcon(file.mime || '')}
+          </div>
           
-          {/* Action buttons overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
-            {/* Preview button - available for all users */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open(file.url, '_blank', 'noopener,noreferrer');
-              }}
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            
-            {/* Download button - available for all users */}
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="h-8 w-8"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Create a temporary anchor element for download
-                const link = document.createElement('a');
-                link.href = file.url;
-                link.download = file.name;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            
-            {/* Add Tag button - available for creators and admins */}
-            {canEdit && onAddTagToFile && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddTagToFile(file);
-                }}
-              >
-                <Tag className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Edit description button - available for creators and VAs */}
-            {canEdit && onEditNote && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEditNote(file);
-                }}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Delete button - only for creators */}
-            {canDelete && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteFile(file.id);
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-            
-            {/* Remove from folder button - for users with canManageFolders permission */}
-            {showRemoveFromFolder && onRemoveFromFolder && canEdit && (
-              <Button 
-                variant="secondary" 
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemoveFromFolder(file.id);
-                }}
-              >
-                <FolderMinus className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <CardContent className="p-4 flex-grow">
-        <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
-        <div className="text-xs text-muted-foreground">
-          {formatFileSize(file.size)} - {formatDate(file.created_at)}
-        </div>
-        {file.description && (
-          <div className="mt-1 text-xs text-muted-foreground italic truncate">
-            "{file.description}"
-          </div>
-        )}
-        {file.tags && file.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {file.tags.map(tagId => (
-              <span key={tagId} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                {tagId}
-              </span>
-            ))}
-          </div>
-        )}
-      </CardContent>
-      
-      {isCreatorView && (
-        <CardFooter className="p-3 pt-0 mt-auto">
-          {isDeleting && <span className="text-xs text-muted-foreground">Deleting...</span>}
-          {isRemoving && <span className="text-xs text-muted-foreground">Removing...</span>}
-          {!isDeleting && !isRemoving && isSelected && (
-            <span className="text-xs text-brand-yellow font-medium">Selected</span>
+          {/* Action Buttons Overlay */}
+          {isCreatorView && (
+            <div className={`
+              absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+              flex items-center justify-center gap-1
+              ${isMobile ? 'opacity-100 bg-black/30' : ''}
+            `}>
+              <div className="flex gap-1">
+                {onEditNote && (
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? "sm" : "icon"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditNote(file);
+                    }}
+                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-white/90 hover:bg-white`}
+                    title="Edit note"
+                  >
+                    <Edit className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-black`} />
+                  </Button>
+                )}
+                
+                {onAddTagToFile && (
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? "sm" : "icon"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddTagToFile(file);
+                    }}
+                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-white/90 hover:bg-white`}
+                    title="Add tag"
+                  >
+                    <Tag className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-black`} />
+                  </Button>
+                )}
+                
+                {showRemoveFromFolder && onRemoveFromFolder && (
+                  <Button
+                    variant="secondary"
+                    size={isMobile ? "sm" : "icon"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveFromFolder();
+                    }}
+                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-orange-500/90 hover:bg-orange-600`}
+                    title="Remove from folder"
+                  >
+                    <FolderMinus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-white`} />
+                  </Button>
+                )}
+                
+                {canDelete && onDeleteFile && (
+                  <Button
+                    variant="destructive"
+                    size={isMobile ? "sm" : "icon"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteFile();
+                    }}
+                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-red-500/90 hover:bg-red-600`}
+                    title="Delete file"
+                  >
+                    <Trash2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  </Button>
+                )}
+              </div>
+            </div>
           )}
-        </CardFooter>
-      )}
+        </div>
+
+        {/* File Info */}
+        <div className="flex-1 min-h-0">
+          <h3 className={`font-medium text-foreground line-clamp-2 mb-1 ${isMobile ? 'text-sm' : 'text-sm'}`}>
+            {file.name}
+          </h3>
+          <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
+            {formatFileSize(file.file_size)}
+          </p>
+          
+          {file.description && (
+            <p className={`text-muted-foreground line-clamp-2 mt-1 ${isMobile ? 'text-xs' : 'text-xs'}`}>
+              {file.description}
+            </p>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 };
