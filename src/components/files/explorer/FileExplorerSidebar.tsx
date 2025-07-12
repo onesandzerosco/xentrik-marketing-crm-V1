@@ -2,10 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Folder, Category } from '@/types/fileTypes';
-import { FolderIcon, X } from 'lucide-react';
+import { FolderIcon } from 'lucide-react';
 import { CategorySidebar } from './CategorySidebar';
 import { useAuth } from '@/context/AuthContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerSidebarProps {
   onFolderChange: (folderId: string) => void;
@@ -20,8 +19,6 @@ interface FileExplorerSidebarProps {
   onRenameFolder?: (folderId: string, newName: string) => Promise<void>;
   onRenameCategory?: (categoryId: string, newName: string) => Promise<void>;
   isCreatorView: boolean;
-  isOpen?: boolean;
-  onClose?: () => void;
 }
 
 export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
@@ -36,12 +33,9 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
   onDeleteCategory,
   onRenameFolder,
   onRenameCategory,
-  isCreatorView,
-  isOpen = true,
-  onClose
+  isCreatorView
 }) => {
   const { isCreator } = useAuth();
-  const isMobile = useIsMobile();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryForNewFolder, setCategoryForNewFolder] = useState<string | null>(null);
@@ -88,23 +82,9 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
     }
   };
 
-  const sidebarContent = (
-    <>
-      {isMobile && onClose && (
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Folders</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      
-      {!isMobile && <h2 className="text-lg font-semibold">Folders</h2>}
+  return (
+    <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0 h-full overflow-y-auto">
+      <h2 className="text-lg font-semibold">Folders</h2>
       
       {isAddingCategory && (
         <div className="flex items-center space-x-2 mb-2">
@@ -147,35 +127,6 @@ export const FileExplorerSidebar: React.FC<FileExplorerSidebarProps> = ({
         onDeleteFolder={onDeleteFolder || (async () => {})}
         onRenameFolder={handleRenameFolderClick}
       />
-    </>
-  );
-
-  if (isMobile) {
-    return (
-      <>
-        {/* Mobile Overlay */}
-        {isOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={onClose}
-          />
-        )}
-        
-        {/* Mobile Sidebar */}
-        <div className={`fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-background border-r z-50 transform transition-transform duration-300 lg:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } overflow-y-auto`}>
-          <div className="p-4 space-y-4">
-            {sidebarContent}
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <div className="w-64 bg-muted/30 rounded-lg p-4 space-y-4 flex-shrink-0 h-full overflow-y-auto">
-      {sidebarContent}
     </div>
   );
 };

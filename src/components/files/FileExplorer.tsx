@@ -11,7 +11,6 @@ import { useFileOperations } from '@/hooks/file-operations';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { RenameCategoryModal } from './explorer/RenameCategoryModal';
 import { RenameFolderModal } from './explorer/RenameFolderModal';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -64,10 +63,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
-  const isMobile = useIsMobile();
-  // Sidebar should start closed on mobile by default
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   // State for rename modals
   const [isRenameCategoryModalOpen, setIsRenameCategoryModalOpen] = useState(false);
   const [isRenameFolderModalOpen, setIsRenameFolderModalOpen] = useState(false);
@@ -142,14 +137,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     fileOperations.confirmDeleteFolder(folderId);
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
   return (
     <div className="flex flex-col h-full">
       <FileExplorerHeader
@@ -167,7 +154,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleAddToFolderClick={fileExplorerState.handleAddToFolderClick}
         isCreatorView={isCreatorView}
         onRefresh={onRefresh}
-        onToggleSidebar={toggleSidebar}
       />
       
       <div className="flex flex-1 overflow-hidden">
@@ -184,8 +170,6 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
           onRenameFolder={onRenameFolder}
           onRenameCategory={onRenameCategory}
           isCreatorView={isCreatorView}
-          isOpen={isSidebarOpen}
-          onClose={closeSidebar}
         />
         
         <FileExplorerContent

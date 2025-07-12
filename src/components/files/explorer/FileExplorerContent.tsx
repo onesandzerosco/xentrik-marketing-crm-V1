@@ -8,7 +8,6 @@ import { CreatorFileType } from '@/types/fileTypes';
 import { FileTag } from '@/hooks/useFileTags';
 import { FileGridContainer } from '../grid/FileGridContainer';
 import { BatchActionsBar } from './BatchActionsBar';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerContentProps {
   isLoading: boolean;
@@ -71,8 +70,6 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
   onTagCreate,
   handleEditNote
 }) => {
-  const isMobile = useIsMobile();
-
   // Handle search change with fallback to setSearchQuery if onSearchChange not provided
   const handleSearchChange = (query: string) => {
     if (onSearchChange) {
@@ -86,33 +83,30 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4">
+      <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
-          {/* Hide FilterBar on mobile since search is in header */}
-          {!isMobile && (
-            <FilterBar
-              activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}
-              onFilterChange={(filter) => {
-                if (filter) {
-                  setSelectedTypes([filter]);
-                } else {
-                  setSelectedTypes([]);
-                }
-              }}
-              searchQuery={searchQuery}
-              onSearchChange={handleSearchChange}
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagSelect={(tagId) => {
-                if (selectedTags.includes(tagId)) {
-                  setSelectedTags(selectedTags.filter(id => id !== tagId));
-                } else {
-                  setSelectedTags([...selectedTags, tagId]);
-                }
-              }}
-              onTagCreate={onTagCreate}
-            />
-          )}
+          <FilterBar
+            activeFilter={selectedTypes.length > 0 ? selectedTypes[0] : null}
+            onFilterChange={(filter) => {
+              if (filter) {
+                setSelectedTypes([filter]);
+              } else {
+                setSelectedTypes([]);
+              }
+            }}
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onTagSelect={(tagId) => {
+              if (selectedTags.includes(tagId)) {
+                setSelectedTags(selectedTags.filter(id => id !== tagId));
+              } else {
+                setSelectedTags([...selectedTags, tagId]);
+              }
+            }}
+            onTagCreate={onTagCreate}
+          />
           
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -138,11 +132,7 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
             </div>
           ) : (
             viewMode === 'grid' ? (
-              <div className={`grid gap-3 ${
-                isMobile 
-                  ? 'grid-cols-2 sm:grid-cols-3' 
-                  : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-              }`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 <FileGridContainer 
                   files={filteredFiles}
                   isCreatorView={isCreatorView}
@@ -157,23 +147,21 @@ export const FileExplorerContent: React.FC<FileExplorerContentProps> = ({
                 />
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <FileList
-                  files={filteredFiles}
-                  isCreatorView={isCreatorView}
-                  onFileDeleted={onFileDeleted}
-                  recentlyUploadedIds={recentlyUploadedIds}
-                  onSelectFiles={setSelectedFileIds} 
-                  onAddToFolderClick={onAddToFolderClick}
-                  currentFolder={currentFolder}
-                  availableFolders={availableFolders}
-                  onRemoveFromFolder={onRemoveFromFolder}
-                  onEditNote={onEditNote || handleEditNote}
-                  onAddTagClick={onAddTagClick}
-                  onAddTagToFile={onAddTagToFile}
-                  viewMode={viewMode}
-                />
-              </div>
+              <FileList
+                files={filteredFiles}
+                isCreatorView={isCreatorView}
+                onFileDeleted={onFileDeleted}
+                recentlyUploadedIds={recentlyUploadedIds}
+                onSelectFiles={setSelectedFileIds} 
+                onAddToFolderClick={onAddToFolderClick}
+                currentFolder={currentFolder}
+                availableFolders={availableFolders}
+                onRemoveFromFolder={onRemoveFromFolder}
+                onEditNote={onEditNote || handleEditNote}
+                onAddTagClick={onAddTagClick}
+                onAddTagToFile={onAddTagToFile}
+                viewMode={viewMode}
+              />
             )
           )}
         </div>
