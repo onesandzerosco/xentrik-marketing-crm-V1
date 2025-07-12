@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { FileExplorerHeader } from './explorer/FileExplorerHeader';
@@ -66,7 +65,8 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameCategory
 }) => {
   const isMobile = useIsMobile();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
+  // Sidebar should start closed on mobile by default
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // State for rename modals
   const [isRenameCategoryModalOpen, setIsRenameCategoryModalOpen] = useState(false);

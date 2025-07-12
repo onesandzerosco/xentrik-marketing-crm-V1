@@ -108,13 +108,13 @@ export const FileCard: React.FC<FileCardProps> = ({
           {/* Action Buttons Overlay */}
           {isCreatorView && (
             <div className={`
-              absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 
+              absolute inset-0 bg-black/50 transition-opacity duration-200 
               flex items-center justify-center gap-1
-              ${isMobile ? 'opacity-100 bg-black/30' : ''}
+              ${isMobile ? 'opacity-100 bg-black/30' : 'opacity-0 group-hover:opacity-100'}
             `}>
               {isMobile ? (
-                // Mobile: Show menu button that reveals actions
-                <div className="relative group/mobile">
+                // Mobile: Show menu button with dropdown
+                <div className="relative group/actions">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -124,8 +124,8 @@ export const FileCard: React.FC<FileCardProps> = ({
                     <Menu className="h-4 w-4 text-black" />
                   </Button>
                   
-                  {/* Mobile actions menu */}
-                  <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/mobile:opacity-100 transition-opacity duration-200 z-10 min-w-[120px]">
+                  {/* Mobile actions dropdown */}
+                  <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/actions:opacity-100 transition-opacity duration-200 z-10 min-w-[120px]">
                     {onEditNote && (
                       <Button
                         variant="ghost"
@@ -188,8 +188,8 @@ export const FileCard: React.FC<FileCardProps> = ({
                   </div>
                 </div>
               ) : (
-                // Desktop: Show individual buttons
-                <div className="flex gap-1">
+                // Desktop: Show individual buttons in a row
+                <div className="flex items-center justify-center gap-1">
                   {onEditNote && (
                     <Button
                       variant="secondary"
