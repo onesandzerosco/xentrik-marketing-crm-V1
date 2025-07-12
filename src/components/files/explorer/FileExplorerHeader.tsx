@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus } from 'lucide-react';
+import { ListFilter, Grid, List, Upload, RefreshCw, FolderPlus, Menu } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useAuth } from '@/context/AuthContext';
 import { ContentGuideDownloader } from '@/components/onboarding/ContentGuideDownloader';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerHeaderProps {
   creatorName: string;
@@ -20,6 +22,7 @@ interface FileExplorerHeaderProps {
   handleAddToFolderClick: () => void;
   isCreatorView: boolean;
   onRefresh?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
@@ -36,9 +39,11 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
   setIsUploadModalOpen,
   handleAddToFolderClick,
   isCreatorView,
-  onRefresh
+  onRefresh,
+  onToggleSidebar
 }) => {
   const { isCreator } = useAuth();
+  const isMobile = useIsMobile();
   
   const handleViewModeChange = (value: string) => {
     if (value === 'grid' || value === 'list') {
@@ -51,15 +56,29 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
   };
 
   return (
-    <div className="w-full border-b">
-      <div className="flex items-center justify-between p-4">
-        <div>
-          <h1 className="text-xl font-semibold">Files for {creatorName}</h1>
+    <div className="w-full border-b bg-background">
+      <div className={`flex items-center justify-between ${isMobile ? 'p-3' : 'p-4'}`}>
+        <div className="flex items-center gap-2">
+          {isMobile && onToggleSidebar && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onToggleSidebar}
+              className="h-8 w-8"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
+          <div>
+            <h1 className={`font-semibold ${isMobile ? 'text-lg' : 'text-xl'}`}>
+              {isMobile ? 'Files' : `Files for ${creatorName}`}
+            </h1>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          {/* Content Guide Download Button - Only show for Creators */}
-          {isCreator && (
+        <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+          {/* Content Guide Download Button - Only show for Creators on desktop */}
+          {isCreator && !isMobile && (
             <ContentGuideDownloader />
           )}
           
@@ -67,12 +86,12 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
           {selectedFileIds.length > 0 && (
             <Button 
               variant="outline" 
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               onClick={handleAddToFolderClick}
               className="flex items-center"
             >
-              <FolderPlus className="mr-1 h-4 w-4" />
-              Add to Folder
+              <FolderPlus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? '' : 'mr-1'}`} />
+              {!isMobile && 'Add to Folder'}
             </Button>
           )}
           
@@ -83,11 +102,11 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
             onValueChange={handleViewModeChange}
             className="border rounded-md"
           >
-            <ToggleGroupItem value="grid" aria-label="Grid view">
-              <Grid className="h-4 w-4" />
+            <ToggleGroupItem value="grid" aria-label="Grid view" className={isMobile ? 'h-8 w-8 p-1' : ''}>
+              <Grid className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
             </ToggleGroupItem>
-            <ToggleGroupItem value="list" aria-label="List view">
-              <List className="h-4 w-4" />
+            <ToggleGroupItem value="list" aria-label="List view" className={isMobile ? 'h-8 w-8 p-1' : ''}>
+              <List className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
             </ToggleGroupItem>
           </ToggleGroup>
           
@@ -97,18 +116,20 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
             size="icon" 
             onClick={onRefresh}
             title="Refresh"
+            className={isMobile ? 'h-8 w-8' : ''}
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
           </Button>
           
           {/* Upload button (only shown for creators) */}
           {isCreatorView && (
             <Button 
               onClick={onUploadClick}
-              className="flex items-center"
+              className={`flex items-center ${isMobile ? 'h-8 px-3' : ''}`}
+              size={isMobile ? "sm" : "default"}
             >
-              <Upload className="mr-1 h-4 w-4" />
-              Upload
+              <Upload className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? '' : 'mr-1'}`} />
+              {!isMobile && 'Upload'}
             </Button>
           )}
         </div>

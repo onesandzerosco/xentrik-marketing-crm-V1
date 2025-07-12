@@ -17,6 +17,7 @@ import {
   Tag
 } from 'lucide-react';
 import { formatFileSize, formatDate } from '@/utils/fileUtils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileCardProps {
   file: CreatorFileType;
@@ -51,6 +52,8 @@ export const FileCard: React.FC<FileCardProps> = ({
   canDelete,
   canEdit
 }) => {
+  const isMobile = useIsMobile();
+  
   let Icon = File;
   if (file.type === 'image') Icon = FileImage;
   if (file.type === 'video') Icon = FileVideo;
@@ -64,12 +67,10 @@ export const FileCard: React.FC<FileCardProps> = ({
     <Card className={`overflow-hidden h-full flex flex-col ${isNew ? 'border-2 border-green-500' : ''}`}>
       <div className="relative">
         {/* Thumbnail container that fills the available space */}
-        <div 
-          className="relative h-40 w-full"
-        >
+        <div className={`relative w-full ${isMobile ? 'h-32' : 'h-40'}`}>
           {/* Default icon shown when no thumbnail */}
           <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-            <Icon className="h-12 w-12 text-muted-foreground" />
+            <Icon className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} text-muted-foreground`} />
           </div>
           
           {/* Actual image or video thumbnail overlay */}
@@ -94,25 +95,27 @@ export const FileCard: React.FC<FileCardProps> = ({
           )}
           
           {/* Action buttons overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center gap-1 transition-opacity">
+          <div className={`absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center ${
+            isMobile ? 'gap-0.5' : 'gap-1'
+          } transition-opacity`}>
             {/* Preview button - available for all users */}
             <Button 
               variant="secondary" 
               size="icon" 
-              className="h-8 w-8"
+              className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
               onClick={(e) => {
                 e.stopPropagation();
                 window.open(file.url, '_blank', 'noopener,noreferrer');
               }}
             >
-              <Eye className="h-4 w-4" />
+              <Eye className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
             </Button>
             
             {/* Download button - available for all users */}
             <Button 
               variant="secondary" 
               size="icon" 
-              className="h-8 w-8"
+              className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
               onClick={(e) => {
                 e.stopPropagation();
                 // Create a temporary anchor element for download
@@ -124,7 +127,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                 document.body.removeChild(link);
               }}
             >
-              <Download className="h-4 w-4" />
+              <Download className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
             </Button>
             
             {/* Add Tag button - available for creators and admins */}
@@ -132,13 +135,13 @@ export const FileCard: React.FC<FileCardProps> = ({
               <Button 
                 variant="secondary" 
                 size="icon"
-                className="h-8 w-8"
+                className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddTagToFile(file);
                 }}
               >
-                <Tag className="h-4 w-4" />
+                <Tag className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
               </Button>
             )}
             
@@ -147,13 +150,13 @@ export const FileCard: React.FC<FileCardProps> = ({
               <Button 
                 variant="secondary" 
                 size="icon"
-                className="h-8 w-8"
+                className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
                 onClick={(e) => {
                   e.stopPropagation();
                   onEditNote(file);
                 }}
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
               </Button>
             )}
             
@@ -162,13 +165,13 @@ export const FileCard: React.FC<FileCardProps> = ({
               <Button 
                 variant="secondary" 
                 size="icon"
-                className="h-8 w-8"
+                className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteFile(file.id);
                 }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
               </Button>
             )}
             
@@ -177,33 +180,38 @@ export const FileCard: React.FC<FileCardProps> = ({
               <Button 
                 variant="secondary" 
                 size="icon"
-                className="h-8 w-8"
+                className={isMobile ? 'h-6 w-6' : 'h-8 w-8'}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemoveFromFolder(file.id);
                 }}
               >
-                <FolderMinus className="h-4 w-4" />
+                <FolderMinus className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
               </Button>
             )}
           </div>
         </div>
       </div>
       
-      <CardContent className="p-4 flex-grow">
-        <div className="mt-1 text-sm font-medium truncate">{file.name}</div>
-        <div className="text-xs text-muted-foreground">
+      <CardContent className={`${isMobile ? 'p-2' : 'p-4'} flex-grow`}>
+        <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} ${isMobile ? 'text-xs' : 'text-sm'} font-medium truncate`}>
+          {file.name}
+        </div>
+        <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>
           {formatFileSize(file.size)} - {formatDate(file.created_at)}
         </div>
         {file.description && (
-          <div className="mt-1 text-xs text-muted-foreground italic truncate">
+          <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground italic truncate`}>
             "{file.description}"
           </div>
         )}
         {file.tags && file.tags.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} flex flex-wrap gap-1`}>
             {file.tags.map(tagId => (
-              <span key={tagId} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+              <span 
+                key={tagId} 
+                className={`inline-flex items-center px-1.5 py-0.5 rounded ${isMobile ? 'text-xs' : 'text-xs'} font-medium bg-blue-100 text-blue-800`}
+              >
                 {tagId}
               </span>
             ))}
@@ -212,11 +220,11 @@ export const FileCard: React.FC<FileCardProps> = ({
       </CardContent>
       
       {isCreatorView && (
-        <CardFooter className="p-3 pt-0 mt-auto">
-          {isDeleting && <span className="text-xs text-muted-foreground">Deleting...</span>}
-          {isRemoving && <span className="text-xs text-muted-foreground">Removing...</span>}
+        <CardFooter className={`${isMobile ? 'p-2 pt-0' : 'p-3 pt-0'} mt-auto`}>
+          {isDeleting && <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Deleting...</span>}
+          {isRemoving && <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>Removing...</span>}
           {!isDeleting && !isRemoving && isSelected && (
-            <span className="text-xs text-brand-yellow font-medium">Selected</span>
+            <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-brand-yellow font-medium`}>Selected</span>
           )}
         </CardFooter>
       )}

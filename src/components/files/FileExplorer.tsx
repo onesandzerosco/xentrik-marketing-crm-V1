@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FileExplorerLayout } from './explorer/layout/FileExplorerLayout';
 import { FileExplorerHeader } from './explorer/FileExplorerHeader';
@@ -11,6 +12,7 @@ import { useFileOperations } from '@/hooks/file-operations';
 import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 import { RenameCategoryModal } from './explorer/RenameCategoryModal';
 import { RenameFolderModal } from './explorer/RenameFolderModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FileExplorerProps {
   files: CreatorFileType[];
@@ -63,6 +65,9 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
   onRenameFolder,
   onRenameCategory
 }) => {
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
   // State for rename modals
   const [isRenameCategoryModalOpen, setIsRenameCategoryModalOpen] = useState(false);
   const [isRenameFolderModalOpen, setIsRenameFolderModalOpen] = useState(false);
@@ -99,6 +104,14 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
     onRenameCategory,
     creatorId
   });
+
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const handleCloseSidebar = () => {
+    setIsSidebarOpen(false);
+  };
 
   const handleRenameCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,23 +167,29 @@ export const FileExplorer: React.FC<FileExplorerProps> = ({
         handleAddToFolderClick={fileExplorerState.handleAddToFolderClick}
         isCreatorView={isCreatorView}
         onRefresh={onRefresh}
+        onToggleSidebar={isMobile ? handleToggleSidebar : undefined}
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <FileExplorerSidebar
-          onFolderChange={onFolderChange}
-          currentFolder={currentFolder}
-          onCategoryChange={onCategoryChange}
-          currentCategory={currentCategory}
-          availableFolders={availableFolders}
-          availableCategories={availableCategories}
-          onCreateCategory={onCreateCategory}
-          onDeleteFolder={handleConfirmDeleteFolder}
-          onDeleteCategory={handleConfirmDeleteCategory}
-          onRenameFolder={onRenameFolder}
-          onRenameCategory={onRenameCategory}
-          isCreatorView={isCreatorView}
-        />
+        {/* Desktop sidebar or mobile overlay sidebar */}
+        {(!isMobile || isSidebarOpen) && (
+          <FileExplorerSidebar
+            onFolderChange={onFolderChange}
+            currentFolder={currentFolder}
+            onCategoryChange={onCategoryChange}
+            currentCategory={currentCategory}
+            availableFolders={availableFolders}
+            availableCategories={availableCategories}
+            onCreateCategory={onCreateCategory}
+            onDeleteFolder={handleConfirmDeleteFolder}
+            onDeleteCategory={handleConfirmDeleteCategory}
+            onRenameFolder={onRenameFolder}
+            onRenameCategory={onRenameCategory}
+            isCreatorView={isCreatorView}
+            isOpen={!isMobile || isSidebarOpen}
+            onClose={isMobile ? handleCloseSidebar : undefined}
+          />
+        )}
         
         <FileExplorerContent
           filteredFiles={fileExplorerState.filteredFiles}
