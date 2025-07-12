@@ -75,10 +75,10 @@ export const FileCard: React.FC<FileCardProps> = ({
 
   return (
     <div className="relative">
-      {/* Action Buttons positioned above the card */}
+      {/* Action Buttons positioned above the card - centered but not constrained */}
       {isCreatorView && (
         <div className={`
-          absolute -top-2 right-2 z-20 transition-opacity duration-200
+          absolute -top-12 left-1/2 transform -translate-x-1/2 z-20 transition-opacity duration-200
           ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
         `}>
           {isMobile ? (
@@ -87,14 +87,14 @@ export const FileCard: React.FC<FileCardProps> = ({
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-8 w-8 p-0 bg-white/95 hover:bg-white shadow-md"
+                className="h-8 w-8 p-0 bg-card/95 hover:bg-card border border-border shadow-md"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Menu className="h-4 w-4 text-black" />
+                <Menu className="h-4 w-4 text-foreground" />
               </Button>
               
               {/* Mobile actions dropdown */}
-              <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/actions:opacity-100 transition-opacity duration-200 z-30 min-w-[120px]">
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-card rounded-lg shadow-lg border border-border p-1 opacity-0 group-hover/actions:opacity-100 transition-opacity duration-200 z-30 min-w-[120px]">
                 {onEditNote && (
                   <Button
                     variant="ghost"
@@ -103,7 +103,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                       e.stopPropagation();
                       onEditNote(file);
                     }}
-                    className="w-full justify-start h-8 px-2 text-xs"
+                    className="w-full justify-start h-8 px-2 text-xs text-foreground hover:bg-muted"
                   >
                     <Edit className="h-3 w-3 mr-2" />
                     Edit
@@ -118,7 +118,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                       e.stopPropagation();
                       onAddTagToFile(file);
                     }}
-                    className="w-full justify-start h-8 px-2 text-xs"
+                    className="w-full justify-start h-8 px-2 text-xs text-foreground hover:bg-muted"
                   >
                     <Tag className="h-3 w-3 mr-2" />
                     Tag
@@ -133,7 +133,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                       e.stopPropagation();
                       onRemoveFromFolder();
                     }}
-                    className="w-full justify-start h-8 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    className="w-full justify-start h-8 px-2 text-xs text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
                   >
                     <FolderMinus className="h-3 w-3 mr-2" />
                     Remove
@@ -148,7 +148,7 @@ export const FileCard: React.FC<FileCardProps> = ({
                       e.stopPropagation();
                       onDeleteFile();
                     }}
-                    className="w-full justify-start h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="w-full justify-start h-8 px-2 text-xs text-destructive hover:text-destructive/80 hover:bg-destructive/10"
                   >
                     <Trash2 className="h-3 w-3 mr-2" />
                     Delete
@@ -158,7 +158,7 @@ export const FileCard: React.FC<FileCardProps> = ({
             </div>
           ) : (
             // Desktop: Show individual buttons in a row
-            <div className="flex items-center justify-center gap-1 bg-white/95 rounded-lg shadow-md p-1">
+            <div className="flex items-center justify-center gap-1 bg-card/95 backdrop-blur-sm rounded-lg shadow-md border border-border p-1">
               {onEditNote && (
                 <Button
                   variant="ghost"
@@ -167,10 +167,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                     e.stopPropagation();
                     onEditNote(file);
                   }}
-                  className="h-7 w-7"
+                  className="h-8 w-8 text-foreground hover:bg-muted hover:text-foreground"
                   title="Edit note"
                 >
-                  <Edit className="h-3 w-3" />
+                  <Edit className="h-4 w-4" />
                 </Button>
               )}
               
@@ -182,10 +182,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                     e.stopPropagation();
                     onAddTagToFile(file);
                   }}
-                  className="h-7 w-7"
+                  className="h-8 w-8 text-foreground hover:bg-muted hover:text-foreground"
                   title="Add tag"
                 >
-                  <Tag className="h-3 w-3" />
+                  <Tag className="h-4 w-4" />
                 </Button>
               )}
               
@@ -197,10 +197,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                     e.stopPropagation();
                     onRemoveFromFolder();
                   }}
-                  className="h-7 w-7 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                  className="h-8 w-8 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
                   title="Remove from folder"
                 >
-                  <FolderMinus className="h-3 w-3" />
+                  <FolderMinus className="h-4 w-4" />
                 </Button>
               )}
               
@@ -212,10 +212,10 @@ export const FileCard: React.FC<FileCardProps> = ({
                     e.stopPropagation();
                     onDeleteFile();
                   }}
-                  className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
                   title="Delete file"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               )}
             </div>
