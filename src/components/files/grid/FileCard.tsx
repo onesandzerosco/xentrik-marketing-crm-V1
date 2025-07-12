@@ -12,7 +12,8 @@ import {
   Image, 
   Video, 
   Music, 
-  File 
+  File,
+  Menu
 } from 'lucide-react';
 import { formatFileSize } from '@/utils/fileUtils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -64,8 +65,8 @@ export const FileCard: React.FC<FileCardProps> = ({
     if (file.thumbnail_url) {
       return file.thumbnail_url;
     }
-    if (file.mime?.startsWith('image/')) {
-      return `https://rdzwpiokpyssqhnfiqrt.supabase.co/storage/v1/object/public/creator-files/${file.bucket_key}`;
+    if (file.type?.startsWith('image/')) {
+      return `https://rdzwpiokpyssqhnfiqrt.supabase.co/storage/v1/object/public/creator-files/${file.bucketPath}`;
     }
     return null;
   };
@@ -73,13 +74,16 @@ export const FileCard: React.FC<FileCardProps> = ({
   const previewImage = getPreviewImage();
 
   return (
-    <Card className={`
-      relative group hover:shadow-md transition-all duration-200 
-      ${isSelected ? 'ring-2 ring-primary' : ''} 
-      ${isNew ? 'ring-2 ring-green-500' : ''} 
-      ${isDeleting || isRemoving ? 'opacity-50' : ''}
-      ${isMobile ? 'h-auto' : 'h-48'}
-    `}>
+    <Card 
+      className={`
+        relative group hover:shadow-md transition-all duration-200 cursor-pointer
+        ${isSelected ? 'ring-2 ring-primary' : ''} 
+        ${isNew ? 'ring-2 ring-green-500' : ''} 
+        ${isDeleting || isRemoving ? 'opacity-50' : ''}
+        ${isMobile ? 'h-auto' : 'h-48'}
+      `}
+      onClick={() => onFileClick(file)}
+    >
       <CardContent className={`p-2 ${isMobile ? 'p-3' : 'p-4'} h-full flex flex-col`}>
         {/* File Preview */}
         <div className={`
@@ -98,7 +102,7 @@ export const FileCard: React.FC<FileCardProps> = ({
             />
           ) : null}
           <div className={`flex items-center justify-center text-muted-foreground ${previewImage ? 'hidden' : ''}`}>
-            {getFileIcon(file.mime || '')}
+            {getFileIcon(file.type || '')}
           </div>
           
           {/* Action Buttons Overlay */}
@@ -108,67 +112,145 @@ export const FileCard: React.FC<FileCardProps> = ({
               flex items-center justify-center gap-1
               ${isMobile ? 'opacity-100 bg-black/30' : ''}
             `}>
-              <div className="flex gap-1">
-                {onEditNote && (
+              {isMobile ? (
+                // Mobile: Show menu button that reveals actions
+                <div className="relative group/mobile">
                   <Button
                     variant="secondary"
-                    size={isMobile ? "sm" : "icon"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditNote(file);
-                    }}
-                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-white/90 hover:bg-white`}
-                    title="Edit note"
+                    size="sm"
+                    className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Edit className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-black`} />
+                    <Menu className="h-4 w-4 text-black" />
                   </Button>
-                )}
-                
-                {onAddTagToFile && (
-                  <Button
-                    variant="secondary"
-                    size={isMobile ? "sm" : "icon"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddTagToFile(file);
-                    }}
-                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-white/90 hover:bg-white`}
-                    title="Add tag"
-                  >
-                    <Tag className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-black`} />
-                  </Button>
-                )}
-                
-                {showRemoveFromFolder && onRemoveFromFolder && (
-                  <Button
-                    variant="secondary"
-                    size={isMobile ? "sm" : "icon"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemoveFromFolder();
-                    }}
-                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-orange-500/90 hover:bg-orange-600`}
-                    title="Remove from folder"
-                  >
-                    <FolderMinus className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-white`} />
-                  </Button>
-                )}
-                
-                {canDelete && onDeleteFile && (
-                  <Button
-                    variant="destructive"
-                    size={isMobile ? "sm" : "icon"}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteFile();
-                    }}
-                    className={`${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8'} bg-red-500/90 hover:bg-red-600`}
-                    title="Delete file"
-                  >
-                    <Trash2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                  </Button>
-                )}
-              </div>
+                  
+                  {/* Mobile actions menu */}
+                  <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border p-1 opacity-0 group-hover/mobile:opacity-100 transition-opacity duration-200 z-10 min-w-[120px]">
+                    {onEditNote && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditNote(file);
+                        }}
+                        className="w-full justify-start h-8 px-2 text-xs"
+                      >
+                        <Edit className="h-3 w-3 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                    
+                    {onAddTagToFile && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddTagToFile(file);
+                        }}
+                        className="w-full justify-start h-8 px-2 text-xs"
+                      >
+                        <Tag className="h-3 w-3 mr-2" />
+                        Tag
+                      </Button>
+                    )}
+                    
+                    {showRemoveFromFolder && onRemoveFromFolder && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveFromFolder();
+                        }}
+                        className="w-full justify-start h-8 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                      >
+                        <FolderMinus className="h-3 w-3 mr-2" />
+                        Remove
+                      </Button>
+                    )}
+                    
+                    {canDelete && onDeleteFile && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteFile();
+                        }}
+                        className="w-full justify-start h-8 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-3 w-3 mr-2" />
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Desktop: Show individual buttons
+                <div className="flex gap-1">
+                  {onEditNote && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditNote(file);
+                      }}
+                      className="h-8 w-8 bg-white/90 hover:bg-white"
+                      title="Edit note"
+                    >
+                      <Edit className="h-4 w-4 text-black" />
+                    </Button>
+                  )}
+                  
+                  {onAddTagToFile && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddTagToFile(file);
+                      }}
+                      className="h-8 w-8 bg-white/90 hover:bg-white"
+                      title="Add tag"
+                    >
+                      <Tag className="h-4 w-4 text-black" />
+                    </Button>
+                  )}
+                  
+                  {showRemoveFromFolder && onRemoveFromFolder && (
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveFromFolder();
+                      }}
+                      className="h-8 w-8 bg-orange-500/90 hover:bg-orange-600"
+                      title="Remove from folder"
+                    >
+                      <FolderMinus className="h-4 w-4 text-white" />
+                    </Button>
+                  )}
+                  
+                  {canDelete && onDeleteFile && (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteFile();
+                      }}
+                      className="h-8 w-8 bg-red-500/90 hover:bg-red-600"
+                      title="Delete file"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -179,7 +261,7 @@ export const FileCard: React.FC<FileCardProps> = ({
             {file.name}
           </h3>
           <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-xs'}`}>
-            {formatFileSize(file.file_size)}
+            {formatFileSize(file.size)}
           </p>
           
           {file.description && (
