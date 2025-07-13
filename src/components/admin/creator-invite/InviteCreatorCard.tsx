@@ -1,61 +1,70 @@
 
 import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Copy, ExternalLink } from "lucide-react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { generateInvitationToken } from "@/utils/onboardingUtils";
+
+// Validation schema
+const inviteSchema = z.object({
+  modelName: z.string().min(1, "Model name is required"),
+});
+
+type InviteFormValues = z.infer<typeof inviteSchema>;
 
 const InviteCreatorCard: React.FC = () => {
-  const [modelName, setModelName] = useState("");
-  const [stageName, setStageName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState("");
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  
+  const form = useForm<InviteFormValues>({
+    resolver: zodResolver(inviteSchema),
+    defaultValues: {
+      modelName: "",
+    },
+  });
 
-  const generateInviteLink = async () => {
-    if (!modelName.trim() || !stageName.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both model name and stage name",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
+  const handleGenerateLink = async (data: InviteFormValues) => {
     try {
-      const { data, error } = await supabase
-        .from('creator_invitations')
-        .insert({
-          model_name: modelName.trim(),
-          stage_name: stageName.trim(),
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const inviteUrl = `${window.location.origin}/creator-onboarding/${data.token}`;
-      setGeneratedLink(inviteUrl);
+      setIsLoading(true);
+      console.log("Generating link for model:", data.modelName);
       
-      toast({
-        title: "Invite Link Generated",
-        description: "Creator onboarding link has been created successfully",
-      });
+      // Generate invitation token with model name
+      const result = await generateInvitationToken(data.modelName);
+        
+      if (!result.success || !result.token) {
+        throw new Error(result.error || "Failed to generate invitation token");
+      }
 
-      // Reset form
-      setModelName("");
-      setStageName("");
-    } catch (error: any) {
-      console.error('Error generating invite link:', error);
+      console.log("Received token from generation:", result.token);
+
+      // Generate the onboarding link
+      const appUrl = window.location.origin;
+      const onboardingLink = `${appUrl}/onboarding-form/${result.token}`;
+      
+      console.log("Generated onboarding link:", onboardingLink);
+      setGeneratedLink(onboardingLink);
+
       toast({
-        title: "Error",
-        description: "Failed to generate invite link. Please try again.",
+        title: "Onboarding link generated",
+        description: `Copy the link and share it with ${data.modelName}`,
+      });
+      
+      form.reset();
+    } catch (error: any) {
+      console.error("Error generating link:", error);
+      toast({
         variant: "destructive",
+        title: "Failed to generate link",
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
       setIsLoading(false);
@@ -65,98 +74,105 @@ const InviteCreatorCard: React.FC = () => {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(generatedLink);
+      setCopied(true);
       toast({
-        title: "Copied!",
-        description: "Invite link copied to clipboard",
+        title: "Link copied",
+        description: "The onboarding link has been copied to your clipboard",
       });
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: "Copy Failed",
-        description: "Failed to copy link to clipboard",
         variant: "destructive",
+        title: "Failed to copy",
+        description: "Could not copy the link to clipboard",
       });
     }
   };
 
-  const openLink = () => {
-    window.open(generatedLink, '_blank');
+  const generateNewLink = () => {
+    setGeneratedLink("");
+    setCopied(false);
   };
 
   return (
-    <Card className="w-full h-fit">
-      <CardHeader className="pb-4 sm:pb-6">
-        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-          <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
-          Create Invite Link
-        </CardTitle>
-        <CardDescription className="text-sm sm:text-base">
-          Generate onboarding links for new creators
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6">
-        <div className="space-y-4 sm:space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="modelName" className="text-sm sm:text-base">Model Name</Label>
-            <Input
-              id="modelName"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              placeholder="Enter model name"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-10 sm:h-11"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="stageName" className="text-sm sm:text-base">Stage Name</Label>
-            <Input
-              id="stageName"
-              value={stageName}
-              onChange={(e) => setStageName(e.target.value)}
-              placeholder="Enter stage name"
-              disabled={isLoading}
-              className="text-sm sm:text-base h-10 sm:h-11"
-            />
-          </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Generate Creator Onboarding Link</CardTitle>
+          <CardDescription>
+            Create a unique onboarding link for new creators (expires in 72 hours)
+          </CardDescription>
         </div>
-        
-        <Button 
-          onClick={generateInviteLink}
-          disabled={isLoading}
-          className="w-full bg-brand-yellow text-black hover:bg-brand-yellow/90 h-10 sm:h-11 text-sm sm:text-base"
-        >
-          {isLoading ? "Generating..." : "Generate Invite Link"}
-        </Button>
-        
-        {generatedLink && (
-          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 bg-muted rounded-lg">
-            <Label className="text-sm sm:text-base font-medium">Generated Link:</Label>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <Input
-                value={generatedLink}
-                readOnly
-                className="flex-1 text-xs sm:text-sm bg-background h-9 sm:h-10"
+        <Link className="h-5 w-5 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {!generatedLink ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleGenerateLink)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="modelName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model Name *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter the model's name" 
+                        {...field} 
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-              <div className="flex gap-2">
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                <Link className="mr-2 h-4 w-4" />
+                Generate Onboarding Link
+              </Button>
+            </form>
+          </Form>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Label>Generated Onboarding Link</Label>
+              <div className="flex gap-2 mt-2">
+                <Input 
+                  value={generatedLink} 
+                  readOnly 
+                  className="flex-1"
+                />
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={copyToClipboard}
-                  className="flex-1 sm:flex-none h-9 sm:h-10 text-xs sm:text-sm"
+                  disabled={copied}
                 >
-                  <Copy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Copy
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={openLink}
-                  className="flex-1 sm:flex-none h-9 sm:h-10 text-xs sm:text-sm"
-                >
-                  <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Open
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={generateNewLink}
+                className="flex-1"
+              >
+                Generate New Link
+              </Button>
+              <Button
+                onClick={copyToClipboard}
+                disabled={copied}
+                className="flex-1"
+              >
+                {copied ? "Copied!" : "Copy Link"}
+              </Button>
             </div>
           </div>
         )}
