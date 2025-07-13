@@ -203,17 +203,17 @@ const CreatorsDataTable: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              {!isChatter && <TableHead>Email</TableHead>}
-              <TableHead>Actions</TableHead>
+              <TableHead className="text-left">Name</TableHead>
+              {!isChatter && <TableHead className="text-left">Email</TableHead>}
+              <TableHead className="text-left">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCreators.map((submission) => (
               <TableRow key={submission.id}>
-                <TableCell className="font-medium">{submission.name}</TableCell>
-                {!isChatter && <TableCell>{submission.email}</TableCell>}
-                <TableCell>
+                <TableCell className="font-medium text-left">{submission.name}</TableCell>
+                {!isChatter && <TableCell className="text-left">{submission.email}</TableCell>}
+                <TableCell className="text-left">
                   <Button
                     variant="ghost"
                     size="sm"

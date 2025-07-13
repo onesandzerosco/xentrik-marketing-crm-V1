@@ -421,13 +421,13 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       // Special handling for date of birth field
       if (fieldKey === 'dateOfBirth') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-[240px] justify-start text-left font-normal",
+                    "w-full sm:w-[240px] justify-start text-left font-normal h-12 sm:h-auto",
                     !editValue && "text-muted-foreground"
                   )}
                 >
@@ -448,12 +448,16 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 />
               </PopoverContent>
             </Popover>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
@@ -461,8 +465,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       // Special handling for location fields
       if (fieldKey === 'location' || fieldKey === 'hometown') {
         return (
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <div className="flex-1 w-full">
               <LocationPicker
                 value={editValue || ''}
                 onChange={(location) => setEditValue(location)}
@@ -470,12 +474,16 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 showCurrentTime={fieldKey === 'location'}
               />
             </div>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
@@ -483,9 +491,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       // Special handling for boolean fields
       if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Select value={String(editValue)} onValueChange={setEditValue}>
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-full sm:w-24 h-12 sm:h-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -493,12 +501,16 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="false">No</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
@@ -506,9 +518,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       // Special handling for enum fields
       if (fieldKey === 'sex') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Select value={editValue} onValueChange={setEditValue}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 h-12 sm:h-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -517,21 +529,25 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Transgender">Transgender</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
       
       if (fieldKey === 'handedness') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Select value={editValue} onValueChange={setEditValue}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 h-12 sm:h-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -540,21 +556,25 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Ambidextrous">Ambidextrous</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
       
       if (fieldKey === 'isTopOrBottom') {
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             <Select value={editValue} onValueChange={setEditValue}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 h-12 sm:h-auto">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -563,12 +583,16 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 <SelectItem value="Versatile">Versatile</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-              <Save className="h-3 w-3" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-              <X className="h-3 w-3" />
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
+              </Button>
+            </div>
           </div>
         );
       }
@@ -576,18 +600,20 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       // For longer text fields, use textarea
       if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote' || fieldKey === 'customVideoNotes' || fieldKey === 'videoCallNotes') {
         return (
-          <div className="flex items-start gap-2">
+          <div className="flex flex-col gap-2">
             <Textarea 
               value={editValue} 
               onChange={(e) => setEditValue(e.target.value)}
-              className="min-h-[60px]"
+              className="min-h-[80px] text-base"
             />
-            <div className="flex flex-col gap-1">
-              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-                <Save className="h-3 w-3" />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <Save className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Save</span>
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                <X className="h-3 w-3" />
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+                <X className="h-3 w-3 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Cancel</span>
               </Button>
             </div>
           </div>
@@ -596,26 +622,30 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       
       // Default input field
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
           <Input 
             value={editValue} 
             onChange={(e) => setEditValue(e.target.value)}
-            className="flex-1"
+            className="flex-1 h-12 sm:h-auto text-base"
           />
-          <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving}>
-            <Save className="h-3 w-3" />
-          </Button>
-          <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-            <X className="h-3 w-3" />
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button size="sm" onClick={() => handleSaveClick(section, fieldKey)} disabled={isSaving} className="h-12 sm:h-auto flex-1 sm:flex-none">
+              <Save className="h-3 w-3 mr-2 sm:mr-0" />
+              <span className="sm:hidden">Save</span>
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-12 sm:h-auto flex-1 sm:flex-none">
+              <X className="h-3 w-3 mr-2 sm:mr-0" />
+              <span className="sm:hidden">Cancel</span>
+            </Button>
+          </div>
         </div>
       );
     }
     
     // Display mode with conditional edit button
     return (
-      <div className="flex items-center justify-between group">
-        <div className="flex-1 text-muted-foreground break-words">
+      <div className="flex items-start justify-between group gap-3">
+        <div className="flex-1 text-muted-foreground break-words min-w-0">
           {/* Special handling for date of birth display */}
           {fieldKey === 'dateOfBirth' && value ? (
             (() => {
@@ -632,9 +662,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             value.length > 0 ? (
               <div className="space-y-2">
                 {value.map((pet: any, index: number) => (
-                  <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                  <div key={index} className="bg-muted/30 p-3 rounded text-sm">
                     {Object.entries(pet).map(([petKey, petValue]) => (
-                      <div key={petKey}>
+                      <div key={petKey} className="mb-1 last:mb-0">
                         <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
                       </div>
                     ))}
@@ -645,14 +675,14 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
               formatValue(value, fieldKey)
             )
           ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {Object.entries(value).map(([platform, handle]) => {
                 // Special handling for the "other" platforms array
                 if (platform === 'other' && Array.isArray(handle)) {
                   return (
                     <div key={platform}>
                       <span className="font-medium">Other Platforms:</span>
-                      <div className="ml-4 space-y-1">
+                      <div className="ml-2 space-y-1 mt-1">
                         {handle.map((otherPlatform: any, index: number) => (
                           <div key={index} className="bg-muted/30 p-2 rounded text-sm">
                             <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
@@ -664,7 +694,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                 }
                 // Regular platform handling
                 return (
-                  <div key={platform}>
+                  <div key={platform} className="mb-1 last:mb-0">
                     <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
                   </div>
                 );
@@ -681,11 +711,12 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
           <Button 
             size="sm" 
             variant="ghost" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-10 w-10 sm:h-auto sm:w-auto flex-shrink-0"
             onClick={() => handleEditClick(section, fieldKey, value)}
             disabled={isSaving}
           >
             <Edit className="h-3 w-3" />
+            <span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
           </Button>
         )}
       </div>
@@ -792,11 +823,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
           }
           
           return (
-            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-b border-border/50">
-              <div className="font-medium text-foreground">
+            <div key={key} className="flex flex-col space-y-2 py-3 border-b border-border/50 last:border-b-0">
+              <div className="font-medium text-foreground text-base">
                 {formatFieldName(key)}:
               </div>
-              <div className="md:col-span-2">
+              <div className="pl-0">
                 {renderEditableField(section, key, value)}
               </div>
             </div>
@@ -808,75 +839,81 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            {submission.name}'s Model Profile
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">Accepted</Badge>
-              {!canEdit && (
-                <Badge variant="outline" className="text-muted-foreground">
-                  View Only
-                </Badge>
-              )}
-            </div>
-          </DialogTitle>
-          <DialogDescription>
-            <HeaderTimeDisplay 
-              location={submissionData?.personalInfo?.location || ''} 
-              preloadedTimezone={submission.timezone} 
-            />
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl max-h-[90vh] w-[95vw] sm:w-full p-0">
+        <div className="p-4 sm:p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <span className="text-lg sm:text-xl">{submission.name}'s Model Profile</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">Accepted</Badge>
+                {!canEdit && (
+                  <Badge variant="outline" className="text-muted-foreground">
+                    View Only
+                  </Badge>
+                )}
+              </div>
+            </DialogTitle>
+            <DialogDescription className="text-sm">
+              <HeaderTimeDisplay 
+                location={submissionData?.personalInfo?.location || ''} 
+                preloadedTimezone={submission.timezone} 
+              />
+            </DialogDescription>
+          </DialogHeader>
+        </div>
         
-        <ScrollArea className="h-[65vh] w-full">
-          <Tabs defaultValue="announcements" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="announcements">Announcements</TabsTrigger>
-              <TabsTrigger value="all">All Data</TabsTrigger>
-              <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="physical">Physical</TabsTrigger>
-              <TabsTrigger value="preferences">Preferences</TabsTrigger>
-              <TabsTrigger value="content">Content & Service</TabsTrigger>
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex-1 min-h-0">
+          <Tabs defaultValue="announcements" className="w-full h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto p-1">
+              <TabsTrigger value="announcements" className="text-xs sm:text-sm py-2 px-1">Announce</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm py-2 px-1">All Data</TabsTrigger>
+              <TabsTrigger value="personal" className="text-xs sm:text-sm py-2 px-1">Personal</TabsTrigger>
+              <TabsTrigger value="physical" className="text-xs sm:text-sm py-2 px-1">Physical</TabsTrigger>
+              <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2 px-1">Preferences</TabsTrigger>
+              <TabsTrigger value="content" className="text-xs sm:text-sm py-2 px-1">Content</TabsTrigger>
             </TabsList>
             
-            <div className="mt-6">
-              <TabsContent value="announcements" className="space-y-4">
-                {creatorData?.id ? (
-                  <AnnouncementsTab creatorId={creatorData.id} />
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    Creator not found in database. Cannot load announcements.
-                  </div>
-                )}
-              </TabsContent>
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-[60vh] w-full">
+                <div className="pr-4">
+                  <TabsContent value="announcements" className="space-y-4 mt-0">
+                    {creatorData?.id ? (
+                      <AnnouncementsTab creatorId={creatorData.id} />
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        Creator not found in database. Cannot load announcements.
+                      </div>
+                    )}
+                  </TabsContent>
 
-              <TabsContent value="all" className="space-y-4">
-                {renderAllData()}
-              </TabsContent>
+                  <TabsContent value="all" className="space-y-4 mt-0">
+                    {renderAllData()}
+                  </TabsContent>
 
-              <TabsContent value="personal" className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                {renderDataSection(submissionData?.personalInfo, 'Personal Information', personalInfoPriority, 'personalInfo')}
-              </TabsContent>
-              
-              <TabsContent value="physical" className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
-                {renderDataSection(submissionData?.physicalAttributes, 'Physical Attributes', physicalPriority, 'physicalAttributes')}
-              </TabsContent>
-              
-              <TabsContent value="preferences" className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
-                {renderDataSection(submissionData?.personalPreferences, 'Personal Preferences', preferencesPriority, 'personalPreferences')}
-              </TabsContent>
-              
-              <TabsContent value="content" className="space-y-4">
-                <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
-                {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
-              </TabsContent>
+                  <TabsContent value="personal" className="space-y-4 mt-0">
+                    <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+                    {renderDataSection(submissionData?.personalInfo, 'Personal Information', personalInfoPriority, 'personalInfo')}
+                  </TabsContent>
+                  
+                  <TabsContent value="physical" className="space-y-4 mt-0">
+                    <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
+                    {renderDataSection(submissionData?.physicalAttributes, 'Physical Attributes', physicalPriority, 'physicalAttributes')}
+                  </TabsContent>
+                  
+                  <TabsContent value="preferences" className="space-y-4 mt-0">
+                    <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
+                    {renderDataSection(submissionData?.personalPreferences, 'Personal Preferences', preferencesPriority, 'personalPreferences')}
+                  </TabsContent>
+                  
+                  <TabsContent value="content" className="space-y-4 mt-0">
+                    <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
+                    {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
+                  </TabsContent>
+                </div>
+              </ScrollArea>
             </div>
           </Tabs>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
