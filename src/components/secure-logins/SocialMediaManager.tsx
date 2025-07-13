@@ -59,6 +59,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
   const [isEditing, setIsEditing] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState('');
   const [showAddPlatform, setShowAddPlatform] = useState(false);
+  const [showAddPlatformModal, setShowAddPlatformModal] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [editingLogin, setEditingLogin] = useState<SocialMediaLogin | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -331,7 +332,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
     );
   };
 
-  // Add new platform
+  // Add new platform function - updated to handle modal state
   const addNewPlatform = async () => {
     if (!canEdit || !newPlatformName.trim()) return;
 
@@ -367,6 +368,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
 
       setNewPlatformName('');
       setShowAddPlatform(false);
+      setShowAddPlatformModal(false);
       await fetchSocialMediaLogins();
     } catch (error) {
       console.error('Error in addNewPlatform:', error);
@@ -508,15 +510,67 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setShowAddPlatform(true)}
-                className={`rounded-[15px] ${isMobile ? 'w-full' : ''}`}
-                size={isMobile ? "lg" : "default"}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Platform
-              </Button>
+              {isMobile ? (
+                <Dialog open={showAddPlatformModal} onOpenChange={setShowAddPlatformModal}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="rounded-[15px] w-full"
+                      size="lg"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Platform
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Add New Platform</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Platform Name</Label>
+                        <Input
+                          placeholder="Enter platform name (e.g., LinkedIn, YouTube)"
+                          value={newPlatformName}
+                          onChange={(e) => setNewPlatformName(e.target.value)}
+                          className="rounded-[15px]"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2 pt-4">
+                        <Button 
+                          onClick={addNewPlatform} 
+                          className="flex-1 rounded-[15px]"
+                          disabled={!newPlatformName.trim()}
+                          variant="premium"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Platform
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowAddPlatformModal(false);
+                            setNewPlatformName('');
+                          }}
+                          className="flex-1 rounded-[15px]"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddPlatform(true)}
+                  className="rounded-[15px]"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Platform
+                </Button>
+              )}
             </>
           )}
           {canEdit && isEditing && (
@@ -812,22 +866,22 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
         </DialogContent>
       </Dialog>
 
-      {/* Add New Platform Form */}
-      {showAddPlatform && canEdit && (
+      {/* Add New Platform Form - Desktop Only */}
+      {showAddPlatform && canEdit && !isMobile && (
         <div className="border rounded-lg p-4 bg-muted/30 border-dashed">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Add New Platform</Label>
-            <div className={`flex ${isMobile ? 'flex-col' : ''} gap-2`}>
+            <div className="flex gap-2">
               <Input
                 placeholder="Enter platform name (e.g., LinkedIn, YouTube)"
                 value={newPlatformName}
                 onChange={(e) => setNewPlatformName(e.target.value)}
-                className={`rounded-[15px] border-muted-foreground/20 ${isMobile ? 'w-full' : ''}`}
+                className="rounded-[15px] border-muted-foreground/20"
               />
-              <div className={`flex gap-2 ${isMobile ? 'w-full' : ''}`}>
+              <div className="flex gap-2">
                 <Button 
                   onClick={addNewPlatform} 
-                  className={`rounded-[15px] ${isMobile ? 'flex-1' : ''}`}
+                  className="rounded-[15px]"
                   disabled={!newPlatformName.trim()}
                 >
                   Add
@@ -838,7 +892,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
                     setShowAddPlatform(false);
                     setNewPlatformName('');
                   }}
-                  className={`rounded-[15px] ${isMobile ? 'flex-1' : ''}`}
+                  className="rounded-[15px]"
                 >
                   <X className="h-4 w-4" />
                 </Button>
