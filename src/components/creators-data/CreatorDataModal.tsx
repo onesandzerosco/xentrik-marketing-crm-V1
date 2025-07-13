@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -643,82 +642,172 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       );
     }
     
-    // Display mode - FIXED: Responsive layout with horizontal for desktop, vertical for mobile
+    // Display mode - Desktop: inline (horizontal), Mobile: stacked (vertical)
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between group gap-2 sm:gap-3">
-        <div className="flex-1 text-muted-foreground break-words min-w-0">
-          {/* Special handling for date of birth display */}
-          {fieldKey === 'dateOfBirth' && value ? (
-            (() => {
-              try {
-                const date = new Date(value);
-                return format(date, "MMMM dd, yyyy");
-              } catch (e) {
-                return formatValue(value, fieldKey);
-              }
-            })()
-          ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
-            <LocationWithTime location={value} preloadedTimezone={submission.timezone} />
-          ) : fieldKey === 'pets' && Array.isArray(value) ? (
-            value.length > 0 ? (
-              <div className="space-y-2">
-                {value.map((pet: any, index: number) => (
-                  <div key={index} className="bg-muted/30 p-3 rounded text-sm">
-                    {Object.entries(pet).map(([petKey, petValue]) => (
-                      <div key={petKey} className="mb-1 last:mb-0">
-                        <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              formatValue(value, fieldKey)
-            )
-          ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
-            <div className="space-y-2">
-              {Object.entries(value).map(([platform, handle]) => {
-                // Special handling for the "other" platforms array
-                if (platform === 'other' && Array.isArray(handle)) {
-                  return (
-                    <div key={platform}>
-                      <span className="font-medium">Other Platforms:</span>
-                      <div className="ml-2 space-y-1 mt-1">
-                        {handle.map((otherPlatform: any, index: number) => (
-                          <div key={index} className="bg-muted/30 p-2 rounded text-sm">
-                            <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
+      <div className="group gap-3">
+        {/* Mobile Layout - Stacked */}
+        <div className="flex flex-col space-y-2 sm:hidden">
+          <div className="font-medium text-foreground text-base">
+            {formatFieldName(fieldKey)}:
+          </div>
+          <div className="flex items-start justify-between">
+            <div className="flex-1 text-muted-foreground break-words min-w-0">
+              {/* Special handling for date of birth display */}
+              {fieldKey === 'dateOfBirth' && value ? (
+                (() => {
+                  try {
+                    const date = new Date(value);
+                    return format(date, "MMMM dd, yyyy");
+                  } catch (e) {
+                    return formatValue(value, fieldKey);
+                  }
+                })()
+              ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
+                <LocationWithTime location={value} preloadedTimezone={submission.timezone} />
+              ) : fieldKey === 'pets' && Array.isArray(value) ? (
+                value.length > 0 ? (
+                  <div className="space-y-2">
+                    {value.map((pet: any, index: number) => (
+                      <div key={index} className="bg-muted/30 p-3 rounded text-sm">
+                        {Object.entries(pet).map(([petKey, petValue]) => (
+                          <div key={petKey} className="mb-1 last:mb-0">
+                            <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
                           </div>
                         ))}
                       </div>
-                    </div>
-                  );
-                }
-                // Regular platform handling
-                return (
-                  <div key={platform} className="mb-1 last:mb-0">
-                    <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                    ))}
                   </div>
-                );
-              })}
+                ) : (
+                  formatValue(value, fieldKey)
+                )
+              ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
+                <div className="space-y-2">
+                  {Object.entries(value).map(([platform, handle]) => {
+                    // Special handling for the "other" platforms array
+                    if (platform === 'other' && Array.isArray(handle)) {
+                      return (
+                        <div key={platform}>
+                          <span className="font-medium">Other Platforms:</span>
+                          <div className="ml-2 space-y-1 mt-1">
+                            {handle.map((otherPlatform: any, index: number) => (
+                              <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                                <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    // Regular platform handling
+                    return (
+                      <div key={platform} className="mb-1 last:mb-0">
+                        <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                formatValue(value, fieldKey)
+              )}
             </div>
-          ) : (
-            formatValue(value, fieldKey)
+            {/* Show edit button only for authorized users and exclude complex objects */}
+            {canEdit && 
+             !(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
+             !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0"
+                onClick={() => handleEditClick(section, fieldKey, value)}
+                disabled={isSaving}
+              >
+                <Edit className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Layout - Inline */}
+        <div className="hidden sm:flex sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="font-medium text-foreground text-base min-w-0 flex-shrink-0">
+              {formatFieldName(fieldKey)}:
+            </div>
+            <div className="flex-1 text-muted-foreground break-words min-w-0">
+              {/* Special handling for date of birth display */}
+              {fieldKey === 'dateOfBirth' && value ? (
+                (() => {
+                  try {
+                    const date = new Date(value);
+                    return format(date, "MMMM dd, yyyy");
+                  } catch (e) {
+                    return formatValue(value, fieldKey);
+                  }
+                })()
+              ) : (fieldKey === 'location' || fieldKey === 'hometown') && value ? (
+                <LocationWithTime location={value} preloadedTimezone={submission.timezone} />
+              ) : fieldKey === 'pets' && Array.isArray(value) ? (
+                value.length > 0 ? (
+                  <div className="space-y-2">
+                    {value.map((pet: any, index: number) => (
+                      <div key={index} className="bg-muted/30 p-3 rounded text-sm">
+                        {Object.entries(pet).map(([petKey, petValue]) => (
+                          <div key={petKey} className="mb-1 last:mb-0">
+                            <span className="font-medium">{formatFieldName(petKey)}:</span> {formatValue(petValue)}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  formatValue(value, fieldKey)
+                )
+              ) : fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
+                <div className="space-y-2">
+                  {Object.entries(value).map(([platform, handle]) => {
+                    // Special handling for the "other" platforms array
+                    if (platform === 'other' && Array.isArray(handle)) {
+                      return (
+                        <div key={platform}>
+                          <span className="font-medium">Other Platforms:</span>
+                          <div className="ml-2 space-y-1 mt-1">
+                            {handle.map((otherPlatform: any, index: number) => (
+                              <div key={index} className="bg-muted/30 p-2 rounded text-sm">
+                                <span className="font-medium">{otherPlatform.platform}:</span> {otherPlatform.handle}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    // Regular platform handling
+                    return (
+                      <div key={platform} className="mb-1 last:mb-0">
+                        <span className="font-medium">{formatFieldName(platform)}:</span> {formatValue(handle)}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                formatValue(value, fieldKey)
+              )}
+            </div>
+          </div>
+          {/* Show edit button only for authorized users and exclude complex objects */}
+          {canEdit && 
+           !(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
+           !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0"
+              onClick={() => handleEditClick(section, fieldKey, value)}
+              disabled={isSaving}
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
           )}
         </div>
-        {/* Show edit button only for authorized users and exclude complex objects */}
-        {canEdit && 
-         !(fieldKey === 'pets' && Array.isArray(value) && value.length > 0) && 
-         !(fieldKey === 'socialMediaHandles' && typeof value === 'object' && value !== null) && (
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0"
-            onClick={() => handleEditClick(section, fieldKey, value)}
-            disabled={isSaving}
-          >
-            <Edit className="h-3 w-3" />
-          </Button>
-        )}
       </div>
     );
   };
