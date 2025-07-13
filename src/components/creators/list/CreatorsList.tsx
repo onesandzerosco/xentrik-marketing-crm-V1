@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Creator } from "@/types";
 import CreatorCard from "@/components/CreatorCard";
 import EmptyState from "./EmptyState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CreatorsListProps {
   isLoading: boolean;
@@ -13,6 +14,8 @@ interface CreatorsListProps {
 }
 
 const CreatorsList: React.FC<CreatorsListProps> = ({ isLoading, creators, hasFilters }) => {
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -27,7 +30,7 @@ const CreatorsList: React.FC<CreatorsListProps> = ({ isLoading, creators, hasFil
   }
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-${isMobile ? '3' : '2'}`}>
       {creators.map(creator => (
         <Link key={creator.id} to={`/creator-profile/${creator.id}`}>
           <CreatorCard 

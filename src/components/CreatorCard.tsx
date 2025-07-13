@@ -1,18 +1,14 @@
 
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Creator } from '@/types';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { LineChart, FileText, LogIn, Files, Share2, Loader2, DollarSign } from 'lucide-react';
+import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import SecureLoginModal from './creators/secure-logins/SecureLoginModal';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Creator } from "@/types";
+import { Upload, FileText, Users, AlertTriangle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CreatorCardProps {
   creator: Creator;
-  variant?: 'default' | 'files';
+  variant?: "default" | "files";
   fileCount?: number;
   showUploadingIndicator?: boolean;
   uploadingCount?: number;
@@ -24,198 +20,153 @@ interface CreatorCardProps {
   };
 }
 
-const CreatorCard = ({ 
+const CreatorCard: React.FC<CreatorCardProps> = ({ 
   creator, 
-  variant = 'default', 
-  fileCount = 0, 
+  variant = "default",
+  fileCount = 0,
   showUploadingIndicator = false,
   uploadingCount = 0,
-  permissions 
-}: CreatorCardProps) => {
-  const { toast } = useToast();
-  const { userRole } = useAuth();
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  permissions
+}) => {
+  const isMobile = useIsMobile();
 
-  const handleShareButtonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Generate upload link
-    const uploadUrl = `/upload/${creator.id}`;
-    
-    // Copy link to clipboard
-    navigator.clipboard.writeText(`${window.location.origin}${uploadUrl}`);
-    
-    toast({
-      title: "Upload link copied!",
-      description: `Share this link with ${creator.name} to let them upload files directly.`,
-    });
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase();
   };
 
-  const handleLoginButtonClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowLoginModal(true);
+  const getGenderBadgeColor = (gender: string) => {
+    switch (gender.toLowerCase()) {
+      case 'male': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'female': return 'bg-pink-500/20 text-pink-400 border-pink-500/30';
+      case 'trans': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
   };
 
-  // Check if user has Admin privileges or permission to upload
-  const isAdmin = userRole === "Admin";
-  // Use permissions if provided, otherwise default to only admin having privileges
-  const canUpload = permissions?.canUpload || isAdmin;
+  const getTeamBadgeColor = (team: string) => {
+    switch (team) {
+      case 'A Team': return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'B Team': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'C Team': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+    }
+  };
 
   return (
-    <>
-      <Card className="p-4 hover:bg-accent/5 transition-colors group cursor-pointer">
-        <div className="flex items-center gap-4">
-          <div className="shrink-0">
-            {creator.profileImage ? (
-              <img 
-                src={creator.profileImage} 
-                alt={creator.name} 
-                className="w-12 h-12 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-all"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-premium-highlight/10 flex items-center justify-center">
-                <span className="text-lg font-semibold text-primary/60 group-hover:text-primary/80 transition-colors">
-                  {creator.name[0].toUpperCase()}
-                </span>
+    <div className={`bg-premium-card border border-[#333333] rounded-lg p-${isMobile ? '4' : '6'} hover:bg-premium-highlight transition-all duration-200 cursor-pointer`}>
+      <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
+        {/* Left side - Avatar and Info */}
+        <div className={`flex items-center ${isMobile ? 'justify-center text-center' : 'space-x-4'}`}>
+          <Avatar className={`${isMobile ? 'h-16 w-16' : 'h-12 w-12'}`}>
+            <AvatarImage src={creator.profileImage} alt={creator.name} />
+            <AvatarFallback className="bg-primary/20 text-primary">
+              {getInitials(creator.name)}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className={`${isMobile ? 'mt-3' : ''}`}>
+            <h3 className={`font-semibold text-white ${isMobile ? 'text-lg' : 'text-base'}`}>
+              {creator.name}
+            </h3>
+            {creator.telegramUsername && (
+              <p className={`text-muted-foreground ${isMobile ? 'text-base' : 'text-sm'}`}>
+                @{creator.telegramUsername}
+              </p>
+            )}
+            {creator.email && (
+              <p className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-xs'}`}>
+                {creator.email}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Right side - Badges and Status */}
+        <div className={`flex ${isMobile ? 'flex-col space-y-3 items-center' : 'items-center space-x-4'}`}>
+          {/* Badges */}
+          <div className={`flex ${isMobile ? 'flex-wrap justify-center' : ''} gap-2`}>
+            <Badge 
+              variant="outline" 
+              className={`${getGenderBadgeColor(creator.gender)} ${isMobile ? 'text-sm' : 'text-xs'}`}
+            >
+              {creator.gender}
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className={`${getTeamBadgeColor(creator.team)} ${isMobile ? 'text-sm' : 'text-xs'}`}
+            >
+              {creator.team}
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className={`bg-primary/20 text-primary border-primary/30 ${isMobile ? 'text-sm' : 'text-xs'}`}
+            >
+              {creator.creatorType}
+            </Badge>
+          </div>
+
+          {/* File count for files variant */}
+          {variant === "files" && (
+            <div className={`flex items-center space-x-4 ${isMobile ? 'justify-center' : ''}`}>
+              <div className="flex items-center space-x-2 text-muted-foreground">
+                <FileText className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+                <span className={`${isMobile ? 'text-base' : 'text-sm'}`}>{fileCount} files</span>
+              </div>
+              
+              {showUploadingIndicator && uploadingCount > 0 && (
+                <div className="flex items-center space-x-2 text-yellow-400">
+                  <Upload className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'} animate-pulse`} />
+                  <span className={`${isMobile ? 'text-base' : 'text-sm'}`}>{uploadingCount} uploading</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Status indicators */}
+          <div className={`flex items-center space-x-2 ${isMobile ? 'justify-center' : ''}`}>
+            {creator.needsReview && (
+              <div className="flex items-center space-x-1 text-yellow-400">
+                <AlertTriangle className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+                {isMobile && <span className="text-sm">Needs Review</span>}
+              </div>
+            )}
+            
+            {creator.assignedTeamMembers && creator.assignedTeamMembers.length > 0 && (
+              <div className="flex items-center space-x-1 text-muted-foreground">
+                <Users className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+                {isMobile && <span className="text-sm">{creator.assignedTeamMembers.length} assigned</span>}
               </div>
             )}
           </div>
-          
-          <div className="flex-1 min-w-0 flex items-center justify-between">
-            <div className="flex flex-col">
-              <div className="text-left">
-                <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">{creator.name}</h3>
-                <div className="text-sm text-muted-foreground mt-0.5">
-                  ID: {creator.id}
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant="secondary" className="bg-pink-900/40 text-pink-200 hover:bg-pink-900/60">
-                    {creator.gender}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-yellow-900/40 text-yellow-200 hover:bg-yellow-900/60">
-                    {creator.team}
-                  </Badge>
-                  <Badge variant="secondary" className="bg-blue-900/40 text-blue-200 hover:bg-blue-900/60">
-                    {creator.creatorType}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-end gap-2 ml-4">
-              {variant === 'default' ? (
-                // Default view for Creators page - Updated admin buttons for Analytics, Invoices, and Login
-                <>
-                  {isAdmin && (
-                    <div className="flex items-center gap-2">
-                      <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                          variant="ghost" 
-                          className="px-3 h-9 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
-                        >
-                          <LineChart className="h-4 w-4 mr-2" />
-                          Analytics
-                        </Button>
-                      </Link>
-                      
-                      <Link to={`/creator-invoices/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                          variant="ghost" 
-                          className="px-3 h-9 bg-green-600/80 text-white hover:opacity-90 transition-all"
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Invoices
-                        </Button>
-                      </Link>
-                      
-                      <Button 
-                        variant="secondary" 
-                        size="sm"
-                        className="h-9"
-                        onClick={handleLoginButtonClick}
-                      >
-                        <LogIn className="h-4 w-4 mr-2" />
-                        Login
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {/* For non-admin users, just show Analytics */}
-                  {!isAdmin && (
-                    <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="ghost" 
-                        className="px-8 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
-                      >
-                        <LineChart className="h-4 w-4 mr-2" />
-                        Analytics
-                      </Button>
-                    </Link>
-                  )}
-                </>
-              ) : (
-                // Files view for SharedFiles page - View Files and Share buttons
-                <>
-                  <Link to={`/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                    <Button 
-                      variant="ghost" 
-                      className="px-6 h-10 bg-gradient-premium-yellow text-black hover:opacity-90 transition-all"
-                    >
-                      <Files className="h-4 w-4 mr-2" />
-                      View Files
-                      {fileCount > 0 && (
-                        <span className="ml-1 bg-primary/20 text-black px-1.5 rounded-full text-xs">
-                          {fileCount}
-                        </span>
-                      )}
-                      
-                      {showUploadingIndicator && (
-                        <span className="ml-2 flex items-center text-xs">
-                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                          {uploadingCount} uploading
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
-                  
-                  <Link to={`/creator-analytics/${creator.id}?tab=income`} onClick={(e) => e.stopPropagation()}>
-                    <Button 
-                      variant="ghost" 
-                      className="px-3 h-10 bg-green-600/80 text-white hover:opacity-90 transition-all"
-                    >
-                      <DollarSign className="h-4 w-4 mr-2" />
-                      Income
-                    </Button>
-                  </Link>
-                  
-                  {/* Show Share button for users with appropriate permissions */}
-                  {canUpload && (
-                    <Button 
-                      variant="secondary" 
-                      size="sm"
-                      className="h-9"
-                      onClick={handleShareButtonClick}
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Share
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
+        </div>
+      </div>
+
+      {/* Tags section for mobile */}
+      {isMobile && creator.tags && creator.tags.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-[#333333]">
+          <div className="flex flex-wrap justify-center gap-2">
+            {creator.tags.slice(0, 4).map((tag, index) => (
+              <Badge 
+                key={index} 
+                variant="secondary" 
+                className="text-xs bg-secondary/50"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {creator.tags.length > 4 && (
+              <Badge variant="secondary" className="text-xs bg-secondary/50">
+                +{creator.tags.length - 4} more
+              </Badge>
+            )}
           </div>
         </div>
-      </Card>
-
-      <SecureLoginModal 
-        open={showLoginModal} 
-        onOpenChange={setShowLoginModal} 
-        creatorId={creator.id} 
-        creatorName={creator.name}
-      />
-    </>
+      )}
+    </div>
   );
 };
 
