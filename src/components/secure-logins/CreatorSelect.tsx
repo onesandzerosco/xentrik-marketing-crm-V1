@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UserCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserCircle, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Creator } from '../../types';
 
@@ -28,19 +29,34 @@ const CreatorSelect: React.FC<CreatorSelectProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className={`${isMobile ? 'grid grid-cols-1 gap-3' : 'space-y-2'}`}>
-          {creators.map(creator => (
-            <Button
-              key={creator.id}
-              variant={selectedCreator?.id === creator.id ? "premium" : "outline"}
-              className={`${isMobile ? 'w-full h-12 text-left' : 'w-full'} justify-start rounded-[15px] transition-all duration-300 hover:opacity-90`}
-              onClick={() => onSelectCreator(creator.id)}
-            >
-              <UserCircle className={`${isMobile ? 'w-6 h-6' : 'w-5 h-5'} mr-2 flex-shrink-0`} />
-              <span className={`${isMobile ? 'text-base' : ''} truncate`}>{creator.name}</span>
-            </Button>
-          ))}
-        </div>
+        <Select
+          value={selectedCreator?.id || ''}
+          onValueChange={onSelectCreator}
+        >
+          <SelectTrigger className={`w-full ${isMobile ? 'h-12' : 'h-10'} rounded-[15px]`}>
+            <div className="flex items-center gap-2">
+              <UserCircle className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} flex-shrink-0`} />
+              <SelectValue 
+                placeholder="Choose a creator"
+                className={isMobile ? 'text-base' : 'text-sm'}
+              />
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-background border shadow-md">
+            {creators.map(creator => (
+              <SelectItem 
+                key={creator.id} 
+                value={creator.id}
+                className="cursor-pointer hover:bg-muted/50 focus:bg-muted"
+              >
+                <div className="flex items-center gap-2">
+                  <UserCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{creator.name}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardContent>
     </Card>
   );

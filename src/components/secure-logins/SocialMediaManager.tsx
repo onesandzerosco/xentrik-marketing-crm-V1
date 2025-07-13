@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Trash2, Edit, Eye, EyeOff, X, Lock, Smartphone } from 'lucide-react';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff, X, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -572,7 +572,7 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
                     onClick={() => handleEditLogin(login)}
                     className="h-10 w-10 p-0"
                   >
-                    <Smartphone className="h-4 w-4" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                 )}
               </div>
