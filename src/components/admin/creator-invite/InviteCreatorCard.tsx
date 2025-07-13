@@ -95,17 +95,17 @@ const InviteCreatorCard: React.FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div>
-          <CardTitle>Generate Creator Onboarding Link</CardTitle>
-          <CardDescription>
+    <Card className="h-full">
+      <CardHeader className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 pb-2 p-4 md:p-6">
+        <div className="flex-1 min-w-0">
+          <CardTitle className="text-lg md:text-xl">Generate Creator Onboarding Link</CardTitle>
+          <CardDescription className="text-sm md:text-base mt-1">
             Create a unique onboarding link for new creators (expires in 72 hours)
           </CardDescription>
         </div>
-        <Link className="h-5 w-5 text-muted-foreground" />
+        <Link className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-2 md:mt-0" />
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 md:p-6 pt-0">
         {!generatedLink ? (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleGenerateLink)} className="space-y-4">
@@ -114,12 +114,13 @@ const InviteCreatorCard: React.FC = () => {
                 name="modelName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Model Name *</FormLabel>
+                    <FormLabel className="text-sm md:text-base">Model Name *</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Enter the model's name" 
                         {...field} 
                         disabled={isLoading}
+                        className="h-10 md:h-auto text-base"
                       />
                     </FormControl>
                     <FormMessage />
@@ -129,7 +130,7 @@ const InviteCreatorCard: React.FC = () => {
 
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full h-11 md:h-auto text-base" 
                 disabled={isLoading}
               >
                 <Link className="mr-2 h-4 w-4" />
@@ -140,36 +141,37 @@ const InviteCreatorCard: React.FC = () => {
         ) : (
           <div className="space-y-4">
             <div>
-              <Label>Generated Onboarding Link</Label>
+              <Label className="text-sm md:text-base">Generated Onboarding Link</Label>
               <div className="flex gap-2 mt-2">
                 <Input 
                   value={generatedLink} 
                   readOnly 
-                  className="flex-1"
+                  className="flex-1 text-xs md:text-sm h-10 md:h-auto"
                 />
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={copyToClipboard}
                   disabled={copied}
+                  className="h-10 w-10 flex-shrink-0"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={generateNewLink}
-                className="flex-1"
+                className="flex-1 h-11 md:h-auto text-base"
               >
                 Generate New Link
               </Button>
               <Button
                 onClick={copyToClipboard}
                 disabled={copied}
-                className="flex-1"
+                className="flex-1 h-11 md:h-auto text-base"
               >
                 {copied ? "Copied!" : "Copy Link"}
               </Button>

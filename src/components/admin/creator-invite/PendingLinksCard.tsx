@@ -124,81 +124,82 @@ const PendingLinksCard: React.FC = () => {
 
   return (
     <Card className="flex flex-col h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 flex-shrink-0">
-        <div>
-          <CardTitle>Pending Invitation Links</CardTitle>
-          <CardDescription>
+      <CardHeader className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0 pb-2 flex-shrink-0 p-4 md:p-6">
+        <div className="flex-1 min-w-0">
+          <CardTitle className="text-lg md:text-xl">Pending Invitation Links</CardTitle>
+          <CardDescription className="text-sm md:text-base mt-1">
             Manage pending creator onboarding links (active until submitted)
           </CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-2 md:mt-0">
           <Clock className="h-5 w-5 text-muted-foreground" />
           <Button 
             variant="outline" 
             size="sm" 
             onClick={fetchPendingInvitations}
             disabled={loading}
+            className="h-9 text-sm"
           >
             Refresh
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 min-h-0">
+      <CardContent className="flex-1 min-h-0 p-4 md:p-6 pt-0">
         {loading ? (
           <div className="text-center py-4">
-            <p className="text-muted-foreground">Loading pending links...</p>
+            <p className="text-muted-foreground text-sm md:text-base">Loading pending links...</p>
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
             <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">No pending invitation links</p>
+            <p className="text-muted-foreground text-sm md:text-base">No pending invitation links</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] w-full">
-            <div className="space-y-3 pr-4">
+          <ScrollArea className="h-[300px] md:h-[400px] w-full">
+            <div className="space-y-3 pr-2 md:pr-4">
               {invitations.map((invitation) => {
                 return (
                   <div 
                     key={invitation.token} 
                     className="border rounded-lg p-3 border-border"
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-sm">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                          <p className="font-medium text-sm md:text-base truncate">
                             {invitation.model_name || 'Unnamed Model'}
                           </p>
-                          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
+                          <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded w-fit">
                             Pending
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Created {formatDistanceToNow(new Date(invitation.created_at))} ago
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Valid until submitted
                         </p>
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 md:h-9 md:w-9"
                           onClick={() => copyLink(invitation.token)}
                           disabled={copiedToken === invitation.token}
                         >
                           {copiedToken === invitation.token ? 
-                            <Check className="h-3 w-3" /> : 
-                            <Copy className="h-3 w-3" />
+                            <Check className="h-3 w-3 md:h-4 md:w-4" /> : 
+                            <Copy className="h-3 w-3 md:h-4 md:w-4" />
                           }
                         </Button>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-8 w-8 md:h-9 md:w-9 text-destructive hover:text-destructive"
                           onClick={() => deleteInvitation(invitation.token)}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                         </Button>
                       </div>
                     </div>

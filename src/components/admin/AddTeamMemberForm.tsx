@@ -21,11 +21,11 @@ const AddTeamMemberForm: React.FC = () => {
   } = useTeamMemberForm();
 
   return (
-    <div className="px-8">
+    <div className="px-2 md:px-8">
       <FormHeader />
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           <EmailField control={form.control} />
           <PrimaryRoleField control={form.control} />
           
