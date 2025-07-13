@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Save, Trash2, Edit, Eye, EyeOff, X, Lock } from 'lucide-react';
+import { Plus, Save, Trash2, Edit, Eye, EyeOff, X, Lock, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Creator } from '../../types';
 
 interface SocialMediaLogin {
@@ -50,6 +52,7 @@ interface OnboardingSubmissionData {
 
 const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [socialMediaLogins, setSocialMediaLogins] = useState<SocialMediaLogin[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,6 +60,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
   const [newPlatformName, setNewPlatformName] = useState('');
   const [showAddPlatform, setShowAddPlatform] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [editingLogin, setEditingLogin] = useState<SocialMediaLogin | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { toast } = useToast();
   const { userRole, isCreator, creatorId } = useAuth();
 
@@ -434,6 +439,22 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
     fetchSocialMediaLogins();
   };
 
+  const handleEditLogin = (login: SocialMediaLogin) => {
+    setEditingLogin({ ...login });
+    setIsEditModalOpen(true);
+  };
+
+  const saveEditedLogin = () => {
+    if (!editingLogin) return;
+    
+    updateLogin(editingLogin.id, 'username', editingLogin.username);
+    updateLogin(editingLogin.id, 'password', editingLogin.password);
+    updateLogin(editingLogin.id, 'notes', editingLogin.notes);
+    
+    setIsEditModalOpen(false);
+    setEditingLogin(null);
+  };
+
   useEffect(() => {
     if (creator?.email) {
       fetchSocialMediaLogins();
@@ -474,14 +495,15 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className={`flex ${isMobile ? 'flex-col gap-4' : 'items-center justify-between'}`}>
+        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'gap-2'}`}>
           {canEdit && !isEditing && (
             <>
               <Button 
                 onClick={startEditing}
                 variant="outline"
-                className="rounded-[15px]"
+                className={`rounded-[15px] ${isMobile ? 'w-full' : ''}`}
+                size={isMobile ? "lg" : "default"}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
@@ -489,7 +511,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
               <Button
                 variant="outline"
                 onClick={() => setShowAddPlatform(true)}
-                className="rounded-[15px]"
+                className={`rounded-[15px] ${isMobile ? 'w-full' : ''}`}
+                size={isMobile ? "lg" : "default"}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Platform
@@ -497,12 +520,13 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
             </>
           )}
           {canEdit && isEditing && (
-            <div className="flex gap-2">
+            <div className={`flex ${isMobile ? 'flex-col' : ''} gap-2`}>
               <Button 
                 onClick={saveAllChanges}
                 disabled={saving}
-                className="rounded-[15px]"
+                className={`rounded-[15px] ${isMobile ? 'w-full' : ''}`}
                 variant="premium"
+                size={isMobile ? "lg" : "default"}
               >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Saving...' : 'Save All'}
@@ -510,7 +534,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
               <Button 
                 variant="outline"
                 onClick={() => setIsEditing(false)}
-                className="rounded-[15px]"
+                className={`rounded-[15px] ${isMobile ? 'w-full' : ''}`}
+                size={isMobile ? "lg" : "default"}
               >
                 Cancel
               </Button>
@@ -519,8 +544,8 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
         </div>
         <Button 
           variant="destructive" 
-          size="sm"
-          className="flex items-center gap-2 rounded-[15px] shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90"
+          size={isMobile ? "lg" : "sm"}
+          className={`flex items-center gap-2 rounded-[15px] shadow-premium-sm hover:shadow-premium-md transform hover:-translate-y-1 transition-all duration-300 hover:opacity-90 ${isMobile ? 'w-full mt-4' : ''}`}
           onClick={handleLock}
         >
           <Lock className="h-4 w-4" />
@@ -528,148 +553,296 @@ const SocialMediaManager: React.FC<SocialMediaManagerProps> = ({ creator, onLock
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
-              <TableHead className="font-semibold text-foreground">Platform</TableHead>
-              <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
-              <TableHead className="font-semibold text-foreground">Login Password</TableHead>
-              <TableHead className="font-semibold text-foreground">Notes</TableHead>
-              {isEditing && canEdit && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {socialMediaLogins.map((login) => (
-              <TableRow key={login.id} className="hover:bg-muted/20">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
-                      {login.platform.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="font-medium text-foreground">{login.platform}</span>
+      {isMobile ? (
+        // Mobile card layout
+        <div className="space-y-4">
+          {socialMediaLogins.map((login) => (
+            <div key={login.id} className="border rounded-lg p-4 bg-card shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-sm font-bold shadow-sm`}>
+                    {login.platform.charAt(0).toUpperCase()}
                   </div>
-                </TableCell>
+                  <span className="font-medium text-foreground text-lg">{login.platform}</span>
+                </div>
+                {isEditing && canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditLogin(login)}
+                    className="h-10 w-10 p-0"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              
+              {/* Mobile display of info */}
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Username: </span>
+                  <span className="font-mono bg-muted/50 px-2 py-1 rounded text-xs">
+                    {login.username || '-'}
+                  </span>
+                </div>
                 
-                <TableCell>
-                  {isEditing && canEdit ? (
-                    <Input
-                      value={login.username}
-                      onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
-                      placeholder="username"
-                      className="rounded-[15px] h-9 border-muted-foreground/20"
-                    />
-                  ) : (
-                    <div className="flex items-center">
-                      <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
-                        {login.username || '-'}
-                      </span>
-                    </div>
-                  )}
-                </TableCell>
-                
-                <TableCell>
-                  {isEditing && canEdit ? (
-                    <div className="flex gap-1">
-                      <Input
-                        type={showPasswords[login.id] ? 'text' : 'password'}
-                        value={login.password}
-                        onChange={(e) => updateLogin(login.id, 'password', e.target.value)}
-                        placeholder="Enter password"
-                        className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
-                      />
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Password: </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">
+                      {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : '-'}
+                    </span>
+                    {login.password && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => togglePasswordVisibility(login.id)}
-                        className="h-9 w-9 p-0"
+                        className="h-6 w-6 p-0"
                       >
                         {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                       </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {login.notes && (
+                  <div>
+                    <span className="text-muted-foreground">Notes: </span>
+                    <span className="text-xs">{login.notes}</span>
+                  </div>
+                )}
+                
+                {isEditing && canEdit && !login.is_predefined && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removePlatform(login.id, login.platform)}
+                    className="w-full mt-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remove Platform
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Desktop table layout - keep existing
+        <div className="border rounded-lg overflow-hidden bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="font-semibold text-foreground">Platform</TableHead>
+                <TableHead className="font-semibold text-foreground">Username/Handle</TableHead>
+                <TableHead className="font-semibold text-foreground">Login Password</TableHead>
+                <TableHead className="font-semibold text-foreground">Notes</TableHead>
+                {isEditing && canEdit && <TableHead className="font-semibold text-foreground w-20">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {socialMediaLogins.map((login) => (
+                <TableRow key={login.id} className="hover:bg-muted/20">
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getPlatformColor(login.platform)} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                        {login.platform.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-medium text-foreground">{login.platform}</span>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : '-'}
-                      </span>
-                      {login.password && (
+                  </TableCell>
+                  
+                  <TableCell>
+                    {isEditing && canEdit ? (
+                      <Input
+                        value={login.username}
+                        onChange={(e) => updateLogin(login.id, 'username', e.target.value)}
+                        placeholder="username"
+                        className="rounded-[15px] h-9 border-muted-foreground/20"
+                      />
+                    ) : (
+                      <div className="flex items-center">
+                        <span className="text-sm font-mono bg-muted/50 px-2 py-1 rounded">
+                          {login.username || '-'}
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+                  
+                  <TableCell>
+                    {isEditing && canEdit ? (
+                      <div className="flex gap-1">
+                        <Input
+                          type={showPasswords[login.id] ? 'text' : 'password'}
+                          value={login.password}
+                          onChange={(e) => updateLogin(login.id, 'password', e.target.value)}
+                          placeholder="Enter password"
+                          className="rounded-[15px] h-9 flex-1 border-muted-foreground/20"
+                        />
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => togglePasswordVisibility(login.id)}
-                          className="h-6 w-6 p-0"
+                          className="h-9 w-9 p-0"
                         >
                           {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                         </Button>
-                      )}
-                    </div>
-                  )}
-                </TableCell>
-                
-                <TableCell>
-                  {isEditing && canEdit ? (
-                    <Input
-                      value={login.notes}
-                      onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
-                      placeholder="Additional notes"
-                      className="rounded-[15px] h-9 border-muted-foreground/20"
-                    />
-                  ) : (
-                    <span className="text-sm text-muted-foreground">{login.notes || '-'}</span>
-                  )}
-                </TableCell>
-                
-                {isEditing && canEdit && (
-                  <TableCell>
-                    {!login.is_predefined && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removePlatform(login.id, login.platform)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {login.password ? (showPasswords[login.id] ? login.password : '••••••••') : '-'}
+                        </span>
+                        {login.password && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => togglePasswordVisibility(login.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            {showPasswords[login.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </TableCell>
-                )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  
+                  <TableCell>
+                    {isEditing && canEdit ? (
+                      <Input
+                        value={login.notes}
+                        onChange={(e) => updateLogin(login.id, 'notes', e.target.value)}
+                        placeholder="Additional notes"
+                        className="rounded-[15px] h-9 border-muted-foreground/20"
+                      />
+                    ) : (
+                      <span className="text-sm text-muted-foreground">{login.notes || '-'}</span>
+                    )}
+                  </TableCell>
+                  
+                  {isEditing && canEdit && (
+                    <TableCell>
+                      {!login.is_predefined && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePlatform(login.id, login.platform)}
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Edit Modal for Mobile */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit {editingLogin?.platform}</DialogTitle>
+          </DialogHeader>
+          {editingLogin && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Username/Handle</Label>
+                <Input
+                  value={editingLogin.username}
+                  onChange={(e) => setEditingLogin({ ...editingLogin, username: e.target.value })}
+                  placeholder="Enter username"
+                  className="rounded-[15px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type={showPasswords[editingLogin.id] ? 'text' : 'password'}
+                    value={editingLogin.password}
+                    onChange={(e) => setEditingLogin({ ...editingLogin, password: e.target.value })}
+                    placeholder="Enter password"
+                    className="rounded-[15px] flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => togglePasswordVisibility(editingLogin.id)}
+                    className="rounded-[15px]"
+                  >
+                    {showPasswords[editingLogin.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Input
+                  value={editingLogin.notes}
+                  onChange={(e) => setEditingLogin({ ...editingLogin, notes: e.target.value })}
+                  placeholder="Additional notes"
+                  className="rounded-[15px]"
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button onClick={saveEditedLogin} className="flex-1 rounded-[15px]" variant="premium">
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 rounded-[15px]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add New Platform Form */}
       {showAddPlatform && canEdit && (
         <div className="border rounded-lg p-4 bg-muted/30 border-dashed">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Add New Platform</Label>
-            <div className="flex gap-2">
+            <div className={`flex ${isMobile ? 'flex-col' : ''} gap-2`}>
               <Input
                 placeholder="Enter platform name (e.g., LinkedIn, YouTube)"
                 value={newPlatformName}
                 onChange={(e) => setNewPlatformName(e.target.value)}
-                className="rounded-[15px] border-muted-foreground/20"
+                className={`rounded-[15px] border-muted-foreground/20 ${isMobile ? 'w-full' : ''}`}
               />
-              <Button 
-                onClick={addNewPlatform} 
-                className="rounded-[15px]"
-                disabled={!newPlatformName.trim()}
-              >
-                Add
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowAddPlatform(false);
-                  setNewPlatformName('');
-                }}
-                className="rounded-[15px]"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className={`flex gap-2 ${isMobile ? 'w-full' : ''}`}>
+                <Button 
+                  onClick={addNewPlatform} 
+                  className={`rounded-[15px] ${isMobile ? 'flex-1' : ''}`}
+                  disabled={!newPlatformName.trim()}
+                >
+                  Add
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowAddPlatform(false);
+                    setNewPlatformName('');
+                  }}
+                  className={`rounded-[15px] ${isMobile ? 'flex-1' : ''}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AuthFormHeader from './auth/AuthFormHeader';
 import PasswordInput from './auth/PasswordInput';
 import { useSecurePasswordManager } from '@/hooks/useSecurePasswordManager';
@@ -16,6 +17,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   const [passwordError, setPasswordError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const { verifySecurePassword, setSecureAreaAuthorization, checkSecureAreaAuthorization } = useSecurePasswordManager();
 
   useEffect(() => {
@@ -69,11 +71,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
   };
 
   return (
-    <div className="container mx-auto flex items-center justify-center h-[calc(100vh-4rem)]">
-      <Card className="w-full max-w-md mx-auto bg-card shadow-premium-md rounded-2xl">
+    <div className={`container mx-auto flex items-center justify-center ${isMobile ? 'h-screen px-4' : 'h-[calc(100vh-4rem)]'}`}>
+      <Card className={`w-full ${isMobile ? 'max-w-sm' : 'max-w-md'} mx-auto bg-card shadow-premium-md rounded-2xl`}>
         <AuthFormHeader />
         <form onSubmit={handlePasswordSubmit}>
-          <CardContent>
+          <CardContent className={isMobile ? 'px-6 py-4' : ''}>
             <div className="grid w-full items-center gap-4">
               <PasswordInput 
                 password={password}
@@ -82,11 +84,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticate }) => {
               />
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className={isMobile ? 'px-6 pb-6' : ''}>
             <Button 
               type="submit" 
               variant="premium" 
-              className="w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1"
+              className={`w-full rounded-2xl shadow-premium-yellow transition-all duration-300 hover:opacity-90 transform hover:-translate-y-1 ${isMobile ? 'h-12 text-base' : ''}`}
               disabled={isVerifying}
             >
               {isVerifying ? "Authenticating..." : "Authenticate"}

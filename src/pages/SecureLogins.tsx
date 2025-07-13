@@ -4,6 +4,7 @@ import { useCreators } from '../context/creator';
 import { useSecureLogins } from '../hooks/useSecureLogins';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import AuthForm from '../components/secure-logins/AuthForm';
 import CreatorSelect from '../components/secure-logins/CreatorSelect';
 import LoginDetailsEditor from '../components/secure-logins/LoginDetailsEditor';
@@ -18,6 +19,7 @@ const SecureLogins: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, userRole, isCreator, creatorId } = useAuth();
+  const isMobile = useIsMobile();
   
   const { 
     getLoginDetailsForCreator, 
@@ -153,26 +155,25 @@ const SecureLogins: React.FC = () => {
   }
   
   return (
-    <div className="container mx-auto p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">
+    <div className={`container mx-auto ${isMobile ? 'p-4' : 'p-8'}`}>
+      <div className={`flex ${isMobile ? 'flex-col' : 'justify-between items-center'} mb-6`}>
+        <h1 className={`${isMobile ? 'text-2xl mb-4' : 'text-3xl'} font-bold`}>
           {isCreatorUser ? "My Social Media Accounts" : "Secure Login Details"}
         </h1>
       </div>
       
-      <div className="grid gap-8 md:grid-cols-[300px_1fr]">
-        {isAdminUser && (
-          <div>
+      {isMobile ? (
+        // Mobile layout - stack everything vertically
+        <div className="space-y-6">
+          {isAdminUser && (
             <CreatorSelect 
               creators={creators}
               selectedCreator={selectedCreator}
               onSelectCreator={handleCreatorSelect}
             />
-          </div>
-        )}
-        
-        {selectedCreator ? (
-          <div className={isCreatorUser ? "col-span-2" : "space-y-8"}>
+          )}
+          
+          {selectedCreator ? (
             <LoginDetailsEditor 
               creator={selectedCreator}
               loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
@@ -180,11 +181,38 @@ const SecureLogins: React.FC = () => {
               onSaveLoginDetails={handleSaveLoginDetails}
               onLock={handleManualLock}
             />
-          </div>
-        ) : (
-          <NoCreatorSelected />
-        )}
-      </div>
+          ) : (
+            <NoCreatorSelected />
+          )}
+        </div>
+      ) : (
+        // Desktop layout - keep original grid
+        <div className="grid gap-8 md:grid-cols-[300px_1fr]">
+          {isAdminUser && (
+            <div>
+              <CreatorSelect 
+                creators={creators}
+                selectedCreator={selectedCreator}
+                onSelectCreator={handleCreatorSelect}
+              />
+            </div>
+          )}
+          
+          {selectedCreator ? (
+            <div className={isCreatorUser ? "col-span-2" : "space-y-8"}>
+              <LoginDetailsEditor 
+                creator={selectedCreator}
+                loginDetails={getLoginDetailsForCreator(selectedCreator.id)}
+                onUpdateLogin={handleUpdateLogin}
+                onSaveLoginDetails={handleSaveLoginDetails}
+                onLock={handleManualLock}
+              />
+            </div>
+          ) : (
+            <NoCreatorSelected />
+          )}
+        </div>
+      )}
     </div>
   );
 };
