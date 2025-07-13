@@ -179,7 +179,7 @@ const CreatorsDataTable: React.FC = () => {
         {filteredCreators.map((submission) => (
           <div key={submission.id} className="bg-card border rounded-lg p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <h3 className="font-medium text-base text-foreground truncate mb-1">
                   {submission.name}
                 </h3>
