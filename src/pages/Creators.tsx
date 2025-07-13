@@ -5,14 +5,12 @@ import { useAuth } from "@/context/AuthContext";
 import CreatorsHeader from "../components/creators/list/CreatorsHeader";
 import CreatorsManagementList from "../components/creators/management/CreatorsManagementList";
 import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const Creators = () => {
   const { creators, filterCreators } = useCreators();
   const { userRole, userRoles, isCreator, creatorId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -66,7 +64,7 @@ const Creators = () => {
   }, [creators, filteredCreators, isCreator, creatorId, userRole, userRoles]);
 
   return (
-    <div className={`w-full mx-auto ${isMobile ? 'p-4 max-w-full' : 'p-8 max-w-[1400px]'}`}>
+    <div className="p-8 w-full max-w-[1400px] mx-auto">
       <CreatorsHeader 
         isLoading={isLoading}
         creatorCount={displayCreators.length}

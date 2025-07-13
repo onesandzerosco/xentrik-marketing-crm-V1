@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Creator } from "@/types";
-import CreatorsList from "../list/CreatorsList";
-import EmptyState from "../list/EmptyState";
-import { useIsMobile } from "@/hooks/use-mobile";
+import CreatorCard from "@/components/CreatorCard";
+import ManagementEmptyState from "./ManagementEmptyState";
 
 interface CreatorsManagementListProps {
   isLoading: boolean;
@@ -12,35 +12,31 @@ interface CreatorsManagementListProps {
   hasFilters: boolean;
 }
 
-const CreatorsManagementList: React.FC<CreatorsManagementListProps> = ({ 
-  isLoading, 
-  creators, 
-  hasFilters 
-}) => {
-  const isMobile = useIsMobile();
-
+const CreatorsManagementList: React.FC<CreatorsManagementListProps> = ({ isLoading, creators, hasFilters }) => {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-yellow mb-4" />
-          <p className="text-muted-foreground text-center">Loading creators...</p>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-muted-foreground">Loading creators...</span>
       </div>
     );
   }
 
   if (creators.length === 0) {
-    return <EmptyState hasFilters={hasFilters} />;
+    return <ManagementEmptyState hasFilters={hasFilters} />;
   }
 
   return (
-    <div className={isMobile ? "px-2" : ""}>
-      <CreatorsList 
-        isLoading={isLoading}
-        creators={creators}
-        hasFilters={hasFilters}
-      />
+    <div className="space-y-2">
+      {creators.map(creator => (
+        <Link key={creator.id} to={`/creator-profile/${creator.id}`}>
+          <CreatorCard 
+            key={creator.id} 
+            creator={creator} 
+            variant="default"
+          />
+        </Link>
+      ))}
     </div>
   );
 };
