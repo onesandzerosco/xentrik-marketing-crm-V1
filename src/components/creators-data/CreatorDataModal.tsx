@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -642,9 +643,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       );
     }
     
-    // Display mode with conditional edit button
+    // Display mode - FIXED: Responsive layout with horizontal for desktop, vertical for mobile
     return (
-      <div className="flex items-start justify-between group gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between group gap-2 sm:gap-3">
         <div className="flex-1 text-muted-foreground break-words min-w-0">
           {/* Special handling for date of birth display */}
           {fieldKey === 'dateOfBirth' && value ? (
@@ -711,12 +712,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
           <Button 
             size="sm" 
             variant="ghost" 
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 h-10 w-10 sm:h-auto sm:w-auto flex-shrink-0"
+            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0"
             onClick={() => handleEditClick(section, fieldKey, value)}
             disabled={isSaving}
           >
             <Edit className="h-3 w-3" />
-            <span className="sr-only sm:not-sr-only sm:ml-1">Edit</span>
           </Button>
         )}
       </div>
