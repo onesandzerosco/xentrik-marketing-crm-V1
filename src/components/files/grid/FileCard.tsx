@@ -200,11 +200,12 @@ export const FileCard: React.FC<FileCardProps> = ({
         <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground`}>
           {formatFileSize(file.size)} - {formatDate(file.created_at)}
         </div>
-        {file.description && (
-          <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground italic truncate`}>
-            "{file.description}"
-          </div>
-        )}
+        
+        {/* Always show description area for consistent spacing */}
+        <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground italic truncate ${isMobile ? 'min-h-[16px]' : 'min-h-[18px]'}`}>
+          {file.description ? `"${file.description}"` : ' '}
+        </div>
+        
         {file.tags && file.tags.length > 0 && (
           <div className={`${isMobile ? 'mt-0.5' : 'mt-1'} flex flex-wrap gap-1`}>
             {file.tags.map(tagId => (
