@@ -183,14 +183,6 @@ const CreatorsDataTable: React.FC = () => {
                 <h3 className="font-medium text-base text-foreground truncate mb-1">
                   {submission.name}
                 </h3>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    Accepted
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(submission.submitted_at)}
-                  </span>
-                </div>
               </div>
               <Button
                 variant="ghost"
@@ -213,8 +205,6 @@ const CreatorsDataTable: React.FC = () => {
             <TableRow>
               <TableHead>Name</TableHead>
               {!isChatter && <TableHead>Email</TableHead>}
-              <TableHead>Submitted</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -223,10 +213,6 @@ const CreatorsDataTable: React.FC = () => {
               <TableRow key={submission.id}>
                 <TableCell className="font-medium">{submission.name}</TableCell>
                 {!isChatter && <TableCell>{submission.email}</TableCell>}
-                <TableCell>{formatDate(submission.submitted_at)}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">Accepted</Badge>
-                </TableCell>
                 <TableCell>
                   <Button
                     variant="ghost"
