@@ -27,7 +27,7 @@ const CreatorsManagementList: React.FC<CreatorsManagementListProps> = ({ isLoadi
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 md:space-y-2">
       {creators.map(creator => (
         <Link key={creator.id} to={`/creator-profile/${creator.id}`}>
           <CreatorCard 

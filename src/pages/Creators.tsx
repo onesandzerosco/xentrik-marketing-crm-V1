@@ -64,7 +64,7 @@ const Creators = () => {
   }, [creators, filteredCreators, isCreator, creatorId, userRole, userRoles]);
 
   return (
-    <div className="p-8 w-full max-w-[1400px] mx-auto">
+    <div className="p-4 md:p-8 w-full max-w-[1400px] mx-auto">
       <CreatorsHeader 
         isLoading={isLoading}
         creatorCount={displayCreators.length}
