@@ -32,42 +32,42 @@ const AccessControlPanel: React.FC = () => {
   }, [userRole, navigate, toast]);
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-bold">Access Control Panel</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Access Control Panel</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage roles and permissions for team members
           </p>
         </div>
-        <div className="flex items-center">
-          <Shield className="mr-2 h-5 w-5 text-brand-yellow" />
-          <span className="text-brand-yellow">Admin Access</span>
+        <div className="flex items-center self-start sm:self-auto">
+          <Shield className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-brand-yellow" />
+          <span className="text-brand-yellow text-sm sm:text-base">Admin Access</span>
         </div>
       </div>
 
       {/* Add Permissions Settings */}
-      <Card className="mb-6">
-        <CardHeader className="pb-0">
-          <CardTitle>Permissions Settings</CardTitle>
-          <CardDescription>
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-lg sm:text-xl">Permissions Settings</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Manage role-based permissions for different modules
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-2 sm:pt-4">
           <PermissionsSettings />
         </CardContent>
       </Card>
 
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <Card className="mb-4 sm:mb-6">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 sm:pb-4 space-y-2 sm:space-y-0">
           <div>
-            <CardTitle>User Roles Management</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">User Roles Management</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               View and manage roles for all team members organized by role type
             </CardDescription>
           </div>
-          <Users className="h-5 w-5 text-muted-foreground" />
+          <Users className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground self-start sm:self-auto" />
         </CardHeader>
         <CardContent>
           <RoleBasedUsersList />

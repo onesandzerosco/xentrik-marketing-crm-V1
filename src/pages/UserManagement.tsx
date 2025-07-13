@@ -12,29 +12,31 @@ const UserManagement = () => {
 
   if (!isAdmin) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p>You don't have permission to access this page.</p>
+      <div className="p-4 sm:p-8">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4">Access Denied</h1>
+        <p className="text-sm sm:text-base">You don't have permission to access this page.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-2">User Management</h1>
-      <p className="text-muted-foreground mb-6">
-        Manage team members and creator onboarding links
-      </p>
+    <div className="p-4 sm:p-8">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">User Management</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Manage team members and creator onboarding links
+        </p>
+      </div>
 
       {/* Add Team Member - Top Section */}
-      <div className="mb-6">
-        <Card className="p-6">
+      <div className="mb-4 sm:mb-6">
+        <Card className="p-4 sm:p-6">
           <AddTeamMemberForm />
         </Card>
       </div>
 
-      {/* Onboarding Links - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Onboarding Links - Stack on mobile, side by side on desktop */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         <InviteCreatorCard />
         <PendingLinksCard />
       </div>
