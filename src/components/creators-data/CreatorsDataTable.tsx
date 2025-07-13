@@ -174,7 +174,40 @@ const CreatorsDataTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      {/* Mobile Card Layout - Visible only on mobile */}
+      <div className="block md:hidden space-y-3">
+        {filteredCreators.map((submission) => (
+          <div key={submission.id} className="bg-card border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-base text-foreground truncate mb-1">
+                  {submission.name}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    Accepted
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(submission.submitted_at)}
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleViewData(submission)}
+                className="ml-3 h-9 px-3 text-sm"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Data
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table Layout - Hidden on mobile */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
