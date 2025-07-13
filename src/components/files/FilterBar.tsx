@@ -32,62 +32,71 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const fileTypeFilters = ['image', 'video', 'audio', 'document', 'other'];
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <div className="flex-1 flex gap-2">
-        {isSearchVisible ? (
-          <div className="flex-1 flex items-center relative">
-            <Input
-              className="pl-8"
-              placeholder="Search files..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-            <Search className="h-4 w-4 absolute left-2 text-muted-foreground" />
+    <div className="space-y-3 md:space-y-0">
+      {/* Mobile: Stack vertically, Desktop: Single row */}
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
+        {/* Search Section */}
+        <div className="flex-shrink-0 md:flex-1 max-w-full md:max-w-xs">
+          {isSearchVisible ? (
+            <div className="flex items-center relative w-full">
+              <Input
+                className="pl-8 pr-8"
+                placeholder="Search files..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+              <Search className="h-4 w-4 absolute left-2 text-muted-foreground" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 h-7 w-7 p-0 hover:bg-muted"
+                onClick={() => {
+                  onSearchChange('');
+                  setIsSearchVisible(false);
+                }}
+              >
+                &times;
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="absolute right-1 h-7 w-7 p-0"
-              onClick={() => {
-                onSearchChange('');
-                setIsSearchVisible(false);
-              }}
+              onClick={() => setIsSearchVisible(true)}
+              className="flex gap-2 items-center w-full md:w-auto justify-center md:justify-start"
             >
-              &times;
+              <Search className="h-4 w-4" />
+              <span>Search</span>
             </Button>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSearchVisible(true)}
-            className="flex gap-2 items-center"
-          >
-            <Search className="h-4 w-4" />
-            <span>Search</span>
-          </Button>
-        )}
+          )}
+        </div>
 
-        {fileTypeFilters.map((filter) => (
-          <Button
-            key={filter}
-            variant={activeFilter === filter ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => onFilterChange(activeFilter === filter ? null : filter)}
-          >
-            {filter.charAt(0).toUpperCase() + filter.slice(1)}
-          </Button>
-        ))}
-      </div>
-      
-      <div className="flex items-center gap-2">
+        {/* Filter Buttons Section */}
+        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+          {fileTypeFilters.map((filter) => (
+            <Button
+              key={filter}
+              variant={activeFilter === filter ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onFilterChange(activeFilter === filter ? null : filter)}
+              className="flex-shrink-0"
+            >
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            </Button>
+          ))}
+        </div>
+
+        {/* Tags Section */}
         {availableTags && availableTags.length > 0 && (
-          <TagSelector
-            tags={availableTags}
-            selectedTags={selectedTags}
-            onTagSelect={onTagSelect}
-            onTagCreate={onTagCreate}
-            variant="compact"
-          />
+          <div className="flex-shrink-0">
+            <TagSelector
+              tags={availableTags}
+              selectedTags={selectedTags}
+              onTagSelect={onTagSelect}
+              onTagCreate={onTagCreate}
+              variant="compact"
+            />
+          </div>
         )}
       </div>
     </div>
