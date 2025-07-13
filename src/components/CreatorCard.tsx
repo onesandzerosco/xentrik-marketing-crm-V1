@@ -69,11 +69,11 @@ const CreatorCard = ({
   const getGenderBadgeClass = (gender: string) => {
     switch (gender.toLowerCase()) {
       case 'male':
-        return "bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border-blue-500/20";
+        return "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/30";
       case 'female':
-        return "bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 border-pink-500/20";
+        return "bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 border-pink-500/30";
       case 'trans':
-        return "bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 border-purple-500/20";
+        return "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border-purple-500/30";
       default:
         return "bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 border-gray-500/20";
     }
@@ -89,10 +89,10 @@ const CreatorCard = ({
                 <img 
                   src={creator.profileImage} 
                   alt={creator.name} 
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-all"
+                  className="w-16 h-16 md:w-18 md:h-18 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-all"
                 />
               ) : (
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-premium-highlight/10 flex items-center justify-center">
+                <div className="w-16 h-16 md:w-18 md:h-18 rounded-full bg-premium-highlight/10 flex items-center justify-center">
                   <span className="text-xl md:text-2xl font-semibold text-primary/60 group-hover:text-primary/80 transition-colors">
                     {creator.name[0].toUpperCase()}
                   </span>
@@ -102,30 +102,30 @@ const CreatorCard = ({
             
             <div className="flex-1 min-w-0">
               <div className="text-left">
-                <h3 className="text-xl md:text-2xl font-semibold group-hover:text-primary transition-colors truncate mb-1">
+                <h3 className="text-xl md:text-2xl font-semibold group-hover:text-primary transition-colors truncate mb-2">
                   {creator.name}
                 </h3>
                 {creator.email && (
-                  <div className="text-sm md:text-base text-muted-foreground mb-3">
+                  <div className="text-base md:text-lg text-muted-foreground mb-4">
                     {creator.email}
                   </div>
                 )}
-                <div className="flex gap-2 md:gap-3 mt-2 flex-wrap">
+                <div className="flex gap-2 md:gap-3 mt-3 flex-wrap">
                   <Badge 
                     variant="secondary" 
-                    className={`${getGenderBadgeClass(creator.gender)} text-xs md:text-sm px-3 py-1.5 border`}
+                    className={`${getGenderBadgeClass(creator.gender)} text-sm md:text-base px-4 py-2 border font-medium`}
                   >
                     {creator.gender}
                   </Badge>
                   <Badge 
                     variant="secondary" 
-                    className="bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 border-yellow-500/20 text-xs md:text-sm px-3 py-1.5 border"
+                    className="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border-yellow-500/30 text-sm md:text-base px-4 py-2 border font-medium"
                   >
                     {creator.team}
                   </Badge>
                   <Badge 
                     variant="secondary" 
-                    className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border-blue-500/20 text-xs md:text-sm px-3 py-1.5 border"
+                    className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/30 text-sm md:text-base px-4 py-2 border font-medium"
                   >
                     {creator.creatorType}
                   </Badge>
@@ -134,28 +134,28 @@ const CreatorCard = ({
             </div>
           </div>
           
-          <div className={`flex ${isMobile ? 'flex-col w-full gap-3' : 'items-center justify-end gap-3 flex-shrink-0'}`}>
+          <div className={`flex ${isMobile ? 'w-full gap-2' : 'items-center justify-end gap-3 flex-shrink-0'}`}>
             {variant === 'default' ? (
               // Default view for Creators page
               <>
                 {isAdmin && (
-                  <div className={`flex ${isMobile ? 'flex-col w-full gap-3' : 'items-center gap-3'}`}>
-                    <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'w-full' : ''}>
+                  <div className={`flex ${isMobile ? 'w-full gap-2' : 'items-center gap-3'}`}>
+                    <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'flex-1' : ''}>
                       <Button 
                         variant="ghost" 
                         size={isMobile ? "default" : "default"}
-                        className={`${isMobile ? 'w-full h-11 text-base' : 'px-4 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
+                        className={`${isMobile ? 'w-full h-12 text-base' : 'px-4 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
                       >
                         <LineChart className="h-4 w-4 mr-2" />
                         Analytics
                       </Button>
                     </Link>
                     
-                    <Link to={`/creator-invoices/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'w-full' : ''}>
+                    <Link to={`/creator-invoices/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'flex-1' : ''}>
                       <Button 
                         variant="ghost" 
                         size={isMobile ? "default" : "default"}
-                        className={`${isMobile ? 'w-full h-11 text-base' : 'px-4 h-10'} bg-green-600/80 text-white hover:opacity-90 transition-all`}
+                        className={`${isMobile ? 'w-full h-12 text-base' : 'px-4 h-10'} bg-green-600/80 text-white hover:opacity-90 transition-all`}
                       >
                         <FileText className="h-4 w-4 mr-2" />
                         Invoices
@@ -165,7 +165,7 @@ const CreatorCard = ({
                     <Button 
                       variant="secondary" 
                       size={isMobile ? "default" : "default"}
-                      className={`${isMobile ? 'w-full h-11 text-base' : 'h-10 px-4'}`}
+                      className={`${isMobile ? 'flex-1 h-12 text-base' : 'h-10 px-4'}`}
                       onClick={handleLoginButtonClick}
                     >
                       <LogIn className="h-4 w-4 mr-2" />
@@ -180,7 +180,7 @@ const CreatorCard = ({
                     <Button 
                       variant="ghost" 
                       size={isMobile ? "default" : "default"}
-                      className={`${isMobile ? 'w-full h-11 text-base px-6' : 'px-8 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
+                      className={`${isMobile ? 'w-full h-12 text-base px-6' : 'px-8 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
                     >
                       <LineChart className="h-4 w-4 mr-2" />
                       Analytics
@@ -190,12 +190,12 @@ const CreatorCard = ({
               </>
             ) : (
               // Files view for SharedFiles page
-              <div className={`flex ${isMobile ? 'flex-col w-full gap-3' : 'items-center gap-3'}`}>
-                <Link to={`/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'w-full' : ''}>
+              <div className={`flex ${isMobile ? 'w-full gap-2' : 'items-center gap-3'}`}>
+                <Link to={`/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'flex-1' : ''}>
                   <Button 
                     variant="ghost" 
                     size={isMobile ? "default" : "default"}
-                    className={`${isMobile ? 'w-full h-11 text-base' : 'px-6 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
+                    className={`${isMobile ? 'w-full h-12 text-base' : 'px-6 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
                   >
                     <Files className="h-4 w-4 mr-2" />
                     Files
@@ -214,11 +214,11 @@ const CreatorCard = ({
                   </Button>
                 </Link>
                 
-                <Link to={`/creator-analytics/${creator.id}?tab=income`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'w-full' : ''}>
+                <Link to={`/creator-analytics/${creator.id}?tab=income`} onClick={(e) => e.stopPropagation()} className={isMobile ? 'flex-1' : ''}>
                   <Button 
                     variant="ghost" 
                     size={isMobile ? "default" : "default"}
-                    className={`${isMobile ? 'w-full h-11 text-base' : 'px-4 h-10'} bg-green-600/80 text-white hover:opacity-90 transition-all`}
+                    className={`${isMobile ? 'w-full h-12 text-base' : 'px-4 h-10'} bg-green-600/80 text-white hover:opacity-90 transition-all`}
                   >
                     <DollarSign className="h-4 w-4 mr-2" />
                     Income
@@ -230,7 +230,7 @@ const CreatorCard = ({
                   <Button 
                     variant="secondary" 
                     size={isMobile ? "default" : "default"}
-                    className={`${isMobile ? 'w-full h-11 text-base' : 'h-10 px-4'}`}
+                    className={`${isMobile ? 'flex-1 h-12 text-base' : 'h-10 px-4'}`}
                     onClick={handleShareButtonClick}
                   >
                     <Share2 className="h-4 w-4 mr-2" />
