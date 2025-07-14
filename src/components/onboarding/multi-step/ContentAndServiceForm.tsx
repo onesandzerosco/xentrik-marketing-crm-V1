@@ -184,14 +184,14 @@ export const ContentAndServiceForm: React.FC = () => {
         name="contentAndService.sexToysCount"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>How many sex toys do you have?</FormLabel>
+            <FormLabel>Type and amount of sex toys you have (ie. 2 dildos, 3 buttplugs)</FormLabel>
             <FormControl>
               <Input 
-                type="number" 
-                min={0}
+                type="text"
                 {...field} 
                 value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                onChange={(e) => field.onChange(e.target.value)}
+                placeholder="e.g. 2 dildos, 3 buttplugs"
                 className="min-h-[44px]"
               />
             </FormControl>
