@@ -259,78 +259,156 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Submitted</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {submissions.map((submission) => (
-          <React.Fragment key={submission.token}>
+    <div className="space-y-4">
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell>{submission.email}</TableCell>
-              <TableCell>{submission.name}</TableCell>
-              <TableCell>
-                {formatDate(submission.submittedAt)}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+              <TableHead>Email</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Submitted</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {submissions.map((submission) => (
+              <React.Fragment key={submission.token}>
+                <TableRow>
+                  <TableCell>{submission.email}</TableCell>
+                  <TableCell>{submission.name}</TableCell>
+                  <TableCell>
+                    {formatDate(submission.submittedAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => togglePreview(submission.token)}
+                        title="Toggle preview"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeclineClick(submission.token)}
+                        disabled={disabledTokens.has(submission.token)}
+                        title="Decline submission"
+                      >
+                        {processingTokens.includes(submission.token) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleAcceptClick(submission)}
+                        disabled={disabledTokens.has(submission.token)}
+                        title="Approve creator"
+                      >
+                        {processingTokens.includes(submission.token) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                {submission.showPreview && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="bg-muted/10">
+                      <div className="p-4 rounded overflow-auto max-h-96">
+                        <div className="max-w-4xl">
+                          {renderFormattedPreview(submission.data)}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {submissions.map((submission) => (
+          <div key={submission.token} className="bg-muted/10 rounded-lg border border-border/20 overflow-hidden">
+            <div className="p-4 space-y-3">
+              <div className="space-y-2">
+                <div>
+                  <span className="text-sm text-muted-foreground block">Email</span>
+                  <span className="text-foreground break-all text-sm">{submission.email}</span>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground block">Name</span>
+                  <span className="text-foreground text-sm">{submission.name}</span>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground block">Submitted</span>
+                  <span className="text-muted-foreground text-xs">{formatDate(submission.submittedAt)}</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => togglePreview(submission.token)}
+                  className="w-full min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  {submission.showPreview ? 'Hide Preview' : 'Show Preview'}
+                </Button>
+                <div className="flex gap-2">
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => togglePreview(submission.token)}
-                    title="Toggle preview"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="destructive"
                     onClick={() => handleDeclineClick(submission.token)}
                     disabled={disabledTokens.has(submission.token)}
-                    title="Decline submission"
+                    className="flex-1 min-h-[44px] touch-manipulation flex items-center justify-center gap-2"
                   >
                     {processingTokens.includes(submission.token) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Trash2 className="h-4 w-4" />
                     )}
+                    <span className="text-sm">Decline</span>
                   </Button>
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="default"
                     onClick={() => handleAcceptClick(submission)}
                     disabled={disabledTokens.has(submission.token)}
-                    title="Approve creator"
+                    className="flex-1 min-h-[44px] touch-manipulation flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700"
                   >
                     {processingTokens.includes(submission.token) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Check className="h-4 w-4" />
                     )}
+                    <span className="text-sm">Accept</span>
                   </Button>
                 </div>
-              </TableCell>
-            </TableRow>
+              </div>
+            </div>
+            
             {submission.showPreview && (
-              <TableRow>
-                <TableCell colSpan={4} className="bg-muted/10">
-                  <div className="p-4 rounded overflow-auto max-h-96">
-                    <div className="max-w-4xl">
-                      {renderFormattedPreview(submission.data)}
-                    </div>
+              <div className="border-t border-border/20 p-4 bg-muted/5">
+                <div className="rounded overflow-auto max-h-96">
+                  <div className="max-w-full">
+                    {renderFormattedPreview(submission.data)}
                   </div>
-                </TableCell>
-              </TableRow>
+                </div>
+              </div>
             )}
-          </React.Fragment>
+          </div>
         ))}
-      </TableBody>
-    </Table>
+      </div>
+    </div>
   );
 };
 

@@ -48,24 +48,24 @@ const CreatorOnboardQueue: React.FC = () => {
   }
 
   return (
-    <div className="p-8 w-full">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-white">Creator Onboarding Queue</h1>
-        <p className="text-muted-foreground">
+    <div className="p-4 md:p-8 w-full">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-white">Creator Onboarding Queue</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Review and approve creator onboarding submissions.
         </p>
       </div>
       
       <Card className="bg-[#1a1a33]/50 backdrop-blur-sm border border-[#252538]/50">
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <span>Pending Submissions</span>
+        <CardHeader className="pb-4">
+          <CardTitle className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <span className="text-lg md:text-xl">Pending Submissions</span>
             <Button 
               variant="outline" 
               size="sm" 
               onClick={fetchSubmissions}
               disabled={loading}
-              className="text-white border-white/20"
+              className="text-white border-white/20 w-full sm:w-auto min-h-[44px] touch-manipulation"
             >
               {loading ? (
                 <>

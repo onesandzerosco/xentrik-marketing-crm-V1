@@ -129,29 +129,29 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] bg-[#1a1a33] text-white border-[#252538]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-[#1a1a33] text-white border-[#252538] mx-4">
         <DialogHeader>
-          <DialogTitle>Accept Creator Submission</DialogTitle>
-          <DialogDescription className="text-gray-300">
+          <DialogTitle className="text-lg md:text-xl">Accept Creator Submission</DialogTitle>
+          <DialogDescription className="text-gray-300 text-sm md:text-base">
             This will create a new creator account with the email from their submission and set their password to "XentrikBananas". The creator will be able to login with these credentials.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+          <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+            <Label htmlFor="name" className="md:text-right font-medium">
               Name
             </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="col-span-3 bg-[#252538] border-[#383854] text-white"
+              className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]"
               disabled={isSubmitting || isLoading}
               placeholder="Enter creator name"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="team" className="text-right">
+          <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+            <Label htmlFor="team" className="md:text-right font-medium">
               Team
             </Label>
             <Select 
@@ -159,7 +159,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               onValueChange={(value: TeamEnum) => setTeam(value)}
               disabled={isSubmitting || isLoading}
             >
-              <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
+              <SelectTrigger className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]">
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
               <SelectContent className="bg-[#252538] border-[#383854] text-white">
@@ -169,8 +169,8 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="creatorType" className="text-right">
+          <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4">
+            <Label htmlFor="creatorType" className="md:text-right font-medium">
               Creator Type
             </Label>
             <Select 
@@ -178,7 +178,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               onValueChange={(value: CreatorTypeEnum) => setCreatorType(value)}
               disabled={isSubmitting || isLoading}
             >
-              <SelectTrigger className="col-span-3 bg-[#252538] border-[#383854] text-white">
+              <SelectTrigger className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]">
                 <SelectValue placeholder="Select creator type" />
               </SelectTrigger>
               <SelectContent className="bg-[#252538] border-[#383854] text-white">
@@ -187,11 +187,11 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-start gap-4">
-            <Label className="text-right pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-4 items-start gap-2 md:gap-4">
+            <Label className="md:text-right md:pt-2 font-medium">
               Profile Image
             </Label>
-            <div className="col-span-3">
+            <div className="md:col-span-3">
               <ProfileImageUploader
                 value={profileImage}
                 onChange={setProfileImage}
@@ -200,11 +200,11 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           <Button 
             variant="outline" 
             onClick={handleClose}
-            className="text-white border-white/20"
+            className="text-white border-white/20 w-full sm:w-auto min-h-[44px] touch-manipulation order-2 sm:order-1"
             disabled={isSubmitting || isLoading}
           >
             Cancel
@@ -212,7 +212,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
           <Button 
             onClick={handleAccept} 
             disabled={isButtonDisabled}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white w-full sm:w-auto min-h-[44px] touch-manipulation order-1 sm:order-2"
           >
             {(isLoading || isSubmitting) ? (
               <>
