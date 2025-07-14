@@ -366,12 +366,19 @@ export const PersonalInfoForm = () => {
                 <Textarea 
                   placeholder="E.g. France, Italy, Japan"
                   onChange={(e) => {
-                    // Split on commas and trim, allowing spaces and commas
+                    // Store the raw text value and let user type freely
                     const placesText = e.target.value;
-                    const places = placesText.split(',').map(place => place.trim()).filter(Boolean);
-                    field.onChange(places);
+                    // Only split into array when there are actual commas, otherwise keep as text
+                    if (placesText.includes(',')) {
+                      const places = placesText.split(',').map(place => place.trim()).filter(place => place.length > 0);
+                      field.onChange(places);
+                    } else {
+                      // If no comma, treat as single item or empty array
+                      field.onChange(placesText.trim() ? [placesText.trim()] : []);
+                    }
                   }}
-                  value={field.value?.join(', ') || ''}
+                  value={Array.isArray(field.value) ? field.value.join(', ') : (field.value || '')}
+                  className="min-h-[80px]"
                 />
               </FormControl>
               <FormMessage />
