@@ -28,6 +28,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState<CreatorOnboardingFormValues | null>(null);
   const { toast } = useToast();
   
   const methods = useForm<CreatorOnboardingFormValues>({
@@ -86,14 +87,30 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   };
 
   const handleContentGuideDownload = () => {
-    // Extract document ID from the Google Docs URL and create direct PDF export link
-    const docId = '1LcUGvtlCQsZFGliXHTxCUcV8U6LARvKjDpKD55yKHqs';
+    if (!submittedData) return;
+    
+    const sex = submittedData.personalInfo.sex;
+    let docId: string;
+    let filename: string;
+    
+    // Set document ID based on sex field
+    if (sex === 'Female') {
+      docId = '1LcUGvtlCQsZFGliXHTxCUcV8U6LARvKjDpKD55yKHqs';
+      filename = 'Female-Content-Guide.pdf';
+    } else if (sex === 'Male') {
+      docId = '1jtIRCBXkA39yl7DBm_ELwThotLc3QC6-IlHjAyUxSMQ';
+      filename = 'Male-Content-Guide.pdf';
+    } else {
+      // Transgender or other - no file available
+      return;
+    }
+    
     const pdfExportUrl = `https://docs.google.com/document/d/${docId}/export?format=pdf`;
     
     // Create a temporary link element to trigger download
     const link = document.createElement('a');
     link.href = pdfExportUrl;
-    link.download = 'Content-Guide.pdf';
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -125,6 +142,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           description: "Your onboarding information has been submitted successfully.",
           variant: "default",
         });
+        setSubmittedData(data);
         setIsSubmitted(true);
       } else {
         throw new Error(result.error || "Failed to submit form");
@@ -171,6 +189,9 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
 
   // Show success state after submission
   if (isSubmitted) {
+    const sex = submittedData?.personalInfo.sex;
+    const hasContentGuide = sex === 'Female' || sex === 'Male';
+    
     return (
       <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
         <CardContent className="flex items-center justify-center py-12">
@@ -180,16 +201,24 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
             <p className="text-gray-300 mb-6">
               Thank you for completing the onboarding process. Your information has been received and will be reviewed by our team.
             </p>
-            <p className="text-gray-300 mb-6">
-              To get started with creating content, download our comprehensive content guide below. This guide will help you understand our content requirements and best practices.
-            </p>
-            <Button 
-              onClick={handleContentGuideDownload}
-              className="mb-6 bg-gradient-premium-yellow text-black hover:shadow-premium-yellow"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download Content Guide
-            </Button>
+            {hasContentGuide ? (
+              <>
+                <p className="text-gray-300 mb-6">
+                  To get started with creating content, download our comprehensive content guide below. This guide will help you understand our content requirements and best practices.
+                </p>
+                <Button 
+                  onClick={handleContentGuideDownload}
+                  className="mb-6 bg-gradient-premium-yellow text-black hover:shadow-premium-yellow"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Content Guide
+                </Button>
+              </>
+            ) : (
+              <p className="text-gray-300 mb-6">
+                We'll provide you with specific content guidelines during our review process.
+              </p>
+            )}
             <p className="text-gray-400 text-sm">
               You can now close this page. We'll be in touch soon!
             </p>
