@@ -28,7 +28,7 @@ export const personalInfoSchema = z.object({
   numberOfKids: z.number().optional().nullable(),
   occupation: z.string().optional().or(z.literal('')),
   workplace: z.string().optional().or(z.literal('')),
-  placesVisited: z.array(z.string()).optional(),
+  placesVisited: z.string().optional().or(z.literal('')),
   preferredFanNickname: z.string().optional().or(z.literal('')),
 });
 
@@ -130,7 +130,7 @@ export const defaultPersonalInfoValues: PersonalInfoFormValues = {
   numberOfKids: undefined,
   occupation: "",
   workplace: "",
-  placesVisited: [],
+  placesVisited: "",
   preferredFanNickname: "",
 };
 
