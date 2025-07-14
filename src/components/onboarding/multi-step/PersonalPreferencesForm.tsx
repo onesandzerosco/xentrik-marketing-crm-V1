@@ -11,7 +11,7 @@ export const PersonalPreferencesForm: React.FC = () => {
   const { control } = useFormContext<CreatorOnboardingFormValues>();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <FormField
         control={control}
         name="personalPreferences.hobbies"
@@ -28,6 +28,7 @@ export const PersonalPreferencesForm: React.FC = () => {
                     value ? value.split(",").map(item => item.trim()) : []
                   );
                 }}
+                className="min-h-[44px]"
               />
             </FormControl>
             <FormMessage />
@@ -42,28 +43,29 @@ export const PersonalPreferencesForm: React.FC = () => {
           <FormItem>
             <FormLabel>Favorite Drink</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Enter favorite drink" />
+              <Input {...field} placeholder="Enter favorite drink" className="min-h-[44px]" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-4">
           <FormField
             control={control}
             name="personalPreferences.canSing"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Do you sing?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Do you sing?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -73,15 +75,16 @@ export const PersonalPreferencesForm: React.FC = () => {
             control={control}
             name="personalPreferences.smokes"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Do you smoke?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Do you smoke?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -93,15 +96,16 @@ export const PersonalPreferencesForm: React.FC = () => {
             control={control}
             name="personalPreferences.drinks"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Do you drink?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Do you drink?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -111,15 +115,16 @@ export const PersonalPreferencesForm: React.FC = () => {
             control={control}
             name="personalPreferences.isSexual"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Are you a sexual person?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Are you a sexual person?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -152,14 +157,14 @@ export const PersonalPreferencesForm: React.FC = () => {
           <FormItem>
             <FormLabel>First thing you do in the morning</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Describe your morning routine" />
+              <Input {...field} placeholder="Describe your morning routine" className="min-h-[44px]" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="personalPreferences.likeInPerson"
@@ -222,7 +227,7 @@ export const PersonalPreferencesForm: React.FC = () => {
           <FormItem>
             <FormLabel>Favorite Expression</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Your favorite expression or saying" />
+              <Input {...field} placeholder="Your favorite expression or saying" className="min-h-[44px]" />
             </FormControl>
             <FormMessage />
           </FormItem>

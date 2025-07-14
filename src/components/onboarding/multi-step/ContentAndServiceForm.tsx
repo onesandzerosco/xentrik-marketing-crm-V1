@@ -16,10 +16,10 @@ export const ContentAndServiceForm: React.FC = () => {
   const hasFetish = watch("contentAndService.hasFetish");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <SocialMediaSection />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="contentAndService.bodyCount"
@@ -33,6 +33,7 @@ export const ContentAndServiceForm: React.FC = () => {
                   {...field} 
                   value={field.value || ""}
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                  className="min-h-[44px]"
                 />
               </FormControl>
               <FormMessage />
@@ -47,7 +48,7 @@ export const ContentAndServiceForm: React.FC = () => {
             <FormItem>
               <FormLabel>Craziest place you've had sex in</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter location" />
+                <Input {...field} placeholder="Enter location" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -60,15 +61,16 @@ export const ContentAndServiceForm: React.FC = () => {
           control={control}
           name="contentAndService.hasFetish"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
               <FormControl>
                 <Checkbox 
                   checked={field.value} 
-                  onCheckedChange={field.onChange} 
+                  onCheckedChange={field.onChange}
+                  className="mt-1"
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Any fetish?</FormLabel>
+                <FormLabel className="text-sm sm:text-base">Any fetish?</FormLabel>
               </div>
             </FormItem>
           )}
@@ -95,21 +97,22 @@ export const ContentAndServiceForm: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-4">
           <FormField
             control={control}
             name="contentAndService.doesAnal"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Do you do anal?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Do you do anal?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -119,15 +122,16 @@ export const ContentAndServiceForm: React.FC = () => {
             control={control}
             name="contentAndService.hasTriedOrgy"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Have you tried orgy?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Have you tried orgy?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -139,15 +143,16 @@ export const ContentAndServiceForm: React.FC = () => {
             control={control}
             name="contentAndService.lovesThreesomes"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Do you love threesomes?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Do you love threesomes?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -157,15 +162,16 @@ export const ContentAndServiceForm: React.FC = () => {
             control={control}
             name="contentAndService.sellsUnderwear"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
                 <FormControl>
                   <Checkbox 
                     checked={field.value} 
-                    onCheckedChange={field.onChange} 
+                    onCheckedChange={field.onChange}
+                    className="mt-1"
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Open to selling underwear?</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">Open to selling underwear?</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -186,6 +192,7 @@ export const ContentAndServiceForm: React.FC = () => {
                 {...field} 
                 value={field.value || ""}
                 onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                className="min-h-[44px]"
               />
             </FormControl>
             <FormMessage />
@@ -200,7 +207,7 @@ export const ContentAndServiceForm: React.FC = () => {
           <FormItem>
             <FormLabel>Favorite sex position</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Enter favorite position" />
+              <Input {...field} placeholder="Enter favorite position" className="min-h-[44px]" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -225,7 +232,7 @@ export const ContentAndServiceForm: React.FC = () => {
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div className="space-y-4">
           <FormField
             control={control}

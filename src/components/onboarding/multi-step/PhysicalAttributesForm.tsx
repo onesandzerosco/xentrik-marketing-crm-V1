@@ -12,8 +12,8 @@ export const PhysicalAttributesForm: React.FC = () => {
   const hasTattoos = watch("physicalAttributes.hasTattoos");
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="physicalAttributes.weight"
@@ -21,7 +21,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Weight</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., 68kg" />
+                <Input {...field} placeholder="e.g., 68kg" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -35,7 +35,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Height</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., 175cm" />
+                <Input {...field} placeholder="e.g., 175cm" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -50,7 +50,7 @@ export const PhysicalAttributesForm: React.FC = () => {
               <FormLabel>Body Type</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="min-h-[44px]">
                     <SelectValue placeholder="Select body type" />
                   </SelectTrigger>
                 </FormControl>
@@ -69,7 +69,7 @@ export const PhysicalAttributesForm: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="physicalAttributes.favoriteColor"
@@ -77,7 +77,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Favorite Color</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter favorite color" />
+                <Input {...field} placeholder="Enter favorite color" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,7 +91,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Disliked Color</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter disliked color" />
+                <Input {...field} placeholder="Enter disliked color" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -106,7 +106,7 @@ export const PhysicalAttributesForm: React.FC = () => {
           <FormItem>
             <FormLabel>Allergies</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="List any allergies" />
+              <Input {...field} placeholder="List any allergies" className="min-h-[44px]" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -117,15 +117,16 @@ export const PhysicalAttributesForm: React.FC = () => {
         control={control}
         name="physicalAttributes.hasTattoos"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
             <FormControl>
               <Checkbox 
                 checked={field.value} 
-                onCheckedChange={field.onChange} 
+                onCheckedChange={field.onChange}
+                className="mt-1"
               />
             </FormControl>
             <div className="space-y-1 leading-none">
-              <FormLabel>Do you have tattoos?</FormLabel>
+              <FormLabel className="text-sm sm:text-base">Do you have tattoos?</FormLabel>
             </div>
           </FormItem>
         )}
@@ -139,7 +140,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem className="ml-7">
               <FormLabel>Tattoo details (how many and where)</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Describe your tattoos" />
+                <Input {...field} placeholder="Describe your tattoos" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -147,7 +148,7 @@ export const PhysicalAttributesForm: React.FC = () => {
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="physicalAttributes.bustWaistHip"
@@ -155,7 +156,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Bust-Waist-Hip Measurement</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., 36-24-36" />
+                <Input {...field} placeholder="e.g., 36-24-36" className="min-h-[44px]" />
               </FormControl>
               <FormDescription>
                 Measurements in inches, separated by hyphens
@@ -172,7 +173,7 @@ export const PhysicalAttributesForm: React.FC = () => {
             <FormItem>
               <FormLabel>Dick Size</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="e.g., 7 inches" />
+                <Input {...field} placeholder="e.g., 7 inches" className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -180,20 +181,21 @@ export const PhysicalAttributesForm: React.FC = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="physicalAttributes.isCircumcised"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
               <FormControl>
                 <Checkbox 
                   checked={field.value} 
-                  onCheckedChange={field.onChange} 
+                  onCheckedChange={field.onChange}
+                  className="mt-1"
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Circumcised</FormLabel>
+                <FormLabel className="text-sm sm:text-base">Circumcised</FormLabel>
               </div>
             </FormItem>
           )}
@@ -207,7 +209,7 @@ export const PhysicalAttributesForm: React.FC = () => {
               <FormLabel>Top or Bottom?</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="min-h-[44px]">
                     <SelectValue placeholder="Select preference" />
                   </SelectTrigger>
                 </FormControl>

@@ -193,24 +193,25 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={(e) => e.preventDefault()} className="space-y-8">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-4 sm:space-y-6 lg:space-y-8">
         <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-white">Creator Onboarding</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Creator Onboarding</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Complete the form to save information about <span className="bg-gradient-premium-yellow bg-clip-text text-transparent font-semibold">how you want to be marketed</span>. We promise to save this data securely.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <Tabs value={currentStep} onValueChange={setCurrentStep} className="w-full">
-              <TabsList className="grid grid-cols-4 mb-8">
+              <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-4 sm:mb-6 lg:mb-8 w-full gap-1 sm:gap-0 h-auto p-1">
                 {steps.map((step) => (
                   <TabsTrigger 
                     key={step.id} 
                     value={step.id}
-                    className="data-[state=active]:bg-gradient-premium-yellow data-[state=active]:text-black"
+                    className="data-[state=active]:bg-gradient-premium-yellow data-[state=active]:text-black text-xs sm:text-sm p-2 sm:p-3 h-auto whitespace-normal text-center"
                   >
-                    {step.label}
+                    <span className="block sm:hidden">{step.label.split(' ')[0]}</span>
+                    <span className="hidden sm:block">{step.label}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -232,15 +233,16 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-[#252538]/50 pt-4">
+          <CardFooter className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 border-t border-[#252538]/50 pt-4 p-4 sm:p-6">
             <Button
               type="button"
               variant="outline"
               onClick={goToPreviousStep}
               disabled={currentStepIndex === 0}
-              className="flex items-center gap-2"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
             >
-              <ChevronLeft className="h-4 w-4" /> Previous
+              <ChevronLeft className="h-4 w-4" /> 
+              <span>Previous</span>
             </Button>
             
             {currentStepIndex < steps.length - 1 ? (
@@ -248,22 +250,26 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
                 type="button"
                 variant="premium"
                 onClick={goToNextStep}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
               >
-                Next <ChevronRight className="h-4 w-4" />
+                <span>Next</span> <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
               <Button
                 type="button" 
                 variant="premium"
                 disabled={isSubmitting || !isValid}
-                className="flex items-center gap-2"
+                className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
                 onClick={() => methods.handleSubmit(handleFinalSubmit)()}
               >
                 {isSubmitting ? (
-                  <>Processing <Upload className="h-4 w-4 animate-bounce" /></>
+                  <>
+                    <span>Processing</span> <Upload className="h-4 w-4 animate-bounce" />
+                  </>
                 ) : (
-                  <>Submit <Save className="h-4 w-4" /></>
+                  <>
+                    <span>Submit</span> <Save className="h-4 w-4" />
+                  </>
                 )}
               </Button>
             )}

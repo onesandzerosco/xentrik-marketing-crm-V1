@@ -28,8 +28,8 @@ export const PersonalInfoForm = () => {
   const hasKids = watch('personalInfo.hasKids');
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <FormField
           control={control}
           name="personalInfo.fullName"
@@ -37,7 +37,7 @@ export const PersonalInfoForm = () => {
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your full name" {...field} />
+                <Input placeholder="Your full name" {...field} className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -51,7 +51,7 @@ export const PersonalInfoForm = () => {
             <FormItem>
               <FormLabel>Nickname (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Preferred name" {...field} />
+                <Input placeholder="Preferred name" {...field} className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -65,7 +65,7 @@ export const PersonalInfoForm = () => {
             <FormItem>
               <FormLabel>Email Address</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Email address" {...field} />
+                <Input type="email" placeholder="Email address" {...field} className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -79,7 +79,7 @@ export const PersonalInfoForm = () => {
             <FormItem>
               <FormLabel>Date of Birth</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <Input type="date" {...field} className="min-h-[44px]" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,6 +101,7 @@ export const PersonalInfoForm = () => {
                   {...field} 
                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   value={field.value || ''}
+                  className="min-h-[44px]"
                 />
               </FormControl>
               <FormMessage />
@@ -116,7 +117,7 @@ export const PersonalInfoForm = () => {
               <FormLabel>Sex/Gender</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="min-h-[44px]">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                 </FormControl>
@@ -268,15 +269,16 @@ export const PersonalInfoForm = () => {
           control={control}
           name="personalInfo.hasPets"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
               <FormControl>
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="mt-1"
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Do you have pets?</FormLabel>
+                <FormLabel className="text-sm sm:text-base">Do you have pets?</FormLabel>
               </div>
             </FormItem>
           )}
@@ -288,15 +290,16 @@ export const PersonalInfoForm = () => {
           control={control}
           name="personalInfo.hasKids"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 sm:p-4 min-h-[44px]">
               <FormControl>
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="mt-1"
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>Do you have kids?</FormLabel>
+                <FormLabel className="text-sm sm:text-base">Do you have kids?</FormLabel>
               </div>
             </FormItem>
           )}
