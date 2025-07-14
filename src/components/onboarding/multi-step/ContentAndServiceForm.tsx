@@ -276,6 +276,49 @@ export const ContentAndServiceForm: React.FC = () => {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={control}
+            name="contentAndService.dickRatePrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dick Rate Price</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
+                    <Input 
+                      type="number" 
+                      min={0}
+                      step="0.01"
+                      className="pl-6"
+                      {...field} 
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="contentAndService.dickRateNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Notes for Dick Rate</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    placeholder="Any additional notes about dick rate pricing or preferences..."
+                    className="min-h-[80px]"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="space-y-4">
@@ -314,6 +357,49 @@ export const ContentAndServiceForm: React.FC = () => {
                   <Textarea 
                     {...field} 
                     placeholder="Any additional notes about video call pricing or preferences..."
+                    className="min-h-[80px]"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="contentAndService.underwearSellingPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Underwear Selling Price</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2">$</span>
+                    <Input 
+                      type="number" 
+                      min={0}
+                      step="0.01"
+                      className="pl-6"
+                      {...field} 
+                      value={field.value || ""}
+                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="contentAndService.underwearSellingNotes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Additional Notes for Underwear Selling</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    {...field} 
+                    placeholder="Any additional notes about underwear selling pricing or preferences..."
                     className="min-h-[80px]"
                   />
                 </FormControl>

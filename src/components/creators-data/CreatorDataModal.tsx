@@ -225,7 +225,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     if (typeof value === 'object') return JSON.stringify(value, null, 2);
     
     // Add dollar sign for price fields
-    if (fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
+    if (fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice' || fieldKey === 'dickRatePrice' || fieldKey === 'underwearSellingPrice') {
       const numValue = Number(value);
       if (!isNaN(numValue) && numValue > 0) {
         return `$${numValue}`;
@@ -241,7 +241,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       'pricePerMinute': 'Custom Price per Minute',
       'videoCallPrice': 'Video Call Price per Minute',
       'customVideoNotes': 'Custom Video Notes',
-      'videoCallNotes': 'Video Call Notes'
+      'videoCallNotes': 'Video Call Notes',
+      'dickRatePrice': 'Dick Rate Price',
+      'dickRateNotes': 'Dick Rate Notes',
+      'underwearSellingPrice': 'Underwear Selling Price',
+      'underwearSellingNotes': 'Underwear Selling Notes'
     };
     
     // Return custom mapping if it exists
@@ -369,8 +373,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     if (fieldKey === 'dateOfBirth' && editValue instanceof Date) {
       // Format date as YYYY-MM-DD for consistent storage
       processedValue = format(editValue, 'yyyy-MM-dd');
-    } else if (fieldKey === 'age' || fieldKey === 'numberOfKids' || fieldKey === 'bodyCount' || fieldKey === 'sexToysCount' || fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice') {
-      processedValue = editValue === '' ? null : Number(editValue);
+      } else if (fieldKey === 'age' || fieldKey === 'numberOfKids' || fieldKey === 'bodyCount' || fieldKey === 'sexToysCount' || fieldKey === 'pricePerMinute' || fieldKey === 'videoCallPrice' || fieldKey === 'dickRatePrice' || fieldKey === 'underwearSellingPrice') {
+        processedValue = editValue === '' ? null : Number(editValue);
     } else if (fieldKey === 'hasPets' || fieldKey === 'hasKids' || fieldKey === 'hasTattoos' || fieldKey === 'canSing' || fieldKey === 'smokes' || fieldKey === 'drinks' || fieldKey === 'isSexual' || fieldKey === 'hasFetish' || fieldKey === 'doesAnal' || fieldKey === 'hasTriedOrgy' || fieldKey === 'lovesThreesomes' || fieldKey === 'sellsUnderwear' || fieldKey === 'isCircumcised') {
       processedValue = editValue === 'true' || editValue === true;
     } else if (fieldKey === 'hobbies' || fieldKey === 'placesVisited') {
@@ -598,7 +602,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       }
       
       // For longer text fields, use textarea
-      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote' || fieldKey === 'customVideoNotes' || fieldKey === 'videoCallNotes') {
+      if (fieldKey === 'tattooDetails' || fieldKey === 'fetishDetails' || fieldKey === 'homeActivities' || fieldKey === 'morningRoutine' || fieldKey === 'likeInPerson' || fieldKey === 'dislikeInPerson' || fieldKey === 'turnOffs' || fieldKey === 'craziestSexPlace' || fieldKey === 'fanHandlingPreference' || fieldKey === 'additionalLocationNote' || fieldKey === 'customVideoNotes' || fieldKey === 'videoCallNotes' || fieldKey === 'dickRateNotes' || fieldKey === 'underwearSellingNotes') {
         return (
           <div className="flex flex-col gap-2">
             <Textarea 
@@ -742,9 +746,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   ];
 
   const contentPriority = [
-    'pricePerMinute', 'customVideoNotes', 'videoCallPrice', 'videoCallNotes', 'sellsUnderwear',
-    'bodyCount', 'hasFetish', 'fetishDetails', 'doesAnal', 'hasTriedOrgy', 'sexToysCount',
-    'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 'fanHandlingPreference', 'socialMediaHandles'
+    'pricePerMinute', 'customVideoNotes', 'videoCallPrice', 'videoCallNotes', 'dickRatePrice', 'dickRateNotes', 
+    'sellsUnderwear', 'underwearSellingPrice', 'underwearSellingNotes', 'bodyCount', 'hasFetish', 'fetishDetails', 
+    'doesAnal', 'hasTriedOrgy', 'sexToysCount', 'lovesThreesomes', 'favoritePosition', 'craziestSexPlace', 
+    'fanHandlingPreference', 'socialMediaHandles'
   ];
 
   const sortFieldsByPriority = (data: any, priorityOrder: string[]) => {

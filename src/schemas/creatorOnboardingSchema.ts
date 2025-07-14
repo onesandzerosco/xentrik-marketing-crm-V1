@@ -78,6 +78,10 @@ export const contentAndServiceSchema = z.object({
   videoCallPrice: z.number().optional().nullable(),
   videoCallNotes: z.string().optional().or(z.literal('')),
   sellsUnderwear: z.boolean().default(false),
+  dickRatePrice: z.number().optional().nullable(),
+  dickRateNotes: z.string().optional().or(z.literal('')),
+  underwearSellingPrice: z.number().optional().nullable(),
+  underwearSellingNotes: z.string().optional().or(z.literal('')),
   socialMediaHandles: z.object({
     instagram: z.string().optional().or(z.literal('')),
     twitter: z.string().optional().or(z.literal('')),
@@ -176,6 +180,10 @@ export const defaultContentAndServiceValues: ContentAndServiceFormValues = {
   videoCallPrice: undefined,
   videoCallNotes: "",
   sellsUnderwear: false,
+  dickRatePrice: undefined,
+  dickRateNotes: "",
+  underwearSellingPrice: undefined,
+  underwearSellingNotes: "",
   socialMediaHandles: {
     instagram: "",
     twitter: "",
