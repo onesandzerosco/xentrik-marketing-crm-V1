@@ -68,16 +68,20 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   const goToNextStep = () => {
     if (currentStepIndex < steps.length - 1) {
       setCurrentStep(steps[currentStepIndex + 1].id);
-      // Scroll to top for better UX
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to top for better UX with a small delay to ensure DOM updates
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
     }
   };
 
   const goToPreviousStep = () => {
     if (currentStepIndex > 0) {
       setCurrentStep(steps[currentStepIndex - 1].id);
-      // Scroll to top for better UX
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Scroll to top for better UX with a small delay to ensure DOM updates
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
     }
   };
 
