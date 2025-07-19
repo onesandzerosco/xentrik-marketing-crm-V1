@@ -72,7 +72,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
 
   // Updated field priority orders to match actual schema fields only
   const personalInfoPriority = [
-    'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
+    'modelName', 'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'hometown', 'ethnicity',
     // Logical ordering for remaining actual fields
     'email', 'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
