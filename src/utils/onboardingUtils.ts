@@ -67,7 +67,7 @@ export const saveOnboardingData = async (
     }
     
     // Extract basic required fields
-    const name = data.personalInfo?.fullName || "New Creator";
+    const name = data.personalInfo?.modelName || data.personalInfo?.fullName || "New Creator";
     const email = data.personalInfo?.email || "noemail@example.com";
     
     // Check if this token has already been submitted

@@ -22,7 +22,7 @@ export class OnboardingService {
   static async saveOnboardingData(token: string, formData: any): Promise<string | undefined> {
     try {
       // Extract basic required fields for the onboarding_submissions table
-      const name = formData.personalInfo?.fullName || formData.name || "New Creator";
+      const name = formData.personalInfo?.modelName || formData.personalInfo?.fullName || formData.name || "New Creator";
       const email = formData.personalInfo?.email || "noemail@example.com";
       
       console.log("Saving onboarding data with token:", token);
@@ -251,12 +251,15 @@ export class OnboardingService {
       
       console.log("Creating creator record...");
       
+      // Use modelName if available, otherwise fall back to name
+      const creatorName = personalInfo.modelName || creatorInfo.name;
+      
       // Create creator record with the same ID as the auth user
       const { data: creatorData, error: creatorError } = await supabase
         .from('creators')
         .insert({
           id: userId,
-          name: creatorInfo.name,
+          name: creatorName,
           email: email,
           gender: genderValue,
           team: creatorInfo.team,
