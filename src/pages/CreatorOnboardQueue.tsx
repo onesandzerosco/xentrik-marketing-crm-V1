@@ -23,6 +23,7 @@ const CreatorOnboardQueue: React.FC = () => {
     togglePreview,
     declineSubmission,
     removeSubmissionFromView,
+    updateSubmissionData,
     setProcessingTokens,
     formatDate
   } = useOnboardingSubmissions();
@@ -91,6 +92,7 @@ const CreatorOnboardQueue: React.FC = () => {
               togglePreview={togglePreview}
               deleteSubmission={declineSubmission}
               onAcceptClick={openAcceptModal}
+              onUpdateSubmission={updateSubmissionData}
             />
           )}
         </CardContent>

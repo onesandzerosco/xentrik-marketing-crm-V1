@@ -124,6 +124,41 @@ export const useOnboardingSubmissions = () => {
     setSubmissions(prev => prev.filter(sub => sub.token !== token));
   };
 
+  // Function to update submission data
+  const updateSubmissionData = async (token: string, updatedData: any) => {
+    try {
+      console.log("Updating submission data for token:", token);
+      
+      // Update the data in the database
+      const { error } = await supabase
+        .from('onboarding_submissions')
+        .update({ data: updatedData })
+        .eq('token', token);
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update local state
+      setSubmissions(prev => prev.map(sub => 
+        sub.token === token ? { ...sub, data: updatedData } : sub
+      ));
+      
+      toast({
+        title: "Submission updated",
+        description: "The submission data has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating submission:", error);
+      toast({
+        title: "Error updating submission",
+        description: "Failed to update the submission data.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   // Format date utility
   const formatDate = (dateString: string) => {
     try {
@@ -147,6 +182,7 @@ export const useOnboardingSubmissions = () => {
     togglePreview,
     declineSubmission,
     removeSubmissionFromView,
+    updateSubmissionData,
     setProcessingTokens,
     formatDate
   };

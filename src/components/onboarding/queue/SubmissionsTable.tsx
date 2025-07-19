@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { 
   Table, 
   TableBody, 
@@ -9,7 +9,9 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Eye, Trash2, Check, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Eye, Trash2, Check, Loader2, Edit2, Save, X } from "lucide-react";
 import { OnboardSubmission } from "@/hooks/useOnboardingSubmissions";
 
 interface SubmissionsTableProps {
@@ -19,6 +21,7 @@ interface SubmissionsTableProps {
   togglePreview: (token: string) => void;
   deleteSubmission: (token: string) => Promise<void>;
   onAcceptClick: (submission: OnboardSubmission) => void;
+  onUpdateSubmission?: (token: string, updatedData: any) => Promise<void>;
 }
 
 const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
@@ -27,11 +30,17 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   formatDate,
   togglePreview,
   deleteSubmission,
-  onAcceptClick
+  onAcceptClick,
+  onUpdateSubmission
 }) => {
   // Track buttons that have been clicked to prevent double clicks
   const [clickedButtons, setClickedButtons] = React.useState<Record<string, boolean>>({});
   const [handlingTokens, setHandlingTokens] = React.useState<Set<string>>(new Set());
+  
+  // Track editing state for each field
+  const [editingFields, setEditingFields] = useState<Record<string, string>>({});
+  const [editingValues, setEditingValues] = useState<Record<string, any>>({});
+  const [localSubmissions, setLocalSubmissions] = useState(submissions);
   
   // Use useMemo for derived state that depends on other state values
   const disabledTokens = useMemo(() => {
@@ -50,6 +59,11 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     
     return tokens;
   }, [processingTokens, clickedButtons, handlingTokens]);
+
+  // Update local submissions when props change
+  React.useEffect(() => {
+    setLocalSubmissions(submissions);
+  }, [submissions]);
 
   // Formatting functions adapted from CreatorDataModal
   const formatValue = (value: any): string => {
@@ -125,7 +139,125 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     });
   };
 
-  const renderDataSection = (sectionData: any, title: string, priorityOrder: string[]) => {
+  // Editing functions
+  const startEditing = (token: string, sectionKey: string, fieldKey: string, currentValue: any) => {
+    const fullKey = `${token}.${sectionKey}.${fieldKey}`;
+    setEditingFields(prev => ({ ...prev, [fullKey]: fullKey }));
+    setEditingValues(prev => ({ ...prev, [fullKey]: currentValue }));
+  };
+
+  const cancelEditing = (token: string, sectionKey: string, fieldKey: string) => {
+    const fullKey = `${token}.${sectionKey}.${fieldKey}`;
+    setEditingFields(prev => {
+      const newState = { ...prev };
+      delete newState[fullKey];
+      return newState;
+    });
+    setEditingValues(prev => {
+      const newState = { ...prev };
+      delete newState[fullKey];
+      return newState;
+    });
+  };
+
+  const saveFieldEdit = async (token: string, sectionKey: string, fieldKey: string) => {
+    const fullKey = `${token}.${sectionKey}.${fieldKey}`;
+    const newValue = editingValues[fullKey];
+    
+    try {
+      // Update local state immediately
+      setLocalSubmissions(prev => prev.map(sub => {
+        if (sub.token === token) {
+          const updatedData = { ...sub.data };
+          if (!updatedData[sectionKey]) {
+            updatedData[sectionKey] = {};
+          }
+          updatedData[sectionKey][fieldKey] = newValue;
+          return { ...sub, data: updatedData };
+        }
+        return sub;
+      }));
+
+      // Save to database if update function is provided
+      if (onUpdateSubmission) {
+        const submission = localSubmissions.find(s => s.token === token);
+        if (submission) {
+          const updatedData = { ...submission.data };
+          if (!updatedData[sectionKey]) {
+            updatedData[sectionKey] = {};
+          }
+          updatedData[sectionKey][fieldKey] = newValue;
+          await onUpdateSubmission(token, updatedData);
+        }
+      }
+
+      // Clear editing state
+      cancelEditing(token, sectionKey, fieldKey);
+    } catch (error) {
+      console.error('Error saving field edit:', error);
+      // Revert local state on error
+      setLocalSubmissions(submissions);
+    }
+  };
+
+  const renderEditableField = (token: string, sectionKey: string, fieldKey: string, value: any) => {
+    const fullKey = `${token}.${sectionKey}.${fieldKey}`;
+    const isEditing = editingFields[fullKey];
+    const editValue = editingValues[fullKey];
+
+    if (isEditing) {
+      return (
+        <div className="flex items-center gap-2">
+          {typeof value === 'string' && value.length > 50 ? (
+            <Textarea
+              value={editValue ?? ''}
+              onChange={(e) => setEditingValues(prev => ({ ...prev, [fullKey]: e.target.value }))}
+              className="flex-1 min-h-[60px]"
+              rows={3}
+            />
+          ) : (
+            <Input
+              value={editValue ?? ''}
+              onChange={(e) => setEditingValues(prev => ({ ...prev, [fullKey]: e.target.value }))}
+              className="flex-1"
+            />
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => saveFieldEdit(token, sectionKey, fieldKey)}
+            className="h-8 w-8 p-0"
+          >
+            <Save className="h-3 w-3" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => cancelEditing(token, sectionKey, fieldKey)}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-start justify-between group">
+        <span className="flex-1">{formatValue(value)}</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => startEditing(token, sectionKey, fieldKey, value)}
+          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+        >
+          <Edit2 className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  };
+
+  const renderDataSection = (token: string, sectionData: any, title: string, priorityOrder: string[], sectionKey: string) => {
     // Always render fields, even if sectionData is null/undefined
     const sortedEntries = sortFieldsByPriority(sectionData || {}, priorityOrder);
 
@@ -151,7 +283,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     ))}
                   </div>
                 ) : (
-                  formatValue(value)
+                  renderEditableField(token, sectionKey, key, value)
                 )
               ) : key === 'socialMediaHandles' && typeof value === 'object' && value !== null ? (
                 <div className="space-y-1">
@@ -162,7 +294,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                   ))}
                 </div>
               ) : (
-                formatValue(value)
+                renderEditableField(token, sectionKey, key, value)
               )}
             </div>
           </div>
@@ -171,27 +303,31 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     );
   };
 
-  const renderFormattedPreview = (data: any) => {
+  const renderFormattedPreview = (token: string, data: any) => {
     const sections = [
       { 
         title: 'Personal Information', 
         data: data?.personalInfo,
-        priority: personalInfoPriority 
+        priority: personalInfoPriority,
+        key: 'personalInfo'
       },
       { 
         title: 'Physical Attributes', 
         data: data?.physicalAttributes,
-        priority: physicalPriority 
+        priority: physicalPriority,
+        key: 'physicalAttributes'
       },
       { 
         title: 'Personal Preferences', 
         data: data?.personalPreferences,
-        priority: preferencesPriority 
+        priority: preferencesPriority,
+        key: 'personalPreferences'
       },
       { 
         title: 'Content & Service', 
         data: data?.contentAndService,
-        priority: contentPriority 
+        priority: contentPriority,
+        key: 'contentAndService'
       }
     ];
 
@@ -200,7 +336,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
         {sections.map((section, index) => (
           <div key={index} className="mb-4">
             <h4 className="text-base font-semibold mb-3 border-b pb-1 text-white">{section.title}</h4>
-            {renderDataSection(section.data, section.title, section.priority)}
+            {renderDataSection(token, section.data, section.title, section.priority, section.key)}
           </div>
         ))}
       </div>
@@ -272,7 +408,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {submissions.map((submission) => (
+            {localSubmissions.map((submission) => (
               <React.Fragment key={submission.token}>
                 <TableRow>
                   <TableCell>{submission.email}</TableCell>
@@ -324,7 +460,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     <TableCell colSpan={4} className="bg-muted/10">
                       <div className="p-4 rounded overflow-auto max-h-96">
                         <div className="max-w-4xl">
-                          {renderFormattedPreview(submission.data)}
+                          {renderFormattedPreview(submission.token, submission.data)}
                         </div>
                       </div>
                     </TableCell>
@@ -338,7 +474,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
-        {submissions.map((submission) => (
+        {localSubmissions.map((submission) => (
           <div key={submission.token} className="bg-muted/10 rounded-lg border border-border/20 overflow-hidden">
             <div className="p-4 space-y-3">
               <div className="space-y-2">
@@ -400,7 +536,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
               <div className="border-t border-border/20 p-4 bg-muted/5">
                 <div className="rounded overflow-auto max-h-96">
                   <div className="max-w-full">
-                    {renderFormattedPreview(submission.data)}
+                    {renderFormattedPreview(submission.token, submission.data)}
                   </div>
                 </div>
               </div>
