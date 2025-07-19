@@ -35,7 +35,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>Full Name (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="Your full name" {...field} className="min-h-[44px]" />
               </FormControl>
@@ -49,7 +49,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.modelName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Model Name</FormLabel>
+              <FormLabel>Model Name *</FormLabel>
               <FormControl>
                 <Input placeholder="Your model/stage name" {...field} className="min-h-[44px]" />
               </FormControl>
