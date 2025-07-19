@@ -235,7 +235,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-white">Creator Onboarding</CardTitle>
             <CardDescription className="text-sm sm:text-base">
-              Complete the form to save information about <span className="bg-gradient-premium-yellow bg-clip-text text-transparent font-semibold">how you want to be marketed</span>. We promise to save this data securely.
+              Complete the form to save <span className="bg-gradient-premium-yellow bg-clip-text text-transparent font-semibold">information that you want us to publicly and consistently tell the fans</span>. We promise to save this data securely.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
