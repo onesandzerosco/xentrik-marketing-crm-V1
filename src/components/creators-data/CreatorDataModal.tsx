@@ -727,7 +727,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const personalInfoPriority = [
-    'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
+    'modelName', 'fullName', 'nickname', 'age', 'dateOfBirth', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
     ...(isChatter ? [] : ['email']), // Hide email for Chatter role
     'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
@@ -860,7 +860,7 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         <div className="p-4 sm:p-6 pb-0">
           <DialogHeader>
             <DialogTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-lg sm:text-xl">{submission.name}'s Model Profile</span>
+              <span className="text-lg sm:text-xl">{submissionData?.personalInfo?.modelName || submission.name}'s Model Profile</span>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary">Accepted</Badge>
                 {!canEdit && (

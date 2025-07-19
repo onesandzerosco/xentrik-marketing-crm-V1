@@ -118,9 +118,10 @@ const CreatorsDataTable: React.FC = () => {
     
     const query = searchQuery.toLowerCase();
     const matchName = submission.name.toLowerCase().includes(query);
+    const matchModelName = submission.data?.personalInfo?.modelName?.toLowerCase().includes(query);
     const matchEmail = !isChatter && submission.email.toLowerCase().includes(query);
     
-    return matchName || matchEmail;
+    return matchName || matchModelName || matchEmail;
   });
 
   const handleDataUpdate = (updatedSubmission: CreatorSubmission) => {
@@ -166,7 +167,7 @@ const CreatorsDataTable: React.FC = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search creators by name or email..."
+            placeholder="Search creators by model name, name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -181,7 +182,7 @@ const CreatorsDataTable: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0 text-left">
                 <h3 className="font-medium text-base text-foreground truncate mb-1">
-                  {submission.name}
+                  {submission.data?.personalInfo?.modelName || submission.name}
                 </h3>
               </div>
               <Button
@@ -203,7 +204,7 @@ const CreatorsDataTable: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-left">Name</TableHead>
+              <TableHead className="text-left">Model Name</TableHead>
               {!isChatter && <TableHead className="text-left">Email</TableHead>}
               <TableHead className="text-left">Actions</TableHead>
             </TableRow>
@@ -211,7 +212,7 @@ const CreatorsDataTable: React.FC = () => {
           <TableBody>
             {filteredCreators.map((submission) => (
               <TableRow key={submission.id}>
-                <TableCell className="font-medium text-left">{submission.name}</TableCell>
+                <TableCell className="font-medium text-left">{submission.data?.personalInfo?.modelName || submission.name}</TableCell>
                 {!isChatter && <TableCell className="text-left">{submission.email}</TableCell>}
                 <TableCell className="text-left">
                   <Button

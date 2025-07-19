@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const personalInfoSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
+  modelName: z.string().min(1, "Model name is required"),
   nickname: z.string().optional().or(z.literal('')),
   email: z.string().email("Invalid email address").min(1, "Email is required"),
   dateOfBirth: z.string().optional().or(z.literal('')),
@@ -112,6 +113,7 @@ export type ContentAndServiceFormValues = z.infer<typeof contentAndServiceSchema
 
 export const defaultPersonalInfoValues: PersonalInfoFormValues = {
   fullName: "",
+  modelName: "",
   nickname: "",
   email: "",
   dateOfBirth: "",

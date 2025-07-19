@@ -46,6 +46,20 @@ export const PersonalInfoForm = () => {
         
         <FormField
           control={control}
+          name="personalInfo.modelName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Model Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Your model/stage name" {...field} className="min-h-[44px]" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={control}
           name="personalInfo.nickname"
           render={({ field }) => (
             <FormItem>
