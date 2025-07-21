@@ -174,23 +174,6 @@ const CreatorCard = ({
                     >
                       {creator.creatorType}
                     </Badge>
-                    {variant === 'marketing-files' && creator.marketingStrategy && creator.marketingStrategy.length > 0 && (
-                      <>
-                        {creator.marketingStrategy.map((strategy) => {
-                          const emblem = getPlatformEmblemStyle(strategy);
-                          return (
-                            <Badge 
-                              key={strategy}
-                              variant="secondary" 
-                              className={`${emblem.className} text-xs md:text-sm px-3 py-1 font-bold transition-all duration-200 hover-scale`}
-                              title={`Marketing Strategy: ${strategy}`}
-                            >
-                              {emblem.text}
-                            </Badge>
-                          );
-                        })}
-                      </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -252,41 +235,62 @@ const CreatorCard = ({
                   </>
                 ) : (
                   // Files view for SharedFiles and MarketingFiles pages
-                  <div className="flex items-center gap-1.5 md:gap-3">
-                    <Link to={variant === 'marketing-files' ? `/creator-marketing-files/${creator.id}` : `/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="ghost" 
-                        size={isMobile ? "sm" : "default"}
-                        className={`${isMobile ? 'px-2 h-8 text-xs' : 'px-6 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
-                      >
-                        <Files className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                        {variant === 'marketing-files' ? 'Marketing Files' : 'Files'}
-                        {fileCount > 0 && (
-                          <span className={`ml-1 bg-primary/20 text-black px-1.5 py-0.5 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                            {fileCount}
-                          </span>
-                        )}
-                        
-                        {showUploadingIndicator && (
-                          <span className={`ml-1 flex items-center ${isMobile ? 'text-xs' : 'text-xs'}`}>
-                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                            {uploadingCount}
-                          </span>
-                        )}
-                      </Button>
-                    </Link>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-1.5 md:gap-3">
+                      <Link to={variant === 'marketing-files' ? `/creator-marketing-files/${creator.id}` : `/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          variant="ghost" 
+                          size={isMobile ? "sm" : "default"}
+                          className={`${isMobile ? 'px-2 h-8 text-xs' : 'px-6 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
+                        >
+                          <Files className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
+                          {variant === 'marketing-files' ? 'Marketing Files' : 'Files'}
+                          {fileCount > 0 && (
+                            <span className={`ml-1 bg-primary/20 text-black px-1.5 py-0.5 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                              {fileCount}
+                            </span>
+                          )}
+                          
+                          {showUploadingIndicator && (
+                            <span className={`ml-1 flex items-center ${isMobile ? 'text-xs' : 'text-xs'}`}>
+                              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                              {uploadingCount}
+                            </span>
+                          )}
+                        </Button>
+                      </Link>
+                      
+                      {/* Show Share button only for files variant (not marketing-files) */}
+                      {variant !== 'marketing-files' && canUpload && (
+                        <Button 
+                          variant="secondary" 
+                          size={isMobile ? "sm" : "default"}
+                          className={`${isMobile ? 'h-8 px-2' : 'h-10 px-4'}`}
+                          onClick={handleShareButtonClick}
+                        >
+                          <Share2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                          {!isMobile && <span className="ml-2">Share</span>}
+                        </Button>
+                      )}
+                    </div>
                     
-                    {/* Show Share button for users with appropriate permissions */}
-                    {canUpload && (
-                      <Button 
-                        variant="secondary" 
-                        size={isMobile ? "sm" : "default"}
-                        className={`${isMobile ? 'h-8 px-2' : 'h-10 px-4'}`}
-                        onClick={handleShareButtonClick}
-                      >
-                        <Share2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                        {!isMobile && <span className="ml-2">Share</span>}
-                      </Button>
+                    {/* Show marketing strategy badges under Marketing Files button */}
+                    {variant === 'marketing-files' && creator.marketingStrategy && creator.marketingStrategy.length > 0 && (
+                      <div className="flex gap-1 md:gap-2 flex-wrap justify-end">
+                        {creator.marketingStrategy.map((strategy) => {
+                          const emblem = getPlatformEmblemStyle(strategy);
+                          return (
+                            <Badge 
+                              key={strategy}
+                              variant="secondary" 
+                              className={`${emblem.className} text-xs px-2 py-0.5 font-bold transition-all duration-200 hover-scale`}
+                              title={`Marketing Strategy: ${strategy}`}
+                            >
+                              {emblem.text}
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 )}
