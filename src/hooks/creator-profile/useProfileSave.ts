@@ -67,8 +67,8 @@ export function useProfileSave(creator: Creator | null | undefined) {
     });
     
     toast({
-      title: "Profile Updated",
-      description: "Creator profile has been successfully updated"
+      title: "Success!",
+      description: "You've successfully updated the Creator's profile"
     });
   };
 
