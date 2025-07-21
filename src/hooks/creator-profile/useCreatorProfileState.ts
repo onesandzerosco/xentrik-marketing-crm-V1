@@ -30,6 +30,13 @@ export function useCreatorProfileState(creator?: Creator | null): {
   const [notes, setNotes] = useState(creator?.notes || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
   const [assignedMembers, setAssignedMembers] = useState<Employee[]>([]);
+  const [marketingStrategy, setMarketingStrategy] = useState({
+    reddit: false,
+    twitter: false,
+    tiktok: false,
+    instagram: false,
+    chaturbate: false,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Extract custom social links
@@ -72,6 +79,7 @@ export function useCreatorProfileState(creator?: Creator | null): {
       notes,
       needsReview,
       assignedMembers,
+      marketingStrategy,
       errors
     },
     actions: {
@@ -92,7 +100,8 @@ export function useCreatorProfileState(creator?: Creator | null): {
       setCustomSocialLinks,
       setNotes,
       setNeedsReview,
-      setAssignedMembers
+      setAssignedMembers,
+      setMarketingStrategy
     }
   };
 }

@@ -40,6 +40,13 @@ export interface FormState {
   youtube: string;
   customSocialLinks: CustomSocialLink[];
   notes: string;
+  marketingStrategy: {
+    reddit: boolean;
+    twitter: boolean;
+    tiktok: boolean;
+    instagram: boolean;
+    chaturbate: boolean;
+  };
   errors: ValidationErrors;
 }
 
@@ -59,4 +66,11 @@ export interface FormActions {
   setYoutube: (username: string) => void;
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   setNotes: (notes: string) => void;
+  setMarketingStrategy: (strategy: {
+    reddit: boolean;
+    twitter: boolean;
+    tiktok: boolean;
+    instagram: boolean;
+    chaturbate: boolean;
+  }) => void;
 }

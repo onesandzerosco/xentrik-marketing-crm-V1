@@ -76,6 +76,8 @@ const CreatorOnboarding = () => {
           setCustomSocialLinks={formActions.setCustomSocialLinks}
           notes={formState.notes}
           setNotes={formActions.setNotes}
+          marketingStrategy={formState.marketingStrategy}
+          setMarketingStrategy={formActions.setMarketingStrategy}
           errors={formState.errors}
         />
       </OnboardingFormContainer>

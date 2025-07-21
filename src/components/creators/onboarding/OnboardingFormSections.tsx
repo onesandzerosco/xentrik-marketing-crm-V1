@@ -2,6 +2,7 @@
 import React from "react";
 import ProfilePicture from "@/components/profile/ProfilePicture";
 import BasicInfoSection from "@/components/onboarding/BasicInfoSection";
+import MarketingStrategySection from "@/components/onboarding/MarketingStrategySection";
 import { CustomSocialLink } from "@/components/onboarding/social/CustomSocialLinkItem";
 import { Gender, Team, CreatorType } from "@/types";
 
@@ -53,6 +54,20 @@ interface OnboardingFormSectionsProps {
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   notes: string;
   setNotes: (notes: string) => void;
+  marketingStrategy: {
+    reddit: boolean;
+    twitter: boolean;
+    tiktok: boolean;
+    instagram: boolean;
+    chaturbate: boolean;
+  };
+  setMarketingStrategy: (strategy: {
+    reddit: boolean;
+    twitter: boolean;
+    tiktok: boolean;
+    instagram: boolean;
+    chaturbate: boolean;
+  }) => void;
   errors: ValidationErrors;
 }
 
@@ -88,6 +103,8 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
     setCustomSocialLinks,
     notes,
     setNotes,
+    marketingStrategy,
+    setMarketingStrategy,
     errors
   } = props;
 
@@ -118,6 +135,14 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
             setProfileImage={setProfileImage}
           />
         </div>
+      </div>
+
+      {/* Marketing Strategy */}
+      <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+        <MarketingStrategySection
+          marketingStrategy={marketingStrategy}
+          setMarketingStrategy={setMarketingStrategy}
+        />
       </div>
     </div>
   );

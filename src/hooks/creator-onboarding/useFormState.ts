@@ -23,6 +23,13 @@ export function useFormState() {
   
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
+  const [marketingStrategy, setMarketingStrategy] = useState({
+    reddit: false,
+    twitter: false,
+    tiktok: false,
+    instagram: false,
+    chaturbate: false,
+  });
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   return {
@@ -42,6 +49,7 @@ export function useFormState() {
       youtube,
       customSocialLinks,
       notes,
+      marketingStrategy,
       errors
     } as FormState,
     formActions: {
@@ -59,7 +67,8 @@ export function useFormState() {
       setChaturbate,
       setYoutube,
       setCustomSocialLinks,
-      setNotes
+      setNotes,
+      setMarketingStrategy
     } as FormActions,
     setErrors
   };
