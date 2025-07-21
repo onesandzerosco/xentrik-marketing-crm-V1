@@ -2,6 +2,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from '@/components/ui/sidebar';
 import { 
   LayoutDashboard, 
   Users, 
@@ -30,152 +38,202 @@ interface NavItem {
   hidden?: boolean; // Hide this item completely
 }
 
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
 interface SidebarNavProps {
   isAdmin: boolean;
 }
 
-const navItems: NavItem[] = [
+const navGroups: NavGroup[] = [
   {
-    path: '/dashboard',
-    label: 'Dashboard',
-    icon: <LayoutDashboard className="h-5 w-5" />,
-    allowCreator: true, // Explicitly allow Creators to see Dashboard
-    hideForChatter: true, // Hide for Chatter role
+    title: "Administrative Team",
+    items: [
+      {
+        path: '/dashboard',
+        label: 'Dashboard',
+        icon: <LayoutDashboard className="h-5 w-5" />,
+        allowCreator: true,
+        hideForChatter: true,
+      },
+      {
+        path: '/creators',
+        label: 'Creators',
+        icon: <Users className="h-5 w-5" />,
+        hideForCreator: true,
+        hideForChatter: true,
+      },
+      {
+        path: '/shared-files',
+        label: 'Shared Files',
+        icon: <FileUp className="h-5 w-5" />,
+        allowCreator: true,
+        hideForChatter: true,
+      },
+      {
+        path: '/team',
+        label: 'Team',
+        icon: <UserCog className="h-5 w-5" />,
+        hideForCreator: true,
+        hideForChatter: true,
+      },
+      {
+        path: '/secure-logins',
+        label: 'Secure Logins',
+        icon: <Lock className="h-5 w-5" />,
+        allowCreator: true,
+        hideForChatter: true,
+      },
+      {
+        path: '/onboard-queue',
+        label: 'Onboard Queue',
+        icon: <ListCheck className="h-5 w-5" />,
+        adminOnly: true,
+      },
+      {
+        path: '/access-control',
+        label: 'Access Control',
+        icon: <Shield className="h-5 w-5" />,
+        adminOnly: true,
+      },
+      {
+        path: '/users',
+        label: 'User Management',
+        icon: <Users className="h-5 w-5" />,
+        adminOnly: true,
+      },
+    ]
   },
   {
-    path: '/creators',
-    label: 'Creators',
-    icon: <Users className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
-    hideForChatter: true, // Hide for Chatter role
+    title: "Chatting Team",
+    items: [
+      {
+        path: '/creators-data',
+        label: 'Model Profile',
+        icon: <Database className="h-5 w-5" />,
+        roles: ['Admin', 'VA', 'Chatter'],
+      },
+      {
+        path: '/customs-tracker',
+        label: 'Customs Tracker',
+        icon: <Kanban className="h-5 w-5" />,
+        hideForCreator: true,
+      },
+      {
+        path: '/voice-generation',
+        label: 'Voice Generator',
+        icon: <Mic className="h-5 w-5" />,
+        hideForCreator: true,
+      },
+    ]
   },
   {
-    path: '/creators-data',
-    label: 'Model Profile',
-    icon: <Database className="h-5 w-5" />,
-    roles: ['Admin', 'VA', 'Chatter'], // Only these roles can see this
-  },
-  {
-    path: '/customs-tracker',
-    label: 'Customs Tracker',
-    icon: <Kanban className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
-  },
-  {
-    path: '/shared-files',
-    label: 'Shared Files',
-    icon: <FileUp className="h-5 w-5" />,
-    allowCreator: true, // Explicitly allow Creators to see Shared Files
-    hideForChatter: true, // Hide for Chatter role
-  },
-  {
-    path: '/marketing-files',
-    label: 'Marketing Files',
-    icon: <FileUp className="h-5 w-5" />,
-    allowCreator: true, // Explicitly allow Creators to see Marketing Files
-    hideForChatter: true, // Hide for Chatter role
-  },
-  {
-    path: '/team',
-    label: 'Team',
-    icon: <UserCog className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
-    hideForChatter: true, // Hide for Chatter role
-  },
-  {
-    path: '/secure-logins',
-    label: 'Secure Logins',
-    icon: <Lock className="h-5 w-5" />,
-    allowCreator: true, // Allow Creator role to access their own secure logins
-    hideForChatter: true, // Hide for Chatter role
-  },
+    title: "Marketing Team",
+    items: [
+      {
+        path: '/marketing-files',
+        label: 'Marketing Files',
+        icon: <FileUp className="h-5 w-5" />,
+        allowCreator: true,
+        hideForChatter: true,
+      },
+    ]
+  }
+];
+
+// Hidden items not shown in any group
+const hiddenItems: NavItem[] = [
   {
     path: '/messages',
     label: 'Messages',
     icon: <MessageSquare className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
-    hideForChatter: true, // Hide for Chatter role
-  },
-  {
-    path: '/voice-generation',
-    label: 'Voice Generator',
-    icon: <Mic className="h-5 w-5" />,
-    hideForCreator: true, // Hide for Creator role
+    hideForCreator: true,
+    hideForChatter: true,
+    hidden: true,
   },
   {
     path: '/onboard',
     label: 'Creator Onboarding',
     icon: <UserPlus className="h-5 w-5" />,
-    hidden: true, // Hide from all users - only accessible via direct links
-  },
-  {
-    path: '/onboard-queue',
-    label: 'Onboard Queue',
-    icon: <ListCheck className="h-5 w-5" />,
-    adminOnly: true,
-  },
-  {
-    path: '/access-control',
-    label: 'Access Control',
-    icon: <Shield className="h-5 w-5" />,
-    adminOnly: true,
-  },
-  {
-    path: '/users',
-    label: 'User Management',
-    icon: <Users className="h-5 w-5" />,
-    adminOnly: true,
+    hidden: true,
   },
 ];
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   const { userRole, userRoles, isCreator } = useAuth();
   
+  const shouldShowItem = (item: NavItem): boolean => {
+    // Skip items that are completely hidden
+    if (item.hidden) return false;
+    
+    // Skip adminOnly items if user is not admin
+    if (item.adminOnly && !isAdmin) return false;
+    
+    // For Creator role users, only show items that explicitly allow Creator
+    if (isCreator && userRole === 'Creator') {
+      if (!item.allowCreator) return false;
+    }
+    
+    // Skip items that should be hidden for creators if the user is a creator
+    if (item.hideForCreator && isCreator) return false;
+    
+    // Skip items that should be hidden for chatters if the user is a chatter
+    if (item.hideForChatter && (userRole === 'Chatter' || userRoles?.includes('Chatter'))) return false;
+    
+    // Check specific roles if defined
+    if (item.roles) {
+      const hasRequiredRole = item.roles.some(role => 
+        userRole === role || (userRoles && userRoles.includes(role))
+      );
+      if (!hasRequiredRole) return false;
+    }
+    
+    return true;
+  };
+
+  const renderNavItem = (item: NavItem) => (
+    <SidebarMenuItem key={item.path}>
+      <SidebarMenuButton asChild>
+        <NavLink
+          to={item.path}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-300",
+              {
+                "bg-gradient-premium-yellow text-black": isActive,
+                "hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5": !isActive
+              }
+            )
+          }
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+
   return (
-    <nav className="grid gap-1 pt-2 z-30 relative">
-      {navItems.map((item) => {
-        // Skip items that are completely hidden
-        if (item.hidden) return null;
+    <nav className="grid gap-4 pt-2 z-30 relative">
+      {navGroups.map((group) => {
+        const visibleItems = group.items.filter(shouldShowItem);
         
-        // Skip adminOnly items if user is not admin
-        if (item.adminOnly && !isAdmin) return null;
-        
-        // For Creator role users, only show items that explicitly allow Creator
-        if (isCreator && userRole === 'Creator') {
-          if (!item.allowCreator) return null;
-        }
-        
-        // Skip items that should be hidden for creators if the user is a creator
-        if (item.hideForCreator && isCreator) return null;
-        
-        // Skip items that should be hidden for chatters if the user is a chatter
-        if (item.hideForChatter && (userRole === 'Chatter' || userRoles?.includes('Chatter'))) return null;
-        
-        // Check specific roles if defined
-        if (item.roles) {
-          const hasRequiredRole = item.roles.some(role => 
-            userRole === role || (userRoles && userRoles.includes(role))
-          );
-          if (!hasRequiredRole) return null;
-        }
+        // Don't render the group if no items are visible
+        if (visibleItems.length === 0) return null;
         
         return (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-300",
-                {
-                  "bg-gradient-premium-yellow text-black": isActive,
-                  "hover:bg-gradient-premium-yellow hover:text-black hover:-translate-y-0.5": !isActive
-                }
-              )
-            }
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </NavLink>
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+              {group.title}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleItems.map(renderNavItem)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         );
       })}
     </nav>
