@@ -22,7 +22,7 @@ export interface CreatorProfileState {
   notes: string;
   needsReview: boolean;
   assignedMembers: Employee[];
-  marketingStrategy: string; // Change to text field instead of platform booleans
+  marketingStrategy: string[]; // Change to array
   errors: Record<string, string>;
 }
 
@@ -45,5 +45,5 @@ export interface CreatorProfileActions {
   setNotes: (notes: string) => void;
   setNeedsReview: (needsReview: boolean) => void;
   setAssignedMembers: (members: Employee[]) => void;
-  setMarketingStrategy: (strategy: string) => void; // Change to text field
+  setMarketingStrategy: (strategy: string[]) => void; // Change to array
 }

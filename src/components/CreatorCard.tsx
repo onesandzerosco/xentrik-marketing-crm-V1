@@ -137,14 +137,19 @@ const CreatorCard = ({
                     >
                       {creator.creatorType}
                     </Badge>
-                    {variant === 'marketing-files' && creator.marketingStrategy && (
-                      <Badge 
-                        variant="secondary" 
-                        className="bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60 text-xs md:text-sm px-3 py-1"
-                        title="Marketing Strategy"
-                      >
-                        📈 {creator.marketingStrategy}
-                      </Badge>
+                    {variant === 'marketing-files' && creator.marketingStrategy && creator.marketingStrategy.length > 0 && (
+                      <>
+                        {creator.marketingStrategy.map((strategy) => (
+                          <Badge 
+                            key={strategy}
+                            variant="secondary" 
+                            className="bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60 text-xs md:text-sm px-3 py-1"
+                            title={`Marketing Strategy: ${strategy}`}
+                          >
+                            📈 {strategy}
+                          </Badge>
+                        ))}
+                      </>
                     )}
                   </div>
                 </div>

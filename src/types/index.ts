@@ -8,7 +8,7 @@ export interface Creator {
   gender: Gender;
   team: Team;
   creatorType: CreatorType;
-  marketingStrategy?: string; // Add marketing strategy field
+  marketingStrategy?: string[]; // Array of marketing strategies
   socialLinks: {
     instagram: string;
     tiktok: string;

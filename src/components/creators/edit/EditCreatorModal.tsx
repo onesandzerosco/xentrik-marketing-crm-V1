@@ -43,7 +43,7 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
     gender: creator.gender,
     team: creator.team,
     creatorType: creator.creatorType,
-    marketingStrategy: creator.marketingStrategy || '',
+    marketingStrategy: creator.marketingStrategy || [],
     telegramUsername: creator.telegramUsername || '',
     whatsappNumber: creator.whatsappNumber || '',
     notes: creator.notes || ''
@@ -58,7 +58,7 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
       gender: creator.gender,
       team: creator.team,
       creatorType: creator.creatorType,
-      marketingStrategy: creator.marketingStrategy || '',
+      marketingStrategy: creator.marketingStrategy || [],
       telegramUsername: creator.telegramUsername || '',
       whatsappNumber: creator.whatsappNumber || '',
       notes: creator.notes || ''

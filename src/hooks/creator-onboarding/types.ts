@@ -40,7 +40,7 @@ export interface FormState {
   youtube: string;
   customSocialLinks: CustomSocialLink[];
   notes: string;
-  marketingStrategy: string;
+  marketingStrategy: string[];
   errors: ValidationErrors;
 }
 
@@ -60,5 +60,5 @@ export interface FormActions {
   setYoutube: (username: string) => void;
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   setNotes: (notes: string) => void;
-  setMarketingStrategy: (strategy: string) => void;
+  setMarketingStrategy: (strategy: string[]) => void;
 }

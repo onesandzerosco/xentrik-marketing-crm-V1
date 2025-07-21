@@ -54,8 +54,8 @@ interface OnboardingFormSectionsProps {
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   notes: string;
   setNotes: (notes: string) => void;
-  marketingStrategy: string;
-  setMarketingStrategy: (strategy: string) => void;
+  marketingStrategy: string[];
+  setMarketingStrategy: (strategy: string[]) => void;
   errors: ValidationErrors;
 }
 

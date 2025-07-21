@@ -30,7 +30,7 @@ export function useCreatorProfileState(creator?: Creator | null): {
   const [notes, setNotes] = useState(creator?.notes || "");
   const [needsReview, setNeedsReview] = useState(creator?.needsReview || false);
   const [assignedMembers, setAssignedMembers] = useState<Employee[]>([]);
-  const [marketingStrategy, setMarketingStrategy] = useState(creator?.marketingStrategy || "");
+  const [marketingStrategy, setMarketingStrategy] = useState<string[]>(creator?.marketingStrategy || []);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Extract custom social links

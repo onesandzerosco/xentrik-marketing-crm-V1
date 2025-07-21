@@ -19,7 +19,7 @@ export function useFormHandlers() {
   const [youtube, setYoutube] = useState("");
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
-  const [marketingStrategy, setMarketingStrategy] = useState("");
+  const [marketingStrategy, setMarketingStrategy] = useState<string[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   return {

@@ -79,6 +79,7 @@ export const useAddCreator = (
           gender: creator.gender,
           team: creator.team,
           creator_type: creator.creatorType,
+          marketing_strategy: creator.marketingStrategy || [],
           needs_review: creator.needsReview !== undefined ? creator.needsReview : false,
           active: creator.active !== undefined ? creator.active : true, // Ensure active is set
           telegram_username: creator.telegramUsername || null,
@@ -179,6 +180,7 @@ export const useAddCreator = (
         gender: creator.gender,
         team: creator.team,
         creatorType: creator.creatorType,
+        marketingStrategy: creator.marketingStrategy || [],
         socialLinks: {
           instagram: creator.socialLinks?.instagram || '',
           tiktok: creator.socialLinks?.tiktok || '',

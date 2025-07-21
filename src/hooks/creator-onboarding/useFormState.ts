@@ -23,7 +23,7 @@ export function useFormState() {
   
   const [customSocialLinks, setCustomSocialLinks] = useState<CustomSocialLink[]>([]);
   const [notes, setNotes] = useState("");
-  const [marketingStrategy, setMarketingStrategy] = useState("");
+  const [marketingStrategy, setMarketingStrategy] = useState<string[]>([]);
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   return {
@@ -45,7 +45,7 @@ export function useFormState() {
       notes,
       marketingStrategy,
       errors
-    } as FormState,
+    },
     formActions: {
       setName,
       setProfileImage,
@@ -63,7 +63,7 @@ export function useFormState() {
       setCustomSocialLinks,
       setNotes,
       setMarketingStrategy
-    } as FormActions,
+    },
     setErrors
   };
 }
