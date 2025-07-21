@@ -23,18 +23,20 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-medium">Additional Roles</h3>
-      <p className="text-sm text-muted-foreground">
-        Select all roles that apply to this user
-      </p>
-      <p className="text-xs text-amber-500">
-        Note: Admin is an exclusive role and cannot be combined with other roles
-      </p>
+    <div className="space-y-3">
+      <div className="text-center">
+        <h3 className="text-lg font-medium">Additional Roles</h3>
+        <p className="text-sm text-muted-foreground">
+          Select all roles that apply to this user
+        </p>
+        <p className="text-xs text-amber-500">
+          Note: Admin is an exclusive role and cannot be combined with other roles
+        </p>
+      </div>
       
-      <CheckboxGroup className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-xs mx-auto">
         {ADDITIONAL_ROLES.map(role => (
-          <div key={role} className="flex items-center space-x-2 justify-start">
+          <div key={role} className="flex items-center space-x-1.5">
             <Checkbox 
               id={`additional-role-${role}`}
               checked={additionalRoles.includes(role)}
@@ -44,13 +46,13 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
             />
             <Label 
               htmlFor={`additional-role-${role}`}
-              className={`cursor-pointer text-sm ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
+              className={`cursor-pointer text-sm whitespace-nowrap ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
             >
               {role}
             </Label>
           </div>
         ))}
-      </CheckboxGroup>
+      </div>
     </div>
   );
 };
