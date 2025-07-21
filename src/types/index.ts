@@ -2,6 +2,7 @@
 export interface Creator {
   id: string;
   name: string;
+  modelName?: string; // Add model name field
   email?: string; // Make email optional
   profileImage: string;
   gender: Gender;

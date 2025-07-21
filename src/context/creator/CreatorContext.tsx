@@ -82,6 +82,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return {
           id: creator.id,
           name: creator.name,
+          modelName: creator.model_name || creator.name, // Use model_name if available, fallback to name
           email: creator.email || '',
           profileImage: creator.profile_image || '',
           gender: genderValue as "Male" | "Female" | "Trans",

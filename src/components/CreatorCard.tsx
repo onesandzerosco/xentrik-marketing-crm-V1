@@ -50,7 +50,7 @@ const CreatorCard = ({
     
     toast({
       title: "Upload link copied!",
-      description: `Share this link with ${creator.name} to let them upload files directly.`,
+      description: `Share this link with ${creator.modelName || creator.name} to let them upload files directly.`,
     });
   };
 
@@ -87,13 +87,13 @@ const CreatorCard = ({
             {creator.profileImage ? (
               <img 
                 src={creator.profileImage} 
-                alt={creator.name} 
+                alt={creator.modelName || creator.name} 
                 className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-primary/20 group-hover:border-primary/40 transition-all"
               />
             ) : (
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-premium-highlight/10 flex items-center justify-center">
                 <span className="text-lg md:text-xl font-semibold text-primary/60 group-hover:text-primary/80 transition-colors">
-                  {creator.name[0].toUpperCase()}
+                  {(creator.modelName || creator.name)[0].toUpperCase()}
                 </span>
               </div>
             )}
@@ -104,7 +104,7 @@ const CreatorCard = ({
               <div className="flex flex-col min-w-0">
                 <div className="text-left">
                   <h3 className="text-xl md:text-2xl font-semibold group-hover:text-primary transition-colors truncate mb-1">
-                    {creator.name}
+                    {creator.modelName || creator.name}
                   </h3>
                   {creator.email && (
                     <div className="text-sm md:text-base text-muted-foreground mb-3">
@@ -249,7 +249,7 @@ const CreatorCard = ({
         open={showLoginModal} 
         onOpenChange={setShowLoginModal} 
         creatorId={creator.id} 
-        creatorName={creator.name}
+        creatorName={creator.modelName || creator.name}
       />
     </>
   );
