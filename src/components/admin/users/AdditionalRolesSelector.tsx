@@ -32,9 +32,9 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
         Note: Admin is an exclusive role and cannot be combined with other roles
       </p>
       
-      <CheckboxGroup className="grid grid-cols-2 gap-2 pt-2">
+      <CheckboxGroup className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-w-md mx-auto">
         {ADDITIONAL_ROLES.map(role => (
-          <div key={role} className="flex items-center space-x-2">
+          <div key={role} className="flex items-center space-x-2 justify-start">
             <Checkbox 
               id={`additional-role-${role}`}
               checked={additionalRoles.includes(role)}
@@ -44,7 +44,7 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
             />
             <Label 
               htmlFor={`additional-role-${role}`}
-              className={`cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
+              className={`cursor-pointer text-sm ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
             >
               {role}
             </Label>
