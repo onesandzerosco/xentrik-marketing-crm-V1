@@ -178,9 +178,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation';
     }
     
-    // VA employees should see Chatting Team items + Marketing Files + Shared Files
+    // VA employees should see Chatting Team items + Marketing Files + Shared Files (but not Customs Tracker)
     if (userRole === 'VA' || userRoles?.includes('VA')) {
-      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || 
+      return item.path === '/creators-data' || item.path === '/voice-generation' || 
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
     
@@ -282,17 +282,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         // Don't render the group if no items are visible
         if (visibleItems.length === 0) return null;
         
-        // Special case: Marketing Team sees Model Profile without "Chatting Team" category title
-        const isMarketingTeamViewingModelProfile = (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) && 
-                                                   group.title === 'Chatting Team';
-        
         return (
           <SidebarGroup key={group.title}>
-            {!isMarketingTeamViewingModelProfile && (
-              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
-                {group.title}
-              </SidebarGroupLabel>
-            )}
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+              {group.title}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleItems.map(renderNavItem)}
