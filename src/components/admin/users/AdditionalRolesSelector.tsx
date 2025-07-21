@@ -35,8 +35,8 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
       </div>
       
       <div className="flex justify-center">
-        <div className="w-80 border border-border rounded-lg p-4">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="w-96 p-4">
+          <div className="grid grid-cols-2 gap-4">
             {ADDITIONAL_ROLES.map(role => (
               <div key={role} className="flex items-center space-x-2">
                 <Checkbox 
