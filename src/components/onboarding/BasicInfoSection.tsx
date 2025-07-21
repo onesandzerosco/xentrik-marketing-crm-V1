@@ -37,23 +37,6 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
       <h2 className="text-xl font-bold">Basic Information</h2>
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name" className="flex items-center">
-            Name <span className="text-red-500 ml-1">*</span>
-          </Label>
-          <Input 
-            id="name" 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
-            className={errors.name ? "border-red-500" : ""} 
-            placeholder="Enter creator name"
-            required
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm">{errors.name}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
           <Label htmlFor="gender" className="flex items-center">
             Gender <span className="text-red-500 ml-1">*</span>
           </Label>

@@ -2,9 +2,6 @@
 import React from "react";
 import ProfilePicture from "@/components/profile/ProfilePicture";
 import BasicInfoSection from "@/components/onboarding/BasicInfoSection";
-import ContactInfoSection from "@/components/onboarding/ContactInfoSection";
-import SocialLinksSection from "@/components/onboarding/SocialLinksSection";
-import NotesSection from "@/components/onboarding/NotesSection";
 import { CustomSocialLink } from "@/components/onboarding/social/CustomSocialLinkItem";
 import { Gender, Team, CreatorType } from "@/types";
 
@@ -121,46 +118,6 @@ const OnboardingFormSections: React.FC<OnboardingFormSectionsProps> = (props) =>
             setProfileImage={setProfileImage}
           />
         </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-        <ContactInfoSection
-          telegramUsername={telegramUsername}
-          setTelegramUsername={setTelegramUsername}
-          whatsappNumber={whatsappNumber}
-          setWhatsappNumber={setWhatsappNumber}
-          errors={errors}
-        />
-      </div>
-      
-      {/* Social Media Links */}
-      <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-        <SocialLinksSection
-          instagram={instagram}
-          setInstagram={setInstagram}
-          tiktok={tiktok}
-          setTiktok={setTiktok}
-          twitter={twitter}
-          setTwitter={setTwitter}
-          reddit={reddit}
-          setReddit={setReddit}
-          chaturbate={chaturbate}
-          setChaturbate={setChaturbate}
-          youtube={youtube}
-          setYoutube={setYoutube}
-          customSocialLinks={customSocialLinks}
-          setCustomSocialLinks={setCustomSocialLinks}
-          errors={errors}
-        />
-      </div>
-      
-      {/* Notes Section */}
-      <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-        <NotesSection 
-          notes={notes}
-          setNotes={setNotes}
-        />
       </div>
     </div>
   );

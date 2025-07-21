@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCreatorProfile } from "@/hooks/useCreatorProfile";
 import CreatorHeader from "@/components/creators/shared/CreatorHeader";
-import ProfileActions from "@/components/profile/ProfileActions";
 import OnboardingFormSections from "@/components/creators/onboarding/OnboardingFormSections";
 import CreatorNotFound from "@/components/creators/profile/CreatorNotFound";
 import { useAuth } from "@/context/AuthContext";
@@ -74,18 +73,6 @@ const CreatorProfile = () => {
       />
 
       <div className="space-y-8 max-w-7xl mx-auto">
-        {/* Actions Section - As the first row */}
-        <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-          <ProfileActions
-            needsReview={formState.needsReview}
-            setNeedsReview={formActions.setNeedsReview}
-            creatorId={creator.id}
-            creatorName={creator.name}
-            assignedMembers={formState.assignedMembers}
-            onAssignMembers={handleAssignTeamMembers}
-          />
-        </div>
-
         {/* Form Sections - Matching Onboarding Layout */}
         <OnboardingFormSections
           name={formState.name}
