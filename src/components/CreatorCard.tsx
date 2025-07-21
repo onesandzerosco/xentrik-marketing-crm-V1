@@ -86,6 +86,43 @@ const CreatorCard = ({
     }
   };
 
+  // Get platform-specific emblem styling
+  const getPlatformEmblemStyle = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'twitter':
+      case 'x':
+        return {
+          className: "bg-black text-white hover:bg-gray-800",
+          text: "X"
+        };
+      case 'instagram':
+        return {
+          className: "bg-pink-500 text-white hover:bg-pink-600",
+          text: "IG"
+        };
+      case 'chaturbate':
+        return {
+          className: "bg-orange-500 text-white hover:bg-orange-600",
+          text: "CB"
+        };
+      case 'tiktok':
+        return {
+          className: "bg-purple-500 text-white hover:bg-purple-600",
+          text: "TT"
+        };
+      case 'reddit':
+        return {
+          className: "bg-red-500 text-white hover:bg-red-600",
+          text: "R"
+        };
+      default:
+        return {
+          className: "bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60",
+          text: platform.charAt(0).toUpperCase()
+        };
+    }
+  };
+
   return (
     <>
       <Card className="p-4 md:p-6 hover:bg-accent/5 transition-colors group cursor-pointer">
@@ -139,16 +176,19 @@ const CreatorCard = ({
                     </Badge>
                     {variant === 'marketing-files' && creator.marketingStrategy && creator.marketingStrategy.length > 0 && (
                       <>
-                        {creator.marketingStrategy.map((strategy) => (
-                          <Badge 
-                            key={strategy}
-                            variant="secondary" 
-                            className="bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60 text-xs md:text-sm px-3 py-1"
-                            title={`Marketing Strategy: ${strategy}`}
-                          >
-                            📈 {strategy}
-                          </Badge>
-                        ))}
+                        {creator.marketingStrategy.map((strategy) => {
+                          const emblem = getPlatformEmblemStyle(strategy);
+                          return (
+                            <Badge 
+                              key={strategy}
+                              variant="secondary" 
+                              className={`${emblem.className} text-xs md:text-sm px-3 py-1 font-bold transition-all duration-200 hover-scale`}
+                              title={`Marketing Strategy: ${strategy}`}
+                            >
+                              {emblem.text}
+                            </Badge>
+                          );
+                        })}
                       </>
                     )}
                   </div>
