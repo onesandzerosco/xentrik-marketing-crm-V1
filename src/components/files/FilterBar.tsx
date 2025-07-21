@@ -59,7 +59,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         ))}
       </div>
       
-      {availableTags && availableTags.length > 0 && (
+      {availableTags && (
         <div>
           <TagSelector
             tags={availableTags}
@@ -196,7 +196,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Tags Section */}
-        {availableTags && availableTags.length > 0 && (
+        {availableTags && (
           <div className="flex-shrink-0">
             <TagSelector
               tags={availableTags}
