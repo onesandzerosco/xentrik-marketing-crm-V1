@@ -118,7 +118,7 @@ const CreatorCard = ({
                       {creator.email}
                     </div>
                   )}
-                  <div className="flex gap-2 md:gap-3 mt-2 flex-wrap">
+                   <div className="flex gap-2 md:gap-3 mt-2 flex-wrap">
                     <Badge 
                       variant="secondary" 
                       className={`${getGenderBadgeClass(creator.gender)} text-xs md:text-sm px-3 py-1`}
@@ -137,6 +137,15 @@ const CreatorCard = ({
                     >
                       {creator.creatorType}
                     </Badge>
+                    {variant === 'marketing-files' && creator.marketingStrategy && (
+                      <Badge 
+                        variant="secondary" 
+                        className="bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60 text-xs md:text-sm px-3 py-1"
+                        title="Marketing Strategy"
+                      >
+                        📈 {creator.marketingStrategy}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>

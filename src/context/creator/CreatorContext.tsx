@@ -88,6 +88,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
           gender: genderValue as "Male" | "Female" | "Trans",
           team: creator.team as "A Team" | "B Team" | "C Team",
           creatorType: creator.creator_type as "Real" | "AI",
+          marketingStrategy: creator.marketing_strategy || '',
           socialLinks: {
             instagram: formattedSocialLinks.instagram || '',
             tiktok: formattedSocialLinks.tiktok || '',

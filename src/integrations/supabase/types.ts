@@ -182,6 +182,7 @@ export type Database = {
           email: string | null
           gender: Database["public"]["Enums"]["gender"]
           id: string
+          marketing_strategy: string | null
           model_name: string | null
           model_profile: Json | null
           name: string
@@ -201,6 +202,7 @@ export type Database = {
           email?: string | null
           gender: Database["public"]["Enums"]["gender"]
           id: string
+          marketing_strategy?: string | null
           model_name?: string | null
           model_profile?: Json | null
           name: string
@@ -220,6 +222,7 @@ export type Database = {
           email?: string | null
           gender?: Database["public"]["Enums"]["gender"]
           id?: string
+          marketing_strategy?: string | null
           model_name?: string | null
           model_profile?: Json | null
           name?: string

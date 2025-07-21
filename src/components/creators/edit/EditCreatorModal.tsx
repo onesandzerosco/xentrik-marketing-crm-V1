@@ -43,6 +43,7 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
     gender: creator.gender,
     team: creator.team,
     creatorType: creator.creatorType,
+    marketingStrategy: creator.marketingStrategy || '',
     telegramUsername: creator.telegramUsername || '',
     whatsappNumber: creator.whatsappNumber || '',
     notes: creator.notes || ''
@@ -57,6 +58,7 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
       gender: creator.gender,
       team: creator.team,
       creatorType: creator.creatorType,
+      marketingStrategy: creator.marketingStrategy || '',
       telegramUsername: creator.telegramUsername || '',
       whatsappNumber: creator.whatsappNumber || '',
       notes: creator.notes || ''
@@ -81,6 +83,7 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
         gender: formData.gender as "Male" | "Female" | "Trans",
         team: formData.team as "A Team" | "B Team" | "C Team",
         creatorType: formData.creatorType as "Real" | "AI",
+        marketingStrategy: formData.marketingStrategy,
         telegramUsername: formData.telegramUsername,
         whatsappNumber: formData.whatsappNumber,
         notes: formData.notes
@@ -220,6 +223,18 @@ const EditCreatorModal: React.FC<EditCreatorModalProps> = ({
                 placeholder="+1234567890"
               />
             </div>
+          </div>
+
+          {/* Marketing Strategy */}
+          <div className="space-y-2">
+            <Label htmlFor="marketingStrategy">Marketing Strategy</Label>
+            <Textarea
+              id="marketingStrategy"
+              value={formData.marketingStrategy}
+              onChange={(e) => handleInputChange('marketingStrategy', e.target.value)}
+              placeholder="Describe the marketing strategy for this creator..."
+              rows={2}
+            />
           </div>
 
           {/* Notes */}

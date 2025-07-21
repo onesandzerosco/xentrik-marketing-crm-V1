@@ -63,6 +63,7 @@ export const useUpdateCreator = (
           gender: updates.gender,
           team: updates.team,
           creator_type: updates.creatorType,
+          marketing_strategy: updates.marketingStrategy, // Add marketing strategy field
           needs_review: updates.needsReview,
           telegram_username: updates.telegramUsername,
           whatsapp_number: updates.whatsappNumber,
