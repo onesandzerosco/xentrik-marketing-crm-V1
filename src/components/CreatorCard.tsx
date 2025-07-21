@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SecureLoginModal from './creators/secure-logins/SecureLoginModal';
-import EditCreatorModal from './creators/edit/EditCreatorModal';
 
 interface CreatorCardProps {
   creator: Creator;
@@ -37,8 +36,8 @@ const CreatorCard = ({
   const { toast } = useToast();
   const { userRole } = useAuth();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleShareButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,7 +64,7 @@ const CreatorCard = ({
   const handleEditButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowEditModal(true);
+    navigate(`/creators/${creator.id}`);
   };
 
   // Check if user has Admin privileges or permission to upload
@@ -268,12 +267,6 @@ const CreatorCard = ({
         onOpenChange={setShowLoginModal} 
         creatorId={creator.id} 
         creatorName={creator.modelName || creator.name}
-      />
-      
-      <EditCreatorModal 
-        open={showEditModal}
-        onOpenChange={setShowEditModal}
-        creator={creator}
       />
     </>
   );
