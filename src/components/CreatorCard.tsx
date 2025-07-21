@@ -179,15 +179,6 @@ const CreatorCard = ({
                           {isMobile ? 'Edit' : 'Edit Info'}
                         </Button>
                         
-                        <Button 
-                          variant="secondary" 
-                          size={isMobile ? "sm" : "default"}
-                          className={`${isMobile ? 'h-8 px-2 text-xs' : 'h-10 px-4'}`}
-                          onClick={handleLoginButtonClick}
-                        >
-                          <LogIn className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                          {isMobile ? 'Login' : 'Login'}
-                        </Button>
                       </div>
                     )}
                     
