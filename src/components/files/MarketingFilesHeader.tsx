@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Users, Filter, SlidersHorizontal, AlertCircle } from "lucide-react";
+import { Users, Filter, SlidersHorizontal, AlertCircle, Target } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +17,11 @@ interface MarketingFilesHeaderProps {
   selectedGenders: string[];
   selectedTeams: string[];
   selectedClasses: string[];
+  selectedMarketingStrategies: string[];
   setSelectedGenders: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedTeams: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedClasses: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedMarketingStrategies: React.Dispatch<React.SetStateAction<string[]>>;
   handleClearFilters: () => void;
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
@@ -28,6 +30,7 @@ interface MarketingFilesHeaderProps {
 const genderTags = ["Male", "Female", "Trans"];
 const teamTags = ["A Team", "B Team", "C Team"];
 const classTags = ["Real", "AI"];
+const marketingStrategyTags = ["Twitter", "Instagram", "Chaturbate", "TikTok", "Reddit"];
 
 const MarketingFilesHeader: React.FC<MarketingFilesHeaderProps> = ({
   isLoading,
@@ -35,9 +38,11 @@ const MarketingFilesHeader: React.FC<MarketingFilesHeaderProps> = ({
   selectedGenders,
   selectedTeams,
   selectedClasses,
+  selectedMarketingStrategies,
   setSelectedGenders,
   setSelectedTeams,
   setSelectedClasses,
+  setSelectedMarketingStrategies,
   handleClearFilters,
   searchQuery,
   setSearchQuery
@@ -54,6 +59,9 @@ const MarketingFilesHeader: React.FC<MarketingFilesHeaderProps> = ({
   };
   const toggleClass = (c: string) => {
     setSelectedClasses(selectedClasses.includes(c) ? selectedClasses.filter(x => x !== c) : [...selectedClasses, c]);
+  };
+  const toggleMarketingStrategy = (s: string) => {
+    setSelectedMarketingStrategies(selectedMarketingStrategies.includes(s) ? selectedMarketingStrategies.filter(x => x !== s) : [...selectedMarketingStrategies, s]);
   };
 
   return (
@@ -150,8 +158,34 @@ const MarketingFilesHeader: React.FC<MarketingFilesHeaderProps> = ({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        {/* Marketing Strategy Filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="rounded-full flex gap-2 items-center min-w-[120px] h-12 border-white/20 text-white">
+              <Target className="h-5 w-5 text-white" />
+              Strategy
+              {selectedMarketingStrategies.length > 0 && (
+                <span className="ml-1 bg-white/10 text-xs px-2 py-0.5 rounded-full text-white">{selectedMarketingStrategies.length}</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="z-50 w-44 bg-background border-white/20">
+            <DropdownMenuLabel className="text-white">Filter by strategy</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-white/20" />
+            {marketingStrategyTags.map((s) => (
+              <DropdownMenuCheckboxItem
+                key={s}
+                checked={selectedMarketingStrategies.includes(s)}
+                onCheckedChange={() => toggleMarketingStrategy(s)}
+                className="text-white"
+              >
+                {s}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         {/* Clear button if any filters are active */}
-        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || searchQuery) && (
+        {(selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || selectedMarketingStrategies.length > 0 || searchQuery) && (
           <Button variant="ghost" size="sm" className="h-12 text-white hover:text-white/80" onClick={handleClearFilters}>
             <span className="mr-1">Clear</span>
             <Filter className="h-4 w-4 text-white" />

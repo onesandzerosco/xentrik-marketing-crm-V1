@@ -23,6 +23,7 @@ const MarketingFiles = () => {
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
+  const [selectedMarketingStrategies, setSelectedMarketingStrategies] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [hasPendingUploads, setHasPendingUploads] = useState(false);
 
@@ -134,6 +135,7 @@ const MarketingFiles = () => {
     gender: selectedGenders,
     team: selectedTeams,
     creatorType: selectedClasses,
+    marketingStrategy: selectedMarketingStrategies,
     searchQuery,
   };
 
@@ -161,10 +163,11 @@ const MarketingFiles = () => {
     setSelectedGenders([]);
     setSelectedTeams([]);
     setSelectedClasses([]);
+    setSelectedMarketingStrategies([]);
     setSearchQuery("");
   };
 
-  const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || !!searchQuery;
+  const hasFilters = selectedGenders.length > 0 || selectedTeams.length > 0 || selectedClasses.length > 0 || selectedMarketingStrategies.length > 0 || !!searchQuery;
 
   // Final list of creators to display based on filters and role
   const finalCreators = React.useMemo(() => {
@@ -185,9 +188,11 @@ const MarketingFiles = () => {
         selectedGenders={selectedGenders}
         selectedTeams={selectedTeams}
         selectedClasses={selectedClasses}
+        selectedMarketingStrategies={selectedMarketingStrategies}
         setSelectedGenders={setSelectedGenders}
         setSelectedTeams={setSelectedTeams}
         setSelectedClasses={setSelectedClasses}
+        setSelectedMarketingStrategies={setSelectedMarketingStrategies}
         handleClearFilters={handleClearFilters}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

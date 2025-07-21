@@ -14,6 +14,7 @@ export interface CreatorContextType {
     team?: string[]; 
     creatorType?: string[]; 
     reviewStatus?: string[]; 
+    marketingStrategy?: string[];
     searchQuery?: string; 
   }) => Creator[];
 }

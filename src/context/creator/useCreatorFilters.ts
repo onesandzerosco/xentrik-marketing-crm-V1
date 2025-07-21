@@ -7,6 +7,7 @@ export const useCreatorFilters = (creators: Creator[]) => {
     team?: string[];
     creatorType?: string[];
     reviewStatus?: string[];
+    marketingStrategy?: string[];
     searchQuery?: string;
   }) => {
     return creators.filter((creator) => {
@@ -49,6 +50,17 @@ export const useCreatorFilters = (creators: Creator[]) => {
           (filters.reviewStatus.includes("Needs Review") && !needsReview) ||
           (filters.reviewStatus.includes("Reviewed") && needsReview)
         ) {
+          return false;
+        }
+      }
+
+      // Filter by marketing strategy
+      if (filters.marketingStrategy && filters.marketingStrategy.length > 0) {
+        const creatorStrategies = creator.marketingStrategy || [];
+        const hasMatchingStrategy = filters.marketingStrategy.some(strategy => 
+          creatorStrategies.includes(strategy)
+        );
+        if (!hasMatchingStrategy) {
           return false;
         }
       }
