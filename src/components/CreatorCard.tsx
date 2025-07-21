@@ -235,7 +235,7 @@ const CreatorCard = ({
                   </>
                 ) : (
                   // Files view for SharedFiles and MarketingFiles pages
-                  <div className="flex flex-col items-end gap-2">
+                  <div className={`flex flex-col gap-2 ${variant === 'marketing-files' && isMobile ? 'items-center' : 'items-end'}`}>
                     <div className="flex items-center gap-1.5 md:gap-3">
                       <Link to={variant === 'marketing-files' ? `/creator-marketing-files/${creator.id}` : `/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                         <Button 
@@ -276,7 +276,7 @@ const CreatorCard = ({
                     
                     {/* Show marketing strategy badges under Marketing Files button */}
                     {variant === 'marketing-files' && creator.marketingStrategy && creator.marketingStrategy.length > 0 && (
-                      <div className="flex gap-1 md:gap-2 flex-wrap justify-end">
+                      <div className={`flex gap-1 md:gap-2 flex-wrap ${isMobile ? 'justify-center' : 'justify-end'}`}>
                         {creator.marketingStrategy.map((strategy) => {
                           const emblem = getPlatformEmblemStyle(strategy);
                           return (
