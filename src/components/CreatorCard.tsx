@@ -222,17 +222,6 @@ const CreatorCard = ({
                       </Button>
                     </Link>
                     
-                    <Link to={`/creator-analytics/${creator.id}?tab=income`} onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="ghost" 
-                        size={isMobile ? "sm" : "default"}
-                        className={`${isMobile ? 'px-2 h-8 text-xs' : 'px-4 h-10'} bg-green-600/80 text-white hover:opacity-90 transition-all`}
-                      >
-                        <DollarSign className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                        {isMobile ? 'Income' : 'Income'}
-                      </Button>
-                    </Link>
-                    
                     {/* Show Share button for users with appropriate permissions */}
                     {canUpload && (
                       <Button 
