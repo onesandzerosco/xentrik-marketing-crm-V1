@@ -86,33 +86,33 @@ const CreatorCard = ({
     }
   };
 
-  // Get platform-specific emblem styling
+  // Get platform-specific emblem styling - using app's muted aesthetic
   const getPlatformEmblemStyle = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'twitter':
       case 'x':
         return {
-          className: "bg-black text-white hover:bg-gray-800",
+          className: "bg-slate-900/40 text-slate-200 hover:bg-slate-900/60",
           text: "X"
         };
       case 'instagram':
         return {
-          className: "bg-pink-500 text-white hover:bg-pink-600",
+          className: "bg-rose-900/40 text-rose-200 hover:bg-rose-900/60",
           text: "IG"
         };
       case 'chaturbate':
         return {
-          className: "bg-orange-500 text-white hover:bg-orange-600",
+          className: "bg-amber-900/40 text-amber-200 hover:bg-amber-900/60",
           text: "CB"
         };
       case 'tiktok':
         return {
-          className: "bg-purple-500 text-white hover:bg-purple-600",
+          className: "bg-violet-900/40 text-violet-200 hover:bg-violet-900/60",
           text: "TT"
         };
       case 'reddit':
         return {
-          className: "bg-red-500 text-white hover:bg-red-600",
+          className: "bg-orange-900/40 text-orange-200 hover:bg-orange-900/60",
           text: "R"
         };
       default:
