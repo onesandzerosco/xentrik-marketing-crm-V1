@@ -193,6 +193,35 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     return true;
   };
 
+  const shouldShowGroup = (groupTitle: string): boolean => {
+    // Admin and Developer can see everything
+    if (userRole === 'Admin' || userRoles?.includes('Admin') || 
+        userRole === 'Developer' || userRoles?.includes('Developer')) {
+      return true;
+    }
+
+    // Marketing Team employees only see Marketing Team category
+    if (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) {
+      return groupTitle === 'Marketing Team';
+    }
+
+    // Chatter employees only see Chatting Team category
+    if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
+      return groupTitle === 'Chatting Team';
+    }
+
+    // VA employees see Chatting Team + Marketing Team (Shared Files is handled separately)
+    if (userRole === 'VA' || userRoles?.includes('VA')) {
+      return groupTitle === 'Chatting Team' || groupTitle === 'Marketing Team';
+    }
+
+    return true;
+  };
+
+  const shouldShowSharedFilesForVA = (): boolean => {
+    return userRole === 'VA' || userRoles?.includes('VA');
+  };
+
   const renderNavItem = (item: NavItem) => (
     <SidebarMenuItem key={item.path}>
       <SidebarMenuButton asChild>
@@ -218,7 +247,21 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   return (
     <nav className="grid gap-4 pt-2 z-30 relative">
       {navGroups.map((group) => {
-        const visibleItems = group.items.filter(shouldShowItem);
+        // Check if this group should be shown for the current user
+        if (!shouldShowGroup(group.title)) return null;
+
+        let visibleItems = group.items.filter(shouldShowItem);
+        
+        // Special handling for VA employees - they see Shared Files from Administrative Team
+        if (group.title === 'Administrative Team' && shouldShowSharedFilesForVA()) {
+          visibleItems = visibleItems.filter(item => item.path === '/shared-files');
+        } else if (group.title === 'Administrative Team' && (
+          userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
+          userRole === 'Chatter' || userRoles?.includes('Chatter')
+        )) {
+          // Marketing Team and Chatter shouldn't see Administrative Team items at all
+          return null;
+        }
         
         // Don't render the group if no items are visible
         if (visibleItems.length === 0) return null;
