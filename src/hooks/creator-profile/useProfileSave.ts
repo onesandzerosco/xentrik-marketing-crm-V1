@@ -61,6 +61,7 @@ export function useProfileSave(creator: Creator | null | undefined) {
       socialLinks: socialLinks,
       tags: [state.gender, state.team, state.creatorType],
       needsReview: state.needsReview,
+      marketingStrategy: state.marketingStrategy,
       assignedTeamMembers,
       notes: state.notes
     });

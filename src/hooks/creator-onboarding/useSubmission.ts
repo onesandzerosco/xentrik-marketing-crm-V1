@@ -40,6 +40,7 @@ export function useSubmission() {
         gender: formState.gender,
         team: formState.team,
         creatorType: formState.creatorType,
+        marketingStrategy: formState.marketingStrategy,
         socialLinks: {
           instagram: socialLinks.instagram || "",
           tiktok: socialLinks.tiktok || "",

@@ -22,13 +22,7 @@ export interface CreatorProfileState {
   notes: string;
   needsReview: boolean;
   assignedMembers: Employee[];
-  marketingStrategy: {
-    reddit: boolean;
-    twitter: boolean;
-    tiktok: boolean;
-    instagram: boolean;
-    chaturbate: boolean;
-  };
+  marketingStrategy: string; // Change to text field instead of platform booleans
   errors: Record<string, string>;
 }
 
@@ -51,11 +45,5 @@ export interface CreatorProfileActions {
   setNotes: (notes: string) => void;
   setNeedsReview: (needsReview: boolean) => void;
   setAssignedMembers: (members: Employee[]) => void;
-  setMarketingStrategy: (strategy: {
-    reddit: boolean;
-    twitter: boolean;
-    tiktok: boolean;
-    instagram: boolean;
-    chaturbate: boolean;
-  }) => void;
+  setMarketingStrategy: (strategy: string) => void; // Change to text field
 }

@@ -54,20 +54,8 @@ interface OnboardingFormSectionsProps {
   setCustomSocialLinks: (links: CustomSocialLink[]) => void;
   notes: string;
   setNotes: (notes: string) => void;
-  marketingStrategy: {
-    reddit: boolean;
-    twitter: boolean;
-    tiktok: boolean;
-    instagram: boolean;
-    chaturbate: boolean;
-  };
-  setMarketingStrategy: (strategy: {
-    reddit: boolean;
-    twitter: boolean;
-    tiktok: boolean;
-    instagram: boolean;
-    chaturbate: boolean;
-  }) => void;
+  marketingStrategy: string;
+  setMarketingStrategy: (strategy: string) => void;
   errors: ValidationErrors;
 }
 
