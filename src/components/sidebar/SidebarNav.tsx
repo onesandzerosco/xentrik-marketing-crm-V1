@@ -284,9 +284,13 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         return (
           <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
-              {group.title}
-            </SidebarGroupLabel>
+            {/* Only show category labels for Admin and Developer roles */}
+            {(userRole === 'Admin' || userRoles?.includes('Admin') || 
+              userRole === 'Developer' || userRoles?.includes('Developer')) && (
+              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+                {group.title}
+              </SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleItems.map(renderNavItem)}
