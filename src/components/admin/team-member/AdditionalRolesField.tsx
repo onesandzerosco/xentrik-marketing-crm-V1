@@ -21,32 +21,38 @@ const AdditionalRolesField: React.FC<AdditionalRolesFieldProps> = ({
 }) => {
   return (
     <div className="space-y-3">
-      <FormLabel>Additional Roles</FormLabel>
-      <p className="text-sm text-muted-foreground">
-        Select all roles that apply to this user
-      </p>
-      <p className="text-xs text-amber-500">
-        Note: Admin is an exclusive role and cannot be combined with other roles
-      </p>
+      <div className="text-center">
+        <FormLabel>Additional Roles</FormLabel>
+        <p className="text-sm text-muted-foreground">
+          Select all roles that apply to this user
+        </p>
+        <p className="text-xs text-amber-500">
+          Note: Admin is an exclusive role and cannot be combined with other roles
+        </p>
+      </div>
       
-      <div className="grid grid-cols-2 gap-2 pt-2">
-        {availableRoles.map((role) => (
-          <div key={role} className="flex items-center space-x-2">
-            <Checkbox 
-              id={`role-${role}`}
-              checked={selectedRoles.includes(role)}
-              onCheckedChange={(checked) => handleRoleChange(checked, role)}
-              disabled={isRoleDisabled(role)}
-              className={isRoleDisabled(role) ? "opacity-50" : ""}
-            />
-            <label 
-              htmlFor={`role-${role}`}
-              className={`text-sm cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
-            >
-              {role}
-            </label>
+      <div className="flex justify-center">
+        <div className="w-72 bg-gray-50 rounded-lg p-4">
+          <div className="grid grid-cols-2 gap-3">
+            {availableRoles.map((role) => (
+              <div key={role} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`role-${role}`}
+                  checked={selectedRoles.includes(role)}
+                  onCheckedChange={(checked) => handleRoleChange(checked, role)}
+                  disabled={isRoleDisabled(role)}
+                  className={isRoleDisabled(role) ? "opacity-50" : ""}
+                />
+                <label 
+                  htmlFor={`role-${role}`}
+                  className={`text-sm cursor-pointer ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
+                >
+                  {role}
+                </label>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
