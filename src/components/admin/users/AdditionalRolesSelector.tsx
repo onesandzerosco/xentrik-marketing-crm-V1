@@ -34,24 +34,28 @@ const AdditionalRolesSelector: React.FC<AdditionalRolesSelectorProps> = ({
         </p>
       </div>
       
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 max-w-xs mx-auto">
-        {ADDITIONAL_ROLES.map(role => (
-          <div key={role} className="flex items-center space-x-1.5">
-            <Checkbox 
-              id={`additional-role-${role}`}
-              checked={additionalRoles.includes(role)}
-              onCheckedChange={() => toggleAdditionalRole(role)}
-              disabled={isRoleDisabled(role)}
-              className={isRoleDisabled(role) ? "opacity-50" : ""}
-            />
-            <Label 
-              htmlFor={`additional-role-${role}`}
-              className={`cursor-pointer text-sm whitespace-nowrap ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
-            >
-              {role}
-            </Label>
+      <div className="flex justify-center">
+        <div className="w-80 bg-gray-50 rounded-lg p-4">
+          <div className="grid grid-cols-2 gap-2">
+            {ADDITIONAL_ROLES.map(role => (
+              <div key={role} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`additional-role-${role}`}
+                  checked={additionalRoles.includes(role)}
+                  onCheckedChange={() => toggleAdditionalRole(role)}
+                  disabled={isRoleDisabled(role)}
+                  className={isRoleDisabled(role) ? "opacity-50" : ""}
+                />
+                <Label 
+                  htmlFor={`additional-role-${role}`}
+                  className={`cursor-pointer text-sm ${isRoleDisabled(role) ? "text-muted-foreground" : ""}`}
+                >
+                  {role}
+                </Label>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
