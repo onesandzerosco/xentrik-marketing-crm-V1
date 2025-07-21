@@ -7,24 +7,30 @@ interface UseFilesFetchingProps {
   creatorId?: string;
   recentlyUploadedIds: string[];
   availableFolders: { id: string; name: string }[];
+  tableName?: string;
 }
 
 export const useFilesFetching = ({ 
   creatorId,
   recentlyUploadedIds,
-  availableFolders
+  availableFolders,
+  tableName = 'media'
 }: UseFilesFetchingProps) => {
   const fetchCreatorFiles = async () => {
     if (!creatorId) {
       throw new Error('Creator not found');
     }
     
-    // Fetch from media table
-    const { data: mediaData, error: mediaError } = await supabase
-      .from('media')
-      .select('*')
-      .eq('creator_id', creatorId)
-      .order('created_at', { ascending: false }); // Sort by most recent first
+    // Fetch from specified table (media or marketing_media)
+    const { data: mediaData, error: mediaError } = tableName === 'marketing_media' 
+      ? await supabase.from('marketing_media')
+          .select('*')
+          .eq('creator_id', creatorId)
+          .order('created_at', { ascending: false })
+      : await supabase.from('media')
+          .select('*')
+          .eq('creator_id', creatorId)
+          .order('created_at', { ascending: false }); // Sort by most recent first
     
     if (mediaError) {
       console.error('Error fetching media data:', mediaError);

@@ -447,6 +447,54 @@ export type Database = {
           },
         ]
       }
+      marketing_media: {
+        Row: {
+          bucket_key: string
+          categories: string[] | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          file_size: number
+          filename: string
+          folders: string[] | null
+          id: string
+          mime: string
+          status: string
+          tags: string[] | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          bucket_key: string
+          categories?: string[] | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          file_size: number
+          filename: string
+          folders?: string[] | null
+          id?: string
+          mime: string
+          status?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          bucket_key?: string
+          categories?: string[] | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          file_size?: number
+          filename?: string
+          folders?: string[] | null
+          id?: string
+          mime?: string
+          status?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+        }
+        Relationships: []
+      }
       media: {
         Row: {
           bucket_key: string

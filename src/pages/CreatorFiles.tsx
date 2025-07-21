@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCreators } from '@/context/creator';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +15,7 @@ import { CreatorFileType, Category, Folder } from '@/types/fileTypes';
 const CreatorFiles = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { getCreator } = useCreators();
   const creator = getCreator(id || '');
   const { toast } = useToast();
@@ -24,6 +25,10 @@ const CreatorFiles = () => {
   const [currentCategory, setCurrentCategory] = useState<string | null>(null);
   const [isCurrentUserCreator, setIsCurrentUserCreator] = useState(false);
   const [recentlyUploadedIds, setRecentlyUploadedIds] = useState<string[]>([]);
+  
+  // Determine if this is marketing files based on the route
+  const isMarketingFiles = location.pathname.includes('creator-marketing-files');
+  const tableName = isMarketingFiles ? 'marketing_media' : 'media';
   
   // Custom hooks
   const { 
@@ -58,14 +63,15 @@ const CreatorFiles = () => {
   const { fetchCreatorFiles } = useFilesFetching({
     creatorId: creator?.id,
     recentlyUploadedIds,
-    availableFolders
+    availableFolders,
+    tableName
   });
   
   useEffect(() => {
     ensureStorageBucket();
     
     if (!id) {
-      navigate('/shared-files');
+      navigate(isMarketingFiles ? '/marketing-files' : '/shared-files');
     }
     
     // Check if the current user is the creator
@@ -85,7 +91,7 @@ const CreatorFiles = () => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['creator-files', creator?.id, currentFolder, currentCategory, recentlyUploadedIds, availableFolders, availableCategories],
+    queryKey: ['creator-files', tableName, creator?.id, currentFolder, currentCategory, recentlyUploadedIds, availableFolders, availableCategories],
     queryFn: fetchCreatorFiles,
     enabled: !!creator?.id,
     staleTime: 5 * 60 * 1000,

@@ -36,7 +36,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     else if (path.includes('/users')) setPageTitle('User Management');
     else if (path.includes('/messages')) setPageTitle('Messages');
     else if (path.includes('/shared-files')) setPageTitle('Shared Files');
+    else if (path.includes('/marketing-files')) setPageTitle('Marketing Files');
     else if (path.includes('/creator-files')) setPageTitle('Creator Files');
+    else if (path.includes('/creator-marketing-files')) setPageTitle('Creator Marketing Files');
     else if (path.includes('/secure-logins')) setPageTitle('Secure Logins');
     else if (path.includes('/account')) setPageTitle('Account Settings');
     else if (path.includes('/voice-generation')) setPageTitle('Voice Generation');

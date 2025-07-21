@@ -69,6 +69,13 @@ const navItems: NavItem[] = [
     hideForChatter: true, // Hide for Chatter role
   },
   {
+    path: '/marketing-files',
+    label: 'Marketing Files',
+    icon: <FileUp className="h-5 w-5" />,
+    allowCreator: true, // Explicitly allow Creators to see Marketing Files
+    hideForChatter: true, // Hide for Chatter role
+  },
+  {
     path: '/team',
     label: 'Team',
     icon: <UserCog className="h-5 w-5" />,

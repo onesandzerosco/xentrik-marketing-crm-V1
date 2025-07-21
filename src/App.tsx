@@ -27,6 +27,7 @@ import Index from './pages/Index';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { ensureStorageBucket } from "./utils/setupStorage";
 import SharedFiles from './pages/SharedFiles';
+import MarketingFiles from './pages/MarketingFiles';
 import CreatorFiles from './pages/CreatorFiles';
 import TeamMemberEdit from './pages/TeamMemberEdit';
 import VoiceGeneration from './pages/VoiceGeneration';
@@ -105,8 +106,10 @@ const AppRoutes = () => {
       <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
       <Route path="/access-control" element={<ProtectedRoute><AccessControlPanel /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
-      <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />
-      <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
+        <Route path="/shared-files" element={<ProtectedRoute><SharedFiles /></ProtectedRoute>} />
+        <Route path="/marketing-files" element={<ProtectedRoute><MarketingFiles /></ProtectedRoute>} />
+        <Route path="/creator-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
+        <Route path="/creator-marketing-files/:id" element={<ProtectedRoute><CreatorFiles /></ProtectedRoute>} />
       <Route path="/creators/:id" element={<ProtectedRoute><CreatorProfile /></ProtectedRoute>} />
       <Route path="/creators/:id/analytics" element={<ProtectedRoute><CreatorAnalytics /></ProtectedRoute>} />
       <Route path="/creators/:id/invoices" element={<ProtectedRoute><CreatorInvoice /></ProtectedRoute>} />

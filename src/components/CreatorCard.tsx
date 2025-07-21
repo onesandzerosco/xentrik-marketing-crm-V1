@@ -13,7 +13,7 @@ import SecureLoginModal from './creators/secure-logins/SecureLoginModal';
 
 interface CreatorCardProps {
   creator: Creator;
-  variant?: 'default' | 'files';
+  variant?: 'default' | 'files' | 'marketing-files';
   fileCount?: number;
   showUploadingIndicator?: boolean;
   uploadingCount?: number;
@@ -206,16 +206,16 @@ const CreatorCard = ({
                     )}
                   </>
                 ) : (
-                  // Files view for SharedFiles page
+                  // Files view for SharedFiles and MarketingFiles pages
                   <div className="flex items-center gap-1.5 md:gap-3">
-                    <Link to={`/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
+                    <Link to={variant === 'marketing-files' ? `/creator-marketing-files/${creator.id}` : `/creator-files/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                       <Button 
                         variant="ghost" 
                         size={isMobile ? "sm" : "default"}
                         className={`${isMobile ? 'px-2 h-8 text-xs' : 'px-6 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
                       >
                         <Files className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                        Files
+                        {variant === 'marketing-files' ? 'Marketing Files' : 'Files'}
                         {fileCount > 0 && (
                           <span className={`ml-1 bg-primary/20 text-black px-1.5 py-0.5 rounded-full ${isMobile ? 'text-xs' : 'text-xs'}`}>
                             {fileCount}
