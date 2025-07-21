@@ -168,9 +168,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     // Skip items that are completely hidden
     if (item.hidden) return false;
     
-    // Marketing Team employees should ONLY see Marketing Files
+    // Marketing Team employees should see Marketing Files + Model Profile
     if (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) {
-      return item.path === '/marketing-files';
+      return item.path === '/marketing-files' || item.path === '/creators-data';
     }
     
     // Chatter employees should ONLY see Chatting Team items
@@ -216,9 +216,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return true;
     }
 
-    // Marketing Team employees only see Marketing Team category
+    // Marketing Team employees see Marketing Team category + Model Profile (without Chatting Team title)
     if (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) {
-      return groupTitle === 'Marketing Team';
+      return groupTitle === 'Marketing Team' || groupTitle === 'Chatting Team';
     }
 
     // Chatter employees only see Chatting Team category
@@ -282,11 +282,17 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         // Don't render the group if no items are visible
         if (visibleItems.length === 0) return null;
         
+        // Special case: Marketing Team sees Model Profile without "Chatting Team" category title
+        const isMarketingTeamViewingModelProfile = (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) && 
+                                                   group.title === 'Chatting Team';
+        
         return (
           <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
-              {group.title}
-            </SidebarGroupLabel>
+            {!isMarketingTeamViewingModelProfile && (
+              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+                {group.title}
+              </SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleItems.map(renderNavItem)}
