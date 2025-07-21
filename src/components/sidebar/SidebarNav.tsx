@@ -260,6 +260,46 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     </SidebarMenuItem>
   );
 
+  const isAdminOrDeveloper = userRole === 'Admin' || userRoles?.includes('Admin') || 
+                           userRole === 'Developer' || userRoles?.includes('Developer');
+
+  // For non-admin users, collect all visible items into a single group to avoid spacing issues
+  if (!isAdminOrDeveloper) {
+    const allVisibleItems: NavItem[] = [];
+    
+    navGroups.forEach((group) => {
+      if (!shouldShowGroup(group.title)) return;
+
+      let visibleItems = group.items.filter(shouldShowItem);
+      
+      // Special handling for VA employees - they see Shared Files from Administrative Team
+      if (group.title === 'Administrative Team' && shouldShowSharedFilesForVA()) {
+        visibleItems = visibleItems.filter(item => item.path === '/shared-files');
+      } else if (group.title === 'Administrative Team' && (
+        userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
+        userRole === 'Chatter' || userRoles?.includes('Chatter')
+      )) {
+        // Marketing Team and Chatter shouldn't see Administrative Team items at all
+        return;
+      }
+      
+      allVisibleItems.push(...visibleItems);
+    });
+
+    return (
+      <nav className="pt-2 z-30 relative">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {allVisibleItems.map(renderNavItem)}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </nav>
+    );
+  }
+
+  // For admin/developer users, show with category titles and spacing
   return (
     <nav className="grid gap-4 pt-2 z-30 relative">
       {navGroups.map((group) => {
@@ -284,13 +324,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         
         return (
           <SidebarGroup key={group.title}>
-            {/* Only show category labels for Admin and Developer roles */}
-            {(userRole === 'Admin' || userRoles?.includes('Admin') || 
-              userRole === 'Developer' || userRoles?.includes('Developer')) && (
-              <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
-                {group.title}
-              </SidebarGroupLabel>
-            )}
+            <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">
+              {group.title}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleItems.map(renderNavItem)}
