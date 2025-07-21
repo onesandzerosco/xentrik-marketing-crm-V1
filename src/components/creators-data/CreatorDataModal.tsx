@@ -325,10 +325,17 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         const creatorId = creators[0].id;
         console.log('Found creator ID:', creatorId);
 
-        // Step 3: Update creators table model_profile
+        // Step 3: Update creators table model_profile and model_name if changed
+        const updatePayload: any = { model_profile: updatedData };
+        
+        // If model name was updated, also update the model_name column
+        if (updatedData.personalInfo?.modelName) {
+          updatePayload.model_name = updatedData.personalInfo.modelName;
+        }
+        
         const { data: creatorUpdateData, error: creatorError } = await supabase
           .from('creators')
-          .update({ model_profile: updatedData })
+          .update(updatePayload)
           .eq('id', creatorId)
           .select();
 
