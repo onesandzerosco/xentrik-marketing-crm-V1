@@ -32,7 +32,7 @@ const AdditionalRolesField: React.FC<AdditionalRolesFieldProps> = ({
       </div>
       
       <div className="flex justify-center">
-        <div className="w-72 bg-gray-50 rounded-lg p-4">
+        <div className="w-72 border border-border rounded-lg p-4">
           <div className="grid grid-cols-2 gap-3">
             {availableRoles.map((role) => (
               <div key={role} className="flex items-center space-x-2">
