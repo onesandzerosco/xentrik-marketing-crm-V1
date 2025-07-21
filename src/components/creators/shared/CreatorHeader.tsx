@@ -59,14 +59,6 @@ const CreatorHeader: React.FC<CreatorHeaderProps> = ({
         <div className="flex gap-3 ml-auto">
           {isAdmin && creatorId && (
             <>
-              {showAnalytics && (
-                <Link to={`/creators/${creatorId}/analytics`}>
-                  <Button variant="outline">
-                    <LineChart className="h-4 w-4 mr-2" />
-                    Analytics
-                  </Button>
-                </Link>
-              )}
               
               <Link to={`/creator-invoices/${creatorId}`}>
                 <Button variant="outline" className="bg-green-600/20 text-green-200 border-green-600/30 hover:bg-green-600/30">

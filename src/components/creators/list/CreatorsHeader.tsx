@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
-import { CreateMarketingStructureButton } from "@/components/admin/CreateMarketingStructureButton";
+
 
 interface CreatorsHeaderProps {
   isLoading: boolean;
@@ -172,11 +172,6 @@ const CreatorsHeader: React.FC<CreatorsHeaderProps> = ({
           <span className="sm:hidden">Creators: </span>
           <span className="ml-2 text-brand-yellow">{isLoading ? "..." : creatorCount}</span>
         </h1>
-        
-        {/* Admin Only: Marketing Structure Button */}
-        {isAdmin && (
-          <CreateMarketingStructureButton />
-        )}
       </div>
       
       {/* Search and Filters */}
