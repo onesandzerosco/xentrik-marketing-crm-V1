@@ -7,13 +7,15 @@ import CreatorsDataTable from '@/components/creators-data/CreatorsDataTable';
 const CreatorsData: React.FC = () => {
   const { userRole, userRoles } = useAuth();
   
-  // Check if user has access (Admin, VA, or Chatter)
+  // Check if user has access (Admin, VA, Chatter, or Marketing Team)
   const hasAccess = userRole === 'Admin' || 
                    userRoles?.includes('Admin') ||
                    userRole === 'VA' || 
                    userRoles?.includes('VA') ||
                    userRole === 'Chatter' || 
-                   userRoles?.includes('Chatter');
+                   userRoles?.includes('Chatter') ||
+                   userRole === 'Marketing Team' || 
+                   userRoles?.includes('Marketing Team');
 
   if (!hasAccess) {
     return (
