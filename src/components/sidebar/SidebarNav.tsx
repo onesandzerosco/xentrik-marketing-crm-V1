@@ -178,6 +178,12 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation';
     }
     
+    // VA employees should see Chatting Team items + Marketing Files + Shared Files
+    if (userRole === 'VA' || userRoles?.includes('VA')) {
+      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || 
+             item.path === '/marketing-files' || item.path === '/shared-files';
+    }
+    
     // Skip adminOnly items if user is not admin
     if (item.adminOnly && !isAdmin) return false;
     
