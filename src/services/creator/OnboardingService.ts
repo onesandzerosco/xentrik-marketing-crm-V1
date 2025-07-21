@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
+import { MarketingFoldersService } from "./MarketingFoldersService";
 
 // Define the enum types from Supabase
 type TeamEnum = Database["public"]["Enums"]["team"];
@@ -301,6 +302,17 @@ export class OnboardingService {
       // Save social media handles to the social_media_logins table
       console.log("Saving social media handles...");
       await this.saveSocialMediaHandles(formData, email);
+      
+      // Create default marketing categories and folders
+      console.log("Creating default marketing structure...");
+      const marketingStructureCreated = await MarketingFoldersService.createDefaultMarketingStructure(userId);
+      
+      if (!marketingStructureCreated) {
+        console.warn("Failed to create default marketing structure, but continuing with creator creation");
+        // Don't throw error as this is not critical for creator creation
+      } else {
+        console.log("Default marketing structure created successfully");
+      }
       
       console.log("=== ACCEPTANCE PROCESS COMPLETED SUCCESSFULLY ===");
       console.log("Final creator ID:", userId);
