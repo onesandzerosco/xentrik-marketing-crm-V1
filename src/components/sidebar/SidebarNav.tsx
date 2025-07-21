@@ -168,6 +168,16 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     // Skip items that are completely hidden
     if (item.hidden) return false;
     
+    // Marketing Team employees should ONLY see Marketing Files
+    if (userRole === 'Marketing Team' || userRoles?.includes('Marketing Team')) {
+      return item.path === '/marketing-files';
+    }
+    
+    // Chatter employees should ONLY see Chatting Team items
+    if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
+      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation';
+    }
+    
     // Skip adminOnly items if user is not admin
     if (item.adminOnly && !isAdmin) return false;
     
