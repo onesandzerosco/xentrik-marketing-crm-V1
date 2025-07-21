@@ -57,6 +57,8 @@ export const useUpdateCreator = (
         .from('creators')
         .update({
           name: updates.name,
+          model_name: updates.modelName, // Add model_name field
+          email: updates.email, // Add email field
           profile_image: updates.profileImage,
           gender: updates.gender,
           team: updates.team,

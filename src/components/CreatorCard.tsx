@@ -4,12 +4,13 @@ import { Link } from 'react-router-dom';
 import { Creator } from '@/types';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, FileText, LogIn, Files, Share2, Loader2, DollarSign } from 'lucide-react';
+import { LineChart, FileText, LogIn, Files, Share2, Loader2, DollarSign, Edit } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import SecureLoginModal from './creators/secure-logins/SecureLoginModal';
+import EditCreatorModal from './creators/edit/EditCreatorModal';
 
 interface CreatorCardProps {
   creator: Creator;
@@ -37,6 +38,7 @@ const CreatorCard = ({
   const { userRole } = useAuth();
   const isMobile = useIsMobile();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const handleShareButtonClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,6 +60,12 @@ const CreatorCard = ({
     e.preventDefault();
     e.stopPropagation();
     setShowLoginModal(true);
+  };
+
+  const handleEditButtonClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowEditModal(true);
   };
 
   // Check if user has Admin privileges or permission to upload
@@ -166,6 +174,16 @@ const CreatorCard = ({
                           variant="secondary" 
                           size={isMobile ? "sm" : "default"}
                           className={`${isMobile ? 'h-8 px-2 text-xs' : 'h-10 px-4'}`}
+                          onClick={handleEditButtonClick}
+                        >
+                          <Edit className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
+                          {isMobile ? 'Edit' : 'Edit Info'}
+                        </Button>
+                        
+                        <Button 
+                          variant="secondary" 
+                          size={isMobile ? "sm" : "default"}
+                          className={`${isMobile ? 'h-8 px-2 text-xs' : 'h-10 px-4'}`}
                           onClick={handleLoginButtonClick}
                         >
                           <LogIn className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
@@ -250,6 +268,12 @@ const CreatorCard = ({
         onOpenChange={setShowLoginModal} 
         creatorId={creator.id} 
         creatorName={creator.modelName || creator.name}
+      />
+      
+      <EditCreatorModal 
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        creator={creator}
       />
     </>
   );
