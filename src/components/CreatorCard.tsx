@@ -184,16 +184,6 @@ const CreatorCard = ({
                   <>
                     {isAdmin && (
                       <div className="flex items-center gap-1.5 md:gap-3">
-                        <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            variant="ghost" 
-                            size={isMobile ? "sm" : "default"}
-                            className={`${isMobile ? 'px-2 h-8 text-xs' : 'px-4 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
-                          >
-                            <LineChart className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                            {isMobile ? 'Analytics' : 'Analytics'}
-                          </Button>
-                        </Link>
                         
                         <Link to={`/creator-invoices/${creator.id}`} onClick={(e) => e.stopPropagation()}>
                           <Button 
@@ -219,19 +209,6 @@ const CreatorCard = ({
                       </div>
                     )}
                     
-                    {/* For non-admin users, just show Analytics */}
-                    {!isAdmin && (
-                      <Link to={`/creator-analytics/${creator.id}`} onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                          variant="ghost" 
-                          size={isMobile ? "sm" : "default"}
-                          className={`${isMobile ? 'px-4 h-8 text-xs' : 'px-8 h-10'} bg-gradient-premium-yellow text-black hover:opacity-90 transition-all`}
-                        >
-                          <LineChart className={`${isMobile ? 'h-3 w-3 mr-1' : 'h-4 w-4 mr-2'}`} />
-                          Analytics
-                        </Button>
-                      </Link>
-                    )}
                   </>
                 ) : (
                   // Files view for SharedFiles and MarketingFiles pages
