@@ -253,6 +253,7 @@ export class OnboardingService {
       
       // Use modelName if available, otherwise fall back to name
       const creatorName = personalInfo.modelName || creatorInfo.name;
+      const modelName = personalInfo.modelName || creatorInfo.name; // Model name specifically
       
       // Create creator record with the same ID as the auth user
       const { data: creatorData, error: creatorError } = await supabase
@@ -260,6 +261,7 @@ export class OnboardingService {
         .insert({
           id: userId,
           name: creatorName,
+          model_name: modelName, // Save the model name to the dedicated field
           email: email,
           gender: genderValue,
           team: creatorInfo.team,

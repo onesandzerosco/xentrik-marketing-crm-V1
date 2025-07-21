@@ -9,6 +9,7 @@ type GenderEnum = Database["public"]["Enums"]["gender"];
 
 export interface CreatorData {
   name: string;
+  modelName?: string; // Add model name field
   email?: string;
   gender: GenderEnum;
   team: TeamEnum;

@@ -25,6 +25,7 @@ export class CreatorAddService {
         .from('creators')
         .insert({
           name: creatorData.name,
+          model_name: creatorData.modelName || creatorData.name, // Use modelName if provided, fallback to name
           email: creatorData.email,
           gender: creatorData.gender,
           team: creatorData.team,
