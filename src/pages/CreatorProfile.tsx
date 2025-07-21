@@ -61,7 +61,7 @@ const CreatorProfile = () => {
   return (
     <div className="p-8 w-full min-h-screen bg-background">
       <CreatorHeader
-        title={`${creator.name}'s Profile`}
+        title={`${creator.modelName || creator.name}'s Profile`}
         onSave={handleSave}
         badges={{
           gender: creator.gender,
