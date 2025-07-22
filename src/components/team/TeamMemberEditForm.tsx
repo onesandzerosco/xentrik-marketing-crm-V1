@@ -6,7 +6,6 @@ import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 import ProfileImageSection from './ProfileImageSection';
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
-import TeamAssignmentSection from './TeamAssignmentSection';
 import { EmployeeTeam } from '@/types/employee';
 
 export type FormValues = TeamMemberFormValues;
@@ -43,7 +42,6 @@ const TeamMemberEditForm: React.FC<TeamMemberEditFormProps> = ({
 
           <div className="space-y-6">
             <TeamRolesSection control={form.control} />
-            <TeamAssignmentSection control={form.control} />
           </div>
         </div>
       </form>
