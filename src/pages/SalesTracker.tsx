@@ -1,13 +1,13 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SalesTrackerTable } from '@/components/sales-tracker/SalesTrackerTable';
-import { SalesTrackerHeader } from '@/components/sales-tracker/SalesTrackerHeader';
+import React, { useState } from 'react';
+import { AdminSalesView } from '@/components/sales-tracker/AdminSalesView';
+import { ChatterSalesView } from '@/components/sales-tracker/ChatterSalesView';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
 
 const SalesTracker: React.FC = () => {
   const { userRole, userRoles, isAuthenticated } = useAuth();
+  const [selectedChatterId, setSelectedChatterId] = useState<string | null>(null);
 
   // Check if user has access to Sales Tracker
   const hasAccess = isAuthenticated && (
@@ -18,6 +18,9 @@ const SalesTracker: React.FC = () => {
     userRole === 'VA' || 
     userRoles?.includes('VA')
   );
+
+  const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
 
   if (!hasAccess) {
     return (
@@ -34,22 +37,15 @@ const SalesTracker: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-premium-dark">
-      <div className="container mx-auto p-4 space-y-6">
-        <SalesTrackerHeader />
-        
-        <Card className="bg-secondary/10 border-muted">
-          <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              Weekly Sales Tracker
-              <span className="text-sm text-muted-foreground font-normal">
-                (Thursday to Wednesday)
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SalesTrackerTable />
-          </CardContent>
-        </Card>
+      <div className="container mx-auto p-4">
+        {isAdmin ? (
+          <AdminSalesView 
+            selectedChatterId={selectedChatterId}
+            onSelectChatter={setSelectedChatterId}
+          />
+        ) : (
+          <ChatterSalesView />
+        )}
       </div>
     </div>
   );
