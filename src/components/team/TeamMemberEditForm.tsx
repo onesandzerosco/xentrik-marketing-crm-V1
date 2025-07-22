@@ -26,20 +26,26 @@ const TeamMemberEditForm: React.FC<TeamMemberEditFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Profile Image Section - Full Width at Top */}
+        <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
+          <h2 className="text-xl font-semibold mb-4">Profile Image</h2>
+          <div className="flex justify-center">
+            <ProfileImageSection
+              profileImage={form.watch("profileImage") || ""}
+              name={form.watch("name") || teamMember.name}
+              handleProfileImageChange={(url) => form.setValue("profileImage", url)}
+            />
+          </div>
+        </div>
+
+        {/* Main Content Grid - Two Balanced Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Basic Information */}
           <div className="space-y-6">
-            <div className="bg-[#1a1a33]/50 backdrop-blur-sm p-6 rounded-xl border border-[#252538]/50">
-              <h2 className="text-xl font-semibold mb-4">Profile Image</h2>
-              <ProfileImageSection
-                profileImage={form.watch("profileImage") || ""}
-                name={form.watch("name") || teamMember.name}
-                handleProfileImageChange={(url) => form.setValue("profileImage", url)}
-              />
-            </div>
-            
             <TeamBasicInfoSection control={form.control} />
           </div>
 
+          {/* Right Column - Roles & Status */}
           <div className="space-y-6">
             <TeamRolesSection control={form.control} />
           </div>
