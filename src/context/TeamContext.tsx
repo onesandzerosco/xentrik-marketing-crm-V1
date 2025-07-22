@@ -50,7 +50,7 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: profile.email || '',
           roles: profile.roles || [],
           status: profile.status || 'Active',
-          teams: profile.teams || [],
+          teams: [], // Remove teams reference from database
           telegram: profile.telegram,
           phoneNumber: profile.phone_number,
           lastLogin: profile.last_login || 'Never',
@@ -130,7 +130,6 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
         name: updates.name,
         role: updates.role, // Primary role
         roles: updates.roles, // Additional roles
-        teams: updates.teams,
         status: updates.status,
         telegram: updates.telegram,
         phone_number: updates.phoneNumber,

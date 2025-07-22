@@ -11,7 +11,6 @@ export const teamMemberFormSchema = z.object({
   department: z.string().optional(),
   roles: z.array(z.string()).default([]),
   profileImage: z.string().optional(),
-  teams: z.array(z.enum(["A", "B", "C"])).optional(),
   assignedCreators: z.array(z.string()).optional(),
   phoneNumber: z.string().optional()
 });

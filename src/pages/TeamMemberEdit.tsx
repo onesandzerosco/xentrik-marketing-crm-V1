@@ -29,7 +29,6 @@ const TeamMemberEdit = () => {
       role: (teamMember?.roles?.[0] || 'Employee') as any,
       roles: teamMember?.roles || [],
       status: teamMember?.status || 'Active',
-      teams: teamMember?.teams as ("A" | "B" | "C")[] || [],
       department: teamMember?.department || '',
       telegram: teamMember?.telegram || '',
       phoneNumber: teamMember?.phoneNumber || '',
@@ -49,8 +48,7 @@ const TeamMemberEdit = () => {
     try {
       await updateTeamMember(teamMember.id, {
         ...values,
-        roles: values.roles as unknown as TeamMemberRole[],
-        teams: values.teams
+        roles: values.roles as unknown as TeamMemberRole[]
       });
       
       toast({

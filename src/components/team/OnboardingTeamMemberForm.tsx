@@ -11,7 +11,6 @@ import { teamMemberFormSchema, TeamMemberFormValues } from '@/schemas/teamMember
 import { PrimaryRole } from '@/types/employee';
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
-import TeamAssignmentSection from './TeamAssignmentSection';
 
 const OnboardingTeamMemberForm = () => {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ const OnboardingTeamMemberForm = () => {
       email: '',
       role: 'Employee',
       status: 'Active',
-      teams: [],
       telegram: '',
       department: '',
       roles: []
@@ -43,9 +41,9 @@ const OnboardingTeamMemberForm = () => {
         email: data.email, // Ensure email is explicitly set
         roles: [data.role], // Convert single role to array for API
         status: data.status || 'Active',
-        teams: data.teams || [],
         telegram: data.telegram,
         department: data.department,
+        teams: [], // Add empty teams array to satisfy TeamMember interface
       };
       
       await addTeamMember(teamMemberData, tempPassword);
@@ -70,7 +68,6 @@ const OnboardingTeamMemberForm = () => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-3xl mx-auto">
         <TeamBasicInfoSection control={form.control} />
         <TeamRolesSection control={form.control} />
-        <TeamAssignmentSection control={form.control} />
         
         <Button type="submit" className="w-full">
           Add Team Member

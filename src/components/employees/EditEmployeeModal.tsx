@@ -18,7 +18,6 @@ import { teamMemberFormSchema, TeamMemberFormValues } from "@/schemas/teamMember
 // Import the refactored components
 import ProfileImageSection from "@/components/team/ProfileImageSection";
 import BasicInfoSection from "@/components/team/BasicInfoSection";
-import TeamAssignmentSection from "@/components/team/TeamAssignmentSection";
 import CreatorsAssignmentSection from "@/components/team/CreatorsAssignmentSection";
 
 interface EditEmployeeModalProps {
@@ -51,7 +50,6 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
       department: employee.department || "",
       roles: employee.roles || [],
       profileImage: employee.profileImage || "",
-      teams: employee.teams || [],
       assignedCreators: employee.assignedCreators || []
     }
   });
@@ -68,7 +66,6 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
         department: employee.department || "",
         roles: employee.roles || [],
         profileImage: employee.profileImage || "",
-        teams: employee.teams || [],
         assignedCreators: employee.assignedCreators || []
       });
       setSelectedTeams(employee.teams || []);
@@ -89,7 +86,7 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     }
     
     // Add selected teams and creators to the form values
-    values.teams = selectedTeams;
+    // values.teams = selectedTeams; // Removed teams functionality
     values.assignedCreators = selectedCreators;
     
     onUpdateEmployee(employee.id, values);
@@ -145,10 +142,6 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
               />
             </div>
 
-            <TeamAssignmentSection 
-              selectedTeams={selectedTeams}
-              toggleTeam={toggleTeam}
-            />
 
             <CreatorsAssignmentSection 
               selectedCreators={selectedCreators}

@@ -5,7 +5,6 @@ import { UseFormReturn } from "react-hook-form";
 import { TeamMemberFormValues } from "@/schemas/teamMemberSchema";
 import ProfileImageSection from "./ProfileImageSection";
 import BasicInfoSection from "./BasicInfoSection";
-import TeamAssignmentSection from "./TeamAssignmentSection";
 import CreatorsAssignmentSection from "./CreatorsAssignmentSection";
 import FormActions from "./FormActions";
 import { EmployeeTeam } from "@/types/employee";
@@ -52,10 +51,6 @@ const ProfileFormContainer: React.FC<ProfileFormContainerProps> = ({
             />
           </div>
           
-          <TeamAssignmentSection 
-            selectedTeams={selectedTeams}
-            toggleTeam={toggleTeam}
-          />
 
           <CreatorsAssignmentSection 
             selectedCreators={selectedCreators}
