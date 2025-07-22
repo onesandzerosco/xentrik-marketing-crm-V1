@@ -22,7 +22,8 @@ import {
   UserPlus,
   ListCheck,
   Database,
-  Kanban
+  Kanban,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -122,6 +123,13 @@ const navGroups: NavGroup[] = [
         hideForCreator: true,
       },
       {
+        path: '/sales-tracker',
+        label: 'Sales Tracker',
+        icon: <DollarSign className="h-5 w-5" />,
+        roles: ['Admin', 'VA', 'Chatter'],
+        hideForCreator: true,
+      },
+      {
         path: '/voice-generation',
         label: 'Voice Generator',
         icon: <Mic className="h-5 w-5" />,
@@ -175,12 +183,12 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     
     // Chatter employees should ONLY see Chatting Team items
     if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
-      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation';
+      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker';
     }
     
     // VA employees should see Chatting Team items + Marketing Files + Shared Files (but not Customs Tracker)
     if (userRole === 'VA' || userRoles?.includes('VA')) {
-      return item.path === '/creators-data' || item.path === '/voice-generation' || 
+      return item.path === '/creators-data' || item.path === '/voice-generation' || item.path === '/sales-tracker' ||
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
     

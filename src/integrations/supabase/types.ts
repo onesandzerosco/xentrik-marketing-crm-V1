@@ -705,6 +705,76 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_models: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          model_name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_models_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_tracker: {
+        Row: {
+          chatter_id: string | null
+          created_at: string
+          day_of_week: number
+          earnings: number
+          id: string
+          model_name: string
+          updated_at: string
+          week_start_date: string
+        }
+        Insert: {
+          chatter_id?: string | null
+          created_at?: string
+          day_of_week: number
+          earnings?: number
+          id?: string
+          model_name: string
+          updated_at?: string
+          week_start_date: string
+        }
+        Update: {
+          chatter_id?: string | null
+          created_at?: string
+          day_of_week?: number
+          earnings?: number
+          id?: string
+          model_name?: string
+          updated_at?: string
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_tracker_chatter_id_fkey"
+            columns: ["chatter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       secure_area_passwords: {
         Row: {
           active: boolean | null
@@ -864,6 +934,13 @@ export type Database = {
           additional_roles?: string[]
         }
         Returns: string
+      }
+      get_user_role_and_roles: {
+        Args: { user_id: string }
+        Returns: {
+          user_role: string
+          user_roles: string[]
+        }[]
       }
     }
     Enums: {
