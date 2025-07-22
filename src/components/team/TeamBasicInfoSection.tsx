@@ -3,10 +3,10 @@ import React from 'react';
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FormValues } from './TeamMemberEditForm';
+import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 
 interface TeamBasicInfoSectionProps {
-  control: Control<FormValues>;
+  control: Control<TeamMemberFormValues>;
 }
 
 const TeamBasicInfoSection: React.FC<TeamBasicInfoSectionProps> = ({ control }) => {

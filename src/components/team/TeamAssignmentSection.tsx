@@ -4,11 +4,11 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EmployeeTeam } from "@/types/employee";
-import { FormValues } from './TeamMemberEditForm';
+import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 
 // Define two different interfaces for different usage contexts
 interface TeamAssignmentFormProps {
-  control: Control<FormValues>;
+  control: Control<TeamMemberFormValues>;
   selectedTeams?: never;
   toggleTeam?: never;
 }

@@ -6,18 +6,20 @@ import { Save } from 'lucide-react';
 
 interface TeamMemberEditHeaderProps {
   memberName: string;
+  memberId: string;
   isCurrentUser: boolean;
   onSave: () => void;
 }
 
 const TeamMemberEditHeader: React.FC<TeamMemberEditHeaderProps> = ({
   memberName,
+  memberId,
   isCurrentUser,
   onSave
 }) => {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <BackButton to={`/team/${memberName}`} />
+      <BackButton to={`/team/${memberId}`} />
       <div>
         <h1 className="text-2xl font-bold">Edit Team Member</h1>
         <p className="text-sm text-muted-foreground">

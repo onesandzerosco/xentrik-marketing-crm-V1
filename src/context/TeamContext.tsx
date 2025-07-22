@@ -9,7 +9,7 @@ interface TeamContextProps {
   loading: boolean;
   error: string | null;
   addTeamMember: (teamMember: Omit<TeamMember, 'id' | 'createdAt'>, password: string) => Promise<void>;
-  updateTeamMember: (id: string, updates: Partial<TeamMember>) => Promise<void>;
+  updateTeamMember: (id: string, updates: Partial<TeamMember> & { role?: string }) => Promise<void>;
   deleteTeamMember: (id: string) => Promise<void>;
   filterTeamMembers: (filters: TeamFilters) => TeamMember[];
 }
@@ -121,15 +121,16 @@ export const TeamProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateTeamMember = async (id: string, updates: Partial<TeamMember>) => {
+  const updateTeamMember = async (id: string, updates: Partial<TeamMember> & { role?: string }) => {
     try {
       setLoading(true);
       
       // Map to database column names
       const dbUpdates: any = {
         name: updates.name,
+        role: updates.role, // Primary role
+        roles: updates.roles, // Additional roles
         teams: updates.teams,
-        roles: updates.roles,
         status: updates.status,
         telegram: updates.telegram,
         phone_number: updates.phoneNumber,

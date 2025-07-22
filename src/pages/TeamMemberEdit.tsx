@@ -8,21 +8,8 @@ import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { TeamMemberRole } from '@/types/employee';
 import TeamMemberEditHeader from '@/components/team/TeamMemberEditHeader';
-import TeamMemberEditForm, { FormValues } from '@/components/team/TeamMemberEditForm';
-import { z } from 'zod';
-
-const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  status: z.enum(["Active", "Inactive", "Paused"]),
-  telegram: z.string().optional(),
-  department: z.string().optional(),
-  profileImage: z.string().optional(),
-  teams: z.array(z.enum(["A", "B", "C"])).default([]),
-  role: z.enum(["Admin", "Manager", "Employee"]).optional(),
-  roles: z.array(z.string()).default([]),
-  phoneNumber: z.string().optional(),
-});
+import TeamMemberEditForm from '@/components/team/TeamMemberEditForm';
+import { teamMemberFormSchema, TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 
 const TeamMemberEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,11 +21,12 @@ const TeamMemberEdit = () => {
   const teamMember = id ? teamMembers.find(member => member.id === id) : null;
   const isCurrentUser = user?.id === id;
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<TeamMemberFormValues>({
+    resolver: zodResolver(teamMemberFormSchema),
     defaultValues: {
       name: teamMember?.name || '',
       email: teamMember?.email || '',
+      role: (teamMember?.roles?.[0] || 'Employee') as any,
       roles: teamMember?.roles || [],
       status: teamMember?.status || 'Active',
       teams: teamMember?.teams as ("A" | "B" | "C")[] || [],
@@ -57,7 +45,7 @@ const TeamMemberEdit = () => {
     );
   }
 
-  const handleSubmit = async (values: FormValues) => {
+  const handleSubmit = async (values: TeamMemberFormValues) => {
     try {
       await updateTeamMember(teamMember.id, {
         ...values,
@@ -71,6 +59,7 @@ const TeamMemberEdit = () => {
       });
       navigate(`/team/${teamMember.id}`);
     } catch (error) {
+      console.error('Error updating team member:', error);
       toast({
         title: "Error",
         description: "Failed to update team member",
@@ -83,6 +72,7 @@ const TeamMemberEdit = () => {
     <div className="container mx-auto px-4 py-8">
       <TeamMemberEditHeader
         memberName={teamMember.name}
+        memberId={teamMember.id}
         isCurrentUser={isCurrentUser}
         onSave={form.handleSubmit(handleSubmit)}
       />

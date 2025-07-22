@@ -2,31 +2,18 @@
 import React from 'react';
 import { Form } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
-import { z } from 'zod';
+import { TeamMemberFormValues } from '@/schemas/teamMemberSchema';
 import ProfileImageSection from './ProfileImageSection';
 import TeamBasicInfoSection from './TeamBasicInfoSection';
 import TeamRolesSection from './TeamRolesSection';
 import TeamAssignmentSection from './TeamAssignmentSection';
 import { EmployeeTeam } from '@/types/employee';
 
-const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  status: z.enum(["Active", "Inactive", "Paused"]),
-  telegram: z.string().optional(),
-  department: z.string().optional(),
-  profileImage: z.string().optional(),
-  teams: z.array(z.enum(["A", "B", "C"])).default([]),
-  role: z.enum(["Admin", "Manager", "Employee"]).optional(),
-  roles: z.array(z.string()).default([]),
-  phoneNumber: z.string().optional(),
-});
-
-export type FormValues = z.infer<typeof formSchema>;
+export type FormValues = TeamMemberFormValues;
 
 interface TeamMemberEditFormProps {
-  form: UseFormReturn<FormValues>;
-  onSubmit: (values: FormValues) => void;
+  form: UseFormReturn<TeamMemberFormValues>;
+  onSubmit: (values: TeamMemberFormValues) => void;
   isCurrentUser: boolean;
   teamMember: any;
 }
