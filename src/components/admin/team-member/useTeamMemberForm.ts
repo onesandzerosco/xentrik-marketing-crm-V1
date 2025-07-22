@@ -17,6 +17,7 @@ export const useTeamMemberForm = () => {
   const form = useForm<TeamMemberFormData>({
     resolver: zodResolver(teamMemberFormSchema),
     defaultValues: {
+      name: "",
       email: "",
       primaryRole: "Employee",
       additionalRoles: [],
@@ -35,7 +36,7 @@ export const useTeamMemberForm = () => {
         body: {
           email: data.email,
           password: 'XentrikBananas',
-          name: data.email.split('@')[0],
+          name: data.name,
           primary_role: data.primaryRole,
           additional_roles: data.additionalRoles,
           geographic_restrictions: data.geographicRestrictions || []
@@ -52,11 +53,12 @@ export const useTeamMemberForm = () => {
 
       toast({
         title: "Success",
-        description: `New team member created with email ${data.email}`,
+        description: `New team member ${data.name} created with email ${data.email}`,
       });
 
       // Reset form
       form.reset({
+        name: "",
         email: "",
         primaryRole: "Employee",
         additionalRoles: [],

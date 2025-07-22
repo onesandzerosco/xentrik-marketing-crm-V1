@@ -3,6 +3,7 @@ import React from "react";
 import { Form } from "@/components/ui/form";
 import { useTeamMemberForm } from "./team-member/useTeamMemberForm";
 import FormHeader from "./team-member/FormHeader";
+import NameField from "./team-member/NameField";
 import EmailField from "./team-member/EmailField";
 import PrimaryRoleField from "./team-member/PrimaryRoleField";
 import AdditionalRolesField from "./team-member/AdditionalRolesField";
@@ -26,6 +27,7 @@ const AddTeamMemberForm: React.FC = () => {
       
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
+          <NameField control={form.control} />
           <EmailField control={form.control} />
           <PrimaryRoleField control={form.control} />
           
