@@ -62,8 +62,16 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
   };
 
   const handleDialogOpenChange = (open: boolean) => {
-    // If dialog is being closed and we're not in a submitting state
-    if (!open && !isSubmitting && !uploadingAttachments) {
+    console.log('Dialog change:', { open, isSubmitting, uploadingAttachments });
+    // If dialog is being closed
+    if (!open) {
+      // Only prevent closing if actively submitting or uploading
+      if (isSubmitting || uploadingAttachments) {
+        console.log('Preventing close due to active operation');
+        return; // Don't close
+      }
+      
+      console.log('Closing modal');
       resetForm();
       resetAttachments();
       onClose();
@@ -71,11 +79,10 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
   };
 
   const handleCancelClick = () => {
-    if (!isSubmitting && !uploadingAttachments) {
-      resetForm();
-      resetAttachments();
-      onClose();
-    }
+    console.log('Cancel clicked:', { isSubmitting, uploadingAttachments });
+    resetForm();
+    resetAttachments();
+    onClose();
   };
 
   return (
