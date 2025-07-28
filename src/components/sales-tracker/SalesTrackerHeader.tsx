@@ -12,6 +12,7 @@ export const SalesTrackerHeader: React.FC = () => {
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
 
   return (
     <div className="flex justify-between items-center">
@@ -23,7 +24,7 @@ export const SalesTrackerHeader: React.FC = () => {
       </div>
 
       <div className="flex gap-3">
-        {(isAdmin || isVA) && (
+        {(isAdmin || isVA || isChatter) && (
           <Button
             onClick={() => setShowAddModel(true)}
             className="bg-gradient-premium-yellow hover:bg-gradient-premium-yellow/90 text-black"
@@ -45,7 +46,7 @@ export const SalesTrackerHeader: React.FC = () => {
         )}
       </div>
 
-      {(isAdmin || isVA) && (
+      {(isAdmin || isVA || isChatter) && (
         <AddModelDialog 
           open={showAddModel} 
           onOpenChange={setShowAddModel} 
