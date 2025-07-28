@@ -60,8 +60,16 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
     }
   };
 
-  const handleClose = () => {
-    // Always allow closing unless actively submitting
+  const handleDialogOpenChange = (open: boolean) => {
+    // If dialog is being closed and we're not in a submitting state
+    if (!open && !isSubmitting && !uploadingAttachments) {
+      resetForm();
+      resetAttachments();
+      onClose();
+    }
+  };
+
+  const handleCancelClick = () => {
     if (!isSubmitting && !uploadingAttachments) {
       resetForm();
       resetAttachments();
@@ -70,7 +78,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Custom</DialogTitle>
@@ -101,7 +109,7 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
           />
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+            <Button type="button" variant="outline" onClick={handleCancelClick} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting || creatorsLoading || uploadingAttachments}>
