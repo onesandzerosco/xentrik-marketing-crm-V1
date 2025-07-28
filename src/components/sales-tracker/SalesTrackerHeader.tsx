@@ -14,6 +14,12 @@ export const SalesTrackerHeader: React.FC = () => {
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
 
+  // Debug logging
+  console.log('SalesTrackerHeader - userRole:', userRole);
+  console.log('SalesTrackerHeader - userRoles:', userRoles);
+  console.log('SalesTrackerHeader - isChatter:', isChatter);
+  console.log('SalesTrackerHeader - should show button:', (isAdmin || isVA || isChatter));
+
   return (
     <div className="flex justify-between items-center">
       <div>
