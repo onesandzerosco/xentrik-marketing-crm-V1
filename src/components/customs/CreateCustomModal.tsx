@@ -61,7 +61,8 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    // Always allow closing unless actively submitting
+    if (!isSubmitting && !uploadingAttachments) {
       resetForm();
       resetAttachments();
       onClose();

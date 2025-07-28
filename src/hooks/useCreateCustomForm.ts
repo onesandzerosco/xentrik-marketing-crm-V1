@@ -80,6 +80,8 @@ export const useCreateCustomForm = (onSuccess: () => void) => {
       });
 
       resetForm();
+      // Reset submitting state BEFORE calling onSuccess to prevent modal blocking
+      setIsSubmitting(false);
       onSuccess();
     } catch (error) {
       toast({
@@ -88,7 +90,6 @@ export const useCreateCustomForm = (onSuccess: () => void) => {
         variant: "destructive",
       });
       console.error('Error creating custom:', error);
-    } finally {
       setIsSubmitting(false);
     }
   };
