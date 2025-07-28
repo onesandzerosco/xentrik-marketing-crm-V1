@@ -33,7 +33,7 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             <SelectContent>
               {creators.map((creator) => (
                 <SelectItem key={creator.id} value={creator.model_name}>
-                  {creator.model_name} ({creator.name})
+                  {creator.model_name}
                 </SelectItem>
               ))}
             </SelectContent>
