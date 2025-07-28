@@ -36,7 +36,8 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
         .from('creators')
         .select('id, name, model_name')
         .eq('active', true)
-        .order('model_name.asc.nullslast, name.asc');
+        .order('model_name', { ascending: true, nullsFirst: false })
+        .order('name', { ascending: true });
       
       if (error) throw error;
       return data;
