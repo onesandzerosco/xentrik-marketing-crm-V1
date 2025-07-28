@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PremiumInput } from '@/components/ui/premium-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSalesData } from './hooks/useSalesData';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,20 +23,30 @@ export const SalesTrackerTable: React.FC = () => {
   const { salesData, models, isLoading, refetch } = useSalesData();
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
+  const [dayTypes, setDayTypes] = useState<Record<number, boolean>>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
 
-  // Initialize local data when sales data loads
+  // Initialize local data and day types when sales data loads
   useEffect(() => {
     const initialData: Record<string, string> = {};
+    const initialDayTypes: Record<number, boolean> = {};
+    
     salesData.forEach(entry => {
       const key = `${entry.model_name}-${entry.day_of_week}`;
       initialData[key] = entry.earnings?.toString() || '0';
     });
+    
+    // Initialize day types from DAYS_OF_WEEK default values
+    DAYS_OF_WEEK.forEach(day => {
+      initialDayTypes[day.value] = dayTypes[day.value] !== undefined ? dayTypes[day.value] : day.isWorkingDay;
+    });
+    
     setLocalData(initialData);
+    setDayTypes(initialDayTypes);
   }, [salesData]);
 
   const getEarnings = (modelName: string, dayOfWeek: number): string => {
@@ -147,6 +158,10 @@ export const SalesTrackerTable: React.FC = () => {
     return thursday.toISOString().split('T')[0];
   };
 
+  const updateDayType = (dayValue: number, isWorkingDay: boolean) => {
+    setDayTypes(prev => ({ ...prev, [dayValue]: isWorkingDay }));
+  };
+
   const calculateDayTotal = (dayOfWeek: number): number => {
     return models.reduce((total, model) => {
       const earnings = parseFloat(getEarnings(model.model_name, dayOfWeek)) || 0;
@@ -215,7 +230,19 @@ export const SalesTrackerTable: React.FC = () => {
           {DAYS_OF_WEEK.map(day => (
             <TableRow key={day.value}>
               <TableCell className="font-medium">
-                {day.isWorkingDay ? 'Working Days' : 'Non-Working Days'}
+                <Select
+                  value={dayTypes[day.value] ? "working" : "non-working"}
+                  onValueChange={(value) => updateDayType(day.value, value === "working")}
+                  disabled={isVA}
+                >
+                  <SelectTrigger className="w-full bg-background border border-input">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border border-border z-50">
+                    <SelectItem value="working">Working Days</SelectItem>
+                    <SelectItem value="non-working">Non-Working Days</SelectItem>
+                  </SelectContent>
+                </Select>
               </TableCell>
               <TableCell className="font-medium">
                 {getDateForDay(day.value)}
