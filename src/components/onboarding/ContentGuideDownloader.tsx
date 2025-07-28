@@ -2,8 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const ContentGuideDownloader: React.FC = () => {
+  const isMobile = useIsMobile();
+
   const handleDownload = () => {
     // Create a link to the PDF file and trigger download
     const link = document.createElement('a');
@@ -18,10 +21,11 @@ export const ContentGuideDownloader: React.FC = () => {
     <Button 
       onClick={handleDownload}
       variant="outline"
+      size={isMobile ? "sm" : "default"}
       className="flex items-center"
     >
-      <Download className="mr-1 h-4 w-4" />
-      Content Guide
+      <Download className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${isMobile ? '' : 'mr-1'}`} />
+      {!isMobile && 'Content Guide'}
     </Button>
   );
 };

@@ -77,8 +77,8 @@ export const FileExplorerHeader: React.FC<FileExplorerHeaderProps> = ({
         </div>
         
         <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
-          {/* Content Guide Download Button - Only show for Creators on desktop */}
-          {isCreator && !isMobile && (
+          {/* Content Guide Download Button - Show for Creators on all devices */}
+          {isCreator && (
             <ContentGuideDownloader />
           )}
           
