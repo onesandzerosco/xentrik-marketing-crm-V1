@@ -71,6 +71,8 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
           </div>
         </div>
         
+        <SalesTrackerHeader />
+        
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
