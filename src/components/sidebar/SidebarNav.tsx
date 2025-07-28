@@ -126,7 +126,7 @@ const navGroups: NavGroup[] = [
         path: '/sales-tracker',
         label: 'Sales Tracker',
         icon: <DollarSign className="h-5 w-5" />,
-        roles: ['Admin', 'VA'], // Removed 'Chatter' to hide from Chatter employees
+        roles: ['Admin', 'VA', 'Chatter'],
         hideForCreator: true,
       },
       {
@@ -181,9 +181,9 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return item.path === '/marketing-files' || item.path === '/creators-data';
     }
     
-    // Chatter employees should ONLY see Chatting Team items (excluding Sales Tracker under construction)
+    // Chatter employees should ONLY see Chatting Team items
     if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
-      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation';
+      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker';
     }
     
     // VA employees should see Chatting Team items + Marketing Files + Shared Files + Sales Tracker (but not Customs Tracker)
