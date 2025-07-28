@@ -11,6 +11,7 @@ export const SalesTrackerHeader: React.FC = () => {
   const { userRole, userRoles } = useAuth();
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+  const isVA = userRole === 'VA' || userRoles?.includes('VA');
 
   return (
     <div className="flex justify-between items-center">
@@ -22,13 +23,15 @@ export const SalesTrackerHeader: React.FC = () => {
       </div>
 
       <div className="flex gap-3">
-        <Button
-          onClick={() => setShowAddModel(true)}
-          className="bg-gradient-premium-yellow hover:bg-gradient-premium-yellow/90 text-black"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Model
-        </Button>
+        {(isAdmin || isVA) && (
+          <Button
+            onClick={() => setShowAddModel(true)}
+            className="bg-gradient-premium-yellow hover:bg-gradient-premium-yellow/90 text-black"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Model
+          </Button>
+        )}
 
         {isAdmin && (
           <Button
@@ -42,10 +45,12 @@ export const SalesTrackerHeader: React.FC = () => {
         )}
       </div>
 
-      <AddModelDialog 
-        open={showAddModel} 
-        onOpenChange={setShowAddModel} 
-      />
+      {(isAdmin || isVA) && (
+        <AddModelDialog 
+          open={showAddModel} 
+          onOpenChange={setShowAddModel} 
+        />
+      )}
       
       {isAdmin && (
         <PayChatterDialog 

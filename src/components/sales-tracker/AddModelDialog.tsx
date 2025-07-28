@@ -20,7 +20,7 @@ import { toast } from '@/hooks/use-toast';
 interface Creator {
   id: string;
   name: string;
-  model_name: string;
+  model_name: string | null;
 }
 
 interface AddModelDialogProps {
@@ -63,9 +63,10 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
       if (modelsError) throw modelsError;
 
       const existingModelNames = existingModels?.map(m => m.model_name) || [];
-      const availableCreators = creatorsData?.filter(creator => 
-        creator.model_name && !existingModelNames.includes(creator.model_name)
-      ) || [];
+      const availableCreators = creatorsData?.filter(creator => {
+        const modelNameToCheck = creator.model_name || creator.name;
+        return modelNameToCheck && !existingModelNames.includes(modelNameToCheck);
+      }) || [];
 
       setCreators(availableCreators);
     } catch (error) {
@@ -95,12 +96,15 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
     const creator = creators.find(c => c.id === selectedCreator);
     if (!creator) return;
 
+    // Use model_name if available, otherwise fall back to name
+    const modelNameToUse = creator.model_name || creator.name;
+
     setIsLoading(true);
     try {
       const { error } = await supabase
         .from('sales_models')
         .insert({
-          model_name: creator.model_name,
+          model_name: modelNameToUse,
         });
 
       if (error) {
@@ -118,7 +122,7 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
 
       toast({
         title: "Success",
-        description: `${creator.model_name} has been added to the tracker.`
+        description: `${modelNameToUse} has been added to the tracker.`
       });
 
       setSelectedCreator('');
@@ -170,11 +174,14 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
                   <SelectValue placeholder="Choose a creator" />
                 </SelectTrigger>
                 <SelectContent>
-                  {creators.map((creator) => (
-                    <SelectItem key={creator.id} value={creator.id}>
-                      {creator.model_name} ({creator.name})
-                    </SelectItem>
-                  ))}
+                  {creators.map((creator) => {
+                    const displayName = creator.model_name || creator.name;
+                    return (
+                      <SelectItem key={creator.id} value={creator.id}>
+                        {displayName} ({creator.name})
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
