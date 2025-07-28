@@ -9,14 +9,13 @@ const SalesTracker: React.FC = () => {
   const { userRole, userRoles, isAuthenticated } = useAuth();
   const [selectedChatterId, setSelectedChatterId] = useState<string | null>(null);
 
-  // Check if user has access to Sales Tracker
+  // Check if user has access to Sales Tracker (temporarily disabled for Chatters)
   const hasAccess = isAuthenticated && (
     userRole === 'Admin' || 
     userRoles?.includes('Admin') ||
-    userRole === 'Chatter' || 
-    userRoles?.includes('Chatter') ||
     userRole === 'VA' || 
     userRoles?.includes('VA')
+    // Chatter access temporarily disabled - Sales Tracker under construction
   );
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -28,7 +27,7 @@ const SalesTracker: React.FC = () => {
         <Alert className="max-w-md">
           <Lock className="h-4 w-4" />
           <AlertDescription>
-            You don't have permission to access the Sales Tracker. This module is only available to Admin, Chatter, and VA users.
+            You don't have permission to access the Sales Tracker. This module is currently under construction and only available to Admin and VA users.
           </AlertDescription>
         </Alert>
       </div>
