@@ -10,7 +10,7 @@ interface BasicInfoSectionProps {
     sale_by: string;
     custom_type: string;
   };
-  creators: Array<{ id: string; name: string }>;
+  creators: Array<{ id: string; name: string; model_name: string }>;
   creatorsLoading: boolean;
   onInputChange: (field: string, value: string) => void;
 }
@@ -32,8 +32,8 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             </SelectTrigger>
             <SelectContent>
               {creators.map((creator) => (
-                <SelectItem key={creator.id} value={creator.name}>
-                  {creator.name}
+                <SelectItem key={creator.id} value={creator.model_name}>
+                  {creator.model_name} ({creator.name})
                 </SelectItem>
               ))}
             </SelectContent>

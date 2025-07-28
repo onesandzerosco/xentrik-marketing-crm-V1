@@ -34,9 +34,9 @@ const CreateCustomModal: React.FC<CreateCustomModalProps> = ({ isOpen, onClose, 
     queryFn: async () => {
       const { data, error } = await supabase
         .from('creators')
-        .select('id, name')
+        .select('id, name, model_name')
         .eq('active', true)
-        .order('name');
+        .order('model_name');
       
       if (error) throw error;
       return data;
