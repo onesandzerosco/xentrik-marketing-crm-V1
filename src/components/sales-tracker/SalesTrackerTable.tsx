@@ -9,14 +9,17 @@ import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
-  { label: 'Thursday', value: 0 },
-  { label: 'Friday', value: 1 },
-  { label: 'Saturday', value: 2 },
-  { label: 'Sunday', value: 3 },
-  { label: 'Monday', value: 4 },
-  { label: 'Tuesday', value: 5 },
-  { label: 'Wednesday', value: 6 },
+  { label: 'Thursday', value: 0, isWorkingDay: true },
+  { label: 'Friday', value: 1, isWorkingDay: true },
+  { label: 'Saturday', value: 2, isWorkingDay: true },
+  { label: 'Sunday', value: 3, isWorkingDay: true },
+  { label: 'Monday', value: 4, isWorkingDay: true },
+  { label: 'Tuesday', value: 5, isWorkingDay: false },
+  { label: 'Wednesday', value: 6, isWorkingDay: false },
 ];
+
+const WORKING_DAYS = DAYS_OF_WEEK.filter(day => day.isWorkingDay);
+const NON_WORKING_DAYS = DAYS_OF_WEEK.filter(day => !day.isWorkingDay);
 
 export const SalesTrackerTable: React.FC = () => {
   const { salesData, models, isLoading, refetch } = useSalesData();
@@ -179,74 +182,104 @@ export const SalesTrackerTable: React.FC = () => {
     );
   }
 
+  const renderDaySection = (days: typeof DAYS_OF_WEEK, sectionTitle: string) => (
+    <div className="mb-6">
+      <div className="bg-secondary/20 p-3 mb-2">
+        <h3 className="font-semibold text-foreground">{sectionTitle}:</h3>
+      </div>
+      {days.map(day => {
+        const date = new Date();
+        const weekStart = new Date(getWeekStartDate());
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(weekStart.getDate() + day.value);
+        
+        return (
+          <div key={day.value} className="border-b border-muted">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-left font-semibold bg-muted/50 min-w-[150px]">
+                    DATE | MODEL<br />
+                    <span className="text-sm font-normal">
+                      {dayDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </TableHead>
+                  {models.map(model => (
+                    <TableHead key={model.model_name} className="text-center font-semibold min-w-[120px]">
+                      {model.model_name}
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeModel(model.model_name)}
+                          className="ml-2 h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </TableHead>
+                  ))}
+                  <TableHead className="text-center font-semibold bg-primary/10 min-w-[120px]">
+                    TOTAL
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium bg-muted/30">
+                    {day.label}
+                  </TableCell>
+                  {models.map(model => (
+                    <TableCell key={model.model_name} className="text-center">
+                      <PremiumInput
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={getEarnings(model.model_name, day.value)}
+                        onChange={(e) => updateEarnings(model.model_name, day.value, e.target.value)}
+                        className="w-full text-center"
+                        placeholder="$0.00"
+                        disabled={isVA}
+                      />
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-center font-semibold bg-primary/5">
+                    ${calculateDayTotal(day.value).toFixed(2)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
-    <div className="w-full overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-left font-semibold">Model</TableHead>
-            {DAYS_OF_WEEK.map(day => (
-              <TableHead key={day.value} className="text-center font-semibold min-w-[120px]">
-                {day.label}
-              </TableHead>
-            ))}
-            <TableHead className="text-center font-semibold bg-primary/10 min-w-[120px]">
-              Total
-            </TableHead>
-            {isAdmin && <TableHead className="text-center w-[60px]">Action</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {models.map(model => (
-            <TableRow key={model.model_name}>
-              <TableCell className="font-medium">{model.model_name}</TableCell>
-              {DAYS_OF_WEEK.map(day => (
-                <TableCell key={day.value} className="text-center">
-                  <PremiumInput
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={getEarnings(model.model_name, day.value)}
-                    onChange={(e) => updateEarnings(model.model_name, day.value, e.target.value)}
-                    className="w-full text-center"
-                    placeholder="0.00"
-                    disabled={isVA}
-                  />
+    <div className="w-full space-y-6">
+      {renderDaySection(WORKING_DAYS, "Working Days")}
+      {renderDaySection(NON_WORKING_DAYS, "Non-Working Days")}
+      
+      {/* Total Net Sales Row */}
+      <div className="border-2 border-primary bg-primary/5">
+        <Table>
+          <TableBody>
+            <TableRow className="bg-primary/10">
+              <TableCell className="font-bold text-lg bg-primary/20 min-w-[150px]">
+                TOTAL NET SALES:
+              </TableCell>
+              {models.map(model => (
+                <TableCell key={model.model_name} className="text-center font-bold text-lg min-w-[120px]">
+                  ${calculateModelTotal(model.model_name).toFixed(2)}
                 </TableCell>
               ))}
-              <TableCell className="text-center font-semibold bg-primary/5">
-                ${calculateModelTotal(model.model_name).toFixed(2)}
+              <TableCell className="text-center font-bold text-lg bg-primary/20 min-w-[120px]">
+                ${calculateWeeklyTotal().toFixed(2)}
               </TableCell>
-              {isAdmin && (
-                <TableCell className="text-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeModel(model.model_name)}
-                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              )}
             </TableRow>
-          ))}
-          
-          {/* Totals Row */}
-          <TableRow className="bg-secondary/20 font-semibold">
-            <TableCell>Daily Total</TableCell>
-            {DAYS_OF_WEEK.map(day => (
-              <TableCell key={day.value} className="text-center">
-                ${calculateDayTotal(day.value).toFixed(2)}
-              </TableCell>
-            ))}
-            <TableCell className="text-center bg-primary/20">
-              ${calculateWeeklyTotal().toFixed(2)}
-            </TableCell>
-            {isAdmin && <TableCell></TableCell>}
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
