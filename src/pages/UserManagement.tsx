@@ -5,6 +5,7 @@ import AddTeamMemberForm from "../components/admin/AddTeamMemberForm";
 import { Card } from "@/components/ui/card";
 import InviteCreatorCard from "@/components/admin/creator-invite/InviteCreatorCard";
 import PendingLinksCard from "@/components/admin/creator-invite/PendingLinksCard";
+import UserRolesList from "@/components/admin/users/UserRolesList";
 
 const UserManagement = () => {
   const { user } = useAuth();
@@ -32,6 +33,19 @@ const UserManagement = () => {
       <div className="mb-4 md:mb-6">
         <Card className="p-4 md:p-6">
           <AddTeamMemberForm />
+        </Card>
+      </div>
+
+      {/* Employee Management Table */}
+      <div className="mb-4 md:mb-6">
+        <Card className="p-4 md:p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold mb-2">Employee Management</h2>
+            <p className="text-sm text-muted-foreground">
+              Manage team member roles, suspend accounts, or permanently delete users
+            </p>
+          </div>
+          <UserRolesList />
         </Card>
       </div>
 

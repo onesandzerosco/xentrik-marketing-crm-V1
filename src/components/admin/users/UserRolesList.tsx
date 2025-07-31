@@ -3,6 +3,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import UserRolesTable from "./UserRolesTable";
 import EditUserRolesModal from "../EditUserRolesModal";
+import EmployeeActionsDialog from "./EmployeeActionsDialog";
 import useUserRoles from "./useUserRoles";
 import useUserRolesUpdate from "./useUserRolesUpdate";
 
@@ -14,8 +15,14 @@ const UserRolesList: React.FC = () => {
     setSelectedUser,
     isModalOpen,
     setIsModalOpen,
+    isActionDialogOpen,
+    setIsActionDialogOpen,
+    pendingAction,
     fetchUsers,
-    handleEdit
+    handleEdit,
+    handleSuspend,
+    handleDelete,
+    handleConfirmAction
   } = useUserRoles();
 
   const { handleUpdateUser } = useUserRolesUpdate(fetchUsers);
@@ -34,7 +41,9 @@ const UserRolesList: React.FC = () => {
       <div className="rounded-md border">
         <UserRolesTable 
           users={users} 
-          onEditUser={handleEdit} 
+          onEditUser={handleEdit}
+          onSuspendUser={handleSuspend}
+          onDeleteUser={handleDelete}
         />
       </div>
       
@@ -43,6 +52,14 @@ const UserRolesList: React.FC = () => {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onUpdate={handleUpdateUser}
+      />
+      
+      <EmployeeActionsDialog 
+        open={isActionDialogOpen}
+        onOpenChange={setIsActionDialogOpen}
+        onConfirm={handleConfirmAction}
+        employee={selectedUser}
+        action={pendingAction || 'suspend'}
       />
     </>
   );

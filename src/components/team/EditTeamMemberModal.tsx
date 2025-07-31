@@ -43,7 +43,7 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Invalid email address" }),
   roles: z.array(z.string()).min(1, { message: "Select at least one role" }),
-  status: z.enum(["Active", "Inactive", "Paused"]),
+  status: z.enum(["Active", "Inactive", "Paused", "Suspended"]),
   teams: z.array(z.string()).optional(),
   department: z.string().optional(),
   telegram: z.string().optional(),
@@ -195,6 +195,7 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
                           <SelectItem value="Active">Active</SelectItem>
                           <SelectItem value="Paused">Paused</SelectItem>
                           <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Suspended">Suspended</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

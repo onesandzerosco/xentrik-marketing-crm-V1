@@ -9,6 +9,8 @@ export const useUserRoles = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isActionDialogOpen, setIsActionDialogOpen] = useState<boolean>(false);
+  const [pendingAction, setPendingAction] = useState<'suspend' | 'delete' | null>(null);
   const { toast } = useToast();
 
   // Sort users by role priority: Admin > Manager > Employee
@@ -82,6 +84,69 @@ export const useUserRoles = () => {
     setIsModalOpen(true);
   };
 
+  const handleSuspend = (user: Employee) => {
+    setSelectedUser(user);
+    setPendingAction('suspend');
+    setIsActionDialogOpen(true);
+  };
+
+  const handleDelete = (user: Employee) => {
+    setSelectedUser(user);
+    setPendingAction('delete');
+    setIsActionDialogOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!selectedUser || !pendingAction) return;
+
+    try {
+      setLoading(true);
+      
+      if (pendingAction === 'suspend') {
+        // Update user status to Suspended
+        const { error } = await supabase
+          .from('profiles')
+          .update({ status: 'Suspended' })
+          .eq('id', selectedUser.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${selectedUser.name} has been suspended`,
+        });
+      } else if (pendingAction === 'delete') {
+        // Call the edge function to delete the user
+        const { error } = await supabase.functions.invoke('delete-team-member', {
+          body: { userId: selectedUser.id }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: `${selectedUser.name} has been permanently deleted`,
+        });
+      }
+
+      // Refresh the users list
+      await fetchUsers();
+      
+    } catch (error) {
+      console.error(`Error ${pendingAction}ing user:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to ${pendingAction} user`,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+      setIsActionDialogOpen(false);
+      setPendingAction(null);
+      setSelectedUser(null);
+    }
+  };
+
   return {
     users,
     loading,
@@ -89,8 +154,14 @@ export const useUserRoles = () => {
     setSelectedUser,
     isModalOpen,
     setIsModalOpen,
+    isActionDialogOpen,
+    setIsActionDialogOpen,
+    pendingAction,
     fetchUsers,
-    handleEdit
+    handleEdit,
+    handleSuspend,
+    handleDelete,
+    handleConfirmAction
   };
 };
 

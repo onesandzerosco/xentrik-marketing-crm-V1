@@ -6,7 +6,7 @@ export interface TeamMember {
   name: string;
   email: string;
   roles: TeamMemberRole[];
-  status: "Active" | "Inactive" | "Paused";
+  status: "Active" | "Inactive" | "Paused" | "Suspended";
   teams: ("A" | "B" | "C")[];
   telegram?: string;
   phoneNumber?: string;
@@ -34,6 +34,6 @@ export type TeamMemberFormValues = {
 export interface TeamFilters {
   roles: TeamMemberRole[];
   teams: ("A" | "B" | "C")[];
-  status: ("Active" | "Inactive" | "Paused")[];
+  status: ("Active" | "Inactive" | "Paused" | "Suspended")[];
   searchQuery: string;
 }
