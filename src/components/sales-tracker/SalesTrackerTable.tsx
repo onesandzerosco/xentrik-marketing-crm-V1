@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   { label: 'Thursday', value: 0, isWorkingDay: true },
@@ -19,8 +19,26 @@ const DAYS_OF_WEEK = [
   { label: 'Wednesday', value: 6, isWorkingDay: false },
 ];
 
+const getWeekStartDate = (): string => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
+  const thursday = new Date(today);
+  
+  if (dayOfWeek < 4) {
+    // If today is before Thursday, go to last Thursday
+    thursday.setDate(today.getDate() - (7 - daysUntilThursday));
+  } else {
+    // If today is Thursday or after, go to this Thursday
+    thursday.setDate(today.getDate() - daysUntilThursday);
+  }
+  
+  return thursday.toISOString().split('T')[0];
+};
+
 export const SalesTrackerTable: React.FC = () => {
-  const { salesData, models, isLoading, refetch } = useSalesData();
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(getWeekStartDate());
+  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart);
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
   const [dayTypes, setDayTypes] = useState<Record<number, boolean>>({});
@@ -74,12 +92,11 @@ export const SalesTrackerTable: React.FC = () => {
     setIsUpdating(true);
     try {
       const earnings = parseFloat(value) || 0;
-      const weekStartDate = getWeekStartDate();
 
       const { error } = await supabase
         .from('sales_tracker')
         .upsert({
-          week_start_date: weekStartDate,
+          week_start_date: selectedWeekStart,
           model_name: modelName,
           day_of_week: dayOfWeek,
           earnings,
@@ -115,13 +132,12 @@ export const SalesTrackerTable: React.FC = () => {
 
       if (modelsError) throw modelsError;
 
-      // Remove from sales_tracker table for current week
-      const weekStartDate = getWeekStartDate();
+      // Remove from sales_tracker table for selected week
       const { error: salesError } = await supabase
         .from('sales_tracker')
         .delete()
         .eq('model_name', modelName)
-        .eq('week_start_date', weekStartDate);
+        .eq('week_start_date', selectedWeekStart);
 
       if (salesError) throw salesError;
 
@@ -141,22 +157,6 @@ export const SalesTrackerTable: React.FC = () => {
     }
   };
 
-  const getWeekStartDate = (): string => {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
-    const thursday = new Date(today);
-    
-    if (dayOfWeek < 4) {
-      // If today is before Thursday, go to last Thursday
-      thursday.setDate(today.getDate() - (7 - daysUntilThursday));
-    } else {
-      // If today is Thursday or after, go to this Thursday
-      thursday.setDate(today.getDate() - daysUntilThursday);
-    }
-    
-    return thursday.toISOString().split('T')[0];
-  };
 
   const updateDayType = (dayValue: number, isWorkingDay: boolean) => {
     setDayTypes(prev => ({ ...prev, [dayValue]: isWorkingDay }));
@@ -194,15 +194,59 @@ export const SalesTrackerTable: React.FC = () => {
     );
   }
 
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const currentWeek = new Date(selectedWeekStart);
+    const newWeek = new Date(currentWeek);
+    newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
+    setSelectedWeekStart(newWeek.toISOString().split('T')[0]);
+  };
+
   const getDateForDay = (dayValue: number): string => {
-    const weekStart = new Date(getWeekStartDate());
+    const weekStart = new Date(selectedWeekStart);
     const dayDate = new Date(weekStart);
     dayDate.setDate(weekStart.getDate() + dayValue);
     return dayDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
   };
 
+  const formatWeekRange = (): string => {
+    const weekStart = new Date(selectedWeekStart);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  };
+
   return (
     <div className="w-full overflow-x-auto">
+      {/* Week Navigation */}
+      <div className="flex items-center justify-between mb-4 p-4 bg-card border rounded-lg">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigateWeek('prev')}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous Week
+        </Button>
+        
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-semibold">Week of {formatWeekRange()}</span>
+          {selectedWeekStart === getWeekStartDate() && (
+            <span className="text-sm text-muted-foreground">(Current Week)</span>
+          )}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigateWeek('next')}
+          className="flex items-center gap-2"
+        >
+          Next Week
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      
       <Table>
         <TableHeader>
           <TableRow>

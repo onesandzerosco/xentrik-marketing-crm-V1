@@ -16,7 +16,7 @@ interface SalesModel {
   created_at: string;
 }
 
-export const useSalesData = () => {
+export const useSalesData = (selectedWeekStart?: string) => {
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,8 +52,8 @@ export const useSalesData = () => {
         return;
       }
 
-      // Fetch sales data for current week
-      const weekStartDate = getWeekStartDate();
+      // Fetch sales data for selected week or current week
+      const weekStartDate = selectedWeekStart || getWeekStartDate();
       const { data: salesData, error: salesError } = await supabase
         .from('sales_tracker')
         .select('*')
@@ -75,7 +75,7 @@ export const useSalesData = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedWeekStart]);
 
   return {
     salesData,
