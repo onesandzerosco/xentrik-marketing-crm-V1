@@ -19,6 +19,7 @@ const DAYS_OF_WEEK = [
   { label: 'Wednesday', value: 6, isWorkingDay: false },
 ];
 
+// Move getWeekStartDate outside component to avoid temporal dead zone
 const getWeekStartDate = (): string => {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
