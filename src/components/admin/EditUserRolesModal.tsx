@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -30,9 +30,9 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const defaultPrimaryRole: PrimaryRole = "Employee"; 
   const defaultAdditionalRoles: string[] = [];
   
-  // Use the user's actual roles, or fallback to defaults
-  const userPrimaryRole = user?.role || defaultPrimaryRole;
-  const userAdditionalRoles = user?.roles || defaultAdditionalRoles;
+  // Memoize these values to prevent infinite re-renders
+  const userPrimaryRole = useMemo(() => user?.role || defaultPrimaryRole, [user?.role]);
+  const userAdditionalRoles = useMemo(() => user?.roles || defaultAdditionalRoles, [user?.roles]);
   
   const {
     primaryRole,
@@ -67,7 +67,8 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
         additionalRoles 
       });
       
-      onUpdate(user.id, primaryRole, additionalRoles);
+      await onUpdate(user.id, primaryRole, additionalRoles);
+      onOpenChange(false); // Close modal after successful update
     }
   };
 
