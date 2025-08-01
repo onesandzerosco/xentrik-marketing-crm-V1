@@ -15,6 +15,7 @@ interface SalesModel {
   id: string;
   model_name: string;
   created_at: string;
+  week_start_date: string;
 }
 
 export const useSalesData = (selectedWeekStart?: string) => {
@@ -42,19 +43,21 @@ export const useSalesData = (selectedWeekStart?: string) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch ALL models from sales_models table (not just ones with sales data)
-      const { data: allModels, error: modelsError } = await supabase
+      // Fetch sales data for selected week or current week
+      const weekStartDate = selectedWeekStart || getWeekStartDate();
+      
+      // Fetch models for the specific week
+      const { data: weekModels, error: modelsError } = await supabase
         .from('sales_models')
         .select('*')
+        .eq('week_start_date', weekStartDate)
         .order('model_name');
 
       if (modelsError) {
         console.error('Error fetching models:', modelsError);
         return;
       }
-
-      // Fetch sales data for selected week or current week
-      const weekStartDate = selectedWeekStart || getWeekStartDate();
+      
       const { data: salesData, error: salesError } = await supabase
         .from('sales_tracker')
         .select('*')
@@ -65,7 +68,7 @@ export const useSalesData = (selectedWeekStart?: string) => {
         return;
       }
 
-      setModels(allModels || []);
+      setModels(weekModels || []);
       setSalesData(salesData || []);
     } catch (error) {
       console.error('Error fetching data:', error);

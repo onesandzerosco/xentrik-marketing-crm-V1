@@ -711,18 +711,21 @@ export type Database = {
           created_by: string | null
           id: string
           model_name: string
+          week_start_date: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           model_name: string
+          week_start_date?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           model_name?: string
+          week_start_date?: string
         }
         Relationships: [
           {

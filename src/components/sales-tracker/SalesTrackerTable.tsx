@@ -183,11 +183,12 @@ export const SalesTrackerTable: React.FC = () => {
     if (!isAdmin) return;
 
     try {
-      // Remove from sales_models table
+      // Remove from sales_models table for this specific week
       const { error: modelsError } = await supabase
         .from('sales_models')
         .delete()
-        .eq('model_name', modelName);
+        .eq('model_name', modelName)
+        .eq('week_start_date', selectedWeekStart);
 
       if (modelsError) throw modelsError;
 
@@ -293,28 +294,30 @@ export const SalesTrackerTable: React.FC = () => {
     if (!newModelName.trim() || !isAdmin) return;
     
     try {
-      // Check if model already exists
+      // Check if model already exists for this week
       const { data: existingModel } = await supabase
         .from('sales_models')
         .select('model_name')
         .eq('model_name', newModelName.trim())
-        .single();
+        .eq('week_start_date', selectedWeekStart)
+        .maybeSingle();
       
       if (existingModel) {
         toast({
           title: "Model Exists",
-          description: "This model already exists in the system.",
+          description: "This model already exists for this week.",
           variant: "destructive"
         });
         return;
       }
       
-      // Add to sales_models table
+      // Add to sales_models table for this specific week
       const { error } = await supabase
         .from('sales_models')
         .insert({
           model_name: newModelName.trim(),
-          created_by: user?.id
+          created_by: user?.id,
+          week_start_date: selectedWeekStart
         });
       
       if (error) throw error;
