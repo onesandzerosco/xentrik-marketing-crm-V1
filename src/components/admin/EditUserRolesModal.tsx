@@ -30,9 +30,13 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
   const defaultPrimaryRole: PrimaryRole = "Employee"; 
   const defaultAdditionalRoles: string[] = [];
   
-  // Memoize these values to prevent infinite re-renders
+  // Memoize these values to prevent infinite re-renders and handle circular references
   const userPrimaryRole = useMemo(() => user?.role || defaultPrimaryRole, [user?.role]);
-  const userAdditionalRoles = useMemo(() => user?.roles || defaultAdditionalRoles, [user?.roles]);
+  const userAdditionalRoles = useMemo(() => {
+    if (!user?.roles || !Array.isArray(user.roles)) return defaultAdditionalRoles;
+    // Create a clean copy to avoid circular references
+    return [...user.roles];
+  }, [user?.roles]);
   
   const {
     primaryRole,
