@@ -8,6 +8,7 @@ interface SalesEntry {
   day_of_week: number;
   earnings: number;
   chatter_id: string | null;
+  working_day: boolean;
 }
 
 interface SalesModel {

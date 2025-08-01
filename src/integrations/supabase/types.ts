@@ -744,6 +744,7 @@ export type Database = {
           model_name: string
           updated_at: string
           week_start_date: string
+          working_day: boolean
         }
         Insert: {
           chatter_id?: string | null
@@ -754,6 +755,7 @@ export type Database = {
           model_name: string
           updated_at?: string
           week_start_date: string
+          working_day?: boolean
         }
         Update: {
           chatter_id?: string | null
@@ -764,6 +766,7 @@ export type Database = {
           model_name?: string
           updated_at?: string
           week_start_date?: string
+          working_day?: boolean
         }
         Relationships: [
           {
