@@ -79,12 +79,8 @@ export const SalesTrackerTable: React.FC = () => {
     const key = `${modelName}-${dayOfWeek}`;
     setLocalData(prev => ({ ...prev, [key]: value }));
 
-    // Debounce the API call
-    setTimeout(async () => {
-      if (localData[key] === value) { // Only update if value hasn't changed
-        await saveEarnings(modelName, dayOfWeek, value);
-      }
-    }, 1000);
+    // Save immediately without debouncing to ensure data integrity
+    await saveEarnings(modelName, dayOfWeek, value);
   };
 
   const saveEarnings = async (modelName: string, dayOfWeek: number, value: string) => {
@@ -94,6 +90,10 @@ export const SalesTrackerTable: React.FC = () => {
     try {
       const earnings = parseFloat(value) || 0;
 
+      // For Chatters, include chatter_id in the upsert conflict resolution
+      // For Admins/VAs, use null chatter_id (they manage all records)
+      const chatter_id = isChatter ? user?.id : null;
+
       const { error } = await supabase
         .from('sales_tracker')
         .upsert({
@@ -101,9 +101,9 @@ export const SalesTrackerTable: React.FC = () => {
           model_name: modelName,
           day_of_week: dayOfWeek,
           earnings,
-          chatter_id: isChatter ? user?.id : null,
+          chatter_id,
         }, {
-          onConflict: 'week_start_date,model_name,day_of_week'
+          onConflict: chatter_id ? 'week_start_date,model_name,day_of_week,chatter_id' : 'week_start_date,model_name,day_of_week'
         });
 
       if (error) {
@@ -113,9 +113,16 @@ export const SalesTrackerTable: React.FC = () => {
           description: "Failed to save earnings. Please try again.",
           variant: "destructive"
         });
+      } else {
+        console.log(`Successfully saved: ${modelName} - Day ${dayOfWeek} - $${earnings}`);
       }
     } catch (error) {
       console.error('Error saving earnings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save earnings. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsUpdating(false);
     }
