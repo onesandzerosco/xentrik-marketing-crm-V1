@@ -14,8 +14,8 @@ export const useRolesManagement = (
   // Update state when initial values change (when modal opens with new user)
   useEffect(() => {
     setPrimaryRole(initialPrimaryRole);
-    setAdditionalRoles(initialAdditionalRoles);
-  }, [initialPrimaryRole, initialAdditionalRoles]);
+    setAdditionalRoles([...initialAdditionalRoles]); // Create fresh copy
+  }, [initialPrimaryRole, JSON.stringify(initialAdditionalRoles)]); // Use JSON.stringify for array comparison
 
   const handlePrimaryRoleChange = (newRole: PrimaryRole) => {
     // If changing to Admin, show confirmation dialog

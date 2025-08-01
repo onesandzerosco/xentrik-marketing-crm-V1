@@ -58,10 +58,10 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
         role: user.role, 
         roles: user.roles,
         userPrimaryRole,
-        userAdditionalRoles
+        userAdditionalRoles: userAdditionalRoles.length
       });
     }
-  }, [user, open, userPrimaryRole, userAdditionalRoles]);
+  }, [user?.id, open]); // Only depend on user ID and open state
 
   const handleSubmit = async () => {
     if (user) {
