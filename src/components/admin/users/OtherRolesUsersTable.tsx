@@ -6,11 +6,15 @@ import UserRolesTable from "./UserRolesTable";
 interface OtherRolesUsersTableProps {
   users: Employee[];
   onEditUser: (user: Employee) => void;
+  onSuspendUser?: (user: Employee) => void;
+  onDeleteUser?: (user: Employee) => void;
 }
 
 const OtherRolesUsersTable: React.FC<OtherRolesUsersTableProps> = ({ 
   users,
-  onEditUser
+  onEditUser,
+  onSuspendUser,
+  onDeleteUser
 }) => {
   // Filter users who have Manager primary role OR other additional roles (not Admin primary, not Creator only)
   const otherRoleUsers = users.filter(user => {
@@ -34,7 +38,9 @@ const OtherRolesUsersTable: React.FC<OtherRolesUsersTableProps> = ({
       {otherRoleUsers.length > 0 ? (
         <UserRolesTable 
           users={otherRoleUsers} 
-          onEditUser={onEditUser} 
+          onEditUser={onEditUser}
+          onSuspendUser={onSuspendUser}
+          onDeleteUser={onDeleteUser}
         />
       ) : (
         <div className="text-center py-8 text-muted-foreground">

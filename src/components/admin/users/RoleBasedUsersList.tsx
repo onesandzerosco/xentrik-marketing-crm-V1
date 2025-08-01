@@ -4,6 +4,7 @@ import AdminUsersTable from "./AdminUsersTable";
 import CreatorUsersTable from "./CreatorUsersTable";
 import OtherRolesUsersTable from "./OtherRolesUsersTable";
 import EditUserRolesModal from "../EditUserRolesModal";
+import EmployeeActionsDialog from "./EmployeeActionsDialog";
 import useUserRoles from "./useUserRoles";
 import useUserRolesUpdate from "./useUserRolesUpdate";
 import { Separator } from "@/components/ui/separator";
@@ -16,8 +17,14 @@ const RoleBasedUsersList: React.FC = () => {
     setSelectedUser,
     isModalOpen,
     setIsModalOpen,
+    isActionDialogOpen,
+    setIsActionDialogOpen,
+    pendingAction,
     fetchUsers,
-    handleEdit
+    handleEdit,
+    handleSuspend,
+    handleDelete,
+    handleConfirmAction
   } = useUserRoles();
 
   const { handleUpdateUser } = useUserRolesUpdate(fetchUsers);
@@ -38,7 +45,9 @@ const RoleBasedUsersList: React.FC = () => {
         <div className="rounded-md border p-4">
           <AdminUsersTable 
             users={users} 
-            onEditUser={handleEdit} 
+            onEditUser={handleEdit}
+            onSuspendUser={handleSuspend}
+            onDeleteUser={handleDelete}
           />
         </div>
 
@@ -48,7 +57,9 @@ const RoleBasedUsersList: React.FC = () => {
         <div className="rounded-md border p-4">
           <CreatorUsersTable 
             users={users} 
-            onEditUser={handleEdit} 
+            onEditUser={handleEdit}
+            onSuspendUser={handleSuspend}
+            onDeleteUser={handleDelete}
           />
         </div>
 
@@ -58,7 +69,9 @@ const RoleBasedUsersList: React.FC = () => {
         <div className="rounded-md border p-4">
           <OtherRolesUsersTable 
             users={users} 
-            onEditUser={handleEdit} 
+            onEditUser={handleEdit}
+            onSuspendUser={handleSuspend}
+            onDeleteUser={handleDelete}
           />
         </div>
       </div>
@@ -68,6 +81,14 @@ const RoleBasedUsersList: React.FC = () => {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onUpdate={handleUpdateUser}
+      />
+      
+      <EmployeeActionsDialog 
+        open={isActionDialogOpen}
+        onOpenChange={setIsActionDialogOpen}
+        onConfirm={handleConfirmAction}
+        employee={selectedUser}
+        action={pendingAction || 'suspend'}
       />
     </>
   );
