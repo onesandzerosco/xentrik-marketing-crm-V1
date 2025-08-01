@@ -364,10 +364,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           }
         }
         
-        // Always check for updated status
-        setTimeout(() => {
-          checkCreatorStatus(currentSession.user.id);
-        }, 0);
+        // Check for updated status only once, without setTimeout
+        checkCreatorStatus(currentSession.user.id);
       }
       
       if (event === 'SIGNED_OUT') {
@@ -399,10 +397,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setSession(currentSession);
       
       if (currentSession?.user) {
-        // Check creator status for existing session
-        setTimeout(() => {
-          checkCreatorStatus(currentSession.user.id);
-        }, 0);
+        // Check creator status for existing session only once
+        checkCreatorStatus(currentSession.user.id);
       }
       
       setIsLoading(false);
