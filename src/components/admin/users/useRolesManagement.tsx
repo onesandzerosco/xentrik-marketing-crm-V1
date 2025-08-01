@@ -36,9 +36,10 @@ export const useRolesManagement = (
       setAdditionalRoles([]);
       console.log("Cleared additional roles for Admin");
     }
+    console.log("Closing admin alert dialog");
     setShowAdminAlert(false);
     setPendingRoleChange(null);
-    console.log("Admin confirmation dialog closed");
+    console.log("Admin confirmation dialog closed, state reset");
   };
 
   const handleCancelAdminChange = () => {

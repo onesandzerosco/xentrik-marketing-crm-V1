@@ -63,26 +63,43 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
     }
   }, [user?.id, open]); // Only depend on user ID and open state
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const handleSubmit = async () => {
-    if (user) {
+    console.log("=== handleSubmit START ===");
+    if (user && !isSubmitting) {
       console.log("handleSubmit called for user:", user.id);
-      console.log("Submitting role update:", { 
-        userId: user.id,
+      console.log("Current state:", { 
         primaryRole, 
-        additionalRoles 
+        additionalRoles,
+        showAdminAlert,
+        pendingRoleChange
       });
       
-      console.log("Calling onUpdate...");
-      const result = await onUpdate(user.id, primaryRole, additionalRoles);
-      console.log("onUpdate result:", result);
+      // Prevent multiple simultaneous submissions
+      if (isSubmitting) {
+        console.log("Already submitting, ignoring submit");
+        return;
+      }
       
-      if (result) {
-        console.log("Closing modal after successful update");
-        onOpenChange(false); // Close modal after successful update
-      } else {
-        console.log("Update failed, keeping modal open");
+      setIsSubmitting(true);
+      console.log("Calling onUpdate...");
+      
+      try {
+        const result = await onUpdate(user.id, primaryRole, additionalRoles);
+        console.log("onUpdate result:", result);
+        
+        if (result) {
+          console.log("Closing modal after successful update");
+          onOpenChange(false);
+        } else {
+          console.log("Update failed, keeping modal open");
+        }
+      } finally {
+        setIsSubmitting(false);
       }
     }
+    console.log("=== handleSubmit END ===");
   };
 
   if (!user) return null;
