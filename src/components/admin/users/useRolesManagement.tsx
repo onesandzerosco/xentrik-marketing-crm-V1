@@ -15,7 +15,7 @@ export const useRolesManagement = (
   useEffect(() => {
     setPrimaryRole(initialPrimaryRole);
     setAdditionalRoles([...initialAdditionalRoles]); // Create fresh copy
-  }, [initialPrimaryRole, JSON.stringify(initialAdditionalRoles)]); // Use JSON.stringify for array comparison
+  }, [initialPrimaryRole, initialAdditionalRoles.length]); // Only depend on array length, not contents
 
   const handlePrimaryRoleChange = (newRole: PrimaryRole) => {
     // If changing to Admin, show confirmation dialog
