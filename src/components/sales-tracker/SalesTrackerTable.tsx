@@ -291,7 +291,7 @@ export const SalesTrackerTable: React.FC = () => {
   };
 
   const addModel = async () => {
-    if (!newModelName.trim() || !isAdmin) return;
+    if (!newModelName.trim() || !(isAdmin || isChatter)) return;
     
     try {
       // Check if model already exists for this week
@@ -402,7 +402,7 @@ export const SalesTrackerTable: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {isAdmin && (
+          {(isAdmin || isChatter) && (
             <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
               <DialogTrigger asChild>
                 <Button variant="default" size="sm" className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
