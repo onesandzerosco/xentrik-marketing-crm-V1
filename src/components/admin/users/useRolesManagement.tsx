@@ -28,13 +28,17 @@ export const useRolesManagement = (
   };
 
   const handleConfirmAdminChange = () => {
+    console.log("handleConfirmAdminChange called", { pendingRoleChange });
     if (pendingRoleChange) {
+      console.log("Setting primary role to:", pendingRoleChange);
       setPrimaryRole(pendingRoleChange);
       // Clear additional roles when becoming Admin (exclusive role)
       setAdditionalRoles([]);
+      console.log("Cleared additional roles for Admin");
     }
     setShowAdminAlert(false);
     setPendingRoleChange(null);
+    console.log("Admin confirmation dialog closed");
   };
 
   const handleCancelAdminChange = () => {

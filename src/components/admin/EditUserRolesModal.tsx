@@ -18,7 +18,7 @@ interface EditUserRolesModalProps {
   user: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => void;
+  onUpdate: (userId: string, primaryRole: PrimaryRole, additionalRoles: string[]) => Promise<boolean>;
 }
 
 const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
@@ -65,14 +65,23 @@ const EditUserRolesModal: React.FC<EditUserRolesModalProps> = ({
 
   const handleSubmit = async () => {
     if (user) {
+      console.log("handleSubmit called for user:", user.id);
       console.log("Submitting role update:", { 
         userId: user.id,
         primaryRole, 
         additionalRoles 
       });
       
-      await onUpdate(user.id, primaryRole, additionalRoles);
-      onOpenChange(false); // Close modal after successful update
+      console.log("Calling onUpdate...");
+      const result = await onUpdate(user.id, primaryRole, additionalRoles);
+      console.log("onUpdate result:", result);
+      
+      if (result) {
+        console.log("Closing modal after successful update");
+        onOpenChange(false); // Close modal after successful update
+      } else {
+        console.log("Update failed, keeping modal open");
+      }
     }
   };
 
