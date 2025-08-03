@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ArrowLeft, User, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
@@ -75,12 +76,18 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
         
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              Weekly Sales Tracker
-              <span className="text-sm text-muted-foreground font-normal">
-                (Thursday to Wednesday)
-              </span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-foreground flex items-center gap-2">
+                Weekly Sales Tracker
+                <span className="text-sm text-muted-foreground font-normal">
+                  (Thursday to Wednesday)
+                </span>
+              </CardTitle>
+               <Button variant="default" size="sm" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Model
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <SalesTrackerTable />

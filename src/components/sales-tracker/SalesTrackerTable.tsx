@@ -402,44 +402,6 @@ export const SalesTrackerTable: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 font-semibold border-2 border-green-500"
-                onClick={() => console.log('Add Model button clicked!')}
-              >
-                <Plus className="h-4 w-4" />
-                Add Model
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Model</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div>
-                  <Label htmlFor="model-name">Model Name</Label>
-                  <Input
-                    id="model-name"
-                    value={newModelName}
-                    onChange={(e) => setNewModelName(e.target.value)}
-                    placeholder="Enter model name"
-                    onKeyDown={(e) => e.key === 'Enter' && addModel()}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setIsAddModelOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={addModel} disabled={!newModelName.trim()}>
-                    Add Model
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
           <Button
             variant="outline"
             size="sm"
