@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ArrowLeft, User, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
 
@@ -24,6 +28,27 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
 }) => {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
+  const [newModelName, setNewModelName] = useState('');
+  const { user } = useAuth();
+
+  // Function to get current week start date (Thursday)
+  const getWeekStartDate = (): string => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
+    const thursday = new Date(today);
+    
+    if (dayOfWeek < 4) {
+      // If today is before Thursday, go to last Thursday
+      thursday.setDate(today.getDate() - (7 - daysUntilThursday));
+    } else {
+      // If today is Thursday or after, go to this Thursday
+      thursday.setDate(today.getDate() - daysUntilThursday);
+    }
+    
+    return thursday.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     fetchChatters();
@@ -48,6 +73,59 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       console.error('Error fetching chatters:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const addModel = async () => {
+    if (!newModelName.trim()) return;
+    
+    const selectedWeekStart = getWeekStartDate();
+    
+    try {
+      // Check if model already exists for this week
+      const { data: existingModel } = await supabase
+        .from('sales_models')
+        .select('model_name')
+        .eq('model_name', newModelName.trim())
+        .eq('week_start_date', selectedWeekStart)
+        .maybeSingle();
+      
+      if (existingModel) {
+        toast({
+          title: "Model Exists",
+          description: "This model already exists for this week.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add to sales_models table for this specific week
+      const { error } = await supabase
+        .from('sales_models')
+        .insert({
+          model_name: newModelName.trim(),
+          created_by: user?.id,
+          week_start_date: selectedWeekStart
+        });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: `Model "${newModelName}" has been added.`
+      });
+      
+      setNewModelName('');
+      setIsAddModelOpen(false);
+      // Refresh the page to show the new model
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding model:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add model. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -83,10 +161,39 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                   (Thursday to Wednesday)
                 </span>
               </CardTitle>
-               <Button variant="default" size="sm" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Model
-              </Button>
+              <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="default" size="sm" className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Model
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Model</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div>
+                      <Label htmlFor="model-name">Model Name</Label>
+                      <Input
+                        id="model-name"
+                        value={newModelName}
+                        onChange={(e) => setNewModelName(e.target.value)}
+                        placeholder="Enter model name"
+                        onKeyDown={(e) => e.key === 'Enter' && addModel()}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddModelOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={addModel} disabled={!newModelName.trim()}>
+                        Add Model
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardHeader>
           <CardContent>
