@@ -404,7 +404,12 @@ export const SalesTrackerTable: React.FC = () => {
         <div className="flex items-center gap-2">
           <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
             <DialogTrigger asChild>
-              <Button variant="default" size="sm" className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 font-semibold border-2 border-green-500"
+                onClick={() => console.log('Add Model button clicked!')}
+              >
                 <Plus className="h-4 w-4" />
                 Add Model
               </Button>
