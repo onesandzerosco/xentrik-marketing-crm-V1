@@ -41,7 +41,24 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   const [selectedModelName, setSelectedModelName] = useState('');
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
-  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(() => {
+    // Initialize with the current Thursday
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const thursday = new Date(today);
+    
+    if (dayOfWeek <= 4) {
+      // If date is Thursday or before, go to this week's Thursday
+      const daysToThursday = 4 - dayOfWeek;
+      thursday.setDate(today.getDate() + daysToThursday);
+    } else {
+      // If date is Friday/Saturday/Sunday, go to next week's Thursday
+      const daysToNextThursday = (4 + 7 - dayOfWeek) % 7;
+      thursday.setDate(today.getDate() + daysToNextThursday);
+    }
+    
+    return thursday;
+  });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { user } = useAuth();
 
@@ -165,27 +182,35 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
     }
   };
 
-  // Function to get week start date (Thursday) from any date
-  const getWeekStartFromDate = (date: Date): string => {
+  // Function to get the Thursday from any date (ensures we always land on Thursday)
+  const getThursdayFromDate = (date: Date): Date => {
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
     const thursday = new Date(date);
     
-    if (dayOfWeek < 4) {
-      // If date is before Thursday, go to last Thursday
-      thursday.setDate(date.getDate() - (7 - daysUntilThursday));
+    if (dayOfWeek <= 4) {
+      // If date is Thursday or before, go to this week's Thursday
+      const daysToThursday = 4 - dayOfWeek;
+      thursday.setDate(date.getDate() + daysToThursday);
     } else {
-      // If date is Thursday or after, go to this Thursday
-      thursday.setDate(date.getDate() - daysUntilThursday);
+      // If date is Friday/Saturday/Sunday, go to next week's Thursday
+      const daysToNextThursday = (4 + 7 - dayOfWeek) % 7;
+      thursday.setDate(date.getDate() + daysToNextThursday);
     }
     
+    return thursday;
+  };
+
+  // Function to get week start date (Thursday) from any date
+  const getWeekStartFromDate = (date: Date): string => {
+    const thursday = getThursdayFromDate(date);
     return thursday.toISOString().split('T')[0];
   };
 
   const formatWeekRange = (date: Date): string => {
-    const weekStart = new Date(getWeekStartFromDate(date));
+    const thursday = getThursdayFromDate(date);
+    const weekStart = new Date(thursday);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
+    weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -235,9 +260,15 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                       selected={selectedWeekDate}
                       onSelect={(date) => {
                         if (date) {
-                          setSelectedWeekDate(date);
+                          // Ensure we always get the Thursday of the selected week
+                          const thursday = getThursdayFromDate(date);
+                          setSelectedWeekDate(thursday);
                           setIsCalendarOpen(false);
                         }
+                      }}
+                      disabled={(date) => {
+                        // Only allow Thursdays to be selected
+                        return date.getDay() !== 4; // 4 = Thursday
                       }}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
