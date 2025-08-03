@@ -293,10 +293,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log("Local state cleared, now calling Supabase signOut");
       
-      // Try to sign out from Supabase, but don't fail the entire logout if it doesn't work
+      // Try to get the current session from Supabase to check if it actually exists
       try {
-        // Only call signOut if we have a session
-        if (session) {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        
+        if (currentSession) {
+          console.log("Valid session found, calling signOut");
           const { error } = await supabase.auth.signOut({ scope: 'global' });
           
           if (error) {
@@ -305,10 +307,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
             console.log("Supabase signOut successful");
           }
         } else {
-          console.log("No active session, skipping Supabase signOut call");
+          console.log("No valid session found in Supabase, skipping signOut call");
         }
       } catch (error) {
-        console.warn("Error during signOut API call (continuing with logout):", error);
+        console.warn("Error during signOut process (continuing with logout):", error);
         // Continue with logout flow even if the API call fails
       }
       
