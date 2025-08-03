@@ -4,10 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft, User, Plus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, User, Plus, CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
 
@@ -15,6 +20,10 @@ interface Chatter {
   id: string;
   name: string;
   email: string;
+}
+
+interface ModelOption {
+  model_name: string;
 }
 
 interface AdminSalesViewProps {
@@ -29,7 +38,11 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
-  const [newModelName, setNewModelName] = useState('');
+  const [selectedModelName, setSelectedModelName] = useState('');
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+  const [isModelsLoading, setIsModelsLoading] = useState(false);
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { user } = useAuth();
 
   // Function to get current week start date (Thursday)
@@ -52,7 +65,30 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
 
   useEffect(() => {
     fetchChatters();
+    fetchAvailableModels();
   }, []);
+
+  const fetchAvailableModels = async () => {
+    setIsModelsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('creators')
+        .select('model_name')
+        .not('model_name', 'is', null)
+        .order('model_name');
+
+      if (error) {
+        console.error('Error fetching models:', error);
+        return;
+      }
+
+      setAvailableModels(data || []);
+    } catch (error) {
+      console.error('Error fetching models:', error);
+    } finally {
+      setIsModelsLoading(false);
+    }
+  };
 
   const fetchChatters = async () => {
     setIsLoading(true);
@@ -77,16 +113,16 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   };
 
   const addModel = async () => {
-    if (!newModelName.trim()) return;
+    if (!selectedModelName.trim()) return;
     
-    const selectedWeekStart = getWeekStartDate();
+    const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
     
     try {
       // Check if model already exists for this week
       const { data: existingModel } = await supabase
         .from('sales_models')
         .select('model_name')
-        .eq('model_name', newModelName.trim())
+        .eq('model_name', selectedModelName.trim())
         .eq('week_start_date', selectedWeekStart)
         .maybeSingle();
       
@@ -103,7 +139,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       const { error } = await supabase
         .from('sales_models')
         .insert({
-          model_name: newModelName.trim(),
+          model_name: selectedModelName.trim(),
           created_by: user?.id,
           week_start_date: selectedWeekStart
         });
@@ -112,10 +148,10 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       
       toast({
         title: "Success",
-        description: `Model "${newModelName}" has been added.`
+        description: `Model "${selectedModelName}" has been added.`
       });
       
-      setNewModelName('');
+      setSelectedModelName('');
       setIsAddModelOpen(false);
       // Refresh the page to show the new model
       window.location.reload();
@@ -127,6 +163,30 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  // Function to get week start date (Thursday) from any date
+  const getWeekStartFromDate = (date: Date): string => {
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
+    const thursday = new Date(date);
+    
+    if (dayOfWeek < 4) {
+      // If date is before Thursday, go to last Thursday
+      thursday.setDate(date.getDate() - (7 - daysUntilThursday));
+    } else {
+      // If date is Thursday or after, go to this Thursday
+      thursday.setDate(date.getDate() - daysUntilThursday);
+    }
+    
+    return thursday.toISOString().split('T')[0];
+  };
+
+  const formatWeekRange = (date: Date): string => {
+    const weekStart = new Date(getWeekStartFromDate(date));
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
   if (selectedChatterId) {
@@ -155,12 +215,36 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-foreground flex items-center gap-2">
-                Weekly Sales Tracker
-                <span className="text-sm text-muted-foreground font-normal">
-                  (Thursday to Wednesday)
-                </span>
-              </CardTitle>
+              <div className="flex items-center gap-4">
+                <CardTitle className="text-foreground flex items-center gap-2">
+                  Weekly Sales Tracker
+                  <span className="text-sm text-muted-foreground font-normal">
+                    (Thursday to Wednesday)
+                  </span>
+                </CardTitle>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      {formatWeekRange(selectedWeekDate)}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedWeekDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedWeekDate(date);
+                          setIsCalendarOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
                 <DialogTrigger asChild>
                   <Button variant="default" size="sm" className="flex items-center gap-2">
@@ -174,20 +258,25 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
                     <div>
-                      <Label htmlFor="model-name">Model Name</Label>
-                      <Input
-                        id="model-name"
-                        value={newModelName}
-                        onChange={(e) => setNewModelName(e.target.value)}
-                        placeholder="Enter model name"
-                        onKeyDown={(e) => e.key === 'Enter' && addModel()}
-                      />
+                      <Label htmlFor="model-select">Select Model</Label>
+                      <Select value={selectedModelName} onValueChange={setSelectedModelName}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={isModelsLoading ? "Loading models..." : "Select a model"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover border border-border z-50">
+                          {availableModels.map((model) => (
+                            <SelectItem key={model.model_name} value={model.model_name}>
+                              {model.model_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsAddModelOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={addModel} disabled={!newModelName.trim()}>
+                      <Button onClick={addModel} disabled={!selectedModelName.trim() || isModelsLoading}>
                         Add Model
                       </Button>
                     </div>
