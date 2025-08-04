@@ -191,14 +191,22 @@ export const ChatterSalesView: React.FC = () => {
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const thursday = new Date(date);
     
-    // Calculate days to subtract to get to the Thursday of the current week
-    let daysToSubtract;
-    if (dayOfWeek >= 4) { // Thursday to Saturday
-      daysToSubtract = dayOfWeek - 4;
-    } else { // Sunday to Wednesday  
-      daysToSubtract = dayOfWeek + 3;
+    // For Thursday-to-Wednesday weeks, calculate days to get to Thursday
+    if (dayOfWeek === 0) { // Sunday
+      thursday.setDate(date.getDate() - 3); // Go back to Thursday
+    } else if (dayOfWeek === 1) { // Monday  
+      thursday.setDate(date.getDate() - 4); // Go back to Thursday
+    } else if (dayOfWeek === 2) { // Tuesday
+      thursday.setDate(date.getDate() - 5); // Go back to Thursday  
+    } else if (dayOfWeek === 3) { // Wednesday
+      thursday.setDate(date.getDate() - 6); // Go back to Thursday
+    } else if (dayOfWeek === 4) { // Thursday
+      // Already Thursday, keep same date
+    } else if (dayOfWeek === 5) { // Friday
+      thursday.setDate(date.getDate() - 1); // Go back to Thursday
+    } else if (dayOfWeek === 6) { // Saturday
+      thursday.setDate(date.getDate() - 2); // Go back to Thursday
     }
-    thursday.setDate(date.getDate() - daysToSubtract);
     
     return thursday;
   };

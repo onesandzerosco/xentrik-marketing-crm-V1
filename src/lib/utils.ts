@@ -11,18 +11,23 @@ export function getCurrentWeekStart(): string {
   const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const thursday = new Date(today);
   
-  // Calculate days to subtract to get to the Thursday of the current week
-  // For Thursday-to-Wednesday weeks:
-  // Sun(0)->3 days back, Mon(1)->4 days back, Tue(2)->5 days back, Wed(3)->6 days back
-  // Thu(4)->0 days back, Fri(5)->1 day back, Sat(6)->2 days back
-  let daysToSubtract;
-  if (dayOfWeek >= 4) { // Thursday to Saturday
-    daysToSubtract = dayOfWeek - 4;
-  } else { // Sunday to Wednesday  
-    daysToSubtract = dayOfWeek + 3;
+  // For Thursday-to-Wednesday weeks, calculate days to get to Thursday
+  // Thursday = 4, so we want to get to the most recent Thursday
+  if (dayOfWeek === 0) { // Sunday
+    thursday.setDate(today.getDate() - 3); // Go back to Thursday
+  } else if (dayOfWeek === 1) { // Monday  
+    thursday.setDate(today.getDate() - 4); // Go back to Thursday
+  } else if (dayOfWeek === 2) { // Tuesday
+    thursday.setDate(today.getDate() - 5); // Go back to Thursday  
+  } else if (dayOfWeek === 3) { // Wednesday
+    thursday.setDate(today.getDate() - 6); // Go back to Thursday
+  } else if (dayOfWeek === 4) { // Thursday
+    // Already Thursday, keep same date
+  } else if (dayOfWeek === 5) { // Friday
+    thursday.setDate(today.getDate() - 1); // Go back to Thursday
+  } else if (dayOfWeek === 6) { // Saturday
+    thursday.setDate(today.getDate() - 2); // Go back to Thursday
   }
-  
-  thursday.setDate(today.getDate() - daysToSubtract);
   
   return thursday.toISOString().split('T')[0];
 }
@@ -32,16 +37,22 @@ export function getWeekStartFromDate(date: Date): string {
   const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   const thursday = new Date(date);
   
-  // Calculate days to subtract to get to the Thursday of the current week
-  // For Thursday-to-Wednesday weeks:
-  let daysToSubtract;
-  if (dayOfWeek >= 4) { // Thursday to Saturday
-    daysToSubtract = dayOfWeek - 4;
-  } else { // Sunday to Wednesday  
-    daysToSubtract = dayOfWeek + 3;
+  // For Thursday-to-Wednesday weeks, calculate days to get to Thursday
+  if (dayOfWeek === 0) { // Sunday
+    thursday.setDate(date.getDate() - 3); // Go back to Thursday
+  } else if (dayOfWeek === 1) { // Monday  
+    thursday.setDate(date.getDate() - 4); // Go back to Thursday
+  } else if (dayOfWeek === 2) { // Tuesday
+    thursday.setDate(date.getDate() - 5); // Go back to Thursday  
+  } else if (dayOfWeek === 3) { // Wednesday
+    thursday.setDate(date.getDate() - 6); // Go back to Thursday
+  } else if (dayOfWeek === 4) { // Thursday
+    // Already Thursday, keep same date
+  } else if (dayOfWeek === 5) { // Friday
+    thursday.setDate(date.getDate() - 1); // Go back to Thursday
+  } else if (dayOfWeek === 6) { // Saturday
+    thursday.setDate(date.getDate() - 2); // Go back to Thursday
   }
-  
-  thursday.setDate(date.getDate() - daysToSubtract);
   
   return thursday.toISOString().split('T')[0];
 }
