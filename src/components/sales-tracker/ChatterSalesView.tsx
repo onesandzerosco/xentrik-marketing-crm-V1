@@ -24,6 +24,9 @@ export const ChatterSalesView: React.FC = () => {
   const { user } = useAuth();
   const { id: viewingUserId } = useParams<{ id: string }>();
   const chatterId = viewingUserId || user?.id;
+  
+  // Debug log to see what's happening with chatterId
+  console.log('ChatterSalesView: viewingUserId:', viewingUserId, 'user?.id:', user?.id, 'chatterId:', chatterId);
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
