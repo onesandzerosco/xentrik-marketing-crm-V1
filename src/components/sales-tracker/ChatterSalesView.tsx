@@ -72,16 +72,16 @@ export const ChatterSalesView: React.FC = () => {
     try {
       const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
       
-      // Check if model already exists for this week and chatter
-      const { data: existingModel } = await supabase
-        .from('sales_models')
+      // Check if model already exists for this week by checking sales_tracker
+      const { data: existingEntries } = await supabase
+        .from('sales_tracker')
         .select('model_name')
         .eq('model_name', selectedModelName.trim())
         .eq('week_start_date', selectedWeekStart)
-        .eq('created_by', user?.id)
-        .maybeSingle();
+        .eq('chatter_id', user?.id)
+        .limit(1);
       
-      if (existingModel) {
+      if (existingEntries && existingEntries.length > 0) {
         toast({
           title: "Model Exists",
           description: "This model already exists for this week.",
@@ -89,17 +89,6 @@ export const ChatterSalesView: React.FC = () => {
         });
         return;
       }
-      
-      // Add to sales_models table for this specific week
-      const { error: modelsError } = await supabase
-        .from('sales_models')
-        .insert({
-          model_name: selectedModelName.trim(),
-          created_by: user?.id,
-          week_start_date: selectedWeekStart
-        });
-      
-      if (modelsError) throw modelsError;
       
       // Create initial sales_tracker entries for all 7 days of the week
       const salesTrackerEntries = [];
@@ -114,11 +103,11 @@ export const ChatterSalesView: React.FC = () => {
         });
       }
       
-      const { error: salesError } = await supabase
+      const { error } = await supabase
         .from('sales_tracker')
         .insert(salesTrackerEntries);
       
-      if (salesError) throw salesError;
+      if (error) throw error;
       
       toast({
         title: "Success",

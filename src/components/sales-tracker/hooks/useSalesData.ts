@@ -12,7 +12,6 @@ interface SalesEntry {
 }
 
 interface SalesModel {
-  id: string;
   model_name: string;
   created_at: string;
   week_start_date: string;
@@ -46,18 +45,6 @@ export const useSalesData = (selectedWeekStart?: string) => {
       // Fetch sales data for selected week or current week
       const weekStartDate = selectedWeekStart || getWeekStartDate();
       
-      // Fetch models for the specific week
-      const { data: weekModels, error: modelsError } = await supabase
-        .from('sales_models')
-        .select('*')
-        .eq('week_start_date', weekStartDate)
-        .order('model_name');
-
-      if (modelsError) {
-        console.error('Error fetching models:', modelsError);
-        return;
-      }
-      
       const { data: salesData, error: salesError } = await supabase
         .from('sales_tracker')
         .select('*')
@@ -68,7 +55,25 @@ export const useSalesData = (selectedWeekStart?: string) => {
         return;
       }
 
-      setModels(weekModels || []);
+      // Extract unique models from sales_tracker data
+      const uniqueModels: SalesModel[] = [];
+      const modelNamesSet = new Set<string>();
+      
+      salesData?.forEach(entry => {
+        if (!modelNamesSet.has(entry.model_name)) {
+          modelNamesSet.add(entry.model_name);
+          uniqueModels.push({
+            model_name: entry.model_name,
+            created_at: entry.created_at,
+            week_start_date: entry.week_start_date
+          });
+        }
+      });
+
+      // Sort models by name
+      uniqueModels.sort((a, b) => a.model_name.localeCompare(b.model_name));
+
+      setModels(uniqueModels);
       setSalesData(salesData || []);
     } catch (error) {
       console.error('Error fetching data:', error);

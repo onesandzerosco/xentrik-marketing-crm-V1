@@ -107,19 +107,6 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
-  
-  // Debug logging
-  console.log('DEBUG - Current info:', {
-    selectedWeekStart,
-    currentWeekStart: getWeekStartDate(),
-    userRole,
-    userRoles,
-    isVA,
-    canEditWeekResult: canEditWeek(selectedWeekStart),
-    today: new Date().toISOString().split('T')[0],
-    dayOfWeek: new Date().getDay()
-  });
-  
   const canEdit = canEditWeek(selectedWeekStart) && !isVA;
 
   // Initialize local data and day types when sales data loads
@@ -205,23 +192,14 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     if (!isAdmin) return;
 
     try {
-      // Remove from sales_models table for this specific week
-      const { error: modelsError } = await supabase
-        .from('sales_models')
-        .delete()
-        .eq('model_name', modelName)
-        .eq('week_start_date', selectedWeekStart);
-
-      if (modelsError) throw modelsError;
-
-      // Remove from sales_tracker table for selected week
-      const { error: salesError } = await supabase
+      // Remove all entries for this model from sales_tracker table for selected week
+      const { error } = await supabase
         .from('sales_tracker')
         .delete()
         .eq('model_name', modelName)
         .eq('week_start_date', selectedWeekStart);
 
-      if (salesError) throw salesError;
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -324,15 +302,15 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     if (!newModelName.trim()) return;
     
     try {
-      // Check if model already exists for this week
-      const { data: existingModel } = await supabase
-        .from('sales_models')
+      // Check if model already exists for this week by checking sales_tracker
+      const { data: existingEntries } = await supabase
+        .from('sales_tracker')
         .select('model_name')
         .eq('model_name', newModelName.trim())
         .eq('week_start_date', selectedWeekStart)
-        .maybeSingle();
+        .limit(1);
       
-      if (existingModel) {
+      if (existingEntries && existingEntries.length > 0) {
         toast({
           title: "Model Exists",
           description: "This model already exists for this week.",
@@ -341,18 +319,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
         return;
       }
       
-      // Add to sales_models table for this specific week
-      const { error: modelsError } = await supabase
-        .from('sales_models')
-        .insert({
-          model_name: newModelName.trim(),
-          created_by: user?.id,
-          week_start_date: selectedWeekStart
-        });
-      
-      if (modelsError) throw modelsError;
-      
-      // Create initial sales_tracker entries for all 7 days of the week
+      // Create sales_tracker entries for all 7 days of the week
       const salesTrackerEntries = [];
       for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
         salesTrackerEntries.push({
@@ -365,11 +332,11 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
         });
       }
       
-      const { error: salesError } = await supabase
+      const { error } = await supabase
         .from('sales_tracker')
         .insert(salesTrackerEntries);
       
-      if (salesError) throw salesError;
+      if (error) throw error;
       
       toast({
         title: "Success",
