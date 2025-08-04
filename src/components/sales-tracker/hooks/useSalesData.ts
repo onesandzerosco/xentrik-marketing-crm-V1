@@ -76,7 +76,10 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   };
 
   useEffect(() => {
-    fetchData();
+    // Only fetch if we have a chatterId when it's required
+    if (chatterId) {
+      fetchData();
+    }
   }, [selectedWeekStart, chatterId]);
 
   return {
