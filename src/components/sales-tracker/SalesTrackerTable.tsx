@@ -83,8 +83,17 @@ const getWeekStartFromDate = (date: Date): string => {
   return thursday.toISOString().split('T')[0];
 };
 
-export const SalesTrackerTable: React.FC = () => {
-  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(getWeekStartDate());
+interface SalesTrackerTableProps {
+  selectedWeekStart?: string;
+  onWeekChange?: (weekStart: string) => void;
+}
+
+export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange }) => {
+  const [internalWeekStart, setInternalWeekStart] = useState<string>(getWeekStartDate());
+  
+  // Use prop week start if provided, otherwise use internal state
+  const selectedWeekStart = propWeekStart || internalWeekStart;
+  
   const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart);
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
@@ -266,7 +275,11 @@ export const SalesTrackerTable: React.FC = () => {
       return;
     }
     
-    setSelectedWeekStart(newWeekStart);
+    if (onWeekChange) {
+      onWeekChange(newWeekStart);
+    } else {
+      setInternalWeekStart(newWeekStart);
+    }
     setCalendarDate(newWeek);
   };
 
@@ -285,7 +298,11 @@ export const SalesTrackerTable: React.FC = () => {
       return;
     }
     
-    setSelectedWeekStart(weekStart);
+    if (onWeekChange) {
+      onWeekChange(weekStart);
+    } else {
+      setInternalWeekStart(weekStart);
+    }
     setCalendarDate(date);
     setIsCalendarOpen(false);
   };

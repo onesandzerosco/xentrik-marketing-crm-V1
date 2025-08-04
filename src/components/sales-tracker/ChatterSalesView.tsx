@@ -127,8 +127,7 @@ export const ChatterSalesView: React.FC = () => {
       
       setSelectedModelName('');
       setIsAddModelOpen(false);
-      // Refresh the page to show the new model
-      window.location.reload();
+      // No need to reload - the SalesTrackerTable will refetch automatically
     } catch (error) {
       console.error('Error adding model:', error);
       toast({
@@ -255,7 +254,13 @@ export const ChatterSalesView: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <SalesTrackerTable />
+          <SalesTrackerTable 
+            selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
+            onWeekChange={(weekStart) => {
+              const newDate = new Date(weekStart);
+              setSelectedWeekDate(newDate);
+            }}
+          />
         </CardContent>
       </Card>
     </div>
