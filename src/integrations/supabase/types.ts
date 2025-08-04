@@ -638,6 +638,7 @@ export type Database = {
           profile_image: string | null
           role: string
           roles: string[] | null
+          sales_tracker_link: string | null
           status: string
           telegram: string | null
           updated_at: string | null
@@ -655,6 +656,7 @@ export type Database = {
           profile_image?: string | null
           role: string
           roles?: string[] | null
+          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -672,6 +674,7 @@ export type Database = {
           profile_image?: string | null
           role?: string
           roles?: string[] | null
+          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null

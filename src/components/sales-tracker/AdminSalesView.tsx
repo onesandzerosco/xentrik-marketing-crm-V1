@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, User, Plus, CalendarIcon } from 'lucide-react';
+import { ArrowLeft, User, Plus, CalendarIcon, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -20,6 +20,7 @@ interface Chatter {
   id: string;
   name: string;
   email: string;
+  sales_tracker_link?: string;
 }
 
 interface ModelOption {
@@ -112,7 +113,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, sales_tracker_link')
         .or('role.eq.Chatter,roles.cs.{"Chatter"}')
         .order('name');
 
@@ -236,6 +237,32 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
         </div>
         
         <SalesTrackerHeader />
+        
+        {/* Chatter's Sales Tracker Link */}
+        {selectedChatter?.sales_tracker_link && (
+          <Card className="bg-card/50 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Chatter's Sales Tracker</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(selectedChatter.sales_tracker_link, '_blank')}
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open Link
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 break-all">
+                {selectedChatter.sales_tracker_link}
+              </p>
+            </CardContent>
+          </Card>
+        )}
         
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>

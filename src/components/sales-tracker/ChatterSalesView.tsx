@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
-import { Calendar as CalendarIcon, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, Link, Save } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -27,6 +28,8 @@ export const ChatterSalesView: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force table update
+  const [salesTrackerLink, setSalesTrackerLink] = useState('');
+  const [isLinkSaving, setIsLinkSaving] = useState(false);
 
   // Initialize selectedWeekDate to current Thursday
   useEffect(() => {
@@ -37,7 +40,8 @@ export const ChatterSalesView: React.FC = () => {
   // Fetch available models (creators)
   useEffect(() => {
     fetchAvailableModels();
-  }, []);
+    fetchSalesTrackerLink();
+  }, [user?.id]);
 
   const fetchAvailableModels = async () => {
     setIsModelsLoading(true);
@@ -127,6 +131,52 @@ export const ChatterSalesView: React.FC = () => {
         description: "Failed to add model. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchSalesTrackerLink = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('sales_tracker_link')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setSalesTrackerLink(data?.sales_tracker_link || '');
+    } catch (error) {
+      console.error('Error fetching sales tracker link:', error);
+    }
+  };
+
+  const saveSalesTrackerLink = async () => {
+    if (!user?.id) return;
+    
+    setIsLinkSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ sales_tracker_link: salesTrackerLink })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Sales tracker link saved successfully."
+      });
+    } catch (error) {
+      console.error('Error saving sales tracker link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save sales tracker link.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLinkSaving(false);
     }
   };
 
@@ -246,7 +296,33 @@ export const ChatterSalesView: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <SalesTrackerTable 
+          {/* Sales Tracker Link Section */}
+          <div className="mb-6 p-4 bg-card border rounded-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <Link className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-medium">My Sales Tracker Link</Label>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter your sales tracker link here..."
+                value={salesTrackerLink}
+                onChange={(e) => setSalesTrackerLink(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={saveSalesTrackerLink}
+                disabled={isLinkSaving}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isLinkSaving ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </div>
+          
+          <SalesTrackerTable
             key={refreshKey} // Force remount when refreshKey changes
             selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
             onWeekChange={(weekStart) => {
