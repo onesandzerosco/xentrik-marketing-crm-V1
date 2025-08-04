@@ -713,34 +713,46 @@ export type Database = {
       }
       sales_tracker: {
         Row: {
+          admin_confirmed: boolean
           chatter_id: string | null
+          confirmed_commission_rate: number | null
+          confirmed_hours_worked: number | null
           created_at: string
           day_of_week: number
           earnings: number
           id: string
           model_name: string
+          sales_locked: boolean
           updated_at: string
           week_start_date: string
           working_day: boolean
         }
         Insert: {
+          admin_confirmed?: boolean
           chatter_id?: string | null
+          confirmed_commission_rate?: number | null
+          confirmed_hours_worked?: number | null
           created_at?: string
           day_of_week: number
           earnings?: number
           id?: string
           model_name: string
+          sales_locked?: boolean
           updated_at?: string
           week_start_date: string
           working_day?: boolean
         }
         Update: {
+          admin_confirmed?: boolean
           chatter_id?: string | null
+          confirmed_commission_rate?: number | null
+          confirmed_hours_worked?: number | null
           created_at?: string
           day_of_week?: number
           earnings?: number
           id?: string
           model_name?: string
+          sales_locked?: boolean
           updated_at?: string
           week_start_date?: string
           working_day?: boolean

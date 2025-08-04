@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Lock, Download, CheckCircle } from 'lucide-react';
 import { AddModelDialog } from './AddModelDialog';
+import { PayrollConfirmationModal } from './PayrollConfirmationModal';
+import { generatePayslipPDF } from './PayslipGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 
 interface SalesEntry {
@@ -15,6 +17,10 @@ interface SalesEntry {
   day_of_week: number;
   earnings: number;
   working_day?: boolean;
+  sales_locked?: boolean;
+  admin_confirmed?: boolean;
+  confirmed_hours_worked?: number;
+  confirmed_commission_rate?: number;
 }
 
 interface SalesModel {
@@ -46,7 +52,9 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModel, setShowAddModel] = useState(false);
+  const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [hourlyRate, setHourlyRate] = useState<number>(0);
+  const [chatterName, setChatterName] = useState<string>('');
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -107,10 +115,10 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
       if (modelsError) throw modelsError;
 
-      // Fetch chatter's hourly rate
+      // Fetch chatter's hourly rate and name
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('hourly_rate')
+        .select('hourly_rate, name')
         .eq('id', effectiveChatterId)
         .single();
 
@@ -123,6 +131,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       setSalesData(salesData || []);
       setModels(uniqueModels);
       setHourlyRate(profileData?.hourly_rate || 0);
+      setChatterName(profileData?.name || '');
     } catch (error) {
       console.error('Error fetching sales data:', error);
       toast({
@@ -269,6 +278,73 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
+  // Get sales locking status
+  const isSalesLocked = salesData.length > 0 && salesData[0]?.sales_locked;
+  const isAdminConfirmed = salesData.length > 0 && salesData[0]?.admin_confirmed;
+  const confirmedHours = salesData.length > 0 ? salesData[0]?.confirmed_hours_worked || 0 : 0;
+  const confirmedCommissionRate = salesData.length > 0 ? salesData[0]?.confirmed_commission_rate || 0 : 0;
+
+  // Check if inputs should be disabled (locked sales or not editable week)
+  const areInputsDisabled = !isWeekEditable || isSalesLocked;
+
+  const confirmWeekSales = async () => {
+    if (!effectiveChatterId || !isCurrentWeek) return;
+
+    try {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      const { error } = await supabase
+        .from('sales_tracker')
+        .update({ sales_locked: true })
+        .eq('chatter_id', effectiveChatterId)
+        .eq('week_start_date', weekStartStr);
+
+      if (error) throw error;
+
+      await fetchData(); // Refresh data
+      toast({
+        title: "Sales Confirmed",
+        description: "Your weekly sales have been locked and submitted for review.",
+      });
+    } catch (error) {
+      console.error('Error confirming sales:', error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm sales",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadPayslip = () => {
+    if (!chatterName || !isAdminConfirmed) return;
+
+    const weekEnd = addDays(weekStart, 6);
+    const totalSales = getWeekTotal();
+    const commissionAmount = (totalSales * confirmedCommissionRate) / 100;
+    const hourlyPay = confirmedHours * hourlyRate;
+    const totalPayout = hourlyPay + commissionAmount;
+
+    const payslipData = {
+      chatterName,
+      weekStart,
+      weekEnd,
+      salesData: salesData.map(entry => ({
+        model_name: entry.model_name,
+        day_of_week: entry.day_of_week,
+        earnings: entry.earnings,
+      })),
+      totalSales,
+      hoursWorked: confirmedHours,
+      hourlyRate,
+      commissionRate: confirmedCommissionRate,
+      commissionAmount,
+      totalPayout,
+    };
+
+    generatePayslipPDF(payslipData);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -280,7 +356,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
   return (
     <div className="space-y-4">
-      {isWeekEditable && (
+      {isWeekEditable && !isSalesLocked && (
         <div className="flex justify-between items-center">
           <Button
             onClick={() => setShowAddModel(true)}
@@ -325,7 +401,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                         parseFloat(e.target.value) || 0
                       )}
                       className="w-full text-center"
-                      disabled={!isWeekEditable}
+                      disabled={areInputsDisabled}
                     />
                   </TableCell>
                 ))}
@@ -402,12 +478,81 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
         </Table>
       </div>
 
+      {/* Action Buttons */}
+      {models.length > 0 && (
+        <div className="flex gap-2 justify-end pt-4 border-t">
+          {/* Chatter buttons */}
+          {!isAdmin && isCurrentWeek && !isSalesLocked && (
+            <Button 
+              onClick={confirmWeekSales}
+              className="flex items-center gap-2"
+              variant="default"
+            >
+              <Lock className="h-4 w-4" />
+              Confirm Week's Sales
+            </Button>
+          )}
+          
+          {!isAdmin && isSalesLocked && !isAdminConfirmed && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <CheckCircle className="h-4 w-4" />
+              Sales locked - awaiting admin confirmation
+            </div>
+          )}
+          
+          {!isAdmin && isAdminConfirmed && (
+            <Button 
+              onClick={downloadPayslip}
+              className="flex items-center gap-2"
+              variant="default"
+            >
+              <Download className="h-4 w-4" />
+              Download Payslip (PDF)
+            </Button>
+          )}
+
+          {/* Admin buttons */}
+          {isAdmin && isSalesLocked && !isAdminConfirmed && (
+            <Button 
+              onClick={() => setShowPayrollModal(true)}
+              className="flex items-center gap-2"
+              variant="default"
+            >
+              <CheckCircle className="h-4 w-4" />
+              Check Payroll
+            </Button>
+          )}
+          
+          {isAdmin && isAdminConfirmed && (
+            <Button 
+              onClick={downloadPayslip}
+              className="flex items-center gap-2"
+              variant="outline"
+            >
+              <Download className="h-4 w-4" />
+              Download Payslip (PDF)
+            </Button>
+          )}
+        </div>
+      )}
+
       <AddModelDialog
         open={showAddModel}
         onOpenChange={setShowAddModel}
         chatterId={effectiveChatterId}
         weekStart={weekStart}
         onModelAdded={fetchData}
+      />
+
+      <PayrollConfirmationModal
+        open={showPayrollModal}
+        onOpenChange={setShowPayrollModal}
+        chatterName={chatterName}
+        chatterId={effectiveChatterId || ''}
+        weekStart={weekStart}
+        totalSales={getWeekTotal()}
+        currentHourlyRate={hourlyRate}
+        onConfirmed={fetchData}
       />
     </div>
   );
