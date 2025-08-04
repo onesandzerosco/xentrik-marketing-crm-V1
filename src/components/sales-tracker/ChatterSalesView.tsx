@@ -39,7 +39,7 @@ export const ChatterSalesView: React.FC = () => {
 
   // Initialize selectedWeekDate to July 31st (where your data exists)
   useEffect(() => {
-    const targetDate = new Date('2025-07-31');
+    const targetDate = new Date('2025-07-31T12:00:00'); // Use noon to avoid timezone issues
     console.log('ChatterSalesView: Setting selectedWeekDate to:', targetDate.toDateString());
     setSelectedWeekDate(targetDate);
   }, []);
@@ -189,7 +189,9 @@ export const ChatterSalesView: React.FC = () => {
 
   // Function to get week start date from any date - use the date AS IS
   const getWeekStart = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    const result = date.toISOString().split('T')[0];
+    console.log('getWeekStart: Input date:', date.toDateString(), 'Output:', result);
+    return result;
   };
 
   const formatWeekRange = (date: Date): string => {
