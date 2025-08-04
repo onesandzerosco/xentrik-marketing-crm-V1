@@ -25,15 +25,16 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   const getWeekStartDate = (): string => {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
     const thursday = new Date(today);
     
-    if (dayOfWeek < 4) {
-      // If today is before Thursday, go to last Thursday
-      thursday.setDate(today.getDate() - (7 - daysUntilThursday));
+    if (dayOfWeek <= 4) {
+      // If date is Thursday or before, go to this week's Thursday
+      const daysToThursday = 4 - dayOfWeek;
+      thursday.setDate(today.getDate() + daysToThursday);
     } else {
-      // If today is Thursday or after, go to this Thursday
-      thursday.setDate(today.getDate() - daysUntilThursday);
+      // If date is Friday/Saturday/Sunday, go to next week's Thursday
+      const daysToNextThursday = (4 + 7 - dayOfWeek) % 7;
+      thursday.setDate(today.getDate() + daysToNextThursday);
     }
     
     return thursday.toISOString().split('T')[0];
