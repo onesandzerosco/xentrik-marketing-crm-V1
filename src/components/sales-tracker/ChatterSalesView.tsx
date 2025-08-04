@@ -37,10 +37,9 @@ export const ChatterSalesView: React.FC = () => {
   const [salesTrackerLink, setSalesTrackerLink] = useState('');
   const [isLinkSaving, setIsLinkSaving] = useState(false);
 
-  // Initialize selectedWeekDate to current Thursday
+  // Initialize selectedWeekDate to today
   useEffect(() => {
-    const currentThursday = getThursdayFromDate(new Date());
-    setSelectedWeekDate(currentThursday);
+    setSelectedWeekDate(new Date());
   }, []);
 
   // Fetch available models (creators)
@@ -186,28 +185,15 @@ export const ChatterSalesView: React.FC = () => {
     }
   };
 
-  // Function to get the Thursday from any date (ensures we always land on Thursday)
-  const getThursdayFromDate = (date: Date): Date => {
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const thursday = new Date(date);
-    
-    // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = (dayOfWeek + 3) % 7;
-    thursday.setDate(date.getDate() - daysToSubtract);
-    
-    return thursday;
-  };
-
-  // Function to get week start date (Thursday) from any date - wrapper for imported function
+  // Function to get week start date - just return the exact date picked
   const getWeekStart = (date: Date): string => {
-    return getWeekStartFromDate(date);
+    return date.toISOString().split('T')[0];
   };
 
   const formatWeekRange = (date: Date): string => {
-    const thursday = getThursdayFromDate(date);
-    const weekStart = new Date(thursday);
+    const weekStart = new Date(date);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
+    weekEnd.setDate(weekStart.getDate() + 6); // Selected date + 6 days
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -222,7 +208,7 @@ export const ChatterSalesView: React.FC = () => {
               <CardTitle className="text-foreground flex items-center gap-2">
                 My Sales Tracker
                 <span className="text-sm text-muted-foreground font-normal">
-                  (Thursday to Wednesday)
+                  (7 consecutive days)
                 </span>
               </CardTitle>
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -238,15 +224,10 @@ export const ChatterSalesView: React.FC = () => {
                     selected={selectedWeekDate}
                     onSelect={(date) => {
                       if (date) {
-                        // Ensure we always get the Thursday of the selected week
-                        const thursday = getThursdayFromDate(date);
-                        setSelectedWeekDate(thursday);
+                        // Use the exact date selected
+                        setSelectedWeekDate(date);
                         setIsCalendarOpen(false);
                       }
-                    }}
-                    disabled={(date) => {
-                      // Only allow Thursdays to be selected
-                      return date.getDay() !== 4; // 4 = Thursday
                     }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
