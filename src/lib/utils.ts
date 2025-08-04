@@ -12,7 +12,6 @@ export function getCurrentWeekStart(): string {
   const thursday = new Date(today);
   
   // For Thursday-to-Wednesday weeks, calculate days to get to Thursday
-  // Thursday = 4, so we want to get to the most recent Thursday
   if (dayOfWeek === 0) { // Sunday
     thursday.setDate(today.getDate() - 3); // Go back to Thursday
   } else if (dayOfWeek === 1) { // Monday  
