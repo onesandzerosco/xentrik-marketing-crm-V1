@@ -43,15 +43,9 @@ export const AdminSalesView: React.FC = () => {
     const dayOfWeek = today.getDay();
     const thursday = new Date(today);
     
-    if (dayOfWeek <= 4) {
-      // If date is Thursday or before, go to this week's Thursday
-      const daysToThursday = 4 - dayOfWeek;
-      thursday.setDate(today.getDate() + daysToThursday);
-    } else {
-      // If date is Friday/Saturday/Sunday, go to next week's Thursday
-      const daysToNextThursday = (4 + 7 - dayOfWeek) % 7;
-      thursday.setDate(today.getDate() + daysToNextThursday);
-    }
+    // Calculate days to subtract to get to the Thursday of the current week
+    const daysToSubtract = (dayOfWeek + 3) % 7;
+    thursday.setDate(today.getDate() - daysToSubtract);
     
     return thursday;
   });
@@ -183,15 +177,9 @@ export const AdminSalesView: React.FC = () => {
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const thursday = new Date(date);
     
-    if (dayOfWeek <= 4) {
-      // If date is Thursday or before, go to this week's Thursday
-      const daysToThursday = 4 - dayOfWeek;
-      thursday.setDate(date.getDate() + daysToThursday);
-    } else {
-      // If date is Friday/Saturday/Sunday, go to next week's Thursday
-      const daysToNextThursday = (4 + 7 - dayOfWeek) % 7;
-      thursday.setDate(date.getDate() + daysToNextThursday);
-    }
+    // Calculate days to subtract to get to the Thursday of the current week
+    const daysToSubtract = (dayOfWeek + 3) % 7;
+    thursday.setDate(date.getDate() - daysToSubtract);
     
     return thursday;
   };
