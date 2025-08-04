@@ -37,18 +37,7 @@ export const AdminSalesView: React.FC = () => {
   const [selectedModelName, setSelectedModelName] = useState('');
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
-  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(() => {
-    // Initialize with the current Thursday
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const thursday = new Date(today);
-    
-    // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = (dayOfWeek + 3) % 7;
-    thursday.setDate(today.getDate() - daysToSubtract);
-    
-    return thursday;
-  });
+  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { user } = useAuth();
 
@@ -103,20 +92,21 @@ export const AdminSalesView: React.FC = () => {
   };
 
   const addModel = async () => {
-    if (!selectedModelName.trim()) return;
+    if (!selectedModelName.trim() || !selectedChatterId) return;
     
-      const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
+    const selectedWeekStart = selectedWeekDate.toISOString().split('T')[0];
     
     try {
-      // Check if model already exists for this week
-      const { data: existingModel } = await supabase
-        .from('sales_models')
+      // Check if model already exists for this week and chatter
+      const { data: existingEntries } = await supabase
+        .from('sales_tracker')
         .select('model_name')
         .eq('model_name', selectedModelName.trim())
         .eq('week_start_date', selectedWeekStart)
-        .maybeSingle();
+        .eq('chatter_id', selectedChatterId)
+        .limit(1);
       
-      if (existingModel) {
+      if (existingEntries && existingEntries.length > 0) {
         toast({
           title: "Model Exists",
           description: "This model already exists for this week.",
@@ -125,14 +115,22 @@ export const AdminSalesView: React.FC = () => {
         return;
       }
       
-      // Add to sales_models table for this specific week
-      const { error } = await supabase
-        .from('sales_models')
-        .insert({
+      // Create sales_tracker entries for all 7 days of the week
+      const salesTrackerEntries = [];
+      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+        salesTrackerEntries.push({
+          week_start_date: selectedWeekStart,
           model_name: selectedModelName.trim(),
-          created_by: user?.id,
-          week_start_date: selectedWeekStart
+          day_of_week: dayOfWeek,
+          earnings: 0,
+          chatter_id: selectedChatterId,
+          working_day: true
         });
+      }
+      
+      const { error } = await supabase
+        .from('sales_tracker')
+        .insert(salesTrackerEntries);
       
       if (error) throw error;
       
@@ -156,9 +154,9 @@ export const AdminSalesView: React.FC = () => {
   };
 
   const formatWeekRange = (date: Date): string => {
-    const weekStart = new Date(getWeekStartFromDate(date));
+    const weekStart = new Date(date);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
+    weekEnd.setDate(weekStart.getDate() + 6); // Selected date + 6 days
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -218,7 +216,7 @@ export const AdminSalesView: React.FC = () => {
                 <CardTitle className="text-foreground flex items-center gap-2">
                   Weekly Sales Tracker
                   <span className="text-sm text-muted-foreground font-normal">
-                    (Thursday to Wednesday)
+                    (7 consecutive days)
                   </span>
                 </CardTitle>
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -234,18 +232,10 @@ export const AdminSalesView: React.FC = () => {
                       selected={selectedWeekDate}
                       onSelect={(date) => {
                         if (date) {
-                          // Ensure we always get the Thursday of the selected week
-                          const newDate = new Date(date);
-                          const dayOfWeek = newDate.getDay();
-                          const daysToSubtract = (dayOfWeek + 3) % 7;
-                          newDate.setDate(newDate.getDate() - daysToSubtract);
-                          setSelectedWeekDate(newDate);
+                          // Use the exact date selected
+                          setSelectedWeekDate(date);
                           setIsCalendarOpen(false);
                         }
-                      }}
-                      disabled={(date) => {
-                        // Only allow Thursdays to be selected
-                        return date.getDay() !== 4; // 4 = Thursday
                       }}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
@@ -296,13 +286,9 @@ export const AdminSalesView: React.FC = () => {
           <CardContent>
             <SalesTrackerTable 
               chatterId={selectedChatterId} 
-              selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
+              selectedWeekStart={selectedWeekDate.toISOString().split('T')[0]}
               onWeekChange={(newWeekStart) => {
-                const newDate = new Date(newWeekStart + 'T00:00:00');
-                const dayOfWeek = newDate.getDay();
-                const daysToSubtract = (dayOfWeek + 3) % 7;
-                newDate.setDate(newDate.getDate() - daysToSubtract);
-                setSelectedWeekDate(newDate);
+                setSelectedWeekDate(new Date(newWeekStart + 'T12:00:00'));
               }}
             />
           </CardContent>
