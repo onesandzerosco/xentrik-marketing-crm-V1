@@ -40,6 +40,7 @@ export const ChatterSalesView: React.FC = () => {
   // Initialize selectedWeekDate to current Thursday
   useEffect(() => {
     const currentThursday = getThursdayFromDate(new Date());
+    console.log('ChatterSalesView: Setting selectedWeekDate to:', currentThursday);
     setSelectedWeekDate(currentThursday);
   }, []);
 
