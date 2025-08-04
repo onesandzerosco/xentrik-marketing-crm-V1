@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { WeekNavigator } from './WeekNavigator';
+import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Chatter {
@@ -68,13 +69,16 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
 
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
-            <CardTitle className="text-foreground flex items-center gap-2">
-              Weekly Sales Tracker
-              <span className="text-sm text-muted-foreground font-normal">
-                (Thursday to Wednesday)
-              </span>
-            </CardTitle>
-            <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-foreground flex items-center gap-2">
+                Weekly Sales Tracker
+                <span className="text-sm text-muted-foreground font-normal">
+                  (Thursday to Wednesday)
+                </span>
+              </CardTitle>
+              <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+            </div>
+            <GoogleSheetsLinkManager chatterId={selectedChatterId} isAdminView />
           </CardHeader>
           <CardContent>
             <SalesTrackerTable chatterId={selectedChatterId} selectedWeek={selectedWeek} />

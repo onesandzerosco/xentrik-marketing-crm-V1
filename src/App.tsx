@@ -122,6 +122,7 @@ const AppRoutes = () => {
       <Route path="/upload/:id" element={<CreatorUpload />} />
       <Route path="/customs-tracker" element={<ProtectedRoute><CustomsTracker /></ProtectedRoute>} />
       <Route path="/sales-tracker" element={<ProtectedRoute><SalesTracker /></ProtectedRoute>} />
+      <Route path="/sales-tracker/:id" element={<ProtectedRoute><SalesTracker /></ProtectedRoute>} />
       
       {/* Add redirects for old route patterns */}
       

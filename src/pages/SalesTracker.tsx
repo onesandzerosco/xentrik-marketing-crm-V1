@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { AdminSalesView } from '@/components/sales-tracker/AdminSalesView';
 import { ChatterSalesView } from '@/components/sales-tracker/ChatterSalesView';
 import { useAuth } from '@/context/AuthContext';
@@ -6,8 +7,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
 
 const SalesTracker: React.FC = () => {
-  const { userRole, userRoles, isAuthenticated } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  const { userRole, userRoles, isAuthenticated, user } = useAuth();
   const [selectedChatterId, setSelectedChatterId] = useState<string | null>(null);
+
+  // Handle URL parameter for chatter ID
+  useEffect(() => {
+    if (id) {
+      setSelectedChatterId(id);
+    }
+  }, [id]);
 
   // Check if user has access to Sales Tracker
   const hasAccess = isAuthenticated && (
