@@ -229,6 +229,10 @@ export const ChatterSalesView: React.FC = () => {
                         setIsCalendarOpen(false);
                       }
                     }}
+                    disabled={(date) => {
+                      // Only allow Thursdays to be selected
+                      return date.getDay() !== 4; // 4 = Thursday
+                    }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
