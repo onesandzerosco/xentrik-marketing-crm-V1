@@ -199,7 +199,10 @@ export const ChatterSalesView: React.FC = () => {
 
   // Function to get week start date - just return the exact date picked
   const getWeekStart = (date: Date): string => {
-    return date.toISOString().split('T')[0];
+    console.log('getWeekStart: Input date:', date, 'toISOString:', date.toISOString());
+    const result = date.toISOString().split('T')[0];
+    console.log('getWeekStart: Output result:', result);
+    return result;
   };
 
   const formatWeekRange = (date: Date): string => {
@@ -320,10 +323,17 @@ export const ChatterSalesView: React.FC = () => {
           
           <SalesTrackerTable
             key={refreshKey} // Force remount when refreshKey changes
-            selectedWeekStart={getWeekStart(selectedWeekDate)}
+            selectedWeekStart={(() => {
+              console.log('ChatterSalesView: selectedWeekDate before getWeekStart:', selectedWeekDate);
+              const weekStart = getWeekStart(selectedWeekDate);
+              console.log('ChatterSalesView: weekStart after getWeekStart:', weekStart);
+              return weekStart;
+            })()}
             chatterId={chatterId}
             onWeekChange={(weekStart) => {
-              const newDate = new Date(weekStart);
+              console.log('ChatterSalesView: onWeekChange received weekStart:', weekStart);
+              const newDate = new Date(weekStart + 'T12:00:00'); // Add time to avoid timezone issues
+              console.log('ChatterSalesView: onWeekChange newDate:', newDate);
               setSelectedWeekDate(newDate);
             }}
           />
