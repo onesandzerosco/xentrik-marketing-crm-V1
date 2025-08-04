@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getCurrentWeekStart } from '@/lib/utils';
+// Remove unused import
 
 interface SalesEntry {
   id: string;
@@ -26,8 +26,8 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch sales data for selected week or current week
-      const weekStartDate = selectedWeekStart || getCurrentWeekStart();
+      // Fetch sales data for selected week or current date
+      const weekStartDate = selectedWeekStart || new Date().toISOString().split('T')[0];
       console.log('useSalesData: Fetching data for week:', weekStartDate, 'chatterId:', chatterId);
       
       let query = supabase
