@@ -222,6 +222,7 @@ export const ChatterSalesView: React.FC = () => {
     const weekStart = new Date(thursday);
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
+    console.log('formatWeekRange: Input date:', date.toDateString(), 'Thursday:', thursday.toDateString(), 'Range:', weekStart.toDateString(), 'to', weekEnd.toDateString());
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -259,8 +260,8 @@ export const ChatterSalesView: React.FC = () => {
                       }
                     }}
                     disabled={(date) => {
-                      // Only allow Thursdays to be selected
-                      return date.getDay() !== 4; // 4 = Thursday
+                      // Allow any date to be selected for now
+                      return false;
                     }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
