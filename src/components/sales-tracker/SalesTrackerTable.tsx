@@ -9,7 +9,7 @@ import { generatePayslipPDF } from './PayslipGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { format, addDays } from 'date-fns';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface SalesEntry {
   id: string;
@@ -258,10 +258,13 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ hourly_rate: newRate } as any)
+        .update({ hourly_rate: newRate })
         .eq('id', effectiveChatterId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        throw error;
+      }
 
       setHourlyRate(newRate);
       toast({
