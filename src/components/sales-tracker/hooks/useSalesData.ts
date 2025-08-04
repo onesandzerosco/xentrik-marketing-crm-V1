@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { getCurrentWeekStart } from '@/lib/utils';
 
 interface SalesEntry {
   id: string;
@@ -22,23 +23,11 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const getWeekStartDate = (): string => {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const thursday = new Date(today);
-    
-    // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = (dayOfWeek + 3) % 7;
-    thursday.setDate(today.getDate() - daysToSubtract);
-    
-    return thursday.toISOString().split('T')[0];
-  };
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
       // Fetch sales data for selected week or current week
-      const weekStartDate = selectedWeekStart || getWeekStartDate();
+      const weekStartDate = selectedWeekStart || getCurrentWeekStart();
       console.log('useSalesData: Fetching data for week:', weekStartDate, 'chatterId:', chatterId);
       
       let query = supabase

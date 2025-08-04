@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Trash2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getCurrentWeekStart, getWeekStartFromDate } from '@/lib/utils';
 
 const DAYS_OF_WEEK = [
   { label: 'Thursday', value: 0, isWorkingDay: true },
@@ -26,27 +26,9 @@ const DAYS_OF_WEEK = [
   { label: 'Wednesday', value: 6, isWorkingDay: false },
 ];
 
-// Move getWeekStartDate outside component to avoid temporal dead zone
-const getWeekStartDate = (): string => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
-  const thursday = new Date(today);
-  
-  if (dayOfWeek < 4) {
-    // If today is before Thursday, go to last Thursday
-    thursday.setDate(today.getDate() - (7 - daysUntilThursday));
-  } else {
-    // If today is Thursday or after, go to this Thursday
-    thursday.setDate(today.getDate() - daysUntilThursday);
-  }
-  
-  return thursday.toISOString().split('T')[0];
-};
-
 // Check if we can edit a given week (only current week or if it's before Thursday)
 const canEditWeek = (weekStart: string): boolean => {
-  const currentWeekStart = getWeekStartDate();
+  const currentWeekStart = getCurrentWeekStart();
   const selectedWeek = new Date(weekStart);
   const currentWeek = new Date(currentWeekStart);
   
@@ -66,23 +48,6 @@ const canEditWeek = (weekStart: string): boolean => {
   return true;
 };
 
-// Get the Thursday of the week containing the given date
-const getWeekStartFromDate = (date: Date): string => {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
-  const thursday = new Date(date);
-  
-  if (dayOfWeek < 4) {
-    // If date is before Thursday, go to last Thursday
-    thursday.setDate(date.getDate() - (7 - daysUntilThursday));
-  } else {
-    // If date is Thursday or after, go to this Thursday
-    thursday.setDate(date.getDate() - daysUntilThursday);
-  }
-  
-  return thursday.toISOString().split('T')[0];
-};
-
 interface SalesTrackerTableProps {
   selectedWeekStart?: string;
   onWeekChange?: (weekStart: string) => void;
@@ -90,7 +55,7 @@ interface SalesTrackerTableProps {
 }
 
 export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange, chatterId }) => {
-  const [internalWeekStart, setInternalWeekStart] = useState<string>(getWeekStartDate());
+  const [internalWeekStart, setInternalWeekStart] = useState<string>(getCurrentWeekStart());
   
   // Use prop week start if provided, otherwise use internal state
   const selectedWeekStart = propWeekStart || internalWeekStart;
@@ -272,7 +237,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     const newWeekStart = newWeek.toISOString().split('T')[0];
     
     // Don't allow navigation to future weeks
-    if (direction === 'next' && newWeekStart > getWeekStartDate()) {
+    if (direction === 'next' && newWeekStart > getCurrentWeekStart()) {
       return;
     }
     
@@ -290,7 +255,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     const weekStart = getWeekStartFromDate(date);
     
     // Don't allow selection of future weeks
-    if (weekStart > getWeekStartDate()) {
+    if (weekStart > getCurrentWeekStart()) {
       toast({
         title: "Invalid Week",
         description: "You cannot view future weeks.",
@@ -416,16 +381,16 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
                   onSelect={handleCalendarSelect}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
-                  disabled={(date) => {
-                    const maxDate = new Date(getWeekStartDate());
-                    maxDate.setDate(maxDate.getDate() + 6);
-                    return date > maxDate;
+                   disabled={(date) => {
+                     const maxDate = new Date(getCurrentWeekStart());
+                     maxDate.setDate(maxDate.getDate() + 6);
+                     return date > maxDate;
                   }}
                 />
               </PopoverContent>
             </Popover>
           </div>
-          {selectedWeekStart === getWeekStartDate() && (
+          {selectedWeekStart === getCurrentWeekStart() && (
             <span className="text-sm text-muted-foreground">(Current Week)</span>
           )}
           {!canEdit && (
@@ -439,7 +404,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
             size="sm"
             onClick={() => navigateWeek('next')}
             className="flex items-center gap-2"
-            disabled={selectedWeekStart >= getWeekStartDate()}
+            disabled={selectedWeekStart >= getCurrentWeekStart()}
           >
             Next Week
             <ChevronRight className="h-4 w-4" />

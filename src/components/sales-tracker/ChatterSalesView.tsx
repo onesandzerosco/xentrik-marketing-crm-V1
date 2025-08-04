@@ -10,7 +10,7 @@ import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
 import { Calendar as CalendarIcon, Plus, Link, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { cn, getCurrentWeekStart, getWeekStartFromDate } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -78,7 +78,7 @@ export const ChatterSalesView: React.FC = () => {
     if (!selectedModelName.trim()) return;
     
     try {
-      const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
+      const selectedWeekStart = getWeekStart(selectedWeekDate);
       
       // Check if model already exists for this week by checking sales_tracker
       const { data: existingEntries } = await supabase
@@ -195,10 +195,9 @@ export const ChatterSalesView: React.FC = () => {
     return thursday;
   };
 
-  // Function to get week start date (Thursday) from any date
-  const getWeekStartFromDate = (date: Date): string => {
-    const thursday = getThursdayFromDate(date);
-    return thursday.toISOString().split('T')[0];
+  // Function to get week start date (Thursday) from any date - wrapper for imported function
+  const getWeekStart = (date: Date): string => {
+    return getWeekStartFromDate(date);
   };
 
   const formatWeekRange = (date: Date): string => {
@@ -321,7 +320,7 @@ export const ChatterSalesView: React.FC = () => {
           
           <SalesTrackerTable
             key={refreshKey} // Force remount when refreshKey changes
-            selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
+            selectedWeekStart={getWeekStart(selectedWeekDate)}
             chatterId={chatterId}
             onWeekChange={(weekStart) => {
               const newDate = new Date(weekStart);

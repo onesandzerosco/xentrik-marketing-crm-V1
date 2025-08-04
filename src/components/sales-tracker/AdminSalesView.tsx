@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, getCurrentWeekStart, getWeekStartFromDate } from '@/lib/utils';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -52,23 +52,6 @@ export const AdminSalesView: React.FC = () => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const { user } = useAuth();
 
-  // Function to get current week start date (Thursday)
-  const getWeekStartDate = (): string => {
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
-    const thursday = new Date(today);
-    
-    if (dayOfWeek < 4) {
-      // If today is before Thursday, go to last Thursday
-      thursday.setDate(today.getDate() - (7 - daysUntilThursday));
-    } else {
-      // If today is Thursday or after, go to this Thursday
-      thursday.setDate(today.getDate() - daysUntilThursday);
-    }
-    
-    return thursday.toISOString().split('T')[0];
-  };
 
   useEffect(() => {
     fetchChatters();
@@ -122,7 +105,7 @@ export const AdminSalesView: React.FC = () => {
   const addModel = async () => {
     if (!selectedModelName.trim()) return;
     
-    const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
+      const selectedWeekStart = getWeekStartFromDate(selectedWeekDate);
     
     try {
       // Check if model already exists for this week
@@ -172,27 +155,8 @@ export const AdminSalesView: React.FC = () => {
     }
   };
 
-  // Function to get the Thursday from any date (ensures we always land on Thursday)
-  const getThursdayFromDate = (date: Date): Date => {
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const thursday = new Date(date);
-    
-    // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = (dayOfWeek + 3) % 7;
-    thursday.setDate(date.getDate() - daysToSubtract);
-    
-    return thursday;
-  };
-
-  // Function to get week start date (Thursday) from any date
-  const getWeekStartFromDate = (date: Date): string => {
-    const thursday = getThursdayFromDate(date);
-    return thursday.toISOString().split('T')[0];
-  };
-
   const formatWeekRange = (date: Date): string => {
-    const thursday = getThursdayFromDate(date);
-    const weekStart = new Date(thursday);
+    const weekStart = new Date(getWeekStartFromDate(date));
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
@@ -271,8 +235,11 @@ export const AdminSalesView: React.FC = () => {
                       onSelect={(date) => {
                         if (date) {
                           // Ensure we always get the Thursday of the selected week
-                          const thursday = getThursdayFromDate(date);
-                          setSelectedWeekDate(thursday);
+                          const newDate = new Date(date);
+                          const dayOfWeek = newDate.getDay();
+                          const daysToSubtract = (dayOfWeek + 3) % 7;
+                          newDate.setDate(newDate.getDate() - daysToSubtract);
+                          setSelectedWeekDate(newDate);
                           setIsCalendarOpen(false);
                         }
                       }}
@@ -331,8 +298,11 @@ export const AdminSalesView: React.FC = () => {
               chatterId={selectedChatterId} 
               selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
               onWeekChange={(newWeekStart) => {
-                const newDate = new Date(newWeekStart);
-                setSelectedWeekDate(getThursdayFromDate(newDate));
+                const newDate = new Date(newWeekStart + 'T00:00:00');
+                const dayOfWeek = newDate.getDay();
+                const daysToSubtract = (dayOfWeek + 3) % 7;
+                newDate.setDate(newDate.getDate() - daysToSubtract);
+                setSelectedWeekDate(newDate);
               }}
             />
           </CardContent>
