@@ -7,14 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Trash2, ChevronLeft, ChevronRight, Calendar as CalendarIcon, Plus } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn, getCurrentWeekStart, getWeekStartFromDate } from '@/lib/utils';
+import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   { label: 'Thursday', value: 0, isWorkingDay: true },
@@ -26,44 +19,35 @@ const DAYS_OF_WEEK = [
   { label: 'Wednesday', value: 6, isWorkingDay: false },
 ];
 
-// Allow editing for any week (simplified)
-const canEditWeek = (weekStart: string): boolean => {
-  return true; // Allow editing any week for now
+// Move getWeekStartDate outside component to avoid temporal dead zone
+const getWeekStartDate = (): string => {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
+  const thursday = new Date(today);
+  
+  if (dayOfWeek < 4) {
+    // If today is before Thursday, go to last Thursday
+    thursday.setDate(today.getDate() - (7 - daysUntilThursday));
+  } else {
+    // If today is Thursday or after, go to this Thursday
+    thursday.setDate(today.getDate() - daysUntilThursday);
+  }
+  
+  return thursday.toISOString().split('T')[0];
 };
 
-interface SalesTrackerTableProps {
-  selectedWeekStart?: string;
-  onWeekChange?: (weekStart: string) => void;
-  chatterId?: string;
-}
-
-export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange, chatterId }) => {
-  const [internalWeekStart, setInternalWeekStart] = useState<string>(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const thursday = new Date(today);
-    const daysToSubtract = (dayOfWeek + 3) % 7;
-    thursday.setDate(today.getDate() - daysToSubtract);
-    return thursday.toISOString().split('T')[0];
-  });
-  
-  // Use prop week start if provided, otherwise use internal state
-  const selectedWeekStart = propWeekStart || internalWeekStart;
-  
-  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart, chatterId);
+export const SalesTrackerTable: React.FC = () => {
+  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(getWeekStartDate());
+  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart);
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
   const [dayTypes, setDayTypes] = useState<Record<number, boolean>>({});
   const [isUpdating, setIsUpdating] = useState(false);
-  const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date(selectedWeekStart));
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
-  const [newModelName, setNewModelName] = useState('');
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
-  const canEdit = canEditWeek(selectedWeekStart) && !isVA;
 
   // Initialize local data and day types when sales data loads
   useEffect(() => {
@@ -90,7 +74,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
   };
 
   const updateEarnings = async (modelName: string, dayOfWeek: number, value: string) => {
-    if (!canEdit) return; // Check if editing is allowed
+    if (isVA) return; // VAs can only view
 
     const key = `${modelName}-${dayOfWeek}`;
     setLocalData(prev => ({ ...prev, [key]: value }));
@@ -106,11 +90,9 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     try {
       const earnings = parseFloat(value) || 0;
 
-      // Determine the chatter_id to use:
-      // 1. If chatterId prop is provided (admin viewing specific chatter), use that
-      // 2. If user is a chatter, use their own ID
-      // 3. Otherwise, use null (admin creating general entries)
-      const chatter_id = chatterId || (isChatter ? user?.id : null);
+      // For Chatters, include chatter_id in the upsert conflict resolution
+      // For Admins/VAs, use null chatter_id (they manage all records)
+      const chatter_id = isChatter ? user?.id : null;
 
       const { error } = await supabase
         .from('sales_tracker')
@@ -121,7 +103,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
           earnings,
           chatter_id,
         }, {
-          onConflict: 'week_start_date,model_name,day_of_week,chatter_id'
+          onConflict: chatter_id ? 'week_start_date,model_name,day_of_week,chatter_id' : 'week_start_date,model_name,day_of_week'
         });
 
       if (error) {
@@ -150,21 +132,22 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     if (!isAdmin) return;
 
     try {
-      // Remove all entries for this model from sales_tracker table for selected week
-      let deleteQuery = supabase
+      // Remove from sales_models table
+      const { error: modelsError } = await supabase
+        .from('sales_models')
+        .delete()
+        .eq('model_name', modelName);
+
+      if (modelsError) throw modelsError;
+
+      // Remove from sales_tracker table for selected week
+      const { error: salesError } = await supabase
         .from('sales_tracker')
         .delete()
         .eq('model_name', modelName)
         .eq('week_start_date', selectedWeekStart);
 
-      // If viewing a specific chatter's data, only delete their entries
-      if (chatterId) {
-        deleteQuery = deleteQuery.eq('chatter_id', chatterId);
-      }
-
-      const { error } = await deleteQuery;
-
-      if (error) throw error;
+      if (salesError) throw salesError;
 
       toast({
         title: "Success",
@@ -184,7 +167,6 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
 
 
   const updateDayType = (dayValue: number, isWorkingDay: boolean) => {
-    if (!canEdit) return;
     setDayTypes(prev => ({ ...prev, [dayValue]: isWorkingDay }));
   };
 
@@ -224,97 +206,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     const currentWeek = new Date(selectedWeekStart);
     const newWeek = new Date(currentWeek);
     newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
-    const newWeekStart = newWeek.toISOString().split('T')[0];
-    
-    // Remove future week restrictions for now
-    // if (direction === 'next' && newWeekStart > getCurrentWeekStart()) {
-    //   return;
-    // }
-    
-    if (onWeekChange) {
-      onWeekChange(newWeekStart);
-    } else {
-      setInternalWeekStart(newWeekStart);
-    }
-    setCalendarDate(newWeek);
-  };
-
-  const handleCalendarSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    const weekStart = date.toISOString().split('T')[0];
-    
-    if (onWeekChange) {
-      onWeekChange(weekStart);
-    } else {
-      setInternalWeekStart(weekStart);
-    }
-    setCalendarDate(date);
-    setIsCalendarOpen(false);
-  };
-
-  const addModel = async () => {
-    if (!newModelName.trim()) return;
-    
-    try {
-      // Check if model already exists for this week by checking sales_tracker
-      let existingQuery = supabase
-        .from('sales_tracker')
-        .select('model_name')
-        .eq('model_name', newModelName.trim())
-        .eq('week_start_date', selectedWeekStart);
-
-      // If viewing a specific chatter's data, check for their entries specifically
-      if (chatterId) {
-        existingQuery = existingQuery.eq('chatter_id', chatterId);
-      }
-
-      const { data: existingEntries } = await existingQuery.limit(1);
-      
-      if (existingEntries && existingEntries.length > 0) {
-        toast({
-          title: "Model Exists",
-          description: "This model already exists for this week.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Create sales_tracker entries for all 7 days of the week
-      const salesTrackerEntries = [];
-      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-        salesTrackerEntries.push({
-          week_start_date: selectedWeekStart,
-          model_name: newModelName.trim(),
-          day_of_week: dayOfWeek,
-          earnings: 0,
-          chatter_id: chatterId || (isChatter ? user?.id : null), // Use chatterId prop if provided
-          working_day: true // Default to working day
-        });
-      }
-      
-      const { error } = await supabase
-        .from('sales_tracker')
-        .insert(salesTrackerEntries);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: `Model "${newModelName}" has been added.`
-      });
-      
-      setNewModelName('');
-      setIsAddModelOpen(false);
-      refetch();
-    } catch (error) {
-      console.error('Error adding model:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add model. Please try again.",
-        variant: "destructive"
-      });
-    }
+    setSelectedWeekStart(newWeek.toISOString().split('T')[0]);
   };
 
   const getDateForDay = (dayValue: number): string => {
@@ -345,44 +237,22 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
           Previous Week
         </Button>
         
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold">Week of {formatWeekRange()}</span>
-            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                  <CalendarIcon className="h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
-                <Calendar
-                  mode="single"
-                  selected={calendarDate}
-                  onSelect={handleCalendarSelect}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          {/* Removed current week check for now */}
-          {!canEdit && (
-            <span className="text-sm text-yellow-600">Read-only (Editing locked after Thursday)</span>
+        <div className="flex flex-col items-center">
+          <span className="text-lg font-semibold">Week of {formatWeekRange()}</span>
+          {selectedWeekStart === getWeekStartDate() && (
+            <span className="text-sm text-muted-foreground">(Current Week)</span>
           )}
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigateWeek('next')}
-            className="flex items-center gap-2"
-            disabled={false}
-          >
-            Next Week
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigateWeek('next')}
+          className="flex items-center gap-2"
+        >
+          Next Week
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </div>
       
       <Table>
@@ -415,7 +285,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
                 <Select
                   value={dayTypes[day.value] ? "working" : "non-working"}
                   onValueChange={(value) => updateDayType(day.value, value === "working")}
-                  disabled={!canEdit}
+                  disabled={isVA}
                 >
                   <SelectTrigger className="w-full bg-background border border-input">
                     <SelectValue />
@@ -439,7 +309,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
                     onChange={(e) => updateEarnings(model.model_name, day.value, e.target.value)}
                     className="w-full text-center"
                     placeholder="$0.00"
-                    disabled={!canEdit}
+                    disabled={isVA}
                   />
                 </TableCell>
               ))}

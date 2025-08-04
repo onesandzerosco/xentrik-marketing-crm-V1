@@ -1,15 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { AdminSalesView } from '@/components/sales-tracker/AdminSalesView';
 import { ChatterSalesView } from '@/components/sales-tracker/ChatterSalesView';
 import { useAuth } from '@/context/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
 
 const SalesTracker: React.FC = () => {
-  const { userRole, userRoles, isAuthenticated, user } = useAuth();
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const { userRole, userRoles, isAuthenticated } = useAuth();
+  const [selectedChatterId, setSelectedChatterId] = useState<string | null>(null);
 
   // Check if user has access to Sales Tracker
   const hasAccess = isAuthenticated && (
@@ -24,18 +22,6 @@ const SalesTracker: React.FC = () => {
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
-
-  // Auto-redirect logic for non-admins
-  useEffect(() => {
-    if (!hasAccess || !user?.id) return;
-    
-    if (!isAdmin) {
-      // Chatters and VAs should always go to their own tracker
-      if (!id || id !== user.id) {
-        navigate(`/sales-tracker/${user.id}`, { replace: true });
-      }
-    }
-  }, [hasAccess, isAdmin, user?.id, id, navigate]);
 
   if (!hasAccess) {
     return (
@@ -53,8 +39,11 @@ const SalesTracker: React.FC = () => {
   return (
     <div className="min-h-screen bg-premium-dark">
       <div className="container mx-auto p-4">
-        {isAdmin ? (
-          <AdminSalesView />
+        {(isAdmin || isVA) ? (
+          <AdminSalesView 
+            selectedChatterId={selectedChatterId}
+            onSelectChatter={setSelectedChatterId}
+          />
         ) : (
           <ChatterSalesView />
         )}

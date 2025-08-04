@@ -1,81 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, User, Plus, CalendarIcon, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
-import { format } from 'date-fns';
-import { cn, getCurrentWeekStart, getWeekStartFromDate } from '@/lib/utils';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
-import { useParams, useNavigate } from 'react-router-dom';
 
 interface Chatter {
   id: string;
   name: string;
   email: string;
-  sales_tracker_link?: string;
 }
 
-interface ModelOption {
-  model_name: string;
+interface AdminSalesViewProps {
+  selectedChatterId?: string;
+  onSelectChatter: (chatterId: string | null) => void;
 }
 
-export const AdminSalesView: React.FC = () => {
-  const { id: selectedChatterId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+export const AdminSalesView: React.FC<AdminSalesViewProps> = ({ 
+  selectedChatterId, 
+  onSelectChatter 
+}) => {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModelOpen, setIsAddModelOpen] = useState(false);
-  const [selectedModelName, setSelectedModelName] = useState('');
-  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
-  const [isModelsLoading, setIsModelsLoading] = useState(false);
-  const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const { user } = useAuth();
-
 
   useEffect(() => {
     fetchChatters();
-    fetchAvailableModels();
   }, []);
-
-  const fetchAvailableModels = async () => {
-    setIsModelsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('creators')
-        .select('model_name')
-        .not('model_name', 'is', null)
-        .order('model_name');
-
-      if (error) {
-        console.error('Error fetching models:', error);
-        return;
-      }
-
-      setAvailableModels(data || []);
-    } catch (error) {
-      console.error('Error fetching models:', error);
-    } finally {
-      setIsModelsLoading(false);
-    }
-  };
 
   const fetchChatters = async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, sales_tracker_link')
-        .or('role.eq.Chatter,roles.cs.{"Chatter"},role.eq.VA,roles.cs.{"VA"},role.eq.Admin,roles.cs.{"Admin"}')
+        .select('id, name, email')
+        .or('role.eq.Chatter,roles.cs.{"Chatter"}')
         .order('name');
 
       if (error) {
@@ -91,75 +50,6 @@ export const AdminSalesView: React.FC = () => {
     }
   };
 
-  const addModel = async () => {
-    if (!selectedModelName.trim() || !selectedChatterId) return;
-    
-    const selectedWeekStart = selectedWeekDate.toISOString().split('T')[0];
-    
-    try {
-      // Check if model already exists for this week and chatter
-      const { data: existingEntries } = await supabase
-        .from('sales_tracker')
-        .select('model_name')
-        .eq('model_name', selectedModelName.trim())
-        .eq('week_start_date', selectedWeekStart)
-        .eq('chatter_id', selectedChatterId)
-        .limit(1);
-      
-      if (existingEntries && existingEntries.length > 0) {
-        toast({
-          title: "Model Exists",
-          description: "This model already exists for this week.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // Create sales_tracker entries for all 7 days of the week
-      const salesTrackerEntries = [];
-      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-        salesTrackerEntries.push({
-          week_start_date: selectedWeekStart,
-          model_name: selectedModelName.trim(),
-          day_of_week: dayOfWeek,
-          earnings: 0,
-          chatter_id: selectedChatterId,
-          working_day: true
-        });
-      }
-      
-      const { error } = await supabase
-        .from('sales_tracker')
-        .insert(salesTrackerEntries);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success",
-        description: `Model "${selectedModelName}" has been added.`
-      });
-      
-      setSelectedModelName('');
-      setIsAddModelOpen(false);
-      // Refresh the page to show the new model
-      window.location.reload();
-    } catch (error) {
-      console.error('Error adding model:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add model. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const formatWeekRange = (date: Date): string => {
-    const weekStart = new Date(date);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6); // Selected date + 6 days
-    return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-  };
-
   if (selectedChatterId) {
     const selectedChatter = chatters.find(c => c.id === selectedChatterId);
     return (
@@ -167,15 +57,15 @@ export const AdminSalesView: React.FC = () => {
         <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
-            onClick={() => navigate('/sales-tracker')}
+            onClick={() => onSelectChatter(null)}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Team
+            Back to Chatters
           </Button>
           <div>
             <h2 className="text-2xl font-bold text-foreground">
-              {selectedChatter?.id === user?.id ? 'My Sales Tracker' : `${selectedChatter?.name}'s Sales Tracker`}
+              {selectedChatter?.name}'s Sales Tracker
             </h2>
             <p className="text-muted-foreground">{selectedChatter?.email}</p>
           </div>
@@ -183,118 +73,17 @@ export const AdminSalesView: React.FC = () => {
         
         <SalesTrackerHeader />
         
-        {/* Chatter's Sales Tracker Link */}
-        {selectedChatter?.sales_tracker_link && (
-          <Card className="bg-card/50 border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <ExternalLink className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Chatter's Sales Tracker</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(selectedChatter.sales_tracker_link, '_blank')}
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open Link
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 break-all">
-                {selectedChatter.sales_tracker_link}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-        
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  Weekly Sales Tracker
-                  <span className="text-sm text-muted-foreground font-normal">
-                    (7 consecutive days)
-                  </span>
-                </CardTitle>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4" />
-                      {formatWeekRange(selectedWeekDate)}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center">
-                    <Calendar
-                      mode="single"
-                      selected={selectedWeekDate}
-                      onSelect={(date) => {
-                        if (date) {
-                          // Use the exact date selected
-                          setSelectedWeekDate(date);
-                          setIsCalendarOpen(false);
-                        }
-                      }}
-                      disabled={(date) => {
-                        // Only allow Thursdays to be selected
-                        return date.getDay() !== 4; // 4 = Thursday
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <Dialog open={isAddModelOpen} onOpenChange={setIsAddModelOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="default" size="sm" className="flex items-center gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Model
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Model</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 pt-4">
-                    <div>
-                      <Label htmlFor="model-select">Select Model</Label>
-                      <Select value={selectedModelName} onValueChange={setSelectedModelName}>
-                        <SelectTrigger>
-                          <SelectValue placeholder={isModelsLoading ? "Loading models..." : "Select a model"} />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border border-border z-50">
-                          {availableModels.map((model) => (
-                            <SelectItem key={model.model_name} value={model.model_name}>
-                              {model.model_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsAddModelOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={addModel} disabled={!selectedModelName.trim() || isModelsLoading}>
-                        Add Model
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              Weekly Sales Tracker
+              <span className="text-sm text-muted-foreground font-normal">
+                (Thursday to Wednesday)
+              </span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <SalesTrackerTable 
-              chatterId={selectedChatterId} 
-              selectedWeekStart={selectedWeekDate.toISOString().split('T')[0]}
-              onWeekChange={(newWeekStart) => {
-                setSelectedWeekDate(new Date(newWeekStart + 'T12:00:00'));
-              }}
-            />
+            <SalesTrackerTable />
           </CardContent>
         </Card>
       </div>
@@ -307,7 +96,7 @@ export const AdminSalesView: React.FC = () => {
       
       <Card className="bg-secondary/10 border-muted">
         <CardHeader>
-          <CardTitle className="text-foreground">Select Team Member</CardTitle>
+          <CardTitle className="text-foreground">Select a Chatter</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -324,27 +113,18 @@ export const AdminSalesView: React.FC = () => {
                 <Card 
                   key={chatter.id} 
                   className="cursor-pointer hover:bg-secondary/20 transition-colors border-muted"
-                  onClick={() => navigate(`/sales-tracker/${chatter.id}`)}
+                  onClick={() => onSelectChatter(chatter.id)}
                 >
                   <CardContent className="p-4">
-                     <div className="flex items-center gap-3">
-                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                         <User className="h-5 w-5 text-primary" />
-                       </div>
-                       <div className="flex-1">
-                         <div className="flex items-center gap-2">
-                           <h3 className="font-semibold text-foreground">
-                             {chatter.id === user?.id ? 'Me' : chatter.name}
-                           </h3>
-                           {chatter.id === user?.id && (
-                             <span className="px-2 py-1 text-xs bg-primary/20 text-primary rounded-full">
-                               You
-                             </span>
-                           )}
-                         </div>
-                         <p className="text-sm text-muted-foreground">{chatter.email}</p>
-                       </div>
-                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground">{chatter.name}</h3>
+                        <p className="text-sm text-muted-foreground">{chatter.email}</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}

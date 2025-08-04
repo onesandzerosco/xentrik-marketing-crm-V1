@@ -270,13 +270,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log("Starting signOut process");
       
-      // Check if user is already logged out
-      if (!session && !user) {
-        console.log("User already logged out, redirecting to login");
-        navigate('/login', { replace: true });
-        return;
-      }
-      
       // Clear local state first before API call to ensure UI updates immediately
       localStorage.removeItem('isCreator');
       localStorage.removeItem('creatorId');
@@ -293,53 +286,42 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log("Local state cleared, now calling Supabase signOut");
       
-      // Try to get the current session from Supabase to check if it actually exists
+      // Force signOut which will invalidate all sessions
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
         
-        if (currentSession) {
-          console.log("Valid session found, calling signOut");
-          const { error } = await supabase.auth.signOut({ scope: 'global' });
-          
-          if (error) {
-            console.warn("Supabase signOut error (continuing with logout):", error);
-          } else {
-            console.log("Supabase signOut successful");
-          }
-        } else {
-          console.log("No valid session found in Supabase, skipping signOut call");
+        if (error) {
+          console.error("Supabase signOut error:", error);
         }
       } catch (error) {
-        console.warn("Error during signOut process (continuing with logout):", error);
+        console.error("Error during signOut API call:", error);
         // Continue with logout flow even if the API call fails
       }
       
-      console.log("SignOut process completed, redirecting to login");
+      console.log("Supabase signOut completed, redirecting to login");
       
       toast({
         title: "Logged out successfully",
         description: "You have been securely logged out",
       });
       
-      // Always force navigation to login page
-      navigate('/login', { replace: true });
+      // Always force navigation to login page regardless of API call success
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
       
     } catch (error: any) {
       console.error("Logout error:", error);
-      
-      // Clear state even if there's an error
-      setIsAuthenticated(false);
-      setUser(null);
-      setSession(null);
-      
       toast({
         variant: "destructive",
-        title: "Logout completed with warnings",
-        description: "You have been logged out, but there may have been some issues clearing the session.",
+        title: "Logout failed",
+        description: error.message || "Auth session missing!",
       });
       
-      // Always redirect to login even with errors
-      navigate('/login', { replace: true });
+      // Even with an error, redirect to login
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
     }
   };
 

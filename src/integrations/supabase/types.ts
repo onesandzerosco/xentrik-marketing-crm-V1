@@ -638,7 +638,6 @@ export type Database = {
           profile_image: string | null
           role: string
           roles: string[] | null
-          sales_tracker_link: string | null
           status: string
           telegram: string | null
           updated_at: string | null
@@ -656,7 +655,6 @@ export type Database = {
           profile_image?: string | null
           role: string
           roles?: string[] | null
-          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -674,7 +672,6 @@ export type Database = {
           profile_image?: string | null
           role?: string
           roles?: string[] | null
-          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -714,21 +711,18 @@ export type Database = {
           created_by: string | null
           id: string
           model_name: string
-          week_start_date: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           id?: string
           model_name: string
-          week_start_date?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
           id?: string
           model_name?: string
-          week_start_date?: string
         }
         Relationships: [
           {
@@ -750,7 +744,6 @@ export type Database = {
           model_name: string
           updated_at: string
           week_start_date: string
-          working_day: boolean
         }
         Insert: {
           chatter_id?: string | null
@@ -761,7 +754,6 @@ export type Database = {
           model_name: string
           updated_at?: string
           week_start_date: string
-          working_day?: boolean
         }
         Update: {
           chatter_id?: string | null
@@ -772,7 +764,6 @@ export type Database = {
           model_name?: string
           updated_at?: string
           week_start_date?: string
-          working_day?: boolean
         }
         Relationships: [
           {
