@@ -90,6 +90,31 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   }, [effectiveChatterId, selectedWeek]);
 
+  // Get sales locking status (moved up to fix variable order)
+  const isSalesLocked = salesData.length > 0 && salesData[0]?.sales_locked;
+  const isAdminConfirmed = salesData.length > 0 && salesData[0]?.admin_confirmed;
+  const confirmedHours = salesData.length > 0 ? salesData[0]?.confirmed_hours_worked || 0 : 0;
+  const confirmedCommissionRate = salesData.length > 0 ? salesData[0]?.confirmed_commission_rate || 0 : 0;
+
+  // Check if inputs should be disabled (locked sales or not editable week)
+  const areInputsDisabled = !isWeekEditable || isSalesLocked;
+
+  // Debug logging for button visibility
+  useEffect(() => {
+    console.log('Button visibility debug:', {
+      isAdmin,
+      isCurrentWeek,
+      isSalesLocked,
+      userRole,
+      effectiveChatterId,
+      salesDataLength: salesData.length,
+      modelsLength: models.length,
+      canEdit,
+      isWeekEditable,
+      areInputsDisabled
+    });
+  }, [isAdmin, isCurrentWeek, isSalesLocked, userRole, effectiveChatterId, salesData, models, canEdit, isWeekEditable, areInputsDisabled]);
+
   const fetchData = async () => {
     if (!effectiveChatterId) return;
     
@@ -253,18 +278,32 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   };
 
   const updateHourlyRate = async (newRate: number) => {
-    if (!effectiveChatterId || !isAdmin) return;
+    if (!effectiveChatterId || !isAdmin) {
+      console.log('Hourly rate update blocked:', { effectiveChatterId, isAdmin, userRole });
+      return;
+    }
+
+    console.log('Attempting to update hourly rate:', { 
+      effectiveChatterId, 
+      newRate, 
+      isAdmin, 
+      userRole,
+      currentRate: hourlyRate 
+    });
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ hourly_rate: newRate })
-        .eq('id', effectiveChatterId);
+        .eq('id', effectiveChatterId)
+        .select();
 
       if (error) {
         console.error('Supabase error details:', error);
         throw error;
       }
+
+      console.log('Hourly rate update successful:', data);
 
       setHourlyRate(newRate);
       toast({
@@ -280,15 +319,6 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       });
     }
   };
-
-  // Get sales locking status
-  const isSalesLocked = salesData.length > 0 && salesData[0]?.sales_locked;
-  const isAdminConfirmed = salesData.length > 0 && salesData[0]?.admin_confirmed;
-  const confirmedHours = salesData.length > 0 ? salesData[0]?.confirmed_hours_worked || 0 : 0;
-  const confirmedCommissionRate = salesData.length > 0 ? salesData[0]?.confirmed_commission_rate || 0 : 0;
-
-  // Check if inputs should be disabled (locked sales or not editable week)
-  const areInputsDisabled = !isWeekEditable || isSalesLocked;
 
   const confirmWeekSales = async () => {
     if (!effectiveChatterId || !isCurrentWeek) return;
