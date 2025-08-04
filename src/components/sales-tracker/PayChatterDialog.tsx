@@ -125,29 +125,21 @@ export const PayChatterDialog: React.FC<PayChatterDialogProps> = ({
   const handlePayChatter = async () => {
     setIsLoading(true);
     try {
-      // Generate PDF
+      // Generate PDF only - do not clear data
       await generatePDF();
-      
-      // Clear current week's data
-      await clearWeekData();
       
       toast({
         title: "Success",
-        description: "Sales report saved as PDF and table cleared for next week."
+        description: "Sales report saved as PDF successfully."
       });
       
       onOpenChange(false);
       
-      // Refresh the page to show cleared data
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      
     } catch (error) {
-      console.error('Error processing payment:', error);
+      console.error('Error generating PDF:', error);
       toast({
         title: "Error",
-        description: "Failed to process payment. Please try again.",
+        description: "Failed to generate PDF. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -175,19 +167,11 @@ export const PayChatterDialog: React.FC<PayChatterDialogProps> = ({
               <span className="text-primary">•</span>
               Save the current week's sales data as a PDF report
             </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              Clear all entries from the table
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-primary">•</span>
-              Reset the tracker for the next week cycle
-            </li>
           </ul>
           
-          <div className="bg-orange-50 dark:bg-orange-950/20 p-3 rounded-lg">
-            <p className="text-sm text-orange-800 dark:text-orange-200">
-              <strong>Warning:</strong> This action cannot be undone. Make sure all data is entered correctly before proceeding.
+          <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Note:</strong> This will only generate a PDF report. Your sales data will remain intact and uneditable.
             </p>
           </div>
           
@@ -202,9 +186,9 @@ export const PayChatterDialog: React.FC<PayChatterDialogProps> = ({
             <Button
               onClick={handlePayChatter}
               disabled={isLoading}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {isLoading ? 'Processing...' : 'Generate PDF & Clear'}
+              {isLoading ? 'Generating...' : 'Generate PDF Report'}
             </Button>
           </div>
         </div>
