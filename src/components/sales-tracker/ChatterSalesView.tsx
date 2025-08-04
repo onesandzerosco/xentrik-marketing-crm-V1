@@ -37,11 +37,10 @@ export const ChatterSalesView: React.FC = () => {
   const [salesTrackerLink, setSalesTrackerLink] = useState('');
   const [isLinkSaving, setIsLinkSaving] = useState(false);
 
-  // Initialize selectedWeekDate to July 31st (where your data exists)
+  // Initialize selectedWeekDate to current Thursday
   useEffect(() => {
-    const targetDate = new Date('2025-07-31T12:00:00'); // Use noon to avoid timezone issues
-    console.log('ChatterSalesView: Setting selectedWeekDate to:', targetDate.toDateString());
-    setSelectedWeekDate(targetDate);
+    const currentThursday = getThursdayFromDate(new Date());
+    setSelectedWeekDate(currentThursday);
   }, []);
 
   // Fetch available models (creators)
@@ -187,19 +186,28 @@ export const ChatterSalesView: React.FC = () => {
     }
   };
 
-  // Function to get week start date from any date - use the date AS IS
+  // Function to get the Thursday from any date (ensures we always land on Thursday)
+  const getThursdayFromDate = (date: Date): Date => {
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const thursday = new Date(date);
+    
+    // Calculate days to subtract to get to the Thursday of the current week
+    const daysToSubtract = (dayOfWeek + 3) % 7;
+    thursday.setDate(date.getDate() - daysToSubtract);
+    
+    return thursday;
+  };
+
+  // Function to get week start date (Thursday) from any date - wrapper for imported function
   const getWeekStart = (date: Date): string => {
-    const result = date.toISOString().split('T')[0];
-    console.log('getWeekStart: Input date:', date.toDateString(), 'Output:', result);
-    return result;
+    return getWeekStartFromDate(date);
   };
 
   const formatWeekRange = (date: Date): string => {
-    // Use the selected date as week start, add 6 days for week end
-    const weekStart = new Date(date);
+    const thursday = getThursdayFromDate(date);
+    const weekStart = new Date(thursday);
     const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    console.log('formatWeekRange: Week start:', weekStart.toDateString(), 'Week end:', weekEnd.toDateString());
+    weekEnd.setDate(weekStart.getDate() + 6); // Thursday + 6 days = Wednesday
     return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
@@ -230,15 +238,15 @@ export const ChatterSalesView: React.FC = () => {
                     selected={selectedWeekDate}
                     onSelect={(date) => {
                       if (date) {
-                        // Use the selected date AS IS - no conversion to Thursday
-                        console.log('Date picker: Selected date:', date.toDateString());
-                        setSelectedWeekDate(date);
+                        // Ensure we always get the Thursday of the selected week
+                        const thursday = getThursdayFromDate(date);
+                        setSelectedWeekDate(thursday);
                         setIsCalendarOpen(false);
                       }
                     }}
                     disabled={(date) => {
-                      // Allow any date to be selected for now
-                      return false;
+                      // Only allow Thursdays to be selected
+                      return date.getDay() !== 4; // 4 = Thursday
                     }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}

@@ -28,7 +28,6 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
     try {
       // Fetch sales data for selected week or current week
       const weekStartDate = selectedWeekStart || getCurrentWeekStart();
-      console.log('useSalesData: Using weekStartDate:', weekStartDate, 'selectedWeekStart:', selectedWeekStart, 'getCurrentWeekStart():', getCurrentWeekStart());
       console.log('useSalesData: Fetching data for week:', weekStartDate, 'chatterId:', chatterId);
       
       let query = supabase
@@ -77,7 +76,6 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   };
 
   useEffect(() => {
-    // Fetch data immediately when component mounts or dependencies change
     fetchData();
   }, [selectedWeekStart, chatterId]);
 
