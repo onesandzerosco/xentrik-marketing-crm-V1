@@ -312,7 +312,7 @@ export const SalesTrackerTable: React.FC = () => {
       }
       
       // Add to sales_models table for this specific week
-      const { error } = await supabase
+      const { error: modelsError } = await supabase
         .from('sales_models')
         .insert({
           model_name: newModelName.trim(),
@@ -320,7 +320,26 @@ export const SalesTrackerTable: React.FC = () => {
           week_start_date: selectedWeekStart
         });
       
-      if (error) throw error;
+      if (modelsError) throw modelsError;
+      
+      // Create initial sales_tracker entries for all 7 days of the week
+      const salesTrackerEntries = [];
+      for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+        salesTrackerEntries.push({
+          week_start_date: selectedWeekStart,
+          model_name: newModelName.trim(),
+          day_of_week: dayOfWeek,
+          earnings: 0,
+          chatter_id: isChatter ? user?.id : null, // Set chatter_id only for chatters
+          working_day: true // Default to working day
+        });
+      }
+      
+      const { error: salesError } = await supabase
+        .from('sales_tracker')
+        .insert(salesTrackerEntries);
+      
+      if (salesError) throw salesError;
       
       toast({
         title: "Success",
