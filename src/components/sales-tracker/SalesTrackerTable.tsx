@@ -107,6 +107,19 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
+  
+  // Debug logging
+  console.log('DEBUG - Current info:', {
+    selectedWeekStart,
+    currentWeekStart: getWeekStartDate(),
+    userRole,
+    userRoles,
+    isVA,
+    canEditWeekResult: canEditWeek(selectedWeekStart),
+    today: new Date().toISOString().split('T')[0],
+    dayOfWeek: new Date().getDay()
+  });
+  
   const canEdit = canEditWeek(selectedWeekStart) && !isVA;
 
   // Initialize local data and day types when sales data loads
