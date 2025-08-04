@@ -44,7 +44,7 @@ export const AdminSalesView: React.FC = () => {
     const thursday = new Date(today);
     
     // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = dayOfWeek === 0 ? 3 : (dayOfWeek + 3) % 7;
+    const daysToSubtract = (dayOfWeek + 3) % 7;
     thursday.setDate(today.getDate() - daysToSubtract);
     
     return thursday;
@@ -237,7 +237,7 @@ export const AdminSalesView: React.FC = () => {
                           // Ensure we always get the Thursday of the selected week
                           const newDate = new Date(date);
                           const dayOfWeek = newDate.getDay();
-                          const daysToSubtract = dayOfWeek === 0 ? 3 : (dayOfWeek + 3) % 7;
+                          const daysToSubtract = (dayOfWeek + 3) % 7;
                           newDate.setDate(newDate.getDate() - daysToSubtract);
                           setSelectedWeekDate(newDate);
                           setIsCalendarOpen(false);
@@ -300,7 +300,7 @@ export const AdminSalesView: React.FC = () => {
               onWeekChange={(newWeekStart) => {
                 const newDate = new Date(newWeekStart + 'T00:00:00');
                 const dayOfWeek = newDate.getDay();
-                const daysToSubtract = dayOfWeek === 0 ? 3 : (dayOfWeek + 3) % 7;
+                const daysToSubtract = (dayOfWeek + 3) % 7;
                 newDate.setDate(newDate.getDate() - daysToSubtract);
                 setSelectedWeekDate(newDate);
               }}

@@ -192,7 +192,7 @@ export const ChatterSalesView: React.FC = () => {
     const thursday = new Date(date);
     
     // Calculate days to subtract to get to the Thursday of the current week
-    const daysToSubtract = dayOfWeek === 0 ? 3 : (dayOfWeek + 3) % 7;
+    const daysToSubtract = (dayOfWeek + 3) % 7;
     thursday.setDate(date.getDate() - daysToSubtract);
     
     return thursday;

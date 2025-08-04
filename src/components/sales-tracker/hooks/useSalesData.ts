@@ -76,6 +76,7 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   };
 
   useEffect(() => {
+    // Fetch data immediately when component mounts or dependencies change
     fetchData();
   }, [selectedWeekStart, chatterId]);
 
