@@ -298,10 +298,8 @@ export const AdminSalesView: React.FC = () => {
               chatterId={selectedChatterId} 
               selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
               onWeekChange={(newWeekStart) => {
+                // newWeekStart is already a Thursday, so just use it directly
                 const newDate = new Date(newWeekStart + 'T00:00:00');
-                const dayOfWeek = newDate.getDay();
-                const daysToSubtract = (dayOfWeek + 3) % 7;
-                newDate.setDate(newDate.getDate() - daysToSubtract);
                 setSelectedWeekDate(newDate);
               }}
             />
