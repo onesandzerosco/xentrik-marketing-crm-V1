@@ -40,7 +40,7 @@ export const GoogleSheetsLinkManager: React.FC<GoogleSheetsLinkManagerProps> = (
 
       if (error && error.code !== 'PGRST116') throw error;
 
-      setSalesTrackerLink(data?.sales_tracker_link || '');
+      setSalesTrackerLink((data as any)?.sales_tracker_link || '');
     } catch (error) {
       console.error('Error fetching sales tracker link:', error);
     } finally {
@@ -64,7 +64,7 @@ export const GoogleSheetsLinkManager: React.FC<GoogleSheetsLinkManagerProps> = (
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ sales_tracker_link: tempLink })
+        .update({ sales_tracker_link: tempLink } as any)
         .eq('id', chatterId);
 
       if (error) throw error;
