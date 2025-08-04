@@ -26,6 +26,7 @@ export const ChatterSalesView: React.FC = () => {
   const [selectedModelName, setSelectedModelName] = useState('');
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key to force table update
 
   // Initialize selectedWeekDate to current Thursday
   useEffect(() => {
@@ -116,7 +117,9 @@ export const ChatterSalesView: React.FC = () => {
       
       setSelectedModelName('');
       setIsAddModelOpen(false);
-      // No need to reload - the SalesTrackerTable will refetch automatically
+      
+      // Force table refresh by updating refresh key
+      setRefreshKey(prev => prev + 1);
     } catch (error) {
       console.error('Error adding model:', error);
       toast({
@@ -244,6 +247,7 @@ export const ChatterSalesView: React.FC = () => {
         </CardHeader>
         <CardContent>
           <SalesTrackerTable 
+            key={refreshKey} // Force remount when refreshKey changes
             selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
             onWeekChange={(weekStart) => {
               const newDate = new Date(weekStart);
