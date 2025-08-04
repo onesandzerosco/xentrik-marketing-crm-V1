@@ -55,11 +55,13 @@ interface SalesTrackerTableProps {
 }
 
 export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange, chatterId }) => {
-  const [internalWeekStart, setInternalWeekStart] = useState<string>(getCurrentWeekStart());
+  // Use July 31st as fallback instead of getCurrentWeekStart()
+  const [internalWeekStart, setInternalWeekStart] = useState<string>('2025-07-31');
   
   // Use prop week start if provided, otherwise use internal state
   const selectedWeekStart = propWeekStart || internalWeekStart;
   
+  console.log('SalesTrackerTable: propWeekStart:', propWeekStart, 'selectedWeekStart:', selectedWeekStart);
   const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart, chatterId);
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
@@ -236,10 +238,10 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
     const newWeekStart = newWeek.toISOString().split('T')[0];
     
-    // Don't allow navigation to future weeks
-    if (direction === 'next' && newWeekStart > getCurrentWeekStart()) {
-      return;
-    }
+    // Don't allow navigation to future weeks (disable this check for now)
+    // if (direction === 'next' && newWeekStart > getCurrentWeekStart()) {
+    //   return;
+    // }
     
     if (onWeekChange) {
       onWeekChange(newWeekStart);
@@ -254,15 +256,15 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     
     const weekStart = getWeekStartFromDate(date);
     
-    // Don't allow selection of future weeks
-    if (weekStart > getCurrentWeekStart()) {
-      toast({
-        title: "Invalid Week",
-        description: "You cannot view future weeks.",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Don't allow selection of future weeks (disable this check for now)
+    // if (weekStart > getCurrentWeekStart()) {
+    //   toast({
+    //     title: "Invalid Week",
+    //     description: "You cannot view future weeks.",
+    //     variant: "destructive"
+    //   });
+    //   return;
+    // }
     
     if (onWeekChange) {
       onWeekChange(weekStart);
@@ -390,7 +392,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
               </PopoverContent>
             </Popover>
           </div>
-          {selectedWeekStart === getCurrentWeekStart() && (
+          {selectedWeekStart === '2025-07-31' && (
             <span className="text-sm text-muted-foreground">(Current Week)</span>
           )}
           {!canEdit && (
@@ -404,7 +406,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
             size="sm"
             onClick={() => navigateWeek('next')}
             className="flex items-center gap-2"
-            disabled={selectedWeekStart >= getCurrentWeekStart()}
+            disabled={false}
           >
             Next Week
             <ChevronRight className="h-4 w-4" />
