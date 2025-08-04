@@ -6,136 +6,114 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCreators } from '@/context/creator';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-
-interface Creator {
-  id: string;
-  name: string;
-  model_name: string | null;
-}
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
 
 interface AddModelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  chatterId?: string;
+  weekStart: Date;
+  onModelAdded: () => void;
 }
 
 export const AddModelDialog: React.FC<AddModelDialogProps> = ({
   open,
   onOpenChange,
+  chatterId,
+  weekStart,
+  onModelAdded
 }) => {
-  const [selectedCreator, setSelectedCreator] = useState<string>('');
-  const [creators, setCreators] = useState<Creator[]>([]);
+  const { creators } = useCreators();
+  const { toast } = useToast();
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string>('');
+  const [availableCreators, setAvailableCreators] = useState<typeof creators>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingCreators, setIsLoadingCreators] = useState(false);
 
-  // Fetch creators when dialog opens
   useEffect(() => {
-    if (open) {
-      fetchCreators();
+    if (open && chatterId) {
+      fetchAvailableCreators();
     }
-  }, [open]);
+  }, [open, chatterId, weekStart]);
 
-  const fetchCreators = async () => {
-    setIsLoadingCreators(true);
+  const fetchAvailableCreators = async () => {
+    if (!chatterId) return;
+
     try {
-      const { data: creatorsData, error } = await supabase
-        .from('creators')
-        .select('id, name, model_name')
-        .eq('active', true)
-        .order('name');
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      // Get models already added for this week
+      const { data: existingModels, error } = await supabase
+        .from('sales_tracker')
+        .select('model_name')
+        .eq('chatter_id', chatterId)
+        .eq('week_start_date', weekStartStr);
 
       if (error) throw error;
 
-      // Filter out creators that are already added as models
-      const { data: existingModels, error: modelsError } = await supabase
-        .from('sales_models')
-        .select('model_name');
-
-      if (modelsError) throw modelsError;
-
-      const existingModelNames = existingModels?.map(m => m.model_name) || [];
-      const availableCreators = creatorsData?.filter(creator => {
-        const modelNameToCheck = creator.model_name || creator.name;
-        return modelNameToCheck && !existingModelNames.includes(modelNameToCheck);
-      }) || [];
-
-      setCreators(availableCreators);
+      const existingModelNames = new Set(existingModels?.map(m => m.model_name) || []);
+      
+      // Filter out creators whose model names are already added
+      const available = creators.filter(creator => 
+        creator.modelName && !existingModelNames.has(creator.modelName)
+      );
+      
+      setAvailableCreators(available);
     } catch (error) {
-      console.error('Error fetching creators:', error);
+      console.error('Error fetching available creators:', error);
       toast({
         title: "Error",
-        description: "Failed to load creators. Please try again.",
-        variant: "destructive"
+        description: "Failed to load available models",
+        variant: "destructive",
       });
-    } finally {
-      setIsLoadingCreators(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedCreator) {
-      toast({
-        title: "Error",
-        description: "Please select a creator.",
-        variant: "destructive"
-      });
-      return;
-    }
+    if (!selectedCreatorId || !chatterId) return;
 
-    const creator = creators.find(c => c.id === selectedCreator);
-    if (!creator) return;
-
-    // Use model_name if available, otherwise fall back to name
-    const modelNameToUse = creator.model_name || creator.name;
+    const selectedCreator = creators.find(c => c.id === selectedCreatorId);
+    if (!selectedCreator?.modelName) return;
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('sales_models')
-        .insert({
-          model_name: modelNameToUse,
-        });
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      // Add entries for all days of the week (Thursday=4 to Wednesday=3)
+      const daysOfWeek = [4, 5, 6, 0, 1, 2, 3];
+      const insertData = daysOfWeek.map(dayOfWeek => ({
+        model_name: selectedCreator.modelName,
+        day_of_week: dayOfWeek,
+        earnings: 0,
+        week_start_date: weekStartStr,
+        chatter_id: chatterId,
+        working_day: true
+      }));
 
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          toast({
-            title: "Error",
-            description: "This model name already exists.",
-            variant: "destructive"
-          });
-        } else {
-          throw error;
-        }
-        return;
-      }
+      const { error } = await supabase
+        .from('sales_tracker')
+        .insert(insertData);
+
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: `${modelNameToUse} has been added to the tracker.`
+        description: `${selectedCreator.modelName} added to sales tracker`,
       });
 
-      setSelectedCreator('');
-      onOpenChange(false);
-      
-      // Refresh the page to reload data
-      window.location.reload();
+      onModelAdded();
+      handleDialogChange(false);
     } catch (error) {
       console.error('Error adding model:', error);
       toast({
         title: "Error",
-        description: "Failed to add model. Please try again.",
-        variant: "destructive"
+        description: "Failed to add model",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -145,8 +123,7 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
   const handleDialogChange = (open: boolean) => {
     onOpenChange(open);
     if (!open) {
-      setSelectedCreator('');
-      setCreators([]);
+      setSelectedCreatorId('');
     }
   };
 
@@ -154,54 +131,46 @@ export const AddModelDialog: React.FC<AddModelDialogProps> = ({
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Creator to Sales Tracker</DialogTitle>
+          <DialogTitle>Add Model to Sales Tracker</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="creator">Select Creator</Label>
-            {isLoadingCreators ? (
-              <div className="text-sm text-muted-foreground">Loading creators...</div>
-            ) : creators.length === 0 ? (
-              <div className="text-sm text-muted-foreground">No available creators to add</div>
-            ) : (
-              <Select
-                value={selectedCreator}
-                onValueChange={setSelectedCreator}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a creator" />
-                </SelectTrigger>
-                <SelectContent>
-                  {creators.map((creator) => {
-                    const displayName = creator.model_name || creator.name;
-                    return (
-                      <SelectItem key={creator.id} value={creator.id}>
-                        {displayName} ({creator.name})
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            )}
+          <div>
+            <Select value={selectedCreatorId} onValueChange={setSelectedCreatorId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCreators.length === 0 ? (
+                  <SelectItem value="" disabled>
+                    No available models
+                  </SelectItem>
+                ) : (
+                  availableCreators.map((creator) => (
+                    <SelectItem key={creator.id} value={creator.id}>
+                      {creator.modelName}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="flex justify-end gap-3">
+          <div className="flex gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              onClick={() => handleDialogChange(false)}
+              className="flex-1"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !selectedCreator || creators.length === 0}
-              className="bg-gradient-premium-yellow hover:bg-gradient-premium-yellow/90 text-black"
+              disabled={!selectedCreatorId || isLoading}
+              className="flex-1"
             >
-              {isLoading ? 'Adding...' : 'Add Creator'}
+              {isLoading ? "Adding..." : "Add Model"}
             </Button>
           </div>
         </form>

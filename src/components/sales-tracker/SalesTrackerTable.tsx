@@ -1,340 +1,351 @@
 import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PremiumInput } from '@/components/ui/premium-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSalesData } from './hooks/useSalesData';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Trash2 } from 'lucide-react';
+import { AddModelDialog } from './AddModelDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
+
+interface SalesEntry {
+  id: string;
+  model_name: string;
+  day_of_week: number;
+  earnings: number;
+  working_day?: boolean;
+}
+
+interface SalesModel {
+  model_name: string;
+}
+
+interface SalesTrackerTableProps {
+  chatterId?: string;
+  selectedWeek?: Date;
+}
 
 const DAYS_OF_WEEK = [
-  { label: 'Thursday', value: 0, isWorkingDay: true },
-  { label: 'Friday', value: 1, isWorkingDay: true },
-  { label: 'Saturday', value: 2, isWorkingDay: true },
-  { label: 'Sunday', value: 3, isWorkingDay: true },
-  { label: 'Monday', value: 4, isWorkingDay: true },
-  { label: 'Tuesday', value: 5, isWorkingDay: false },
-  { label: 'Wednesday', value: 6, isWorkingDay: false },
+  { label: 'Thu', value: 4 },
+  { label: 'Fri', value: 5 },
+  { label: 'Sat', value: 6 },
+  { label: 'Sun', value: 0 },
+  { label: 'Mon', value: 1 },
+  { label: 'Tue', value: 2 },
+  { label: 'Wed', value: 3 },
 ];
 
-// Move getWeekStartDate outside component to avoid temporal dead zone
-const getWeekStartDate = (): string => {
-  const today = new Date();
-  const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  const daysUntilThursday = (4 - dayOfWeek + 7) % 7; // 4 = Thursday
-  const thursday = new Date(today);
-  
-  if (dayOfWeek < 4) {
-    // If today is before Thursday, go to last Thursday
-    thursday.setDate(today.getDate() - (7 - daysUntilThursday));
-  } else {
-    // If today is Thursday or after, go to this Thursday
-    thursday.setDate(today.getDate() - daysUntilThursday);
-  }
-  
-  return thursday.toISOString().split('T')[0];
-};
-
-export const SalesTrackerTable: React.FC = () => {
-  const [selectedWeekStart, setSelectedWeekStart] = useState<string>(getWeekStartDate());
-  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart);
+export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
+  chatterId,
+  selectedWeek = new Date()
+}) => {
   const { user, userRole, userRoles } = useAuth();
-  const [localData, setLocalData] = useState<Record<string, string>>({});
-  const [dayTypes, setDayTypes] = useState<Record<number, boolean>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
+  const [salesData, setSalesData] = useState<SalesEntry[]>([]);
+  const [models, setModels] = useState<SalesModel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddModel, setShowAddModel] = useState(false);
 
+  const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
-  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
-  const isVA = userRole === 'VA' || userRoles?.includes('VA');
+  const canEdit = isAdmin || effectiveChatterId === user?.id;
 
-  // Initialize local data and day types when sales data loads
+  // Calculate week start (Thursday)
+  const getWeekStart = (date: Date) => {
+    const day = date.getDay();
+    const thursday = new Date(date);
+    
+    if (day === 0) { // Sunday
+      thursday.setDate(date.getDate() - 3);
+    } else if (day < 4) { // Monday, Tuesday, Wednesday
+      thursday.setDate(date.getDate() - day - 3);
+    } else { // Thursday, Friday, Saturday
+      thursday.setDate(date.getDate() - day + 4);
+    }
+    
+    return thursday;
+  };
+
+  const weekStart = getWeekStart(selectedWeek);
+  const currentWeekStart = getWeekStart(new Date());
+  const isCurrentWeek = weekStart.getTime() === currentWeekStart.getTime();
+  const isFutureWeek = weekStart.getTime() > currentWeekStart.getTime();
+  
+  // Week is editable if it's current week or future, and user has edit permissions
+  const isWeekEditable = canEdit && (isCurrentWeek || isFutureWeek);
+
   useEffect(() => {
-    const initialData: Record<string, string> = {};
-    const initialDayTypes: Record<number, boolean> = {};
+    if (effectiveChatterId) {
+      fetchData();
+    }
+  }, [effectiveChatterId, selectedWeek]);
+
+  const fetchData = async () => {
+    if (!effectiveChatterId) return;
     
-    salesData.forEach(entry => {
-      const key = `${entry.model_name}-${entry.day_of_week}`;
-      initialData[key] = entry.earnings?.toString() || '0';
-    });
-    
-    // Initialize day types from DAYS_OF_WEEK default values
-    DAYS_OF_WEEK.forEach(day => {
-      initialDayTypes[day.value] = dayTypes[day.value] !== undefined ? dayTypes[day.value] : day.isWorkingDay;
-    });
-    
-    setLocalData(initialData);
-    setDayTypes(initialDayTypes);
-  }, [salesData]);
-
-  const getEarnings = (modelName: string, dayOfWeek: number): string => {
-    const key = `${modelName}-${dayOfWeek}`;
-    return localData[key] || '0';
-  };
-
-  const updateEarnings = async (modelName: string, dayOfWeek: number, value: string) => {
-    if (isVA) return; // VAs can only view
-
-    const key = `${modelName}-${dayOfWeek}`;
-    setLocalData(prev => ({ ...prev, [key]: value }));
-
-    // Save immediately without debouncing to ensure data integrity
-    await saveEarnings(modelName, dayOfWeek, value);
-  };
-
-  const saveEarnings = async (modelName: string, dayOfWeek: number, value: string) => {
-    if (isUpdating) return;
-    
-    setIsUpdating(true);
+    setIsLoading(true);
     try {
-      const earnings = parseFloat(value) || 0;
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      // Fetch sales data for the week
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales_tracker')
+        .select('*')
+        .eq('chatter_id', effectiveChatterId)
+        .eq('week_start_date', weekStartStr);
 
-      // For Chatters, include chatter_id in the upsert conflict resolution
-      // For Admins/VAs, use null chatter_id (they manage all records)
-      const chatter_id = isChatter ? user?.id : null;
+      if (salesError) throw salesError;
 
+      // Fetch unique models for this chatter
+      const { data: modelsData, error: modelsError } = await supabase
+        .from('sales_tracker')
+        .select('model_name')
+        .eq('chatter_id', effectiveChatterId)
+        .eq('week_start_date', weekStartStr);
+
+      if (modelsError) throw modelsError;
+
+      const uniqueModels = Array.from(
+        new Set(modelsData?.map(m => m.model_name) || [])
+      ).map(name => ({ model_name: name }));
+
+      setSalesData(salesData || []);
+      setModels(uniqueModels);
+    } catch (error) {
+      console.error('Error fetching sales data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load sales data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getEarnings = (modelName: string, dayOfWeek: number) => {
+    const entry = salesData.find(
+      s => s.model_name === modelName && s.day_of_week === dayOfWeek
+    );
+    return entry?.earnings || 0;
+  };
+
+  const updateEarnings = async (modelName: string, dayOfWeek: number, earnings: number) => {
+    if (!effectiveChatterId || !isWeekEditable) return;
+
+    try {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
       const { error } = await supabase
         .from('sales_tracker')
         .upsert({
-          week_start_date: selectedWeekStart,
           model_name: modelName,
           day_of_week: dayOfWeek,
           earnings,
-          chatter_id,
+          week_start_date: weekStartStr,
+          chatter_id: effectiveChatterId,
+          working_day: true
         }, {
-          onConflict: chatter_id ? 'week_start_date,model_name,day_of_week,chatter_id' : 'week_start_date,model_name,day_of_week'
+          onConflict: 'chatter_id,model_name,day_of_week,week_start_date'
         });
 
-      if (error) {
-        console.error('Error saving earnings:', error);
-        toast({
-          title: "Error",
-          description: "Failed to save earnings. Please try again.",
-          variant: "destructive"
-        });
-      } else {
-        console.log(`Successfully saved: ${modelName} - Day ${dayOfWeek} - $${earnings}`);
-      }
+      if (error) throw error;
+
+      // Update local state
+      setSalesData(prev => {
+        const existing = prev.find(
+          s => s.model_name === modelName && s.day_of_week === dayOfWeek
+        );
+        
+        if (existing) {
+          return prev.map(s =>
+            s.model_name === modelName && s.day_of_week === dayOfWeek
+              ? { ...s, earnings }
+              : s
+          );
+        } else {
+          return [...prev, {
+            id: `temp-${Date.now()}`,
+            model_name: modelName,
+            day_of_week: dayOfWeek,
+            earnings,
+            working_day: true
+          }];
+        }
+      });
     } catch (error) {
-      console.error('Error saving earnings:', error);
+      console.error('Error updating earnings:', error);
       toast({
         title: "Error",
-        description: "Failed to save earnings. Please try again.",
-        variant: "destructive"
+        description: "Failed to update earnings",
+        variant: "destructive",
       });
-    } finally {
-      setIsUpdating(false);
     }
   };
 
   const removeModel = async (modelName: string) => {
-    if (!isAdmin) return;
+    if (!effectiveChatterId || !isAdmin) return;
 
     try {
-      // Remove from sales_models table
-      const { error: modelsError } = await supabase
-        .from('sales_models')
-        .delete()
-        .eq('model_name', modelName);
-
-      if (modelsError) throw modelsError;
-
-      // Remove from sales_tracker table for selected week
-      const { error: salesError } = await supabase
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      const { error } = await supabase
         .from('sales_tracker')
         .delete()
+        .eq('chatter_id', effectiveChatterId)
         .eq('model_name', modelName)
-        .eq('week_start_date', selectedWeekStart);
+        .eq('week_start_date', weekStartStr);
 
-      if (salesError) throw salesError;
+      if (error) throw error;
 
+      setModels(prev => prev.filter(m => m.model_name !== modelName));
+      setSalesData(prev => prev.filter(s => s.model_name !== modelName));
+      
       toast({
         title: "Success",
-        description: `${modelName} has been removed from the tracker.`
+        description: "Model removed successfully",
       });
-
-      refetch();
     } catch (error) {
       console.error('Error removing model:', error);
       toast({
         title: "Error",
-        description: "Failed to remove model. Please try again.",
-        variant: "destructive"
+        description: "Failed to remove model",
+        variant: "destructive",
       });
     }
   };
 
-
-  const updateDayType = (dayValue: number, isWorkingDay: boolean) => {
-    setDayTypes(prev => ({ ...prev, [dayValue]: isWorkingDay }));
+  const getDayTotal = (dayOfWeek: number) => {
+    return salesData
+      .filter(s => s.day_of_week === dayOfWeek)
+      .reduce((sum, s) => sum + s.earnings, 0);
   };
 
-  const calculateDayTotal = (dayOfWeek: number): number => {
-    return models.reduce((total, model) => {
-      const earnings = parseFloat(getEarnings(model.model_name, dayOfWeek)) || 0;
-      return total + earnings;
-    }, 0);
+  const getModelTotal = (modelName: string) => {
+    return salesData
+      .filter(s => s.model_name === modelName)
+      .reduce((sum, s) => sum + s.earnings, 0);
   };
 
-  const calculateModelTotal = (modelName: string): number => {
-    return DAYS_OF_WEEK.reduce((total, day) => {
-      const earnings = parseFloat(getEarnings(modelName, day.value)) || 0;
-      return total + earnings;
-    }, 0);
-  };
-
-  const calculateWeeklyTotal = (): number => {
-    return models.reduce((total, model) => {
-      return total + calculateModelTotal(model.model_name);
-    }, 0);
+  const getWeekTotal = () => {
+    return salesData.reduce((sum, s) => sum + s.earnings, 0);
   };
 
   if (isLoading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading sales data...</div>;
-  }
-
-  if (models.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No models added yet. Click "Add Model" to get started.
+      <div className="space-y-4">
+        <div className="h-8 bg-muted rounded animate-pulse"></div>
+        <div className="h-32 bg-muted rounded animate-pulse"></div>
       </div>
     );
   }
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
-    const currentWeek = new Date(selectedWeekStart);
-    const newWeek = new Date(currentWeek);
-    newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
-    setSelectedWeekStart(newWeek.toISOString().split('T')[0]);
-  };
-
-  const getDateForDay = (dayValue: number): string => {
-    const weekStart = new Date(selectedWeekStart);
-    const dayDate = new Date(weekStart);
-    dayDate.setDate(weekStart.getDate() + dayValue);
-    return dayDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-  };
-
-  const formatWeekRange = (): string => {
-    const weekStart = new Date(selectedWeekStart);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    return `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-  };
-
   return (
-    <div className="w-full overflow-x-auto">
-      {/* Week Navigation */}
-      <div className="flex items-center justify-between mb-4 p-4 bg-card border rounded-lg">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigateWeek('prev')}
-          className="flex items-center gap-2"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Previous Week
-        </Button>
-        
-        <div className="flex flex-col items-center">
-          <span className="text-lg font-semibold">Week of {formatWeekRange()}</span>
-          {selectedWeekStart === getWeekStartDate() && (
-            <span className="text-sm text-muted-foreground">(Current Week)</span>
-          )}
+    <div className="space-y-4">
+      {isWeekEditable && (
+        <div className="flex justify-between items-center">
+          <Button
+            onClick={() => setShowAddModel(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Model
+          </Button>
         </div>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigateWeek('next')}
-          className="flex items-center gap-2"
-        >
-          Next Week
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-left font-semibold min-w-[120px]">Day Type</TableHead>
-            <TableHead className="text-left font-semibold min-w-[120px]">Date</TableHead>
-            {models.map(model => (
-              <TableHead key={model.model_name} className="text-center font-semibold min-w-[120px]">
-                {model.model_name}
-                {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeModel(model.model_name)}
-                    className="ml-2 h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
-              </TableHead>
-            ))}
-            <TableHead className="text-center font-semibold bg-primary/10 min-w-[120px]">Total</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {DAYS_OF_WEEK.map(day => (
-            <TableRow key={day.value}>
-              <TableCell className="font-medium">
-                <Select
-                  value={dayTypes[day.value] ? "working" : "non-working"}
-                  onValueChange={(value) => updateDayType(day.value, value === "working")}
-                  disabled={isVA}
-                >
-                  <SelectTrigger className="w-full bg-background border border-input">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover border border-border z-50">
-                    <SelectItem value="working">Working Days</SelectItem>
-                    <SelectItem value="non-working">Non-Working Days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell className="font-medium">
-                {getDateForDay(day.value)}
-              </TableCell>
-              {models.map(model => (
-                <TableCell key={model.model_name} className="text-center">
-                  <PremiumInput
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={getEarnings(model.model_name, day.value)}
-                    onChange={(e) => updateEarnings(model.model_name, day.value, e.target.value)}
-                    className="w-full text-center"
-                    placeholder="$0.00"
-                    disabled={isVA}
-                  />
-                </TableCell>
+      )}
+
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="min-w-[120px]">Model</TableHead>
+              {DAYS_OF_WEEK.map(day => (
+                <TableHead key={day.value} className="text-center min-w-[80px]">
+                  {day.label}
+                </TableHead>
               ))}
-              <TableCell className="text-center font-semibold bg-primary/5">
-                ${calculateDayTotal(day.value).toFixed(2)}
-              </TableCell>
+              <TableHead className="text-center min-w-[80px]">Total</TableHead>
+              {isAdmin && isWeekEditable && (
+                <TableHead className="w-[50px]"></TableHead>
+              )}
             </TableRow>
-          ))}
-          
-          {/* Total Net Sales Row */}
-          <TableRow className="bg-primary/10 border-t-2 border-primary">
-            <TableCell className="font-bold text-lg" colSpan={2}>
-              TOTAL NET SALES:
-            </TableCell>
-            {models.map(model => (
-              <TableCell key={model.model_name} className="text-center font-bold text-lg">
-                ${calculateModelTotal(model.model_name).toFixed(2)}
-              </TableCell>
+          </TableHeader>
+          <TableBody>
+            {models.map((model) => (
+              <TableRow key={model.model_name}>
+                <TableCell className="font-medium">{model.model_name}</TableCell>
+                {DAYS_OF_WEEK.map(day => (
+                  <TableCell key={day.value} className="text-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={getEarnings(model.model_name, day.value)}
+                      onChange={(e) => updateEarnings(
+                        model.model_name, 
+                        day.value, 
+                        parseFloat(e.target.value) || 0
+                      )}
+                      className="w-full text-center"
+                      disabled={!isWeekEditable}
+                    />
+                  </TableCell>
+                ))}
+                <TableCell className="text-center font-semibold">
+                  ${getModelTotal(model.model_name).toFixed(2)}
+                </TableCell>
+                {isAdmin && isWeekEditable && (
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeModel(model.model_name)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
             ))}
-            <TableCell className="text-center font-bold text-lg bg-primary/20">
-              ${calculateWeeklyTotal().toFixed(2)}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+            {models.length > 0 && (
+              <TableRow className="border-t-2">
+                <TableCell className="font-bold">Daily Total</TableCell>
+                {DAYS_OF_WEEK.map(day => (
+                  <TableCell key={day.value} className="text-center font-bold">
+                    ${getDayTotal(day.value).toFixed(2)}
+                  </TableCell>
+                ))}
+                <TableCell className="text-center font-bold text-primary">
+                  ${getWeekTotal().toFixed(2)}
+                </TableCell>
+                {isAdmin && isWeekEditable && (
+                  <TableCell></TableCell>
+                )}
+              </TableRow>
+            )}
+            {models.length === 0 && (
+              <TableRow>
+                <TableCell 
+                  colSpan={DAYS_OF_WEEK.length + 2 + (isAdmin && isWeekEditable ? 1 : 0)} 
+                  className="text-center text-muted-foreground py-8"
+                >
+                  No models added yet. Click "Add Model" to get started.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <AddModelDialog
+        open={showAddModel}
+        onOpenChange={setShowAddModel}
+        chatterId={effectiveChatterId}
+        weekStart={weekStart}
+        onModelAdded={fetchData}
+      />
     </div>
   );
 };

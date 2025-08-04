@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { ChevronLeft, Users } from 'lucide-react';
 import { SalesTrackerTable } from './SalesTrackerTable';
-import { SalesTrackerHeader } from './SalesTrackerHeader';
+import { WeekNavigator } from './WeekNavigator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Chatter {
   id: string;
@@ -13,34 +13,30 @@ interface Chatter {
 }
 
 interface AdminSalesViewProps {
-  selectedChatterId?: string;
+  selectedChatterId: string | null;
   onSelectChatter: (chatterId: string | null) => void;
 }
 
-export const AdminSalesView: React.FC<AdminSalesViewProps> = ({ 
-  selectedChatterId, 
-  onSelectChatter 
+export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
+  selectedChatterId,
+  onSelectChatter,
 }) => {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedWeek, setSelectedWeek] = useState(new Date());
 
   useEffect(() => {
     fetchChatters();
   }, []);
 
   const fetchChatters = async () => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email')
-        .or('role.eq.Chatter,roles.cs.{"Chatter"}')
-        .order('name');
+        .or('role.eq.Chatter,roles.cs.{Chatter}');
 
-      if (error) {
-        console.error('Error fetching chatters:', error);
-        return;
-      }
+      if (error) throw error;
 
       setChatters(data || []);
     } catch (error) {
@@ -50,29 +46,26 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
     }
   };
 
-  if (selectedChatterId) {
-    const selectedChatter = chatters.find(c => c.id === selectedChatterId);
+  const selectedChatter = chatters.find(c => c.id === selectedChatterId);
+
+  if (selectedChatterId && selectedChatter) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onSelectChatter(null)}
             className="flex items-center gap-2"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
             Back to Chatters
           </Button>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">
-              {selectedChatter?.name}'s Sales Tracker
-            </h2>
-            <p className="text-muted-foreground">{selectedChatter?.email}</p>
+            <h1 className="text-2xl font-bold text-foreground">{selectedChatter.name}</h1>
+            <p className="text-muted-foreground">{selectedChatter.email}</p>
           </div>
         </div>
-        
-        <SalesTrackerHeader />
-        
+
         <Card className="bg-secondary/10 border-muted">
           <CardHeader>
             <CardTitle className="text-foreground flex items-center gap-2">
@@ -81,9 +74,10 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                 (Thursday to Wednesday)
               </span>
             </CardTitle>
+            <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
           </CardHeader>
           <CardContent>
-            <SalesTrackerTable />
+            <SalesTrackerTable chatterId={selectedChatterId} selectedWeek={selectedWeek} />
           </CardContent>
         </Card>
       </div>
@@ -92,46 +86,45 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <SalesTrackerHeader />
-      
-      <Card className="bg-secondary/10 border-muted">
-        <CardHeader>
-          <CardTitle className="text-foreground">Select a Chatter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading chatters...
-            </div>
-          ) : chatters.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No chatters found.
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {chatters.map((chatter) => (
-                <Card 
-                  key={chatter.id} 
-                  className="cursor-pointer hover:bg-secondary/20 transition-colors border-muted"
-                  onClick={() => onSelectChatter(chatter.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{chatter.name}</h3>
-                        <p className="text-sm text-muted-foreground">{chatter.email}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2">
+        <Users className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold text-foreground">Sales Tracker - Select Chatter</h1>
+      </div>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="bg-secondary/10 border-muted animate-pulse">
+              <CardContent className="p-4">
+                <div className="h-4 bg-muted rounded mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : chatters.length === 0 ? (
+        <Card className="bg-secondary/10 border-muted">
+          <CardContent className="p-8 text-center">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No chatters found</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {chatters.map((chatter) => (
+            <Card 
+              key={chatter.id} 
+              className="bg-secondary/10 border-muted hover:border-primary/50 cursor-pointer transition-colors"
+              onClick={() => onSelectChatter(chatter.id)}
+            >
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-foreground mb-1">{chatter.name}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{chatter.email}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
