@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { SalesTrackerHeader } from './SalesTrackerHeader';
+import { useParams, useNavigate } from 'react-router-dom';
 
 interface Chatter {
   id: string;
@@ -27,15 +28,9 @@ interface ModelOption {
   model_name: string;
 }
 
-interface AdminSalesViewProps {
-  selectedChatterId?: string;
-  onSelectChatter: (chatterId: string | null) => void;
-}
-
-export const AdminSalesView: React.FC<AdminSalesViewProps> = ({ 
-  selectedChatterId, 
-  onSelectChatter 
-}) => {
+export const AdminSalesView: React.FC = () => {
+  const { id: selectedChatterId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
@@ -84,11 +79,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   useEffect(() => {
     fetchChatters();
     fetchAvailableModels();
-    // Auto-select the admin's own tracker by default
-    if (user?.id && !selectedChatterId) {
-      onSelectChatter(user.id);
-    }
-  }, [user?.id]);
+  }, []);
 
   const fetchAvailableModels = async () => {
     setIsModelsLoading(true);
@@ -226,7 +217,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
         <div className="flex items-center gap-4">
           <Button 
             variant="outline" 
-            onClick={() => onSelectChatter(null)}
+            onClick={() => navigate('/sales-tracker')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -378,7 +369,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                 <Card 
                   key={chatter.id} 
                   className="cursor-pointer hover:bg-secondary/20 transition-colors border-muted"
-                  onClick={() => onSelectChatter(chatter.id)}
+                  onClick={() => navigate(`/sales-tracker/${chatter.id}`)}
                 >
                   <CardContent className="p-4">
                      <div className="flex items-center gap-3">

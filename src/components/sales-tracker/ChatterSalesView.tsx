@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { useParams } from 'react-router-dom';
 
 interface ModelOption {
   model_name: string;
@@ -21,6 +22,8 @@ interface ModelOption {
 
 export const ChatterSalesView: React.FC = () => {
   const { user } = useAuth();
+  const { id: viewingUserId } = useParams<{ id: string }>();
+  const chatterId = viewingUserId || user?.id;
   const [selectedWeekDate, setSelectedWeekDate] = useState<Date>(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
@@ -83,7 +86,7 @@ export const ChatterSalesView: React.FC = () => {
         .select('model_name')
         .eq('model_name', selectedModelName.trim())
         .eq('week_start_date', selectedWeekStart)
-        .eq('chatter_id', user?.id)
+        .eq('chatter_id', chatterId)
         .limit(1);
       
       if (existingEntries && existingEntries.length > 0) {
@@ -103,7 +106,7 @@ export const ChatterSalesView: React.FC = () => {
           model_name: selectedModelName.trim(),
           day_of_week: dayOfWeek,
           earnings: 0,
-          chatter_id: user?.id,
+          chatter_id: chatterId,
           working_day: true // Default to working day
         });
       }
@@ -325,6 +328,7 @@ export const ChatterSalesView: React.FC = () => {
           <SalesTrackerTable
             key={refreshKey} // Force remount when refreshKey changes
             selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
+            chatterId={chatterId}
             onWeekChange={(weekStart) => {
               const newDate = new Date(weekStart);
               setSelectedWeekDate(newDate);
