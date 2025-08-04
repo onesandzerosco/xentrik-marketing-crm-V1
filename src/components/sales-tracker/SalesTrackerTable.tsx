@@ -163,7 +163,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
           earnings,
           chatter_id,
         }, {
-          onConflict: chatter_id ? 'week_start_date,model_name,day_of_week,chatter_id' : 'week_start_date,model_name,day_of_week'
+          onConflict: 'week_start_date,model_name,day_of_week,chatter_id'
         });
 
       if (error) {
