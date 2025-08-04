@@ -37,9 +37,21 @@ export const ChatterSalesView: React.FC = () => {
   const [salesTrackerLink, setSalesTrackerLink] = useState('');
   const [isLinkSaving, setIsLinkSaving] = useState(false);
 
-  // Initialize selectedWeekDate to today
+  // Initialize selectedWeekDate to the Thursday of the current week
   useEffect(() => {
-    setSelectedWeekDate(new Date());
+    const getThursdayOfCurrentWeek = () => {
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const thursday = new Date(today);
+      
+      // Calculate days to subtract to get to the Thursday of the current week
+      const daysToSubtract = (dayOfWeek + 3) % 7;
+      thursday.setDate(today.getDate() - daysToSubtract);
+      
+      return thursday;
+    };
+    
+    setSelectedWeekDate(getThursdayOfCurrentWeek());
   }, []);
 
   // Fetch available models (creators)

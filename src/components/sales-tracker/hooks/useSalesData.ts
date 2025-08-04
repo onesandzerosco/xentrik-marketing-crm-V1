@@ -26,8 +26,15 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch sales data for selected week or current date
-      const weekStartDate = selectedWeekStart || new Date().toISOString().split('T')[0];
+      // Fetch sales data for selected week or Thursday of current week
+      const weekStartDate = selectedWeekStart || (() => {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const thursday = new Date(today);
+        const daysToSubtract = (dayOfWeek + 3) % 7;
+        thursday.setDate(today.getDate() - daysToSubtract);
+        return thursday.toISOString().split('T')[0];
+      })();
       console.log('useSalesData: Fetching data for week:', weekStartDate, 'chatterId:', chatterId);
       
       let query = supabase

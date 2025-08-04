@@ -38,7 +38,14 @@ interface SalesTrackerTableProps {
 }
 
 export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange, chatterId }) => {
-  const [internalWeekStart, setInternalWeekStart] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [internalWeekStart, setInternalWeekStart] = useState<string>(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const thursday = new Date(today);
+    const daysToSubtract = (dayOfWeek + 3) % 7;
+    thursday.setDate(today.getDate() - daysToSubtract);
+    return thursday.toISOString().split('T')[0];
+  });
   
   // Use prop week start if provided, otherwise use internal state
   const selectedWeekStart = propWeekStart || internalWeekStart;
