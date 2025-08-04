@@ -84,7 +84,11 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   useEffect(() => {
     fetchChatters();
     fetchAvailableModels();
-  }, []);
+    // Auto-select the admin's own tracker by default
+    if (user?.id && !selectedChatterId) {
+      onSelectChatter(user.id);
+    }
+  }, [user?.id]);
 
   const fetchAvailableModels = async () => {
     setIsModelsLoading(true);
@@ -114,7 +118,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       const { data, error } = await supabase
         .from('profiles')
         .select('id, name, email, sales_tracker_link')
-        .or('role.eq.Chatter,roles.cs.{"Chatter"}')
+        .or('role.eq.Chatter,roles.cs.{"Chatter"},role.eq.VA,roles.cs.{"VA"},role.eq.Admin,roles.cs.{"Admin"}')
         .order('name');
 
       if (error) {
@@ -226,11 +230,11 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Chatters
+            Back to Team
           </Button>
           <div>
             <h2 className="text-2xl font-bold text-foreground">
-              {selectedChatter?.name}'s Sales Tracker
+              {selectedChatter?.id === user?.id ? 'My Sales Tracker' : `${selectedChatter?.name}'s Sales Tracker`}
             </h2>
             <p className="text-muted-foreground">{selectedChatter?.email}</p>
           </div>
@@ -357,7 +361,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       
       <Card className="bg-secondary/10 border-muted">
         <CardHeader>
-          <CardTitle className="text-foreground">Select a Chatter</CardTitle>
+          <CardTitle className="text-foreground">Select Team Member</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -377,15 +381,24 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
                   onClick={() => onSelectChatter(chatter.id)}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{chatter.name}</h3>
-                        <p className="text-sm text-muted-foreground">{chatter.email}</p>
-                      </div>
-                    </div>
+                     <div className="flex items-center gap-3">
+                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                         <User className="h-5 w-5 text-primary" />
+                       </div>
+                       <div className="flex-1">
+                         <div className="flex items-center gap-2">
+                           <h3 className="font-semibold text-foreground">
+                             {chatter.id === user?.id ? 'Me' : chatter.name}
+                           </h3>
+                           {chatter.id === user?.id && (
+                             <span className="px-2 py-1 text-xs bg-primary/20 text-primary rounded-full">
+                               You
+                             </span>
+                           )}
+                         </div>
+                         <p className="text-sm text-muted-foreground">{chatter.email}</p>
+                       </div>
+                     </div>
                   </CardContent>
                 </Card>
               ))}

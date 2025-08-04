@@ -39,7 +39,7 @@ const SalesTracker: React.FC = () => {
   return (
     <div className="min-h-screen bg-premium-dark">
       <div className="container mx-auto p-4">
-        {(isAdmin || isVA) ? (
+        {isAdmin ? (
           <AdminSalesView 
             selectedChatterId={selectedChatterId}
             onSelectChatter={setSelectedChatterId}
