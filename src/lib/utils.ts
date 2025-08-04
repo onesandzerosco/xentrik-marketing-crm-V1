@@ -12,7 +12,16 @@ export function getCurrentWeekStart(): string {
   const thursday = new Date(today);
   
   // Calculate days to subtract to get to the Thursday of the current week
-  const daysToSubtract = (dayOfWeek + 3) % 7;
+  // For Thursday-to-Wednesday weeks:
+  // Sun(0)->3 days back, Mon(1)->4 days back, Tue(2)->5 days back, Wed(3)->6 days back
+  // Thu(4)->0 days back, Fri(5)->1 day back, Sat(6)->2 days back
+  let daysToSubtract;
+  if (dayOfWeek >= 4) { // Thursday to Saturday
+    daysToSubtract = dayOfWeek - 4;
+  } else { // Sunday to Wednesday  
+    daysToSubtract = dayOfWeek + 3;
+  }
+  
   thursday.setDate(today.getDate() - daysToSubtract);
   
   return thursday.toISOString().split('T')[0];
@@ -24,7 +33,14 @@ export function getWeekStartFromDate(date: Date): string {
   const thursday = new Date(date);
   
   // Calculate days to subtract to get to the Thursday of the current week
-  const daysToSubtract = (dayOfWeek + 3) % 7;
+  // For Thursday-to-Wednesday weeks:
+  let daysToSubtract;
+  if (dayOfWeek >= 4) { // Thursday to Saturday
+    daysToSubtract = dayOfWeek - 4;
+  } else { // Sunday to Wednesday  
+    daysToSubtract = dayOfWeek + 3;
+  }
+  
   thursday.setDate(date.getDate() - daysToSubtract);
   
   return thursday.toISOString().split('T')[0];
