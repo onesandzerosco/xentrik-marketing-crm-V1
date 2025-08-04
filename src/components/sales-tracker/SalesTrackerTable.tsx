@@ -60,17 +60,26 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const canEdit = isAdmin || effectiveChatterId === user?.id;
 
-  // Calculate week start (Thursday)
+  // Calculate week start (Thursday) - Fixed logic
   const getWeekStart = (date: Date) => {
-    const day = date.getDay();
+    const day = date.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
     const thursday = new Date(date);
+    thursday.setHours(0, 0, 0, 0); // Reset time to start of day
     
-    if (day === 0) { // Sunday
+    if (day === 0) { // Sunday - go back 3 days to Thursday
       thursday.setDate(date.getDate() - 3);
-    } else if (day < 4) { // Monday, Tuesday, Wednesday
-      thursday.setDate(date.getDate() - day - 3);
-    } else { // Thursday, Friday, Saturday
-      thursday.setDate(date.getDate() - day + 4);
+    } else if (day === 1) { // Monday - go back 4 days to Thursday  
+      thursday.setDate(date.getDate() - 4);
+    } else if (day === 2) { // Tuesday - go back 5 days to Thursday
+      thursday.setDate(date.getDate() - 5);
+    } else if (day === 3) { // Wednesday - go back 6 days to Thursday
+      thursday.setDate(date.getDate() - 6);
+    } else if (day === 4) { // Thursday - same day
+      thursday.setDate(date.getDate());
+    } else if (day === 5) { // Friday - go back 1 day to Thursday
+      thursday.setDate(date.getDate() - 1);
+    } else if (day === 6) { // Saturday - go back 2 days to Thursday
+      thursday.setDate(date.getDate() - 2);
     }
     
     return thursday;
@@ -83,6 +92,21 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   
   // Week is editable if it's current week or future, and user has edit permissions
   const isWeekEditable = canEdit && (isCurrentWeek || isFutureWeek);
+
+  console.log('Week calculation debug:', {
+    today: new Date().toISOString().split('T')[0],
+    todayDay: new Date().getDay(),
+    selectedWeek: selectedWeek.toISOString().split('T')[0],
+    weekStart: weekStart.toISOString().split('T')[0],
+    currentWeekStart: currentWeekStart.toISOString().split('T')[0],
+    isCurrentWeek,
+    isFutureWeek,
+    isWeekEditable,
+    canEdit,
+    isAdmin,
+    effectiveChatterId,
+    userId: user?.id
+  });
 
   useEffect(() => {
     if (effectiveChatterId) {
