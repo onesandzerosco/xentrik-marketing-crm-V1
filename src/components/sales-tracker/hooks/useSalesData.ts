@@ -45,6 +45,7 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
     try {
       // Fetch sales data for selected week or current week
       const weekStartDate = selectedWeekStart || getWeekStartDate();
+      console.log('useSalesData: Fetching data for week:', weekStartDate, 'chatterId:', chatterId);
       
       let query = supabase
         .from('sales_tracker')
@@ -57,6 +58,7 @@ export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => 
       }
 
       const { data: salesData, error: salesError } = await query;
+      console.log('useSalesData: Query result:', salesData);
 
       if (salesError) {
         console.error('Error fetching sales data:', salesError);
