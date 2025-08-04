@@ -46,6 +46,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModel, setShowAddModel] = useState(false);
+  const [hourlyRate, setHourlyRate] = useState<number>(0);
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -106,12 +107,22 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
       if (modelsError) throw modelsError;
 
+      // Fetch chatter's hourly rate
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('hourly_rate')
+        .eq('id', effectiveChatterId)
+        .single();
+
+      if (profileError) throw profileError;
+
       const uniqueModels = Array.from(
         new Set(modelsData?.map(m => m.model_name) || [])
       ).map(name => ({ model_name: name }));
 
       setSalesData(salesData || []);
       setModels(uniqueModels);
+      setHourlyRate(profileData?.hourly_rate || 0);
     } catch (error) {
       console.error('Error fetching sales data:', error);
       toast({
@@ -232,6 +243,32 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     return salesData.reduce((sum, s) => sum + s.earnings, 0);
   };
 
+  const updateHourlyRate = async (newRate: number) => {
+    if (!effectiveChatterId || !isAdmin) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ hourly_rate: newRate } as any)
+        .eq('id', effectiveChatterId);
+
+      if (error) throw error;
+
+      setHourlyRate(newRate);
+      toast({
+        title: "Success",
+        description: "Hourly rate updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating hourly rate:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update hourly rate",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -319,6 +356,32 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                 ))}
                 <TableCell className="text-center font-bold text-primary">
                   ${getWeekTotal().toFixed(2)}
+                </TableCell>
+                {isAdmin && isWeekEditable && (
+                  <TableCell></TableCell>
+                )}
+              </TableRow>
+            )}
+            {models.length > 0 && (
+              <TableRow className="border-t-2 bg-muted/20">
+                <TableCell className="font-bold">Hourly Rate</TableCell>
+                <TableCell 
+                  colSpan={DAYS_OF_WEEK.length} 
+                  className="text-center"
+                >
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={hourlyRate}
+                    onChange={(e) => updateHourlyRate(parseFloat(e.target.value) || 0)}
+                    className="w-full text-center max-w-[120px] mx-auto"
+                    disabled={!isAdmin}
+                    placeholder="$0.00/hr"
+                  />
+                </TableCell>
+                <TableCell className="text-center font-bold">
+                  ${hourlyRate.toFixed(2)}/hr
                 </TableCell>
                 {isAdmin && isWeekEditable && (
                   <TableCell></TableCell>

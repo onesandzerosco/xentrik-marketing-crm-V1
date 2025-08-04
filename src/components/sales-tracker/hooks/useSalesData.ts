@@ -41,17 +41,6 @@ export const useSalesData = (selectedWeekStart?: string) => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch ALL models from sales_models table (not just ones with sales data)
-      const { data: allModels, error: modelsError } = await supabase
-        .from('sales_models')
-        .select('*')
-        .order('model_name');
-
-      if (modelsError) {
-        console.error('Error fetching models:', modelsError);
-        return;
-      }
-
       // Fetch sales data for selected week or current week
       const weekStartDate = selectedWeekStart || getWeekStartDate();
       const { data: salesData, error: salesError } = await supabase
@@ -64,7 +53,18 @@ export const useSalesData = (selectedWeekStart?: string) => {
         return;
       }
 
-      setModels(allModels || []);
+      // Get unique models from sales data
+      const uniqueModelNames = Array.from(
+        new Set(salesData?.map(s => s.model_name) || [])
+      );
+      
+      const modelsWithIds = uniqueModelNames.map(name => ({
+        id: `model-${name}`,
+        model_name: name,
+        created_at: new Date().toISOString()
+      }));
+
+      setModels(modelsWithIds);
       setSalesData(salesData || []);
     } catch (error) {
       console.error('Error fetching data:', error);

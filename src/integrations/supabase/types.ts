@@ -630,6 +630,7 @@ export type Database = {
           department: string | null
           email: string
           geographic_restrictions: string[] | null
+          hourly_rate: number | null
           id: string
           last_login: string | null
           name: string
@@ -638,6 +639,7 @@ export type Database = {
           profile_image: string | null
           role: string
           roles: string[] | null
+          sales_tracker_link: string | null
           status: string
           telegram: string | null
           updated_at: string | null
@@ -647,6 +649,7 @@ export type Database = {
           department?: string | null
           email: string
           geographic_restrictions?: string[] | null
+          hourly_rate?: number | null
           id: string
           last_login?: string | null
           name: string
@@ -655,6 +658,7 @@ export type Database = {
           profile_image?: string | null
           role: string
           roles?: string[] | null
+          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -664,6 +668,7 @@ export type Database = {
           department?: string | null
           email?: string
           geographic_restrictions?: string[] | null
+          hourly_rate?: number | null
           id?: string
           last_login?: string | null
           name?: string
@@ -672,6 +677,7 @@ export type Database = {
           profile_image?: string | null
           role?: string
           roles?: string[] | null
+          sales_tracker_link?: string | null
           status?: string
           telegram?: string | null
           updated_at?: string | null
@@ -705,35 +711,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sales_models: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          model_name: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          model_name: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          model_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_models_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       sales_tracker: {
         Row: {
           chatter_id: string | null
@@ -744,6 +721,7 @@ export type Database = {
           model_name: string
           updated_at: string
           week_start_date: string
+          working_day: boolean
         }
         Insert: {
           chatter_id?: string | null
@@ -754,6 +732,7 @@ export type Database = {
           model_name: string
           updated_at?: string
           week_start_date: string
+          working_day?: boolean
         }
         Update: {
           chatter_id?: string | null
@@ -764,6 +743,7 @@ export type Database = {
           model_name?: string
           updated_at?: string
           week_start_date?: string
+          working_day?: boolean
         }
         Relationships: [
           {
