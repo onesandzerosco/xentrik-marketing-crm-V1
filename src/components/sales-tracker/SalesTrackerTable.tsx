@@ -86,15 +86,16 @@ const getWeekStartFromDate = (date: Date): string => {
 interface SalesTrackerTableProps {
   selectedWeekStart?: string;
   onWeekChange?: (weekStart: string) => void;
+  chatterId?: string;
 }
 
-export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange }) => {
+export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWeekStart: propWeekStart, onWeekChange, chatterId }) => {
   const [internalWeekStart, setInternalWeekStart] = useState<string>(getWeekStartDate());
   
   // Use prop week start if provided, otherwise use internal state
   const selectedWeekStart = propWeekStart || internalWeekStart;
   
-  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart);
+  const { salesData, models, isLoading, refetch } = useSalesData(selectedWeekStart, chatterId);
   const { user, userRole, userRoles } = useAuth();
   const [localData, setLocalData] = useState<Record<string, string>>({});
   const [dayTypes, setDayTypes] = useState<Record<number, boolean>>({});
@@ -150,9 +151,11 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     try {
       const earnings = parseFloat(value) || 0;
 
-      // For Chatters, include chatter_id in the upsert conflict resolution
-      // For Admins/VAs, use null chatter_id (they manage all records)
-      const chatter_id = isChatter ? user?.id : null;
+      // Determine the chatter_id to use:
+      // 1. If chatterId prop is provided (admin viewing specific chatter), use that
+      // 2. If user is a chatter, use their own ID
+      // 3. Otherwise, use null (admin creating general entries)
+      const chatter_id = chatterId || (isChatter ? user?.id : null);
 
       const { error } = await supabase
         .from('sales_tracker')
@@ -193,11 +196,18 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
 
     try {
       // Remove all entries for this model from sales_tracker table for selected week
-      const { error } = await supabase
+      let deleteQuery = supabase
         .from('sales_tracker')
         .delete()
         .eq('model_name', modelName)
         .eq('week_start_date', selectedWeekStart);
+
+      // If viewing a specific chatter's data, only delete their entries
+      if (chatterId) {
+        deleteQuery = deleteQuery.eq('chatter_id', chatterId);
+      }
+
+      const { error } = await deleteQuery;
 
       if (error) throw error;
 
@@ -303,12 +313,18 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
     
     try {
       // Check if model already exists for this week by checking sales_tracker
-      const { data: existingEntries } = await supabase
+      let existingQuery = supabase
         .from('sales_tracker')
         .select('model_name')
         .eq('model_name', newModelName.trim())
-        .eq('week_start_date', selectedWeekStart)
-        .limit(1);
+        .eq('week_start_date', selectedWeekStart);
+
+      // If viewing a specific chatter's data, check for their entries specifically
+      if (chatterId) {
+        existingQuery = existingQuery.eq('chatter_id', chatterId);
+      }
+
+      const { data: existingEntries } = await existingQuery.limit(1);
       
       if (existingEntries && existingEntries.length > 0) {
         toast({
@@ -327,7 +343,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({ selectedWe
           model_name: newModelName.trim(),
           day_of_week: dayOfWeek,
           earnings: 0,
-          chatter_id: isChatter ? user?.id : null, // Set chatter_id only for chatters
+          chatter_id: chatterId || (isChatter ? user?.id : null), // Use chatterId prop if provided
           working_day: true // Default to working day
         });
       }

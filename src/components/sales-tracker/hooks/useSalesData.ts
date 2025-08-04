@@ -17,7 +17,7 @@ interface SalesModel {
   week_start_date: string;
 }
 
-export const useSalesData = (selectedWeekStart?: string) => {
+export const useSalesData = (selectedWeekStart?: string, chatterId?: string) => {
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,10 +45,17 @@ export const useSalesData = (selectedWeekStart?: string) => {
       // Fetch sales data for selected week or current week
       const weekStartDate = selectedWeekStart || getWeekStartDate();
       
-      const { data: salesData, error: salesError } = await supabase
+      let query = supabase
         .from('sales_tracker')
         .select('*')
         .eq('week_start_date', weekStartDate);
+
+      // If chatterId is provided, filter by it
+      if (chatterId) {
+        query = query.eq('chatter_id', chatterId);
+      }
+
+      const { data: salesData, error: salesError } = await query;
 
       if (salesError) {
         console.error('Error fetching sales data:', salesError);
@@ -84,7 +91,7 @@ export const useSalesData = (selectedWeekStart?: string) => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedWeekStart]);
+  }, [selectedWeekStart, chatterId]);
 
   return {
     salesData,

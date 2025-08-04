@@ -344,7 +344,7 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
             </div>
           </CardHeader>
           <CardContent>
-            <SalesTrackerTable />
+            <SalesTrackerTable chatterId={selectedChatterId} />
           </CardContent>
         </Card>
       </div>
