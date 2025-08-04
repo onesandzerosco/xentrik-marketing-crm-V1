@@ -339,7 +339,14 @@ export const AdminSalesView: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <SalesTrackerTable chatterId={selectedChatterId} />
+            <SalesTrackerTable 
+              chatterId={selectedChatterId} 
+              selectedWeekStart={getWeekStartFromDate(selectedWeekDate)}
+              onWeekChange={(newWeekStart) => {
+                const newDate = new Date(newWeekStart);
+                setSelectedWeekDate(getThursdayFromDate(newDate));
+              }}
+            />
           </CardContent>
         </Card>
       </div>
