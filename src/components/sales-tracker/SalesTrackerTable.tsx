@@ -475,15 +475,23 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                 {DAYS_OF_WEEK.map(day => (
                   <TableCell key={day.value} className="text-center">
                     <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={getEarnings(model.model_name, day.value) || ''}
-                      onChange={(e) => updateEarnings(
-                        model.model_name, 
-                        day.value, 
-                        parseFloat(e.target.value) || 0
-                      )}
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
+                      value={(() => {
+                        const earnings = getEarnings(model.model_name, day.value);
+                        return earnings === 0 ? '' : earnings.toString();
+                      })()}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow empty, numbers, and decimal points
+                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                          const numericValue = value === '' ? 0 : parseFloat(value);
+                          if (!isNaN(numericValue)) {
+                            updateEarnings(model.model_name, day.value, numericValue);
+                          }
+                        }
+                      }}
                       className="w-full text-center"
                       disabled={areInputsDisabled}
                       placeholder="0.00"
