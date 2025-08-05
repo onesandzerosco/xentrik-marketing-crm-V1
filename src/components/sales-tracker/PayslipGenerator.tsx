@@ -37,18 +37,39 @@ export const generatePayslipPDF = (data: PayslipData) => {
   const pageWidth = pdf.internal.pageSize.width;
   let yPosition = 20;
 
-  // Header
-  pdf.setFontSize(20);
+  // Company Logo placeholder (top center)
+  pdf.setFontSize(16);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('XENTRIK PTY LTD', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 10;
+
+  // Company Address
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('8 Bentine Street Para Vista 5093 South Australia', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 8;
+  pdf.text('+61422789156 | Xentrikmarketing@outlook.com', pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 15;
+
+  // Payslip Number
+  const payslipNumber = `Payslip ${format(data.weekStart, 'MMdd')}-${format(data.weekEnd, 'MMdd')}`;
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(payslipNumber, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 15;
+
+  // Employee Header
+  pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.text(`Weekly Payslip - ${data.chatterName}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
+  yPosition += 10;
 
   // Date range
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'normal');
   const dateRange = `${format(data.weekStart, 'MMM dd, yyyy')} - ${format(data.weekEnd, 'MMM dd, yyyy')}`;
   pdf.text(dateRange, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 30;
+  yPosition += 25;
 
   // Summary section (no daily breakdown)
   pdf.setFont('helvetica', 'bold');
@@ -101,6 +122,33 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   const splitText = pdf.splitTextToSize(payslipText, pageWidth - 40);
   pdf.text(splitText, 20, yPosition);
+  yPosition += splitText.length * 5 + 30;
+
+  // Signature Section
+  const pageHeight = pdf.internal.pageSize.height;
+  const signatureYPosition = pageHeight - 60;
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  pdf.text('Authorized Signatures:', 20, signatureYPosition);
+  
+  // COO Signature
+  pdf.setFont('helvetica', 'normal');
+  pdf.text('Chief Operating Officer:', 20, signatureYPosition + 15);
+  pdf.text('Michael Slipek', 20, signatureYPosition + 35);
+  pdf.line(20, signatureYPosition + 30, 80, signatureYPosition + 30); // Signature line
+  
+  // CEO Signature
+  pdf.text('Chief Executive Officer:', pageWidth / 2, signatureYPosition + 15);
+  pdf.text('Keyshawn Lourde Lopez', pageWidth / 2, signatureYPosition + 35);
+  pdf.line(pageWidth / 2, signatureYPosition + 30, pageWidth / 2 + 60, signatureYPosition + 30); // Signature line
+
+  // Footer
+  pdf.setFontSize(8);
+  pdf.setFont('helvetica', 'italic');
+  const footerText = 'This payslip has been issued for whatever purpose it may serve and is a true and accurate representation of the employee\'s earnings for the stated period.';
+  const footerSplitText = pdf.splitTextToSize(footerText, pageWidth - 40);
+  pdf.text(footerSplitText, pageWidth / 2, pageHeight - 15, { align: 'center' });
 
   // Save the PDF
   const fileName = `payslip_${data.chatterName.replace(/\s+/g, '_')}_${format(data.weekStart, 'yyyy-MM-dd')}.pdf`;
