@@ -175,7 +175,7 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
               type="number"
               min="0"
               step="0.01"
-              value={deductionAmount}
+              value={deductionAmount === 0 ? '' : deductionAmount}
               onChange={(e) => setDeductionAmount(parseFloat(e.target.value) || 0)}
               placeholder="0.00"
             />
