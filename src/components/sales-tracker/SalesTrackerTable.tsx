@@ -507,7 +507,18 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                     min="0"
                     step="0.01"
                     value={hourlyRate}
-                    onChange={(e) => updateHourlyRate(parseFloat(e.target.value) || 0)}
+                    onBlur={(e) => {
+                      const newRate = parseFloat(e.target.value) || 0;
+                      console.log('Hourly rate input onBlur triggered:', { newRate, currentRate: hourlyRate });
+                      if (newRate !== hourlyRate) {
+                        updateHourlyRate(newRate);
+                      }
+                    }}
+                    onChange={(e) => {
+                      const newRate = parseFloat(e.target.value) || 0;
+                      console.log('Hourly rate input onChange:', { newRate });
+                      setHourlyRate(newRate); // Update local state immediately for UI feedback
+                    }}
                     className="w-full text-center max-w-[120px] mx-auto"
                     disabled={!isAdmin}
                     placeholder="$0.00/hr"
