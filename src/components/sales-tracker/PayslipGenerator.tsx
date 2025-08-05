@@ -17,6 +17,8 @@ interface PayslipData {
   hourlyRate: number;
   commissionRate: number;
   commissionAmount: number;
+  deductionAmount: number;
+  deductionNotes: string;
   totalPayout: number;
 }
 
@@ -65,7 +67,23 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.text(`Commission Rate: ${data.commissionRate}%`, 20, yPosition);
   yPosition += 10;
   pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
-  yPosition += 15;
+  yPosition += 10;
+  
+  // Add deduction if present
+  if (data.deductionAmount > 0) {
+    pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, 20, yPosition);
+    yPosition += 7;
+    if (data.deductionNotes) {
+      pdf.setFontSize(9);
+      pdf.text(`Deduction Reason: ${data.deductionNotes}`, 20, yPosition);
+      pdf.setFontSize(10);
+      yPosition += 10;
+    } else {
+      yPosition += 3;
+    }
+  } else {
+    yPosition += 5;
+  }
 
   // Total payout
   pdf.setFont('helvetica', 'bold');

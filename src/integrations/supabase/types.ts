@@ -719,6 +719,8 @@ export type Database = {
           confirmed_hours_worked: number | null
           created_at: string
           day_of_week: number
+          deduction_amount: number | null
+          deduction_notes: string | null
           earnings: number
           id: string
           model_name: string
@@ -734,6 +736,8 @@ export type Database = {
           confirmed_hours_worked?: number | null
           created_at?: string
           day_of_week: number
+          deduction_amount?: number | null
+          deduction_notes?: string | null
           earnings?: number
           id?: string
           model_name: string
@@ -749,6 +753,8 @@ export type Database = {
           confirmed_hours_worked?: number | null
           created_at?: string
           day_of_week?: number
+          deduction_amount?: number | null
+          deduction_notes?: string | null
           earnings?: number
           id?: string
           model_name?: string

@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -45,11 +46,13 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
   const { toast } = useToast();
   const [hoursWorked, setHoursWorked] = useState<number>(40);
   const [commissionRate, setCommissionRate] = useState<number>(getCommissionRate(totalSales));
+  const [deductionAmount, setDeductionAmount] = useState<number>(0);
+  const [deductionNotes, setDeductionNotes] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const commissionAmount = (totalSales * commissionRate) / 100;
   const hourlyPay = hoursWorked * currentHourlyRate;
-  const totalPayout = hourlyPay + commissionAmount;
+  const totalPayout = hourlyPay + commissionAmount - deductionAmount;
 
   const handleConfirmPayroll = async () => {
     setIsProcessing(true);
@@ -63,6 +66,8 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
           admin_confirmed: true,
           confirmed_hours_worked: hoursWorked,
           confirmed_commission_rate: commissionRate,
+          deduction_amount: deductionAmount,
+          deduction_notes: deductionNotes || null,
         })
         .eq('chatter_id', chatterId)
         .eq('week_start_date', weekStartStr);
@@ -137,6 +142,30 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="deduction">Deduction Amount ($)</Label>
+            <Input
+              id="deduction"
+              type="number"
+              min="0"
+              step="0.01"
+              value={deductionAmount}
+              onChange={(e) => setDeductionAmount(parseFloat(e.target.value) || 0)}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="deductionNotes">Deduction Notes (Reason)</Label>
+            <Textarea
+              id="deductionNotes"
+              value={deductionNotes}
+              onChange={(e) => setDeductionNotes(e.target.value)}
+              placeholder="Enter reason for deduction (if any)..."
+              className="min-h-[80px]"
+            />
+          </div>
+
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between text-sm">
               <span>Hours Pay ({hoursWorked}h × ${currentHourlyRate}/h):</span>
@@ -146,6 +175,12 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
               <span>Commission ({commissionRate}% × ${totalSales.toFixed(2)}):</span>
               <span>${commissionAmount.toFixed(2)}</span>
             </div>
+            {deductionAmount > 0 && (
+              <div className="flex justify-between text-sm text-destructive">
+                <span>Deduction:</span>
+                <span>-${deductionAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold border-t pt-2">
               <span>Total Payout:</span>
               <span>${totalPayout.toFixed(2)}</span>
