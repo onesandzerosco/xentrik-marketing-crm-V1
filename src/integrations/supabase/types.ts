@@ -724,6 +724,8 @@ export type Database = {
           earnings: number
           id: string
           model_name: string
+          overtime_notes: string | null
+          overtime_pay: number | null
           sales_locked: boolean
           updated_at: string
           week_start_date: string
@@ -741,6 +743,8 @@ export type Database = {
           earnings?: number
           id?: string
           model_name: string
+          overtime_notes?: string | null
+          overtime_pay?: number | null
           sales_locked?: boolean
           updated_at?: string
           week_start_date: string
@@ -758,6 +762,8 @@ export type Database = {
           earnings?: number
           id?: string
           model_name?: string
+          overtime_notes?: string | null
+          overtime_pay?: number | null
           sales_locked?: boolean
           updated_at?: string
           week_start_date?: string
