@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X } from 'lucide-react';
-import { AddModelDialog } from './AddModelDialog';
+import { AddModelDropdown } from './AddModelDropdown';
 import { PayrollConfirmationModal } from './PayrollConfirmationModal';
 import { generatePayslipPDF } from './PayslipGenerator';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,7 +53,6 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [models, setModels] = useState<SalesModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showAddModel, setShowAddModel] = useState(false);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [hourlyRate, setHourlyRate] = useState<number>(0);
   const [editingHourlyRate, setEditingHourlyRate] = useState(false);
@@ -438,13 +437,12 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     <div className="space-y-4">
       {isWeekEditable && !isSalesLocked && (
         <div className="flex justify-between items-center">
-          <Button
-            onClick={() => setShowAddModel(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Add Model
-          </Button>
+          <AddModelDropdown
+            chatterId={effectiveChatterId}
+            weekStart={weekStart}
+            onModelAdded={fetchData}
+            disabled={!isWeekEditable || isSalesLocked}
+          />
         </div>
       )}
 
@@ -653,14 +651,6 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
           )}
         </div>
       )}
-
-      <AddModelDialog
-        open={showAddModel}
-        onOpenChange={setShowAddModel}
-        chatterId={effectiveChatterId}
-        weekStart={weekStart}
-        onModelAdded={fetchData}
-      />
 
       <PayrollConfirmationModal
         open={showPayrollModal}
