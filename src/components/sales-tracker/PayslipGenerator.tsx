@@ -39,38 +39,59 @@ export const generatePayslipPDF = (data: PayslipData) => {
   const pageWidth = pdf.internal.pageSize.width;
   let yPosition = 20;
 
-  // Company Logo placeholder (top center)
-  pdf.setFontSize(16);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('XENTRIK PTY LTD', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 10;
+  // Yellow border at top
+  pdf.setFillColor(255, 255, 0); // Yellow
+  pdf.rect(0, 0, pageWidth, 8, 'F');
 
-  // Company Address
+  yPosition += 15;
+
+  // Employee Details (Left Side)
   pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('8 Bentine Street Para Vista 5093 South Australia', pageWidth / 2, yPosition, { align: 'center' });
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Employee Information', 20, yPosition);
   yPosition += 8;
-  pdf.text('+61422789156 | Xentrikmarketing@outlook.com', pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
-
-  // Payslip Number
-  const payslipNumber = `Payslip ${format(data.weekStart, 'MMdd')}-${format(data.weekEnd, 'MMdd')}`;
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(payslipNumber, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
-
-  // Employee Header
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(`Weekly Payslip - ${data.chatterName}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 10;
-
-  // Date range
-  pdf.setFontSize(12);
+  
   pdf.setFont('helvetica', 'normal');
-  const dateRange = `${format(data.weekStart, 'MMM dd, yyyy')} - ${format(data.weekEnd, 'MMM dd, yyyy')}`;
-  pdf.text(dateRange, pageWidth / 2, yPosition, { align: 'center' });
+  pdf.text(data.chatterName, 20, yPosition);
+  yPosition += 6;
+  pdf.text('Employee ID: X-001', 20, yPosition);
+  yPosition += 6;
+  const dateRange = `Cut-off Period: ${format(data.weekStart, 'MM/dd')} - ${format(data.weekEnd, 'MM/dd')}`;
+  pdf.text(dateRange, 20, yPosition);
+
+  // Company Details (Right Side)
+  const rightMargin = pageWidth - 20;
+  let rightYPosition = yPosition - 20;
+  
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('XENTRIK PTY LTD', rightMargin, rightYPosition, { align: 'right' });
+  rightYPosition += 6;
+  
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  pdf.text('8 Bentine Street Para Vista', rightMargin, rightYPosition, { align: 'right' });
+  rightYPosition += 5;
+  pdf.text('5093 South Australia', rightMargin, rightYPosition, { align: 'right' });
+  rightYPosition += 5;
+  pdf.text('+61422789156', rightMargin, rightYPosition, { align: 'right' });
+  rightYPosition += 5;
+  pdf.text('Xentrikmarketing@outlook.com', rightMargin, rightYPosition, { align: 'right' });
+
+  yPosition += 20;
+
+  // Yellow Payslip Header Bar
+  pdf.setFillColor(255, 255, 0); // Yellow
+  pdf.rect(20, yPosition, pageWidth - 40, 12, 'F');
+  
+  // Payslip title and number
+  pdf.setFontSize(14);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(0, 0, 0);
+  pdf.text('Payslip', 25, yPosition + 8);
+  
+  const payslipNumber = `#${format(data.weekStart, 'MMdd')}-${format(data.weekEnd, 'MMdd')}`;
+  pdf.text(payslipNumber, pageWidth - 25, yPosition + 8, { align: 'right' });
+  
   yPosition += 25;
 
   // Summary section (no daily breakdown)
