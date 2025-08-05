@@ -149,11 +149,11 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   const splitText = pdf.splitTextToSize(payslipText, pageWidth - 40);
   pdf.text(splitText, 20, yPosition);
-  yPosition += splitText.length * 5 + 30;
+  yPosition += splitText.length * 5 + 40;
 
   // Signature Section
   const pageHeight = pdf.internal.pageSize.height;
-  const signatureYPosition = pageHeight - 60;
+  const signatureYPosition = pageHeight - 80;
   
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
