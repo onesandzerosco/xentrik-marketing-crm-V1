@@ -34,12 +34,18 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email')
-        .or('role.eq.Chatter,roles.cs.{Chatter}');
+        .select('id, name, email, role, roles')
+        .neq('role', 'Creator')
+        .not('roles', 'cs', '{Creator}');
 
       if (error) throw error;
 
-      setChatters(data || []);
+      // Filter out any users who have 'Creator' in their roles array
+      const filteredData = (data || []).filter(user => 
+        !user.roles?.includes('Creator')
+      );
+
+      setChatters(filteredData);
     } catch (error) {
       console.error('Error fetching chatters:', error);
     } finally {
