@@ -45,6 +45,8 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
 }) => {
   const { toast } = useToast();
   const [hoursWorked, setHoursWorked] = useState<number>(40);
+  const [overtimePay, setOvertimePay] = useState<number>(0);
+  const [overtimeNotes, setOvertimeNotes] = useState<string>('');
   const [commissionRate, setCommissionRate] = useState<number>(getCommissionRate(totalSales));
   const [deductionAmount, setDeductionAmount] = useState<number>(0);
   const [deductionNotes, setDeductionNotes] = useState<string>('');
@@ -52,7 +54,7 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
 
   const commissionAmount = (totalSales * commissionRate) / 100;
   const hourlyPay = hoursWorked * currentHourlyRate;
-  const totalPayout = hourlyPay + commissionAmount - deductionAmount;
+  const totalPayout = hourlyPay + commissionAmount + overtimePay - deductionAmount;
 
   const handleConfirmPayroll = async () => {
     setIsProcessing(true);
@@ -125,7 +127,31 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
               value={hoursWorked}
               onChange={(e) => setHoursWorked(parseFloat(e.target.value) || 0)}
             />
-          </div>
+           </div>
+
+           <div className="space-y-2">
+             <Label htmlFor="overtimePay">Overtime Pay ($)</Label>
+             <Input
+               id="overtimePay"
+               type="number"
+               min="0"
+               step="0.01"
+               value={overtimePay}
+               onChange={(e) => setOvertimePay(parseFloat(e.target.value) || 0)}
+               placeholder="0.00"
+             />
+           </div>
+
+           <div className="space-y-2">
+             <Label htmlFor="overtimeNotes">Overtime Pay Notes</Label>
+             <Textarea
+               id="overtimeNotes"
+               value={overtimeNotes}
+               onChange={(e) => setOvertimeNotes(e.target.value)}
+               placeholder="Enter reason for overtime pay (if any)..."
+               className="min-h-[60px]"
+             />
+           </div>
 
           <div className="space-y-2">
             <Label htmlFor="commission">Commission Rate (%)</Label>
@@ -171,10 +197,16 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
               <span>Hours Pay ({hoursWorked}h × ${currentHourlyRate}/h):</span>
               <span>${hourlyPay.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span>Commission ({commissionRate}% × ${totalSales.toFixed(2)}):</span>
-              <span>${commissionAmount.toFixed(2)}</span>
-            </div>
+           <div className="flex justify-between text-sm">
+             <span>Commission ({commissionRate}% × ${totalSales.toFixed(2)}):</span>
+             <span>${commissionAmount.toFixed(2)}</span>
+           </div>
+           {overtimePay > 0 && (
+             <div className="flex justify-between text-sm text-green-600">
+               <span>Overtime Pay:</span>
+               <span>+${overtimePay.toFixed(2)}</span>
+             </div>
+           )}
             {deductionAmount > 0 && (
               <div className="flex justify-between text-sm text-destructive">
                 <span>Deduction:</span>
