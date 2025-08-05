@@ -1,5 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import keyshawnSignature from '@/assets/keyshawn-lopez-signature.png';
+import michaelSignature from '@/assets/michael-slipek-signature.png';
 
 interface SalesEntry {
   model_name: string;
@@ -135,13 +137,13 @@ export const generatePayslipPDF = (data: PayslipData) => {
   // COO Signature
   pdf.setFont('helvetica', 'normal');
   pdf.text('Chief Operating Officer:', 20, signatureYPosition + 15);
-  pdf.text('Keyshawn Lopez', 20, signatureYPosition + 35);
-  pdf.line(20, signatureYPosition + 30, 80, signatureYPosition + 30); // Signature line
+  pdf.addImage(keyshawnSignature, 'PNG', 20, signatureYPosition + 20, 50, 15);
+  pdf.text('Keyshawn Lopez', 20, signatureYPosition + 40);
   
   // CEO Signature
   pdf.text('Chief Executive Officer:', pageWidth / 2, signatureYPosition + 15);
-  pdf.text('Michael Splintek', pageWidth / 2, signatureYPosition + 35);
-  pdf.line(pageWidth / 2, signatureYPosition + 30, pageWidth / 2 + 60, signatureYPosition + 30); // Signature line
+  pdf.addImage(michaelSignature, 'PNG', pageWidth / 2, signatureYPosition + 20, 50, 15);
+  pdf.text('Michael Slipek', pageWidth / 2, signatureYPosition + 40);
 
   // Footer
   pdf.setFontSize(8);
