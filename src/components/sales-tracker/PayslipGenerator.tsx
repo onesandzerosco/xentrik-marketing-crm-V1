@@ -115,32 +115,43 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
   yPosition += 10;
   
-  // Add overtime pay if present
-  if (data.overtimePay > 0) {
-    pdf.text(`Overtime Pay: $${data.overtimePay.toFixed(2)}`, 20, yPosition);
-    yPosition += 7;
-    if (data.overtimeNotes) {
-      pdf.setFontSize(10);
-      pdf.text(`Overtime Reason: ${data.overtimeNotes}`, 20, yPosition);
-      yPosition += 10;
-    } else {
-      yPosition += 3;
-    }
-  } else {
-    yPosition += 5;
-  }
+  // Handle overtime and deduction in two columns
+  const hasOvertime = data.overtimePay > 0;
+  const hasDeduction = data.deductionAmount > 0;
   
-  // Add deduction if present
-  if (data.deductionAmount > 0) {
-    pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, 20, yPosition);
-    yPosition += 7;
-    if (data.deductionNotes) {
-      pdf.setFontSize(10);
-      pdf.text(`Deduction Reason: ${data.deductionNotes}`, 20, yPosition);
-      yPosition += 10;
-    } else {
-      yPosition += 3;
+  if (hasOvertime || hasDeduction) {
+    const leftColumn = pageWidth / 2 - 10; // Left column width
+    let leftY = yPosition;
+    let rightY = yPosition;
+    
+    // Left column - Overtime
+    if (hasOvertime) {
+      pdf.text(`Overtime Pay: $${data.overtimePay.toFixed(2)}`, 20, leftY);
+      leftY += 7;
+      if (data.overtimeNotes) {
+        pdf.setFontSize(10);
+        pdf.text(`Overtime Reason: ${data.overtimeNotes}`, 20, leftY);
+        leftY += 10;
+      } else {
+        leftY += 3;
+      }
     }
+    
+    // Right column - Deduction
+    if (hasDeduction) {
+      pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, leftColumn, rightY);
+      rightY += 7;
+      if (data.deductionNotes) {
+        pdf.setFontSize(10);
+        pdf.text(`Deduction Reason: ${data.deductionNotes}`, leftColumn, rightY);
+        rightY += 10;
+      } else {
+        rightY += 3;
+      }
+    }
+    
+    // Set yPosition to the maximum of both columns
+    yPosition = Math.max(leftY, rightY);
   } else {
     yPosition += 5;
   }
