@@ -153,7 +153,7 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   // Signature Section
   const pageHeight = pdf.internal.pageSize.height;
-  const signatureYPosition = pageHeight - 80;
+  const signatureYPosition = pageHeight - 65;
   
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
