@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Lock, Download, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X } from 'lucide-react';
 import { AddModelDialog } from './AddModelDialog';
 import { PayrollConfirmationModal } from './PayrollConfirmationModal';
 import { generatePayslipPDF } from './PayslipGenerator';
@@ -56,6 +56,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [showAddModel, setShowAddModel] = useState(false);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [hourlyRate, setHourlyRate] = useState<number>(0);
+  const [editingHourlyRate, setEditingHourlyRate] = useState(false);
+  const [tempHourlyRate, setTempHourlyRate] = useState<number>(0);
   const [chatterName, setChatterName] = useState<string>('');
 
   const effectiveChatterId = chatterId || user?.id;
@@ -348,6 +350,21 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
+  const startEditingHourlyRate = () => {
+    setTempHourlyRate(hourlyRate);
+    setEditingHourlyRate(true);
+  };
+
+  const saveHourlyRate = async () => {
+    await updateHourlyRate(tempHourlyRate);
+    setEditingHourlyRate(false);
+  };
+
+  const cancelEditingHourlyRate = () => {
+    setTempHourlyRate(hourlyRate);
+    setEditingHourlyRate(false);
+  };
+
   const confirmWeekSales = async () => {
     if (!effectiveChatterId || !isCurrentWeek) return;
 
@@ -508,27 +525,54 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                   colSpan={DAYS_OF_WEEK.length} 
                   className="text-center"
                 >
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={hourlyRate}
-                    onBlur={(e) => {
-                      const newRate = parseFloat(e.target.value) || 0;
-                      console.log('Hourly rate input onBlur triggered:', { newRate, currentRate: hourlyRate });
-                      if (newRate !== hourlyRate) {
-                        updateHourlyRate(newRate);
-                      }
-                    }}
-                    onChange={(e) => {
-                      const newRate = parseFloat(e.target.value) || 0;
-                      console.log('Hourly rate input onChange:', { newRate });
-                      setHourlyRate(newRate); // Update local state immediately for UI feedback
-                    }}
-                    className="w-full text-center max-w-[120px] mx-auto"
-                    disabled={!isAdmin}
-                    placeholder="$0.00/hr"
-                  />
+                  <div className="flex items-center justify-center gap-2">
+                    {editingHourlyRate ? (
+                      <>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={tempHourlyRate}
+                          onChange={(e) => setTempHourlyRate(parseFloat(e.target.value) || 0)}
+                          className="w-[120px] text-center"
+                          placeholder="$0.00/hr"
+                          autoFocus
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={saveHourlyRate}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={cancelEditingHourlyRate}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="min-w-[120px] text-center">
+                          ${hourlyRate.toFixed(2)}/hr
+                        </span>
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={startEditingHourlyRate}
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-center font-bold">
                   ${hourlyRate.toFixed(2)}/hr
