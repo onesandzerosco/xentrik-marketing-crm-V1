@@ -62,10 +62,12 @@ export const AddModelDropdown: React.FC<AddModelDropdownProps> = ({
 
       const existingModelNames = new Set(existingModels?.map(m => m.model_name) || []);
       
-      // Filter out creators whose model names are already added
-      const available = creators.filter(creator => 
-        creator.modelName && !existingModelNames.has(creator.modelName)
-      );
+      // Filter out creators whose model names are already added and sort alphabetically
+      const available = creators
+        .filter(creator => 
+          creator.modelName && !existingModelNames.has(creator.modelName)
+        )
+        .sort((a, b) => (a.modelName || '').localeCompare(b.modelName || ''));
       
       setAvailableCreators(available);
     } catch (error) {

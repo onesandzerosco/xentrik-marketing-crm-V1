@@ -478,7 +478,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                       type="number"
                       min="0"
                       step="0.01"
-                      value={getEarnings(model.model_name, day.value)}
+                      value={getEarnings(model.model_name, day.value) || ''}
                       onChange={(e) => updateEarnings(
                         model.model_name, 
                         day.value, 
@@ -486,6 +486,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                       )}
                       className="w-full text-center"
                       disabled={areInputsDisabled}
+                      placeholder="0.00"
                     />
                   </TableCell>
                 ))}
