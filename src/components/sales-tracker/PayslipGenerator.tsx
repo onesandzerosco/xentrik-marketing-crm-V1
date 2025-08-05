@@ -135,12 +135,12 @@ export const generatePayslipPDF = (data: PayslipData) => {
   // COO Signature
   pdf.setFont('helvetica', 'normal');
   pdf.text('Chief Operating Officer:', 20, signatureYPosition + 15);
-  pdf.text('Michael Slipek', 20, signatureYPosition + 35);
+  pdf.text('Keyshawn Lopez', 20, signatureYPosition + 35);
   pdf.line(20, signatureYPosition + 30, 80, signatureYPosition + 30); // Signature line
   
   // CEO Signature
   pdf.text('Chief Executive Officer:', pageWidth / 2, signatureYPosition + 15);
-  pdf.text('Keyshawn Lourde Lopez', pageWidth / 2, signatureYPosition + 35);
+  pdf.text('Michael Splintek', pageWidth / 2, signatureYPosition + 35);
   pdf.line(pageWidth / 2, signatureYPosition + 30, pageWidth / 2 + 60, signatureYPosition + 30); // Signature line
 
   // Footer
