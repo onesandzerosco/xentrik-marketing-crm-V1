@@ -46,78 +46,32 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.setFont('helvetica', 'normal');
   const dateRange = `${format(data.weekStart, 'MMM dd, yyyy')} - ${format(data.weekEnd, 'MMM dd, yyyy')}`;
   pdf.text(dateRange, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  yPosition += 30;
 
-  // Sales breakdown table
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Daily Sales Breakdown', 20, yPosition);
-  yPosition += 10;
-
-  // Table headers
-  pdf.setFontSize(10);
-  pdf.text('Day', 20, yPosition);
-  pdf.text('Model', 60, yPosition);
-  pdf.text('Earnings', 140, yPosition);
-  yPosition += 5;
-
-  // Draw line under headers
-  pdf.line(20, yPosition, 180, yPosition);
-  yPosition += 5;
-
-  // Group sales by day
-  const salesByDay: Record<number, SalesEntry[]> = {};
-  data.salesData.forEach(entry => {
-    if (!salesByDay[entry.day_of_week]) {
-      salesByDay[entry.day_of_week] = [];
-    }
-    salesByDay[entry.day_of_week].push(entry);
-  });
-
-  // Add sales data
-  pdf.setFont('helvetica', 'normal');
-  DAYS_OF_WEEK.forEach(day => {
-    const dayEntries = salesByDay[day.value] || [];
-    if (dayEntries.length > 0) {
-      dayEntries.forEach((entry, index) => {
-        pdf.text(index === 0 ? day.label : '', 20, yPosition);
-        pdf.text(entry.model_name, 60, yPosition);
-        pdf.text(`$${entry.earnings.toFixed(2)}`, 140, yPosition);
-        yPosition += 5;
-      });
-    } else {
-      pdf.text(day.label, 20, yPosition);
-      pdf.text('No sales', 60, yPosition);
-      pdf.text('$0.00', 140, yPosition);
-      yPosition += 5;
-    }
-  });
-
-  yPosition += 10;
-
-  // Summary section
+  // Summary section (no daily breakdown)
   pdf.setFont('helvetica', 'bold');
   pdf.text('Payment Summary', 20, yPosition);
-  yPosition += 10;
+  yPosition += 15;
 
   pdf.setFont('helvetica', 'normal');
   pdf.text(`Total Weekly Sales: $${data.totalSales.toFixed(2)}`, 20, yPosition);
-  yPosition += 7;
-  pdf.text(`Hours Worked: ${data.hoursWorked}`, 20, yPosition);
-  yPosition += 7;
-  pdf.text(`Hourly Rate: $${data.hourlyRate.toFixed(2)}/hr`, 20, yPosition);
-  yPosition += 7;
-  pdf.text(`Hours Pay: $${(data.hoursWorked * data.hourlyRate).toFixed(2)}`, 20, yPosition);
-  yPosition += 7;
-  pdf.text(`Commission Rate: ${data.commissionRate}%`, 20, yPosition);
-  yPosition += 7;
-  pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
   yPosition += 10;
+  pdf.text(`Hours Worked: ${data.hoursWorked}`, 20, yPosition);
+  yPosition += 10;
+  pdf.text(`Hourly Rate: $${data.hourlyRate.toFixed(2)}/hr`, 20, yPosition);
+  yPosition += 10;
+  pdf.text(`Hours Pay: $${(data.hoursWorked * data.hourlyRate).toFixed(2)}`, 20, yPosition);
+  yPosition += 10;
+  pdf.text(`Commission Rate: ${data.commissionRate}%`, 20, yPosition);
+  yPosition += 10;
+  pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
+  yPosition += 15;
 
   // Total payout
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(12);
   pdf.text(`Total Payout: $${data.totalPayout.toFixed(2)}`, 20, yPosition);
-  yPosition += 20;
+  yPosition += 25;
 
   // Payslip paragraph
   pdf.setFont('helvetica', 'normal');
