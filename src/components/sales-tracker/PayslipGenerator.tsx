@@ -115,46 +115,35 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
   yPosition += 10;
   
-  // Handle overtime and deduction in two columns
-  const hasOvertime = data.overtimePay > 0;
-  const hasDeduction = data.deductionAmount > 0;
+  // Always show overtime and deduction in two columns
+  const leftColumn = pageWidth / 2 - 10; // Left column width
+  let leftY = yPosition;
+  let rightY = yPosition;
   
-  if (hasOvertime || hasDeduction) {
-    const leftColumn = pageWidth / 2 - 10; // Left column width
-    let leftY = yPosition;
-    let rightY = yPosition;
-    
-    // Left column - Overtime
-    if (hasOvertime) {
-      pdf.text(`Overtime Pay: $${data.overtimePay.toFixed(2)}`, 20, leftY);
-      leftY += 7;
-      if (data.overtimeNotes) {
-        pdf.setFontSize(10);
-        pdf.text(`Overtime Reason: ${data.overtimeNotes}`, 20, leftY);
-        leftY += 10;
-      } else {
-        leftY += 3;
-      }
-    }
-    
-    // Right column - Deduction
-    if (hasDeduction) {
-      pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, leftColumn, rightY);
-      rightY += 7;
-      if (data.deductionNotes) {
-        pdf.setFontSize(10);
-        pdf.text(`Deduction Reason: ${data.deductionNotes}`, leftColumn, rightY);
-        rightY += 10;
-      } else {
-        rightY += 3;
-      }
-    }
-    
-    // Set yPosition to the maximum of both columns
-    yPosition = Math.max(leftY, rightY);
+  // Left column - Overtime (always show)
+  pdf.text(`Overtime Pay: $${data.overtimePay.toFixed(2)}`, 20, leftY);
+  leftY += 7;
+  if (data.overtimeNotes && data.overtimePay > 0) {
+    pdf.setFontSize(10);
+    pdf.text(`Overtime Reason: ${data.overtimeNotes}`, 20, leftY);
+    leftY += 10;
   } else {
-    yPosition += 5;
+    leftY += 3;
   }
+  
+  // Right column - Deduction (always show)
+  pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, leftColumn, rightY);
+  rightY += 7;
+  if (data.deductionNotes && data.deductionAmount > 0) {
+    pdf.setFontSize(10);
+    pdf.text(`Deduction Reason: ${data.deductionNotes}`, leftColumn, rightY);
+    rightY += 10;
+  } else {
+    rightY += 3;
+  }
+  
+  // Set yPosition to the maximum of both columns
+  yPosition = Math.max(leftY, rightY);
 
   // Total payout
   pdf.setFont('helvetica', 'bold');
