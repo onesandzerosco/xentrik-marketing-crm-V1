@@ -132,12 +132,12 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
   pdf.text(`Total Payout: $${data.totalPayout.toFixed(2)}`, 20, yPosition);
-  yPosition += 15;
+  yPosition += 10;
 
   // Yellow border before payslip text
   pdf.setFillColor(255, 255, 0); // Yellow
   pdf.rect(20, yPosition, pageWidth - 40, 3, 'F');
-  yPosition += 10;
+  yPosition += 5;
 
   // Payslip paragraph
   pdf.setFont('helvetica', 'normal');
@@ -161,22 +161,22 @@ export const generatePayslipPDF = (data: PayslipData) => {
   
   // COO Signature
   pdf.setFont('helvetica', 'normal');
-  pdf.text('Chief Operating Officer:', 20, signatureYPosition + 15);
+  pdf.text('Chief Operating Officer:', 20, signatureYPosition + 10);
   
   // Use your uploaded Keyshawn signature
   const keyshawnImg = new Image();
   keyshawnImg.src = '/lovable-uploads/044d8d27-d561-4feb-baba-fed28f199066.png';
-  pdf.addImage(keyshawnImg.src, 'PNG', 20, signatureYPosition + 20, 50, 15);
-  pdf.text('Keyshawn Lopez', 20, signatureYPosition + 40);
+  pdf.addImage(keyshawnImg.src, 'PNG', 20, signatureYPosition + 15, 50, 15);
+  pdf.text('Keyshawn Lopez', 20, signatureYPosition + 35);
   
   // CEO Signature  
-  pdf.text('Chief Executive Officer:', pageWidth / 2, signatureYPosition + 15);
+  pdf.text('Chief Executive Officer:', pageWidth / 2, signatureYPosition + 10);
   
   // Use your uploaded Michael signature
   const michaelImg = new Image();
   michaelImg.src = '/lovable-uploads/9aae90b3-e37d-43d5-8bbd-0f0ae1c1b94c.png';
-  pdf.addImage(michaelImg.src, 'PNG', pageWidth / 2, signatureYPosition + 20, 50, 15);
-  pdf.text('Michael Slipek', pageWidth / 2, signatureYPosition + 40);
+  pdf.addImage(michaelImg.src, 'PNG', pageWidth / 2, signatureYPosition + 15, 50, 15);
+  pdf.text('Michael Slipek', pageWidth / 2, signatureYPosition + 35);
 
   // Footer
   pdf.setFontSize(10);
