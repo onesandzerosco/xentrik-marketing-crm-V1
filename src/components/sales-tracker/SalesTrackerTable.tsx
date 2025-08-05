@@ -60,6 +60,10 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [editingHourlyRate, setEditingHourlyRate] = useState(false);
   const [tempHourlyRate, setTempHourlyRate] = useState<number>(0);
   const [chatterName, setChatterName] = useState<string>('');
+  
+  // Local state for immediate input display and debounced updates
+  const [localInputValues, setLocalInputValues] = useState<Record<string, string>>({});
+  const [updateTimeouts, setUpdateTimeouts] = useState<Record<string, NodeJS.Timeout>>({});
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -202,11 +206,23 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
+  const getInputKey = (modelName: string, dayOfWeek: number) => `${modelName}-${dayOfWeek}`;
+
   const getEarnings = (modelName: string, dayOfWeek: number) => {
     const entry = salesData.find(
       s => s.model_name === modelName && s.day_of_week === dayOfWeek
     );
     return entry?.earnings || 0;
+  };
+
+  const getDisplayValue = (modelName: string, dayOfWeek: number) => {
+    const key = getInputKey(modelName, dayOfWeek);
+    // Use local input value if available, otherwise use database value
+    if (localInputValues[key] !== undefined) {
+      return localInputValues[key];
+    }
+    const earnings = getEarnings(modelName, dayOfWeek);
+    return earnings === 0 ? '' : earnings.toString();
   };
 
   const updateEarnings = async (modelName: string, dayOfWeek: number, earnings: number) => {
@@ -478,18 +494,42 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
                       type="text"
                       inputMode="decimal"
                       pattern="[0-9]*\.?[0-9]*"
-                      value={(() => {
-                        const earnings = getEarnings(model.model_name, day.value);
-                        return earnings === 0 ? '' : earnings.toString();
-                      })()}
+                      value={getDisplayValue(model.model_name, day.value)}
                       onChange={(e) => {
                         const value = e.target.value;
+                        const key = getInputKey(model.model_name, day.value);
+                        
                         // Allow empty, numbers, and decimal points
                         if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                          const numericValue = value === '' ? 0 : parseFloat(value);
-                          if (!isNaN(numericValue)) {
-                            updateEarnings(model.model_name, day.value, numericValue);
+                          // Update local state immediately for responsive typing
+                          setLocalInputValues(prev => ({
+                            ...prev,
+                            [key]: value
+                          }));
+                          
+                          // Clear existing timeout
+                          if (updateTimeouts[key]) {
+                            clearTimeout(updateTimeouts[key]);
                           }
+                          
+                          // Set new timeout for debounced database update
+                          const timeoutId = setTimeout(() => {
+                            const numericValue = value === '' ? 0 : parseFloat(value);
+                            if (!isNaN(numericValue)) {
+                              updateEarnings(model.model_name, day.value, numericValue);
+                              // Clear local value after database update
+                              setLocalInputValues(prev => {
+                                const newValues = { ...prev };
+                                delete newValues[key];
+                                return newValues;
+                              });
+                            }
+                          }, 500); // 500ms debounce
+                          
+                          setUpdateTimeouts(prev => ({
+                            ...prev,
+                            [key]: timeoutId
+                          }));
                         }
                       }}
                       className="w-full text-center"
