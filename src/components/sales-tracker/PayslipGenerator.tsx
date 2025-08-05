@@ -52,6 +52,7 @@ export const generatePayslipPDF = (data: PayslipData) => {
   yPosition += 8;
   
   pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
   pdf.text(data.chatterName, 20, yPosition);
   yPosition += 6;
   pdf.text('Employee ID: X-001', 20, yPosition);
@@ -64,17 +65,18 @@ export const generatePayslipPDF = (data: PayslipData) => {
   let rightYPosition = yPosition - 20;
   
   pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
   pdf.text('XENTRIK PTY LTD', rightMargin, rightYPosition, { align: 'right' });
   rightYPosition += 6;
   
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(8);
+  pdf.setFontSize(10);
   pdf.text('8 Bentine Street Para Vista', rightMargin, rightYPosition, { align: 'right' });
-  rightYPosition += 5;
+  rightYPosition += 6;
   pdf.text('5093 South Australia', rightMargin, rightYPosition, { align: 'right' });
-  rightYPosition += 5;
+  rightYPosition += 6;
   pdf.text('+61422789156', rightMargin, rightYPosition, { align: 'right' });
-  rightYPosition += 5;
+  rightYPosition += 6;
   pdf.text('Xentrikmarketing@outlook.com', rightMargin, rightYPosition, { align: 'right' });
 
   yPosition += 20;
@@ -84,7 +86,7 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.rect(20, yPosition, pageWidth - 40, 12, 'F');
   
   // Payslip title and number
-  pdf.setFontSize(14);
+  pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(0, 0, 0);
   pdf.text('Payslip', 25, yPosition + 8);
@@ -96,10 +98,12 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   // Summary section (no daily breakdown)
   pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
   pdf.text('Payment Summary', 20, yPosition);
   yPosition += 15;
 
   pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
   pdf.text(`Total Weekly Sales: $${data.totalSales.toFixed(2)}`, 20, yPosition);
   yPosition += 10;
   pdf.text(`Hours Worked: ${data.hoursWorked}`, 20, yPosition);
@@ -118,9 +122,8 @@ export const generatePayslipPDF = (data: PayslipData) => {
     pdf.text(`Deduction: -$${data.deductionAmount.toFixed(2)}`, 20, yPosition);
     yPosition += 7;
     if (data.deductionNotes) {
-      pdf.setFontSize(9);
-      pdf.text(`Deduction Reason: ${data.deductionNotes}`, 20, yPosition);
       pdf.setFontSize(10);
+      pdf.text(`Deduction Reason: ${data.deductionNotes}`, 20, yPosition);
       yPosition += 10;
     } else {
       yPosition += 3;
@@ -131,7 +134,7 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   // Total payout
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(12);
+  pdf.setFontSize(10);
   pdf.text(`Total Payout: $${data.totalPayout.toFixed(2)}`, 20, yPosition);
   yPosition += 25;
 
@@ -167,9 +170,9 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.text('Michael Slipek', pageWidth / 2, signatureYPosition + 40);
 
   // Footer
-  pdf.setFontSize(8);
+  pdf.setFontSize(10);
   pdf.setFont('helvetica', 'italic');
-  const footerText = 'This payslip has been issued for whatever purpose it may serve and is a true and accurate representation of the employee\'s earnings for the stated period.';
+  const footerText = "This payslip has been issued for whatever purpose it may serve and is a true and accurate representation of the employee's earnings for the stated period.";
   const footerSplitText = pdf.splitTextToSize(footerText, pageWidth - 40);
   pdf.text(footerSplitText, pageWidth / 2, pageHeight - 15, { align: 'center' });
 
