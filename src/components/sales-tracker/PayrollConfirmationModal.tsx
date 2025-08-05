@@ -136,7 +136,7 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
                type="number"
                min="0"
                step="0.01"
-               value={overtimePay}
+               value={overtimePay === 0 ? '' : overtimePay}
                onChange={(e) => setOvertimePay(parseFloat(e.target.value) || 0)}
                placeholder="0.00"
              />
