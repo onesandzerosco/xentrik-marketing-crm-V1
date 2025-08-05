@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X } from 'lucide-react';
+import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X, Edit } from 'lucide-react';
 import { AddModelDropdown } from './AddModelDropdown';
 import { PayrollConfirmationModal } from './PayrollConfirmationModal';
+import { EditRowModal } from './EditRowModal';
 import { generatePayslipPDF } from './PayslipGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -61,9 +62,9 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const [tempHourlyRate, setTempHourlyRate] = useState<number>(0);
   const [chatterName, setChatterName] = useState<string>('');
   
-  // Local state for immediate input display and debounced updates
-  const [localInputValues, setLocalInputValues] = useState<Record<string, string>>({});
-  const [updateTimeouts, setUpdateTimeouts] = useState<Record<string, NodeJS.Timeout>>({});
+  // Edit modal state
+  const [editingModel, setEditingModel] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -206,23 +207,11 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
-  const getInputKey = (modelName: string, dayOfWeek: number) => `${modelName}-${dayOfWeek}`;
-
   const getEarnings = (modelName: string, dayOfWeek: number) => {
     const entry = salesData.find(
       s => s.model_name === modelName && s.day_of_week === dayOfWeek
     );
     return entry?.earnings || 0;
-  };
-
-  const getDisplayValue = (modelName: string, dayOfWeek: number) => {
-    const key = getInputKey(modelName, dayOfWeek);
-    // Use local input value if available, otherwise use database value
-    if (localInputValues[key] !== undefined) {
-      return localInputValues[key];
-    }
-    const earnings = getEarnings(modelName, dayOfWeek);
-    return earnings === 0 ? '' : earnings.toString();
   };
 
   const updateEarnings = async (modelName: string, dayOfWeek: number, earnings: number) => {
@@ -413,6 +402,82 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
+  const saveRowData = async (modelName: string, dayValues: Record<number, number>) => {
+    if (!effectiveChatterId || !isWeekEditable) return;
+
+    try {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      const updates = [];
+
+      // Create upsert operations for each day
+      for (const [dayOfWeek, earnings] of Object.entries(dayValues)) {
+        updates.push({
+          model_name: modelName,
+          day_of_week: parseInt(dayOfWeek),
+          earnings,
+          week_start_date: weekStartStr,
+          chatter_id: effectiveChatterId,
+          working_day: true
+        });
+      }
+
+      const { error } = await supabase
+        .from('sales_tracker')
+        .upsert(updates, {
+          onConflict: 'chatter_id,model_name,day_of_week,week_start_date'
+        });
+
+      if (error) throw error;
+
+      // Update local state for all the changes
+      setSalesData(prev => {
+        let updated = [...prev];
+        
+        Object.entries(dayValues).forEach(([dayOfWeek, earnings]) => {
+          const dayNum = parseInt(dayOfWeek);
+          const existingIndex = updated.findIndex(
+            s => s.model_name === modelName && s.day_of_week === dayNum
+          );
+          
+          if (existingIndex >= 0) {
+            updated[existingIndex] = { ...updated[existingIndex], earnings };
+          } else {
+            updated.push({
+              id: `temp-${Date.now()}-${dayNum}`,
+              model_name: modelName,
+              day_of_week: dayNum,
+              earnings,
+              working_day: true
+            });
+          }
+        });
+        
+        return updated;
+      });
+
+      toast({
+        title: "Success",
+        description: `Updated sales data for ${modelName}`,
+      });
+    } catch (error) {
+      console.error('Error saving row data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save row data",
+        variant: "destructive",
+      });
+      throw error; // Re-throw to handle in modal
+    }
+  };
+
+  const getRowInitialValues = (modelName: string): Record<number, number> => {
+    const values: Record<number, number> = {};
+    DAYS_OF_WEEK.forEach(day => {
+      values[day.value] = getEarnings(modelName, day.value);
+    });
+    return values;
+  };
+
   const downloadPayslip = () => {
     if (!chatterName || !isAdminConfirmed) return;
 
@@ -487,55 +552,32 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
           <TableBody>
             {models.map((model) => (
               <TableRow key={model.model_name}>
-                <TableCell className="font-medium">{model.model_name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {model.model_name}
+                    {isWeekEditable && !areInputsDisabled && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingModel(model.model_name);
+                          setShowEditModal(true);
+                        }}
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
                 {DAYS_OF_WEEK.map(day => (
                   <TableCell key={day.value} className="text-center">
-                    <Input
-                      type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*\.?[0-9]*"
-                      value={getDisplayValue(model.model_name, day.value)}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const key = getInputKey(model.model_name, day.value);
-                        
-                        // Allow empty, numbers, and decimal points
-                        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                          // Update local state immediately for responsive typing
-                          setLocalInputValues(prev => ({
-                            ...prev,
-                            [key]: value
-                          }));
-                          
-                          // Clear existing timeout
-                          if (updateTimeouts[key]) {
-                            clearTimeout(updateTimeouts[key]);
-                          }
-                          
-                          // Set new timeout for debounced database update
-                          const timeoutId = setTimeout(() => {
-                            const numericValue = value === '' ? 0 : parseFloat(value);
-                            if (!isNaN(numericValue)) {
-                              updateEarnings(model.model_name, day.value, numericValue);
-                              // Clear local value after database update
-                              setLocalInputValues(prev => {
-                                const newValues = { ...prev };
-                                delete newValues[key];
-                                return newValues;
-                              });
-                            }
-                          }, 500); // 500ms debounce
-                          
-                          setUpdateTimeouts(prev => ({
-                            ...prev,
-                            [key]: timeoutId
-                          }));
-                        }
-                      }}
-                      className="w-full text-center"
-                      disabled={areInputsDisabled}
-                      placeholder="0.00"
-                    />
+                    <span className="text-sm">
+                      {(() => {
+                        const earnings = getEarnings(model.model_name, day.value);
+                        return earnings === 0 ? '-' : `$${earnings.toFixed(2)}`;
+                      })()}
+                    </span>
                   </TableCell>
                 ))}
                 <TableCell className="text-center font-semibold">
@@ -706,6 +748,14 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
           )}
         </div>
       )}
+
+      <EditRowModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        modelName={editingModel || ''}
+        initialValues={editingModel ? getRowInitialValues(editingModel) : {}}
+        onSave={saveRowData}
+      />
 
       <PayrollConfirmationModal
         open={showPayrollModal}
