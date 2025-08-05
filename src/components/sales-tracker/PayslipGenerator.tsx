@@ -43,24 +43,22 @@ export const generatePayslipPDF = (data: PayslipData) => {
 
   yPosition += 15;
 
-  // Employee Details (Left Side)
-  pdf.setFontSize(10);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Employee Information', 20, yPosition);
-  yPosition += 8;
+  // Employee Details (Left Side) with Xentrik Logo
+  const xentrikLogo = new Image();
+  xentrikLogo.src = '/lovable-uploads/6f555945-9bc7-43a0-b5aa-a98a240087ba.png';
+  pdf.addImage(xentrikLogo.src, 'PNG', 20, yPosition, 40, 15);
+  yPosition += 20;
   
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(10);
   pdf.text(data.chatterName, 20, yPosition);
-  yPosition += 6;
-  pdf.text('Employee ID: X-001', 20, yPosition);
   yPosition += 6;
   const dateRange = `Cut-off Period: ${format(data.weekStart, 'MM/dd')} - ${format(data.weekEnd, 'MM/dd')}`;
   pdf.text(dateRange, 20, yPosition);
 
   // Company Details (Right Side)
   const rightMargin = pageWidth - 20;
-  let rightYPosition = yPosition - 20;
+  let rightYPosition = yPosition - 14;
   
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
