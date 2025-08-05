@@ -41,7 +41,7 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.setFillColor(255, 255, 0); // Yellow
   pdf.rect(0, 0, pageWidth, 8, 'F');
 
-  yPosition += 15;
+  yPosition += 10;
 
   // Employee Details (Left Side) with Xentrik Logo
   const xentrikLogo = new Image();
@@ -132,7 +132,12 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
   pdf.text(`Total Payout: $${data.totalPayout.toFixed(2)}`, 20, yPosition);
-  yPosition += 25;
+  yPosition += 15;
+
+  // Yellow border before payslip text
+  pdf.setFillColor(255, 255, 0); // Yellow
+  pdf.rect(20, yPosition, pageWidth - 40, 3, 'F');
+  yPosition += 10;
 
   // Payslip paragraph
   pdf.setFont('helvetica', 'normal');
