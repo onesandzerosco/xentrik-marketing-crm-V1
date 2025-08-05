@@ -132,12 +132,12 @@ export const generatePayslipPDF = (data: PayslipData) => {
   pdf.setFont('helvetica', 'bold');
   pdf.setFontSize(10);
   pdf.text(`Total Payout: $${data.totalPayout.toFixed(2)}`, 20, yPosition);
-  yPosition += 10;
+  yPosition += 15;
 
   // Yellow border before payslip text
   pdf.setFillColor(255, 255, 0); // Yellow
   pdf.rect(20, yPosition, pageWidth - 40, 3, 'F');
-  yPosition += 5;
+  yPosition += 15;
 
   // Payslip paragraph
   pdf.setFont('helvetica', 'normal');
