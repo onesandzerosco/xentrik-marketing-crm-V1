@@ -17,6 +17,8 @@ interface PayslipData {
   hourlyRate: number;
   commissionRate: number;
   commissionAmount: number;
+  overtimePay: number;
+  overtimeNotes: string;
   deductionAmount: number;
   deductionNotes: string;
   totalPayout: number;
@@ -112,6 +114,21 @@ export const generatePayslipPDF = (data: PayslipData) => {
   yPosition += 10;
   pdf.text(`Commission Amount: $${data.commissionAmount.toFixed(2)}`, 20, yPosition);
   yPosition += 10;
+  
+  // Add overtime pay if present
+  if (data.overtimePay > 0) {
+    pdf.text(`Overtime Pay: $${data.overtimePay.toFixed(2)}`, 20, yPosition);
+    yPosition += 7;
+    if (data.overtimeNotes) {
+      pdf.setFontSize(10);
+      pdf.text(`Overtime Reason: ${data.overtimeNotes}`, 20, yPosition);
+      yPosition += 10;
+    } else {
+      yPosition += 3;
+    }
+  } else {
+    yPosition += 5;
+  }
   
   // Add deduction if present
   if (data.deductionAmount > 0) {

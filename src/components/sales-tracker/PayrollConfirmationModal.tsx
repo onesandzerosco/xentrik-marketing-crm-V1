@@ -68,6 +68,8 @@ export const PayrollConfirmationModal: React.FC<PayrollConfirmationModalProps> =
           admin_confirmed: true,
           confirmed_hours_worked: hoursWorked,
           confirmed_commission_rate: commissionRate,
+          overtime_pay: overtimePay,
+          overtime_notes: overtimeNotes || null,
           deduction_amount: deductionAmount,
           deduction_notes: deductionNotes || null,
         })

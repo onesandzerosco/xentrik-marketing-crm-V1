@@ -21,6 +21,8 @@ interface SalesEntry {
   admin_confirmed?: boolean;
   confirmed_hours_worked?: number;
   confirmed_commission_rate?: number;
+  overtime_pay?: number;
+  overtime_notes?: string;
   deduction_amount?: number;
   deduction_notes?: string;
 }
@@ -122,6 +124,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const isAdminConfirmed = salesData.length > 0 && salesData[0]?.admin_confirmed;
   const confirmedHours = salesData.length > 0 ? salesData[0]?.confirmed_hours_worked || 0 : 0;
   const confirmedCommissionRate = salesData.length > 0 ? salesData[0]?.confirmed_commission_rate || 0 : 0;
+  const overtimePay = salesData.length > 0 ? salesData[0]?.overtime_pay || 0 : 0;
+  const overtimeNotes = salesData.length > 0 ? salesData[0]?.overtime_notes || '' : '';
   const deductionAmount = salesData.length > 0 ? salesData[0]?.deduction_amount || 0 : 0;
   const deductionNotes = salesData.length > 0 ? salesData[0]?.deduction_notes || '' : '';
 
@@ -400,7 +404,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     const totalSales = getWeekTotal();
     const commissionAmount = (totalSales * confirmedCommissionRate) / 100;
     const hourlyPay = confirmedHours * hourlyRate;
-    const totalPayout = hourlyPay + commissionAmount - deductionAmount;
+    const totalPayout = hourlyPay + commissionAmount + overtimePay - deductionAmount;
 
     const payslipData = {
       chatterName,
@@ -416,6 +420,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       hourlyRate,
       commissionRate: confirmedCommissionRate,
       commissionAmount,
+      overtimePay,
+      overtimeNotes,
       deductionAmount,
       deductionNotes,
       totalPayout,
