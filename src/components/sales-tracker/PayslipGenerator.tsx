@@ -35,13 +35,13 @@ const DAYS_OF_WEEK = [
 export const generatePayslipPDF = (data: PayslipData) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
-  let yPosition = 20;
+  let yPosition = 10;
 
   // Yellow border at top
   pdf.setFillColor(255, 255, 0); // Yellow
   pdf.rect(0, 0, pageWidth, 8, 'F');
 
-  yPosition += 10;
+  yPosition += 8;
 
   // Employee Details (Left Side) with Xentrik Logo
   const xentrikLogo = new Image();
