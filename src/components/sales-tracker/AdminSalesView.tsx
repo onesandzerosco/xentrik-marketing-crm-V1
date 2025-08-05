@@ -5,12 +5,16 @@ import { ChevronLeft, Users } from 'lucide-react';
 import { SalesTrackerTable } from './SalesTrackerTable';
 import { WeekNavigator } from './WeekNavigator';
 import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
+import AdminSalesTable from './AdminSalesTable';
+import ManagerSalesTable from './ManagerSalesTable';
+import EmployeeSalesTable from './EmployeeSalesTable';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Chatter {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface AdminSalesViewProps {
@@ -25,6 +29,11 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(new Date());
+
+  // Separate users by role
+  const adminUsers = chatters.filter(user => user.role === 'Admin');
+  const managerUsers = chatters.filter(user => user.role === 'Manager');
+  const employeeUsers = chatters.filter(user => user.role === 'Employee');
 
   useEffect(() => {
     fetchChatters();
@@ -102,37 +111,35 @@ export const AdminSalesView: React.FC<AdminSalesViewProps> = ({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="bg-secondary/10 border-muted animate-pulse">
-              <CardContent className="p-4">
-                <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-3 bg-muted rounded w-2/3"></div>
-              </CardContent>
-            </Card>
+        <div className="space-y-8">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="space-y-4">
+              <div className="h-6 bg-muted rounded w-48"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(2)].map((_, j) => (
+                  <Card key={j} className="bg-secondary/10 border-muted animate-pulse">
+                    <CardContent className="p-4">
+                      <div className="h-4 bg-muted rounded mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       ) : chatters.length === 0 ? (
         <Card className="bg-secondary/10 border-muted">
           <CardContent className="p-8 text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No chatters found</p>
+            <p className="text-muted-foreground">No users found</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {chatters.map((chatter) => (
-            <Card 
-              key={chatter.id} 
-              className="bg-secondary/10 border-muted hover:border-primary/50 cursor-pointer transition-colors"
-              onClick={() => onSelectChatter(chatter.id)}
-            >
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-foreground mb-1">{chatter.name}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{chatter.email}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="space-y-8">
+          <AdminSalesTable users={adminUsers} onSelectChatter={onSelectChatter} />
+          <ManagerSalesTable users={managerUsers} onSelectChatter={onSelectChatter} />
+          <EmployeeSalesTable users={employeeUsers} onSelectChatter={onSelectChatter} />
         </div>
       )}
     </div>
