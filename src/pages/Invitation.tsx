@@ -52,11 +52,16 @@ const Invitation = () => {
         </div>
 
         {/* Invitation Content Area */}
-        <div className="w-full max-w-4xl flex items-center justify-center">
+        <div className="w-full max-w-4xl flex flex-col items-center justify-center space-y-6">
           <img
             src="/lovable-uploads/66b7d592-3cba-46c5-bf28-3b831144ce6c.png"
             alt="Dolce & Banana Invitation"
             className="w-full h-auto object-contain rounded-lg shadow-lg"
+          />
+          <img
+            src="/lovable-uploads/200e1c01-1345-4a32-919f-4b57ba9618bd.png"
+            alt="Subscription Analytics"
+            className="w-full max-w-md h-auto object-contain rounded-lg shadow-lg"
           />
         </div>
       </div>
