@@ -68,6 +68,24 @@ const Invitation = () => {
             className="w-full h-auto object-contain rounded-lg shadow-lg"
           />
         </div>
+
+        {/* QR Codes Section */}
+        <div className="w-full max-w-4xl flex items-center justify-center gap-8 flex-wrap">
+          <div className="flex-1 min-w-[300px] flex justify-center">
+            <img
+              src="/lovable-uploads/c77234e4-eac0-4fe7-a57e-dd89e9a2f9a0.png"
+              alt="Instagram QR Codes"
+              className="w-full max-w-md h-auto object-contain"
+            />
+          </div>
+          <div className="flex-1 min-w-[300px] flex justify-center">
+            <img
+              src="/lovable-uploads/cfcc1dab-13d4-4b7c-9931-dbb71bd4eaa0.png"
+              alt="WhatsApp QR Code"
+              className="w-full max-w-md h-auto object-contain"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
