@@ -6,7 +6,7 @@ const Invitation = () => {
       <img
         src="/lovable-uploads/3d731fb3-5fad-4e4b-b9fc-83b1a6827f71.png"
         alt="Dolce & Banana Party Invitation"
-        className="w-full h-full object-contain md:object-cover max-w-none"
+        className="w-full h-auto max-w-2xl md:max-w-4xl object-contain"
       />
     </div>
   );
