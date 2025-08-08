@@ -32,9 +32,9 @@ const Invitation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center">
       {/* Logo Section */}
-      <div className="flex justify-center pt-12 pb-8">
+      <div className="flex justify-center mb-8">
         {!logoLoaded && <div className="h-[70px] w-[170px] bg-muted animate-pulse rounded"></div>}
         {logoUrl && (
           <img
@@ -51,14 +51,10 @@ const Invitation = () => {
       </div>
 
       {/* Invitation Content Area */}
-      <div className="container mx-auto px-4">
-        <div className="flex justify-center">
-          <div className="w-full max-w-4xl bg-card rounded-lg border border-border shadow-sm min-h-[600px] p-8">
-            {/* Blank area for invitation content */}
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <p>Invitation content will be placed here</p>
-            </div>
-          </div>
+      <div className="w-full max-w-4xl bg-card rounded-lg border border-border shadow-sm min-h-[600px] p-8">
+        {/* Blank area for invitation content */}
+        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+          <p>Invitation content will be placed here</p>
         </div>
       </div>
     </div>
