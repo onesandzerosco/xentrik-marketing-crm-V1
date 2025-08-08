@@ -39,6 +39,7 @@ import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
 import CreatorsData from './pages/CreatorsData';
 import CustomsTracker from './pages/CustomsTracker';
 import SalesTracker from './pages/SalesTracker';
+import Invitation from './pages/Invitation';
 
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
@@ -97,6 +98,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/invitation" element={<Invitation />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/creators" element={<ProtectedRoute><Creators /></ProtectedRoute>} />
       <Route path="/creators/onboard" element={<ProtectedRoute><CreatorOnboarding /></ProtectedRoute>} />
