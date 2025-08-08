@@ -52,11 +52,12 @@ const Invitation = () => {
         </div>
 
         {/* Invitation Content Area */}
-        <div className="w-full max-w-4xl bg-card rounded-lg border border-border shadow-sm min-h-[600px] p-8">
-          {/* Blank area for invitation content */}
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <p>Invitation content will be placed here</p>
-          </div>
+        <div className="w-full max-w-4xl flex items-center justify-center">
+          <img
+            src="/lovable-uploads/66b7d592-3cba-46c5-bf28-3b831144ce6c.png"
+            alt="Dolce & Banana Invitation"
+            className="w-full h-auto object-contain rounded-lg shadow-lg"
+          />
         </div>
       </div>
     </div>
