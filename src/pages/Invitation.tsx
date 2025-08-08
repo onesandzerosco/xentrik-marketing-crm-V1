@@ -32,17 +32,17 @@ const Invitation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="flex flex-col items-center space-y-8">
+    <div className="min-h-screen bg-background flex items-center justify-center p-2 sm:p-4">
+      <div className="flex flex-col items-center space-y-6 sm:space-y-8 w-full max-w-6xl">
         {/* Logo Section */}
-        <div className="flex justify-center">
-          {!logoLoaded && <div className="h-[70px] w-[170px] bg-muted animate-pulse rounded"></div>}
+        <div className="flex justify-center w-full">
+          {!logoLoaded && <div className="h-[50px] sm:h-[70px] w-[120px] sm:w-[170px] bg-muted animate-pulse rounded"></div>}
           {logoUrl && (
             <img
               src={logoUrl}
               alt="Xentrik Marketing"
               className={cn(
-                "h-[70px] w-auto object-contain transition-opacity duration-300",
+                "h-[50px] sm:h-[70px] w-auto object-contain transition-opacity duration-300",
                 logoLoaded ? "opacity-100" : "opacity-0"
               )}
               style={{ willChange: "transform" }}
@@ -52,37 +52,37 @@ const Invitation = () => {
         </div>
 
         {/* Invitation Content Area */}
-        <div className="w-full max-w-4xl flex items-center justify-center">
+        <div className="w-full flex items-center justify-center px-2">
           <img
             src="/lovable-uploads/66b7d592-3cba-46c5-bf28-3b831144ce6c.png"
             alt="Dolce & Banana Invitation"
-            className="w-full h-auto object-contain rounded-lg shadow-lg"
+            className="w-full h-auto object-contain rounded-lg shadow-lg max-w-4xl"
           />
         </div>
 
         {/* Subscription Analytics Proof */}
-        <div className="w-full max-w-2xl flex items-center justify-center">
+        <div className="w-full flex items-center justify-center px-2">
           <img
             src="/lovable-uploads/8b1a0f55-e02d-4069-ad88-2a6695e6fee4.png"
             alt="Subscription Analytics Proof"
-            className="w-full h-auto object-contain rounded-lg shadow-lg"
+            className="w-full h-auto object-contain rounded-lg shadow-lg max-w-2xl"
           />
         </div>
 
         {/* QR Codes Section */}
-        <div className="w-full max-w-4xl flex items-center justify-center gap-8 flex-wrap">
-          <div className="flex-1 min-w-[300px] flex justify-center">
+        <div className="w-full flex items-center justify-center gap-2 sm:gap-4 md:gap-8 px-2">
+          <div className="flex-1 flex justify-center">
             <img
               src="/lovable-uploads/c77234e4-eac0-4fe7-a57e-dd89e9a2f9a0.png"
               alt="Instagram QR Codes"
-              className="w-full max-w-md h-auto object-contain"
+              className="w-full h-auto object-contain max-w-[140px] sm:max-w-[200px] md:max-w-md"
             />
           </div>
-          <div className="flex-1 min-w-[300px] flex justify-center">
+          <div className="flex-1 flex justify-center">
             <img
               src="/lovable-uploads/cfcc1dab-13d4-4b7c-9931-dbb71bd4eaa0.png"
               alt="WhatsApp QR Code"
-              className="w-full max-w-md h-auto object-contain"
+              className="w-full h-auto object-contain max-w-[140px] sm:max-w-[200px] md:max-w-md"
             />
           </div>
         </div>
