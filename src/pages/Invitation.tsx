@@ -4,7 +4,7 @@ const Invitation = () => {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-black p-0 m-0">
       <img
-        src="/lovable-uploads/82099765-2a36-411b-ab04-253624a4d883.png"
+        src="/lovable-uploads/3d731fb3-5fad-4e4b-b9fc-83b1a6827f71.png"
         alt="Dolce & Banana Party Invitation"
         className="w-full h-full object-contain md:object-cover max-w-none"
       />
