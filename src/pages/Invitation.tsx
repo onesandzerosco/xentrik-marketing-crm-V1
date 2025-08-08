@@ -32,29 +32,31 @@ const Invitation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-      {/* Logo Section */}
-      <div className="flex justify-center mb-8">
-        {!logoLoaded && <div className="h-[70px] w-[170px] bg-muted animate-pulse rounded"></div>}
-        {logoUrl && (
-          <img
-            src={logoUrl}
-            alt="Xentrik Marketing"
-            className={cn(
-              "h-[70px] w-auto object-contain transition-opacity duration-300",
-              logoLoaded ? "opacity-100" : "opacity-0"
-            )}
-            style={{ willChange: "transform" }}
-            onLoad={handleImageLoad}
-          />
-        )}
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="flex flex-col items-center space-y-8">
+        {/* Logo Section */}
+        <div className="flex justify-center">
+          {!logoLoaded && <div className="h-[70px] w-[170px] bg-muted animate-pulse rounded"></div>}
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt="Xentrik Marketing"
+              className={cn(
+                "h-[70px] w-auto object-contain transition-opacity duration-300",
+                logoLoaded ? "opacity-100" : "opacity-0"
+              )}
+              style={{ willChange: "transform" }}
+              onLoad={handleImageLoad}
+            />
+          )}
+        </div>
 
-      {/* Invitation Content Area */}
-      <div className="w-full max-w-4xl bg-card rounded-lg border border-border shadow-sm min-h-[600px] p-8">
-        {/* Blank area for invitation content */}
-        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-          <p>Invitation content will be placed here</p>
+        {/* Invitation Content Area */}
+        <div className="w-full max-w-4xl bg-card rounded-lg border border-border shadow-sm min-h-[600px] p-8">
+          {/* Blank area for invitation content */}
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <p>Invitation content will be placed here</p>
+          </div>
         </div>
       </div>
     </div>
