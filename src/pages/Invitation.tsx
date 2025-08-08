@@ -32,25 +32,21 @@ const Invitation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-2 sm:p-4">
-      <div className="flex flex-col items-center space-y-6 sm:space-y-8 w-full max-w-6xl">
-        {/* Logo Section */}
-        <div className="flex justify-center w-full mb-4">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-6">
+      <div className="w-full max-w-6xl space-y-8">
+        {/* Logo Section - Always visible at top */}
+        <div className="flex justify-center w-full py-4">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt="Xentrik Marketing"
-              className={cn(
-                "h-[50px] sm:h-[70px] w-auto object-contain transition-opacity duration-300",
-                logoLoaded ? "opacity-100" : "opacity-50"
-              )}
-              style={{ willChange: "transform" }}
+              className="h-[60px] sm:h-[80px] w-auto object-contain"
               onLoad={handleImageLoad}
               onError={() => console.log('Logo failed to load from:', logoUrl)}
             />
           ) : (
-            <div className="h-[50px] sm:h-[70px] w-[120px] sm:w-[170px] bg-muted animate-pulse rounded flex items-center justify-center">
-              <span className="text-xs text-muted-foreground">Xentrik</span>
+            <div className="h-[60px] sm:h-[80px] w-[150px] sm:w-[200px] bg-gray-200 rounded flex items-center justify-center border">
+              <span className="text-lg font-bold text-gray-700">XENTRIK</span>
             </div>
           )}
         </div>
