@@ -59,6 +59,15 @@ const Invitation = () => {
             className="w-full h-auto object-contain rounded-lg shadow-lg"
           />
         </div>
+
+        {/* Subscription Analytics Proof */}
+        <div className="w-full max-w-2xl flex items-center justify-center">
+          <img
+            src="/lovable-uploads/8b1a0f55-e02d-4069-ad88-2a6695e6fee4.png"
+            alt="Subscription Analytics Proof"
+            className="w-full h-auto object-contain rounded-lg shadow-lg"
+          />
+        </div>
       </div>
     </div>
   );
