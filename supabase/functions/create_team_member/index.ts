@@ -43,17 +43,21 @@ serve(async (req) => {
 
     console.log('User created:', userData.user?.id)
 
-    // Update the profile with all the role information
+    // Wait a moment for trigger to create profile, then update it
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Upsert the profile with all the role information
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .update({
+      .upsert({
+        id: userData.user?.id,
         name,
+        email,
         role: primary_role,
         roles: additional_roles || [],
         geographic_restrictions: geographic_restrictions || [],
         status: 'Active'
-      })
-      .eq('id', userData.user?.id)
+      }, { onConflict: 'id' })
 
     if (profileError) {
       console.error('Error updating profile:', profileError)
