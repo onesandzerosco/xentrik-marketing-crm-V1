@@ -9,18 +9,18 @@ export const creatorOnboardingSchema = z.object({
     required_error: "Please select a gender",
   }),
   email: z.string().email("Please enter a valid email address"),
-  bio: z.string().optional(),
+  bio: z.string().min(1, "Bio is required"),
   
   // Contact Info
-  telegramUsername: z.string().optional(),
-  whatsappNumber: z.string().optional(),
+  telegramUsername: z.string().min(1, "Telegram username is required"),
+  whatsappNumber: z.string().min(1, "WhatsApp number is required"),
   
   // Social Media
-  instagram: z.string().optional(),
-  tiktok: z.string().optional(),
-  twitter: z.string().optional(),
-  reddit: z.string().optional(),
-  youtube: z.string().optional(),
+  instagram: z.string().min(1, "Instagram is required"),
+  tiktok: z.string().min(1, "TikTok is required"),
+  twitter: z.string().min(1, "Twitter is required"),
+  reddit: z.string().min(1, "Reddit is required"),
+  youtube: z.string().min(1, "YouTube is required"),
   
   // Custom Social Links (can be extended)
   customSocialLinks: z.array(
@@ -28,13 +28,15 @@ export const creatorOnboardingSchema = z.object({
       platform: z.string().min(1, "Platform name is required"),
       url: z.string().url("Please enter a valid URL"),
     })
-  ).optional(),
+  ).min(1, "At least one custom social link is required"),
   
   // Profile Picture
-  profilePicture: z.any().optional(),
+  profilePicture: z.any().refine(val => val !== undefined && val !== null, {
+    message: "Profile picture is required",
+  }),
   
   // Additional Information
-  notes: z.string().optional(),
+  notes: z.string().min(1, "Notes are required"),
   
   // Consent
   termsAccepted: z.boolean().refine(val => val === true, {
@@ -46,7 +48,18 @@ export type CreatorOnboardingFormValues = z.infer<typeof creatorOnboardingSchema
 
 // Default values for the form
 export const defaultCreatorOnboardingValues: Partial<CreatorOnboardingFormValues> = {
+  name: "",
   gender: "Female",
-  customSocialLinks: [],
+  email: "",
+  bio: "",
+  telegramUsername: "",
+  whatsappNumber: "",
+  instagram: "",
+  tiktok: "",
+  twitter: "",
+  reddit: "",
+  youtube: "",
+  customSocialLinks: [{ platform: "", url: "" }],
+  notes: "",
   termsAccepted: false,
 };
