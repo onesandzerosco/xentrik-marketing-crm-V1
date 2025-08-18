@@ -32,7 +32,7 @@ const FanInfoSection: React.FC<FanInfoSectionProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="fan_username">Fan Username (Optional)</Label>
+          <Label htmlFor="fan_username">Fan Username</Label>
           <Input
             id="fan_username"
             value={formData.fan_username}

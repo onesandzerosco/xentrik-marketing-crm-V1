@@ -18,7 +18,7 @@ const AttachmentsSection: React.FC<AttachmentsSectionProps> = ({
 }) => {
   return (
     <div>
-      <Label htmlFor="attachments">Attachments (Optional)</Label>
+      <Label htmlFor="attachments">Attachments</Label>
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Input

@@ -35,7 +35,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name (Optional)</FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
                 <Input placeholder="Your full name" {...field} className="min-h-[44px]" />
               </FormControl>
@@ -63,7 +63,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.nickname"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nickname (Optional)</FormLabel>
+              <FormLabel>Nickname</FormLabel>
               <FormControl>
                 <Input placeholder="Preferred name" {...field} className="min-h-[44px]" />
               </FormControl>
@@ -219,7 +219,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.religion"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Religion (Optional)</FormLabel>
+              <FormLabel>Religion</FormLabel>
               <FormControl>
                 <Input placeholder="Religion" {...field} />
               </FormControl>
@@ -361,7 +361,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.workplace"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Where do you work? (Optional)</FormLabel>
+              <FormLabel>Where do you work?</FormLabel>
               <FormControl>
                 <Input placeholder="Workplace" {...field} />
               </FormControl>
