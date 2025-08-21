@@ -63,7 +63,8 @@ export const filterAndSortEmployees = (
           "Chatter": 3,
           "VA": 4,
           "Developer": 5,
-          "Creator": 6
+          "Creator": 6,
+          "HR / Work Force": 7
         };
         return (roleOrder[a.role] || 999) - (roleOrder[b.role] || 999);
       default:

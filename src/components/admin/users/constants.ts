@@ -11,7 +11,8 @@ export const ADDITIONAL_ROLES: string[] = [
   "Developer",
   "Creator",
   "Marketing Team",
-  "Outreach Team"
+  "Outreach Team",
+  "HR / Work Force"
 ];
 
 // Define exclusive roles that cannot be combined with other roles

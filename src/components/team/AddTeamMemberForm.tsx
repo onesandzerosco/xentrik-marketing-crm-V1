@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 // Define available role types
 const PRIMARY_ROLES = ["Admin", "Manager", "Employee"];
-const ADDITIONAL_ROLES = ["Admin", "VA", "Chatter", "Developer"];
+const ADDITIONAL_ROLES = ["Admin", "VA", "Chatter", "Developer", "HR / Work Force"];
 
 interface FormState {
   name: string;

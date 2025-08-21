@@ -64,6 +64,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+  const canApprovePayroll = isAdmin || userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
   const canEdit = isAdmin || effectiveChatterId === user?.id;
 
   // Calculate week start (Thursday) - Fixed logic
@@ -653,8 +654,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
             </Button>
           )}
 
-          {/* Admin buttons */}
-          {isAdmin && isSalesLocked && !isAdminConfirmed && (
+          {/* Admin and HR buttons */}
+          {canApprovePayroll && isSalesLocked && !isAdminConfirmed && (
             <Button 
               onClick={() => setShowPayrollModal(true)}
               className="flex items-center gap-2"
@@ -665,7 +666,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
             </Button>
           )}
           
-          {isAdmin && isAdminConfirmed && (
+          {canApprovePayroll && isAdminConfirmed && (
             <Button 
               onClick={downloadPayslip}
               className="flex items-center gap-2"

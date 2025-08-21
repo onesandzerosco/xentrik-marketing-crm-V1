@@ -9,7 +9,7 @@ export interface RolePermission {
 }
 
 // Only additional roles should be shown in Permission Settings
-export const PERMISSION_ROLES = ['Admin', 'VA', 'Chatter', 'Developer'];
+export const PERMISSION_ROLES = ['Admin', 'VA', 'Chatter', 'Developer', 'HR / Work Force'];
 
 export const DEFAULT_PERMISSIONS: RolePermission[] = [
   {
@@ -41,6 +41,14 @@ export const DEFAULT_PERMISSIONS: RolePermission[] = [
     preview: true,
     edit: true,
     upload: true,
+    download: true,
+    delete: false
+  },
+  {
+    rolename: 'HR / Work Force',
+    preview: true,
+    edit: false,
+    upload: false,
     download: true,
     delete: false
   }

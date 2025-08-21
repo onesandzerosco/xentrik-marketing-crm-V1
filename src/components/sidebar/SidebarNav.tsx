@@ -126,7 +126,7 @@ const navGroups: NavGroup[] = [
         path: '/sales-tracker',
         label: 'Sales Tracker',
         icon: <DollarSign className="h-5 w-5" />,
-        roles: ['Admin', 'VA', 'Chatter'],
+        roles: ['Admin', 'VA', 'Chatter', 'HR / Work Force'],
         hideForCreator: true,
       },
       {
@@ -192,6 +192,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
     
+    // HR / Work Force employees should see Sales Tracker and Shared Files
+    if (userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
+      return item.path === '/sales-tracker' || item.path === '/shared-files';
+    }
+    
     // Skip adminOnly items if user is not admin
     if (item.adminOnly && !isAdmin) return false;
     
@@ -237,6 +242,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     // VA employees see Chatting Team + Marketing Team (Shared Files is handled separately)
     if (userRole === 'VA' || userRoles?.includes('VA')) {
       return groupTitle === 'Chatting Team' || groupTitle === 'Marketing Team';
+    }
+    
+    // HR / Work Force employees see Chatting Team (for Sales Tracker)
+    if (userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
+      return groupTitle === 'Chatting Team';
     }
 
     return true;
@@ -285,7 +295,8 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         visibleItems = visibleItems.filter(item => item.path === '/shared-files');
       } else if (group.title === 'Administrative Team' && (
         userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
-        userRole === 'Chatter' || userRoles?.includes('Chatter')
+        userRole === 'Chatter' || userRoles?.includes('Chatter') ||
+        userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')
       )) {
         // Marketing Team and Chatter shouldn't see Administrative Team items at all
         return;
@@ -321,7 +332,8 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
           visibleItems = visibleItems.filter(item => item.path === '/shared-files');
         } else if (group.title === 'Administrative Team' && (
           userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
-          userRole === 'Chatter' || userRoles?.includes('Chatter')
+          userRole === 'Chatter' || userRoles?.includes('Chatter') ||
+          userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')
         )) {
           // Marketing Team and Chatter shouldn't see Administrative Team items at all
           return null;

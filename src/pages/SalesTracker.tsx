@@ -25,12 +25,15 @@ const SalesTracker: React.FC = () => {
     userRole === 'VA' || 
     userRoles?.includes('VA') ||
     userRole === 'Chatter' || 
-    userRoles?.includes('Chatter')
+    userRoles?.includes('Chatter') ||
+    userRole === 'HR / Work Force' || 
+    userRoles?.includes('HR / Work Force')
   );
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const isVA = userRole === 'VA' || userRoles?.includes('VA');
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
+  const isHR = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
 
   if (!hasAccess) {
     return (
@@ -48,7 +51,7 @@ const SalesTracker: React.FC = () => {
   return (
     <div className="min-h-screen bg-premium-dark">
       <div className="container mx-auto p-4">
-        {(isAdmin || isVA) ? (
+        {(isAdmin || isVA || isHR) ? (
           <AdminSalesView 
             selectedChatterId={selectedChatterId}
             onSelectChatter={setSelectedChatterId}
