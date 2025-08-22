@@ -281,12 +281,14 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     </SidebarMenuItem>
   );
 
-  const isAdminOrDeveloper = userRole === 'Admin' || userRoles?.includes('Admin') || 
-                           userRole === 'Developer' || userRoles?.includes('Developer') ||
-                           userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+  // Check if user should get admin-style navigation with grouped categories
+  const shouldShowAdminNavigation = userRole === 'Admin' || userRoles?.includes('Admin') || 
+                                   userRole === 'Developer' || userRoles?.includes('Developer') ||
+                                   userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force') ||
+                                   isAdmin; // Use the isAdmin prop as final authority
 
   // For non-admin users, collect all visible items into a single group to avoid spacing issues
-  if (!isAdminOrDeveloper) {
+  if (!shouldShowAdminNavigation) {
     const allVisibleItems: NavItem[] = [];
     
     navGroups.forEach((group) => {
