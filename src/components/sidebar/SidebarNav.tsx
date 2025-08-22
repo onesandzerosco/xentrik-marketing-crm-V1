@@ -192,10 +192,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
     
-    // HR / Work Force employees should see Sales Tracker and Shared Files
-    if (userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
-      return item.path === '/sales-tracker' || item.path === '/shared-files';
-    }
+    // HR / Work Force employees should see everything like Admin (removed restriction)
     
     // Skip adminOnly items if user is not admin
     if (item.adminOnly && !isAdmin) return false;
@@ -223,9 +220,10 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   };
 
   const shouldShowGroup = (groupTitle: string): boolean => {
-    // Admin and Developer can see everything
+    // Admin, Developer, and HR / Work Force can see everything
     if (userRole === 'Admin' || userRoles?.includes('Admin') || 
-        userRole === 'Developer' || userRoles?.includes('Developer')) {
+        userRole === 'Developer' || userRoles?.includes('Developer') ||
+        userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
       return true;
     }
 
@@ -244,10 +242,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return groupTitle === 'Chatting Team' || groupTitle === 'Marketing Team';
     }
     
-    // HR / Work Force employees see Chatting Team (for Sales Tracker)
-    if (userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
-      return groupTitle === 'Chatting Team';
-    }
+    // HR / Work Force now handled above with Admin/Developer
 
     return true;
   };
@@ -279,7 +274,8 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   );
 
   const isAdminOrDeveloper = userRole === 'Admin' || userRoles?.includes('Admin') || 
-                           userRole === 'Developer' || userRoles?.includes('Developer');
+                           userRole === 'Developer' || userRoles?.includes('Developer') ||
+                           userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
 
   // For non-admin users, collect all visible items into a single group to avoid spacing issues
   if (!isAdminOrDeveloper) {
@@ -295,8 +291,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
         visibleItems = visibleItems.filter(item => item.path === '/shared-files');
       } else if (group.title === 'Administrative Team' && (
         userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
-        userRole === 'Chatter' || userRoles?.includes('Chatter') ||
-        userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')
+        userRole === 'Chatter' || userRoles?.includes('Chatter')
       )) {
         // Marketing Team and Chatter shouldn't see Administrative Team items at all
         return;
@@ -332,8 +327,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
           visibleItems = visibleItems.filter(item => item.path === '/shared-files');
         } else if (group.title === 'Administrative Team' && (
           userRole === 'Marketing Team' || userRoles?.includes('Marketing Team') ||
-          userRole === 'Chatter' || userRoles?.includes('Chatter') ||
-          userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')
+          userRole === 'Chatter' || userRoles?.includes('Chatter')
         )) {
           // Marketing Team and Chatter shouldn't see Administrative Team items at all
           return null;
