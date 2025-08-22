@@ -674,6 +674,28 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       {/* Action Buttons */}
       {models.length > 0 && (
         <div className="flex gap-2 justify-end pt-4 border-t">
+          {/* Debug logging for lock button visibility */}
+          {(() => {
+            const hasChatterRole = userRole === 'Chatter' || userRoles?.includes('Chatter');
+            const isOwnData = effectiveChatterId === user?.id;
+            const showLockButton = hasChatterRole && isOwnData && isCurrentWeek && !isSalesLocked;
+            
+            console.log('Lock button visibility check:', {
+              hasChatterRole,
+              userRole,
+              userRoles,
+              isOwnData,
+              effectiveChatterId,
+              userId: user?.id,
+              isCurrentWeek,
+              isSalesLocked,
+              modelsLength: models.length,
+              finalCondition: showLockButton && models.length > 0
+            });
+            
+            return null;
+          })()}
+          
           {/* Chatter buttons - Any user with Chatter role can lock their own sales */}
           {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isCurrentWeek && !isSalesLocked && (
             <Button 
