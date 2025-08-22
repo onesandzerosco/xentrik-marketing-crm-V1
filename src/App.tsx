@@ -32,7 +32,6 @@ import CreatorFiles from './pages/CreatorFiles';
 import TeamMemberEdit from './pages/TeamMemberEdit';
 import VoiceGeneration from './pages/VoiceGeneration';
 import VoiceClone from './pages/VoiceClone';
-import VoiceCloneAdmin from './pages/VoiceCloneAdmin';
 import CreatorUpload from './pages/CreatorUpload';
 import AccessControlPanel from './pages/AccessControlPanel';
 import CreatorInviteOnboarding from './pages/CreatorOnboarding/CreatorInviteOnboarding';
@@ -124,7 +123,6 @@ const AppRoutes = () => {
       <Route path="/shared/:shareCode" element={<SharedFiles />} />
       <Route path="/voice-generation" element={<ProtectedRoute><VoiceGeneration /></ProtectedRoute>} />
       <Route path="/voice-clone" element={<ProtectedRoute><VoiceClone /></ProtectedRoute>} />
-      <Route path="/voice-clone/admin" element={<ProtectedRoute><VoiceCloneAdmin /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
       <Route path="/customs-tracker" element={<ProtectedRoute><CustomsTracker /></ProtectedRoute>} />
       <Route path="/sales-tracker" element={<ProtectedRoute><SalesTracker /></ProtectedRoute>} />

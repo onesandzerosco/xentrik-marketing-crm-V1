@@ -141,12 +141,6 @@ const navGroups: NavGroup[] = [
         label: 'Voice Clone',
         icon: <VolumeX className="h-5 w-5" />,
       },
-      {
-        path: '/voice-clone/admin',
-        label: 'Voice Clone Admin',
-        icon: <VolumeX className="h-5 w-5" />,
-        adminOnly: true,
-      },
     ]
   },
   {
