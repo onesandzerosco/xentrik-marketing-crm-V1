@@ -916,6 +916,33 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_sources: {
+        Row: {
+          bucket_key: string
+          created_at: string
+          emotion: string
+          id: string
+          model_name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_key: string
+          created_at?: string
+          emotion: string
+          id?: string
+          model_name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_key?: string
+          created_at?: string
+          emotion?: string
+          id?: string
+          model_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

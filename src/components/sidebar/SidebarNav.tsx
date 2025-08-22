@@ -23,7 +23,8 @@ import {
   ListCheck,
   Database,
   Kanban,
-  DollarSign
+  DollarSign,
+  VolumeX
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -134,6 +135,17 @@ const navGroups: NavGroup[] = [
         label: 'Voice Generator',
         icon: <Mic className="h-5 w-5" />,
         hideForCreator: true,
+      },
+      {
+        path: '/voice-clone',
+        label: 'Voice Clone',
+        icon: <VolumeX className="h-5 w-5" />,
+      },
+      {
+        path: '/voice-clone/admin',
+        label: 'Voice Clone Admin',
+        icon: <VolumeX className="h-5 w-5" />,
+        adminOnly: true,
       },
     ]
   },
