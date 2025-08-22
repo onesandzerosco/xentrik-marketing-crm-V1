@@ -173,7 +173,8 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   const { userRole, userRoles, isCreator } = useAuth();
   
   const shouldShowItem = (item: NavItem): boolean => {
-    // Admin users can see ALL modules regardless of other restrictions
+    // CRITICAL: Admin users can see ALL modules regardless of other restrictions
+    // This must be the FIRST check and return immediately
     if (userRole === 'Admin' || userRoles?.includes('Admin')) {
       return !item.hidden; // Only skip completely hidden items
     }
@@ -186,20 +187,21 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return item.path === '/marketing-files' || item.path === '/creators-data';
     }
     
-    // Chatter employees should ONLY see Chatting Team items (unless they're also Admin)
-    if ((userRole === 'Chatter' || userRoles?.includes('Chatter')) && 
-        !(userRole === 'Admin' || userRoles?.includes('Admin'))) {
+    // Chatter employees should ONLY see Chatting Team items (this won't affect Admin-Chatter users)
+    if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
       return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker';
     }
     
-    // VA employees should see Chatting Team items + Marketing Files + Shared Files + Sales Tracker (unless they're also Admin)
-    if ((userRole === 'VA' || userRoles?.includes('VA')) && 
-        !(userRole === 'Admin' || userRoles?.includes('Admin'))) {
+    // VA employees should see specific items
+    if (userRole === 'VA' || userRoles?.includes('VA')) {
       return item.path === '/creators-data' || item.path === '/voice-generation' || item.path === '/sales-tracker' ||
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
     
-    // HR / Work Force employees should see everything like Admin (removed restriction)
+    // HR / Work Force employees should see everything like Admin
+    if (userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
+      return !item.hidden;
+    }
     
     // Skip adminOnly items if user is not admin
     if (item.adminOnly && !isAdmin) return false;
@@ -211,9 +213,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     
     // Skip items that should be hidden for creators if the user is a creator
     if (item.hideForCreator && isCreator) return false;
-    
-    // Skip items that should be hidden for chatters if the user is a chatter
-    if (item.hideForChatter && (userRole === 'Chatter' || userRoles?.includes('Chatter'))) return false;
     
     // Check specific roles if defined
     if (item.roles) {
