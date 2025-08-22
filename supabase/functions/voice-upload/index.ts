@@ -44,40 +44,8 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, roles')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    console.log('Profile check:', { profile, profileError, userId: user.id });
-
-    if (profileError) {
-      console.log('Profile query error:', profileError);
-      return new Response(
-        JSON.stringify({ error: 'Error checking admin access' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!profile) {
-      console.log('No profile found for user:', user.id);
-      return new Response(
-        JSON.stringify({ error: 'User profile not found. Please contact an administrator.' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const isAdmin = profile.role === 'Admin' || profile.roles?.includes('Admin');
-    console.log('Admin check:', { role: profile.role, roles: profile.roles, isAdmin });
-
-    if (!isAdmin) {
-      return new Response(
-        JSON.stringify({ error: `Admin access required. Current role: ${profile.role}` }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // User is authenticated, allow upload for everyone
+    console.log('Authenticated user uploading:', { userId: user.id, email: user.email });
 
     if (req.method !== 'POST') {
       return new Response(
