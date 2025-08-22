@@ -142,14 +142,18 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       isCurrentWeek,
       isSalesLocked,
       userRole,
+      userRoles,
       effectiveChatterId,
+      userId: user?.id,
       salesDataLength: salesData.length,
       modelsLength: models.length,
       canEdit,
       isWeekEditable,
-      areInputsDisabled
+      areInputsDisabled,
+      hasChatterRole: userRole === 'Chatter' || userRoles?.includes('Chatter'),
+      effectiveChatterMatches: effectiveChatterId === user?.id
     });
-  }, [isAdmin, isCurrentWeek, isSalesLocked, userRole, effectiveChatterId, salesData, models, canEdit, isWeekEditable, areInputsDisabled]);
+  }, [isAdmin, isCurrentWeek, isSalesLocked, userRole, userRoles, effectiveChatterId, user?.id, salesData, models, canEdit, isWeekEditable, areInputsDisabled]);
 
   const fetchData = async () => {
     if (!effectiveChatterId) return;
