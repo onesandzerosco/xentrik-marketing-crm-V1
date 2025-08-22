@@ -186,13 +186,15 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
       return item.path === '/marketing-files' || item.path === '/creators-data';
     }
     
-    // Chatter employees should ONLY see Chatting Team items
-    if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
+    // Chatter employees should ONLY see Chatting Team items (unless they're also Admin)
+    if ((userRole === 'Chatter' || userRoles?.includes('Chatter')) && 
+        !(userRole === 'Admin' || userRoles?.includes('Admin'))) {
       return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker';
     }
     
-    // VA employees should see Chatting Team items + Marketing Files + Shared Files + Sales Tracker (but not Customs Tracker)
-    if (userRole === 'VA' || userRoles?.includes('VA')) {
+    // VA employees should see Chatting Team items + Marketing Files + Shared Files + Sales Tracker (unless they're also Admin)
+    if ((userRole === 'VA' || userRoles?.includes('VA')) && 
+        !(userRole === 'Admin' || userRoles?.includes('Admin'))) {
       return item.path === '/creators-data' || item.path === '/voice-generation' || item.path === '/sales-tracker' ||
              item.path === '/marketing-files' || item.path === '/shared-files';
     }
