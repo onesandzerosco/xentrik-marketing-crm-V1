@@ -51,19 +51,44 @@ const VoiceClone: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingCreators, setIsLoadingCreators] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
-  const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+  const isAdmin = userProfile?.role === 'Admin' || userProfile?.roles?.includes('Admin');
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       fetchVoiceSources();
-      if (isAdmin) {
+      fetchUserProfile();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role, roles')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return;
+      }
+
+      setUserProfile(data);
+      
+      // Only fetch creators if user is admin
+      if (data?.role === 'Admin' || data?.roles?.includes('Admin')) {
         fetchCreators();
       }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
-  }, [isAuthenticated, isAdmin]);
+  };
 
   const fetchCreators = async () => {
     try {
@@ -335,7 +360,7 @@ const VoiceClone: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="generate" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="generate">Voice Generation</TabsTrigger>
               {isAdmin && <TabsTrigger value="admin">Upload Voices</TabsTrigger>}
             </TabsList>

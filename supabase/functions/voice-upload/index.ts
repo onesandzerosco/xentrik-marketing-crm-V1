@@ -49,14 +49,22 @@ serve(async (req) => {
       .from('profiles')
       .select('role, roles')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     console.log('Profile check:', { profile, profileError, userId: user.id });
 
-    if (profileError || !profile) {
-      console.log('Profile not found or error:', profileError);
+    if (profileError) {
+      console.log('Profile query error:', profileError);
       return new Response(
-        JSON.stringify({ error: 'Admin access required - profile not found' }),
+        JSON.stringify({ error: 'Error checking admin access' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!profile) {
+      console.log('No profile found for user:', user.id);
+      return new Response(
+        JSON.stringify({ error: 'User profile not found. Please contact an administrator.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -66,7 +74,7 @@ serve(async (req) => {
 
     if (!isAdmin) {
       return new Response(
-        JSON.stringify({ error: `Admin access required - current role: ${profile.role}, roles: ${JSON.stringify(profile.roles)}` }),
+        JSON.stringify({ error: `Admin access required. Current role: ${profile.role}` }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
