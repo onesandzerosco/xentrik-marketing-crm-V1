@@ -45,15 +45,28 @@ serve(async (req) => {
     }
 
     // Check if user is admin
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, roles')
       .eq('id', user.id)
       .single();
 
-    if (!profile || (profile.role !== 'Admin' && !profile.roles?.includes('Admin'))) {
+    console.log('Profile check:', { profile, profileError, userId: user.id });
+
+    if (profileError || !profile) {
+      console.log('Profile not found or error:', profileError);
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Admin access required - profile not found' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const isAdmin = profile.role === 'Admin' || profile.roles?.includes('Admin');
+    console.log('Admin check:', { role: profile.role, roles: profile.roles, isAdmin });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: `Admin access required - current role: ${profile.role}, roles: ${JSON.stringify(profile.roles)}` }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
