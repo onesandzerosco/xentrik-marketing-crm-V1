@@ -173,6 +173,11 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   const { userRole, userRoles, isCreator } = useAuth();
   
   const shouldShowItem = (item: NavItem): boolean => {
+    // Admin users can see ALL modules regardless of other restrictions
+    if (userRole === 'Admin' || userRoles?.includes('Admin')) {
+      return !item.hidden; // Only skip completely hidden items
+    }
+    
     // Skip items that are completely hidden
     if (item.hidden) return false;
     
