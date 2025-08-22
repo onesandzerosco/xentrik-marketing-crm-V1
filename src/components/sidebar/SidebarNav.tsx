@@ -195,7 +195,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     
     // Chatter employees should ONLY see Chatting Team items (this won't affect Admin-Chatter users)
     if (userRole === 'Chatter' || userRoles?.includes('Chatter')) {
-      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker';
+      return item.path === '/creators-data' || item.path === '/customs-tracker' || item.path === '/voice-generation' || item.path === '/sales-tracker' || item.path === '/voice-clone';
     }
     
     // VA employees should see specific items
