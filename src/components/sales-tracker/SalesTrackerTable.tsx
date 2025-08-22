@@ -696,17 +696,21 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
             return null;
           })()}
           
-          {/* Lock Sales button - Admins and Chatters can lock their own sales */}
+          {/* Lock Sales button - Chatters and Non-HR Admins can lock their own sales */}
           {(() => {
             const hasChatterRole = userRole === 'Chatter' || userRoles?.includes('Chatter');
             const hasAdminRole = userRole === 'Admin' || userRoles?.includes('Admin');
-            const canLockSales = hasChatterRole || hasAdminRole;
+            const isHRWorkforce = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+            
+            // HR/Workforce users should not be able to lock sales, only approve/reject
+            const canLockSales = hasChatterRole || (hasAdminRole && !isHRWorkforce);
             const isOwnData = effectiveChatterId === user?.id;
             const shouldShowLockButton = canLockSales && isOwnData && isCurrentWeek && !isSalesLocked;
             
             console.log('DETAILED Lock button check:', {
               hasChatterRole,
               hasAdminRole,
+              isHRWorkforce,
               canLockSales,
               userRole,
               userRoles,
@@ -720,6 +724,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
               'userRoles?.includes(Chatter)': userRoles?.includes('Chatter'),
               'userRole === Admin': userRole === 'Admin',
               'userRoles?.includes(Admin)': userRoles?.includes('Admin'),
+              'userRole === HR / Work Force': userRole === 'HR / Work Force',
+              'userRoles?.includes(HR / Work Force)': userRoles?.includes('HR / Work Force'),
               'effectiveChatterId === user?.id': effectiveChatterId === user?.id
             });
             
@@ -738,25 +744,45 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
             return null;
           })()}
           
-          {/* Status messages for Admins and Chatters */}
-          {((userRole === 'Chatter' || userRoles?.includes('Chatter')) || (userRole === 'Admin' || userRoles?.includes('Admin'))) && effectiveChatterId === user?.id && isSalesLocked && !isAdminConfirmed && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <CheckCircle className="h-4 w-4" />
-              Sales locked - awaiting HR/Admin approval
-            </div>
-          )}
+          {/* Status messages for Chatters and Non-HR Admins */}
+          {(() => {
+            const hasChatterRole = userRole === 'Chatter' || userRoles?.includes('Chatter');
+            const hasAdminRole = userRole === 'Admin' || userRoles?.includes('Admin');
+            const isHRWorkforce = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+            const canSeeStatus = hasChatterRole || (hasAdminRole && !isHRWorkforce);
+            
+            if (canSeeStatus && effectiveChatterId === user?.id && isSalesLocked && !isAdminConfirmed) {
+              return (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle className="h-4 w-4" />
+                  Sales locked - awaiting HR/Admin approval
+                </div>
+              );
+            }
+            return null;
+          })()}
           
-          {/* Payslip download for Admins and Chatters */}
-          {((userRole === 'Chatter' || userRoles?.includes('Chatter')) || (userRole === 'Admin' || userRoles?.includes('Admin'))) && effectiveChatterId === user?.id && isAdminConfirmed && (
-            <Button 
-              onClick={downloadPayslip}
-              className="flex items-center gap-2"
-              variant="default"
-            >
-              <Download className="h-4 w-4" />
-              Download Payslip (PDF)
-            </Button>
-          )}
+          {/* Payslip download for Chatters and Non-HR Admins */}
+          {(() => {
+            const hasChatterRole = userRole === 'Chatter' || userRoles?.includes('Chatter');
+            const hasAdminRole = userRole === 'Admin' || userRoles?.includes('Admin');
+            const isHRWorkforce = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+            const canDownloadPayslip = hasChatterRole || (hasAdminRole && !isHRWorkforce);
+            
+            if (canDownloadPayslip && effectiveChatterId === user?.id && isAdminConfirmed) {
+              return (
+                <Button 
+                  onClick={downloadPayslip}
+                  className="flex items-center gap-2"
+                  variant="default"
+                >
+                  <Download className="h-4 w-4" />
+                  Download Payslip (PDF)
+                </Button>
+              );
+            }
+            return null;
+          })()}
 
           {/* Admin and HR buttons */}
           {canApprovePayroll && isSalesLocked && !isAdminConfirmed && (
