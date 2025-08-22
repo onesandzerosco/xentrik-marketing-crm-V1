@@ -697,16 +697,40 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
           })()}
           
           {/* Chatter buttons - Any user with Chatter role can lock their own sales */}
-          {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isCurrentWeek && !isSalesLocked && (
-            <Button 
-              onClick={confirmWeekSales}
-              className="flex items-center gap-2"
-              variant="default"
-            >
-              <Lock className="h-4 w-4" />
-              Lock Weekly Sales
-            </Button>
-          )}
+          {(() => {
+            const hasChatterRole = userRole === 'Chatter' || userRoles?.includes('Chatter');
+            const isOwnData = effectiveChatterId === user?.id;
+            const shouldShowLockButton = hasChatterRole && isOwnData && isCurrentWeek && !isSalesLocked;
+            
+            console.log('DETAILED Lock button check:', {
+              hasChatterRole,
+              userRole,
+              userRoles,
+              isOwnData,
+              effectiveChatterId,
+              userId: user?.id,
+              isCurrentWeek,
+              isSalesLocked,
+              shouldShowLockButton,
+              'userRole === Chatter': userRole === 'Chatter',
+              'userRoles?.includes(Chatter)': userRoles?.includes('Chatter'),
+              'effectiveChatterId === user?.id': effectiveChatterId === user?.id
+            });
+            
+            if (shouldShowLockButton) {
+              return (
+                <Button 
+                  onClick={confirmWeekSales}
+                  className="flex items-center gap-2"
+                  variant="default"
+                >
+                  <Lock className="h-4 w-4" />
+                  Lock Weekly Sales
+                </Button>
+              );
+            }
+            return null;
+          })()}
           
           {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isSalesLocked && !isAdminConfirmed && (
             <div className="flex items-center gap-2 text-muted-foreground">
