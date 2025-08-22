@@ -670,8 +670,8 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       {/* Action Buttons */}
       {models.length > 0 && (
         <div className="flex gap-2 justify-end pt-4 border-t">
-          {/* Chatter buttons - Show when chatter is viewing their own data OR when it's current week and user is the chatter */}
-          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isCurrentWeek && !isSalesLocked && (
+          {/* Chatter buttons - Any user with Chatter role can lock their own sales */}
+          {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isCurrentWeek && !isSalesLocked && (
             <Button 
               onClick={confirmWeekSales}
               className="flex items-center gap-2"
@@ -682,14 +682,14 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
             </Button>
           )}
           
-          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isSalesLocked && !isAdminConfirmed && (
+          {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isSalesLocked && !isAdminConfirmed && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <CheckCircle className="h-4 w-4" />
               Sales locked - awaiting HR/Admin approval
             </div>
           )}
           
-          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isAdminConfirmed && (
+          {(userRole === 'Chatter' || userRoles?.includes('Chatter')) && effectiveChatterId === user?.id && isAdminConfirmed && (
             <Button 
               onClick={downloadPayslip}
               className="flex items-center gap-2"
