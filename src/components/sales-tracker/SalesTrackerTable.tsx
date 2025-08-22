@@ -64,7 +64,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
-  const canApprovePayroll = isAdmin || userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+  const canApprovePayroll = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
   const canEdit = isAdmin || effectiveChatterId === user?.id;
 
   // Calculate week start (Thursday) - Fixed logic
