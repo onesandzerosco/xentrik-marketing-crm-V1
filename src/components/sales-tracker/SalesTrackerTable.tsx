@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X } from 'lucide-react';
+import { Plus, Trash2, Lock, Download, CheckCircle, Edit3, Check, X, XCircle } from 'lucide-react';
 import { AddModelDropdown } from './AddModelDropdown';
 import { PayrollConfirmationModal } from './PayrollConfirmationModal';
 
@@ -65,6 +65,7 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const canApprovePayroll = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
+  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const canEdit = isAdmin || effectiveChatterId === user?.id;
 
   // Calculate week start (Thursday) - Fixed logic
@@ -399,6 +400,51 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
     }
   };
 
+  const rejectPayroll = async () => {
+    if (!effectiveChatterId || !canApprovePayroll) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to reject payroll.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      const { error } = await supabase
+        .from('sales_tracker')
+        .update({ 
+          sales_locked: false,
+          admin_confirmed: false,
+          confirmed_hours_worked: null,
+          confirmed_commission_rate: null,
+          overtime_pay: null,
+          overtime_notes: null,
+          deduction_amount: null,
+          deduction_notes: null
+        })
+        .eq('chatter_id', effectiveChatterId)
+        .eq('week_start_date', weekStartStr);
+
+      if (error) throw error;
+
+      await fetchData(); // Refresh data
+      toast({
+        title: "Payroll Rejected",
+        description: "Sales have been unlocked for the chatter to review and resubmit.",
+      });
+    } catch (error) {
+      console.error('Error rejecting payroll:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject payroll",
+        variant: "destructive",
+      });
+    }
+  };
+
   const downloadPayslip = () => {
     if (!chatterName || !isAdminConfirmed) return;
 
@@ -624,26 +670,26 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
       {/* Action Buttons */}
       {models.length > 0 && (
         <div className="flex gap-2 justify-end pt-4 border-t">
-          {/* Chatter buttons */}
-          {!isAdmin && isCurrentWeek && !isSalesLocked && (
+          {/* Chatter buttons - Show when chatter is viewing their own data OR when it's current week and user is the chatter */}
+          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isCurrentWeek && !isSalesLocked && (
             <Button 
               onClick={confirmWeekSales}
               className="flex items-center gap-2"
               variant="default"
             >
               <Lock className="h-4 w-4" />
-              Confirm Week's Sales
+              Lock Weekly Sales
             </Button>
           )}
           
-          {!isAdmin && isSalesLocked && !isAdminConfirmed && (
+          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isSalesLocked && !isAdminConfirmed && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <CheckCircle className="h-4 w-4" />
-              Sales locked - awaiting admin confirmation
+              Sales locked - awaiting HR/Admin approval
             </div>
           )}
           
-          {!isAdmin && isAdminConfirmed && (
+          {((isChatter && effectiveChatterId === user?.id) || (effectiveChatterId === user?.id && (userRole === 'Chatter' || userRoles?.includes('Chatter')))) && isAdminConfirmed && (
             <Button 
               onClick={downloadPayslip}
               className="flex items-center gap-2"
@@ -656,25 +702,45 @@ export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
 
           {/* Admin and HR buttons */}
           {canApprovePayroll && isSalesLocked && !isAdminConfirmed && (
-            <Button 
-              onClick={() => setShowPayrollModal(true)}
-              className="flex items-center gap-2"
-              variant="default"
-            >
-              <CheckCircle className="h-4 w-4" />
-              Check Payroll
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowPayrollModal(true)}
+                className="flex items-center gap-2"
+                variant="default"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Approve Payroll
+              </Button>
+              <Button 
+                onClick={rejectPayroll}
+                className="flex items-center gap-2"
+                variant="destructive"
+              >
+                <XCircle className="h-4 w-4" />
+                Reject Payroll
+              </Button>
+            </div>
           )}
           
           {canApprovePayroll && isAdminConfirmed && (
-            <Button 
-              onClick={downloadPayslip}
-              className="flex items-center gap-2"
-              variant="outline"
-            >
-              <Download className="h-4 w-4" />
-              Download Payslip (PDF)
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={downloadPayslip}
+                className="flex items-center gap-2"
+                variant="outline"
+              >
+                <Download className="h-4 w-4" />
+                Download Payslip (PDF)
+              </Button>
+              <Button 
+                onClick={rejectPayroll}
+                className="flex items-center gap-2"
+                variant="destructive"
+              >
+                <XCircle className="h-4 w-4" />
+                Reject Payroll
+              </Button>
+            </div>
           )}
         </div>
       )}
