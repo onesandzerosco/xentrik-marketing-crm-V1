@@ -226,9 +226,13 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
   };
 
   const shouldShowGroup = (groupTitle: string): boolean => {
-    // Admin, Developer, and HR / Work Force can see everything
-    if (userRole === 'Admin' || userRoles?.includes('Admin') || 
-        userRole === 'Developer' || userRoles?.includes('Developer') ||
+    // CRITICAL: Admin users can see ALL groups - this must be first
+    if (userRole === 'Admin' || userRoles?.includes('Admin')) {
+      return true;
+    }
+
+    // Developer and HR / Work Force can see everything
+    if (userRole === 'Developer' || userRoles?.includes('Developer') ||
         userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force')) {
       return true;
     }
@@ -247,8 +251,6 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ isAdmin }) => {
     if (userRole === 'VA' || userRoles?.includes('VA')) {
       return groupTitle === 'Chatting Team' || groupTitle === 'Marketing Team';
     }
-    
-    // HR / Work Force now handled above with Admin/Developer
 
     return true;
   };
