@@ -372,11 +372,13 @@ const VoiceClone: React.FC = () => {
                 <div className="space-y-2">
                   <Label htmlFor="model">Model</Label>
                   <Select
-                    value={selectedModel}
-                    onValueChange={(value) => {
-                      setSelectedModel(value);
-                      setSelectedEmotion('');
-                    }}
+                     value={selectedModel}
+                     onValueChange={(value) => {
+                       console.log('Model selected:', value);
+                       console.log('Available emotions for model:', Object.keys(groupedSources[value] || {}));
+                       setSelectedModel(value);
+                       setSelectedEmotion('');
+                     }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a model" />
