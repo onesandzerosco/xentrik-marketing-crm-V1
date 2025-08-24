@@ -127,6 +127,8 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
       if (profileError) throw profileError;
 
       const calculatedTotalSales = salesData?.reduce((sum, entry) => sum + (entry.earnings || 0), 0) || 0;
+      console.log('LockSalesButton: salesData:', salesData);
+      console.log('LockSalesButton: calculatedTotalSales:', calculatedTotalSales);
       
       setTotalSales(calculatedTotalSales);
       setCurrentHourlyRate(profileData?.hourly_rate || 0);
