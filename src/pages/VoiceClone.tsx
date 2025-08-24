@@ -230,29 +230,41 @@ const VoiceClone: React.FC = () => {
     try {
       setIsUploading(true);
       
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('modelName', selectedModel);
-      formData.append('emotion', selectedEmotion);
+      // Generate unique filename
+      const fileExtension = selectedFile.name.split('.').pop() || 'wav';
+      const uniqueId = crypto.randomUUID();
+      const bucketKey = `voices/${selectedModel}/${selectedEmotion}/${uniqueId}.${fileExtension}`;
 
-      // Get the session to include the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(`https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkendwaW9rcHlzc3FobmZpcXJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2Njc3MTIsImV4cCI6MjA2MDI0MzcxMn0.aUc4NpSjXMG-KQs7FeDPJTjZxp4ehJxvGi5-kk3CZRE'
-        },
-        body: formData,
-      });
+      // Upload file to storage using Supabase client (same as Shared Files)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('voices')
+        .upload(bucketKey, selectedFile, {
+          contentType: selectedFile.type || 'audio/wav',
+          upsert: false
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(`Failed to upload file: ${uploadError.message}`);
       }
 
-      const data = await response.json();
+      // Insert record into voice_sources table
+      const { data: voiceSource, error: dbError } = await supabase
+        .from('voice_sources')
+        .insert({
+          model_name: selectedModel,
+          emotion: selectedEmotion,
+          bucket_key: bucketKey
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Database error:', dbError);
+        // Clean up uploaded file if database insert fails
+        await supabase.storage.from('voices').remove([bucketKey]);
+        throw new Error(`Failed to save voice source: ${dbError.message}`);
+      }
       
       toast({
         title: "Success",
