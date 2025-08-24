@@ -26,10 +26,13 @@ serve(async (req) => {
 
     if (req.method === 'GET') {
       // Get all voice sources (public endpoint)
+      console.log('Fetching voice sources from database...');
       const { data: voiceSources, error } = await supabase
         .from('voice_sources')
         .select('*')
         .order('model_name', { ascending: true });
+
+      console.log('Database query result:', { voiceSources, error });
 
       if (error) {
         console.error('Database error:', error);
@@ -39,8 +42,11 @@ serve(async (req) => {
         );
       }
 
+      console.log('Found voice sources:', voiceSources?.length || 0);
+
       // Group by model and emotion for easier frontend consumption
-      const groupedSources = voiceSources.reduce((acc, source) => {
+      const groupedSources = voiceSources?.reduce((acc, source) => {
+        console.log('Processing voice source:', source);
         if (!acc[source.model_name]) {
           acc[source.model_name] = {};
         }
@@ -49,11 +55,13 @@ serve(async (req) => {
         }
         acc[source.model_name][source.emotion].push(source);
         return acc;
-      }, {} as Record<string, Record<string, any[]>>);
+      }, {} as Record<string, Record<string, any[]>>) || {};
+
+      console.log('Grouped sources:', groupedSources);
 
       return new Response(
         JSON.stringify({ 
-          voiceSources: voiceSources,
+          voiceSources: voiceSources || [],
           groupedSources: groupedSources
         }),
         { 
