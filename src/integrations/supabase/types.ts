@@ -714,6 +714,7 @@ export type Database = {
       sales_tracker: {
         Row: {
           admin_confirmed: boolean
+          attendance: boolean | null
           chatter_id: string | null
           confirmed_commission_rate: number | null
           confirmed_hours_worked: number | null
@@ -733,6 +734,7 @@ export type Database = {
         }
         Insert: {
           admin_confirmed?: boolean
+          attendance?: boolean | null
           chatter_id?: string | null
           confirmed_commission_rate?: number | null
           confirmed_hours_worked?: number | null
@@ -752,6 +754,7 @@ export type Database = {
         }
         Update: {
           admin_confirmed?: boolean
+          attendance?: boolean | null
           chatter_id?: string | null
           confirmed_commission_rate?: number | null
           confirmed_hours_worked?: number | null

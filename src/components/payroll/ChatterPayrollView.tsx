@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PayrollTable } from './PayrollTable';
+import { AttendanceTable } from './AttendanceTable';
 import { WeekNavigator } from './WeekNavigator';
 import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
+import { useSalesLockStatus } from './hooks/useSalesLockStatus';
 import { useAuth } from '@/context/AuthContext';
 
 export const ChatterPayrollView: React.FC = () => {
   const { user } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState(new Date());
+  
+  // Get sales lock status for the current user and week
+  const { isSalesLocked } = useSalesLockStatus(user?.id, selectedWeek);
 
   return (
     <div className="space-y-6">
@@ -28,6 +33,12 @@ export const ChatterPayrollView: React.FC = () => {
           <PayrollTable chatterId={user?.id} selectedWeek={selectedWeek} />
         </CardContent>
       </Card>
+
+      <AttendanceTable 
+        chatterId={user?.id} 
+        selectedWeek={selectedWeek}
+        isSalesLocked={isSalesLocked}
+      />
     </div>
   );
 };

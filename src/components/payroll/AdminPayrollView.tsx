@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
 import { PayrollTable } from './PayrollTable';
+import { AttendanceTable } from './AttendanceTable';
 import { WeekNavigator } from './WeekNavigator';
 import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
+import { useSalesLockStatus } from './hooks/useSalesLockStatus';
 import AdminPayrollTable from './AdminPayrollTable';
 import ManagerPayrollTable from './ManagerPayrollTable';
 import EmployeePayrollTable from './EmployeePayrollTable';
@@ -29,6 +31,9 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(new Date());
+  
+  // Get sales lock status for the selected chatter and week
+  const { isSalesLocked } = useSalesLockStatus(selectedChatterId, selectedWeek);
 
   // Separate users by role
   const adminUsers = chatters.filter(user => user.role === 'Admin');
@@ -99,6 +104,12 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
             <PayrollTable chatterId={selectedChatterId} selectedWeek={selectedWeek} />
           </CardContent>
         </Card>
+
+        <AttendanceTable 
+          chatterId={selectedChatterId} 
+          selectedWeek={selectedWeek}
+          isSalesLocked={isSalesLocked}
+        />
       </div>
     );
   }
