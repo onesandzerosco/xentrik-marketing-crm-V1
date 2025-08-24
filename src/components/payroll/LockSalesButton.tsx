@@ -143,7 +143,7 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-green-600">
               <Lock className="h-4 w-4" />
-              <span className="text-sm font-medium">Sales & Attendance Locked</span>
+              <span className="text-sm font-medium">Sales & Attendance Locked - Waiting for HR Approval</span>
             </div>
             {(isAdmin || canApprovePayroll) && (
               <Button
