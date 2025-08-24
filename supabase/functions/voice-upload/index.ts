@@ -14,14 +14,15 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
-    const supabase = createClient(
+    // Initialize Supabase client with service role for server operations
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
-          persistSession: false,
-        },
+          autoRefreshToken: false,
+          persistSession: false
+        }
       }
     );
 
@@ -29,23 +30,28 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Set the auth token
+    // Verify the user using anon client
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
     
     if (authError || !user) {
+      console.error('Auth error:', authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Invalid token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // User is authenticated, allow upload for everyone
     console.log('Authenticated user uploading:', { userId: user.id, email: user.email });
 
     if (req.method !== 'POST') {
@@ -81,9 +87,9 @@ serve(async (req) => {
     const uniqueId = crypto.randomUUID();
     const bucketKey = `voices/${modelName}/${emotion}/${uniqueId}.${fileExtension}`;
 
-    // Upload file to storage
+    // Upload file to storage using service role client
     const fileBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from('voices')
       .upload(bucketKey, fileBuffer, {
         contentType: file.type || 'audio/wav',
@@ -93,13 +99,13 @@ serve(async (req) => {
     if (uploadError) {
       console.error('Upload error:', uploadError);
       return new Response(
-        JSON.stringify({ error: 'Failed to upload file' }),
+        JSON.stringify({ error: 'Failed to upload file', details: uploadError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Insert record into voice_sources table
-    const { data: voiceSource, error: dbError } = await supabase
+    // Insert record into voice_sources table using service role client
+    const { data: voiceSource, error: dbError } = await supabaseClient
       .from('voice_sources')
       .insert({
         model_name: modelName,
@@ -112,9 +118,9 @@ serve(async (req) => {
     if (dbError) {
       console.error('Database error:', dbError);
       // Clean up uploaded file if database insert fails
-      await supabase.storage.from('voices').remove([bucketKey]);
+      await supabaseClient.storage.from('voices').remove([bucketKey]);
       return new Response(
-        JSON.stringify({ error: 'Failed to save voice source' }),
+        JSON.stringify({ error: 'Failed to save voice source', details: dbError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
