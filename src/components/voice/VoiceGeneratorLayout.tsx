@@ -189,6 +189,15 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       return;
     }
 
+    if (!selectedEmotion) {
+      toast({
+        title: "Error",
+        description: "Please select an emotion",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const textToGenerate = message.trim();
     if (!textToGenerate) {
       toast({
@@ -213,12 +222,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     try {
       console.log('Generating voice...');
       
-      const { data, error } = await supabase.functions.invoke('generate-voice', {
+      const { data, error } = await supabase.functions.invoke('voice-generate', {
         body: {
-          voiceId: selectedModel,
-          message: textToGenerate,
-          tone: aiTone,
-          ambience: ambience
+          text: textToGenerate,
+          modelName: selectedModel,
+          emotion: selectedEmotion
         }
       });
 
