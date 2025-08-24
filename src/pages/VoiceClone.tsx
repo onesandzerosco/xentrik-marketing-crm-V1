@@ -61,6 +61,7 @@ const VoiceClone: React.FC = () => {
     if (isAuthenticated && user) {
       fetchVoiceSources();
       fetchUserProfile();
+      fetchCreators(); // Fetch creators for all users to populate model dropdown
     }
   }, [isAuthenticated, user]);
 
@@ -80,11 +81,6 @@ const VoiceClone: React.FC = () => {
       }
 
       setUserProfile(data);
-      
-      // Only fetch creators if user is admin
-      if (data?.role === 'Admin' || data?.roles?.includes('Admin')) {
-        fetchCreators();
-      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
@@ -332,8 +328,8 @@ const VoiceClone: React.FC = () => {
     });
   };
 
-  const availableModels = Object.keys(groupedSources);
-  const availableEmotions = emotions; // Use the same emotions as upload tab
+  const availableModels = creators.map(creator => creator.model_name || creator.name);
+  const availableEmotions = selectedModel ? Object.keys(groupedSources[selectedModel] || {}) : [];
 
   if (isLoadingSources) {
     return (
