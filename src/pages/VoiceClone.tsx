@@ -112,12 +112,18 @@ const VoiceClone: React.FC = () => {
   const fetchVoiceSources = async () => {
     try {
       setIsLoadingSources(true);
+      console.log('Fetching voice sources...');
       const { data, error } = await supabase.functions.invoke('voice-sources', {
         method: 'GET'
       });
 
+      console.log('Voice sources response:', { data, error });
+
       if (error) throw error;
 
+      console.log('Setting voice sources:', data.voiceSources);
+      console.log('Setting grouped sources:', data.groupedSources);
+      
       setVoiceSources(data.voiceSources || []);
       setGroupedSources(data.groupedSources || {});
     } catch (error) {
