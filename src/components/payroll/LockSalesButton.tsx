@@ -16,6 +16,7 @@ interface LockSalesButtonProps {
   isCurrentWeek: boolean;
   canEdit: boolean;
   onDataRefresh: () => void;
+  onRenderApprovedState?: (approvedStateElement: React.ReactNode) => void;
 }
 
 export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
@@ -25,7 +26,8 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
   isAdminConfirmed,
   isCurrentWeek,
   canEdit,
-  onDataRefresh
+  onDataRefresh,
+  onRenderApprovedState
 }) => {
   const { user, userRole, userRoles } = useAuth();
   const { toast } = useToast();
@@ -311,22 +313,6 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
                   </Button>
                 </div>
               )}
-            </div>
-          ) : isSalesLocked && isAdminConfirmed ? (
-            <div className="flex items-center justify-center gap-4">
-              <div className="flex items-center gap-2 text-blue-600">
-                <Check className="h-4 w-4" />
-                <span className="text-sm font-medium">Approved by HR</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={downloadPayslip}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download Payslip
-              </Button>
             </div>
           ) : (
             canEdit && (
