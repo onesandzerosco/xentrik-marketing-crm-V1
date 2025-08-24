@@ -235,22 +235,13 @@ const VoiceClone: React.FC = () => {
       formData.append('modelName', selectedModel);
       formData.append('emotion', selectedEmotion);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(`https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-upload`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
+      const { data, error } = await supabase.functions.invoke('voice-upload', {
         body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+      if (error) {
+        throw new Error(error.message || 'Upload failed');
       }
-
-      const result = await response.json();
       
       toast({
         title: "Success",
@@ -284,20 +275,12 @@ const VoiceClone: React.FC = () => {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(`https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-sources`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id }),
+      const { data, error } = await supabase.functions.invoke('voice-sources', {
+        body: { id },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Delete failed');
+      if (error) {
+        throw new Error(error.message || 'Delete failed');
       }
 
       toast({
