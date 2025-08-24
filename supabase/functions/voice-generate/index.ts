@@ -105,68 +105,174 @@ serve(async (req) => {
       );
     }
 
-    // Use the HiggsAudio voice cloning system
+    // Use the HiggsAudio voice cloning system directly from your code
     console.log('Using HiggsAudio voice cloning system');
     
-    // Get the reference audio file URL for the HiggsAudio service
-    const { data: urlData } = supabaseClient.storage
-      .from('voices')
-      .getPublicUrl(voiceSource.bucket_key);
+    // Convert audio file to base64 for Python script
+    const audioArrayBuffer = await audioFile.arrayBuffer();
+    const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioArrayBuffer)));
     
-    const referenceAudioUrl = urlData.publicUrl;
-    console.log('Reference audio URL:', referenceAudioUrl);
+    // Create Python script that uses your HiggsAudio model
+    const pythonScript = `
+import sys
+import json
+import base64
+import tempfile
+import os
+import numpy as np
+import torch
+import wave
+from io import BytesIO
 
-    // Call the HiggsAudio service
-    // Note: The HiggsAudio service should be running on localhost:7860 or another configured endpoint
-    const higgsAudioEndpoint = Deno.env.get('HIGGS_AUDIO_ENDPOINT') || 'http://localhost:7860';
+# Add the project path to use your higgs_audio module
+project_path = "/opt/project"
+sys.path.insert(0, f"{project_path}/src/services/voice-clone")
+
+try:
+    from higgs_audio.serve.serve_engine import HiggsAudioServeEngine
+    from higgs_audio.dataset.chatml_dataset import ChatMLSample, AudioContent
+    
+    def generate_voice(text, audio_base64, model_name, emotion):
+        # Decode the reference audio
+        audio_bytes = base64.b64decode(audio_base64)
+        
+        # Create temporary file for reference audio
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
+            temp_audio.write(audio_bytes)
+            temp_audio_path = temp_audio.name
+        
+        try:
+            # Initialize the HiggsAudio engine with a default model path
+            # You'll need to configure this with your actual model path
+            engine = HiggsAudioServeEngine(
+                model_name_or_path=model_name,
+                audio_tokenizer_name_or_path=model_name,
+                device="cpu"
+            )
+            
+            # Create ChatML sample with reference audio
+            chat_sample = ChatMLSample(
+                messages=[
+                    {
+                        "role": "user", 
+                        "content": f"Generate speech with {emotion} emotion: {text}"
+                    }
+                ],
+                audio_contents=[
+                    AudioContent(
+                        audio_url=temp_audio_path,
+                        raw_audio=None
+                    )
+                ]
+            )
+            
+            # Generate the audio
+            response = engine.generate(
+                chat_ml_sample=chat_sample,
+                max_new_tokens=1024,
+                temperature=0.7,
+                force_audio_gen=True
+            )
+            
+            if response.audio is not None:
+                # Convert numpy array to WAV format
+                audio_data = response.audio
+                
+                # Create WAV file in memory
+                buffer = BytesIO()
+                with wave.open(buffer, 'wb') as wav_file:
+                    wav_file.setnchannels(1)
+                    wav_file.setsampwidth(2)
+                    wav_file.setframerate(response.sampling_rate or 16000)
+                    
+                    # Convert float to int16
+                    audio_int16 = (audio_data * 32767).astype(np.int16)
+                    wav_file.writeframes(audio_int16.tobytes())
+                
+                # Get WAV data and encode to base64
+                wav_data = buffer.getvalue()
+                result_audio_base64 = base64.b64encode(wav_data).decode('utf-8')
+                
+                return {
+                    "success": True,
+                    "audio_base64": result_audio_base64,
+                    "generated_text": response.generated_text,
+                    "sampling_rate": response.sampling_rate or 16000
+                }
+            else:
+                return {"success": False, "error": "No audio generated"}
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_audio_path):
+                os.unlink(temp_audio_path)
+                
+except ImportError as e:
+    print(json.dumps({"success": False, "error": f"Failed to import HiggsAudio modules: {str(e)}"}))
+    sys.exit(0)
+except Exception as e:
+    print(json.dumps({"success": False, "error": f"Generation failed: {str(e)}"}))
+    sys.exit(0)
+
+if __name__ == "__main__":
+    try:
+        data = json.loads(sys.argv[1])
+        result = generate_voice(data["text"], data["audio_base64"], data["model_name"], data["emotion"])
+        print(json.dumps(result))
+    except Exception as e:
+        print(json.dumps({"success": False, "error": str(e)}))
+`;
+
     let generatedFileName = '';
     
     try {
-      console.log('Calling HiggsAudio service at:', higgsAudioEndpoint);
-      
-      // Prepare the request for the HiggsAudio service
-      const formData = new FormData();
-      formData.append('system_prompt', ''); // Empty for voice cloning
-      formData.append('input_text', text);
-      formData.append('voice_preset', 'EMPTY'); // Use custom reference
-      formData.append('reference_audio', referenceAudioUrl);
-      formData.append('reference_text', ''); // We don't have reference text
-      formData.append('max_completion_tokens', '1024');
-      formData.append('temperature', '1.0');
-      formData.append('top_p', '0.95');
-      formData.append('top_k', '50');
-      formData.append('ras_win_len', '7');
-      formData.append('ras_win_max_num_repeat', '3');
-      
-      const response = await fetch(`${higgsAudioEndpoint}/api/generate_speech`, {
-        method: 'POST',
-        body: formData,
+      // Create temporary Python file
+      const tempDir = await Deno.makeTempDir();
+      const pythonFile = `${tempDir}/generate_voice.py`;
+      await Deno.writeTextFile(pythonFile, pythonScript);
+
+      // Prepare input data
+      const inputData = JSON.stringify({
+        text,
+        audio_base64: audioBase64,
+        model_name: modelName,
+        emotion
       });
 
-      if (!response.ok) {
-        throw new Error(`HiggsAudio service error: ${response.status} ${response.statusText}`);
+      // Run Python script
+      const command = new Deno.Command("python3", {
+        args: [pythonFile, inputData],
+        stdout: "piped",
+        stderr: "piped",
+      });
+
+      const process = command.spawn();
+      const { code, stdout, stderr } = await process.output();
+
+      // Clean up temp files
+      await Deno.remove(tempDir, { recursive: true });
+
+      if (code !== 0) {
+        const errorText = new TextDecoder().decode(stderr);
+        console.error('Python script error:', errorText);
+        throw new Error(`Voice generation failed: ${errorText}`);
       }
 
-      const result = await response.json();
-      
-      if (!result || !result.audio_path) {
-        throw new Error('No audio generated by HiggsAudio service');
+      const output = new TextDecoder().decode(stdout);
+      const result = JSON.parse(output);
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
-      // The HiggsAudio service returns a path to the generated audio file
-      // We need to read this file and upload it to our storage
-      const audioResponse = await fetch(`${higgsAudioEndpoint}${result.audio_path}`);
-      if (!audioResponse.ok) {
-        throw new Error('Failed to download generated audio from HiggsAudio service');
-      }
-
-      const audioBuffer = await audioResponse.arrayBuffer();
+      // Convert base64 back to buffer for storage
+      const generatedAudioBuffer = Uint8Array.from(atob(result.audio_base64), c => c.charCodeAt(0));
       
       // Upload the generated audio to storage
       generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.wav`;
       const { data: uploadData, error: uploadError } = await supabaseClient.storage
         .from('voices')
-        .upload(generatedFileName, audioBuffer, {
+        .upload(generatedFileName, generatedAudioBuffer, {
           contentType: 'audio/wav',
           upsert: false
         });
