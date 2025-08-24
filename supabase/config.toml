@@ -178,7 +178,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.voice-upload]
-verify_jwt = true
+verify_jwt = false
 
 [functions.voice-sources]
 verify_jwt = false
