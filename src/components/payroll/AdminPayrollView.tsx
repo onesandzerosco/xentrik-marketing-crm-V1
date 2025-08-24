@@ -35,7 +35,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Get sales lock status for the selected chatter and week
-  const { isSalesLocked } = useSalesLockStatus(selectedChatterId, selectedWeek, refreshKey);
+  const { isSalesLocked, isAdminConfirmed } = useSalesLockStatus(selectedChatterId, selectedWeek, refreshKey);
 
   // Calculate week start and current week status
   const getWeekStart = (date: Date) => {
@@ -143,6 +143,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
           chatterId={selectedChatterId}
           selectedWeek={selectedWeek}
           isSalesLocked={isSalesLocked}
+          isAdminConfirmed={isAdminConfirmed}
           isCurrentWeek={isCurrentWeek}
           canEdit={true}
           onDataRefresh={handleDataRefresh}

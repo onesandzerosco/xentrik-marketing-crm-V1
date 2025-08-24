@@ -14,7 +14,7 @@ export const ChatterPayrollView: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Get sales lock status for the current user and week
-  const { isSalesLocked } = useSalesLockStatus(user?.id, selectedWeek, refreshKey);
+  const { isSalesLocked, isAdminConfirmed } = useSalesLockStatus(user?.id, selectedWeek, refreshKey);
 
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
   const canEdit = isAdmin || user?.id;
@@ -75,6 +75,7 @@ export const ChatterPayrollView: React.FC = () => {
         chatterId={user?.id}
         selectedWeek={selectedWeek}
         isSalesLocked={isSalesLocked}
+        isAdminConfirmed={isAdminConfirmed}
         isCurrentWeek={isCurrentWeek}
         canEdit={canEdit}
         onDataRefresh={handleDataRefresh}
