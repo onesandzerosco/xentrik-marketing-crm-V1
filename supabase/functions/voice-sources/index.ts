@@ -14,13 +14,16 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase client
+    const authHeader = req.headers.get('Authorization');
+    console.log('Auth header present:', !!authHeader);
+    
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           persistSession: false,
-        },
+        }
       }
     );
 
@@ -73,7 +76,6 @@ serve(async (req) => {
 
     if (req.method === 'DELETE') {
       // Get the authorization header
-      const authHeader = req.headers.get('Authorization');
       if (!authHeader) {
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
