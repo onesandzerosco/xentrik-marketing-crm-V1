@@ -318,17 +318,15 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
                 <Check className="h-4 w-4" />
                 <span className="text-sm font-medium">Approved by HR</span>
               </div>
-              {effectiveChatterId === user?.id && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={downloadPayslip}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Download Payslip
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadPayslip}
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Payslip
+              </Button>
             </div>
           ) : (
             canEdit && (
