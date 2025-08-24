@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -61,12 +61,27 @@ serve(async (req) => {
       );
     }
 
+    console.log('Processing POST request...');
+
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
     const formData = await req.formData();
+    console.log('FormData entries:', [...formData.entries()].map(([key, value]) => [key, value instanceof File ? `File: ${value.name}` : value]));
+    
     const file = formData.get('file') as File;
     const modelName = formData.get('modelName') as string;
     const emotion = formData.get('emotion') as string;
 
+    console.log('Extracted data:', { 
+      hasFile: !!file, 
+      fileName: file?.name, 
+      fileSize: file?.size,
+      modelName, 
+      emotion 
+    });
+
     if (!file || !modelName || !emotion) {
+      console.error('Missing required fields:', { hasFile: !!file, modelName, emotion });
       return new Response(
         JSON.stringify({ error: 'Missing required fields: file, modelName, emotion' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
