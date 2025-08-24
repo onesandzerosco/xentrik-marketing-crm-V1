@@ -333,7 +333,7 @@ const VoiceClone: React.FC = () => {
   };
 
   const availableModels = Object.keys(groupedSources);
-  const availableEmotions = selectedModel ? Object.keys(groupedSources[selectedModel] || {}) : [];
+  const availableEmotions = emotions; // Use the same emotions as upload tab
 
   if (isLoadingSources) {
     return (
