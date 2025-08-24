@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SalesTrackerTable } from './SalesTrackerTable';
+import { PayrollTable } from './PayrollTable';
 import { WeekNavigator } from './WeekNavigator';
 import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
 import { useAuth } from '@/context/AuthContext';
 
-export const ChatterSalesView: React.FC = () => {
+export const ChatterPayrollView: React.FC = () => {
   const { user } = useAuth();
   const [selectedWeek, setSelectedWeek] = useState(new Date());
 
@@ -15,7 +15,7 @@ export const ChatterSalesView: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-foreground flex items-center gap-2">
-              Weekly Sales Tracker
+              Weekly Payroll
               <span className="text-sm text-muted-foreground font-normal">
                 (Thursday to Wednesday)
               </span>
@@ -25,7 +25,7 @@ export const ChatterSalesView: React.FC = () => {
           <GoogleSheetsLinkManager chatterId={user?.id} />
         </CardHeader>
         <CardContent>
-          <SalesTrackerTable chatterId={user?.id} selectedWeek={selectedWeek} />
+          <PayrollTable chatterId={user?.id} selectedWeek={selectedWeek} />
         </CardContent>
       </Card>
     </div>

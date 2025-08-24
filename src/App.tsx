@@ -39,7 +39,7 @@ import CreatorOnboardForm from './pages/CreatorOnboardForm';
 import CreatorOnboardQueue from './pages/CreatorOnboardQueue';
 import CreatorsData from './pages/CreatorsData';
 import CustomsTracker from './pages/CustomsTracker';
-import SalesTracker from './pages/SalesTracker';
+import Payroll from './pages/Payroll';
 import Invitation from './pages/Invitation';
 
 // Call the function to ensure our storage bucket exists
@@ -125,8 +125,8 @@ const AppRoutes = () => {
       <Route path="/voice-clone" element={<ProtectedRoute><VoiceClone /></ProtectedRoute>} />
       <Route path="/upload/:id" element={<CreatorUpload />} />
       <Route path="/customs-tracker" element={<ProtectedRoute><CustomsTracker /></ProtectedRoute>} />
-      <Route path="/sales-tracker" element={<ProtectedRoute><SalesTracker /></ProtectedRoute>} />
-      <Route path="/sales-tracker/:id" element={<ProtectedRoute><SalesTracker /></ProtectedRoute>} />
+      <Route path="/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
+      <Route path="/payroll/:id" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       
       {/* Add redirects for old route patterns */}
       

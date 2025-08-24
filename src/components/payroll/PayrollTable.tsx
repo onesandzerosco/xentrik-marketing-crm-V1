@@ -32,7 +32,7 @@ interface SalesModel {
   model_name: string;
 }
 
-interface SalesTrackerTableProps {
+interface PayrollTableProps {
   chatterId?: string;
   selectedWeek?: Date;
 }
@@ -47,7 +47,7 @@ const DAYS_OF_WEEK = [
   { label: 'Wed', value: 3 },
 ];
 
-export const SalesTrackerTable: React.FC<SalesTrackerTableProps> = ({
+export const PayrollTable: React.FC<PayrollTableProps> = ({
   chatterId,
   selectedWeek = new Date()
 }) => {
