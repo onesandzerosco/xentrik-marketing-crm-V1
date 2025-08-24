@@ -235,13 +235,24 @@ const VoiceClone: React.FC = () => {
       formData.append('modelName', selectedModel);
       formData.append('emotion', selectedEmotion);
 
-      const { data, error } = await supabase.functions.invoke('voice-upload', {
+      // Get the session to include the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(`https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkendwaW9rcHlzc3FobmZpcXJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2Njc3MTIsImV4cCI6MjA2MDI0MzcxMn0.aUc4NpSjXMG-KQs7FeDPJTjZxp4ehJxvGi5-kk3CZRE'
+        },
         body: formData,
       });
 
-      if (error) {
-        throw new Error(error.message || 'Upload failed');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${response.status} ${response.statusText} - ${errorText}`);
       }
+
+      const data = await response.json();
       
       toast({
         title: "Success",
