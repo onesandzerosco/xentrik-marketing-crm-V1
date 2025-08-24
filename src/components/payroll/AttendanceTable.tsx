@@ -250,8 +250,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {DAYS_OF_WEEK.map((day) => {
-                const dayDate = addDays(weekStart, day.value === 0 ? 3 : day.value - 4);
+              {DAYS_OF_WEEK.map((day, index) => {
+                const dayDate = addDays(weekStart, index);
                 const hasAttendance = Boolean(attendanceData[day.value]?.trim());
                 
                 return (
