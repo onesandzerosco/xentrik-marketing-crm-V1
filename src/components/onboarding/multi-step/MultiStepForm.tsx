@@ -295,7 +295,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
               <Button
                 type="button" 
                 variant="premium"
-                disabled={isSubmitting || !isValid}
+                disabled={isSubmitting}
                 className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
                 onClick={() => methods.handleSubmit(handleFinalSubmit)()}
               >

@@ -99,7 +99,7 @@ export const contentAndServiceSchema = z.object({
         handle: z.string().optional(),
       })
     ).optional(),
-  }),
+  }).optional(),
 });
 
 export const creatorOnboardingSchema = z.object({
