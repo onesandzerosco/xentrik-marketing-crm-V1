@@ -23,12 +23,12 @@ export const personalInfoSchema = z.object({
   hasPets: z.boolean().default(false),
   pets: z.array(
     z.object({
-      type: z.string().min(1, "Pet type is required"),
-      breed: z.string().min(1, "Pet breed is required"),
-      age: z.string().min(1, "Pet age is required"),
-      name: z.string().min(1, "Pet name is required"),
+      type: z.string().optional(),
+      breed: z.string().optional(),
+      age: z.string().optional(),
+      name: z.string().optional(),
     })
-  ).min(1, "Pet details are required when you have pets"),
+  ).optional(),
   hasKids: z.boolean().default(false),
   numberOfKids: z.number().min(0, "Number of kids is required"),
   occupation: z.string().min(1, "Occupation is required"),
@@ -70,7 +70,7 @@ export const personalPreferencesSchema = z.object({
 export const contentAndServiceSchema = z.object({
   bodyCount: z.number().min(0, "Body count is required"),
   hasFetish: z.boolean().default(false),
-  fetishDetails: z.string().min(1, "Fetish details are required"),
+  fetishDetails: z.string().optional(),
   doesAnal: z.boolean().default(false),
   hasTriedOrgy: z.boolean().default(false),
   sexToysCount: z.string().min(1, "Sex toys count is required"),
