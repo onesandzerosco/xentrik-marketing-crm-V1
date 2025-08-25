@@ -37,7 +37,11 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
     mode: "onSubmit"
   });
 
-  const { formState: { errors } } = methods;
+  const { formState: { errors, isValid } } = methods;
+  
+  // Debug form state
+  console.log("Form errors:", errors);
+  console.log("Form isValid:", isValid);
 
   // Validate token on component mount
   useEffect(() => {
@@ -297,6 +301,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
                 type="submit" 
                 variant="premium"
                 disabled={isSubmitting}
+                onClick={() => console.log("Submit button clicked!")}
                 className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
               >
                 {isSubmitting ? (
