@@ -117,6 +117,7 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   };
 
   const handleFinalSubmit = async (data: CreatorOnboardingFormValues) => {
+    console.log("handleFinalSubmit called with data:", data);
     try {
       setIsSubmitting(true);
       console.log("Form data being submitted:", data);
