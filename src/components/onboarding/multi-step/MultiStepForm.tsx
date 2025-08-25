@@ -34,10 +34,10 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   const methods = useForm<CreatorOnboardingFormValues>({
     resolver: zodResolver(creatorOnboardingSchema),
     defaultValues: defaultOnboardingValues,
-    mode: "onChange"
+    mode: "onSubmit"
   });
 
-  const { formState: { isValid, errors } } = methods;
+  const { formState: { errors } } = methods;
 
   // Validate token on component mount
   useEffect(() => {
