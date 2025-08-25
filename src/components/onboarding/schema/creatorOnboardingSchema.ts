@@ -31,17 +31,13 @@ export const creatorOnboardingSchema = z.object({
   ).optional(),
   
   // Profile Picture
-  profilePicture: z.any().refine(val => val !== undefined && val !== null, {
-    message: "Profile picture is required",
-  }),
+  profilePicture: z.any().optional(),
   
   // Additional Information
-  notes: z.string().min(1, "Notes are required"),
+  notes: z.string().optional(),
   
   // Consent
-  termsAccepted: z.boolean().refine(val => val === true, {
-    message: "You must accept the terms to continue",
-  }),
+  termsAccepted: z.boolean().default(false),
 });
 
 export type CreatorOnboardingFormValues = z.infer<typeof creatorOnboardingSchema>;
