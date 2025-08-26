@@ -95,8 +95,8 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
       
       // Fetch attendance data for the week
-      const { data: salesData, error } = await supabase
-        .from('sales_tracker')
+      const { data: attendanceData, error } = await supabase
+        .from('attendance')
         .select('day_of_week, model_name, attendance')
         .eq('chatter_id', effectiveChatterId)
         .eq('week_start_date', weekStartStr);
@@ -115,7 +115,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       // Create a map of day_of_week to model names for attendance
       const attendanceMap: Record<number, string> = {};
       
-      salesData?.forEach(entry => {
+      attendanceData?.forEach(entry => {
         if (entry.attendance) {
           // If multiple models worked on the same day, join them with commas
           if (attendanceMap[entry.day_of_week]) {
@@ -146,34 +146,30 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
     try {
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
       
-      // First, set all attendance to false for this day
+      // First, delete all attendance entries for this day
       await supabase
-        .from('sales_tracker')
-        .update({ attendance: false })
+        .from('attendance')
+        .delete()
         .eq('chatter_id', effectiveChatterId)
         .eq('week_start_date', weekStartStr)
         .eq('day_of_week', dayOfWeek);
 
-      // If there are model names provided, set attendance to true for those models
+      // If there are model names provided, create attendance entries
       if (modelNames.trim()) {
         const modelList = modelNames.split(',').map(name => name.trim()).filter(name => name);
         
         for (const modelName of modelList) {
-          // Use upsert to only update attendance without affecting sales data
-          const { error: upsertError } = await supabase
-            .from('sales_tracker')
-            .upsert({
+          const { error: insertError } = await supabase
+            .from('attendance')
+            .insert({
               chatter_id: effectiveChatterId,
               week_start_date: weekStartStr,
               day_of_week: dayOfWeek,
               model_name: modelName,
               attendance: true
-            }, {
-              onConflict: 'chatter_id,model_name,day_of_week,week_start_date',
-              ignoreDuplicates: false
             });
 
-          if (upsertError) throw upsertError;
+          if (insertError) throw insertError;
         }
       }
 
