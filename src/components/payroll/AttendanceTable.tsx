@@ -159,7 +159,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
         const modelList = modelNames.split(',').map(name => name.trim()).filter(name => name);
         
         for (const modelName of modelList) {
-          // Use upsert instead of update to handle both existing and new records
+          // Use upsert to only update attendance without affecting sales data
           const { error: upsertError } = await supabase
             .from('sales_tracker')
             .upsert({
@@ -167,11 +167,10 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
               week_start_date: weekStartStr,
               day_of_week: dayOfWeek,
               model_name: modelName,
-              earnings: 0,
-              working_day: true,
               attendance: true
             }, {
-              onConflict: 'chatter_id,model_name,day_of_week,week_start_date'
+              onConflict: 'chatter_id,model_name,day_of_week,week_start_date',
+              ignoreDuplicates: false
             });
 
           if (upsertError) throw upsertError;
