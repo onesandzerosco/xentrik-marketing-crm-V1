@@ -293,6 +293,24 @@ export const LockSalesButton: React.FC<LockSalesButtonProps> = ({
               </div>
               {(isAdmin || canApprovePayroll) && (
                 <div className="flex items-center gap-3">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={rejectPayroll}
+                    className="flex items-center gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Reject & Unlock
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={openPayrollModal}
+                    className="flex items-center gap-2"
+                  >
+                    <Check className="h-4 w-4" />
+                    Approve Payroll
+                  </Button>
                 </div>
               )}
             </div>

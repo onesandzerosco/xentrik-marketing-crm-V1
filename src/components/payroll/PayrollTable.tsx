@@ -521,27 +521,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
         </Table>
       </div>
 
-      {/* Admin and HR buttons */}
-      {models.length > 0 && canApprovePayroll && isSalesLocked && !isAdminConfirmed && (
-        <div className="flex gap-2 justify-end pt-4 border-t">
-          <Button 
-            variant="destructive"
-            onClick={rejectPayroll}
-            className="flex items-center gap-2"
-          >
-            <XCircle className="h-4 w-4" />
-            Reject & Unlock
-          </Button>
-          <Button 
-            onClick={() => setShowPayrollModal(true)}
-            className="flex items-center gap-2"
-            variant="default"
-          >
-            <CheckCircle className="h-4 w-4" />
-            Approve Payroll
-          </Button>
-        </div>
-      )}
+      {/* Download payslip button for confirmed payroll */}
       
       {models.length > 0 && canApprovePayroll && isAdminConfirmed && (
         <div className="flex gap-2 justify-end pt-4 border-t">
