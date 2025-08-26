@@ -147,46 +147,34 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
       
       // First, set all attendance to false for this day
-      const { error: resetError } = await supabase
+      await supabase
         .from('sales_tracker')
         .update({ attendance: false })
         .eq('chatter_id', effectiveChatterId)
         .eq('week_start_date', weekStartStr)
         .eq('day_of_week', dayOfWeek);
 
-      if (resetError) throw resetError;
-
       // If there are model names provided, set attendance to true for those models
       if (modelNames.trim()) {
         const modelList = modelNames.split(',').map(name => name.trim()).filter(name => name);
         
         for (const modelName of modelList) {
-          const { error: updateError } = await supabase
+          // Use upsert instead of update to handle both existing and new records
+          const { error: upsertError } = await supabase
             .from('sales_tracker')
-            .update({ attendance: true })
-            .eq('chatter_id', effectiveChatterId)
-            .eq('week_start_date', weekStartStr)
-            .eq('day_of_week', dayOfWeek)
-            .eq('model_name', modelName);
+            .upsert({
+              chatter_id: effectiveChatterId,
+              week_start_date: weekStartStr,
+              day_of_week: dayOfWeek,
+              model_name: modelName,
+              earnings: 0,
+              working_day: true,
+              attendance: true
+            }, {
+              onConflict: 'chatter_id,model_name,day_of_week,week_start_date'
+            });
 
-          // If model doesn't exist for this day, create a minimal entry
-          if (updateError) {
-            const { error: insertError } = await supabase
-              .from('sales_tracker')
-              .upsert({
-                chatter_id: effectiveChatterId,
-                week_start_date: weekStartStr,
-                day_of_week: dayOfWeek,
-                model_name: modelName,
-                earnings: 0,
-                working_day: true,
-                attendance: true
-              }, {
-                onConflict: 'chatter_id,model_name,day_of_week,week_start_date'
-              });
-
-            if (insertError) throw insertError;
-          }
+          if (upsertError) throw upsertError;
         }
       }
 
