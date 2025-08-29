@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -9,25 +9,6 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PremiumCard } from '@/components/ui/premium-card';
 import { supabase } from '@/integrations/supabase/client';
-
-// Your custom ElevenLabs voices with their available tones
-const ELEVENLABS_VOICES = [
-  { 
-    id: 'puU1eXVwhHYVUrgX2AMX', 
-    name: 'Maddy',
-    availableTones: ['normal', 'seductive']
-  },
-  { 
-    id: 'aEO01A4wXwd1O8GPgGlF', 
-    name: 'Tash',
-    availableTones: ['normal']
-  },
-  { 
-    id: 'gXh9cw4Q1mk45fJJeQQC', 
-    name: 'Molly',
-    availableTones: ['normal']
-  },
-];
 
 const VOICE_TONES = [
   { id: 'normal', name: 'Normal' },
@@ -81,41 +62,36 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
-  // New state for voice sources from database
-  const [voiceSources, setVoiceSources] = useState<any[]>([]);
-  const [groupedSources, setGroupedSources] = useState<Record<string, Record<string, any[]>>>({});
+  // State for voices from Airtable
+  const [voicesByClient, setVoicesByClient] = useState<Record<string, any[]>>({});
   const [isLoadingSources, setIsLoadingSources] = useState<boolean>(true);
 
   const audioRef = React.useRef<HTMLAudioElement>(null);
 
-  // Fetch voice sources from database
-  React.useEffect(() => {
-    fetchVoiceSources();
+  // Fetch voices from Airtable
+  useEffect(() => {
+    fetchVoicesFromAirtable();
   }, []);
 
-  const fetchVoiceSources = async () => {
+  const fetchVoicesFromAirtable = async () => {
     try {
       setIsLoadingSources(true);
-      console.log('Fetching voice sources from database...');
+      console.log('Fetching voices from Airtable...');
       
-      const { data, error } = await supabase.functions.invoke('voice-sources', {
-        method: 'GET'
-      });
+      const { data, error } = await supabase.functions.invoke('airtable-voices');
 
-      console.log('Voice sources response:', { data, error });
+      if (error) {
+        console.error('Error fetching voices from Airtable:', error);
+        throw error;
+      }
 
-      if (error) throw error;
-
-      console.log('Setting voice sources:', data.voiceSources);
-      console.log('Setting grouped sources:', data.groupedSources);
-      
-      setVoiceSources(data.voiceSources || []);
-      setGroupedSources(data.groupedSources || {});
+      console.log('Airtable voices response:', data);
+      setVoicesByClient(data?.voicesByClient || {});
     } catch (error) {
-      console.error('Error fetching voice sources:', error);
+      console.error('Error fetching voices:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch voice sources",
+        description: "Failed to fetch voice models",
         variant: "destructive",
       });
     } finally {
@@ -123,35 +99,20 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     }
   };
 
-  // Get available emotions for the selected model
-  const availableModels = Object.keys(groupedSources);
-  const availableEmotions = selectedModel ? Object.keys(groupedSources[selectedModel] || {}) : [];
+  // Get available models (client names)
+  const availableModels = Object.keys(voicesByClient);
 
-  // Get available tones for the selected voice (keeping existing ElevenLabs logic for now)
-  const getAvailableTonesForVoice = (voiceId: string) => {
-    const voice = ELEVENLABS_VOICES.find(v => v.id === voiceId);
-    if (!voice) return [];
-    
-    return VOICE_TONES.filter(tone => voice.availableTones.includes(tone.id));
-  };
+  // Get available emotions/tones for the selected model
+  const availableEmotions = selectedModel ? (voicesByClient[selectedModel] || []).map(voice => voice.tone) : [];
 
   // Updated voice selection handler
-  const handleVoiceChange = (voiceId: string) => {
-    console.log('Model selected:', voiceId);
-    console.log('Available emotions for model:', Object.keys(groupedSources[voiceId] || {}));
-    setSelectedModel(voiceId);
+  const handleVoiceChange = (clientName: string) => {
+    console.log('Model selected:', clientName);
+    setSelectedModel(clientName);
     setSelectedEmotion(''); // Reset emotion when model changes
-    
-    // Get available tones for the new voice (ElevenLabs fallback)
-    const availableTones = getAvailableTonesForVoice(voiceId);
-    
-    // If current tone is not available for the new voice, reset to the first available tone
-    if (availableTones.length > 0 && !availableTones.some(tone => tone.id === aiTone)) {
-      setAiTone(availableTones[0].id);
-    }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedModel) {
       setIsLoading(true);
       setTimeout(() => {
@@ -192,7 +153,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     if (!selectedEmotion) {
       toast({
         title: "Error",
-        description: "Please select an emotion",
+        description: "Please select a tone",
         variant: "destructive",
       });
       return;
@@ -217,30 +178,43 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       return;
     }
 
+    // Find the selected voice details
+    const selectedVoiceData = voicesByClient[selectedModel]?.find(voice => voice.tone === selectedEmotion);
+    if (!selectedVoiceData) {
+      toast({
+        title: "Error",
+        description: "Selected voice configuration not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
-      console.log('Generating voice...');
+      console.log('Generating voice with ElevenLabs...');
       
-      const { data, error } = await supabase.functions.invoke('voice-generate', {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-generate', {
         body: {
           text: textToGenerate,
-          modelName: selectedModel,
-          emotion: selectedEmotion
+          voiceId: selectedVoiceData.elevenId,
+          apiKey: selectedVoiceData.apiKey
         }
       });
 
       if (error) {
-        console.error('Supabase function error:', error);
+        console.error('ElevenLabs generation error:', error);
         throw new Error(error.message || 'Failed to generate voice');
       }
 
-      if (!data || !data.audio) {
+      if (!data || !data.audioContent) {
         throw new Error('No audio data received from voice generation service');
       }
 
-      const audioBase64 = data.audio;
-      setGeneratedAudio(audioBase64);
+      // Convert base64 to blob URL for playback
+      const audioBlob = new Blob([Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      setGeneratedAudio(audioUrl);
       
       // Store in local cache
       const voiceGenerationCache = JSON.parse(localStorage.getItem('voiceGenerationCache') || '{}');
@@ -249,7 +223,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       const voiceNote = {
         id: `voice-${Date.now()}`,
         text: textToGenerate,
-        audio: audioBase64,
+        audio: audioUrl,
         settings: {
           model: selectedModel,
           ambience: ambience,
@@ -269,7 +243,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       
       toast({
         title: "Success",
-        description: "Voice note generated successfully!",
+        description: data.message || "Voice note generated successfully!",
       });
     } catch (error) {
       console.error('Error generating voice:', error);
@@ -340,11 +314,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     return ambience ? ambience.name : ambienceId;
   };
 
-  const getVoiceName = (voiceId: string) => {
-    const voice = ELEVENLABS_VOICES.find(v => v.id === voiceId);
-    return voice ? voice.name : voiceId;
-  };
-
   const filteredNotes = searchTerm 
     ? voiceNotes.filter(note => 
         note.text.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -358,9 +327,6 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
       return 'Unknown date';
     }
   };
-
-  // Get available tones for the currently selected voice
-  const availableTones = selectedModel ? getAvailableTonesForVoice(selectedModel) : [];
 
   return (
     <>
@@ -397,22 +363,22 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
             )}
           </div>
 
-          {/* Step 2: Emotion Selection */}
+          {/* Step 2: Tone Selection */}
           {selectedModel && (
             <div className="w-full">
-              <Label className="text-sm font-medium block">Step 2: Select Emotion</Label>
+              <Label className="text-sm font-medium block">Step 2: Select Tone</Label>
               <Select
                 value={selectedEmotion}
                 onValueChange={setSelectedEmotion}
                 disabled={!selectedModel}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select an emotion" />
+                  <SelectValue placeholder="Select a tone" />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableEmotions.map((emotion) => (
-                    <SelectItem key={emotion} value={emotion}>
-                      {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                  {availableEmotions.map((tone) => (
+                    <SelectItem key={tone} value={tone}>
+                      {tone.charAt(0).toUpperCase() + tone.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -441,7 +407,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
                           <SelectValue placeholder="Select AI tone" />
                         </SelectTrigger>
                         <SelectContent>
-                          {availableTones.map(tone => (
+                          {VOICE_TONES.map(tone => (
                             <SelectItem key={tone.id} value={tone.id}>
                               {tone.name}
                             </SelectItem>
@@ -503,158 +469,135 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
                     )}
                   </Button>
 
-                  <div className="w-full">
-                    {generatedAudio && !isGenerating ? (
-                      <PremiumCard className="h-full flex flex-col">
-                        <div className="p-5 flex-1">
-                          <h3 className="font-semibold mb-4 text-lg">Preview Generated Voice Note</h3>
-                          <ScrollArea className="h-[160px] w-full">
-                            <p className="text-sm text-muted-foreground mb-4">{message}</p>
-                          </ScrollArea>
-                          
-                          <div className="flex flex-col gap-3">
-                            <Button onClick={() => playAudio("preview", generatedAudio)} variant="outline" className="w-full">
-                              <Play className="mr-2 h-4 w-4" />
-                              {playingId === "preview" ? "Playing..." : "Play"}
+                  {/* Generated Audio Preview */}
+                  {generatedAudio && (
+                    <PremiumCard className="border-premium-accent/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => playAudio('generated', generatedAudio)}
+                            >
+                              <Play className="h-4 w-4" />
                             </Button>
-                            <Button onClick={copyAudioToClipboard} variant="outline" className="w-full">
-                              <Copy className="mr-2 h-4 w-4" />
-                              Copy
+                            <span className="text-sm text-muted-foreground">Generated Audio</span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={copyAudioToClipboard}
+                            >
+                              <Copy className="h-4 w-4" />
                             </Button>
-                            <Button onClick={() => downloadAudio(generatedAudio, message)} variant="outline" className="w-full">
-                              <Download className="mr-2 h-4 w-4" />
-                              Download
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadAudio(generatedAudio, message)}
+                            >
+                              <Download className="h-4 w-4" />
                             </Button>
                           </div>
-                          
-                          <audio ref={audioRef} src={generatedAudio} className="hidden" />
                         </div>
-                      </PremiumCard>
-                    ) : (
-                      <div className="h-full flex items-center justify-center p-6 border border-dashed border-premium-border/30 rounded-xl bg-accent/5 text-muted-foreground">
-                        {isGenerating ? (
-                          <div className="text-center">
-                            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-                            <p>Generating voice note...</p>
-                          </div>
-                        ) : (
-                          <div className="text-center">
-                            <Mic className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p>Follow the steps above to generate a voice note</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                      </CardContent>
+                    </PremiumCard>
+                  )}
                 </div>
               </TabsContent>
 
-              <TabsContent value="library" className="space-y-6">
-                <div className="space-y-6">
-                  <div>
-                    <Label className="text-sm font-medium block">Search Voice Notes</Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Search by content..."
-                        className="pl-10"
-                      />
-                    </div>
+              <TabsContent value="library" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search voice notes..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="flex-1"
+                    />
                   </div>
 
-                  <div className="mt-6">
-                    {isLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : filteredNotes.length > 0 ? (
-                      <ScrollArea className="h-[400px]">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {filteredNotes.map((note) => (
-                            <PremiumCard key={note.id} className="transition-all hover:shadow-md">
-                              <div className="p-4 space-y-3">
-                                <div className="flex justify-between items-start">
-                                  <div className="w-4/5">
-                                    <p className="line-clamp-2 text-sm font-medium mb-2">{note.text}</p>
-                                    {note.settings.message && note.settings.message !== note.text && (
-                                      <p className="text-xs text-muted-foreground mb-2">
-                                        Original message: {note.settings.message}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={() => deleteVoiceNote(note.id)}
-                                    className="h-8 w-8 p-0"
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </div>
-                                
-                                <div className="space-y-1">
-                                  <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Voice: {getVoiceName(note.settings.model)}</span>
-                                    <span>Ambience: {getAmbienceName(note.settings.ambience)}</span>
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    <span>AI Tone: {getAiToneName(note.settings.aiTone || 'normal')}</span>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span className="ml-2">Loading voice notes...</span>
+                    </div>
+                  ) : filteredNotes.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {selectedModel ? "No voice notes found." : "Select a model to view voice notes."}
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[400px]">
+                      <div className="space-y-3">
+                        {filteredNotes.map((note) => (
+                          <PremiumCard key={note.id} className="border-premium-border/30">
+                            <CardContent className="p-4">
+                              <div className="space-y-3">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 space-y-1">
+                                    <p className="text-sm font-medium line-clamp-2">{note.text}</p>
+                                    <div className="flex flex-wrap gap-2">
+                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
+                                        {note.settings.model}
+                                      </span>
+                                      {note.settings.aiTone && (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
+                                          {getAiToneName(note.settings.aiTone)}
+                                        </span>
+                                      )}
+                                      {note.settings.ambience !== 'none' && (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
+                                          {getAmbienceName(note.settings.ambience)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{formatDate(note.createdAt)}</p>
                                   </div>
                                 </div>
-                                
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDate(note.createdAt)}
-                                </p>
-                                
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  <Button 
-                                    variant="outline" 
+                                <div className="flex items-center justify-between">
+                                  <Button
+                                    variant="outline"
                                     size="sm"
                                     onClick={() => playAudio(note.id, note.audio)}
-                                    className="flex-1"
+                                    className="flex items-center space-x-1"
                                   >
-                                    {playingId === note.id ? (
-                                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                                    ) : (
-                                      <Play className="h-4 w-4 mr-1" />
-                                    )}
-                                    {playingId === note.id ? "Playing" : "Play"}
+                                    <Play className="h-3 w-3" />
+                                    <span>Play</span>
                                   </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => copyAudioToClipboard()}
-                                    className="flex-1"
-                                  >
-                                    <Copy className="h-4 w-4 mr-1" />
-                                    Copy
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm"
-                                    onClick={() => downloadAudio(note.audio, note.text)}
-                                    className="flex-1"
-                                  >
-                                    <Download className="h-4 w-4 mr-1" />
-                                    Download
-                                  </Button>
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={copyAudioToClipboard}
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => downloadAudio(note.audio, note.text)}
+                                    >
+                                      <Download className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => deleteVoiceNote(note.id)}
+                                      className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                            </PremiumCard>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    ) : (
-                      <div className="text-center py-12 bg-accent/5 rounded-xl border border-dashed border-premium-border/30">
-                        <p className="text-muted-foreground">No voice notes found for this voice.</p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Generate some voice notes in the "Generate Voice" tab.
-                        </p>
+                            </CardContent>
+                          </PremiumCard>
+                        ))}
                       </div>
-                    )}
-                  </div>
+                    </ScrollArea>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
