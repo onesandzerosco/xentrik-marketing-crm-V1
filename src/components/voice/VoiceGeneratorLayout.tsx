@@ -14,15 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 const ELEVENLABS_API_KEY = 'sk_ac245bd4e35ea3976298913a1202a82d8db5975534c00f3e';
 const MADDY_VOICE_ID = 'puU1eXVwhHYVUrgX2AMX';
 
-const AMBIENCE_OPTIONS = [
-  { id: 'none', name: 'None' },
-  { id: 'coffee_shop', name: 'Coffee Shop' },
-  { id: 'street', name: 'Street Noise' },
-  { id: 'nature', name: 'Nature Sounds' },
-  { id: 'room', name: 'Room Ambience' },
-  { id: 'fan', name: 'Fan Background' },
-  { id: 'party', name: 'Party Atmosphere' },
-  { id: 'crowd', name: 'Crowd Murmur' },
+const EMOTION_OPTIONS = [
+  { id: 'seductive', name: 'Seductive' },
+  { id: 'casual', name: 'Casual' },
 ];
 
 interface VoiceNote {
@@ -30,7 +24,7 @@ interface VoiceNote {
   text: string;
   audio: string;
   settings: {
-    ambience: string;
+    emotion: string;
     message?: string;
   };
   createdAt: string;
@@ -42,7 +36,7 @@ interface VoiceGeneratorLayoutProps {
 
 const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) => {
   const [message, setMessage] = useState<string>('');
-  const [ambience, setAmbience] = useState<string>('none');
+  const [emotion, setEmotion] = useState<string>('seductive');
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
@@ -127,7 +121,7 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
         text: textToGenerate,
         audio: audioUrl,
         settings: {
-          ambience: ambience,
+          emotion: emotion,
           message: message,
         },
         createdAt: new Date().toISOString()
@@ -204,9 +198,9 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
     }
   };
 
-  const getAmbienceName = (ambienceId: string) => {
-    const ambience = AMBIENCE_OPTIONS.find(a => a.id === ambienceId);
-    return ambience ? ambience.name : ambienceId;
+  const getEmotionName = (emotionId: string) => {
+    const emotion = EMOTION_OPTIONS.find(a => a.id === emotionId);
+    return emotion ? emotion.name : emotionId;
   };
 
   const filteredNotes = searchTerm 
@@ -239,18 +233,18 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
 
             <TabsContent value="generate" className="space-y-6">
               <div className="space-y-6 w-full">
-                {/* Background Ambience */}
+                {/* Voice Emotion */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium block">Background Ambience</Label>
+                  <Label className="text-sm font-medium block">Voice Emotion</Label>
                   <Select 
-                    value={ambience}
-                    onValueChange={setAmbience}
+                    value={emotion}
+                    onValueChange={setEmotion}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select ambience" />
+                      <SelectValue placeholder="Select emotion" />
                     </SelectTrigger>
                     <SelectContent>
-                      {AMBIENCE_OPTIONS.map(option => (
+                      {EMOTION_OPTIONS.map(option => (
                         <SelectItem key={option.id} value={option.id}>
                           {option.name}
                         </SelectItem>
@@ -365,11 +359,11 @@ const VoiceGeneratorLayout: React.FC<VoiceGeneratorLayoutProps> = ({ toast }) =>
                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
                                          Maddy
                                        </span>
-                                       {note.settings.ambience !== 'none' && (
-                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
-                                           {getAmbienceName(note.settings.ambience)}
-                                         </span>
-                                       )}
+                                        {note.settings.emotion && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-premium-muted">
+                                            {getEmotionName(note.settings.emotion)}
+                                          </span>
+                                        )}
                                      </div>
                                     <p className="text-xs text-muted-foreground">{formatDate(note.createdAt)}</p>
                                   </div>
