@@ -69,6 +69,8 @@ const VoiceClone: React.FC = () => {
   const [generatedVoiceClones, setGeneratedVoiceClones] = useState<GeneratedVoiceClone[]>([]);
   const [isLoadingGeneratedClones, setIsLoadingGeneratedClones] = useState(true);
   const [filterModel, setFilterModel] = useState<string>('');
+  const [pendingGenerations, setPendingGenerations] = useState<Set<string>>(new Set());
+  const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
 
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
@@ -80,8 +82,53 @@ const VoiceClone: React.FC = () => {
       fetchUserProfile();
       fetchCreators(); // Fetch creators for all users to populate model dropdown
       fetchGeneratedVoiceClones();
+      setupRealtimeSubscription();
     }
+    
+    return () => {
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
+    };
   }, [isAuthenticated, user]);
+
+  const setupRealtimeSubscription = () => {
+    if (!isAuthenticated || !user) return;
+    
+    const channel = supabase
+      .channel('generated-voice-clones-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'generated_voice_clones',
+          filter: `generated_by=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New voice clone generated:', payload);
+          // Remove from pending and refresh the list
+          setPendingGenerations(prev => {
+            const newSet = new Set(prev);
+            const newClone = payload.new as GeneratedVoiceClone;
+            const pendingKey = `${newClone.model_name}_${newClone.emotion}_${newClone.generated_text.substring(0, 50)}`;
+            newSet.delete(pendingKey);
+            return newSet;
+          });
+          
+          // Refresh the generated voice clones list
+          fetchGeneratedVoiceClones();
+          
+          toast({
+            title: "Voice Generated!",
+            description: `Your ${payload.new.model_name} voice with ${payload.new.emotion} emotion is ready!`,
+          });
+        }
+      )
+      .subscribe();
+      
+    setRealtimeChannel(channel);
+  };
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -166,11 +213,18 @@ const VoiceClone: React.FC = () => {
       return;
     }
 
+    const trimmedText = inputText.trim();
+    const pendingKey = `${selectedModel}_${selectedEmotion}_${trimmedText.substring(0, 50)}`;
+
     try {
       setIsLoading(true);
+      
+      // Add to pending generations
+      setPendingGenerations(prev => new Set(prev).add(pendingKey));
+      
       const { data, error } = await supabase.functions.invoke('voice-generate', {
         body: {
-          text: inputText.trim(),
+          text: trimmedText,
           modelName: selectedModel,
           emotion: selectedEmotion
         }
@@ -181,18 +235,21 @@ const VoiceClone: React.FC = () => {
       // Voice generation started successfully
       toast({
         title: "Voice Generation Started",
-        description: "Your voice is being generated in the background. Check the table below for completed voices.",
+        description: "Your voice is being generated in the background. You'll be notified when it's ready!",
       });
       
       // Clear the form
       setInputText('');
       
-      // Refresh the generated voice clones list after a short delay
-      setTimeout(() => {
-        fetchGeneratedVoiceClones();
-      }, 2000);
     } catch (error) {
       console.error('Error generating voice:', error);
+      // Remove from pending on error
+      setPendingGenerations(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(pendingKey);
+        return newSet;
+      });
+      
       toast({
         title: "Error",
         description: "Failed to generate voice",
@@ -537,9 +594,30 @@ const VoiceClone: React.FC = () => {
                 disabled={isLoading || !selectedModel || !selectedEmotion || !inputText.trim()}
                 className="w-full"
               >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Voice
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Starting Voice Generation...
+                  </>
+                ) : (
+                  'Generate Voice'
+                )}
               </Button>
+              
+              {/* Show active generations status */}
+              {pendingGenerations.size > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                  <div className="flex items-center justify-center gap-2 text-orange-700">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm font-medium">
+                      {pendingGenerations.size} voice{pendingGenerations.size === 1 ? '' : 's'} generating in background...
+                    </span>
+                  </div>
+                  <p className="text-xs text-orange-600 mt-1">
+                    You'll be notified when complete!
+                  </p>
+                </div>
+              )}
 
               {generatedAudio && (
                 <Card>
@@ -616,47 +694,80 @@ const VoiceClone: React.FC = () => {
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody>
-                        {filteredGeneratedClones.map((clone) => (
-                          <TableRow key={clone.id}>
-                            <TableCell className="font-medium">{clone.model_name}</TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {clone.emotion.charAt(0).toUpperCase() + clone.emotion.slice(1)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate" title={clone.generated_text}>
-                              {clone.generated_text}
-                            </TableCell>
-                            <TableCell>{clone.user_name}</TableCell>
-                            <TableCell>{formatDate(clone.created_at)}</TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                onClick={() => handleDownloadGenerated(
-                                  clone.audio_url, 
-                                  clone.model_name, 
-                                  clone.emotion, 
-                                  clone.created_at
-                                )}
-                                variant="outline"
-                                size="sm"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        {filteredGeneratedClones.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                              {filterModel && filterModel !== 'all'
-                                ? `No generated voice clones found for ${filterModel}` 
-                                : 'No generated voice clones found. Generate your first voice to get started.'
-                              }
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
+                       <TableBody>
+                         {/* Show pending generations first */}
+                         {Array.from(pendingGenerations).map((pendingKey) => {
+                           const [model, emotion, text] = pendingKey.split('_');
+                           return (
+                             <TableRow key={`pending-${pendingKey}`} className="bg-muted/30">
+                               <TableCell className="font-medium">{model}</TableCell>
+                               <TableCell>
+                                 <Badge variant="outline" className="border-orange-400 text-orange-600">
+                                   {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                                 </Badge>
+                               </TableCell>
+                               <TableCell className="max-w-xs truncate" title={text}>
+                                 {text}
+                               </TableCell>
+                               <TableCell>
+                                 <div className="flex items-center gap-2">
+                                   <Loader2 className="h-3 w-3 animate-spin text-orange-500" />
+                                   <span className="text-orange-600 text-sm">Generating...</span>
+                                 </div>
+                               </TableCell>
+                               <TableCell className="text-muted-foreground">Processing</TableCell>
+                               <TableCell className="text-right">
+                                 <Button variant="outline" size="sm" disabled>
+                                   <Loader2 className="h-4 w-4 animate-spin" />
+                                 </Button>
+                               </TableCell>
+                             </TableRow>
+                           );
+                         })}
+                         
+                         {/* Show completed generations */}
+                         {filteredGeneratedClones.map((clone) => (
+                           <TableRow key={clone.id}>
+                             <TableCell className="font-medium">{clone.model_name}</TableCell>
+                             <TableCell>
+                               <Badge variant="secondary">
+                                 {clone.emotion.charAt(0).toUpperCase() + clone.emotion.slice(1)}
+                               </Badge>
+                             </TableCell>
+                             <TableCell className="max-w-xs truncate" title={clone.generated_text}>
+                               {clone.generated_text}
+                             </TableCell>
+                             <TableCell>{clone.user_name}</TableCell>
+                             <TableCell>{formatDate(clone.created_at)}</TableCell>
+                             <TableCell className="text-right">
+                               <Button
+                                 onClick={() => handleDownloadGenerated(
+                                   clone.audio_url, 
+                                   clone.model_name, 
+                                   clone.emotion, 
+                                   clone.created_at
+                                 )}
+                                 variant="outline"
+                                 size="sm"
+                               >
+                                 <Download className="h-4 w-4" />
+                               </Button>
+                             </TableCell>
+                           </TableRow>
+                         ))}
+                         
+                         {/* Empty state */}
+                         {filteredGeneratedClones.length === 0 && pendingGenerations.size === 0 && (
+                           <TableRow>
+                             <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                               {filterModel && filterModel !== 'all'
+                                 ? `No generated voice clones found for ${filterModel}` 
+                                 : 'No generated voice clones found. Generate your first voice to get started.'
+                               }
+                             </TableCell>
+                           </TableRow>
+                         )}
+                       </TableBody>
                     </Table>
                   )}
                 </CardContent>
