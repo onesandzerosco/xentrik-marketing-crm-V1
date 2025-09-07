@@ -154,15 +154,31 @@ serve(async (req) => {
           return;
         }
 
+        // Get the actual content type from the response
+        const contentType = audioDownloadResponse.headers.get('content-type') || 'audio/wav';
+        console.log(`Audio content type: ${contentType}`);
+
         const audioBuffer = await audioDownloadResponse.arrayBuffer();
-        console.log(`Downloaded audio file, size: ${audioBuffer.byteLength} bytes`);
+        console.log(`Downloaded audio file, size: ${audioBuffer.byteLength} bytes, content-type: ${contentType}`);
         
-        // Upload the generated audio to storage
-        const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.wav`;
+        // Determine file extension based on content type
+        let fileExtension = 'wav';
+        if (contentType.includes('mp3')) {
+          fileExtension = 'mp3';
+        } else if (contentType.includes('ogg')) {
+          fileExtension = 'ogg';
+        } else if (contentType.includes('wav')) {
+          fileExtension = 'wav';
+        } else if (contentType.includes('webm')) {
+          fileExtension = 'webm';
+        }
+        
+        // Upload the generated audio to storage with correct content type
+        const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${fileExtension}`;
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from('voices')
           .upload(generatedFileName, new Uint8Array(audioBuffer), {
-            contentType: 'audio/wav',
+            contentType: contentType,
             upsert: false
           });
 
@@ -171,7 +187,13 @@ serve(async (req) => {
           return;
         }
 
-        console.log('Audio generated and uploaded successfully:', uploadData);
+        console.log('Audio uploaded successfully:', {
+          path: uploadData.path,
+          id: uploadData.id,
+          fullPath: uploadData.fullPath,
+          contentType: contentType,
+          fileSize: audioBuffer.byteLength
+        });
 
         // Get public URL for the generated audio
         const { data: generatedUrlData } = supabaseClient.storage
