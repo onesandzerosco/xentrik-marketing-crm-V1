@@ -72,27 +72,7 @@ serve(async (req) => {
     // Create a job ID for tracking
     const jobId = `voice-job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    // Create initial job record
-    const { data: jobRecord, error: jobError } = await supabaseClient
-      .from('generated_voice_clones')
-      .insert({
-        bucket_key: jobId, // Temporary placeholder
-        model_name: modelName,
-        emotion: emotion,
-        generated_text: text,
-        generated_by: user.id,
-        job_id: jobId
-      })
-      .select()
-      .single();
-
-    if (jobError) {
-      console.error('Failed to create job record:', jobError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to initialize voice generation job' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log('Starting voice generation job:', jobId);
 
     // Start background processing
     const backgroundTask = async () => {
@@ -109,10 +89,6 @@ serve(async (req) => {
 
         if (dbError || !voiceSource) {
           console.error('Database error or no voice source:', dbError);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .delete()
-            .eq('id', jobRecord.id);
           return;
         }
 
@@ -155,10 +131,6 @@ serve(async (req) => {
 
         if (!bananaTTSResponse.ok) {
           console.error('BananaTTS API error:', bananaTTSResponse.status);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .delete()
-            .eq('id', jobRecord.id);
           return;
         }
 
@@ -166,10 +138,6 @@ serve(async (req) => {
 
         if (!bananaTTSData.success || !bananaTTSData.download_url) {
           console.error('BananaTTS generation failed:', bananaTTSData);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .delete()
-            .eq('id', jobRecord.id);
           return;
         }
 
@@ -183,10 +151,6 @@ serve(async (req) => {
         
         if (!audioDownloadResponse.ok) {
           console.error('Failed to download audio:', audioDownloadResponse.status);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .delete()
-            .eq('id', jobRecord.id);
           return;
         }
 
@@ -204,10 +168,6 @@ serve(async (req) => {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .delete()
-            .eq('id', jobRecord.id);
           return;
         }
 
@@ -218,24 +178,34 @@ serve(async (req) => {
           .from('voices')
           .getPublicUrl(generatedFileName);
 
-        // Update job record with success
-        await supabaseClient
+        // Only NOW create the database record with the complete data
+        const { data: jobRecord, error: finalError } = await supabaseClient
           .from('generated_voice_clones')
-          .update({
+          .insert({
             bucket_key: generatedFileName,
-            audio_url: generatedUrlData.publicUrl,
-            generated_text: bananaTTSData.generated_text || text
+            model_name: modelName,
+            emotion: emotion,
+            generated_text: bananaTTSData.generated_text || text,
+            generated_by: user.id,
+            job_id: jobId,
+            audio_url: generatedUrlData.publicUrl
           })
-          .eq('id', jobRecord.id);
+          .select()
+          .single();
+
+        if (finalError) {
+          console.error('Failed to save completed voice clone:', finalError);
+          // Clean up uploaded file
+          await supabaseClient.storage
+            .from('voices')
+            .remove([generatedFileName]);
+          return;
+        }
 
         console.log('Background voice generation completed for job:', jobId);
 
       } catch (error) {
         console.error('Background task error:', error);
-        await supabaseClient
-          .from('generated_voice_clones')
-          .delete()
-          .eq('id', jobRecord.id);
       }
     };
 
@@ -246,7 +216,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: 'Voice generation started',
-        jobId: jobRecord.id,
+        jobId: jobId,
         status: 'processing'
       }),
       { 

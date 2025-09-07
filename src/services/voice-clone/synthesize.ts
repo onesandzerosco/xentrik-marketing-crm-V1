@@ -21,7 +21,7 @@ export interface SynthesizeResult {
  * @returns Promise<SynthesizeResult> - Generated audio result
  */
 export async function synthesize(params: SynthesizeParams): Promise<SynthesizeResult> {
-  const { text, modelName, emotion, sourceKey } = params;
+  const { text, modelName, emotion } = params;
 
   try {
     console.log('Starting voice synthesis:', { text, modelName, emotion });
@@ -42,74 +42,17 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
 
     console.log('Voice generation job started:', data);
 
-    // Always poll for completion since all jobs start as processing
-    if (data.jobId) {
-      return await pollForJobCompletion(data.jobId);
-    }
-
-    // Fallback for backward compatibility
+    // Return success response - the actual generation happens in background
+    // User will see the completed voice in the table once it's done
     return {
-      audioUrl: data.audioUrl || '',
-      generatedPath: data.generatedPath || ''
+      audioUrl: '', // No immediate audio URL since it's background processing
+      generatedPath: ''
     };
 
   } catch (error) {
     console.error('Voice synthesis error:', error);
     throw error;
   }
-}
-
-/**
- * Poll for job completion
- */
-async function pollForJobCompletion(jobId: string): Promise<SynthesizeResult> {
-  const maxAttempts = 60; // 5 minutes max (5 second intervals)
-  let attempts = 0;
-
-  while (attempts < maxAttempts) {
-    try {
-      // Use direct fetch for GET request with query parameters  
-      const statusUrl = `https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-status?jobId=${jobId}`;
-      const response = await fetch(statusUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token || '')}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkendwaW9rcHlzc3FobmZpcXJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2Njc3MTIsImV4cCI6MjA2MDI0MzcxMn0.aUc4NpSjXMG-KQs7FeDPJTjZxp4ehJxvGi5-kk3CZRE'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Status check failed: ${response.status}`);
-      }
-
-      const statusData = await response.json();
-
-      if (statusData.status === 'completed') {
-        console.log('Voice generation completed:', statusData);
-        return {
-          audioUrl: statusData.audioUrl,
-          generatedPath: statusData.audioUrl
-        };
-      } else if (statusData.status === 'failed') {
-        throw new Error(`Voice generation failed: ${statusData.errorMessage || 'Unknown error'}`);
-      }
-
-      // Still processing, wait and try again
-      console.log(`Job ${jobId} still processing, attempt ${attempts + 1}/${maxAttempts}`);
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-      attempts++;
-
-    } catch (error) {
-      console.error('Error polling for job completion:', error);
-      if (attempts >= maxAttempts - 1) {
-        throw new Error('Voice generation timed out. Please try again.');
-      }
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      attempts++;
-    }
-  }
-
-  throw new Error('Voice generation timed out after 5 minutes. Please try again.');
 }
 
 /**

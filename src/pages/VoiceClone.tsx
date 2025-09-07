@@ -178,14 +178,19 @@ const VoiceClone: React.FC = () => {
 
       if (error) throw error;
 
-      setGeneratedAudio(data.audioUrl);
+      // Voice generation started successfully
       toast({
-        title: "Success",
-        description: "Voice generated successfully!",
+        title: "Voice Generation Started",
+        description: "Your voice is being generated in the background. Check the table below for completed voices.",
       });
       
-      // Refresh the generated voice clones list
-      fetchGeneratedVoiceClones();
+      // Clear the form
+      setInputText('');
+      
+      // Refresh the generated voice clones list after a short delay
+      setTimeout(() => {
+        fetchGeneratedVoiceClones();
+      }, 2000);
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
@@ -626,27 +631,18 @@ const VoiceClone: React.FC = () => {
                             <TableCell>{clone.user_name}</TableCell>
                             <TableCell>{formatDate(clone.created_at)}</TableCell>
                             <TableCell className="text-right">
-                              <div className="flex items-center gap-2">
-                                {clone.audio_url ? (
-                                  <Button
-                                    onClick={() => handleDownloadGenerated(
-                                      clone.audio_url, 
-                                      clone.model_name, 
-                                      clone.emotion, 
-                                      clone.created_at
-                                    )}
-                                    variant="outline"
-                                    size="sm"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                ) : (
-                                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                    Processing
-                                  </div>
+                              <Button
+                                onClick={() => handleDownloadGenerated(
+                                  clone.audio_url, 
+                                  clone.model_name, 
+                                  clone.emotion, 
+                                  clone.created_at
                                 )}
-                              </div>
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
