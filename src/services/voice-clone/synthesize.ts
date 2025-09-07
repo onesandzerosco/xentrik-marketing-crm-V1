@@ -24,7 +24,9 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
   const { text, modelName, emotion, sourceKey } = params;
 
   try {
-    // Call the voice generation edge function
+    console.log('Starting voice synthesis:', { text, modelName, emotion });
+    
+    // Call the voice generation edge function with extended timeout handling
     const { data, error } = await supabase.functions.invoke('voice-generate', {
       body: {
         text,
@@ -34,8 +36,17 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
     });
 
     if (error) {
+      console.error('Voice synthesis error:', error);
+      
+      // Handle timeout errors specifically
+      if (error.message?.includes('timeout') || error.message?.includes('longer than expected')) {
+        throw new Error('Voice generation is taking longer than expected. This can happen with complex text or when the AI model is processing intensive requests. Please try with shorter text or try again later.');
+      }
+      
       throw new Error(`Voice synthesis failed: ${error.message}`);
     }
+
+    console.log('Voice synthesis completed:', data);
 
     // TODO: Integrate with the actual voice cloning engine from the higgs_audio folder
     // For now, we return the mock response from the edge function
