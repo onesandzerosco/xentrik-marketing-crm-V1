@@ -111,8 +111,27 @@ const VoiceClone: React.FC = () => {
           setPendingGenerations(prev => {
             const newSet = new Set(prev);
             const newClone = payload.new as GeneratedVoiceClone;
-            const pendingKey = `${newClone.model_name}_${newClone.emotion}_${newClone.generated_text.substring(0, 50)}`;
-            newSet.delete(pendingKey);
+            
+            // Find matching pending generation by model, emotion and text
+            const pendingData = JSON.parse(localStorage.getItem('pendingGenerations') || '{}');
+            let matchingKey = '';
+            
+            for (const [key, data] of Object.entries(pendingData)) {
+              const pendingItem = data as any;
+              if (pendingItem.model === newClone.model_name && 
+                  pendingItem.emotion === newClone.emotion && 
+                  pendingItem.text === newClone.generated_text) {
+                matchingKey = key;
+                break;
+              }
+            }
+            
+            if (matchingKey) {
+              newSet.delete(matchingKey);
+              delete pendingData[matchingKey];
+              localStorage.setItem('pendingGenerations', JSON.stringify(pendingData));
+            }
+            
             return newSet;
           });
           
@@ -214,13 +233,26 @@ const VoiceClone: React.FC = () => {
     }
 
     const trimmedText = inputText.trim();
-    const pendingKey = `${selectedModel}_${selectedEmotion}_${trimmedText.substring(0, 50)}`;
+    // Create a more unique pending key using timestamp
+    const pendingKey = `${selectedModel}_${selectedEmotion}_${Date.now()}`;
+    const pendingGeneration = {
+      key: pendingKey,
+      model: selectedModel,
+      emotion: selectedEmotion,
+      text: trimmedText,
+      timestamp: Date.now()
+    };
 
     try {
       setIsLoading(true);
       
-      // Add to pending generations
+      // Add to pending generations with full data
       setPendingGenerations(prev => new Set(prev).add(pendingKey));
+      
+      // Store pending generation details for UI display
+      const pendingData = JSON.parse(localStorage.getItem('pendingGenerations') || '{}');
+      pendingData[pendingKey] = pendingGeneration;
+      localStorage.setItem('pendingGenerations', JSON.stringify(pendingData));
       
       const { data, error } = await supabase.functions.invoke('voice-generate', {
         body: {
@@ -234,7 +266,7 @@ const VoiceClone: React.FC = () => {
 
       // Voice generation started successfully
       toast({
-        title: "Voice Generation Started",
+        title: "Voice Generation Started", 
         description: "Your voice is being generated in the background. You'll be notified when it's ready!",
       });
       
@@ -249,6 +281,11 @@ const VoiceClone: React.FC = () => {
         newSet.delete(pendingKey);
         return newSet;
       });
+      
+      // Remove from localStorage too
+      const pendingData = JSON.parse(localStorage.getItem('pendingGenerations') || '{}');
+      delete pendingData[pendingKey];
+      localStorage.setItem('pendingGenerations', JSON.stringify(pendingData));
       
       toast({
         title: "Error",
@@ -695,35 +732,39 @@ const VoiceClone: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                        <TableBody>
-                         {/* Show pending generations first */}
-                         {Array.from(pendingGenerations).map((pendingKey) => {
-                           const [model, emotion, text] = pendingKey.split('_');
-                           return (
-                             <TableRow key={`pending-${pendingKey}`} className="bg-muted/30">
-                               <TableCell className="font-medium">{model}</TableCell>
-                               <TableCell>
-                                 <Badge variant="outline" className="border-orange-400 text-orange-600">
-                                   {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
-                                 </Badge>
-                               </TableCell>
-                               <TableCell className="max-w-xs truncate" title={text}>
-                                 {text}
-                               </TableCell>
-                               <TableCell>
-                                 <div className="flex items-center gap-2">
-                                   <Loader2 className="h-3 w-3 animate-spin text-orange-500" />
-                                   <span className="text-orange-600 text-sm">Generating...</span>
-                                 </div>
-                               </TableCell>
-                               <TableCell className="text-muted-foreground">Processing</TableCell>
-                               <TableCell className="text-right">
-                                 <Button variant="outline" size="sm" disabled>
-                                   <Loader2 className="h-4 w-4 animate-spin" />
-                                 </Button>
-                               </TableCell>
-                             </TableRow>
-                           );
-                         })}
+                          {/* Show pending generations first */}
+                          {Array.from(pendingGenerations).map((pendingKey) => {
+                            const pendingData = JSON.parse(localStorage.getItem('pendingGenerations') || '{}');
+                            const pendingItem = pendingData[pendingKey];
+                            
+                            if (!pendingItem) return null;
+                            
+                            return (
+                              <TableRow key={`pending-${pendingKey}`} className="bg-orange-50 border-orange-200">
+                                <TableCell className="font-medium">{pendingItem.model}</TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="border-orange-400 text-orange-600">
+                                    {pendingItem.emotion.charAt(0).toUpperCase() + pendingItem.emotion.slice(1)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="max-w-xs truncate" title={pendingItem.text}>
+                                  {pendingItem.text}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 animate-spin text-orange-500" />
+                                    <span className="text-orange-600 text-sm font-medium">Generating...</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-muted-foreground">Processing</TableCell>
+                                <TableCell className="text-right">
+                                  <Button variant="outline" size="sm" disabled>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                          
                          {/* Show completed generations */}
                          {filteredGeneratedClones.map((clone) => (
