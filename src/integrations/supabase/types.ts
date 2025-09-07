@@ -483,6 +483,39 @@ export type Database = {
           },
         ]
       }
+      generated_voice_clones: {
+        Row: {
+          bucket_key: string
+          created_at: string
+          emotion: string
+          generated_by: string
+          generated_text: string
+          id: string
+          model_name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_key: string
+          created_at?: string
+          emotion: string
+          generated_by: string
+          generated_text: string
+          id?: string
+          model_name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_key?: string
+          created_at?: string
+          emotion?: string
+          generated_by?: string
+          generated_text?: string
+          id?: string
+          model_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_media: {
         Row: {
           bucket_key: string

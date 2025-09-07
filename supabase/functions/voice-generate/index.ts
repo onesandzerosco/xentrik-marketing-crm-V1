@@ -197,7 +197,28 @@ serve(async (req) => {
       );
     }
 
-    console.log('BananaTTS audio generated and uploaded successfully:', uploadData);
+    console.log('Audio generated and uploaded successfully:', uploadData);
+
+    // Save the generated voice clone data to the database
+    const { data: voiceCloneData, error: dbInsertError } = await supabaseClient
+      .from('generated_voice_clones')
+      .insert({
+        bucket_key: generatedFileName,
+        model_name: modelName,
+        emotion: emotion,
+        generated_text: text,
+        generated_by: user.id
+      })
+      .select()
+      .single();
+
+    if (dbInsertError) {
+      console.error('Database insert error:', dbInsertError);
+      // Still return success since the audio was generated and uploaded
+      console.warn('Failed to save voice clone metadata to database, but audio generation succeeded');
+    } else {
+      console.log('Voice clone metadata saved to database:', voiceCloneData);
+    }
 
     // Get public URL for the generated audio
     const { data: generatedUrlData } = supabaseClient.storage
@@ -208,10 +229,11 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        message: 'Voice generated successfully using BananaTTS',
+        message: 'Voice generated successfully',
         audioUrl: generatedUrlData.publicUrl,
         generatedPath: generatedFileName,
-        generatedText: bananaTTSData.generated_text
+        generatedText: bananaTTSData.generated_text,
+        voiceCloneId: voiceCloneData?.id
       }),
       { 
         status: 200, 
