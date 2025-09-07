@@ -111,7 +111,7 @@ serve(async (req) => {
           console.error('Database error or no voice source:', dbError);
           await supabaseClient
             .from('generated_voice_clones')
-            .update({ status: 'failed', error_message: 'Voice source not found' })
+            .delete()
             .eq('id', jobRecord.id);
           return;
         }
@@ -157,7 +157,7 @@ serve(async (req) => {
           console.error('BananaTTS API error:', bananaTTSResponse.status);
           await supabaseClient
             .from('generated_voice_clones')
-            .update({ status: 'failed', error_message: 'API request failed' })
+            .delete()
             .eq('id', jobRecord.id);
           return;
         }
@@ -168,7 +168,7 @@ serve(async (req) => {
           console.error('BananaTTS generation failed:', bananaTTSData);
           await supabaseClient
             .from('generated_voice_clones')
-            .update({ status: 'failed', error_message: 'Voice generation failed' })
+            .delete()
             .eq('id', jobRecord.id);
           return;
         }
@@ -185,7 +185,7 @@ serve(async (req) => {
           console.error('Failed to download audio:', audioDownloadResponse.status);
           await supabaseClient
             .from('generated_voice_clones')
-            .update({ status: 'failed', error_message: 'Failed to download audio' })
+            .delete()
             .eq('id', jobRecord.id);
           return;
         }
@@ -206,7 +206,7 @@ serve(async (req) => {
           console.error('Upload error:', uploadError);
           await supabaseClient
             .from('generated_voice_clones')
-            .update({ status: 'failed', error_message: 'Failed to upload audio' })
+            .delete()
             .eq('id', jobRecord.id);
           return;
         }
@@ -235,7 +235,7 @@ serve(async (req) => {
         console.error('Background task error:', error);
         await supabaseClient
           .from('generated_voice_clones')
-          .update({ status: 'failed', error_message: error.message })
+          .delete()
           .eq('id', jobRecord.id);
       }
     };
