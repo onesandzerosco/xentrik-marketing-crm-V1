@@ -105,18 +105,70 @@ serve(async (req) => {
       );
     }
 
-    // Mock HiggsAudio voice generation for now
-    // TODO: Replace with actual HiggsAudio integration when Python service is set up
-    console.log('Generating mock voice clone (HiggsAudio Python service integration pending)');
+    // Call BananaTTS API for voice generation
+    console.log('Calling BananaTTS API for voice generation');
     
-    // Create a simple mock WAV audio based on text length
-    const createMockWavAudio = (text: string) => {
-      const sampleRate = 16000;
-      const duration = Math.min(text.length * 0.1, 10); // ~0.1 seconds per character, max 10 seconds
-      const numSamples = Math.floor(sampleRate * duration);
-      
-      // Create WAV header
-      const buffer = new ArrayBuffer(44 + numSamples * 2);
+    const bananaTTSUrl = 'https://03c396de4237.ngrok-free.app/api/generate_speech';
+    const requestData = {
+      text: text,
+      model_name: modelName,
+      emotion: emotion,
+      reference_audio: null,
+      reference_text: null,
+      max_completion_tokens: 1024,
+      temperature: 1.0,
+      top_p: 0.95,
+      top_k: 50,
+      system_prompt: "",
+      stop_strings: ["<|end_of_text|>", "<|eot_id|>"],
+      ras_win_len: 7,
+      ras_win_max_num_repeat: 2
+    };
+
+    console.log('Sending request to BananaTTS:', { modelName, emotion, textLength: text.length });
+
+    const bananaTTSResponse = await fetch(bananaTTSUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData)
+    });
+
+    if (!bananaTTSResponse.ok) {
+      console.error('BananaTTS API error:', bananaTTSResponse.status, bananaTTSResponse.statusText);
+      return new Response(
+        JSON.stringify({ error: `BananaTTS API failed: ${bananaTTSResponse.status} ${bananaTTSResponse.statusText}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const bananaTTSData = await bananaTTSResponse.json();
+
+    if (!bananaTTSData.success) {
+      console.error('BananaTTS generation failed:', bananaTTSData.error || 'Unknown error');
+      return new Response(
+        JSON.stringify({ error: `Voice generation failed: ${bananaTTSData.error || 'Unknown error'}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!bananaTTSData.audio || !Array.isArray(bananaTTSData.audio) || bananaTTSData.audio.length < 2) {
+      console.error('Invalid audio data from BananaTTS:', bananaTTSData.audio);
+      return new Response(
+        JSON.stringify({ error: 'Invalid audio data received from voice generation service' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const [sampleRate, audioArray] = bananaTTSData.audio;
+    console.log(`Audio generated successfully: ${sampleRate}Hz, ${audioArray.length} samples`);
+
+    // Convert BananaTTS audio to WAV format
+    const createWavFromBananaTTS = (audioArray: number[], sampleRate: number): Uint8Array => {
+      const audioData = new Int16Array(audioArray);
+      const length = audioData.length;
+      const buffer = new ArrayBuffer(44 + length * 2);
       const view = new DataView(buffer);
       
       // WAV header
@@ -127,36 +179,34 @@ serve(async (req) => {
       };
       
       writeString(0, 'RIFF');
-      view.setUint32(4, 36 + numSamples * 2, true);
+      view.setUint32(4, 36 + length * 2, true);
       writeString(8, 'WAVE');
       writeString(12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
+      view.setUint32(16, 16, true); // fmt chunk size
+      view.setUint16(20, 1, true);  // audio format (PCM)
+      view.setUint16(22, 1, true);  // number of channels
+      view.setUint32(24, sampleRate, true); // sample rate
+      view.setUint32(28, sampleRate * 2, true); // byte rate
+      view.setUint16(32, 2, true);  // block align
+      view.setUint16(34, 16, true); // bits per sample
       writeString(36, 'data');
-      view.setUint32(40, numSamples * 2, true);
+      view.setUint32(40, length * 2, true);
       
-      // Generate simple audio pattern so you can verify it works
-      for (let i = 0; i < numSamples; i++) {
-        const freq = 440; // A4 note
-        const sample = Math.sin(2 * Math.PI * freq * i / sampleRate) * 0.2; // Low volume
-        view.setInt16(44 + i * 2, sample * 32767, true);
+      // Write audio data
+      for (let i = 0; i < length; i++) {
+        view.setInt16(44 + i * 2, audioData[i], true);
       }
       
       return new Uint8Array(buffer);
     };
 
-    const mockAudioBuffer = createMockWavAudio(text);
+    const audioBuffer = createWavFromBananaTTS(audioArray, sampleRate);
     
-    // Upload the mock generated audio to storage
+    // Upload the generated audio to storage
     const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.wav`;
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from('voices')
-      .upload(generatedFileName, mockAudioBuffer, {
+      .upload(generatedFileName, audioBuffer, {
         contentType: 'audio/wav',
         upsert: false
       });
@@ -169,7 +219,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Mock audio generated and uploaded successfully:', uploadData);
+    console.log('BananaTTS audio generated and uploaded successfully:', uploadData);
 
     // Get public URL for the generated audio
     const { data: generatedUrlData } = supabaseClient.storage
@@ -180,9 +230,10 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        message: 'Voice generated successfully (mock audio - HiggsAudio integration pending)',
+        message: 'Voice generated successfully using BananaTTS',
         audioUrl: generatedUrlData.publicUrl,
-        generatedPath: generatedFileName
+        generatedPath: generatedFileName,
+        generatedText: bananaTTSData.generated_text
       }),
       { 
         status: 200, 
