@@ -105,34 +105,10 @@ serve(async (req) => {
       );
     }
 
-    // Test BananaTTS API availability first
-    const bananaTTSBaseUrl = 'https://03c396de4237.ngrok-free.app';
-    console.log('Testing BananaTTS API availability...');
-    
-    try {
-      const healthResponse = await fetch(`${bananaTTSBaseUrl}/health`, { 
-        method: 'GET',
-        signal: AbortSignal.timeout(10000) // 10 second timeout for health check
-      });
-      
-      if (!healthResponse.ok) {
-        throw new Error(`Health check failed: ${healthResponse.status}`);
-      }
-      
-      const healthData = await healthResponse.json();
-      console.log('BananaTTS API health check passed:', healthData);
-    } catch (healthError) {
-      console.error('BananaTTS API health check failed:', healthError);
-      return new Response(
-        JSON.stringify({ error: 'BananaTTS API is not available. Please check the service status.' }),
-        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Call BananaTTS API for voice generation
     console.log('Calling BananaTTS API for voice generation');
     
-    const bananaTTSUrl = `${bananaTTSBaseUrl}/api/generate_speech`;
+    const bananaTTSUrl = 'https://03c396de4237.ngrok-free.app/api/generate_speech';
     const requestData = {
       text: text,
       model_name: modelName,
@@ -151,29 +127,13 @@ serve(async (req) => {
 
     console.log('Sending request to BananaTTS:', { modelName, emotion, textLength: text.length });
 
-    // Add timeout and better error handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      console.log('BananaTTS request timeout after 120 seconds');
-      controller.abort();
-    }, 120000); // 2 minute timeout
-
-    let bananaTTSResponse;
-    try {
-      bananaTTSResponse = await fetch(bananaTTSUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        signal: controller.signal,
-        body: JSON.stringify(requestData)
-      });
-      clearTimeout(timeoutId);
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.error('BananaTTS fetch error:', fetchError);
-      throw new Error(`BananaTTS API connection failed: ${fetchError.message}`);
-    }
+    const bananaTTSResponse = await fetch(bananaTTSUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestData)
+    });
 
     if (!bananaTTSResponse.ok) {
       console.error('BananaTTS API error:', bananaTTSResponse.status, bananaTTSResponse.statusText);
