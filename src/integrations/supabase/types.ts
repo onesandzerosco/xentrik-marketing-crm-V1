@@ -494,6 +494,7 @@ export type Database = {
           id: string
           job_id: string | null
           model_name: string
+          status: string
           updated_at: string
         }
         Insert: {
@@ -506,6 +507,7 @@ export type Database = {
           id?: string
           job_id?: string | null
           model_name: string
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -518,6 +520,7 @@ export type Database = {
           id?: string
           job_id?: string | null
           model_name?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
