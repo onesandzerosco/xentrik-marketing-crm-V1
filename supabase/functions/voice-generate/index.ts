@@ -59,6 +59,8 @@ serve(async (req) => {
     }
 
     const { text, modelName, emotion } = await req.json();
+    
+    console.log('Voice generation request received:', { text, modelName, emotion });
 
     if (!text || !modelName || !emotion) {
       return new Response(
@@ -125,18 +127,44 @@ serve(async (req) => {
       ras_win_max_num_repeat: 2
     };
 
-    console.log('Sending request to BananaTTS:', { modelName, emotion, textLength: text.length });
-
-    const bananaTTSResponse = await fetch(bananaTTSUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestData)
+    console.log('Sending request to BananaTTS:', { 
+      url: bananaTTSUrl,
+      modelName, 
+      emotion, 
+      textLength: text.length 
     });
+
+    let bananaTTSResponse;
+    try {
+      bananaTTSResponse = await fetch(bananaTTSUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Origin': 'https://rdzwpiokpyssqhnfiqrt.supabase.co'
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      console.log('BananaTTS response status:', bananaTTSResponse.status);
+      
+    } catch (fetchError) {
+      console.error('BananaTTS fetch error:', fetchError);
+      return new Response(
+        JSON.stringify({ error: `Failed to connect to voice generation API: ${fetchError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!bananaTTSResponse.ok) {
       console.error('BananaTTS API error:', bananaTTSResponse.status, bananaTTSResponse.statusText);
+      let errorText = '';
+      try {
+        errorText = await bananaTTSResponse.text();
+        console.error('BananaTTS API error body:', errorText);
+      } catch (e) {
+        console.error('Failed to read error response body');
+      }
       return new Response(
         JSON.stringify({ error: `BananaTTS API failed: ${bananaTTSResponse.status} ${bananaTTSResponse.statusText}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
