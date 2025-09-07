@@ -153,14 +153,6 @@ serve(async (req) => {
       
     } catch (fetchError) {
       console.error('BananaTTS fetch error:', fetchError);
-      if (fetchError.name === 'AbortError' || fetchError.message.includes('timeout')) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Voice generation is taking longer than expected. Your API might be processing a complex request. Please try again or use shorter text.' 
-          }),
-          { status: 408, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
       return new Response(
         JSON.stringify({ error: `Failed to connect to voice generation API: ${fetchError.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

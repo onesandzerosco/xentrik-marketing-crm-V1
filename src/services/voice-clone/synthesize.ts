@@ -37,12 +37,6 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
 
     if (error) {
       console.error('Voice synthesis error:', error);
-      
-      // Handle timeout errors specifically
-      if (error.message?.includes('timeout') || error.message?.includes('longer than expected')) {
-        throw new Error('Voice generation is taking longer than expected. This can happen with complex text or when the AI model is processing intensive requests. Please try with shorter text or try again later.');
-      }
-      
       throw new Error(`Voice synthesis failed: ${error.message}`);
     }
 
