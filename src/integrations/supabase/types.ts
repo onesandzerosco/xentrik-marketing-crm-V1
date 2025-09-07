@@ -485,32 +485,38 @@ export type Database = {
       }
       generated_voice_clones: {
         Row: {
+          audio_url: string | null
           bucket_key: string
           created_at: string
           emotion: string
           generated_by: string
           generated_text: string
           id: string
+          job_id: string | null
           model_name: string
           updated_at: string
         }
         Insert: {
+          audio_url?: string | null
           bucket_key: string
           created_at?: string
           emotion: string
           generated_by: string
           generated_text: string
           id?: string
+          job_id?: string | null
           model_name: string
           updated_at?: string
         }
         Update: {
+          audio_url?: string | null
           bucket_key?: string
           created_at?: string
           emotion?: string
           generated_by?: string
           generated_text?: string
           id?: string
+          job_id?: string | null
           model_name?: string
           updated_at?: string
         }
