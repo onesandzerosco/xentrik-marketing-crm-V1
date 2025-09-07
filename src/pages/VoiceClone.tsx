@@ -426,7 +426,7 @@ const VoiceClone: React.FC = () => {
   const availableEmotions = selectedModel ? Object.keys(groupedSources[selectedModel] || {}) : [];
   
   // Filter generated voice clones by model
-  const filteredGeneratedClones = filterModel 
+  const filteredGeneratedClones = filterModel && filterModel !== 'all'
     ? generatedVoiceClones.filter(clone => clone.model_name === filterModel)
     : generatedVoiceClones;
 
@@ -568,7 +568,7 @@ const VoiceClone: React.FC = () => {
                         <SelectValue placeholder="Filter by model" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Models</SelectItem>
+                        <SelectItem value="all">All Models</SelectItem>
                         {availableModels.map((model) => (
                           <SelectItem key={model} value={model}>
                             {model}
@@ -642,7 +642,7 @@ const VoiceClone: React.FC = () => {
                         {filteredGeneratedClones.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                              {filterModel 
+                              {filterModel && filterModel !== 'all'
                                 ? `No generated voice clones found for ${filterModel}` 
                                 : 'No generated voice clones found. Generate your first voice to get started.'
                               }
