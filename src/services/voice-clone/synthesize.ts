@@ -42,8 +42,8 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
 
     console.log('Voice generation job started:', data);
 
-    // If we got a job ID, poll for completion
-    if (data.jobId && data.status === 'processing') {
+    // Always poll for completion since all jobs start as processing
+    if (data.jobId) {
       return await pollForJobCompletion(data.jobId);
     }
 
@@ -68,7 +68,7 @@ async function pollForJobCompletion(jobId: string): Promise<SynthesizeResult> {
 
   while (attempts < maxAttempts) {
     try {
-      // Use direct fetch for GET request with query parameters
+      // Use direct fetch for GET request with query parameters  
       const statusUrl = `https://rdzwpiokpyssqhnfiqrt.supabase.co/functions/v1/voice-status?jobId=${jobId}`;
       const response = await fetch(statusUrl, {
         method: 'GET',

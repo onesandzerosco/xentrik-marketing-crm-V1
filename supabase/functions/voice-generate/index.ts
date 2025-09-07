@@ -81,7 +81,7 @@ serve(async (req) => {
         emotion: emotion,
         generated_text: text,
         generated_by: user.id,
-        status: 'processing'
+        job_id: jobId
       })
       .select()
       .single();
@@ -223,9 +223,8 @@ serve(async (req) => {
           .from('generated_voice_clones')
           .update({
             bucket_key: generatedFileName,
-            status: 'completed',
             audio_url: generatedUrlData.publicUrl,
-            generated_text_output: bananaTTSData.generated_text
+            generated_text: bananaTTSData.generated_text || text
           })
           .eq('id', jobRecord.id);
 

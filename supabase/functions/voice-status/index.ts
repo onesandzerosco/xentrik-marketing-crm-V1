@@ -71,7 +71,7 @@ serve(async (req) => {
     // Get job status
     const { data: jobData, error: jobError } = await supabaseClient
       .from('generated_voice_clones')
-      .select('id, status, audio_url, generated_text_output, error_message, created_at')
+      .select('id, audio_url, generated_text, created_at, job_id')
       .eq('id', jobId)
       .eq('generated_by', user.id) // Ensure user can only access their own jobs
       .single();
@@ -91,13 +91,15 @@ serve(async (req) => {
       );
     }
 
+    // Determine status based on presence of audio_url
+    const status = jobData.audio_url ? 'completed' : 'processing';
+    
     return new Response(
       JSON.stringify({
         jobId: jobData.id,
-        status: jobData.status,
+        status: status,
         audioUrl: jobData.audio_url,
-        generatedText: jobData.generated_text_output,
-        errorMessage: jobData.error_message,
+        generatedText: jobData.generated_text,
         createdAt: jobData.created_at
       }),
       { 
