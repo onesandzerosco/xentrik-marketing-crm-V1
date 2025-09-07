@@ -34,6 +34,18 @@ interface GroupedSources {
   };
 }
 
+interface GeneratedVoiceClone {
+  id: string;
+  model_name: string;
+  emotion: string;
+  generated_text: string;
+  audio_url: string;
+  bucket_key: string;
+  created_at: string;
+  generated_by: string;
+  user_name?: string;
+}
+
 const VoiceClone: React.FC = () => {
   const { toast } = useToast();
   const { user, isAuthenticated, userRole, userRoles } = useAuth();
@@ -52,6 +64,11 @@ const VoiceClone: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingCreators, setIsLoadingCreators] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  
+  // Generated voice clones states
+  const [generatedVoiceClones, setGeneratedVoiceClones] = useState<GeneratedVoiceClone[]>([]);
+  const [isLoadingGeneratedClones, setIsLoadingGeneratedClones] = useState(true);
+  const [filterModel, setFilterModel] = useState<string>('');
 
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
@@ -62,6 +79,7 @@ const VoiceClone: React.FC = () => {
       fetchVoiceSources();
       fetchUserProfile();
       fetchCreators(); // Fetch creators for all users to populate model dropdown
+      fetchGeneratedVoiceClones();
     }
   }, [isAuthenticated, user]);
 
@@ -165,6 +183,9 @@ const VoiceClone: React.FC = () => {
         title: "Success",
         description: "Voice generated successfully!",
       });
+      
+      // Refresh the generated voice clones list
+      fetchGeneratedVoiceClones();
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
@@ -324,6 +345,73 @@ const VoiceClone: React.FC = () => {
     }
   };
 
+  const fetchGeneratedVoiceClones = async () => {
+    try {
+      setIsLoadingGeneratedClones(true);
+      
+      // First get the generated voice clones
+      const { data: clonesData, error: clonesError } = await supabase
+        .from('generated_voice_clones')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (clonesError) throw clonesError;
+
+      // Get user profiles to map user names
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name');
+
+      if (profilesError) throw profilesError;
+
+      // Create a mapping of user IDs to names
+      const userNameMap = profilesData?.reduce((acc, profile) => {
+        acc[profile.id] = profile.name;
+        return acc;
+      }, {} as Record<string, string>) || {};
+
+      // Combine the data
+      const clonesWithUserNames = clonesData?.map(clone => ({
+        ...clone,
+        user_name: userNameMap[clone.generated_by] || 'Unknown User'
+      })) || [];
+
+      setGeneratedVoiceClones(clonesWithUserNames);
+    } catch (error) {
+      console.error('Error fetching generated voice clones:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch generated voice clones",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGeneratedClones(false);
+    }
+  };
+
+  const handleDownloadGenerated = async (audioUrl: string, modelName: string, emotion: string, createdAt: string) => {
+    try {
+      const response = await fetch(audioUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date(createdAt).toISOString().slice(0, 19).replace(/[:\-]/g, '');
+      link.download = `voice_${modelName}_${emotion}_${timestamp}.wav`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download audio file",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -336,6 +424,11 @@ const VoiceClone: React.FC = () => {
 
   const availableModels = creators.map(creator => creator.model_name || creator.name);
   const availableEmotions = selectedModel ? Object.keys(groupedSources[selectedModel] || {}) : [];
+  
+  // Filter generated voice clones by model
+  const filteredGeneratedClones = filterModel 
+    ? generatedVoiceClones.filter(clone => clone.model_name === filterModel)
+    : generatedVoiceClones;
 
   if (isLoadingSources) {
     return (
@@ -464,6 +557,103 @@ const VoiceClone: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
+              
+              {/* Generated Voice Clones Table */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Generated Voice Clones</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Select value={filterModel} onValueChange={setFilterModel}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Filter by model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Models</SelectItem>
+                        {availableModels.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      onClick={fetchGeneratedVoiceClones}
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoadingGeneratedClones}
+                    >
+                      {isLoadingGeneratedClones ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingGeneratedClones ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="ml-2">Loading generated voice clones...</span>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Model</TableHead>
+                          <TableHead>Emotion</TableHead>
+                          <TableHead>Text</TableHead>
+                          <TableHead>Generated By</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredGeneratedClones.map((clone) => (
+                          <TableRow key={clone.id}>
+                            <TableCell className="font-medium">{clone.model_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {clone.emotion.charAt(0).toUpperCase() + clone.emotion.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate" title={clone.generated_text}>
+                              {clone.generated_text}
+                            </TableCell>
+                            <TableCell>{clone.user_name}</TableCell>
+                            <TableCell>{formatDate(clone.created_at)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                onClick={() => handleDownloadGenerated(
+                                  clone.audio_url, 
+                                  clone.model_name, 
+                                  clone.emotion, 
+                                  clone.created_at
+                                )}
+                                variant="outline"
+                                size="sm"
+                                disabled={!clone.audio_url}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {filteredGeneratedClones.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              {filterModel 
+                                ? `No generated voice clones found for ${filterModel}` 
+                                : 'No generated voice clones found. Generate your first voice to get started.'
+                              }
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {isAdmin && (
