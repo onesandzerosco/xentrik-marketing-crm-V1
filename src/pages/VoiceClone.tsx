@@ -700,12 +700,12 @@ const VoiceClone: React.FC = () => {
                           {filteredGeneratedClones.map((clone) => (
                             <TableRow 
                               key={clone.id}
-                              className={clone.status === 'Pending' ? 'bg-orange-50 border-orange-200' : ''}
+                              className={clone.status === 'Pending' ? 'bg-orange-500/10 border-orange-500/20' : ''}
                             >
                               <TableCell className="font-medium">{clone.model_name}</TableCell>
                               <TableCell>
                                 <Badge variant={clone.status === 'Pending' ? 'outline' : 'secondary'} 
-                                       className={clone.status === 'Pending' ? 'border-orange-400 text-orange-600' : ''}>
+                                       className={clone.status === 'Pending' ? 'border-orange-500 text-orange-400' : ''}>
                                   {clone.emotion.charAt(0).toUpperCase() + clone.emotion.slice(1)}
                                 </Badge>
                               </TableCell>
@@ -716,11 +716,11 @@ const VoiceClone: React.FC = () => {
                               <TableCell>
                                 {clone.status === 'Pending' ? (
                                   <div className="flex items-center gap-2">
-                                    <Loader2 className="h-3 w-3 animate-spin text-orange-500" />
-                                    <span className="text-orange-600 text-sm font-medium">Generating...</span>
+                                    <Loader2 className="h-3 w-3 animate-spin text-orange-400" />
+                                    <span className="text-orange-400 text-sm font-medium">Generating...</span>
                                   </div>
                                 ) : (
-                                  <Badge variant="secondary" className="text-green-600 bg-green-50">
+                                  <Badge variant="secondary" className="text-green-400 bg-green-500/10 border-green-500/20">
                                     Success
                                   </Badge>
                                 )}
