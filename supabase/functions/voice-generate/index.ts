@@ -153,60 +153,38 @@ serve(async (req) => {
       );
     }
 
-    if (!bananaTTSData.audio || !Array.isArray(bananaTTSData.audio) || bananaTTSData.audio.length < 2) {
-      console.error('Invalid audio data from BananaTTS:', bananaTTSData.audio);
+    if (!bananaTTSData.download_url) {
+      console.error('No download URL provided by BananaTTS:', bananaTTSData);
       return new Response(
-        JSON.stringify({ error: 'Invalid audio data received from voice generation service' }),
+        JSON.stringify({ error: 'No download URL received from voice generation service' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const [sampleRate, audioArray] = bananaTTSData.audio;
-    console.log(`Audio generated successfully: ${sampleRate}Hz, ${audioArray.length} samples`);
+    console.log(`Audio generated successfully. Download URL: ${bananaTTSData.download_url}`);
 
-    // Convert BananaTTS audio to WAV format
-    const createWavFromBananaTTS = (audioArray: number[], sampleRate: number): Uint8Array => {
-      const audioData = new Int16Array(audioArray);
-      const length = audioData.length;
-      const buffer = new ArrayBuffer(44 + length * 2);
-      const view = new DataView(buffer);
-      
-      // WAV header
-      const writeString = (offset: number, string: string) => {
-        for (let i = 0; i < string.length; i++) {
-          view.setUint8(offset + i, string.charCodeAt(i));
-        }
-      };
-      
-      writeString(0, 'RIFF');
-      view.setUint32(4, 36 + length * 2, true);
-      writeString(8, 'WAVE');
-      writeString(12, 'fmt ');
-      view.setUint32(16, 16, true); // fmt chunk size
-      view.setUint16(20, 1, true);  // audio format (PCM)
-      view.setUint16(22, 1, true);  // number of channels
-      view.setUint32(24, sampleRate, true); // sample rate
-      view.setUint32(28, sampleRate * 2, true); // byte rate
-      view.setUint16(32, 2, true);  // block align
-      view.setUint16(34, 16, true); // bits per sample
-      writeString(36, 'data');
-      view.setUint32(40, length * 2, true);
-      
-      // Write audio data
-      for (let i = 0; i < length; i++) {
-        view.setInt16(44 + i * 2, audioData[i], true);
-      }
-      
-      return new Uint8Array(buffer);
-    };
+    // Download the audio file from the BananaTTS API
+    const audioDownloadUrl = `https://983efae1c5de.ngrok-free.app${bananaTTSData.download_url}`;
+    console.log(`Downloading audio from: ${audioDownloadUrl}`);
+    
+    const audioDownloadResponse = await fetch(audioDownloadUrl);
+    
+    if (!audioDownloadResponse.ok) {
+      console.error('Failed to download audio:', audioDownloadResponse.status, audioDownloadResponse.statusText);
+      return new Response(
+        JSON.stringify({ error: `Failed to download generated audio: ${audioDownloadResponse.status} ${audioDownloadResponse.statusText}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    const audioBuffer = createWavFromBananaTTS(audioArray, sampleRate);
+    const audioBuffer = await audioDownloadResponse.arrayBuffer();
+    console.log(`Downloaded audio file, size: ${audioBuffer.byteLength} bytes`);
     
     // Upload the generated audio to storage
     const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.wav`;
     const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from('voices')
-      .upload(generatedFileName, audioBuffer, {
+      .upload(generatedFileName, new Uint8Array(audioBuffer), {
         contentType: 'audio/wav',
         upsert: false
       });
