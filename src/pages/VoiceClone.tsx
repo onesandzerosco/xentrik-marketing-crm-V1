@@ -357,6 +357,8 @@ const VoiceClone: React.FC = () => {
 
       if (clonesError) throw clonesError;
 
+      console.log('Generated voice clones data:', clonesData);
+
       // Get user profiles to map user names
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -376,6 +378,7 @@ const VoiceClone: React.FC = () => {
         user_name: userNameMap[clone.generated_by] || 'Unknown User'
       })) || [];
 
+      console.log('Clones with user names:', clonesWithUserNames);
       setGeneratedVoiceClones(clonesWithUserNames);
     } catch (error) {
       console.error('Error fetching generated voice clones:', error);
@@ -623,19 +626,27 @@ const VoiceClone: React.FC = () => {
                             <TableCell>{clone.user_name}</TableCell>
                             <TableCell>{formatDate(clone.created_at)}</TableCell>
                             <TableCell className="text-right">
-                              <Button
-                                onClick={() => handleDownloadGenerated(
-                                  clone.audio_url, 
-                                  clone.model_name, 
-                                  clone.emotion, 
-                                  clone.created_at
+                              <div className="flex items-center gap-2">
+                                {clone.audio_url ? (
+                                  <Button
+                                    onClick={() => handleDownloadGenerated(
+                                      clone.audio_url, 
+                                      clone.model_name, 
+                                      clone.emotion, 
+                                      clone.created_at
+                                    )}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    Processing
+                                  </div>
                                 )}
-                                variant="outline"
-                                size="sm"
-                                disabled={!clone.audio_url}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
