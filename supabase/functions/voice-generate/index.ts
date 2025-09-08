@@ -95,7 +95,7 @@ serve(async (req) => {
         // Call BananaTTS API for voice generation
         console.log('Calling BananaTTS API for voice generation');
         
-        const bananaTTSUrl = 'https://fcf5fb23c517.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'https://983efae1c5de.ngrok-free.app/api/generate_speech';
         const requestData = {
           text: text,
           model_name: modelName,
@@ -144,7 +144,7 @@ serve(async (req) => {
         console.log(`Audio generated successfully. Download URL: ${bananaTTSData.download_url}`);
 
         // Download the audio file from the BananaTTS API
-        const audioDownloadUrl = `https://fcf5fb23c517.ngrok-free.app${bananaTTSData.download_url}`;
+        const audioDownloadUrl = `https://983efae1c5de.ngrok-free.app${bananaTTSData.download_url}`;
         console.log(`Downloading audio from: ${audioDownloadUrl}`);
         
         const audioDownloadResponse = await fetch(audioDownloadUrl);
