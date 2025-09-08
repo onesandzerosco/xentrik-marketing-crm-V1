@@ -150,8 +150,10 @@ serve(async (req) => {
         try {
           bananaTTSData = JSON.parse(responseText);
           console.log('Parsed response keys:', Object.keys(bananaTTSData));
+          console.log('Full response structure:', JSON.stringify(bananaTTSData, null, 2));
         } catch (parseError) {
           console.error('❌ JSON PARSE ERROR:', parseError);
+          console.error('Raw response preview:', responseText.substring(0, 500));
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -159,8 +161,12 @@ serve(async (req) => {
           return;
         }
 
-        if (!bananaTTSData.audio_data) {
+        // Try different possible audio data field names
+        let audioData = bananaTTSData.audio_data || bananaTTSData.audioData || bananaTTSData.data || bananaTTSData.audio;
+        
+        if (!audioData) {
           console.error('❌ NO AUDIO DATA FOUND');
+          console.error('Available keys:', Object.keys(bananaTTSData));
           console.error('Response structure:', JSON.stringify(bananaTTSData, null, 2));
           await supabaseClient
             .from('generated_voice_clones')
@@ -169,12 +175,12 @@ serve(async (req) => {
           return;
         }
 
-        console.log('✅ Audio data received, length:', bananaTTSData.audio_data.length);
+        console.log('✅ Audio data received, length:', audioData.length);
 
         console.log('=== STEP 3: UPLOAD AUDIO TO STORAGE ===');
         
         // Process base64 audio data
-        let audioBase64 = bananaTTSData.audio_data;
+        let audioBase64 = audioData;
         
         // Clean up base64 string
         audioBase64 = audioBase64.replace(/\s/g, '');
@@ -196,7 +202,7 @@ serve(async (req) => {
           return;
         }
         
-        const audioFormat = bananaTTSData.audio_format || 'wav';
+        const audioFormat = bananaTTSData.audio_format || bananaTTSData.format || 'wav';
         const contentType = `audio/${audioFormat}`;
         const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${audioFormat}`;
         
