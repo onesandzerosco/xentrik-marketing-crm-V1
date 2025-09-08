@@ -163,14 +163,24 @@ serve(async (req) => {
         console.log('Audio generated successfully, received base64 data');
 
         // Convert base64 audio data to buffer properly
-        const audioBase64 = bananaTTSData.audio_data;
+        let audioBase64 = bananaTTSData.audio_data;
         
-        // Use proper base64 decoding for binary data
-        const binaryString = atob(audioBase64);
-        const audioBuffer = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          audioBuffer[i] = binaryString.charCodeAt(i);
+        // Clean up base64 string - remove any whitespace and ensure proper padding
+        audioBase64 = audioBase64.replace(/\s/g, '');
+        while (audioBase64.length % 4) {
+          audioBase64 += '=';
         }
+        
+        // Convert base64 to Uint8Array
+        try {
+          const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
+          console.log(`Audio buffer created: ${audioBuffer.byteLength} bytes`);
+        } catch (decodeError) {
+          console.error('Base64 decode error:', decodeError);
+          throw new Error('Failed to decode audio data');
+        }
+        
+        const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
         
         // Determine file extension from audio format or default to wav
         const audioFormat = bananaTTSData.audio_format || 'wav';
