@@ -109,6 +109,7 @@ serve(async (req) => {
     const backgroundTask = async () => {
       try {
         console.log('=== STEP 2: GENERATE SPEECH VIA API ===');
+        console.log(`Starting generation for job: ${jobId}`);
         
         const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
         const requestData = {
@@ -129,11 +130,11 @@ serve(async (req) => {
             'Accept': 'application/json',
             'ngrok-skip-browser-warning': 'true'
           },
-          body: JSON.stringify(requestData),
-          // No timeout - let it run as long as needed
+          body: JSON.stringify(requestData)
         });
 
         console.log('API Response Status:', bananaTTSResponse.status);
+        console.log('API Response Headers:', Object.fromEntries(bananaTTSResponse.headers));
 
         if (!bananaTTSResponse.ok) {
           const errorText = await bananaTTSResponse.text();
@@ -297,13 +298,21 @@ serve(async (req) => {
       }
     };
 
-    // Start background task using waitUntil
+    // Start background task - ensure it runs to completion
+    console.log('Starting background task for job:', jobId);
+    
+    // Use both waitUntil and manual Promise handling for reliability
+    const taskPromise = backgroundTask().catch((error) => {
+      console.error('Background task error for job:', jobId, error);
+      return null;
+    });
+    
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(backgroundTask());
-    } else {
-      // Fallback for local development
-      backgroundTask().catch(console.error);
+      EdgeRuntime.waitUntil(taskPromise);
     }
+    
+    // Also start the task without awaiting to ensure it runs
+    taskPromise;
 
     // Return immediate response with job ID and record ID
     return new Response(
