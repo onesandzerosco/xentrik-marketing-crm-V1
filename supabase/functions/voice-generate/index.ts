@@ -123,9 +123,12 @@ serve(async (req) => {
         
         const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
         const requestData = {
-          modelName: modelName,
+          text: text,
+          model_name: modelName,
           emotion: emotion,
-          generated_text: text
+          temperature: 1.0,
+          top_p: 0.95,
+          top_k: 50
         };
 
         console.log('Sending request to BananaTTS:', { 
