@@ -298,21 +298,21 @@ serve(async (req) => {
       }
     };
 
-    // Start background task - ensure it runs to completion
+    // Use proper background processing for long-running tasks
     console.log('Starting background task for job:', jobId);
     
-    // Use both waitUntil and manual Promise handling for reliability
-    const taskPromise = backgroundTask().catch((error) => {
-      console.error('Background task error for job:', jobId, error);
-      return null;
-    });
+    // Start the background task and handle it properly
+    const taskPromise = backgroundTask();
     
+    // Use EdgeRuntime.waitUntil to ensure the task completes even if the response is sent
     if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
       EdgeRuntime.waitUntil(taskPromise);
+    } else {
+      // Fallback for development
+      taskPromise.catch((error) => {
+        console.error('Background task failed:', error);
+      });
     }
-    
-    // Also start the task without awaiting to ensure it runs
-    taskPromise;
 
     // Return immediate response with job ID and record ID
     return new Response(
