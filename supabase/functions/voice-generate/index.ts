@@ -60,7 +60,11 @@ serve(async (req) => {
 
     const { text, modelName, emotion } = await req.json();
     
-    console.log('Voice generation request received:', { text, modelName, emotion });
+    console.log('=== VOICE GENERATION REQUEST ===');
+    console.log('User ID:', user.id);
+    console.log('Text:', text);
+    console.log('Model:', modelName);
+    console.log('Emotion:', emotion);
 
     if (!text || !modelName || !emotion) {
       return new Response(
@@ -72,9 +76,10 @@ serve(async (req) => {
     // Create a job ID for tracking
     const jobId = `voice-job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log('Starting voice generation job:', jobId);
+    console.log('Job ID created:', jobId);
 
-    // Create pending record first
+    // Step 1: Create pending record with empty bucket_key
+    console.log('=== STEP 1: CREATE PENDING RECORD ===');
     const { data: pendingRecord, error: insertError } = await supabaseClient
       .from('generated_voice_clones')
       .insert({
@@ -98,28 +103,12 @@ serve(async (req) => {
       );
     }
 
-    console.log('Created pending record:', pendingRecord.id);
+    console.log('✅ Pending record created:', pendingRecord.id);
 
-    // Start background processing
+    // Step 2-4: Background processing
     const backgroundTask = async () => {
       try {
-        console.log('Starting background voice generation for job:', jobId);
-
-        // Get the voice source from the database
-        const { data: voiceSource, error: dbError } = await supabaseClient
-          .from('voice_sources')
-          .select('bucket_key')
-          .eq('model_name', modelName)
-          .eq('emotion', emotion)
-          .maybeSingle();
-
-        if (dbError || !voiceSource) {
-          console.error('Database error or no voice source:', dbError);
-          return;
-        }
-
-        // Call BananaTTS API for voice generation
-        console.log('Calling BananaTTS API for voice generation');
+        console.log('=== STEP 2: GENERATE SPEECH VIA API ===');
         
         const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
         const requestData = {
@@ -131,29 +120,22 @@ serve(async (req) => {
           top_k: 50
         };
 
-        console.log('Sending request to BananaTTS:', { 
-          url: bananaTTSUrl,
-          modelName, 
-          emotion, 
-          textLength: text.length 
-        });
+        console.log('API Request:', JSON.stringify(requestData, null, 2));
 
         const bananaTTSResponse = await fetch(bananaTTSUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Origin': 'https://rdzwpiokpyssqhnfiqrt.supabase.co'
+            'Accept': 'application/json'
           },
           body: JSON.stringify(requestData)
         });
 
-        console.log('BananaTTS API response status:', bananaTTSResponse.status);
-        console.log('BananaTTS API response headers:', Object.fromEntries(bananaTTSResponse.headers.entries()));
+        console.log('API Response Status:', bananaTTSResponse.status);
 
         if (!bananaTTSResponse.ok) {
           const errorText = await bananaTTSResponse.text();
-          console.error('BananaTTS API error:', bananaTTSResponse.status, errorText);
+          console.error('❌ API ERROR:', errorText);
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -162,14 +144,14 @@ serve(async (req) => {
         }
 
         const responseText = await bananaTTSResponse.text();
-        console.log('BananaTTS API raw response:', responseText.substring(0, 500));
+        console.log('Raw response length:', responseText.length);
         
         let bananaTTSData;
         try {
           bananaTTSData = JSON.parse(responseText);
+          console.log('Parsed response keys:', Object.keys(bananaTTSData));
         } catch (parseError) {
-          console.error('Failed to parse BananaTTS response as JSON:', parseError);
-          console.error('Raw response:', responseText);
+          console.error('❌ JSON PARSE ERROR:', parseError);
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -177,17 +159,9 @@ serve(async (req) => {
           return;
         }
 
-        console.log('BananaTTS Data structure:', Object.keys(bananaTTSData));
-        console.log('BananaTTS Data values:', {
-          success: bananaTTSData.success,
-          hasAudioData: !!bananaTTSData.audio_data,
-          audioDataLength: bananaTTSData.audio_data ? bananaTTSData.audio_data.length : 0,
-          audioFormat: bananaTTSData.audio_format
-        });
-
-        // Check if audio_data exists in the response
         if (!bananaTTSData.audio_data) {
-          console.error('BananaTTS generation failed or no audio data:', bananaTTSData);
+          console.error('❌ NO AUDIO DATA FOUND');
+          console.error('Response structure:', JSON.stringify(bananaTTSData, null, 2));
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -195,12 +169,14 @@ serve(async (req) => {
           return;
         }
 
-        console.log('Audio generated successfully, received base64 data');
+        console.log('✅ Audio data received, length:', bananaTTSData.audio_data.length);
 
-        // Convert base64 audio data to buffer properly
+        console.log('=== STEP 3: UPLOAD AUDIO TO STORAGE ===');
+        
+        // Process base64 audio data
         let audioBase64 = bananaTTSData.audio_data;
         
-        // Clean up base64 string - remove any whitespace and ensure proper padding
+        // Clean up base64 string
         audioBase64 = audioBase64.replace(/\s/g, '');
         while (audioBase64.length % 4) {
           audioBase64 += '=';
@@ -210,9 +186,9 @@ serve(async (req) => {
         let audioBuffer: Uint8Array;
         try {
           audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-          console.log(`Audio buffer created: ${audioBuffer.byteLength} bytes`);
+          console.log('Audio buffer size:', audioBuffer.byteLength, 'bytes');
         } catch (decodeError) {
-          console.error('Base64 decode error:', decodeError);
+          console.error('❌ BASE64 DECODE ERROR:', decodeError);
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -220,14 +196,13 @@ serve(async (req) => {
           return;
         }
         
-        // Determine file extension from audio format or default to wav
         const audioFormat = bananaTTSData.audio_format || 'wav';
         const contentType = `audio/${audioFormat}`;
-        
-        console.log(`Processing audio: format=${audioFormat}, size=${audioBuffer.byteLength} bytes`);
-        
-        // Upload the generated audio to storage with proper folder structure
         const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${audioFormat}`;
+        
+        console.log('Upload path:', generatedFileName);
+        console.log('Content type:', contentType);
+        
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from('voices')
           .upload(generatedFileName, audioBuffer, {
@@ -236,7 +211,7 @@ serve(async (req) => {
           });
 
         if (uploadError) {
-          console.error('Upload error:', uploadError);
+          console.error('❌ UPLOAD ERROR:', uploadError);
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -244,18 +219,16 @@ serve(async (req) => {
           return;
         }
 
-        console.log('Audio uploaded successfully:', {
-          path: uploadData.path,
-          id: uploadData.id,
-          fullPath: uploadData.fullPath,
-          contentType: contentType,
-          fileSize: audioBuffer.byteLength
-        });
+        console.log('✅ Upload successful:', uploadData.path);
+
+        console.log('=== STEP 4: UPDATE RECORD WITH BUCKET_KEY ===');
 
         // Get public URL for the generated audio
         const { data: generatedUrlData } = supabaseClient.storage
           .from('voices')
           .getPublicUrl(generatedFileName);
+
+        console.log('Public URL:', generatedUrlData.publicUrl);
 
         // Update the pending record with the complete data
         const { data: jobRecord, error: finalError } = await supabaseClient
@@ -271,12 +244,7 @@ serve(async (req) => {
           .single();
 
         if (finalError) {
-          console.error('Failed to update voice clone record:', finalError);
-          console.error('Update details:', {
-            jobId,
-            generatedFileName,
-            audioUrl: generatedUrlData.publicUrl
-          });
+          console.error('❌ DATABASE UPDATE ERROR:', finalError);
           // Clean up uploaded file
           await supabaseClient.storage
             .from('voices')
@@ -289,25 +257,36 @@ serve(async (req) => {
           return;
         }
 
-        console.log('Background voice generation completed for job:', jobId);
-        console.log('Record updated successfully:', {
-          recordId: jobRecord.id,
-          bucketKey: jobRecord.bucket_key,
-          audioUrl: jobRecord.audio_url
-        });
+        console.log('=== ✅ SUCCESS: WORKFLOW COMPLETE ===');
+        console.log('Final record ID:', jobRecord.id);
+        console.log('Bucket key:', jobRecord.bucket_key);
+        console.log('Audio URL:', jobRecord.audio_url);
+        console.log('Status:', jobRecord.status);
 
       } catch (error) {
-        console.error('Background task error:', error);
+        console.error('=== ❌ BACKGROUND TASK ERROR ===');
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        
         // Mark record as failed
-        await supabaseClient
-          .from('generated_voice_clones')
-          .update({ status: 'Failed' })
-          .eq('job_id', jobId);
+        try {
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
+        } catch (updateError) {
+          console.error('Failed to update record as failed:', updateError);
+        }
       }
     };
 
     // Start background task using waitUntil
-    EdgeRuntime.waitUntil(backgroundTask());
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
+      EdgeRuntime.waitUntil(backgroundTask());
+    } else {
+      // Fallback for local development
+      backgroundTask().catch(console.error);
+    }
 
     // Return immediate response with job ID and record ID
     return new Response(
@@ -324,7 +303,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in voice-generate function:', error);
+    console.error('=== ❌ MAIN FUNCTION ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
