@@ -172,15 +172,18 @@ serve(async (req) => {
         }
         
         // Convert base64 to Uint8Array
+        let audioBuffer: Uint8Array;
         try {
-          const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
+          audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
           console.log(`Audio buffer created: ${audioBuffer.byteLength} bytes`);
         } catch (decodeError) {
           console.error('Base64 decode error:', decodeError);
-          throw new Error('Failed to decode audio data');
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
+          return;
         }
-        
-        const audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
         
         // Determine file extension from audio format or default to wav
         const audioFormat = bananaTTSData.audio_format || 'wav';
@@ -199,6 +202,10 @@ serve(async (req) => {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
           return;
         }
 
@@ -230,6 +237,11 @@ serve(async (req) => {
 
         if (finalError) {
           console.error('Failed to update voice clone record:', finalError);
+          console.error('Update details:', {
+            jobId,
+            generatedFileName,
+            audioUrl: generatedUrlData.publicUrl
+          });
           // Clean up uploaded file
           await supabaseClient.storage
             .from('voices')
@@ -243,6 +255,11 @@ serve(async (req) => {
         }
 
         console.log('Background voice generation completed for job:', jobId);
+        console.log('Record updated successfully:', {
+          recordId: jobRecord.id,
+          bucketKey: jobRecord.bucket_key,
+          audioUrl: jobRecord.audio_url
+        });
 
       } catch (error) {
         console.error('Background task error:', error);
