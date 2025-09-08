@@ -129,7 +129,8 @@ serve(async (req) => {
             'Accept': 'application/json',
             'ngrok-skip-browser-warning': 'true'
           },
-          body: JSON.stringify(requestData)
+          body: JSON.stringify(requestData),
+          // No timeout - let it run as long as needed
         });
 
         console.log('API Response Status:', bananaTTSResponse.status);
