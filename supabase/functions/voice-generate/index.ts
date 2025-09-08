@@ -148,15 +148,50 @@ serve(async (req) => {
           body: JSON.stringify(requestData)
         });
 
+        console.log('BananaTTS API response status:', bananaTTSResponse.status);
+        console.log('BananaTTS API response headers:', Object.fromEntries(bananaTTSResponse.headers.entries()));
+
         if (!bananaTTSResponse.ok) {
-          console.error('BananaTTS API error:', bananaTTSResponse.status, await bananaTTSResponse.text());
+          const errorText = await bananaTTSResponse.text();
+          console.error('BananaTTS API error:', bananaTTSResponse.status, errorText);
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
           return;
         }
 
-        const bananaTTSData = await bananaTTSResponse.json();
+        const responseText = await bananaTTSResponse.text();
+        console.log('BananaTTS API raw response:', responseText.substring(0, 500));
+        
+        let bananaTTSData;
+        try {
+          bananaTTSData = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse BananaTTS response as JSON:', parseError);
+          console.error('Raw response:', responseText);
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
+          return;
+        }
 
-        if (!bananaTTSData.success || !bananaTTSData.audio_data) {
+        console.log('BananaTTS Data structure:', Object.keys(bananaTTSData));
+        console.log('BananaTTS Data values:', {
+          success: bananaTTSData.success,
+          hasAudioData: !!bananaTTSData.audio_data,
+          audioDataLength: bananaTTSData.audio_data ? bananaTTSData.audio_data.length : 0,
+          audioFormat: bananaTTSData.audio_format
+        });
+
+        // Check if audio_data exists in the response
+        if (!bananaTTSData.audio_data) {
           console.error('BananaTTS generation failed or no audio data:', bananaTTSData);
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
           return;
         }
 
