@@ -74,6 +74,32 @@ serve(async (req) => {
     
     console.log('Starting voice generation job:', jobId);
 
+    // Create pending record first
+    const { data: pendingRecord, error: insertError } = await supabaseClient
+      .from('generated_voice_clones')
+      .insert({
+        model_name: modelName,
+        emotion: emotion,
+        generated_text: text,
+        generated_by: user.id,
+        job_id: jobId,
+        status: 'Pending',
+        bucket_key: '',
+        audio_url: ''
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Failed to create pending record:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to create pending record' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Created pending record:', pendingRecord.id);
+
     // Start background processing
     const backgroundTask = async () => {
       try {
@@ -95,7 +121,7 @@ serve(async (req) => {
         // Call BananaTTS API for voice generation
         console.log('Calling BananaTTS API for voice generation');
         
-        const bananaTTSUrl = 'https://983efae1c5de.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'https://fcf5fb23c517.ngrok-free.app/api/generate_speech';
         const requestData = {
           text: text,
           model_name: modelName,
@@ -144,7 +170,7 @@ serve(async (req) => {
         console.log(`Audio generated successfully. Download URL: ${bananaTTSData.download_url}`);
 
         // Download the audio file from the BananaTTS API
-        const audioDownloadUrl = `https://983efae1c5de.ngrok-free.app${bananaTTSData.download_url}`;
+        const audioDownloadUrl = `https://fcf5fb23c517.ngrok-free.app${bananaTTSData.download_url}`;
         console.log(`Downloading audio from: ${audioDownloadUrl}`);
         
         const audioDownloadResponse = await fetch(audioDownloadUrl);
@@ -200,27 +226,30 @@ serve(async (req) => {
           .from('voices')
           .getPublicUrl(generatedFileName);
 
-        // Only NOW create the database record with the complete data
+        // Update the pending record with the complete data
         const { data: jobRecord, error: finalError } = await supabaseClient
           .from('generated_voice_clones')
-          .insert({
+          .update({
             bucket_key: generatedFileName,
-            model_name: modelName,
-            emotion: emotion,
             generated_text: bananaTTSData.generated_text || text,
-            generated_by: user.id,
-            job_id: jobId,
-            audio_url: generatedUrlData.publicUrl
+            audio_url: generatedUrlData.publicUrl,
+            status: 'Success'
           })
+          .eq('job_id', jobId)
           .select()
           .single();
 
         if (finalError) {
-          console.error('Failed to save completed voice clone:', finalError);
+          console.error('Failed to update voice clone record:', finalError);
           // Clean up uploaded file
           await supabaseClient.storage
             .from('voices')
             .remove([generatedFileName]);
+          // Mark record as failed
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
           return;
         }
 
@@ -228,17 +257,23 @@ serve(async (req) => {
 
       } catch (error) {
         console.error('Background task error:', error);
+        // Mark record as failed
+        await supabaseClient
+          .from('generated_voice_clones')
+          .update({ status: 'Failed' })
+          .eq('job_id', jobId);
       }
     };
 
     // Start background task using waitUntil
     EdgeRuntime.waitUntil(backgroundTask());
 
-    // Return immediate response with job ID
+    // Return immediate response with job ID and record ID
     return new Response(
       JSON.stringify({ 
         message: 'Voice generation started',
         jobId: jobId,
+        recordId: pendingRecord.id,
         status: 'processing'
       }),
       { 
