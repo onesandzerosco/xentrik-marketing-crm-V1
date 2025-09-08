@@ -219,7 +219,7 @@ serve(async (req) => {
         console.log('Content type:', contentType);
         
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('voices')
+          .from('generated_voices')
           .upload(generatedFileName, audioBuffer, {
             contentType: contentType,
             upsert: false
@@ -240,7 +240,7 @@ serve(async (req) => {
 
         // Get public URL for the generated audio
         const { data: generatedUrlData } = supabaseClient.storage
-          .from('voices')
+          .from('generated_voices')
           .getPublicUrl(generatedFileName);
 
         console.log('Public URL:', generatedUrlData.publicUrl);
@@ -262,7 +262,7 @@ serve(async (req) => {
           console.error('❌ DATABASE UPDATE ERROR:', finalError);
           // Clean up uploaded file
           await supabaseClient.storage
-            .from('voices')
+            .from('generated_voices')
             .remove([generatedFileName]);
           // Mark record as failed
           await supabaseClient
