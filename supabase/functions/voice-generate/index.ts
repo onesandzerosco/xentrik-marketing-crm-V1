@@ -121,21 +121,11 @@ serve(async (req) => {
         // Call BananaTTS API for voice generation
         console.log('Calling BananaTTS API for voice generation');
         
-        const bananaTTSUrl = 'https://fcf5fb23c517.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
         const requestData = {
-          text: text,
-          model_name: modelName,
+          modelName: modelName,
           emotion: emotion,
-          reference_audio: null,
-          reference_text: null,
-          max_completion_tokens: 1024,
-          temperature: 1.0,
-          top_p: 0.95,
-          top_k: 50,
-          system_prompt: "",
-          stop_strings: ["<|end_of_text|>", "<|eot_id|>"],
-          ras_win_len: 7,
-          ras_win_max_num_repeat: 2
+          generated_text: text
         };
 
         console.log('Sending request to BananaTTS:', { 
@@ -156,54 +146,34 @@ serve(async (req) => {
         });
 
         if (!bananaTTSResponse.ok) {
-          console.error('BananaTTS API error:', bananaTTSResponse.status);
+          console.error('BananaTTS API error:', bananaTTSResponse.status, await bananaTTSResponse.text());
           return;
         }
 
         const bananaTTSData = await bananaTTSResponse.json();
 
-        if (!bananaTTSData.success || !bananaTTSData.download_url) {
-          console.error('BananaTTS generation failed:', bananaTTSData);
+        if (!bananaTTSData.success || !bananaTTSData.audio_data) {
+          console.error('BananaTTS generation failed or no audio data:', bananaTTSData);
           return;
         }
 
-        console.log(`Audio generated successfully. Download URL: ${bananaTTSData.download_url}`);
+        console.log('Audio generated successfully, received base64 data');
 
-        // Download the audio file from the BananaTTS API
-        const audioDownloadUrl = `https://fcf5fb23c517.ngrok-free.app${bananaTTSData.download_url}`;
-        console.log(`Downloading audio from: ${audioDownloadUrl}`);
+        // Convert base64 audio data to buffer
+        const audioBase64 = bananaTTSData.audio_data;
+        const audioBuffer = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0));
         
-        const audioDownloadResponse = await fetch(audioDownloadUrl);
+        // Determine file extension from audio format or default to wav
+        const audioFormat = bananaTTSData.audio_format || 'wav';
+        const contentType = `audio/${audioFormat}`;
         
-        if (!audioDownloadResponse.ok) {
-          console.error('Failed to download audio:', audioDownloadResponse.status);
-          return;
-        }
-
-        // Get the actual content type from the response
-        const contentType = audioDownloadResponse.headers.get('content-type') || 'audio/wav';
-        console.log(`Audio content type: ${contentType}`);
-
-        const audioBuffer = await audioDownloadResponse.arrayBuffer();
-        console.log(`Downloaded audio file, size: ${audioBuffer.byteLength} bytes, content-type: ${contentType}`);
+        console.log(`Processing audio: format=${audioFormat}, size=${audioBuffer.byteLength} bytes`);
         
-        // Determine file extension based on content type
-        let fileExtension = 'wav';
-        if (contentType.includes('mp3')) {
-          fileExtension = 'mp3';
-        } else if (contentType.includes('ogg')) {
-          fileExtension = 'ogg';
-        } else if (contentType.includes('wav')) {
-          fileExtension = 'wav';
-        } else if (contentType.includes('webm')) {
-          fileExtension = 'webm';
-        }
-        
-        // Upload the generated audio to storage with correct content type
-        const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${fileExtension}`;
+        // Upload the generated audio to storage with proper folder structure
+        const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${audioFormat}`;
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from('voices')
-          .upload(generatedFileName, new Uint8Array(audioBuffer), {
+          .upload(generatedFileName, audioBuffer, {
             contentType: contentType,
             upsert: false
           });
