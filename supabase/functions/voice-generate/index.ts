@@ -121,7 +121,7 @@ serve(async (req) => {
         // Call BananaTTS API for voice generation
         console.log('Calling BananaTTS API for voice generation');
         
-        const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'http://localhost:7860/api/generate_speech';
         const requestData = {
           text: text,
           model_name: modelName,
@@ -204,7 +204,7 @@ serve(async (req) => {
           .from('generated_voice_clones')
           .update({
             bucket_key: generatedFileName,
-            generated_text: bananaTTSData.generated_text || text,
+            generated_text: text,
             audio_url: generatedUrlData.publicUrl,
             status: 'Success'
           })
