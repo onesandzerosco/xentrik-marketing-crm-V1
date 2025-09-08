@@ -204,7 +204,7 @@ serve(async (req) => {
           .from('generated_voice_clones')
           .update({
             bucket_key: generatedFileName,
-            generated_text: bananaTTSData.generated_text || text,
+            generated_text: text,
             audio_url: generatedUrlData.publicUrl,
             status: 'Success'
           })
