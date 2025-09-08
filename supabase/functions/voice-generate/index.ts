@@ -110,7 +110,7 @@ serve(async (req) => {
       try {
         console.log('=== STEP 2: GENERATE SPEECH VIA API ===');
         
-        const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'http://localhost:7860/api/generate_speech';
         const requestData = {
           text: text,
           model_name: modelName,
