@@ -161,8 +161,17 @@ serve(async (req) => {
           return;
         }
 
-        // Try different possible audio data field names
-        let audioData = bananaTTSData.audio_data || bananaTTSData.audioData || bananaTTSData.data || bananaTTSData.audio;
+        // Check for success and extract audio data
+        if (!bananaTTSData.success) {
+          console.error('❌ API returned success: false');
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ status: 'Failed' })
+            .eq('job_id', jobId);
+          return;
+        }
+
+        let audioData = bananaTTSData.audio_data;
         
         if (!audioData) {
           console.error('❌ NO AUDIO DATA FOUND');
@@ -202,7 +211,7 @@ serve(async (req) => {
           return;
         }
         
-        const audioFormat = bananaTTSData.audio_format || bananaTTSData.format || 'wav';
+        const audioFormat = bananaTTSData.audio_format || 'wav';
         const contentType = `audio/${audioFormat}`;
         const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${audioFormat}`;
         
