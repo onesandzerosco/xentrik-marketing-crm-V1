@@ -211,42 +211,16 @@ const VoiceClone: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // First, insert a pending record in the database
-      const { data: pendingRecord, error: insertError } = await supabase
-        .from('generated_voice_clones')
-        .insert({
-          model_name: selectedModel,
-          emotion: selectedEmotion,
-          generated_text: trimmedText,
-          generated_by: user?.id,
-          bucket_key: '', // Will be updated when generation completes
-          status: 'Pending'
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error('Error creating pending record:', insertError);
-        throw new Error('Failed to create generation record');
-      }
-
-      // Start the voice generation
+      // Call the voice generation function directly - it will handle database creation
       const { data, error } = await supabase.functions.invoke('voice-generate', {
         body: {
           text: trimmedText,
           modelName: selectedModel,
-          emotion: selectedEmotion,
-          recordId: pendingRecord.id // Pass the record ID so the function can update it
+          emotion: selectedEmotion
         }
       });
 
       if (error) {
-        // If generation fails, delete the pending record
-        await supabase
-          .from('generated_voice_clones')
-          .delete()
-          .eq('id', pendingRecord.id);
-        
         throw error;
       }
 
@@ -259,8 +233,7 @@ const VoiceClone: React.FC = () => {
       // Clear the form
       setInputText('');
       
-      // Refresh the list to show the pending record
-      fetchGeneratedVoiceClones();
+      // The real-time subscription will automatically update the list when the generation completes
       
     } catch (error) {
       console.error('Error generating voice:', error);
@@ -698,10 +671,7 @@ const VoiceClone: React.FC = () => {
                         <TableBody>
                           {/* Show all generations with their status */}
                           {filteredGeneratedClones.map((clone) => (
-                            <TableRow 
-                              key={clone.id}
-                              className={clone.status === 'Pending' ? 'bg-orange-500/10 border-orange-500/20' : ''}
-                            >
+                            <TableRow key={clone.id}>
                               <TableCell className="font-medium">{clone.model_name}</TableCell>
                               <TableCell>
                                 <Badge variant={clone.status === 'Pending' ? 'outline' : 'secondary'} 
