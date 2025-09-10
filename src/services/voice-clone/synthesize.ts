@@ -32,13 +32,19 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
     // Step 1: Create pending record and generate job_id
     const jobId = `voice-job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
+    // Get current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('User not authenticated');
+    }
+    
     const { data: pendingRecord, error: insertError } = await supabase
       .from('generated_voice_clones')
       .insert({
         model_name: modelName,
         emotion: emotion,
         generated_text: text,
-        generated_by: (await supabase.auth.getUser()).data.user?.id,
+        generated_by: user.id,
         job_id: jobId,
         status: 'Pending',
         bucket_key: '',
@@ -48,14 +54,14 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
       .single();
 
     if (insertError) {
-      console.error('Failed to create pending record:', insertError);
+      console.error('❌ Failed to create pending record:', insertError);
       throw new Error(`Failed to create pending record: ${insertError.message}`);
     }
 
-    console.log('✅ Pending record created:', pendingRecord.id);
+    console.log('✅ Pending record created:', pendingRecord.id, 'Job ID:', jobId);
 
     // Step 2: Call the voice generation edge function with job_id
-    console.log('Calling edge function with params:', {
+    console.log('🔄 Calling edge function with params:', {
       text,
       modelName,
       emotion,
@@ -71,23 +77,31 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
       }
     });
 
-    console.log('Edge function response:', { data, error });
+    console.log('📨 Edge function response:', { data, error });
 
     if (error) {
-      console.error('Voice synthesis error:', error);
+      console.error('❌ Voice synthesis error:', error);
+      // Update the pending record to failed status
+      await supabase
+        .from('generated_voice_clones')
+        .update({ 
+          status: 'Failed',
+          error_message: error.message || 'Unknown error'
+        })
+        .eq('job_id', jobId);
+        
       throw new Error(`Voice synthesis failed: ${error.message || 'Unknown error'}`);
     }
 
-    console.log('Voice generation API response:', data);
+    console.log('✅ Voice generation started successfully:', data);
 
-    // For background processing, return immediately with job info
-    // The actual audio will be available after processing completes
+    // Return immediate response - the API will handle the rest in background
     return {
-      audioUrl: '', // Will be available after background processing
+      audioUrl: '', // Will be populated by the API when complete
       generatedPath: '',
       jobId: jobId,
       status: 'processing',
-      message: data?.message || 'Voice generation started in background'
+      message: data?.message || 'Voice generation started in background. This may take 2-3 minutes.'
     };
 
   } catch (error) {

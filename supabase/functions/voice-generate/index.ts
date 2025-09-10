@@ -78,12 +78,14 @@ serve(async (req) => {
     console.log('=== STARTING BACKGROUND VOICE GENERATION ===');
     console.log(`Starting background job: ${jobId}`);
     
-    const bananaTTSUrl = 'https://d08bb18fed5a.ngrok-free.app/api/generate_speech';
+    const bananaTTSUrl = 'https://51e19a6e23b1.ngrok-free.app/api/generate_speech';
     const requestData = {
       text: text,
       model_name: modelName,
       emotion: emotion,
       job_id: jobId,
+      supabase_url: Deno.env.get('SUPABASE_URL'),
+      supabase_service_key: Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
       temperature: 1.0,
       top_p: 0.95
     };
@@ -167,15 +169,18 @@ serve(async (req) => {
         console.log('Request ID:', bananaTTSData.request_id);
 
         // The external API should have already updated the database with success status and bucket_key
-        // But let's verify and update if needed
-        const { data: existingRecord } = await supabaseClient
+        // Let's verify the final status
+        const { data: finalRecord } = await supabaseClient
           .from('generated_voice_clones')
-          .select('status, bucket_key')
+          .select('status, bucket_key, audio_url')
           .eq('job_id', jobId)
           .single();
 
-        if (existingRecord && (!existingRecord.bucket_key || existingRecord.status !== 'Completed')) {
-          console.log('🔄 Updating record with bucket_key and status...');
+        console.log('🔍 Final record status:', finalRecord);
+        
+        // If API didn't update the record, we need to do it manually
+        if (finalRecord && bananaTTSData.bucket_key && finalRecord.status !== 'Completed') {
+          console.log('🔄 Manually updating record with bucket_key and status...');
           await supabaseClient
             .from('generated_voice_clones')
             .update({ 

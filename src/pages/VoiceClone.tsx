@@ -72,6 +72,7 @@ const VoiceClone: React.FC = () => {
   const [filterModel, setFilterModel] = useState<string>('');
   const [pendingGenerations, setPendingGenerations] = useState<Set<string>>(new Set());
   const [realtimeChannel, setRealtimeChannel] = useState<any>(null);
+  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
 
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
@@ -90,6 +91,9 @@ const VoiceClone: React.FC = () => {
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
       }
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
     };
   }, [isAuthenticated, user]);
 
@@ -101,26 +105,50 @@ const VoiceClone: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'generated_voice_clones',
-          filter: `generated_by=eq.${user.id}`
         },
         (payload) => {
-          console.log('New voice clone generated:', payload);
+          console.log('Voice clone record updated:', payload);
           
           // Refresh the generated voice clones list
           fetchGeneratedVoiceClones();
           
-          toast({
-            title: "Voice Generated!",
-            description: `Your ${payload.new.model_name} voice with ${payload.new.emotion} emotion is ready!`,
-          });
+          // Show notification for completed generations
+          if (payload.eventType === 'UPDATE' && payload.new.status === 'Completed') {
+            toast({
+              title: "Voice Generated!",
+              description: `Your ${payload.new.model_name} voice with ${payload.new.emotion} emotion is ready!`,
+            });
+          }
         }
       )
       .subscribe();
       
     setRealtimeChannel(channel);
+    
+    // Poll for status updates of pending records
+    const pollPendingRecords = async () => {
+      try {
+        const { data: pendingRecords } = await supabase
+          .from('generated_voice_clones')
+          .select('*')
+          .in('status', ['Pending', 'Processing']);
+
+        if (pendingRecords && pendingRecords.length > 0) {
+          console.log(`Found ${pendingRecords.length} pending/processing records`);
+          // Refresh the list to show updated statuses
+          fetchGeneratedVoiceClones();
+        }
+      } catch (error) {
+        console.error('Error polling pending records:', error);
+      }
+    };
+
+    // Poll every 10 seconds for pending records
+    const intervalId = setInterval(pollPendingRecords, 10000);
+    setPollInterval(intervalId);
   };
 
   const fetchUserProfile = async () => {
@@ -694,39 +722,78 @@ const VoiceClone: React.FC = () => {
                                 {clone.generated_text}
                               </TableCell>
                               <TableCell>{clone.user_name}</TableCell>
-                              <TableCell>
-                                {clone.status === 'Pending' ? (
-                                  <div className="flex items-center gap-2">
-                                    <Loader2 className="h-3 w-3 animate-spin text-orange-400" />
-                                    <span className="text-orange-400 text-sm font-medium">Generating...</span>
-                                  </div>
-                                ) : (
-                                  <Badge variant="secondary" className="text-green-400 bg-green-500/10 border-green-500/20">
-                                    Success
-                                  </Badge>
-                                )}
-                              </TableCell>
+                               <TableCell>
+                                 <span className={`px-2 py-1 rounded text-xs font-medium inline-flex items-center gap-1 ${
+                                   clone.status === 'Completed' 
+                                     ? 'bg-green-100 text-green-800' 
+                                     : clone.status === 'Failed'
+                                     ? 'bg-red-100 text-red-800'
+                                     : clone.status === 'Pending' || clone.status === 'Processing'
+                                     ? 'bg-blue-100 text-blue-800'
+                                     : 'bg-yellow-100 text-yellow-800'
+                                 }`}>
+                                   {clone.status}
+                                   {(clone.status === 'Pending' || clone.status === 'Processing') && (
+                                     <Loader2 className="h-3 w-3 animate-spin" />
+                                   )}
+                                 </span>
+                               </TableCell>
                               <TableCell>{formatDate(clone.created_at)}</TableCell>
-                              <TableCell className="text-right">
-                                {clone.status === 'Pending' ? (
-                                  <Button variant="outline" size="sm" disabled>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    onClick={() => handleDownloadGenerated(
-                                      clone.audio_url, 
-                                      clone.model_name, 
-                                      clone.emotion, 
-                                      clone.created_at
-                                    )}
-                                    variant="outline"
-                                    size="sm"
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
+                               <TableCell className="text-right">
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={async () => {
+                                     if (!clone.audio_url) {
+                                       toast({
+                                         title: "Error",
+                                         description: "Audio not available for download",
+                                         variant: "destructive",
+                                       });
+                                       return;
+                                     }
+                                     
+                                     try {
+                                       // Download from Supabase storage
+                                       const response = await fetch(clone.audio_url);
+                                       if (!response.ok) {
+                                         throw new Error('Failed to fetch audio file');
+                                       }
+                                       
+                                       const blob = await response.blob();
+                                       const url = URL.createObjectURL(blob);
+                                       
+                                       const link = document.createElement('a');
+                                       link.href = url;
+                                       link.download = `voice-clone-${clone.model_name}-${clone.generated_text.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '-')}.wav`;
+                                       document.body.appendChild(link);
+                                       link.click();
+                                       document.body.removeChild(link);
+                                       
+                                       URL.revokeObjectURL(url);
+                                       
+                                       toast({
+                                         title: "Success",
+                                         description: "Audio downloaded successfully!",
+                                       });
+                                     } catch (error) {
+                                       console.error('Download error:', error);
+                                       toast({
+                                         title: "Error",
+                                         description: "Failed to download audio file",
+                                         variant: "destructive",
+                                       });
+                                     }
+                                   }}
+                                   disabled={!clone.audio_url || clone.status !== 'Completed'}
+                                 >
+                                   {(clone.status === 'Pending' || clone.status === 'Processing') ? (
+                                     <Loader2 className="h-4 w-4 animate-spin" />
+                                   ) : (
+                                     <Download className="h-4 w-4" />
+                                   )}
+                                 </Button>
+                               </TableCell>
                             </TableRow>
                           ))}
                          
