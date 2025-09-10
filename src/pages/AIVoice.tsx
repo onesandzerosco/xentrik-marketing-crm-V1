@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload, Trash2, RefreshCw } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Upload, Trash2, RefreshCw, Mic } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -40,6 +42,12 @@ const AIVoice: React.FC = () => {
   const [isLoadingSources, setIsLoadingSources] = useState(true);
   const [isLoadingCreators, setIsLoadingCreators] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Generate voice states
+  const [generateModel, setGenerateModel] = useState<string>('');
+  const [generateEmotion, setGenerateEmotion] = useState<string>('');
+  const [generateText, setGenerateText] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
@@ -243,6 +251,50 @@ const AIVoice: React.FC = () => {
     }
   };
 
+  const handleGenerate = async () => {
+    if (!generateModel || !generateEmotion || !generateText.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a model, emotion, and enter text to generate",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      
+      const { data, error } = await supabase.functions.invoke('voice-generate', {
+        body: {
+          text: generateText,
+          modelName: generateModel,
+          emotion: generateEmotion,
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Generation failed');
+      }
+
+      toast({
+        title: "Success",
+        description: "Voice generation started! Check the results shortly.",
+      });
+
+      // Reset form
+      setGenerateText('');
+    } catch (error) {
+      console.error('Error generating voice:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate voice",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -294,148 +346,234 @@ const AIVoice: React.FC = () => {
         <CardHeader>
           <CardTitle>AI Voice Management</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Upload Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Voice Source</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ai-model">Model</Label>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingCreators ? (
-                        <SelectItem value="loading" disabled>Loading...</SelectItem>
-                      ) : (
-                        creators.map((creator) => (
-                          <SelectItem key={creator.id} value={creator.model_name || creator.name}>
-                            {creator.model_name || creator.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <CardContent>
+          <Tabs defaultValue="generate" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="generate">Generate Voice</TabsTrigger>
+              <TabsTrigger value="upload">Upload Voice Source</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="generate" className="space-y-6">
+              {/* Generate Voice Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Generate Voice</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="generate-model">Model Name</Label>
+                      <Select value={generateModel} onValueChange={setGenerateModel}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingCreators ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : (
+                            creators.map((creator) => (
+                              <SelectItem key={creator.id} value={creator.model_name || creator.name}>
+                                {creator.model_name || creator.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ai-emotion">Emotion</Label>
-                  <Select value={selectedEmotion} onValueChange={setSelectedEmotion}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an emotion" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {emotions.map((emotion) => (
-                        <SelectItem key={emotion} value={emotion}>
-                          {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="generate-emotion">Emotion</Label>
+                      <Select value={generateEmotion} onValueChange={setGenerateEmotion}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an emotion" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {emotions.map((emotion) => (
+                            <SelectItem key={emotion} value={emotion}>
+                              {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="ai-voice-file">Audio File</Label>
-                  <Input
-                    id="ai-voice-file"
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="generate-text">Text to Generate</Label>
+                    <Textarea
+                      id="generate-text"
+                      placeholder="Enter the text you want the AI voice to say..."
+                      value={generateText}
+                      onChange={(e) => setGenerateText(e.target.value)}
+                      rows={4}
+                    />
+                  </div>
 
-              <Button
-                onClick={handleUpload}
-                disabled={isUploading || !selectedModel || !selectedEmotion || !selectedFile}
-                className="w-full"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading Voice...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Voice
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Voice Sources Table */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Voice Sources</CardTitle>
-              <Button
-                onClick={fetchVoiceSources}
-                variant="outline"
-                size="sm"
-                disabled={isLoadingSources}
-              >
-                {isLoadingSources ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoadingSources ? (
-                <div className="flex items-center justify-center h-32">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <span className="ml-2">Loading voice sources...</span>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Model</TableHead>
-                      <TableHead>Emotion</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {voiceSources.map((source) => (
-                      <TableRow key={source.id}>
-                        <TableCell className="font-medium">{source.model_name}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            {source.emotion.charAt(0).toUpperCase() + source.emotion.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(source.created_at)}</TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(source.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    
-                    {voiceSources.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                          No voice sources found. Upload your first voice to get started.
-                        </TableCell>
-                      </TableRow>
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !generateModel || !generateEmotion || !generateText.trim()}
+                    className="w-full"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Voice...
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="mr-2 h-4 w-4" />
+                        Generate Voice
+                      </>
                     )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+                  </Button>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="upload" className="space-y-6">
+              {/* Upload Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Upload Voice Source</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-model">Model</Label>
+                      <Select value={selectedModel} onValueChange={setSelectedModel}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingCreators ? (
+                            <SelectItem value="loading" disabled>Loading...</SelectItem>
+                          ) : (
+                            creators.map((creator) => (
+                              <SelectItem key={creator.id} value={creator.model_name || creator.name}>
+                                {creator.model_name || creator.name}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-emotion">Emotion</Label>
+                      <Select value={selectedEmotion} onValueChange={setSelectedEmotion}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an emotion" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {emotions.map((emotion) => (
+                            <SelectItem key={emotion} value={emotion}>
+                              {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="ai-voice-file">Audio File</Label>
+                      <Input
+                        id="ai-voice-file"
+                        type="file"
+                        accept="audio/*"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleUpload}
+                    disabled={isUploading || !selectedModel || !selectedEmotion || !selectedFile}
+                    className="w-full"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading Voice...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Voice
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Voice Sources Table */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Voice Sources</CardTitle>
+                  <Button
+                    onClick={fetchVoiceSources}
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoadingSources}
+                  >
+                    {isLoadingSources ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingSources ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="ml-2">Loading voice sources...</span>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Model</TableHead>
+                          <TableHead>Emotion</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {voiceSources.map((source) => (
+                          <TableRow key={source.id}>
+                            <TableCell className="font-medium">{source.model_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {source.emotion.charAt(0).toUpperCase() + source.emotion.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatDate(source.created_at)}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDelete(source.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        
+                        {voiceSources.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                              No voice sources found. Upload your first voice to get started.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
