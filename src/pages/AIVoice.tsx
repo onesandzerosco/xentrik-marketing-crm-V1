@@ -28,6 +28,20 @@ interface Creator {
   model_name?: string;
 }
 
+interface GeneratedVoiceClone {
+  id: string;
+  bucket_key: string;
+  model_name: string;
+  emotion: string;
+  generated_text: string;
+  generated_by: string;
+  created_at: string;
+  updated_at: string;
+  audio_url: string;
+  job_id: string;
+  status: string;
+}
+
 const AIVoice: React.FC = () => {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
@@ -35,6 +49,8 @@ const AIVoice: React.FC = () => {
   const [creators, setCreators] = useState<Creator[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [selectedEmotion, setSelectedEmotion] = useState<string>('');
+  const [generatedVoices, setGeneratedVoices] = useState<GeneratedVoiceClone[]>([]);
+  const [isLoadingGenerated, setIsLoadingGenerated] = useState(true);
   
   // Upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -58,6 +74,7 @@ const AIVoice: React.FC = () => {
       fetchVoiceSources();
       fetchUserProfile();
       fetchCreators();
+      fetchGeneratedVoices();
     }
   }, [isAuthenticated, user]);
 
@@ -127,6 +144,29 @@ const AIVoice: React.FC = () => {
       });
     } finally {
       setIsLoadingSources(false);
+    }
+  };
+
+  const fetchGeneratedVoices = async () => {
+    try {
+      setIsLoadingGenerated(true);
+      const { data, error } = await supabase
+        .from('generated_voice_clones')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setGeneratedVoices(data || []);
+    } catch (error) {
+      console.error('Error fetching generated voices:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch generated voices",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingGenerated(false);
     }
   };
 
@@ -276,13 +316,23 @@ const AIVoice: React.FC = () => {
         throw new Error(error.message || 'Generation failed');
       }
 
-      toast({
-        title: "Success",
-        description: "Voice generation started! Check the results shortly.",
-      });
+      if (data && data.success) {
+        toast({
+          title: "Success",
+          description: `Voice generated successfully! Audio saved as ${data.bucketPath}`,
+        });
 
-      // Reset form
-      setGenerateText('');
+        // Reset form
+        setGenerateText('');
+        setGenerateModel('');
+        setGenerateEmotion('');
+
+        // Refresh the voice sources and generated voices
+        fetchVoiceSources();
+        fetchGeneratedVoices();
+      } else {
+        throw new Error(data?.error || 'Voice generation failed');
+      }
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
@@ -348,9 +398,10 @@ const AIVoice: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="generate" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="generate">Generate Voice</TabsTrigger>
               <TabsTrigger value="upload">Upload Voice Source</TabsTrigger>
+              <TabsTrigger value="generated">Generated Voices</TabsTrigger>
             </TabsList>
             
             <TabsContent value="generate" className="space-y-6">
@@ -564,6 +615,105 @@ const AIVoice: React.FC = () => {
                           <TableRow>
                             <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                               No voice sources found. Upload your first voice to get started.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="generated" className="space-y-6">
+              {/* Generated Voices List */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>Generated Voices</CardTitle>
+                  <Button
+                    onClick={fetchGeneratedVoices}
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoadingGenerated}
+                  >
+                    {isLoadingGenerated ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingGenerated ? (
+                    <div className="flex items-center justify-center h-32">
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                      <span className="ml-2">Loading generated voices...</span>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Model</TableHead>
+                          <TableHead>Emotion</TableHead>
+                          <TableHead>Text</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {generatedVoices.map((voice) => (
+                          <TableRow key={voice.id}>
+                            <TableCell className="font-medium">{voice.model_name}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">
+                                {voice.emotion.charAt(0).toUpperCase() + voice.emotion.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="max-w-xs truncate">{voice.generated_text}</TableCell>
+                            <TableCell>
+                              <Badge variant={voice.status === 'Success' ? 'default' : voice.status === 'Pending' ? 'secondary' : 'destructive'}>
+                                {voice.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatDate(voice.created_at)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex gap-2 justify-end">
+                                {voice.audio_url && voice.status === 'Success' && (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const audio = new Audio(voice.audio_url);
+                                        audio.play();
+                                      }}
+                                    >
+                                      Play
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        const link = document.createElement('a');
+                                        link.href = voice.audio_url;
+                                        link.download = `${voice.model_name}_${voice.emotion}_${voice.created_at}.wav`;
+                                        link.click();
+                                      }}
+                                    >
+                                      Download
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        
+                        {generatedVoices.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              No generated voices found. Generate your first voice to get started.
                             </TableCell>
                           </TableRow>
                         )}
