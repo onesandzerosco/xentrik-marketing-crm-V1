@@ -89,6 +89,14 @@ const AIVoice: React.FC = () => {
     ? generatedVoices
     : generatedVoices.filter(voice => voice.model_name === generatedModelFilter);
 
+  // Get models that have voice sources available
+  const modelsWithVoiceSources = [...new Set(voiceSources.map(source => source.model_name))];
+  
+  // Filter creators to only show those with voice sources
+  const creatorsWithVoiceSources = creators.filter(creator => 
+    modelsWithVoiceSources.includes(creator.model_name || creator.name)
+  );
+
   // Get available emotions for selected model in generate tab
   const availableEmotionsForModel = generateModel 
     ? [...new Set(voiceSources
@@ -582,12 +590,16 @@ const AIVoice: React.FC = () => {
                         <SelectContent>
                           {isLoadingCreators ? (
                             <SelectItem value="loading" disabled>Loading...</SelectItem>
-                          ) : (
-                            creators.map((creator) => (
+                          ) : creatorsWithVoiceSources.length > 0 ? (
+                            creatorsWithVoiceSources.map((creator) => (
                               <SelectItem key={creator.id} value={creator.model_name || creator.name}>
                                 {creator.model_name || creator.name}
                               </SelectItem>
                             ))
+                          ) : (
+                            <SelectItem value="no-models" disabled>
+                              No models with voice sources available
+                            </SelectItem>
                           )}
                         </SelectContent>
                       </Select>
