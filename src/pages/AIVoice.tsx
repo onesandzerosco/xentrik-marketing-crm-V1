@@ -89,6 +89,13 @@ const AIVoice: React.FC = () => {
     ? generatedVoices
     : generatedVoices.filter(voice => voice.model_name === generatedModelFilter);
 
+  // Get available emotions for selected model in generate tab
+  const availableEmotionsForModel = generateModel 
+    ? [...new Set(voiceSources
+        .filter(source => source.model_name === generateModel)
+        .map(source => source.emotion))]
+    : emotions;
+
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchVoiceSources();
@@ -97,6 +104,19 @@ const AIVoice: React.FC = () => {
       fetchGeneratedVoices();
     }
   }, [isAuthenticated, user]);
+
+  // Clear emotion selection when model changes in generate tab
+  useEffect(() => {
+    if (generateModel && generateEmotion) {
+      const isEmotionAvailable = voiceSources
+        .filter(source => source.model_name === generateModel)
+        .some(source => source.emotion === generateEmotion);
+      
+      if (!isEmotionAvailable) {
+        setGenerateEmotion('');
+      }
+    }
+  }, [generateModel, voiceSources, generateEmotion]);
 
   const fetchUserProfile = async () => {
     if (!user) return;
@@ -580,11 +600,17 @@ const AIVoice: React.FC = () => {
                           <SelectValue placeholder="Select an emotion" />
                         </SelectTrigger>
                         <SelectContent>
-                          {emotions.map((emotion) => (
-                            <SelectItem key={emotion} value={emotion}>
-                              {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                          {availableEmotionsForModel.length > 0 ? (
+                            availableEmotionsForModel.map((emotion) => (
+                              <SelectItem key={emotion} value={emotion}>
+                                {emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-emotions" disabled>
+                              {generateModel ? 'No emotions available for this model' : 'Select a model first'}
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
