@@ -23,6 +23,9 @@ serve(async (req) => {
       {
         auth: {
           persistSession: false,
+        },
+        global: {
+          headers: authHeader ? { Authorization: authHeader } : {}
         }
       }
     );
@@ -83,11 +86,24 @@ serve(async (req) => {
         );
       }
 
-      // Set the auth token
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      // Create a client with the user's auth token for user verification
+      const userSupabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          auth: {
+            persistSession: false,
+          },
+          global: {
+            headers: { Authorization: authHeader }
+          }
+        }
+      );
+
+      const { data: { user }, error: authError } = await userSupabase.auth.getUser();
       
       if (authError || !user) {
+        console.error('Auth error:', authError);
         return new Response(
           JSON.stringify({ error: 'Unauthorized' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
