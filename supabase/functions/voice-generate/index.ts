@@ -150,7 +150,7 @@ serve(async (req) => {
         bucket_key: bucketPath,
         audio_url: urlData.publicUrl,
         status: 'Success',
-        generated_text: voiceApiResult.generated_text || text,
+        generated_text: text, // Save the original input text, not the API's generated_text
         updated_at: new Date().toISOString()
       })
       .eq('id', generatedRecord.id);
