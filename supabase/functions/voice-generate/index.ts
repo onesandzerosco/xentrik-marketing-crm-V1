@@ -96,7 +96,11 @@ serve(async (req) => {
         text: text,
         model_name: modelName,
         emotion: emotion,
-        reference_audio: voiceSource.bucket_key
+        reference_audio: voiceSource.bucket_key,
+        max_completion_tokens: 1024,
+        temperature: 1.0,
+        top_p: 0.95,
+        top_k: 50
       })
     });
 
