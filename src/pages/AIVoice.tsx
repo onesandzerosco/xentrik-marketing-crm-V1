@@ -157,7 +157,7 @@ const AIVoice: React.FC = () => {
         .from('generated_voice_clones')
         .select(`
           *,
-          profiles!generated_by (
+          profiles (
             name
           )
         `)
