@@ -291,6 +291,43 @@ const AIVoice: React.FC = () => {
     }
   };
 
+  // Helper function to create WAV file buffer
+  const createWavBuffer = (audioData: Int16Array, sampleRate: number): Uint8Array => {
+    const length = audioData.length;
+    const buffer = new ArrayBuffer(44 + length * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * 2, true);
+    
+    // Audio data
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      view.setInt16(offset, audioData[i], true);
+      offset += 2;
+    }
+    
+    return new Uint8Array(buffer);
+  };
+
   const handleGenerate = async () => {
     if (!generateModel || !generateEmotion || !generateText.trim()) {
       toast({
@@ -304,35 +341,114 @@ const AIVoice: React.FC = () => {
     try {
       setIsGenerating(true);
       
-      const { data, error } = await supabase.functions.invoke('voice-generate', {
-        body: {
+      // Call the external voice generation API
+      const response = await fetch('https://fbe8a9ce926e.ngrok-free.app/api/generate_speech', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           text: generateText,
-          modelName: generateModel,
-          emotion: generateEmotion,
-        }
+          model_name: generateModel,
+          emotion: generateEmotion
+        })
       });
 
-      if (error) {
-        throw new Error(error.message || 'Generation failed');
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
-      if (data && data.success) {
+      const result = await response.json();
+
+      if (!result.success) {
         toast({
-          title: "Success",
-          description: `Voice generated successfully! Audio saved as ${data.bucketPath}`,
+          title: "Error",
+          description: `Voice generation failed: ${result.error || 'Unknown error'}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert audio data to WAV blob
+      const [sampleRate, audioDataArray] = result.audio;
+      const audioData = new Int16Array(audioDataArray);
+      const wavBuffer = createWavBuffer(audioData, sampleRate);
+      const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
+      
+      // Upload to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('voices')
+        .upload(`generated/${filename}`, audioBlob, {
+          contentType: 'audio/wav',
+          upsert: false
         });
 
-        // Reset form
-        setGenerateText('');
-        setGenerateModel('');
-        setGenerateEmotion('');
-
-        // Refresh the voice sources and generated voices
-        fetchVoiceSources();
-        fetchGeneratedVoices();
-      } else {
-        throw new Error(data?.error || 'Voice generation failed');
+      if (uploadError) {
+        console.error('Upload failed:', uploadError);
+        toast({
+          title: "Error",
+          description: "Failed to upload generated audio",
+          variant: "destructive",
+        });
+        return;
       }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('voices')
+        .getPublicUrl(`generated/${filename}`);
+
+      // Get current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        toast({
+          title: "Error",
+          description: "User not authenticated",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('generated_voice_clones')
+        .insert({
+          model_name: generateModel,
+          emotion: generateEmotion,
+          generated_text: result.generated_text || generateText,
+          generated_by: user.id,
+          bucket_key: `generated/${filename}`,
+          audio_url: urlData.publicUrl,
+          status: 'Success'
+        });
+
+      if (dbError) {
+        console.error('Database save failed:', dbError);
+        toast({
+          title: "Error",
+          description: "Failed to save generation record",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Voice generated successfully!",
+      });
+
+      // Reset form
+      setGenerateText('');
+      setGenerateModel('');
+      setGenerateEmotion('');
+
+      // Refresh the generated voices list
+      fetchGeneratedVoices();
+      
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
