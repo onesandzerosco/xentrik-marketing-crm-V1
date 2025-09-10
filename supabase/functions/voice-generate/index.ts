@@ -111,7 +111,7 @@ serve(async (req) => {
         console.log('=== STEP 2: GENERATE SPEECH VIA API ===');
         console.log(`Starting generation for job: ${jobId}`);
         
-        const bananaTTSUrl = 'https://2e850c82df32.ngrok-free.app/api/generate_speech';
+        const bananaTTSUrl = 'https://16f59d21ea63.ngrok-free.app/api/generate_speech';
         const requestData = {
           text: text,
           model_name: modelName,
