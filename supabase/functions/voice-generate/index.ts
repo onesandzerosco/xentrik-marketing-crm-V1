@@ -168,7 +168,7 @@ serve(async (req) => {
       recordId: generatedRecord.id,
       audioUrl: urlData.publicUrl,
       bucketPath: bucketPath,
-      generatedText: voiceApiResult.generated_text || text
+      generatedText: text // Return the original input text, not the API's generated_text
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
