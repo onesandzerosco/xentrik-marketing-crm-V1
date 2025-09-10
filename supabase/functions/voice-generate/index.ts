@@ -164,9 +164,10 @@ serve(async (req) => {
           return;
         }
 
-        // Check for success and extract audio data
+        // Check for success and extract data from API response
         if (!bananaTTSData.success) {
           console.error('❌ API returned success: false');
+          console.error('Error:', bananaTTSData.error || 'Unknown error');
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -174,12 +175,20 @@ serve(async (req) => {
           return;
         }
 
-        let audioData = bananaTTSData.audio_data;
+        console.log('=== STEP 3: PROCESS API RESPONSE ===');
         
-        if (!audioData) {
-          console.error('❌ NO AUDIO DATA FOUND');
-          console.error('Available keys:', Object.keys(bananaTTSData));
-          console.error('Response structure:', JSON.stringify(bananaTTSData, null, 2));
+        // Extract data from successful API response
+        const apiGeneratedText = bananaTTSData.generated_text || text;
+        const bucketKey = bananaTTSData.bucket_key;
+        const requestId = bananaTTSData.request_id;
+        
+        console.log('API Generated Text:', apiGeneratedText);
+        console.log('Bucket Key from API:', bucketKey);
+        console.log('Request ID:', requestId);
+
+        // Check if API successfully uploaded to storage
+        if (!bucketKey) {
+          console.error('❌ NO BUCKET KEY - API upload failed');
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
@@ -187,73 +196,23 @@ serve(async (req) => {
           return;
         }
 
-        console.log('✅ Audio data received, length:', audioData.length);
+        console.log('✅ API upload successful, bucket key received');
 
-        console.log('=== STEP 3: UPLOAD AUDIO TO STORAGE ===');
-        
-        // Process base64 audio data
-        let audioBase64 = audioData;
-        
-        // Clean up base64 string
-        audioBase64 = audioBase64.replace(/\s/g, '');
-        while (audioBase64.length % 4) {
-          audioBase64 += '=';
-        }
-        
-        // Convert base64 to Uint8Array
-        let audioBuffer: Uint8Array;
-        try {
-          audioBuffer = Uint8Array.from(atob(audioBase64), (c) => c.charCodeAt(0));
-          console.log('Audio buffer size:', audioBuffer.byteLength, 'bytes');
-        } catch (decodeError) {
-          console.error('❌ BASE64 DECODE ERROR:', decodeError);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .update({ status: 'Failed' })
-            .eq('job_id', jobId);
-          return;
-        }
-        
-        const audioFormat = bananaTTSData.audio_format || 'wav';
-        const contentType = `audio/${audioFormat}`;
-        const generatedFileName = `generated/${modelName}/${emotion}/${Date.now()}.${audioFormat}`;
-        
-        console.log('Upload path:', generatedFileName);
-        console.log('Content type:', contentType);
-        
-        const { data: uploadData, error: uploadError } = await supabaseClient.storage
-          .from('generated_voices')
-          .upload(generatedFileName, audioBuffer, {
-            contentType: contentType,
-            upsert: false
-          });
+        console.log('=== STEP 4: UPDATE RECORD WITH API DATA ===');
 
-        if (uploadError) {
-          console.error('❌ UPLOAD ERROR:', uploadError);
-          await supabaseClient
-            .from('generated_voice_clones')
-            .update({ status: 'Failed' })
-            .eq('job_id', jobId);
-          return;
-        }
-
-        console.log('✅ Upload successful:', uploadData.path);
-
-        console.log('=== STEP 4: UPDATE RECORD WITH BUCKET_KEY ===');
-
-        // Get public URL for the generated audio
+        // Get public URL for the generated audio using the bucket key from API
         const { data: generatedUrlData } = supabaseClient.storage
           .from('generated_voices')
-          .getPublicUrl(generatedFileName);
+          .getPublicUrl(bucketKey);
 
         console.log('Public URL:', generatedUrlData.publicUrl);
 
-        // Update the pending record with the complete data
+        // Update the pending record with the API data
         const { data: jobRecord, error: finalError } = await supabaseClient
           .from('generated_voice_clones')
           .update({
-            bucket_key: generatedFileName,
-            generated_text: text,
+            bucket_key: bucketKey,
+            generated_text: apiGeneratedText,
             audio_url: generatedUrlData.publicUrl,
             status: 'Success'
           })
@@ -263,11 +222,6 @@ serve(async (req) => {
 
         if (finalError) {
           console.error('❌ DATABASE UPDATE ERROR:', finalError);
-          // Clean up uploaded file
-          await supabaseClient.storage
-            .from('generated_voices')
-            .remove([generatedFileName]);
-          // Mark record as failed
           await supabaseClient
             .from('generated_voice_clones')
             .update({ status: 'Failed' })
