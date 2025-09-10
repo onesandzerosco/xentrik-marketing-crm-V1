@@ -53,6 +53,13 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
     console.log('✅ Pending record created:', pendingRecord.id);
 
     // Step 2: Call the voice generation edge function with job_id
+    console.log('Calling edge function with params:', {
+      text,
+      modelName,
+      emotion,
+      jobId
+    });
+
     const { data, error } = await supabase.functions.invoke('voice-generate', {
       body: {
         text,
@@ -62,16 +69,18 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
       }
     });
 
+    console.log('Edge function response:', { data, error });
+
     if (error) {
       console.error('Voice synthesis error:', error);
-      throw new Error(`Voice synthesis failed: ${error.message}`);
+      throw new Error(`Voice synthesis failed: ${error.message || 'Unknown error'}`);
     }
 
     console.log('Voice generation API response:', data);
 
     // Return success response with job info
     return {
-      audioUrl: data?.data?.bucket_key ? supabase.storage.from('generated_voices').getPublicUrl(data.data.bucket_key).data.publicUrl : '',
+      audioUrl: data?.data?.bucket_key ? supabase.storage.from('voices').getPublicUrl(data.data.bucket_key).data.publicUrl : '',
       generatedPath: data?.data?.bucket_key || '',
       jobId: jobId
     };
