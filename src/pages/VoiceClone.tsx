@@ -42,6 +42,7 @@ interface GeneratedVoiceClone {
   audio_url: string;
   bucket_key: string;
   created_at: string;
+  updated_at?: string;
   generated_by: string;
   status: string;
   user_name?: string;
@@ -128,25 +129,32 @@ const VoiceClone: React.FC = () => {
       
     setRealtimeChannel(channel);
     
-    // Poll for status updates of pending records
+    // Poll for status updates of pending records - only update if there are actual changes
     const pollPendingRecords = async () => {
       try {
         const { data: pendingRecords } = await supabase
           .from('generated_voice_clones')
-          .select('*')
+          .select('id, status, updated_at')
           .in('status', ['Pending', 'Processing']);
 
         if (pendingRecords && pendingRecords.length > 0) {
-          console.log(`Found ${pendingRecords.length} pending/processing records`);
-          // Refresh the list to show updated statuses
-          fetchGeneratedVoiceClones();
+          // Check if any record's updated_at is newer than what we have in state
+          const hasChanges = pendingRecords.some(record => {
+            const currentRecord = generatedVoiceClones.find(clone => clone.id === record.id);
+            return !currentRecord || new Date(record.updated_at) > new Date(currentRecord.updated_at || currentRecord.created_at);
+          });
+
+          if (hasChanges) {
+            console.log(`Found status changes in ${pendingRecords.length} records`);
+            fetchGeneratedVoiceClones();
+          }
         }
       } catch (error) {
         console.error('Error polling pending records:', error);
       }
     };
 
-    // Poll every 10 seconds for pending records
+    // Poll every 10 seconds for pending records but only update UI if there are changes
     const intervalId = setInterval(pollPendingRecords, 10000);
     setPollInterval(intervalId);
   };
