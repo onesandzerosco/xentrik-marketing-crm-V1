@@ -207,40 +207,51 @@ const VoiceClone: React.FC = () => {
     }
 
     const trimmedText = inputText.trim();
+    
+    // Get the first available voice source for the selected model and emotion
+    const modelSources = groupedSources[selectedModel];
+    if (!modelSources || !modelSources[selectedEmotion] || modelSources[selectedEmotion].length === 0) {
+      toast({
+        title: "No Voice Source",
+        description: "No voice source available for the selected model and emotion",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const sourceKey = modelSources[selectedEmotion][0].bucket_key;
 
     try {
       setIsLoading(true);
       
-      // Call the voice generation function directly - it will handle database creation
-      const { data, error } = await supabase.functions.invoke('voice-generate', {
-        body: {
-          text: trimmedText,
-          modelName: selectedModel,
-          emotion: selectedEmotion
-        }
+      // Use the synthesize service which implements the new workflow
+      const { synthesize } = await import('@/services/voice-clone');
+      
+      const result = await synthesize({
+        text: trimmedText,
+        modelName: selectedModel,
+        emotion: selectedEmotion,
+        sourceKey: sourceKey
       });
 
-      if (error) {
-        throw error;
-      }
-
-      // Voice generation started successfully
+      // Voice generation completed successfully
       toast({
-        title: "Voice Generation Started", 
-        description: "Your voice is being generated in the background. You'll be notified when it's ready!",
+        title: "Voice Generation Completed", 
+        description: "Your voice has been generated successfully!",
       });
       
       // Clear the form
       setInputText('');
       
-      // The real-time subscription will automatically update the list when the generation completes
+      // Refresh the generated voice clones list
+      fetchGeneratedVoiceClones();
       
     } catch (error) {
       console.error('Error generating voice:', error);
       
       toast({
         title: "Error",
-        description: "Failed to generate voice",
+        description: error instanceof Error ? error.message : "Failed to generate voice",
         variant: "destructive",
       });
     } finally {
