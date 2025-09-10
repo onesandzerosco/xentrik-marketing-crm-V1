@@ -11,6 +11,7 @@ export interface SynthesizeResult {
   audioUrl: string;
   audioBuffer?: ArrayBuffer;
   generatedPath?: string;
+  jobId?: string;
 }
 
 /**
@@ -26,12 +27,38 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
   try {
     console.log('Starting voice synthesis:', { text, modelName, emotion });
     
-    // Call the voice generation edge function to start the job
+    // Step 1: Create pending record and generate job_id
+    const jobId = `voice-job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const { data: pendingRecord, error: insertError } = await supabase
+      .from('generated_voice_clones')
+      .insert({
+        model_name: modelName,
+        emotion: emotion,
+        generated_text: text,
+        generated_by: (await supabase.auth.getUser()).data.user?.id,
+        job_id: jobId,
+        status: 'Pending',
+        bucket_key: '',
+        audio_url: ''
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Failed to create pending record:', insertError);
+      throw new Error(`Failed to create pending record: ${insertError.message}`);
+    }
+
+    console.log('✅ Pending record created:', pendingRecord.id);
+
+    // Step 2: Call the voice generation edge function with job_id
     const { data, error } = await supabase.functions.invoke('voice-generate', {
       body: {
         text,
         modelName,
-        emotion
+        emotion,
+        jobId
       }
     });
 
@@ -40,13 +67,13 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
       throw new Error(`Voice synthesis failed: ${error.message}`);
     }
 
-    console.log('Voice generation job started:', data);
+    console.log('Voice generation API response:', data);
 
-    // Return success response - the actual generation happens in background
-    // User will see the completed voice in the table once it's done
+    // Return success response with job info
     return {
-      audioUrl: '', // No immediate audio URL since it's background processing
-      generatedPath: ''
+      audioUrl: data?.data?.bucket_key ? supabase.storage.from('generated_voices').getPublicUrl(data.data.bucket_key).data.publicUrl : '',
+      generatedPath: data?.data?.bucket_key || '',
+      jobId: jobId
     };
 
   } catch (error) {
