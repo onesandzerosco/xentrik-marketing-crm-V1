@@ -74,100 +74,150 @@ serve(async (req) => {
       );
     }
 
-    // Call the API directly and return response
-    try {
-      console.log('=== CALLING EXTERNAL API ===');
-      console.log(`Calling API for job: ${jobId}`);
-      
-      const bananaTTSUrl = 'https://d08bb18fed5a.ngrok-free.app/api/generate_speech';
-      const requestData = {
-        text: text,
-        model_name: modelName,
-        emotion: emotion,
-        job_id: jobId,
-        temperature: 1.0,
-        top_p: 0.95
-      };
+    // Start background task for long-running API call
+    console.log('=== STARTING BACKGROUND VOICE GENERATION ===');
+    console.log(`Starting background job: ${jobId}`);
+    
+    const bananaTTSUrl = 'https://d08bb18fed5a.ngrok-free.app/api/generate_speech';
+    const requestData = {
+      text: text,
+      model_name: modelName,
+      emotion: emotion,
+      job_id: jobId,
+      temperature: 1.0,
+      top_p: 0.95
+    };
 
-      console.log('API Request:', JSON.stringify(requestData, null, 2));
+    console.log('API Request:', JSON.stringify(requestData, null, 2));
 
-      const bananaTTSResponse = await fetch(bananaTTSUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'ngrok-skip-browser-warning': 'true'
-        },
-        body: JSON.stringify(requestData)
-      });
-
-      console.log('API Response Status:', bananaTTSResponse.status);
-      console.log('API Response Headers:', Object.fromEntries(bananaTTSResponse.headers));
-
-      if (!bananaTTSResponse.ok) {
-        const errorText = await bananaTTSResponse.text();
-        console.error('❌ API ERROR:', errorText);
-        return new Response(
-          JSON.stringify({ error: 'API call failed', details: errorText }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const responseText = await bananaTTSResponse.text();
-      console.log('Raw response length:', responseText.length);
-      
-      let bananaTTSData;
+    const backgroundTask = async () => {
       try {
-        bananaTTSData = JSON.parse(responseText);
-        console.log('Parsed response keys:', Object.keys(bananaTTSData));
-        console.log('Full response structure:', JSON.stringify(bananaTTSData, null, 2));
-      } catch (parseError) {
-        console.error('❌ JSON PARSE ERROR:', parseError);
-        console.error('Raw response preview:', responseText.substring(0, 500));
-        return new Response(
-          JSON.stringify({ error: 'Failed to parse API response', details: parseError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+        console.log('🔄 Background task: Calling external API...');
+        
+        const bananaTTSResponse = await fetch(bananaTTSUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          },
+          body: JSON.stringify(requestData)
+        });
 
-      // Check for success and extract data from API response
-      if (!bananaTTSData.success) {
-        console.error('❌ API returned success: false');
-        console.error('Error:', bananaTTSData.error || 'Unknown error');
-        return new Response(
-          JSON.stringify({ error: 'API generation failed', details: bananaTTSData.error }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+        console.log('🔄 Background task: API Response Status:', bananaTTSResponse.status);
 
-      console.log('=== ✅ API SUCCESS ===');
-      console.log('Generated Text:', bananaTTSData.generated_text);
-      console.log('Bucket Key:', bananaTTSData.bucket_key);
-      console.log('Request ID:', bananaTTSData.request_id);
-
-      // Return the API response directly
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          data: bananaTTSData,
-          message: 'Voice generation completed successfully'
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        if (!bananaTTSResponse.ok) {
+          const errorText = await bananaTTSResponse.text();
+          console.error('❌ Background task: API ERROR:', errorText);
+          
+          // Update record with error status
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ 
+              status: 'Failed',
+              error_message: `API Error: ${bananaTTSResponse.status} - ${errorText}`
+            })
+            .eq('job_id', jobId);
+          
+          return;
         }
-      );
 
-    } catch (error) {
-      console.error('=== ❌ API CALL ERROR ===');
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      
-      return new Response(
-        JSON.stringify({ error: 'Voice generation failed', details: error.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+        const responseText = await bananaTTSResponse.text();
+        console.log('🔄 Background task: Raw response length:', responseText.length);
+        
+        let bananaTTSData;
+        try {
+          bananaTTSData = JSON.parse(responseText);
+          console.log('🔄 Background task: Parsed response keys:', Object.keys(bananaTTSData));
+        } catch (parseError) {
+          console.error('❌ Background task: JSON PARSE ERROR:', parseError);
+          
+          // Update record with error status
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ 
+              status: 'Failed',
+              error_message: `JSON Parse Error: ${parseError.message}`
+            })
+            .eq('job_id', jobId);
+          
+          return;
+        }
+
+        // Check for success and extract data from API response
+        if (!bananaTTSData.success) {
+          console.error('❌ Background task: API returned success: false');
+          console.error('Error:', bananaTTSData.error || 'Unknown error');
+          
+          // Update record with error status
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ 
+              status: 'Failed',
+              error_message: `API generation failed: ${bananaTTSData.error || 'Unknown error'}`
+            })
+            .eq('job_id', jobId);
+          
+          return;
+        }
+
+        console.log('✅ Background task: API SUCCESS');
+        console.log('Generated Text:', bananaTTSData.generated_text);
+        console.log('Bucket Key:', bananaTTSData.bucket_key);
+        console.log('Request ID:', bananaTTSData.request_id);
+
+        // The external API should have already updated the database with success status and bucket_key
+        // But let's verify and update if needed
+        const { data: existingRecord } = await supabaseClient
+          .from('generated_voice_clones')
+          .select('status, bucket_key')
+          .eq('job_id', jobId)
+          .single();
+
+        if (existingRecord && (!existingRecord.bucket_key || existingRecord.status !== 'Completed')) {
+          console.log('🔄 Updating record with bucket_key and status...');
+          await supabaseClient
+            .from('generated_voice_clones')
+            .update({ 
+              status: 'Completed',
+              bucket_key: bananaTTSData.bucket_key,
+              audio_url: `https://rdzwpiokpyssqhnfiqrt.supabase.co/storage/v1/object/public/voices/${bananaTTSData.bucket_key}`
+            })
+            .eq('job_id', jobId);
+        }
+
+        console.log('✅ Background task completed successfully');
+        
+      } catch (error) {
+        console.error('❌ Background task error:', error);
+        
+        // Update record with error status
+        await supabaseClient
+          .from('generated_voice_clones')
+          .update({ 
+            status: 'Failed',
+            error_message: `Background task error: ${error.message}`
+          })
+          .eq('job_id', jobId);
+      }
+    };
+
+    // Start background task using EdgeRuntime.waitUntil
+    EdgeRuntime.waitUntil(backgroundTask());
+
+    // Return immediate response
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        jobId: jobId,
+        message: 'Voice generation started in background. This may take 2-3 minutes.',
+        status: 'processing'
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
 
   } catch (error) {
     console.error('=== ❌ MAIN FUNCTION ERROR ===');

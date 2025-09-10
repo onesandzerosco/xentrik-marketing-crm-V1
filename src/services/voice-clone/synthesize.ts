@@ -12,6 +12,8 @@ export interface SynthesizeResult {
   audioBuffer?: ArrayBuffer;
   generatedPath?: string;
   jobId?: string;
+  status?: string;
+  message?: string;
 }
 
 /**
@@ -78,11 +80,14 @@ export async function synthesize(params: SynthesizeParams): Promise<SynthesizeRe
 
     console.log('Voice generation API response:', data);
 
-    // Return success response with job info
+    // For background processing, return immediately with job info
+    // The actual audio will be available after processing completes
     return {
-      audioUrl: data?.data?.bucket_key ? supabase.storage.from('voices').getPublicUrl(data.data.bucket_key).data.publicUrl : '',
-      generatedPath: data?.data?.bucket_key || '',
-      jobId: jobId
+      audioUrl: '', // Will be available after background processing
+      generatedPath: '',
+      jobId: jobId,
+      status: 'processing',
+      message: data?.message || 'Voice generation started in background'
     };
 
   } catch (error) {
