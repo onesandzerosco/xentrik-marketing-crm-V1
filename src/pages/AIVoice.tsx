@@ -68,9 +68,26 @@ const AIVoice: React.FC = () => {
   const [generateText, setGenerateText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Filter states
+  const [sourceModelFilter, setSourceModelFilter] = useState<string>('all');
+  const [generatedModelFilter, setGeneratedModelFilter] = useState<string>('all');
+
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
   const isAdmin = userProfile?.role === 'Admin' || userProfile?.roles?.includes('Admin');
+
+  // Get unique models for filtering
+  const uniqueSourceModels = [...new Set(voiceSources.map(source => source.model_name))];
+  const uniqueGeneratedModels = [...new Set(generatedVoices.map(voice => voice.model_name))];
+
+  // Filter functions
+  const filteredVoiceSources = sourceModelFilter === 'all' 
+    ? voiceSources 
+    : voiceSources.filter(source => source.model_name === sourceModelFilter);
+
+  const filteredGeneratedVoices = generatedModelFilter === 'all'
+    ? generatedVoices
+    : generatedVoices.filter(voice => voice.model_name === generatedModelFilter);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -682,20 +699,40 @@ const AIVoice: React.FC = () => {
 
               {/* Voice Sources Table */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Voice Sources</CardTitle>
-                  <Button
-                    onClick={fetchVoiceSources}
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoadingSources}
-                  >
-                    {isLoadingSources ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
+                <CardHeader>
+                  <div className="flex flex-row items-center justify-between">
+                    <CardTitle>Voice Sources</CardTitle>
+                    <Button
+                      onClick={fetchVoiceSources}
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoadingSources}
+                    >
+                      {isLoadingSources ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="source-model-filter">Filter by Model</Label>
+                      <Select value={sourceModelFilter} onValueChange={setSourceModelFilter}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Models</SelectItem>
+                          {uniqueSourceModels.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {isLoadingSources ? (
@@ -714,7 +751,7 @@ const AIVoice: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {voiceSources.map((source) => (
+                        {filteredVoiceSources.map((source) => (
                           <TableRow key={source.id}>
                             <TableCell className="font-medium">{source.model_name}</TableCell>
                             <TableCell>
@@ -735,7 +772,7 @@ const AIVoice: React.FC = () => {
                           </TableRow>
                         ))}
                         
-                        {voiceSources.length === 0 && (
+                        {filteredVoiceSources.length === 0 && !isLoadingSources && (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                               No voice sources found. Upload your first voice to get started.
@@ -752,20 +789,40 @@ const AIVoice: React.FC = () => {
             <TabsContent value="generated" className="space-y-6">
               {/* Generated Voices List */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle>Generated Voices</CardTitle>
-                  <Button
-                    onClick={fetchGeneratedVoices}
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoadingGenerated}
-                  >
-                    {isLoadingGenerated ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
-                  </Button>
+                <CardHeader>
+                  <div className="flex flex-row items-center justify-between">
+                    <CardTitle>Generated Voices</CardTitle>
+                    <Button
+                      onClick={fetchGeneratedVoices}
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoadingGenerated}
+                    >
+                      {isLoadingGenerated ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex gap-4 mt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="generated-model-filter">Filter by Model</Label>
+                      <Select value={generatedModelFilter} onValueChange={setGeneratedModelFilter}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Models</SelectItem>
+                          {uniqueGeneratedModels.map((model) => (
+                            <SelectItem key={model} value={model}>
+                              {model}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {isLoadingGenerated ? (
@@ -784,8 +841,8 @@ const AIVoice: React.FC = () => {
                            <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody>
-                        {generatedVoices.map((voice) => (
+                       <TableBody>
+                         {filteredGeneratedVoices.map((voice) => (
                           <TableRow key={voice.id}>
                             <TableCell className="font-medium">{voice.model_name}</TableCell>
                             <TableCell>
@@ -827,8 +884,8 @@ const AIVoice: React.FC = () => {
                             </TableCell>
                           </TableRow>
                         ))}
-                        
-                        {generatedVoices.length === 0 && (
+                         
+                         {filteredGeneratedVoices.length === 0 && !isLoadingGenerated && (
                           <TableRow>
                             <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                               No generated voices found. Generate your first voice to get started.
