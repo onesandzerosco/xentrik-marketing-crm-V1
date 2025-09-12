@@ -394,100 +394,29 @@ const AIVoice: React.FC = () => {
     try {
       setIsGenerating(true);
       
-      // RunPod API configuration
-      const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
-      // Call the external voice generation API
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RUNPOD_API_KEY}`,
-        },
-        body: JSON.stringify({
+      // Call the Supabase edge function for voice generation
+      const { data, error } = await supabase.functions.invoke('voice-generate', {
+        body: {
           text: generateText,
-          model_name: generateModel,
+          modelName: generateModel,
           emotion: generateEmotion
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
-
-      if (!result.success) {
+      if (error) {
+        console.error('Voice generation error:', error);
         toast({
           title: "Error",
-          description: `Voice generation failed: ${result.error || 'Unknown error'}`,
+          description: `Voice generation failed: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
-      // Convert audio data to WAV blob
-      const [sampleRate, audioDataArray] = result.audio;
-      const audioData = new Int16Array(audioDataArray);
-      const wavBuffer = createWavBuffer(audioData, sampleRate);
-      const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-
-      // Generate unique filename
-      const timestamp = Date.now();
-      const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
-      
-      // Upload to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('voices')
-        .upload(`generated/${filename}`, audioBlob, {
-          contentType: 'audio/wav',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error('Upload failed:', uploadError);
+      if (!data?.success) {
         toast({
           title: "Error",
-          description: "Failed to upload generated audio",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('voices')
-        .getPublicUrl(`generated/${filename}`);
-
-      // Get current user
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        toast({
-          title: "Error",
-          description: "User not authenticated",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Save to database
-      const { error: dbError } = await supabase
-        .from('generated_voice_clones')
-        .insert({
-          model_name: generateModel,
-          emotion: generateEmotion,
-          generated_text: generateText,
-          generated_by: user.id,
-          bucket_key: `generated/${filename}`,
-          audio_url: urlData.publicUrl,
-          status: 'Success'
-        });
-
-      if (dbError) {
-        console.error('Database save failed:', dbError);
-        toast({
-          title: "Error",
-          description: "Failed to save generation record",
+          description: `Voice generation failed: ${data?.error || 'Unknown error'}`,
           variant: "destructive",
         });
         return;
