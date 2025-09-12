@@ -408,11 +408,7 @@ const AIVoice: React.FC = () => {
         body: JSON.stringify({
           text: generateText,
           model_name: generateModel,
-          emotion: generateEmotion,
-          max_completion_tokens: 1024,
-          temperature: 1.0,
-          top_p: 0.95,
-          top_k: 50
+          emotion: generateEmotion
         })
       });
 
