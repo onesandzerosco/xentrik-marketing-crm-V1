@@ -391,86 +391,112 @@ const AIVoice: React.FC = () => {
       return;
     }
 
+    // --- Config (Serverless, load-balanced) ---
+    const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
+    const BASE = 'https://tfq6nrycj8hjo2.api.runpod.ai';
+    const SUBMIT_URL = `${BASE}/run`;
+    const STATUS_URL = (jobId: string) => `${BASE}/status/${jobId}`;
+
+    // simple polling helper (1.5s interval, 10 min max ~ 400 polls)
+    const pollStatus = async (jobId: string) => {
+      const started = Date.now();
+      while (true) {
+        const r = await fetch(STATUS_URL(jobId), {
+          headers: {
+            'Authorization': `Bearer ${RUNPOD_API_KEY}`,
+            'Accept': 'application/json'
+          }
+        });
+        const txt = await r.text();
+        if (!r.ok) throw new Error(`Status ${r.status} ${r.statusText} | ${txt.slice(0,500)}`);
+        let data: any = {};
+        try { data = JSON.parse(txt); } catch { throw new Error(`Non-JSON status body: ${txt.slice(0,500)}`); }
+
+        // Possible statuses: QUEUED, IN_PROGRESS, COMPLETED, FAILED, CANCELLED
+        const s = (data.status || '').toUpperCase();
+        if (s === 'COMPLETED') return data;
+        if (s === 'FAILED' || s === 'CANCELLED') {
+          const err = data.output?.error || data.error || 'Job failed';
+          throw new Error(err);
+        }
+
+        if (Date.now() - started > 10 * 60 * 1000) { // 10 minutes safety
+          throw new Error('Timeout waiting for job completion');
+        }
+        await new Promise(res => setTimeout(res, 1500));
+      }
+    };
+
     try {
       setIsGenerating(true);
-      
-      // Call the RunPod serverless API
-      const response = await fetch(`https://api.runpod.ai/v2/tfq6nrycj8hjo2/runsync`, {
+
+      // 1) Submit async job (note the input wrapper)
+      const submitRes = await fetch(SUBMIT_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao`,
+          'Authorization': `Bearer ${RUNPOD_API_KEY}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           input: {
             text: generateText,
             model_name: generateModel,
             emotion: generateEmotion
+            // you can include optional params your handler supports
+            // e.g., max_completion_tokens, temperature, etc.
           }
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      const submitTxt = await submitRes.text();
+      if (!submitRes.ok) {
+        throw new Error(`Submit failed: ${submitRes.status} ${submitRes.statusText} | ${submitTxt.slice(0,500)}`);
       }
+      let submitJson: any = {};
+      try { submitJson = JSON.parse(submitTxt); } catch {
+        throw new Error(`Non-JSON submit body: ${submitTxt.slice(0,500)}`);
+      }
+      const jobId: string = submitJson.id || submitJson.jobId || submitJson.job_id;
+      if (!jobId) throw new Error(`No job id in submit response: ${submitTxt.slice(0,500)}`);
 
-      const { output } = await response.json(); // RunPod wraps your return under "output"
+      // 2) Poll until done
+      const statusJson = await pollStatus(jobId);
+      const output = statusJson.output ?? statusJson; // RunPod wraps your return under "output"
 
       if (!output?.success) {
-        toast({
-          title: "Error",
-          description: `Voice generation failed: ${output?.error || 'TTS failed'}`,
-          variant: "destructive",
-        });
-        return;
+        throw new Error(output?.error || 'Voice generation failed');
       }
 
-      // Convert audio data to WAV blob
-      const [sampleRate, audioDataArray] = output.audio; // same shape as your local API
+      // 3) Use output.audio = [sampleRate, Int16[]]
+      const [sampleRate, audioDataArray] = output.audio;
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
       const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
 
-      // Generate unique filename
+      // filename
       const timestamp = Date.now();
       const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
-      
-      // Upload to Supabase storage
+
+      // 4) Upload to Supabase
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('voices')
         .upload(`generated/${filename}`, audioBlob, {
           contentType: 'audio/wav',
           upsert: false
         });
+      if (uploadError) throw uploadError;
 
-      if (uploadError) {
-        console.error('Upload failed:', uploadError);
-        toast({
-          title: "Error",
-          description: "Failed to upload generated audio",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Get public URL
+      // public URL
       const { data: urlData } = supabase.storage
         .from('voices')
         .getPublicUrl(`generated/${filename}`);
 
-      // Get current user
+      // user
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) {
-        toast({
-          title: "Error",
-          description: "User not authenticated",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (authError || !user) throw new Error('User not authenticated');
 
-      // Save to database
+      // 5) Save DB record
       const { error: dbError } = await supabase
         .from('generated_voice_clones')
         .insert({
@@ -482,30 +508,16 @@ const AIVoice: React.FC = () => {
           audio_url: urlData.publicUrl,
           status: 'Success'
         });
+      if (dbError) throw dbError;
 
-      if (dbError) {
-        console.error('Database save failed:', dbError);
-        toast({
-          title: "Error",
-          description: "Failed to save generation record",
-          variant: "destructive",
-        });
-        return;
-      }
+      toast({ title: "Success", description: "Voice generated successfully!" });
 
-      toast({
-        title: "Success",
-        description: "Voice generated successfully!",
-      });
-
-      // Reset form
+      // reset & refresh
       setGenerateText('');
       setGenerateModel('');
       setGenerateEmotion('');
-
-      // Refresh the generated voices list
       fetchGeneratedVoices();
-      
+
     } catch (error) {
       console.error('Error generating voice:', error);
       toast({
