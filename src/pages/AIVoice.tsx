@@ -394,16 +394,11 @@ const AIVoice: React.FC = () => {
     try {
       setIsGenerating(true);
       
-      // RunPod API configuration
-      const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
-      
       // Call the external voice generation API
-      const response = await fetch(API_URL, {
+      const response = await fetch('https://fbe8a9ce926e.ngrok-free.app/api/generate_speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RUNPOD_API_KEY}`,
         },
         body: JSON.stringify({
           text: generateText,
@@ -427,7 +422,7 @@ const AIVoice: React.FC = () => {
         return;
       }
 
-      // Convert audio data to WAV blob using your existing function
+      // Convert audio data to WAV blob
       const [sampleRate, audioDataArray] = result.audio;
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
