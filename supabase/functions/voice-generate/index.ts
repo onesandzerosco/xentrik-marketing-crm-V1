@@ -89,7 +89,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Add any required API keys here
+        'Authorization': `Bearer ${Deno.env.get('RUNPOD_API_KEY')}`,
       },
       body: JSON.stringify({
         text: text,
