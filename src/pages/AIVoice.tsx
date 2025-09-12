@@ -394,16 +394,20 @@ const AIVoice: React.FC = () => {
     try {
       setIsGenerating(true);
       
-      // Call the external voice generation API
-      const response = await fetch('https://teu5r8y9sz9cod-3000.proxy.runpod.net/api/generate_speech', {
+      // Call the RunPod serverless API
+      const response = await fetch(`https://api.runpod.ai/v2/tfq6nrycj8hjo2/runsync`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${import.meta.env.RUNPOD_API_KEY}`, // move to your own backend in production
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify({
-          text: generateText,
-          model_name: generateModel,
-          emotion: generateEmotion
+          input: {
+            text: generateText,
+            model_name: generateModel,
+            emotion: generateEmotion
+          }
         })
       });
 
@@ -411,19 +415,19 @@ const AIVoice: React.FC = () => {
         throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
-      const result = await response.json();
+      const { output } = await response.json(); // RunPod wraps your return under "output"
 
-      if (!result.success) {
+      if (!output?.success) {
         toast({
           title: "Error",
-          description: `Voice generation failed: ${result.error || 'Unknown error'}`,
+          description: `Voice generation failed: ${output?.error || 'TTS failed'}`,
           variant: "destructive",
         });
         return;
       }
 
       // Convert audio data to WAV blob
-      const [sampleRate, audioDataArray] = result.audio;
+      const [sampleRate, audioDataArray] = output.audio; // same shape as your local API
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
       const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
