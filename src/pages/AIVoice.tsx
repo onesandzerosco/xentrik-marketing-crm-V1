@@ -393,44 +393,35 @@ const AIVoice: React.FC = () => {
 
     try {
       setIsGenerating(true);
-
-      // RunPod API configuration (kept hardcoded as requested)
+      
+      // RunPod API configuration
       const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://api.runpod.ai/v2/1o0bcy29iuw4c1/runsync';
-
-      // Call the RunPod Serverless endpoint (note the input wrapper)
+      const API_URL = 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
+      
+      // Call the external voice generation API
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${RUNPOD_API_KEY}`,
-          'Accept': 'application/json',
         },
         body: JSON.stringify({
-          input: {
-            text: generateText,
-            model_name: generateModel,
-            emotion: generateEmotion
-          }
+          text: generateText,
+          model_name: generateModel,
+          emotion: generateEmotion
         })
       });
 
-      const raw = await response.text();
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText} | ${raw.slice(0, 500)}`);
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
 
-      // RunPod wraps your handler return under "output"
-      let parsed: any = {};
-      try { parsed = JSON.parse(raw); } catch (e) {
-        throw new Error(`Non-JSON response from RunPod: ${raw.slice(0, 500)}`);
-      }
-      const result = parsed?.output || parsed; // safety
+      const result = await response.json();
 
-      if (!result?.success) {
+      if (!result.success) {
         toast({
           title: "Error",
-          description: `Voice generation failed: ${result?.error || 'Unknown error'}`,
+          description: `Voice generation failed: ${result.error || 'Unknown error'}`,
           variant: "destructive",
         });
         return;
@@ -445,7 +436,7 @@ const AIVoice: React.FC = () => {
       // Generate unique filename
       const timestamp = Date.now();
       const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
-
+      
       // Upload to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('voices')
