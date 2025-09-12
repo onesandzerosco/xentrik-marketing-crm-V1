@@ -395,7 +395,7 @@ const AIVoice: React.FC = () => {
       setIsGenerating(true);
 
       const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://hag7qt6pfpkubg.api.runpod.ai/runsync'; // <-- LB domain, not /v2/<id>/...
+      const API_URL = 'https://x221cq8guzrtnb.api.runpod.ai/runsync'; // <-- LB domain, not /v2/<id>/...
 
       const response = await fetch(API_URL, {
         method: 'POST',
