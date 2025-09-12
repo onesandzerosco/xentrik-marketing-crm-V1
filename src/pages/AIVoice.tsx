@@ -396,7 +396,7 @@ const AIVoice: React.FC = () => {
       
       // RunPod API configuration
       const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
+      const API_URL = 'https://api.runpod.ai/v2/1o0bcy29iuw4c1/runsync';
       
       // Call the external voice generation API
       const response = await fetch(API_URL, {
