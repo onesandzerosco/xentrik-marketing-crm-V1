@@ -395,7 +395,7 @@ const AIVoice: React.FC = () => {
       setIsGenerating(true);
       
       // Call the external voice generation API
-      const response = await fetch('https://fbe8a9ce926e.ngrok-free.app/api/generate_speech', {
+      const response = await fetch('https://uubc2d78d7cqh6-3000.proxy.runpod.net/api/generate_speech', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
