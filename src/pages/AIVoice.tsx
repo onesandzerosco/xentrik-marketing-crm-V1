@@ -397,28 +397,6 @@ const AIVoice: React.FC = () => {
       // RunPod API configuration
       const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
       const API_URL = 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
-      // Get the reference audio for the selected model and emotion
-      const { data: voiceSource, error: voiceError } = await supabase
-        .from('voice_sources')
-        .select('bucket_key')
-        .eq('model_name', generateModel)
-        .eq('emotion', generateEmotion)
-        .single();
-
-      if (voiceError || !voiceSource) {
-        toast({
-          title: "Error",
-          description: `Could not find voice source for ${generateModel} with ${generateEmotion} emotion`,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Get the public URL for the reference audio
-      const { data: referenceUrlData } = supabase.storage
-        .from('voices')
-        .getPublicUrl(voiceSource.bucket_key);
-
       // Call the external voice generation API
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -429,8 +407,7 @@ const AIVoice: React.FC = () => {
         body: JSON.stringify({
           text: generateText,
           model_name: generateModel,
-          emotion: generateEmotion,
-          reference_audio: referenceUrlData.publicUrl
+          emotion: generateEmotion
         })
       });
 
