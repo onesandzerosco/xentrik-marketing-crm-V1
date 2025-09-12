@@ -84,17 +84,12 @@ serve(async (req) => {
 
     // Make API call to the voice generation service
     const VOICE_API_URL = Deno.env.get('VOICE_GENERATION_API_URL') || 'https://1o0bcy29iuw4c1.api.runpod.ai/api/generate_speech';
-    const runpodApiKey = Deno.env.get('RUNPOD_API_KEY');
-    
-    console.log('🔑 RunPod API Key present:', !!runpodApiKey);
-    console.log('🔑 RunPod API Key length:', runpodApiKey?.length || 0);
-    console.log('🌐 API URL:', VOICE_API_URL);
     
     const voiceApiResponse = await fetch(VOICE_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${runpodApiKey}`,
+        // Add any required API keys here
       },
       body: JSON.stringify({
         text: text,
