@@ -83,8 +83,7 @@ serve(async (req) => {
     console.log('📝 Created job record:', generatedRecord.id);
 
     // Make API call to the voice generation service
-    // Note: Replace this URL with your actual voice generation API endpoint
-    const VOICE_API_URL = Deno.env.get('VOICE_GENERATION_API_URL') || 'https://your-voice-api.com/generate';
+    const VOICE_API_URL = Deno.env.get('VOICE_GENERATION_API_URL') || 'https://1o0bcy29iuw4c1.api.runpod.ai';
     
     const voiceApiResponse = await fetch(VOICE_API_URL, {
       method: 'POST',
