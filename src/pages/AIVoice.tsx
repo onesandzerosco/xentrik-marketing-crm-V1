@@ -391,47 +391,13 @@ const AIVoice: React.FC = () => {
       return;
     }
 
-    // --- Config (Serverless, load-balanced) ---
-    const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-    const BASE = 'https://tfq6nrycj8hjo2.api.runpod.ai';
-    const SUBMIT_URL = `${BASE}/run`;
-    const STATUS_URL = (jobId: string) => `${BASE}/status/${jobId}`;
-
-    // simple polling helper (1.5s interval, 10 min max ~ 400 polls)
-    const pollStatus = async (jobId: string) => {
-      const started = Date.now();
-      while (true) {
-        const r = await fetch(STATUS_URL(jobId), {
-          headers: {
-            'Authorization': `Bearer ${RUNPOD_API_KEY}`,
-            'Accept': 'application/json'
-          }
-        });
-        const txt = await r.text();
-        if (!r.ok) throw new Error(`Status ${r.status} ${r.statusText} | ${txt.slice(0,500)}`);
-        let data: any = {};
-        try { data = JSON.parse(txt); } catch { throw new Error(`Non-JSON status body: ${txt.slice(0,500)}`); }
-
-        // Possible statuses: QUEUED, IN_PROGRESS, COMPLETED, FAILED, CANCELLED
-        const s = (data.status || '').toUpperCase();
-        if (s === 'COMPLETED') return data;
-        if (s === 'FAILED' || s === 'CANCELLED') {
-          const err = data.output?.error || data.error || 'Job failed';
-          throw new Error(err);
-        }
-
-        if (Date.now() - started > 10 * 60 * 1000) { // 10 minutes safety
-          throw new Error('Timeout waiting for job completion');
-        }
-        await new Promise(res => setTimeout(res, 1500));
-      }
-    };
-
     try {
       setIsGenerating(true);
 
-      // 1) Submit async job (note the input wrapper)
-      const submitRes = await fetch(SUBMIT_URL, {
+      const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
+      const API_URL = 'https://tfq6nrycj8hjo2.api.runpod.ai/runsync'; // <-- LB domain, not /v2/<id>/...
+
+      const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${RUNPOD_API_KEY}`,
@@ -443,32 +409,31 @@ const AIVoice: React.FC = () => {
             text: generateText,
             model_name: generateModel,
             emotion: generateEmotion
-            // you can include optional params your handler supports
-            // e.g., max_completion_tokens, temperature, etc.
           }
-        })
+        }),
       });
 
-      const submitTxt = await submitRes.text();
-      if (!submitRes.ok) {
-        throw new Error(`Submit failed: ${submitRes.status} ${submitRes.statusText} | ${submitTxt.slice(0,500)}`);
+      const raw = await response.text(); // capture server message if it errors
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText} | ${raw.slice(0,500)}`);
       }
-      let submitJson: any = {};
-      try { submitJson = JSON.parse(submitTxt); } catch {
-        throw new Error(`Non-JSON submit body: ${submitTxt.slice(0,500)}`);
-      }
-      const jobId: string = submitJson.id || submitJson.jobId || submitJson.job_id;
-      if (!jobId) throw new Error(`No job id in submit response: ${submitTxt.slice(0,500)}`);
 
-      // 2) Poll until done
-      const statusJson = await pollStatus(jobId);
-      const output = statusJson.output ?? statusJson; // RunPod wraps your return under "output"
+      let parsed: any = {};
+      try { parsed = JSON.parse(raw); } catch {
+        throw new Error(`Non-JSON response: ${raw.slice(0,500)}`);
+      }
+      const output = parsed.output ?? parsed;
 
       if (!output?.success) {
-        throw new Error(output?.error || 'Voice generation failed');
+        toast({
+          title: "Error",
+          description: `Voice generation failed: ${output?.error || 'TTS failed'}`,
+          variant: "destructive",
+        });
+        return;
       }
 
-      // 3) Use output.audio = [sampleRate, Int16[]]
+      // Use output.audio = [sampleRate, Int16[]]
       const [sampleRate, audioDataArray] = output.audio;
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
@@ -478,7 +443,7 @@ const AIVoice: React.FC = () => {
       const timestamp = Date.now();
       const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
 
-      // 4) Upload to Supabase
+      // Upload to Supabase
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('voices')
         .upload(`generated/${filename}`, audioBlob, {
@@ -496,7 +461,7 @@ const AIVoice: React.FC = () => {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error('User not authenticated');
 
-      // 5) Save DB record
+      // Save DB record
       const { error: dbError } = await supabase
         .from('generated_voice_clones')
         .insert({
