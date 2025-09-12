@@ -404,6 +404,7 @@ const AIVoice: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${RUNPOD_API_KEY}`,
+          'Accept': 'application/json',
         },
         body: JSON.stringify({
           text: generateText,
