@@ -398,7 +398,7 @@ const AIVoice: React.FC = () => {
       const response = await fetch(`https://api.runpod.ai/v2/tfq6nrycj8hjo2/runsync`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao`,
+          'Authorization': `rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
