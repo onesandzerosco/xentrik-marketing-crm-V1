@@ -45,6 +45,9 @@ interface GeneratedVoiceClone {
   };
 }
 
+// Helper function for polling delay
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const AIVoice: React.FC = () => {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
@@ -391,15 +394,15 @@ const AIVoice: React.FC = () => {
       return;
     }
 
-    // NOTE: Shipping secrets in the browser is risky; move to a proxy when you can.
+    // NOTE: move this to a server-side proxy ASAP
     const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
-    const RUNPOD_SYNC_URL = "https://itch1khw6miyif.api.runpod.ai/runsync"; // handler endpoint (no LB)
+    const RUNPOD_BASE = "https://api.runpod.ai/v2/itch1khw6miyif"; // v2 handler base
 
     try {
       setIsGenerating(true);
 
-      // Call RunPod handler (sync)
-      const response = await fetch(RUNPOD_SYNC_URL, {
+      // 1) Start job (async)
+      const startRes = await fetch(`${RUNPOD_BASE}/run`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${RUNPOD_API_KEY}`,
@@ -411,33 +414,54 @@ const AIVoice: React.FC = () => {
             text: generateText,
             model_name: generateModel,
             emotion: generateEmotion,
-            // temperature: 1.0, top_p: 0.95, top_k: 50, etc. (optional)
+            // optional: temperature/top_p/top_k/system_prompt...
           },
         }),
       });
+      const startRaw = await startRes.text();
+      if (!startRes.ok) {
+        throw new Error(`RunPod /run failed: ${startRes.status} ${startRes.statusText} | ${startRaw.slice(0,500)}`);
+      }
+      let startJson: any = {};
+      try { startJson = JSON.parse(startRaw); } catch {
+        throw new Error(`Non-JSON response from /run: ${startRaw.slice(0,500)}`);
+      }
+      const jobId = startJson.id;
+      if (!jobId) throw new Error("RunPod did not return a job id");
 
-      const raw = await response.text();
-      if (!response.ok) {
-        throw new Error(`RunPod failed: ${response.status} ${response.statusText} | ${raw.slice(0, 500)}`);
+      // 2) Poll for completion (no total timeout as requested)
+      let statusJson: any;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        await sleep(1500);
+        const stRes = await fetch(`${RUNPOD_BASE}/status/${jobId}`, {
+          headers: { Authorization: `Bearer ${RUNPOD_API_KEY}` },
+        });
+        const stRaw = await stRes.text();
+        if (!stRes.ok) {
+          throw new Error(`RunPod /status failed: ${stRes.status} ${stRes.statusText} | ${stRaw.slice(0,500)}`);
+        }
+        try { statusJson = JSON.parse(stRaw); } catch {
+          throw new Error(`Non-JSON response from /status: ${stRaw.slice(0,500)}`);
+        }
+        const s = statusJson.status;
+        if (s === "COMPLETED" || s === "FAILED" || s === "CANCELLED" || s === "TIMED_OUT") break;
       }
 
-      let parsed: any = {};
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        throw new Error(`Non-JSON response from RunPod: ${raw.slice(0, 500)}`);
+      if (statusJson.status !== "COMPLETED") {
+        const errMsg = statusJson.error || statusJson.status || "TTS job did not complete";
+        toast({ title: "Error", description: `Voice generation failed: ${errMsg}`, variant: "destructive" });
+        return;
       }
 
-      // RunPod handler may return { output: {...} } or the object itself
-      const output = parsed.output ?? parsed;
-
+      // 3) Use handler output (same logic as your working code)
+      const output = statusJson.output ?? {};
       if (!output?.success) {
         const msg = output?.error || "TTS failed";
         toast({ title: "Error", description: `Voice generation failed: ${msg}`, variant: "destructive" });
         return;
       }
 
-      // Expecting: output.audio = [sampleRate, Int16[]]
       if (!output.audio || !Array.isArray(output.audio) || output.audio.length < 2) {
         toast({
           title: "Generated (no audio)",
@@ -450,10 +474,6 @@ const AIVoice: React.FC = () => {
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
       const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
-
-      // Optional: preview playback
-      // const audioUrl = URL.createObjectURL(audioBlob);
-      // new Audio(audioUrl).play().catch(() => {});
 
       // Save to Supabase Storage
       const ts = Date.now();
@@ -471,14 +491,9 @@ const AIVoice: React.FC = () => {
         .from("voices")
         .getPublicUrl(`generated/${filename}`);
 
-      // Require signed-in user
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw new Error("User not authenticated");
 
-      // Save DB record
       const { error: dbError } = await supabase
         .from("generated_voice_clones")
         .insert({
@@ -494,11 +509,11 @@ const AIVoice: React.FC = () => {
 
       toast({ title: "Success", description: "Voice generated and saved!" });
 
-      // reset & refresh
       setGenerateText("");
       setGenerateModel("");
       setGenerateEmotion("");
       fetchGeneratedVoices();
+
     } catch (err) {
       console.error("Error generating voice:", err);
       toast({
