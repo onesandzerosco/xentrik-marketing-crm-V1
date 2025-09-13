@@ -393,7 +393,7 @@ const AIVoice: React.FC = () => {
 
     // NOTE: Shipping secrets in the browser is risky; move to a proxy when you can.
     const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
-    const RUNPOD_SYNC_URL = "https://7avmwr821hnp71.api.runpod.ai/runsync"; // handler endpoint (no LB)
+    const RUNPOD_SYNC_URL = "https://itch1khw6miyif.api.runpod.ai/runsync"; // handler endpoint (no LB)
 
     try {
       setIsGenerating(true);
