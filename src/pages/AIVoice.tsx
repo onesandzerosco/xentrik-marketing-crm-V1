@@ -70,6 +70,7 @@ const AIVoice: React.FC = () => {
   const [generateEmotion, setGenerateEmotion] = useState<string>('');
   const [generateText, setGenerateText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
 
   // Filter states
   const [sourceModelFilter, setSourceModelFilter] = useState<string>('all');
@@ -429,11 +430,20 @@ const AIVoice: React.FC = () => {
       const jobId = startJson.id;
       if (!jobId) throw new Error("RunPod did not return a job id");
 
+      setCurrentJobId(jobId);
+
       // 2) Poll for completion (no total timeout as requested)
       let statusJson: any;
       // eslint-disable-next-line no-constant-condition
       while (true) {
         await sleep(1500);
+        
+        // Check if job was cancelled
+        if (!currentJobId) {
+          toast({ title: "Cancelled", description: "Voice generation cancelled" });
+          return;
+        }
+        
         const stRes = await fetch(`${RUNPOD_BASE}/status/${jobId}`, {
           headers: { Authorization: `Bearer ${RUNPOD_API_KEY}` },
         });
@@ -523,7 +533,30 @@ const AIVoice: React.FC = () => {
       });
     } finally {
       setIsGenerating(false);
+      setCurrentJobId(null);
     }
+  };
+
+  const handleStop = async () => {
+    if (!currentJobId) return;
+
+    const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
+    const RUNPOD_BASE = "https://api.runpod.ai/v2/itch1khw6miyif";
+
+    try {
+      await fetch(`${RUNPOD_BASE}/cancel/${currentJobId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RUNPOD_API_KEY}`,
+        },
+      });
+    } catch (error) {
+      console.error("Error cancelling job:", error);
+    }
+
+    setCurrentJobId(null);
+    setIsGenerating(false);
+    toast({ title: "Cancelled", description: "Voice generation stopped" });
   };
 
   const formatDate = (dateString: string) => {
@@ -652,14 +685,15 @@ const AIVoice: React.FC = () => {
                   </div>
 
                   <Button
-                    onClick={handleGenerate}
-                    disabled={isGenerating || !generateModel || !generateEmotion || !generateText.trim()}
+                    onClick={isGenerating ? handleStop : handleGenerate}
+                    disabled={!isGenerating && (!generateModel || !generateEmotion || !generateText.trim())}
                     className="w-full"
+                    variant={isGenerating ? "destructive" : "default"}
                   >
                     {isGenerating ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating Voice...
+                        Stop Generating
                       </>
                     ) : (
                       <>
