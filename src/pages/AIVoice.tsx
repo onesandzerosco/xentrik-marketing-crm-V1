@@ -666,9 +666,9 @@ const AIVoice: React.FC = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="generate" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="generate">Generate Voice</TabsTrigger>
-              <TabsTrigger value="upload">Upload Voice Source</TabsTrigger>
+              {isAdmin && <TabsTrigger value="upload">Upload Voice Source</TabsTrigger>}
               <TabsTrigger value="generated">Generated Voices</TabsTrigger>
             </TabsList>
             
