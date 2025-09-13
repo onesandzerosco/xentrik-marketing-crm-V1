@@ -391,79 +391,96 @@ const AIVoice: React.FC = () => {
       return;
     }
 
+    // NOTE: Shipping secrets in the browser is risky; move to a proxy when you can.
+    const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
+    const RUNPOD_SYNC_URL = "https://7avmwr821hnp71.api.runpod.ai/runsync"; // handler endpoint (no LB)
+
     try {
       setIsGenerating(true);
 
-      const RUNPOD_API_KEY = 'rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao';
-      const API_URL = 'https://x221cq8guzrtnb.api.runpod.ai/runsync'; // <-- LB domain, not /v2/<id>/...
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
+      // Call RunPod handler (sync)
+      const response = await fetch(RUNPOD_SYNC_URL, {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${RUNPOD_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Authorization: `Bearer ${RUNPOD_API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
           input: {
             text: generateText,
             model_name: generateModel,
-            emotion: generateEmotion
-          }
+            emotion: generateEmotion,
+            // temperature: 1.0, top_p: 0.95, top_k: 50, etc. (optional)
+          },
         }),
       });
 
-      const raw = await response.text(); // capture server message if it errors
+      const raw = await response.text();
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status} ${response.statusText} | ${raw.slice(0,500)}`);
+        throw new Error(`RunPod failed: ${response.status} ${response.statusText} | ${raw.slice(0, 500)}`);
       }
 
       let parsed: any = {};
-      try { parsed = JSON.parse(raw); } catch {
-        throw new Error(`Non-JSON response: ${raw.slice(0,500)}`);
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        throw new Error(`Non-JSON response from RunPod: ${raw.slice(0, 500)}`);
       }
+
+      // RunPod handler may return { output: {...} } or the object itself
       const output = parsed.output ?? parsed;
 
       if (!output?.success) {
+        const msg = output?.error || "TTS failed";
+        toast({ title: "Error", description: `Voice generation failed: ${msg}`, variant: "destructive" });
+        return;
+      }
+
+      // Expecting: output.audio = [sampleRate, Int16[]]
+      if (!output.audio || !Array.isArray(output.audio) || output.audio.length < 2) {
         toast({
-          title: "Error",
-          description: `Voice generation failed: ${output?.error || 'TTS failed'}`,
-          variant: "destructive",
+          title: "Generated (no audio)",
+          description: output.generated_text || "No audio returned by the engine.",
         });
         return;
       }
 
-      // Use output.audio = [sampleRate, Int16[]]
       const [sampleRate, audioDataArray] = output.audio;
       const audioData = new Int16Array(audioDataArray);
       const wavBuffer = createWavBuffer(audioData, sampleRate);
-      const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+      const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
 
-      // filename
-      const timestamp = Date.now();
-      const filename = `generated_${generateModel}_${generateEmotion}_${timestamp}.wav`;
+      // Optional: preview playback
+      // const audioUrl = URL.createObjectURL(audioBlob);
+      // new Audio(audioUrl).play().catch(() => {});
 
-      // Upload to Supabase
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('voices')
+      // Save to Supabase Storage
+      const ts = Date.now();
+      const filename = `generated_${generateModel}_${generateEmotion}_${ts}.wav`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("voices")
         .upload(`generated/${filename}`, audioBlob, {
-          contentType: 'audio/wav',
-          upsert: false
+          contentType: "audio/wav",
+          upsert: false,
         });
       if (uploadError) throw uploadError;
 
-      // public URL
       const { data: urlData } = supabase.storage
-        .from('voices')
+        .from("voices")
         .getPublicUrl(`generated/${filename}`);
 
-      // user
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw new Error('User not authenticated');
+      // Require signed-in user
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("User not authenticated");
 
       // Save DB record
       const { error: dbError } = await supabase
-        .from('generated_voice_clones')
+        .from("generated_voice_clones")
         .insert({
           model_name: generateModel,
           emotion: generateEmotion,
@@ -471,23 +488,22 @@ const AIVoice: React.FC = () => {
           generated_by: user.id,
           bucket_key: `generated/${filename}`,
           audio_url: urlData.publicUrl,
-          status: 'Success'
+          status: "Success",
         });
       if (dbError) throw dbError;
 
-      toast({ title: "Success", description: "Voice generated successfully!" });
+      toast({ title: "Success", description: "Voice generated and saved!" });
 
       // reset & refresh
-      setGenerateText('');
-      setGenerateModel('');
-      setGenerateEmotion('');
+      setGenerateText("");
+      setGenerateModel("");
+      setGenerateEmotion("");
       fetchGeneratedVoices();
-
-    } catch (error) {
-      console.error('Error generating voice:', error);
+    } catch (err) {
+      console.error("Error generating voice:", err);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate voice",
+        description: err instanceof Error ? err.message : "Failed to generate voice",
         variant: "destructive",
       });
     } finally {
