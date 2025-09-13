@@ -80,6 +80,7 @@ const AIVoice: React.FC = () => {
   const emotions = ['sexual', 'angry', 'excited', 'sweet', 'sad', 'conversational'];
 
   const isAdmin = userProfile?.role === 'Admin' || userProfile?.roles?.includes('Admin');
+  const hasAccess = isAdmin || userProfile?.role === 'Chatter' || userProfile?.roles?.includes('Chatter');
 
   // Get unique models for filtering
   const uniqueSourceModels = [...new Set(voiceSources.map(source => source.model_name))];
@@ -646,12 +647,12 @@ const AIVoice: React.FC = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
         <Card>
           <CardContent className="text-center py-8">
-            <p>Access denied. Admin privileges required.</p>
+            <p>Access denied. You need Admin or Chatter privileges to access this module.</p>
           </CardContent>
         </Card>
       </div>
