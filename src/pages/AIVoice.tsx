@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -71,6 +71,7 @@ const AIVoice: React.FC = () => {
   const [generateText, setGenerateText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const cancelledRef = useRef(false);
 
   // Filter states
   const [sourceModelFilter, setSourceModelFilter] = useState<string>('all');
@@ -401,6 +402,7 @@ const AIVoice: React.FC = () => {
 
     try {
       setIsGenerating(true);
+      cancelledRef.current = false;
 
       // 1) Start job (async)
       const startRes = await fetch(`${RUNPOD_BASE}/run`, {
@@ -439,7 +441,7 @@ const AIVoice: React.FC = () => {
         await sleep(1500);
         
         // Check if job was cancelled
-        if (!currentJobId) {
+        if (cancelledRef.current) {
           toast({ title: "Cancelled", description: "Voice generation cancelled" });
           return;
         }
@@ -554,6 +556,7 @@ const AIVoice: React.FC = () => {
       console.error("Error cancelling job:", error);
     }
 
+    cancelledRef.current = true;
     setCurrentJobId(null);
     setIsGenerating(false);
     toast({ title: "Cancelled", description: "Voice generation stopped" });
