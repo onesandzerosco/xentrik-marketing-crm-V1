@@ -396,15 +396,47 @@ const AIVoice: React.FC = () => {
       return;
     }
 
+    // Validate that text is not too long (prevent bad requests)
+    if (generateText.length > 1000) {
+      toast({
+        title: "Text Too Long",
+        description: "Please limit text to 1000 characters or less",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate that the selected model has the selected emotion available
+    const isValidCombination = voiceSources.some(
+      source => source.model_name === generateModel && source.emotion === generateEmotion
+    );
+    
+    if (!isValidCombination) {
+      toast({
+        title: "Invalid Combination",
+        description: "The selected model doesn't have the selected emotion available",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // NOTE: move this to a server-side proxy ASAP
     const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
-    const RUNPOD_BASE = "https://api.runpod.ai/v2/itch1khw6miyif"; // v2 handler base
+    const RUNPOD_BASE = "https://api.runpod.ai/v2/svqhe91xadl9ka"; // Updated endpoint
 
     try {
       setIsGenerating(true);
       cancelledRef.current = false;
 
-      // 1) Start job (async)
+      // 1) Start job (async) - Add validation and better error handling
+      const requestBody = {
+        input: {
+          text: generateText.trim(),
+          model_name: generateModel,
+          emotion: generateEmotion,
+        }
+      };
+
       const startRes = await fetch(`${RUNPOD_BASE}/run`, {
         method: "POST",
         headers: {
@@ -412,25 +444,33 @@ const AIVoice: React.FC = () => {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({
-          input: {
-            text: generateText,
-            model_name: generateModel,
-            emotion: generateEmotion,
-            // optional: temperature/top_p/top_k/system_prompt...
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
       const startRaw = await startRes.text();
       if (!startRes.ok) {
-        throw new Error(`RunPod /run failed: ${startRes.status} ${startRes.statusText} | ${startRaw.slice(0,500)}`);
+        let errorMessage = `RunPod /run failed: ${startRes.status} ${startRes.statusText}`;
+        try {
+          const errorJson = JSON.parse(startRaw);
+          if (errorJson.error) {
+            errorMessage = `RunPod error: ${errorJson.error}`;
+          }
+        } catch {
+          // If not JSON, use the raw response
+          errorMessage += ` | ${startRaw.slice(0,500)}`;
+        }
+        throw new Error(errorMessage);
       }
       let startJson: any = {};
-      try { startJson = JSON.parse(startRaw); } catch {
+      try { 
+        startJson = JSON.parse(startRaw); 
+      } catch {
         throw new Error(`Non-JSON response from /run: ${startRaw.slice(0,500)}`);
       }
       const jobId = startJson.id;
-      if (!jobId) throw new Error("RunPod did not return a job id");
+      if (!jobId) {
+        console.error("Start response:", startJson);
+        throw new Error("RunPod did not return a job id");
+      }
 
       setCurrentJobId(jobId);
 
@@ -451,9 +491,20 @@ const AIVoice: React.FC = () => {
         });
         const stRaw = await stRes.text();
         if (!stRes.ok) {
-          throw new Error(`RunPod /status failed: ${stRes.status} ${stRes.statusText} | ${stRaw.slice(0,500)}`);
+          let errorMessage = `RunPod /status failed: ${stRes.status} ${stRes.statusText}`;
+          try {
+            const errorJson = JSON.parse(stRaw);
+            if (errorJson.error) {
+              errorMessage = `RunPod status error: ${errorJson.error}`;
+            }
+          } catch {
+            errorMessage += ` | ${stRaw.slice(0,500)}`;
+          }
+          throw new Error(errorMessage);
         }
-        try { statusJson = JSON.parse(stRaw); } catch {
+        try { 
+          statusJson = JSON.parse(stRaw); 
+        } catch {
           throw new Error(`Non-JSON response from /status: ${stRaw.slice(0,500)}`);
         }
         const s = statusJson.status;
@@ -543,7 +594,7 @@ const AIVoice: React.FC = () => {
     if (!currentJobId) return;
 
     const RUNPOD_API_KEY = "rpa_N0CIJRBITCDLGM19ZVE8DBTOSDT6450CWC6C28GSsl0lao";
-    const RUNPOD_BASE = "https://api.runpod.ai/v2/itch1khw6miyif";
+    const RUNPOD_BASE = "https://api.runpod.ai/v2/svqhe91xadl9ka";
 
     try {
       await fetch(`${RUNPOD_BASE}/cancel/${currentJobId}`, {
