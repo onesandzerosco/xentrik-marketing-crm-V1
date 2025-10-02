@@ -77,9 +77,10 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, email, role, roles, department')
+        .select('id, name, email, role, roles, department, status')
         .neq('role', 'Creator')
-        .not('roles', 'cs', '{Creator}');
+        .not('roles', 'cs', '{Creator}')
+        .eq('status', 'Active');
 
       if (error) throw error;
 
