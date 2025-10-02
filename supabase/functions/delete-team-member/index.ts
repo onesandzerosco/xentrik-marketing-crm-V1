@@ -41,7 +41,40 @@ serve(async (req) => {
       }
     );
 
-    // First, manually delete the profile to avoid cascade issues
+    // Step 1: Delete all sales_tracker records for this user
+    const { error: salesError } = await supabaseAdmin
+      .from('sales_tracker')
+      .delete()
+      .eq('chatter_id', userId);
+
+    if (salesError) {
+      console.error("Error deleting sales_tracker records:", salesError);
+      // Continue anyway, might not have sales records
+    }
+
+    // Step 2: Delete all attendance records for this user
+    const { error: attendanceError } = await supabaseAdmin
+      .from('attendance')
+      .delete()
+      .eq('chatter_id', userId);
+
+    if (attendanceError) {
+      console.error("Error deleting attendance records:", attendanceError);
+      // Continue anyway, might not have attendance records
+    }
+
+    // Step 3: Delete all generated_voice_clones for this user
+    const { error: voiceError } = await supabaseAdmin
+      .from('generated_voice_clones')
+      .delete()
+      .eq('generated_by', userId);
+
+    if (voiceError) {
+      console.error("Error deleting voice clones:", voiceError);
+      // Continue anyway
+    }
+
+    // Step 4: Delete the profile
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -60,7 +93,7 @@ serve(async (req) => {
       );
     }
 
-    // Then delete the user from auth.users
+    // Step 5: Finally delete the user from auth.users
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authError) {
