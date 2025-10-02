@@ -43,7 +43,7 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
     return (
       <div className="mb-6">
         <h4 className="text-md font-medium mb-3 text-muted-foreground">{title} ({groupUsers.length})</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 justify-items-center">
           {groupUsers.map((user) => (
             <Card 
               key={user.id} 
