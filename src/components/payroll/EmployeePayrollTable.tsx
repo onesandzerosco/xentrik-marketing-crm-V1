@@ -53,7 +53,7 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-1">{user.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-center">
                   {shouldShowEmployeeBadge ? (
                     <span className={`text-xs ${getBadgeColor()} px-2 py-1 rounded`}>
                       {user.role}

@@ -31,9 +31,11 @@ const ManagerPayrollTable: React.FC<ManagerPayrollTableProps> = ({
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-1">{user.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">
-                  {user.role}
-                </span>
+                <div className="flex justify-center">
+                  <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">
+                    {user.role}
+                  </span>
+                </div>
               </CardContent>
             </Card>
           ))}
