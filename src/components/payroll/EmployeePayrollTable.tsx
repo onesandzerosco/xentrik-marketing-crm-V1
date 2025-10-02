@@ -42,7 +42,7 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
     
     return (
       <div className="mb-6">
-        <h4 className="text-md font-medium mb-3 text-muted-foreground">{title} ({groupUsers.length})</h4>
+        <h4 className="text-md font-medium mb-3 text-muted-foreground text-center">{title} ({groupUsers.length})</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {groupUsers.map((user) => (
             <Card 
@@ -74,7 +74,7 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Employee Users ({users.length})</h3>
+      <h3 className="text-lg font-semibold mb-4 text-center">Employee Users ({users.length})</h3>
       {users.length > 0 ? (
         <div className="space-y-6">
           {renderUserGroup('6AM Shift', shift6AM, '6AM')}
