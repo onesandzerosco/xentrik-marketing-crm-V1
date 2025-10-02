@@ -71,6 +71,7 @@ const TeamBasicInfoSection: React.FC<TeamBasicInfoSectionProps> = ({ control }) 
                   <SelectItem value="6AM">6AM</SelectItem>
                   <SelectItem value="2PM">2PM</SelectItem>
                   <SelectItem value="10PM">10PM</SelectItem>
+                  <SelectItem value="Social Media Team">Social Media Team</SelectItem>
                 </SelectContent>
               </Select>
             </FormItem>
