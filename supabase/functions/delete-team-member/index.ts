@@ -41,14 +41,33 @@ serve(async (req) => {
       }
     );
 
-    // Delete the user from auth.users (this will cascade delete the profile as well)
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    // First, manually delete the profile to avoid cascade issues
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
 
-    if (error) {
-      console.error("Error deleting user:", error);
+    if (profileError) {
+      console.error("Error deleting profile:", profileError);
       return new Response(
         JSON.stringify({
-          error: `Failed to delete user: ${error.message}`,
+          error: `Failed to delete profile: ${profileError.message}`,
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Then delete the user from auth.users
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (authError) {
+      console.error("Error deleting auth user:", authError);
+      return new Response(
+        JSON.stringify({
+          error: `Failed to delete auth user: ${authError.message}`,
         }),
         {
           status: 500,
