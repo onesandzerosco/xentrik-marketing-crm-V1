@@ -31,7 +31,7 @@ const AdminPayrollTable: React.FC<AdminPayrollTableProps> = ({
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground mb-1">{user.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
-                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                <span className="text-xs bg-red-500/10 text-red-600 px-2 py-1 rounded">
                   {user.role}
                 </span>
               </CardContent>

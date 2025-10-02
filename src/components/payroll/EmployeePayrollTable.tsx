@@ -24,8 +24,21 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
   const shift10PM = users.filter(user => user.department === '10PM');
   const noShift = users.filter(user => !user.department || !['6AM', '2PM', '10PM'].includes(user.department));
 
-  const renderUserGroup = (title: string, groupUsers: Chatter[]) => {
+  const renderUserGroup = (title: string, groupUsers: Chatter[], shiftType?: '6AM' | '2PM' | '10PM' | 'none') => {
     if (groupUsers.length === 0) return null;
+    
+    const getBadgeColor = () => {
+      if (!shiftType) return 'bg-gray-500/10 text-gray-600';
+      switch (shiftType) {
+        case '6AM': return 'bg-blue-500/10 text-blue-600';
+        case '2PM': return 'bg-pink-500/10 text-pink-600';
+        case '10PM': return 'bg-orange-500/10 text-orange-600';
+        case 'none': return 'bg-gray-500/10 text-gray-600';
+        default: return 'bg-gray-500/10 text-gray-600';
+      }
+    };
+
+    const shouldShowEmployeeBadge = shiftType === 'none';
     
     return (
       <div className="mb-6">
@@ -41,11 +54,12 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
                 <h3 className="font-semibold text-foreground mb-1">{user.name}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{user.email}</p>
                 <div className="flex gap-2">
-                  <span className="text-xs bg-green-500/10 text-green-600 px-2 py-1 rounded">
-                    {user.role}
-                  </span>
-                  {user.department && (
-                    <span className="text-xs bg-blue-500/10 text-blue-600 px-2 py-1 rounded">
+                  {shouldShowEmployeeBadge ? (
+                    <span className={`text-xs ${getBadgeColor()} px-2 py-1 rounded`}>
+                      {user.role}
+                    </span>
+                  ) : (
+                    <span className={`text-xs ${getBadgeColor()} px-2 py-1 rounded`}>
                       {user.department}
                     </span>
                   )}
@@ -63,10 +77,10 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
       <h3 className="text-lg font-semibold mb-4">Employee Users ({users.length})</h3>
       {users.length > 0 ? (
         <div className="space-y-6">
-          {renderUserGroup('6AM Shift', shift6AM)}
-          {renderUserGroup('2PM Shift', shift2PM)}
-          {renderUserGroup('10PM Shift', shift10PM)}
-          {renderUserGroup('No Shift Assigned', noShift)}
+          {renderUserGroup('6AM Shift', shift6AM, '6AM')}
+          {renderUserGroup('2PM Shift', shift2PM, '2PM')}
+          {renderUserGroup('10PM Shift', shift10PM, '10PM')}
+          {renderUserGroup('No Shift Assigned', noShift, 'none')}
         </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground">
