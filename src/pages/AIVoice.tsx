@@ -624,6 +624,17 @@ const AIVoice: React.FC = () => {
     });
   };
 
+  if (isLoadingSources) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Loading voice sources...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
