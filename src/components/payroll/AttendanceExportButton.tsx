@@ -106,42 +106,58 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       // Create a map of profiles for quick lookup
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      // Transform data for Excel
-      const excelData = attendanceRecords.map((record: any) => {
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const weekStartDate = new Date(record.week_start_date);
-        const actualDate = new Date(weekStartDate);
-        actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
-
-        const profile = profileMap.get(record.chatter_id);
-
-        return {
-          'Chatter Name': profile?.name || 'Unknown',
-          'Email': profile?.email || 'N/A',
-          'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
-          'Day of Week': dayNames[record.day_of_week],
-          'Date': format(actualDate, 'MMM dd, yyyy'),
-          'Attendance': record.attendance ? 'Present' : 'Absent',
-          'Models Worked': record.model_name || 'N/A',
-          'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
-        };
+      // Group attendance records by chatter
+      const recordsByChatter = new Map<string, any[]>();
+      attendanceRecords.forEach((record: any) => {
+        if (!recordsByChatter.has(record.chatter_id)) {
+          recordsByChatter.set(record.chatter_id, []);
+        }
+        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
-      // Create workbook and worksheet
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      // Create workbook
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-      // Auto-size columns
-      const maxWidth = 50;
-      const colWidths = Object.keys(excelData[0] || {}).map((key) => {
-        const maxLen = Math.max(
-          key.length,
-          ...excelData.map((row: any) => String(row[key] || '').length)
-        );
-        return { wch: Math.min(maxLen + 2, maxWidth) };
+      // Create a sheet for each chatter
+      recordsByChatter.forEach((chatterRecords, chatterId) => {
+        const profile = profileMap.get(chatterId);
+        const chatterName = profile?.name || 'Unknown';
+
+        // Transform data for this chatter
+        const excelData = chatterRecords.map((record: any) => {
+          const weekStartDate = new Date(record.week_start_date);
+          const actualDate = new Date(weekStartDate);
+          actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
+
+          return {
+            'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
+            'Day of Week': dayNames[record.day_of_week],
+            'Date': format(actualDate, 'MMM dd, yyyy'),
+            'Attendance': record.attendance ? 'Present' : 'Absent',
+            'Models Worked': record.model_name || 'N/A',
+            'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+          };
+        });
+
+        // Create worksheet for this chatter
+        const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // Auto-size columns
+        const maxWidth = 50;
+        const colWidths = Object.keys(excelData[0] || {}).map((key) => {
+          const maxLen = Math.max(
+            key.length,
+            ...excelData.map((row: any) => String(row[key] || '').length)
+          );
+          return { wch: Math.min(maxLen + 2, maxWidth) };
+        });
+        ws['!cols'] = colWidths;
+
+        // Sanitize sheet name (Excel has 31 char limit and doesn't allow special chars)
+        const sanitizedName = chatterName.substring(0, 31).replace(/[:\\\/\?\*\[\]]/g, '_');
+        XLSX.utils.book_append_sheet(wb, ws, sanitizedName);
       });
-      ws['!cols'] = colWidths;
 
       // Generate filename
       const dateRange = startDate && endDate
@@ -213,41 +229,57 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       // Create a map of profiles for quick lookup
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      // Transform data for Excel
-      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const excelData = attendanceRecords.map((record: any) => {
-        const actualDate = new Date(weekStart);
-        actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
-
-        const profile = profileMap.get(record.chatter_id);
-
-        return {
-          'Chatter Name': profile?.name || 'Unknown',
-          'Email': profile?.email || 'N/A',
-          'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
-          'Day of Week': dayNames[record.day_of_week],
-          'Date': format(actualDate, 'MMM dd, yyyy'),
-          'Attendance': record.attendance ? 'Present' : 'Absent',
-          'Models Worked': record.model_name || 'N/A',
-          'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
-        };
+      // Group attendance records by chatter
+      const recordsByChatter = new Map<string, any[]>();
+      attendanceRecords.forEach((record: any) => {
+        if (!recordsByChatter.has(record.chatter_id)) {
+          recordsByChatter.set(record.chatter_id, []);
+        }
+        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
-      // Create workbook and worksheet
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      // Create workbook
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-      // Auto-size columns
-      const maxWidth = 50;
-      const colWidths = Object.keys(excelData[0] || {}).map((key) => {
-        const maxLen = Math.max(
-          key.length,
-          ...excelData.map((row: any) => String(row[key] || '').length)
-        );
-        return { wch: Math.min(maxLen + 2, maxWidth) };
+      // Create a sheet for each chatter
+      recordsByChatter.forEach((chatterRecords, chatterId) => {
+        const profile = profileMap.get(chatterId);
+        const chatterName = profile?.name || 'Unknown';
+
+        // Transform data for this chatter
+        const excelData = chatterRecords.map((record: any) => {
+          const actualDate = new Date(weekStart);
+          actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
+
+          return {
+            'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
+            'Day of Week': dayNames[record.day_of_week],
+            'Date': format(actualDate, 'MMM dd, yyyy'),
+            'Attendance': record.attendance ? 'Present' : 'Absent',
+            'Models Worked': record.model_name || 'N/A',
+            'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+          };
+        });
+
+        // Create worksheet for this chatter
+        const ws = XLSX.utils.json_to_sheet(excelData);
+
+        // Auto-size columns
+        const maxWidth = 50;
+        const colWidths = Object.keys(excelData[0] || {}).map((key) => {
+          const maxLen = Math.max(
+            key.length,
+            ...excelData.map((row: any) => String(row[key] || '').length)
+          );
+          return { wch: Math.min(maxLen + 2, maxWidth) };
+        });
+        ws['!cols'] = colWidths;
+
+        // Sanitize sheet name (Excel has 31 char limit and doesn't allow special chars)
+        const sanitizedName = chatterName.substring(0, 31).replace(/[:\\\/\?\*\[\]]/g, '_');
+        XLSX.utils.book_append_sheet(wb, ws, sanitizedName);
       });
-      ws['!cols'] = colWidths;
 
       // Generate filename
       const chatterName = selectedChatterId ? 'Single_Chatter' : 'All_Chatters';
