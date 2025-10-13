@@ -58,34 +58,28 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      let query = supabase
+      // First get attendance records
+      let attendanceQuery = supabase
         .from('attendance')
-        .select(`
-          *,
-          profiles!chatter_id (
-            name,
-            email,
-            role
-          )
-        `)
+        .select('*')
         .order('week_start_date', { ascending: true })
         .order('day_of_week', { ascending: true });
 
       // Apply filters
       if (selectedChatterId) {
-        query = query.eq('chatter_id', selectedChatterId);
+        attendanceQuery = attendanceQuery.eq('chatter_id', selectedChatterId);
       }
 
       if (startDate && endDate) {
-        query = query
+        attendanceQuery = attendanceQuery
           .gte('week_start_date', format(startDate, 'yyyy-MM-dd'))
           .lte('week_start_date', format(endDate, 'yyyy-MM-dd'));
       } else if (selectedWeek) {
         const weekStart = getWeekStart(selectedWeek);
-        query = query.eq('week_start_date', format(weekStart, 'yyyy-MM-dd'));
+        attendanceQuery = attendanceQuery.eq('week_start_date', format(weekStart, 'yyyy-MM-dd'));
       }
 
-      const { data: attendanceRecords, error } = await query;
+      const { data: attendanceRecords, error } = await attendanceQuery;
 
       if (error) throw error;
 
@@ -98,6 +92,20 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         return;
       }
 
+      // Get unique chatter IDs
+      const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
+
+      // Fetch profiles for these chatters
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', chatterIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
       // Transform data for Excel
       const excelData = attendanceRecords.map((record: any) => {
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -105,9 +113,11 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         const actualDate = new Date(weekStartDate);
         actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
 
+        const profile = profileMap.get(record.chatter_id);
+
         return {
-          'Chatter Name': record.profiles?.name || 'Unknown',
-          'Email': record.profiles?.email || 'N/A',
+          'Chatter Name': profile?.name || 'Unknown',
+          'Email': profile?.email || 'N/A',
           'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
           'Day of Week': dayNames[record.day_of_week],
           'Date': format(actualDate, 'MMM dd, yyyy'),
@@ -166,24 +176,17 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
     try {
       const weekStart = getWeekStart(selectedWeek);
       
-      let query = supabase
+      let attendanceQuery = supabase
         .from('attendance')
-        .select(`
-          *,
-          profiles!chatter_id (
-            name,
-            email,
-            role
-          )
-        `)
+        .select('*')
         .eq('week_start_date', format(weekStart, 'yyyy-MM-dd'))
         .order('day_of_week', { ascending: true });
 
       if (selectedChatterId) {
-        query = query.eq('chatter_id', selectedChatterId);
+        attendanceQuery = attendanceQuery.eq('chatter_id', selectedChatterId);
       }
 
-      const { data: attendanceRecords, error } = await query;
+      const { data: attendanceRecords, error } = await attendanceQuery;
 
       if (error) throw error;
 
@@ -196,15 +199,31 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         return;
       }
 
+      // Get unique chatter IDs
+      const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
+
+      // Fetch profiles for these chatters
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .in('id', chatterIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of profiles for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
       // Transform data for Excel
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const excelData = attendanceRecords.map((record: any) => {
         const actualDate = new Date(weekStart);
         actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
 
+        const profile = profileMap.get(record.chatter_id);
+
         return {
-          'Chatter Name': record.profiles?.name || 'Unknown',
-          'Email': record.profiles?.email || 'N/A',
+          'Chatter Name': profile?.name || 'Unknown',
+          'Email': profile?.email || 'N/A',
           'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
           'Day of Week': dayNames[record.day_of_week],
           'Date': format(actualDate, 'MMM dd, yyyy'),
