@@ -175,9 +175,17 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Users className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+          <AttendanceExportButton 
+            selectedWeek={selectedWeek}
+          />
+        </div>
       </div>
 
       {isLoading ? (
