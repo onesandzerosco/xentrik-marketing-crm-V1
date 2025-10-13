@@ -124,19 +124,40 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         const profile = profileMap.get(chatterId);
         const chatterName = profile?.name || 'Unknown';
 
-        // Transform data for this chatter
-        const excelData = chatterRecords.map((record: any) => {
+        // Group records by date (week_start_date + day_of_week)
+        const recordsByDate = new Map<string, any[]>();
+        chatterRecords.forEach((record: any) => {
           const weekStartDate = new Date(record.week_start_date);
           const actualDate = new Date(weekStartDate);
           actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
+          const dateKey = format(actualDate, 'yyyy-MM-dd');
+          
+          if (!recordsByDate.has(dateKey)) {
+            recordsByDate.set(dateKey, []);
+          }
+          recordsByDate.get(dateKey)?.push(record);
+        });
+
+        // Transform data for this chatter - one row per date
+        const excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
+          const firstRecord = dateRecords[0];
+          const weekStartDate = new Date(firstRecord.week_start_date);
+          const actualDate = new Date(weekStartDate);
+          actualDate.setDate(weekStartDate.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+
+          // Combine all model names for this date
+          const modelsWorked = dateRecords
+            .map(r => r.model_name)
+            .filter(m => m)
+            .join(', ') || 'N/A';
 
           return {
-            'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
-            'Day of Week': dayNames[record.day_of_week],
+            'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+            'Day of Week': dayNames[firstRecord.day_of_week],
             'Date': format(actualDate, 'MMM dd, yyyy'),
-            'Attendance': record.attendance ? 'Present' : 'Absent',
-            'Models Worked': record.model_name || 'N/A',
-            'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+            'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
+            'Models Worked': modelsWorked,
+            'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
           };
         });
 
@@ -247,18 +268,38 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         const profile = profileMap.get(chatterId);
         const chatterName = profile?.name || 'Unknown';
 
-        // Transform data for this chatter
-        const excelData = chatterRecords.map((record: any) => {
+        // Group records by date (week_start_date + day_of_week)
+        const recordsByDate = new Map<string, any[]>();
+        chatterRecords.forEach((record: any) => {
           const actualDate = new Date(weekStart);
           actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
+          const dateKey = format(actualDate, 'yyyy-MM-dd');
+          
+          if (!recordsByDate.has(dateKey)) {
+            recordsByDate.set(dateKey, []);
+          }
+          recordsByDate.get(dateKey)?.push(record);
+        });
+
+        // Transform data for this chatter - one row per date
+        const excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
+          const firstRecord = dateRecords[0];
+          const actualDate = new Date(weekStart);
+          actualDate.setDate(weekStart.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+
+          // Combine all model names for this date
+          const modelsWorked = dateRecords
+            .map(r => r.model_name)
+            .filter(m => m)
+            .join(', ') || 'N/A';
 
           return {
-            'Week Start': format(new Date(record.week_start_date), 'MMM dd, yyyy'),
-            'Day of Week': dayNames[record.day_of_week],
+            'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+            'Day of Week': dayNames[firstRecord.day_of_week],
             'Date': format(actualDate, 'MMM dd, yyyy'),
-            'Attendance': record.attendance ? 'Present' : 'Absent',
-            'Models Worked': record.model_name || 'N/A',
-            'Submitted At': record.submitted_at ? format(new Date(record.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+            'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
+            'Models Worked': modelsWorked,
+            'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
           };
         });
 
