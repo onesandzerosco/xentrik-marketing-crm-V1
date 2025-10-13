@@ -12,6 +12,7 @@ import { ApprovedPayrollStatus } from './ApprovedPayrollStatus';
 import AdminPayrollTable from './AdminPayrollTable';
 import ManagerPayrollTable from './ManagerPayrollTable';
 import EmployeePayrollTable from './EmployeePayrollTable';
+import { AttendanceExportButton } from './AttendanceExportButton';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Chatter {
@@ -135,6 +136,14 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
               <PayrollTable chatterId={selectedChatterId} selectedWeek={selectedWeek} key={refreshKey} />
             </CardContent>
           </Card>
+
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">Attendance Tracker</h3>
+            <AttendanceExportButton 
+              selectedChatterId={selectedChatterId}
+              selectedWeek={selectedWeek}
+            />
+          </div>
 
           <AttendanceTable 
             chatterId={selectedChatterId} 
