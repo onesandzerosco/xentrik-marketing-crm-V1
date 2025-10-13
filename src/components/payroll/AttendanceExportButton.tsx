@@ -62,7 +62,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         .from('attendance')
         .select(`
           *,
-          profiles:chatter_id (
+          profiles!chatter_id (
             name,
             email,
             role
@@ -170,7 +170,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         .from('attendance')
         .select(`
           *,
-          profiles:chatter_id (
+          profiles!chatter_id (
             name,
             email,
             role
