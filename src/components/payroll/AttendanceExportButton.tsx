@@ -60,7 +60,43 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      // First get attendance records
+      // First, get all users that match the filter criteria
+      let usersQuery = supabase
+        .from('profiles')
+        .select('id, name, email, department')
+        .neq('role', 'Creator')
+        .not('roles', 'cs', '{Creator}')
+        .eq('status', 'Active');
+
+      // Apply team filter if specified
+      if (selectedTeam) {
+        if (selectedTeam === 'Admin') {
+          usersQuery = usersQuery.eq('role', 'Admin');
+        } else if (selectedTeam === 'Manager') {
+          usersQuery = usersQuery.eq('role', 'Manager');
+        } else {
+          usersQuery = usersQuery.eq('department', selectedTeam);
+        }
+      }
+
+      // Apply single chatter filter if specified
+      if (selectedChatterId) {
+        usersQuery = usersQuery.eq('id', selectedChatterId);
+      }
+
+      const { data: allUsers, error: usersError } = await usersQuery;
+      if (usersError) throw usersError;
+
+      if (!allUsers || allUsers.length === 0) {
+        toast({
+          title: 'No Users',
+          description: 'No users found for the selected criteria.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Then get attendance records
       let attendanceQuery = supabase
         .from('attendance')
         .select('*')
@@ -68,9 +104,8 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         .order('day_of_week', { ascending: true });
 
       // Apply filters
-      if (selectedChatterId) {
-        attendanceQuery = attendanceQuery.eq('chatter_id', selectedChatterId);
-      }
+      const userIds = allUsers.map(u => u.id);
+      attendanceQuery = attendanceQuery.in('chatter_id', userIds);
 
       if (startDate && endDate) {
         attendanceQuery = attendanceQuery
@@ -82,98 +117,79 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       }
 
       const { data: attendanceRecords, error } = await attendanceQuery;
-
       if (error) throw error;
 
-      if (!attendanceRecords || attendanceRecords.length === 0) {
-        toast({
-          title: 'No Data',
-          description: 'No attendance records found for the selected criteria.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Get unique chatter IDs
-      const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
-
-      // Fetch profiles for these chatters
-      let profilesQuery = supabase
-        .from('profiles')
-        .select('id, name, email, department')
-        .in('id', chatterIds);
-
-      // Apply team filter if specified
-      if (selectedTeam) {
-        profilesQuery = profilesQuery.eq('department', selectedTeam);
-      }
-
-      const { data: profiles, error: profilesError } = await profilesQuery;
-
-      if (profilesError) throw profilesError;
-
       // Create a map of profiles for quick lookup
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(allUsers.map(p => [p.id, p]));
 
-      // Filter profile IDs based on team
-      const filteredProfileIds = new Set(profiles?.map(p => p.id) || []);
-
-      // Group attendance records by chatter (only for filtered chatters)
+      // Group attendance records by chatter
       const recordsByChatter = new Map<string, any[]>();
-      attendanceRecords.forEach((record: any) => {
-        if (filteredProfileIds.has(record.chatter_id)) {
-          if (!recordsByChatter.has(record.chatter_id)) {
-            recordsByChatter.set(record.chatter_id, []);
-          }
-          recordsByChatter.get(record.chatter_id)?.push(record);
+      attendanceRecords?.forEach((record: any) => {
+        if (!recordsByChatter.has(record.chatter_id)) {
+          recordsByChatter.set(record.chatter_id, []);
         }
+        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
       // Create workbook
       const wb = XLSX.utils.book_new();
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-      // Create a sheet for each chatter
-      recordsByChatter.forEach((chatterRecords, chatterId) => {
-        const profile = profileMap.get(chatterId);
-        const chatterName = profile?.name || 'Unknown';
+      // Create a sheet for each user (including those without attendance)
+      allUsers.forEach(user => {
+        const chatterRecords = recordsByChatter.get(user.id) || [];
+        const chatterName = user.name || 'Unknown';
 
-        // Group records by date (week_start_date + day_of_week)
-        const recordsByDate = new Map<string, any[]>();
-        chatterRecords.forEach((record: any) => {
-          const weekStartDate = new Date(record.week_start_date);
-          const actualDate = new Date(weekStartDate);
-          actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
-          const dateKey = format(actualDate, 'yyyy-MM-dd');
-          
-          if (!recordsByDate.has(dateKey)) {
-            recordsByDate.set(dateKey, []);
-          }
-          recordsByDate.get(dateKey)?.push(record);
-        });
+        let excelData: any[] = [];
 
-        // Transform data for this chatter - one row per date
-        const excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
-          const firstRecord = dateRecords[0];
-          const weekStartDate = new Date(firstRecord.week_start_date);
-          const actualDate = new Date(weekStartDate);
-          actualDate.setDate(weekStartDate.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+        if (chatterRecords.length === 0) {
+          // User has no attendance records - create a blank row
+          excelData = [{
+            'Week Start': '',
+            'Day of Week': '',
+            'Date': '',
+            'Attendance': 'No attendance submitted',
+            'Models Worked': '',
+            'Submitted At': '',
+          }];
+        } else {
+          // Group records by date (week_start_date + day_of_week)
+          const recordsByDate = new Map<string, any[]>();
+          chatterRecords.forEach((record: any) => {
+            const weekStartDate = new Date(record.week_start_date);
+            const actualDate = new Date(weekStartDate);
+            actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
+            const dateKey = format(actualDate, 'yyyy-MM-dd');
+            
+            if (!recordsByDate.has(dateKey)) {
+              recordsByDate.set(dateKey, []);
+            }
+            recordsByDate.get(dateKey)?.push(record);
+          });
 
-          // Combine all model names for this date
-          const modelsWorked = dateRecords
-            .map(r => r.model_name)
-            .filter(m => m)
-            .join(', ') || 'N/A';
+          // Transform data for this chatter - one row per date
+          excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
+            const firstRecord = dateRecords[0];
+            const weekStartDate = new Date(firstRecord.week_start_date);
+            const actualDate = new Date(weekStartDate);
+            actualDate.setDate(weekStartDate.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
 
-          return {
-            'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
-            'Day of Week': dayNames[firstRecord.day_of_week],
-            'Date': format(actualDate, 'MMM dd, yyyy'),
-            'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
-            'Models Worked': modelsWorked,
-            'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
-          };
-        });
+            // Combine all model names for this date
+            const modelsWorked = dateRecords
+              .map(r => r.model_name)
+              .filter(m => m)
+              .join(', ') || 'N/A';
+
+            return {
+              'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+              'Day of Week': dayNames[firstRecord.day_of_week],
+              'Date': format(actualDate, 'MMM dd, yyyy'),
+              'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
+              'Models Worked': modelsWorked,
+              'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+            };
+          });
+        }
 
         // Create worksheet for this chatter
         const ws = XLSX.utils.json_to_sheet(excelData);
@@ -228,107 +244,124 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
     try {
       const weekStart = getWeekStart(selectedWeek);
       
+      // First, get all users that match the filter criteria
+      let usersQuery = supabase
+        .from('profiles')
+        .select('id, name, email, department')
+        .neq('role', 'Creator')
+        .not('roles', 'cs', '{Creator}')
+        .eq('status', 'Active');
+
+      // Apply team filter if specified
+      if (selectedTeam) {
+        if (selectedTeam === 'Admin') {
+          usersQuery = usersQuery.eq('role', 'Admin');
+        } else if (selectedTeam === 'Manager') {
+          usersQuery = usersQuery.eq('role', 'Manager');
+        } else {
+          usersQuery = usersQuery.eq('department', selectedTeam);
+        }
+      }
+
+      // Apply single chatter filter if specified
+      if (selectedChatterId) {
+        usersQuery = usersQuery.eq('id', selectedChatterId);
+      }
+
+      const { data: allUsers, error: usersError } = await usersQuery;
+      if (usersError) throw usersError;
+
+      if (!allUsers || allUsers.length === 0) {
+        toast({
+          title: 'No Users',
+          description: 'No users found for the selected criteria.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Then get attendance records
       let attendanceQuery = supabase
         .from('attendance')
         .select('*')
         .eq('week_start_date', format(weekStart, 'yyyy-MM-dd'))
         .order('day_of_week', { ascending: true });
 
-      if (selectedChatterId) {
-        attendanceQuery = attendanceQuery.eq('chatter_id', selectedChatterId);
-      }
+      const userIds = allUsers.map(u => u.id);
+      attendanceQuery = attendanceQuery.in('chatter_id', userIds);
 
       const { data: attendanceRecords, error } = await attendanceQuery;
-
       if (error) throw error;
 
-      if (!attendanceRecords || attendanceRecords.length === 0) {
-        toast({
-          title: 'No Data',
-          description: 'No attendance records found for this week.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Get unique chatter IDs
-      const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
-
-      // Fetch profiles for these chatters
-      let profilesQuery = supabase
-        .from('profiles')
-        .select('id, name, email, department')
-        .in('id', chatterIds);
-
-      // Apply team filter if specified
-      if (selectedTeam) {
-        profilesQuery = profilesQuery.eq('department', selectedTeam);
-      }
-
-      const { data: profiles, error: profilesError } = await profilesQuery;
-
-      if (profilesError) throw profilesError;
-
       // Create a map of profiles for quick lookup
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(allUsers.map(p => [p.id, p]));
 
-      // Filter profile IDs based on team
-      const filteredProfileIds = new Set(profiles?.map(p => p.id) || []);
-
-      // Group attendance records by chatter (only for filtered chatters)
+      // Group attendance records by chatter
       const recordsByChatter = new Map<string, any[]>();
-      attendanceRecords.forEach((record: any) => {
-        if (filteredProfileIds.has(record.chatter_id)) {
-          if (!recordsByChatter.has(record.chatter_id)) {
-            recordsByChatter.set(record.chatter_id, []);
-          }
-          recordsByChatter.get(record.chatter_id)?.push(record);
+      attendanceRecords?.forEach((record: any) => {
+        if (!recordsByChatter.has(record.chatter_id)) {
+          recordsByChatter.set(record.chatter_id, []);
         }
+        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
       // Create workbook
       const wb = XLSX.utils.book_new();
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-      // Create a sheet for each chatter
-      recordsByChatter.forEach((chatterRecords, chatterId) => {
-        const profile = profileMap.get(chatterId);
-        const chatterName = profile?.name || 'Unknown';
+      // Create a sheet for each user (including those without attendance)
+      allUsers.forEach(user => {
+        const chatterRecords = recordsByChatter.get(user.id) || [];
+        const chatterName = user.name || 'Unknown';
 
-        // Group records by date (week_start_date + day_of_week)
-        const recordsByDate = new Map<string, any[]>();
-        chatterRecords.forEach((record: any) => {
-          const actualDate = new Date(weekStart);
-          actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
-          const dateKey = format(actualDate, 'yyyy-MM-dd');
-          
-          if (!recordsByDate.has(dateKey)) {
-            recordsByDate.set(dateKey, []);
-          }
-          recordsByDate.get(dateKey)?.push(record);
-        });
+        let excelData: any[] = [];
 
-        // Transform data for this chatter - one row per date
-        const excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
-          const firstRecord = dateRecords[0];
-          const actualDate = new Date(weekStart);
-          actualDate.setDate(weekStart.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+        if (chatterRecords.length === 0) {
+          // User has no attendance records - create a blank row
+          excelData = [{
+            'Week Start': '',
+            'Day of Week': '',
+            'Date': '',
+            'Attendance': 'No attendance submitted',
+            'Models Worked': '',
+            'Submitted At': '',
+          }];
+        } else {
+          // Group records by date (week_start_date + day_of_week)
+          const recordsByDate = new Map<string, any[]>();
+          chatterRecords.forEach((record: any) => {
+            const actualDate = new Date(weekStart);
+            actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
+            const dateKey = format(actualDate, 'yyyy-MM-dd');
+            
+            if (!recordsByDate.has(dateKey)) {
+              recordsByDate.set(dateKey, []);
+            }
+            recordsByDate.get(dateKey)?.push(record);
+          });
 
-          // Combine all model names for this date
-          const modelsWorked = dateRecords
-            .map(r => r.model_name)
-            .filter(m => m)
-            .join(', ') || 'N/A';
+          // Transform data for this chatter - one row per date
+          excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
+            const firstRecord = dateRecords[0];
+            const actualDate = new Date(weekStart);
+            actualDate.setDate(weekStart.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
 
-          return {
-            'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
-            'Day of Week': dayNames[firstRecord.day_of_week],
-            'Date': format(actualDate, 'MMM dd, yyyy'),
-            'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
-            'Models Worked': modelsWorked,
-            'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
-          };
-        });
+            // Combine all model names for this date
+            const modelsWorked = dateRecords
+              .map(r => r.model_name)
+              .filter(m => m)
+              .join(', ') || 'N/A';
+
+            return {
+              'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+              'Day of Week': dayNames[firstRecord.day_of_week],
+              'Date': format(actualDate, 'MMM dd, yyyy'),
+              'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
+              'Models Worked': modelsWorked,
+              'Submitted At': firstRecord.submitted_at ? format(new Date(firstRecord.submitted_at), 'MMM dd, yyyy HH:mm') : 'Not Submitted',
+            };
+          });
+        }
 
         // Create worksheet for this chatter
         const ws = XLSX.utils.json_to_sheet(excelData);
