@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
 import { PayrollTable } from './PayrollTable';
 import { AttendanceTable } from './AttendanceTable';
-import { WeekNavigator } from './WeekNavigator';
+
 import { GoogleSheetsLinkManager } from './GoogleSheetsLinkManager';
 import { useSalesLockStatus } from './hooks/useSalesLockStatus';
 import { LockSalesButton } from './LockSalesButton';
@@ -35,8 +35,10 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
 }) => {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Always use current week for admin view
+  const selectedWeek = new Date();
   
   // Get sales lock status for the selected chatter and week
   const { isSalesLocked, isAdminConfirmed } = useSalesLockStatus(selectedChatterId, selectedWeek, refreshKey);
@@ -107,15 +109,12 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
 
           <Card className="bg-secondary/10 border-muted">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  Weekly Sales Tracker
-                  <span className="text-sm text-muted-foreground font-normal">
-                    {selectedChatter?.department === '10PM' ? '(Wednesday to Tuesday)' : '(Thursday to Wednesday)'}
-                  </span>
-                </CardTitle>
-                <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
-              </div>
+              <CardTitle className="text-foreground flex items-center gap-2">
+                Weekly Sales Tracker
+                <span className="text-sm text-muted-foreground font-normal">
+                  {selectedChatter?.department === '10PM' ? '(Wednesday to Tuesday)' : '(Thursday to Wednesday)'}
+                </span>
+              </CardTitle>
               <GoogleSheetsLinkManager chatterId={selectedChatterId} isAdminView />
             </CardHeader>
             <CardContent>
@@ -161,12 +160,9 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
-        </div>
-        <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+      <div className="flex items-center gap-2">
+        <Users className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
       </div>
 
       {isLoading ? (
