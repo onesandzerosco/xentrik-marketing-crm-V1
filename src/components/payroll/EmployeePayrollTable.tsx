@@ -47,13 +47,15 @@ const EmployeePayrollTable: React.FC<EmployeePayrollTableProps> = ({
     
     return (
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-md font-medium text-muted-foreground flex-1 text-center">{title} ({groupUsers.length})</h4>
+        <div className="relative mb-3">
+          <h4 className="text-md font-medium text-muted-foreground text-center">{title} ({groupUsers.length})</h4>
           {teamName && (
-            <AttendanceExportButton 
-              selectedWeek={selectedWeek}
-              selectedTeam={teamName}
-            />
+            <div className="absolute right-0 top-0">
+              <AttendanceExportButton 
+                selectedWeek={selectedWeek}
+                selectedTeam={teamName}
+              />
+            </div>
           )}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
