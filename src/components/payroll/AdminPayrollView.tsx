@@ -210,8 +210,8 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
         </Card>
       ) : (
         <div className="space-y-8">
-          <AdminPayrollTable users={adminUsers} onSelectChatter={onSelectChatter} />
-          <ManagerPayrollTable users={managerUsers} onSelectChatter={onSelectChatter} />
+          <AdminPayrollTable users={adminUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
+          <ManagerPayrollTable users={managerUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
           <EmployeePayrollTable users={employeeUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
         </div>
       )}
