@@ -161,12 +161,9 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
-        </div>
-        <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
+      <div className="flex items-center gap-2">
+        <Users className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
       </div>
 
       {isLoading ? (
@@ -196,9 +193,9 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
         </Card>
       ) : (
         <div className="space-y-8">
-          <AdminPayrollTable users={adminUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
-          <ManagerPayrollTable users={managerUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
-          <EmployeePayrollTable users={employeeUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
+          <AdminPayrollTable users={adminUsers} onSelectChatter={onSelectChatter} selectedWeek={new Date()} />
+          <ManagerPayrollTable users={managerUsers} onSelectChatter={onSelectChatter} selectedWeek={new Date()} />
+          <EmployeePayrollTable users={employeeUsers} onSelectChatter={onSelectChatter} selectedWeek={new Date()} />
         </div>
       )}
     </div>
