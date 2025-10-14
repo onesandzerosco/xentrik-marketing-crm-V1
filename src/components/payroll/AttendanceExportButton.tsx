@@ -150,6 +150,8 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
             const firstRecord = dateRecords[0];
             const weekStartDate = new Date(firstRecord.week_start_date);
             const actualDate = getActualDate(weekStartDate, firstRecord.day_of_week, user.department);
+            // Calculate the correct week start for this user's department
+            const userWeekStart = getWeekStart(weekStartDate, user.department);
 
             // Combine all model names for this date
             const modelsWorked = dateRecords
@@ -158,7 +160,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
               .join(', ') || 'N/A';
 
             return {
-              'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+              'Week Start': format(userWeekStart, 'MMM dd, yyyy'),
               'Day of Week': dayNames[firstRecord.day_of_week],
               'Date': format(actualDate, 'MMM dd, yyyy'),
               'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
@@ -332,7 +334,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
               .join(', ') || 'N/A';
 
             return {
-              'Week Start': format(new Date(firstRecord.week_start_date), 'MMM dd, yyyy'),
+              'Week Start': format(userWeekStart, 'MMM dd, yyyy'),
               'Day of Week': dayNames[firstRecord.day_of_week],
               'Date': format(actualDate, 'MMM dd, yyyy'),
               'Attendance': firstRecord.attendance ? 'Present' : 'Absent',
