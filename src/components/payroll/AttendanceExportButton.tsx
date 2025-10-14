@@ -20,11 +20,13 @@ import * as XLSX from 'xlsx';
 interface AttendanceExportButtonProps {
   selectedChatterId?: string | null;
   selectedWeek?: Date;
+  selectedTeam?: string | null;
 }
 
 export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
   selectedChatterId,
   selectedWeek = new Date(),
+  selectedTeam,
 }) => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -96,23 +98,35 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
 
       // Fetch profiles for these chatters
-      const { data: profiles, error: profilesError } = await supabase
+      let profilesQuery = supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, department')
         .in('id', chatterIds);
+
+      // Apply team filter if specified
+      if (selectedTeam) {
+        profilesQuery = profilesQuery.eq('department', selectedTeam);
+      }
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) throw profilesError;
 
       // Create a map of profiles for quick lookup
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      // Group attendance records by chatter
+      // Filter profile IDs based on team
+      const filteredProfileIds = new Set(profiles?.map(p => p.id) || []);
+
+      // Group attendance records by chatter (only for filtered chatters)
       const recordsByChatter = new Map<string, any[]>();
       attendanceRecords.forEach((record: any) => {
-        if (!recordsByChatter.has(record.chatter_id)) {
-          recordsByChatter.set(record.chatter_id, []);
+        if (filteredProfileIds.has(record.chatter_id)) {
+          if (!recordsByChatter.has(record.chatter_id)) {
+            recordsByChatter.set(record.chatter_id, []);
+          }
+          recordsByChatter.get(record.chatter_id)?.push(record);
         }
-        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
       // Create workbook
@@ -184,7 +198,8 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       const dateRange = startDate && endDate
         ? `${format(startDate, 'yyyy-MM-dd')}_to_${format(endDate, 'yyyy-MM-dd')}`
         : format(getWeekStart(selectedWeek), 'yyyy-MM-dd');
-      const chatterName = selectedChatterId ? 'Single_Chatter' : 'All_Chatters';
+      const teamName = selectedTeam ? selectedTeam.replace(/\s+/g, '_') : 'All_Teams';
+      const chatterName = selectedChatterId ? 'Single_Chatter' : teamName;
       const filename = `Attendance_${chatterName}_${dateRange}.xlsx`;
 
       // Download file
@@ -240,23 +255,35 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       const chatterIds = [...new Set(attendanceRecords.map(r => r.chatter_id))];
 
       // Fetch profiles for these chatters
-      const { data: profiles, error: profilesError } = await supabase
+      let profilesQuery = supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, department')
         .in('id', chatterIds);
+
+      // Apply team filter if specified
+      if (selectedTeam) {
+        profilesQuery = profilesQuery.eq('department', selectedTeam);
+      }
+
+      const { data: profiles, error: profilesError } = await profilesQuery;
 
       if (profilesError) throw profilesError;
 
       // Create a map of profiles for quick lookup
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-      // Group attendance records by chatter
+      // Filter profile IDs based on team
+      const filteredProfileIds = new Set(profiles?.map(p => p.id) || []);
+
+      // Group attendance records by chatter (only for filtered chatters)
       const recordsByChatter = new Map<string, any[]>();
       attendanceRecords.forEach((record: any) => {
-        if (!recordsByChatter.has(record.chatter_id)) {
-          recordsByChatter.set(record.chatter_id, []);
+        if (filteredProfileIds.has(record.chatter_id)) {
+          if (!recordsByChatter.has(record.chatter_id)) {
+            recordsByChatter.set(record.chatter_id, []);
+          }
+          recordsByChatter.get(record.chatter_id)?.push(record);
         }
-        recordsByChatter.get(record.chatter_id)?.push(record);
       });
 
       // Create workbook
@@ -323,7 +350,8 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
       });
 
       // Generate filename
-      const chatterName = selectedChatterId ? 'Single_Chatter' : 'All_Chatters';
+      const teamName = selectedTeam ? selectedTeam.replace(/\s+/g, '_') : 'All_Teams';
+      const chatterName = selectedChatterId ? 'Single_Chatter' : teamName;
       const filename = `Attendance_${chatterName}_${format(weekStart, 'yyyy-MM-dd')}.xlsx`;
 
       // Download file
