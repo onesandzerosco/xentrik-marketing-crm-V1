@@ -2,13 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Users } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { PayrollTable } from './PayrollTable';
 import { AttendanceTable } from './AttendanceTable';
 import { WeekNavigator } from './WeekNavigator';
@@ -43,7 +36,6 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWeek, setSelectedWeek] = useState(new Date());
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   
   // Get sales lock status for the selected chatter and week
   const { isSalesLocked, isAdminConfirmed } = useSalesLockStatus(selectedChatterId, selectedWeek, refreshKey);
@@ -188,25 +180,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
           <Users className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold text-foreground">Payroll - Select Chatter</h1>
         </div>
-        <div className="flex items-center gap-4">
-          <Select value={selectedTeam || 'all'} onValueChange={(value) => setSelectedTeam(value === 'all' ? null : value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by team" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Teams</SelectItem>
-              <SelectItem value="6AM">6AM Shift</SelectItem>
-              <SelectItem value="2PM">2PM Shift</SelectItem>
-              <SelectItem value="10PM">10PM Shift</SelectItem>
-              <SelectItem value="Social Media Team">Social Media Team</SelectItem>
-            </SelectContent>
-          </Select>
-          <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
-          <AttendanceExportButton 
-            selectedWeek={selectedWeek}
-            selectedTeam={selectedTeam}
-          />
-        </div>
+        <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />
       </div>
 
       {isLoading ? (
@@ -238,7 +212,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
         <div className="space-y-8">
           <AdminPayrollTable users={adminUsers} onSelectChatter={onSelectChatter} />
           <ManagerPayrollTable users={managerUsers} onSelectChatter={onSelectChatter} />
-          <EmployeePayrollTable users={employeeUsers} onSelectChatter={onSelectChatter} />
+          <EmployeePayrollTable users={employeeUsers} onSelectChatter={onSelectChatter} selectedWeek={selectedWeek} />
         </div>
       )}
     </div>
