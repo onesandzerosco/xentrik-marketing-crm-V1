@@ -14,6 +14,7 @@ import ManagerPayrollTable from './ManagerPayrollTable';
 import EmployeePayrollTable from './EmployeePayrollTable';
 import { AttendanceExportButton } from './AttendanceExportButton';
 import { supabase } from '@/integrations/supabase/client';
+import { getWeekStart } from '@/utils/weekCalculations';
 
 interface Chatter {
   id: string;
@@ -41,22 +42,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
   const { isSalesLocked, isAdminConfirmed } = useSalesLockStatus(selectedChatterId, selectedWeek, refreshKey);
 
   // Calculate week start and current week status
-  const getWeekStart = (date: Date) => {
-    const day = date.getDay();
-    const thursday = new Date(date);
-    thursday.setHours(0, 0, 0, 0);
-    
-    if (day === 0) thursday.setDate(date.getDate() - 3);
-    else if (day === 1) thursday.setDate(date.getDate() - 4);
-    else if (day === 2) thursday.setDate(date.getDate() - 5);
-    else if (day === 3) thursday.setDate(date.getDate() - 6);
-    else if (day === 4) thursday.setDate(date.getDate());
-    else if (day === 5) thursday.setDate(date.getDate() - 1);
-    else if (day === 6) thursday.setDate(date.getDate() - 2);
-    
-    return thursday;
-  };
-
+  // Note: For admin view showing all users, we use standard cutoff (department passed in components)
   const weekStart = getWeekStart(selectedWeek);
   const currentWeekStart = getWeekStart(new Date());
   const isCurrentWeek = weekStart.getTime() === currentWeekStart.getTime();
@@ -125,7 +111,7 @@ export const AdminPayrollView: React.FC<AdminPayrollViewProps> = ({
                 <CardTitle className="text-foreground flex items-center gap-2">
                   Weekly Sales Tracker
                   <span className="text-sm text-muted-foreground font-normal">
-                    (Thursday to Wednesday)
+                    {selectedChatter?.department === '10PM' ? '(Wednesday to Tuesday)' : '(Thursday to Wednesday)'}
                   </span>
                 </CardTitle>
                 <WeekNavigator selectedWeek={selectedWeek} onWeekChange={setSelectedWeek} />

@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
+import { getWeekStart, getWeekEnd, getActualDate } from '@/utils/weekCalculations';
 
 interface AttendanceExportButtonProps {
   selectedChatterId?: string | null;
@@ -33,29 +34,6 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-
-  const getWeekStart = (date: Date) => {
-    const day = date.getDay();
-    const thursday = new Date(date);
-    thursday.setHours(0, 0, 0, 0);
-    
-    if (day === 0) thursday.setDate(date.getDate() - 3);
-    else if (day === 1) thursday.setDate(date.getDate() - 4);
-    else if (day === 2) thursday.setDate(date.getDate() - 5);
-    else if (day === 3) thursday.setDate(date.getDate() - 6);
-    else if (day === 4) thursday.setDate(date.getDate());
-    else if (day === 5) thursday.setDate(date.getDate() - 1);
-    else if (day === 6) thursday.setDate(date.getDate() - 2);
-    
-    return thursday;
-  };
-
-  const getWeekEnd = (weekStart: Date) => {
-    const wednesday = new Date(weekStart);
-    wednesday.setDate(weekStart.getDate() + 6);
-    wednesday.setHours(23, 59, 59, 999);
-    return wednesday;
-  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -112,6 +90,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
           .gte('week_start_date', format(startDate, 'yyyy-MM-dd'))
           .lte('week_start_date', format(endDate, 'yyyy-MM-dd'));
       } else if (selectedWeek) {
+        // For export, use standard cutoff (we'll adjust per user in the loop)
         const weekStart = getWeekStart(selectedWeek);
         attendanceQuery = attendanceQuery.eq('week_start_date', format(weekStart, 'yyyy-MM-dd'));
       }
@@ -157,8 +136,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
           const recordsByDate = new Map<string, any[]>();
           chatterRecords.forEach((record: any) => {
             const weekStartDate = new Date(record.week_start_date);
-            const actualDate = new Date(weekStartDate);
-            actualDate.setDate(weekStartDate.getDate() + (record.day_of_week - 4 + 7) % 7);
+            const actualDate = getActualDate(weekStartDate, record.day_of_week, user.department);
             const dateKey = format(actualDate, 'yyyy-MM-dd');
             
             if (!recordsByDate.has(dateKey)) {
@@ -171,8 +149,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
           excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
             const firstRecord = dateRecords[0];
             const weekStartDate = new Date(firstRecord.week_start_date);
-            const actualDate = new Date(weekStartDate);
-            actualDate.setDate(weekStartDate.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+            const actualDate = getActualDate(weekStartDate, firstRecord.day_of_week, user.department);
 
             // Combine all model names for this date
             const modelsWorked = dateRecords
@@ -329,9 +306,9 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         } else {
           // Group records by date (week_start_date + day_of_week)
           const recordsByDate = new Map<string, any[]>();
+          const userWeekStart = getWeekStart(selectedWeek, user.department);
           chatterRecords.forEach((record: any) => {
-            const actualDate = new Date(weekStart);
-            actualDate.setDate(weekStart.getDate() + (record.day_of_week - 4 + 7) % 7);
+            const actualDate = getActualDate(userWeekStart, record.day_of_week, user.department);
             const dateKey = format(actualDate, 'yyyy-MM-dd');
             
             if (!recordsByDate.has(dateKey)) {
@@ -343,8 +320,8 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
           // Transform data for this chatter - one row per date
           excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
             const firstRecord = dateRecords[0];
-            const actualDate = new Date(weekStart);
-            actualDate.setDate(weekStart.getDate() + (firstRecord.day_of_week - 4 + 7) % 7);
+            const userWeekStart = getWeekStart(selectedWeek, user.department);
+            const actualDate = getActualDate(userWeekStart, firstRecord.day_of_week, user.department);
 
             // Combine all model names for this date
             const modelsWorked = dateRecords
