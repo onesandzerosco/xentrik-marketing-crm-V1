@@ -20,7 +20,7 @@ import { getWeekStart, getWeekEnd, getActualDate } from '@/utils/weekCalculation
 
 interface AttendanceExportButtonProps {
   selectedChatterId?: string | null;
-  selectedWeek?: Date;
+  selectedWeek?: Date; // Only used for custom export dialog
   selectedTeam?: string | null;
 }
 
@@ -219,7 +219,9 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
   const handleQuickExport = async () => {
     setIsExporting(true);
     try {
-      const weekStart = getWeekStart(selectedWeek);
+      // Use current date for "Export Current Week"
+      const currentDate = new Date();
+      const weekStart = getWeekStart(currentDate);
       
       // First, get all users that match the filter criteria
       let usersQuery = supabase
@@ -306,7 +308,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
         } else {
           // Group records by date (week_start_date + day_of_week)
           const recordsByDate = new Map<string, any[]>();
-          const userWeekStart = getWeekStart(selectedWeek, user.department);
+          const userWeekStart = getWeekStart(currentDate, user.department);
           chatterRecords.forEach((record: any) => {
             const actualDate = getActualDate(userWeekStart, record.day_of_week, user.department);
             const dateKey = format(actualDate, 'yyyy-MM-dd');
@@ -320,7 +322,7 @@ export const AttendanceExportButton: React.FC<AttendanceExportButtonProps> = ({
           // Transform data for this chatter - one row per date
           excelData = Array.from(recordsByDate.entries()).map(([dateKey, dateRecords]) => {
             const firstRecord = dateRecords[0];
-            const userWeekStart = getWeekStart(selectedWeek, user.department);
+            const userWeekStart = getWeekStart(currentDate, user.department);
             const actualDate = getActualDate(userWeekStart, firstRecord.day_of_week, user.department);
 
             // Combine all model names for this date
