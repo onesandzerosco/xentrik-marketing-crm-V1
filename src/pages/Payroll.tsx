@@ -23,11 +23,22 @@ const Payroll: React.FC = () => {
   const isCreator = userRole === 'Creator' || userRoles?.includes('Creator');
   const hasAccess = isAuthenticated && !isCreator;
 
-  const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
-  const isVA = userRole === 'VA' || userRoles?.includes('VA');
-  const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
-  const isHR = userRole === 'HR / Work Force' || userRoles?.includes('HR / Work Force');
-  const isSocialMedia = userRole === 'Marketing Team' || userRoles?.includes('Marketing Team');
+  const isAdmin = userRole === 'Admin' || (userRoles && userRoles.includes('Admin'));
+  const isVA = userRole === 'VA' || (userRoles && userRoles.includes('VA'));
+  const isChatter = userRole === 'Chatter' || (userRoles && userRoles.includes('Chatter'));
+  const isHR = userRole === 'HR / Work Force' || (userRoles && userRoles.includes('HR / Work Force'));
+  const isSocialMedia = userRole === 'Marketing Team' || (userRoles && userRoles.includes('Marketing Team'));
+
+  // Debug logging
+  console.log('Payroll Access Debug:', { 
+    userRole, 
+    userRoles, 
+    isVA, 
+    isAdmin, 
+    isHR,
+    hasAccess,
+    isAuthenticated 
+  });
   
   // Roles that need sales tracker + attendance
   const needsSalesTracker = isChatter || isSocialMedia;
