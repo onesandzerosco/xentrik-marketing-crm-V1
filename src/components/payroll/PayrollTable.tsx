@@ -74,9 +74,6 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
   // Get days of week order based on department
   const DAYS_OF_WEEK = getDaysOfWeek(chatterDepartment);
-  
-  // Week is editable if it's current week or future, and user has edit permissions
-  const isWeekEditable = canEdit && (isCurrentWeek || isFutureWeek);
 
   console.log('Week calculation debug:', {
     today: new Date().toISOString().split('T')[0],
@@ -87,38 +84,13 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
     currentWeekStart: currentWeekStart.toISOString().split('T')[0],
     isCurrentWeek,
     isFutureWeek,
-    isWeekEditable,
     canEdit,
     isAdmin,
     effectiveChatterId,
     userId: user?.id
   });
 
-  // First effect: fetch department
-  useEffect(() => {
-    const fetchDepartment = async () => {
-      if (!effectiveChatterId) return;
-      
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('department')
-        .eq('id', effectiveChatterId)
-        .single();
-      
-      setChatterDepartment(profileData?.department || null);
-    };
-    
-    fetchDepartment();
-  }, [effectiveChatterId]);
-
-  // Second effect: fetch sales data once department is known
-  useEffect(() => {
-    if (effectiveChatterId && chatterDepartment !== undefined) {
-      fetchData();
-    }
-  }, [effectiveChatterId, selectedWeek, chatterDepartment]);
-
-  // Get sales locking status (moved up to fix variable order)
+  // Get sales locking status
   const isSalesLocked = salesData.length > 0 && salesData[0]?.sales_locked;
   const isAdminConfirmed = salesData.length > 0 && salesData[0]?.admin_confirmed;
   const confirmedHours = salesData.length > 0 ? salesData[0]?.confirmed_hours_worked || 0 : 0;
@@ -128,8 +100,8 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   const deductionAmount = salesData.length > 0 ? salesData[0]?.deduction_amount || 0 : 0;
   const deductionNotes = salesData.length > 0 ? salesData[0]?.deduction_notes || '' : '';
 
-  // Check if inputs should be disabled (locked sales or not editable week)
-  const areInputsDisabled = !isWeekEditable || isSalesLocked;
+  // Check if inputs should be disabled (only if locked or user doesn't have permission)
+  const areInputsDisabled = !canEdit || isSalesLocked;
 
   // Debug logging for button visibility
   useEffect(() => {
@@ -144,12 +116,11 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
       salesDataLength: salesData.length,
       modelsLength: models.length,
       canEdit,
-      isWeekEditable,
       areInputsDisabled,
       hasChatterRole: userRole === 'Chatter' || userRoles?.includes('Chatter'),
       effectiveChatterMatches: effectiveChatterId === user?.id
     });
-  }, [isAdmin, isCurrentWeek, isSalesLocked, userRole, userRoles, effectiveChatterId, user?.id, salesData, models, canEdit, isWeekEditable, areInputsDisabled]);
+  }, [isAdmin, isCurrentWeek, isSalesLocked, userRole, userRoles, effectiveChatterId, user?.id, salesData, models, canEdit, areInputsDisabled]);
 
   const fetchData = async () => {
     if (!effectiveChatterId) return;
@@ -212,7 +183,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   };
 
   const updateEarnings = async (modelName: string, dayOfWeek: number, earnings: number) => {
-    if (!effectiveChatterId || !isWeekEditable) return;
+    if (!effectiveChatterId || !canEdit || isSalesLocked) return;
 
     try {
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
@@ -415,13 +386,13 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
   return (
     <div className="space-y-4">
-      {isWeekEditable && !isSalesLocked && (
+      {canEdit && !isSalesLocked && (
         <div className="flex justify-between items-center">
           <AddModelDropdown
             chatterId={effectiveChatterId}
             weekStart={weekStart}
             onModelAdded={fetchData}
-            disabled={!isWeekEditable || isSalesLocked}
+            disabled={!canEdit || isSalesLocked}
           />
         </div>
       )}
@@ -437,7 +408,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                 </TableHead>
               ))}
               <TableHead className="text-center min-w-[80px]">Total</TableHead>
-              {isAdmin && isWeekEditable && (
+              {isAdmin && !isSalesLocked && (
                 <TableHead className="w-[50px]"></TableHead>
               )}
             </TableRow>
@@ -475,7 +446,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                 <TableCell className="text-center font-semibold">
                   ${getModelTotal(model.model_name).toFixed(2)}
                 </TableCell>
-                {isAdmin && isWeekEditable && (
+                {isAdmin && !isSalesLocked && (
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -500,7 +471,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                 <TableCell className="text-center font-bold text-primary">
                   ${getWeekTotal().toFixed(2)}
                 </TableCell>
-                {isAdmin && isWeekEditable && (
+                {isAdmin && !isSalesLocked && (
                   <TableCell></TableCell>
                 )}
               </TableRow>
@@ -508,7 +479,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
             {models.length === 0 && (
               <TableRow>
                 <TableCell 
-                  colSpan={DAYS_OF_WEEK.length + 2 + (isAdmin && isWeekEditable ? 1 : 0)} 
+                  colSpan={DAYS_OF_WEEK.length + 2 + (isAdmin && !isSalesLocked ? 1 : 0)} 
                   className="text-center text-muted-foreground py-8"
                 >
                   No models added yet. Click "Add Model" to get started.
