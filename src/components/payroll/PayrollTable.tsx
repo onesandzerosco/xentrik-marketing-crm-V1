@@ -103,6 +103,29 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   // Check if inputs should be disabled (only if locked or user doesn't have permission)
   const areInputsDisabled = !canEdit || isSalesLocked;
 
+  // Fetch data when component mounts or dependencies change
+  useEffect(() => {
+    const fetchChatterDepartment = async () => {
+      if (!effectiveChatterId) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('department')
+        .eq('id', effectiveChatterId)
+        .single();
+      
+      setChatterDepartment(data?.department || null);
+    };
+    
+    fetchChatterDepartment();
+  }, [effectiveChatterId]);
+
+  useEffect(() => {
+    if (chatterDepartment !== undefined) {
+      fetchData();
+    }
+  }, [effectiveChatterId, weekStart, chatterDepartment]);
+
   // Debug logging for button visibility
   useEffect(() => {
     console.log('Button visibility debug:', {
