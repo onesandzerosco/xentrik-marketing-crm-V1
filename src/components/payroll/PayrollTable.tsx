@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,9 +58,17 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   const isChatter = userRole === 'Chatter' || userRoles?.includes('Chatter');
   const canEdit = isAdmin || effectiveChatterId === user?.id;
 
-  // Calculate week start based on department cutoff
-  const weekStart = getWeekStartUtil(selectedWeek, chatterDepartment);
-  const currentWeekStart = getWeekStartUtil(new Date(), chatterDepartment);
+  // Calculate week start based on department cutoff - memoized to recalculate when department changes
+  const weekStart = useMemo(() => 
+    getWeekStartUtil(selectedWeek, chatterDepartment),
+    [selectedWeek, chatterDepartment]
+  );
+  
+  const currentWeekStart = useMemo(() => 
+    getWeekStartUtil(new Date(), chatterDepartment),
+    [chatterDepartment]
+  );
+  
   const isCurrentWeek = weekStart.getTime() === currentWeekStart.getTime();
   const isFutureWeek = weekStart.getTime() > currentWeekStart.getTime();
 
@@ -74,6 +82,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
     today: new Date().toISOString().split('T')[0],
     todayDay: new Date().getDay(),
     selectedWeek: selectedWeek.toISOString().split('T')[0],
+    chatterDepartment,
     weekStart: weekStart.toISOString().split('T')[0],
     currentWeekStart: currentWeekStart.toISOString().split('T')[0],
     isCurrentWeek,
