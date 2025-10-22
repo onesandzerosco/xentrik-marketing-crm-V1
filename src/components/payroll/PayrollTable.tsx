@@ -50,7 +50,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [chatterName, setChatterName] = useState<string>('');
-  const [chatterDepartment, setChatterDepartment] = useState<string | null>(null);
+  const [chatterDepartment, setChatterDepartment] = useState<string | null | undefined>(undefined);
 
   const effectiveChatterId = chatterId || user?.id;
   const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
@@ -85,11 +85,29 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
     userId: user?.id
   });
 
+  // First effect: fetch department
   useEffect(() => {
-    if (effectiveChatterId) {
+    const fetchDepartment = async () => {
+      if (!effectiveChatterId) return;
+      
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('department')
+        .eq('id', effectiveChatterId)
+        .single();
+      
+      setChatterDepartment(profileData?.department || null);
+    };
+    
+    fetchDepartment();
+  }, [effectiveChatterId]);
+
+  // Second effect: fetch sales data once department is known
+  useEffect(() => {
+    if (effectiveChatterId && chatterDepartment !== undefined) {
       fetchData();
     }
-  }, [effectiveChatterId, selectedWeek]);
+  }, [effectiveChatterId, selectedWeek, chatterDepartment]);
 
   // Get sales locking status (moved up to fix variable order)
   const isSalesLocked = salesData.length > 0 && salesData[0]?.sales_locked;
@@ -149,10 +167,10 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
       if (modelsError) throw modelsError;
 
-      // Fetch chatter's name and department
+      // Fetch chatter's name (department already fetched)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('name, department')
+        .select('name')
         .eq('id', effectiveChatterId)
         .single();
 
@@ -165,7 +183,6 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
       setSalesData(salesData || []);
       setModels(uniqueModels);
       setChatterName(profileData?.name || '');
-      setChatterDepartment(profileData?.department || null);
     } catch (error) {
       console.error('Error fetching sales data:', error);
       toast({
