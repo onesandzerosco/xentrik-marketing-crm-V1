@@ -23,25 +23,58 @@ serve(async (req) => {
 
     console.log('Creating team member with:', { email, name, primary_role, additional_roles, geographic_restrictions })
 
-    // Create the user in auth
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role: primary_role,
-        roles: additional_roles || [],
-        geographic_restrictions: geographic_restrictions || []
-      }
-    })
+    let userId: string | undefined;
 
-    if (userError) {
-      console.error('Error creating user:', userError)
-      throw userError
+    // First check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email === email)
+
+    if (existingUser) {
+      console.log('User already exists:', existingUser.id)
+      userId = existingUser.id
+      
+      // Update existing user's metadata
+      const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+        userId,
+        {
+          user_metadata: {
+            name,
+            role: primary_role,
+            roles: additional_roles || [],
+            geographic_restrictions: geographic_restrictions || []
+          }
+        }
+      )
+      
+      if (updateError) {
+        console.error('Error updating existing user:', updateError)
+      }
+    } else {
+      // Create the user in auth
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          name,
+          role: primary_role,
+          roles: additional_roles || [],
+          geographic_restrictions: geographic_restrictions || []
+        }
+      })
+
+      if (userError) {
+        console.error('Error creating user:', userError)
+        throw userError
+      }
+
+      userId = userData.user?.id
+      console.log('User created:', userId)
     }
 
-    console.log('User created:', userData.user?.id)
+    if (!userId) {
+      throw new Error('Failed to get user ID')
+    }
 
     // Wait a moment for trigger to create profile, then update it
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -50,7 +83,7 @@ serve(async (req) => {
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({
-        id: userData.user?.id,
+        id: userId,
         name,
         email,
         role: primary_role,
@@ -69,7 +102,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: { id: userData.user?.id }  // Fixed: Changed user_id to user.id to match expected structure
+        user: { id: userId }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
