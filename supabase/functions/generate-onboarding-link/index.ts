@@ -41,8 +41,7 @@ serve(async (req) => {
       .from('creator_invitations')
       .insert({
         model_name: modelName,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString() // 72 hours from now
+        status: 'pending'
       })
       .select('token')
       .single();
@@ -66,8 +65,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         token: data.token,
-        onboardingLink: onboardingLink,
-        expiresAt: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
+        onboardingLink: onboardingLink
       }),
       { 
         status: 200,
