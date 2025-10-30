@@ -6,18 +6,25 @@
  */
 
 /**
- * Get the week start date based on department
+ * Get the week start date based on department and role
  * @param date - The date to calculate from
  * @param department - Optional department name (if '10PM', uses Wednesday cutoff)
+ * @param role - Optional role (Admin/Manager always use standard cutoff)
+ * @param roles - Optional roles array (if includes Admin/Manager, uses standard cutoff)
  * @returns The start date of the week
  */
-export const getWeekStart = (date: Date, department?: string | null): Date => {
+export const getWeekStart = (date: Date, department?: string | null, role?: string | null, roles?: string[] | null): Date => {
   const day = date.getDay(); // 0=Sunday, 1=Monday, ..., 6=Saturday
   const weekStart = new Date(date);
   weekStart.setHours(0, 0, 0, 0);
   
+  // Admin and Manager roles always use standard Thursday-Wednesday cutoff
+  const isAdminOrManager = role === 'Admin' || role === 'Manager' || 
+                           roles?.includes('Admin') || roles?.includes('Manager');
+  
   // 10PM Department has Wednesday-Tuesday cutoff (week starts Wednesday, day_of_week = 3)
-  if (department === '10PM') {
+  // But Admin/Manager always use standard cutoff
+  if (department === '10PM' && !isAdminOrManager) {
     // Calculate days to go back to reach Wednesday
     if (day === 0) weekStart.setDate(date.getDate() - 4); // Sunday -> back 4 to Wednesday
     else if (day === 1) weekStart.setDate(date.getDate() - 5); // Monday -> back 5
@@ -84,12 +91,18 @@ export const getDaysOfWeek = (department?: string | null) => {
 };
 
 /**
- * Get the start day of week value based on department
+ * Get the start day of week value based on department and role
  * @param department - Optional department name
+ * @param role - Optional role (Admin/Manager always use standard cutoff)
+ * @param roles - Optional roles array (if includes Admin/Manager, uses standard cutoff)
  * @returns The day_of_week value for the start day (3 for 10PM, 4 for others)
  */
-export const getStartDayOfWeek = (department?: string | null): number => {
-  return department === '10PM' ? 3 : 4;
+export const getStartDayOfWeek = (department?: string | null, role?: string | null, roles?: string[] | null): number => {
+  // Admin and Manager roles always use standard Thursday cutoff
+  const isAdminOrManager = role === 'Admin' || role === 'Manager' || 
+                           roles?.includes('Admin') || roles?.includes('Manager');
+  
+  return (department === '10PM' && !isAdminOrManager) ? 3 : 4;
 };
 
 /**
@@ -97,11 +110,13 @@ export const getStartDayOfWeek = (department?: string | null): number => {
  * @param weekStart - The start date of the week
  * @param dayOfWeek - The day_of_week value (0-6)
  * @param department - Optional department name
+ * @param role - Optional role (Admin/Manager always use standard cutoff)
+ * @param roles - Optional roles array (if includes Admin/Manager, uses standard cutoff)
  * @returns The actual date
  */
-export const getActualDate = (weekStart: Date, dayOfWeek: number, department?: string | null): Date => {
+export const getActualDate = (weekStart: Date, dayOfWeek: number, department?: string | null, role?: string | null, roles?: string[] | null): Date => {
   const actualDate = new Date(weekStart);
-  const startDay = getStartDayOfWeek(department);
+  const startDay = getStartDayOfWeek(department, role, roles);
   
   // Calculate offset from the week start day
   const offset = (dayOfWeek - startDay + 7) % 7;
