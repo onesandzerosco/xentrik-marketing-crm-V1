@@ -18,13 +18,8 @@ export const getWeekStart = (date: Date, department?: string | null, role?: stri
   const weekStart = new Date(date);
   weekStart.setHours(0, 0, 0, 0);
   
-  // Admin and Manager roles always use standard Thursday-Wednesday cutoff
-  const isAdminOrManager = role === 'Admin' || role === 'Manager' || 
-                           roles?.includes('Admin') || roles?.includes('Manager');
-  
   // 10PM Department has Wednesday-Tuesday cutoff (week starts Wednesday, day_of_week = 3)
-  // But Admin/Manager always use standard cutoff
-  if (department === '10PM' && !isAdminOrManager) {
+  if (department === '10PM') {
     // Calculate days to go back to reach Wednesday
     if (day === 0) weekStart.setDate(date.getDate() - 4); // Sunday -> back 4 to Wednesday
     else if (day === 1) weekStart.setDate(date.getDate() - 5); // Monday -> back 5
@@ -98,11 +93,7 @@ export const getDaysOfWeek = (department?: string | null) => {
  * @returns The day_of_week value for the start day (3 for 10PM, 4 for others)
  */
 export const getStartDayOfWeek = (department?: string | null, role?: string | null, roles?: string[] | null): number => {
-  // Admin and Manager roles always use standard Thursday cutoff
-  const isAdminOrManager = role === 'Admin' || role === 'Manager' || 
-                           roles?.includes('Admin') || roles?.includes('Manager');
-  
-  return (department === '10PM' && !isAdminOrManager) ? 3 : 4;
+  return department === '10PM' ? 3 : 4;
 };
 
 /**
