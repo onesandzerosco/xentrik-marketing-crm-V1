@@ -444,30 +444,29 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
                     </TableCell>
                     <TableCell className="text-center">
                       {isSubmitted ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="text-xs text-muted-foreground">
-                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mb-1 ${
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="flex items-center gap-2">
+                            <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                               hasAttendance 
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                             }`}>
                               {hasAttendance ? 'Present' : 'Absent'}
                             </div>
-                            <div>
-                              {formatSubmissionTime(submissionData[day.value])}
-                            </div>
+                            {isWeekEditable && (
+                              <Button
+                                onClick={() => handleDeleteClick(day.value)}
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
                           </div>
-                          {isWeekEditable && (
-                            <Button
-                              onClick={() => handleDeleteClick(day.value)}
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Clear
-                            </Button>
-                          )}
+                          <div className="text-xs text-muted-foreground">
+                            {formatSubmissionTime(submissionData[day.value])}
+                          </div>
                         </div>
                       ) : (
                         <Button
