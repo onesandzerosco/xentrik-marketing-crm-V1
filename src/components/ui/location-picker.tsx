@@ -168,13 +168,13 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   const handleInputBlur = () => {
-    // Delay closing to allow clicking on suggestions
+    // If user typed text but didn't select from dropdown, save as plain text immediately
+    if (searchTerm && searchTerm !== value) {
+      onChange(searchTerm);
+    }
+    // Delay closing dropdown to allow clicking on suggestions
     setTimeout(() => {
       setIsOpen(false);
-      // If user typed text but didn't select from dropdown, save as plain text
-      if (searchTerm && searchTerm !== value) {
-        onChange(searchTerm);
-      }
     }, 200);
   };
 
