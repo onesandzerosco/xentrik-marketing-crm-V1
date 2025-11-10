@@ -58,6 +58,11 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
+  // Sync searchTerm with value prop when it changes
+  useEffect(() => {
+    setSearchTerm(value);
+  }, [value]);
+
   // Update current time if timezone is available
   useEffect(() => {
     if (selectedTimezone && showCurrentTime) {
