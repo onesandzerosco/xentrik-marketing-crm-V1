@@ -125,6 +125,9 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
     const query = e.target.value;
     setSearchTerm(query);
     
+    // Immediately update parent with the typed value
+    onChange(query);
+    
     // Clear existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -169,25 +172,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   const handleInputBlur = () => {
     // Delay closing to allow clicking on suggestions
-    setTimeout(() => {
-      setIsOpen(false);
-      // If user typed text but didn't select from dropdown, save as plain text
-      if (searchTerm && searchTerm !== value) {
-        onChange(searchTerm);
-      }
-    }, 200);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      setIsOpen(false);
-      setSuggestions([]);
-      // Save the plain text value
-      if (searchTerm) {
-        onChange(searchTerm);
-      }
-    }
+    setTimeout(() => setIsOpen(false), 200);
   };
 
   return (
@@ -199,7 +184,6 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
-          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="pr-10"
         />
