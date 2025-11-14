@@ -178,13 +178,27 @@ export class OnboardingService {
   ): Promise<string | undefined> {
     try {
       console.log("=== STARTING ACCEPTANCE PROCESS ===");
+      console.log("Full form data structure:", JSON.stringify(formData, null, 2));
       
-      // Map personal info from the form data
-      const personalInfo = formData.personalInfo || {};
-      const email = personalInfo.email;
+      // Map personal info from the form data - check multiple possible locations
+      const personalInfo = formData.personalInfo || formData.data?.personalInfo || {};
+      let email = personalInfo.email || formData.email || formData.data?.email;
       
-      if (!email) {
-        throw new Error("Email is required for creator registration");
+      // Trim and validate email
+      if (!email || typeof email !== 'string') {
+        console.error("Email not found. Personal info:", personalInfo);
+        console.error("Form data keys:", Object.keys(formData));
+        throw new Error("Email is required for creator registration. Please ensure the email field is filled in the onboarding form.");
+      }
+      
+      // Sanitize email: trim whitespace and convert to lowercase
+      email = email.trim().toLowerCase();
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        console.error("Invalid email format:", email);
+        throw new Error(`Invalid email format: "${email}". Please check the email address.`);
       }
       
       console.log("Processing creator:", creatorInfo.name, "with email:", email);
