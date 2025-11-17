@@ -43,6 +43,30 @@ serve(async (req) => {
 
     console.log(`Deleting creator with ID: ${creatorId}`);
 
+    // Check if creator exists
+    const { data: creator, error: creatorLookupError } = await supabaseAdmin
+      .from('creators')
+      .select('id, email, name')
+      .eq('id', creatorId)
+      .maybeSingle();
+    
+    if (creatorLookupError) {
+      console.error("Error looking up creator:", creatorLookupError);
+      return new Response(
+        JSON.stringify({ error: `Failed to find creator: ${creatorLookupError.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!creator) {
+      return new Response(
+        JSON.stringify({ error: `Creator with ID ${creatorId} not found` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Found creator: ${creator.name} (${creator.email || 'no email'})`);
+
     // Delete all related records in order (foreign key constraints)
     
     // 1. Delete creator_tags
@@ -124,7 +148,7 @@ serve(async (req) => {
     // First check if there's a profile with this ID
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('id')
+      .select('id, email')
       .eq('id', creatorId)
       .maybeSingle();
 
@@ -146,14 +170,27 @@ serve(async (req) => {
       
       if (profileError) {
         console.error("Error deleting profile:", profileError);
+      } else {
+        console.log(`Deleted profile for creator ${creatorId}`);
       }
 
-      // Delete the auth user
-      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(creatorId);
+      // Check if auth user exists before trying to delete
+      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      const authUser = users?.find(u => u.id === creatorId || u.email === profile.email);
       
-      if (authError) {
-        console.error("Error deleting auth user:", authError);
+      if (authUser) {
+        const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(creatorId);
+        
+        if (authError) {
+          console.error("Error deleting auth user:", authError);
+        } else {
+          console.log(`Deleted auth account for creator ${creatorId}`);
+        }
+      } else {
+        console.log(`No auth account found for creator ${creatorId}, skipping auth deletion`);
       }
+    } else {
+      console.log(`Creator ${creatorId} has no profile, skipping profile/auth deletion`);
     }
 
     console.log(`Successfully deleted creator ${creatorId}`);
