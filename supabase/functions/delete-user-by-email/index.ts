@@ -33,28 +33,38 @@ serve(async (req) => {
       }
     );
 
-    // Find user by email
-    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    // First, try to find profile by email (may not have auth account)
+    const { data: profile, error: profileLookupError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle();
     
-    if (listError) {
-      console.error("Error listing users:", listError);
+    if (profileLookupError) {
+      console.error("Error looking up profile:", profileLookupError);
       return new Response(
-        JSON.stringify({ error: `Failed to find user: ${listError.message}` }),
+        JSON.stringify({ error: `Failed to find profile: ${profileLookupError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const user = users.find(u => u.email === email);
-    
-    if (!user) {
+    if (!profile) {
       return new Response(
         JSON.stringify({ error: `User with email ${email} not found` }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = user.id;
+    const userId = profile.id;
     console.log(`Deleting user ${email} with ID: ${userId}`);
+
+    // Check if there's an auth account
+    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+    const authUser = users?.find(u => u.email === email);
+    
+    if (listError) {
+      console.error("Warning: Error checking auth users:", listError);
+    }
 
     // Delete all related records in order (foreign key constraints)
     
@@ -128,15 +138,20 @@ serve(async (req) => {
       );
     }
 
-    // 10. Finally delete the auth user
-    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    // 10. Finally delete the auth user (if exists)
+    if (authUser) {
+      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
-    if (authError) {
-      console.error("Error deleting auth user:", authError);
-      return new Response(
-        JSON.stringify({ error: `Failed to delete auth user: ${authError.message}` }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (authError) {
+        console.error("Error deleting auth user:", authError);
+        return new Response(
+          JSON.stringify({ error: `Failed to delete auth user: ${authError.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      console.log(`Deleted auth account for ${email}`);
+    } else {
+      console.log(`No auth account found for ${email}, skipping auth deletion`);
     }
 
     console.log(`Successfully deleted user ${email}`);
