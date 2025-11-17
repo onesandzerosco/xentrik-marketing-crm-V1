@@ -34,17 +34,17 @@ serve(async (req) => {
     );
 
     // Find user by email
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (userError) {
-      console.error("Error fetching users:", userError);
+    if (listError) {
+      console.error("Error listing users:", listError);
       return new Response(
-        JSON.stringify({ error: `Failed to fetch users: ${userError.message}` }),
+        JSON.stringify({ error: `Failed to find user: ${listError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const user = userData.users.find(u => u.email === email);
+    const user = users.find(u => u.email === email);
     
     if (!user) {
       return new Response(
@@ -54,35 +54,67 @@ serve(async (req) => {
     }
 
     const userId = user.id;
+    console.log(`Deleting user ${email} with ID: ${userId}`);
 
-    // Delete related records in order
+    // Delete all related records in order (foreign key constraints)
+    
+    // 1. Delete team_member_roles
+    const { error: rolesError } = await supabaseAdmin
+      .from('team_member_roles')
+      .delete()
+      .eq('profile_id', userId);
+    if (rolesError) console.error("Error deleting team_member_roles:", rolesError);
+
+    // 2. Delete team_assignments
+    const { error: assignmentsError } = await supabaseAdmin
+      .from('team_assignments')
+      .delete()
+      .eq('profile_id', userId);
+    if (assignmentsError) console.error("Error deleting team_assignments:", assignmentsError);
+
+    // 3. Delete creator_team_members (where this person is a team member)
+    const { error: creatorTeamError } = await supabaseAdmin
+      .from('creator_team_members')
+      .delete()
+      .eq('team_member_id', userId);
+    if (creatorTeamError) console.error("Error deleting creator_team_members:", creatorTeamError);
+
+    // 4. Delete creator_telegram_groups (where this person is a team member)
+    const { error: telegramError } = await supabaseAdmin
+      .from('creator_telegram_groups')
+      .delete()
+      .eq('team_member_id', userId);
+    if (telegramError) console.error("Error deleting creator_telegram_groups:", telegramError);
+
+    // 5. Delete model_announcements created by this user
+    const { error: announcementsError } = await supabaseAdmin
+      .from('model_announcements')
+      .delete()
+      .eq('created_by', userId);
+    if (announcementsError) console.error("Error deleting model_announcements:", announcementsError);
+
+    // 6. Delete sales_tracker records
     const { error: salesError } = await supabaseAdmin
       .from('sales_tracker')
       .delete()
       .eq('chatter_id', userId);
+    if (salesError) console.error("Error deleting sales_tracker:", salesError);
 
-    if (salesError) {
-      console.error("Error deleting sales_tracker records:", salesError);
-    }
-
+    // 7. Delete attendance records
     const { error: attendanceError } = await supabaseAdmin
       .from('attendance')
       .delete()
       .eq('chatter_id', userId);
+    if (attendanceError) console.error("Error deleting attendance:", attendanceError);
 
-    if (attendanceError) {
-      console.error("Error deleting attendance records:", attendanceError);
-    }
-
+    // 8. Delete generated_voice_clones
     const { error: voiceError } = await supabaseAdmin
       .from('generated_voice_clones')
       .delete()
       .eq('generated_by', userId);
+    if (voiceError) console.error("Error deleting voice clones:", voiceError);
 
-    if (voiceError) {
-      console.error("Error deleting voice clones:", voiceError);
-    }
-
+    // 9. Delete the profile
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()
@@ -96,7 +128,7 @@ serve(async (req) => {
       );
     }
 
-    // Finally delete the auth user
+    // 10. Finally delete the auth user
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (authError) {
@@ -107,11 +139,9 @@ serve(async (req) => {
       );
     }
 
+    console.log(`Successfully deleted user ${email}`);
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `User ${email} (${userId}) deleted successfully` 
-      }),
+      JSON.stringify({ success: true, message: `User ${email} deleted successfully` }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
