@@ -134,13 +134,32 @@ serve(async (req) => {
       if (socialLoginsError) console.error("Error deleting social_media_logins:", socialLoginsError);
     }
 
-    // 10. Delete customs by model_name if it exists
+    // 10. Delete records by model_name (these tables use model_name as a string field)
     if (creator.model_name) {
+      console.log(`Deleting records by model_name: ${creator.model_name}`);
       const { error: customsError } = await supabaseAdmin
         .from('customs')
         .delete()
         .eq('model_name', creator.model_name);
       if (customsError) console.error("Error deleting customs:", customsError);
+
+      const { error: salesTrackerError } = await supabaseAdmin
+        .from('sales_tracker')
+        .delete()
+        .eq('model_name', creator.model_name);
+      if (salesTrackerError) console.error("Error deleting sales_tracker:", salesTrackerError);
+
+      const { error: attendanceError } = await supabaseAdmin
+        .from('attendance')
+        .delete()
+        .eq('model_name', creator.model_name);
+      if (attendanceError) console.error("Error deleting attendance:", attendanceError);
+
+      const { error: voiceSourcesError } = await supabaseAdmin
+        .from('voice_sources')
+        .delete()
+        .eq('model_name', creator.model_name);
+      if (voiceSourcesError) console.error("Error deleting voice_sources:", voiceSourcesError);
     }
 
     // 11. Delete file_categories for this creator
@@ -164,16 +183,7 @@ serve(async (req) => {
       .eq('creator_id', creatorId);
     if (foldersError) console.error("Error deleting file_folders:", foldersError);
 
-    // 14. Delete voice_sources for this creator by model_name
-    if (creator.model_name) {
-      const { error: voiceSourcesError } = await supabaseAdmin
-        .from('voice_sources')
-        .delete()
-        .eq('model_name', creator.model_name);
-      if (voiceSourcesError) console.error("Error deleting voice_sources:", voiceSourcesError);
-    }
-
-    // 15. Delete the creator record
+    // 14. Delete the creator record
     const { error: creatorError } = await supabaseAdmin
       .from('creators')
       .delete()
