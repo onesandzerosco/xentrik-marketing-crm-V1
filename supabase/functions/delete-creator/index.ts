@@ -67,7 +67,7 @@ serve(async (req) => {
 
     console.log(`Found creator: ${creator.name} (${creator.email || 'no email'})`);
 
-    // Delete all related records in order (foreign key constraints)
+    // Delete all creator-related records in order (foreign key constraints)
     
     // 1. Delete creator_tags
     const { error: tagsError } = await supabaseAdmin
@@ -83,14 +83,14 @@ serve(async (req) => {
       .eq('creator_id', creatorId);
     if (socialLinksError) console.error("Error deleting creator_social_links:", socialLinksError);
 
-    // 3. Delete creator_team_members
+    // 3. Delete creator_team_members (where this is the creator)
     const { error: teamMembersError } = await supabaseAdmin
       .from('creator_team_members')
       .delete()
       .eq('creator_id', creatorId);
     if (teamMembersError) console.error("Error deleting creator_team_members:", teamMembersError);
 
-    // 4. Delete creator_telegram_groups
+    // 4. Delete creator_telegram_groups (where this is the creator)
     const { error: telegramGroupsError } = await supabaseAdmin
       .from('creator_telegram_groups')
       .delete()
@@ -104,7 +104,7 @@ serve(async (req) => {
       .eq('creator_id', creatorId);
     if (filesError) console.error("Error deleting file_uploads:", filesError);
 
-    // 6. Delete model_announcements
+    // 6. Delete model_announcements (where this is the creator)
     const { error: announcementsError } = await supabaseAdmin
       .from('model_announcements')
       .delete()
@@ -125,7 +125,55 @@ serve(async (req) => {
       .eq('creator_id', creatorId);
     if (mediaError) console.error("Error deleting media:", mediaError);
 
-    // 9. Delete the creator record
+    // 9. Delete social_media_logins by creator email
+    if (creator.email) {
+      const { error: socialLoginsError } = await supabaseAdmin
+        .from('social_media_logins')
+        .delete()
+        .eq('creator_email', creator.email);
+      if (socialLoginsError) console.error("Error deleting social_media_logins:", socialLoginsError);
+    }
+
+    // 10. Delete customs by model_name if it exists
+    if (creator.model_name) {
+      const { error: customsError } = await supabaseAdmin
+        .from('customs')
+        .delete()
+        .eq('model_name', creator.model_name);
+      if (customsError) console.error("Error deleting customs:", customsError);
+    }
+
+    // 11. Delete file_categories for this creator
+    const { error: categoriesError } = await supabaseAdmin
+      .from('file_categories')
+      .delete()
+      .eq('creator', creatorId);
+    if (categoriesError) console.error("Error deleting file_categories:", categoriesError);
+
+    // 12. Delete file_tags for this creator
+    const { error: fileTagsError } = await supabaseAdmin
+      .from('file_tags')
+      .delete()
+      .eq('creator', creatorId);
+    if (fileTagsError) console.error("Error deleting file_tags:", fileTagsError);
+
+    // 13. Delete file_folders for this creator
+    const { error: foldersError } = await supabaseAdmin
+      .from('file_folders')
+      .delete()
+      .eq('creator_id', creatorId);
+    if (foldersError) console.error("Error deleting file_folders:", foldersError);
+
+    // 14. Delete voice_sources for this creator by model_name
+    if (creator.model_name) {
+      const { error: voiceSourcesError } = await supabaseAdmin
+        .from('voice_sources')
+        .delete()
+        .eq('model_name', creator.model_name);
+      if (voiceSourcesError) console.error("Error deleting voice_sources:", voiceSourcesError);
+    }
+
+    // 15. Delete the creator record
     const { error: creatorError } = await supabaseAdmin
       .from('creators')
       .delete()
@@ -144,7 +192,7 @@ serve(async (req) => {
       );
     }
 
-    // 10. Delete related profile and auth records (if creator has auth)
+    // 16. Delete related profile and auth records (if creator has auth)
     // First check if there's a profile with this ID
     const { data: profile } = await supabaseAdmin
       .from('profiles')
@@ -158,6 +206,16 @@ serve(async (req) => {
       // Delete profile-related records
       await supabaseAdmin.from('team_member_roles').delete().eq('profile_id', creatorId);
       await supabaseAdmin.from('team_assignments').delete().eq('profile_id', creatorId);
+      
+      // Delete creator_team_members (where this person is a team member)
+      await supabaseAdmin.from('creator_team_members').delete().eq('team_member_id', creatorId);
+      
+      // Delete creator_telegram_groups (where this person is a team member)
+      await supabaseAdmin.from('creator_telegram_groups').delete().eq('team_member_id', creatorId);
+      
+      // Delete model_announcements created by this user
+      await supabaseAdmin.from('model_announcements').delete().eq('created_by', creatorId);
+      
       await supabaseAdmin.from('sales_tracker').delete().eq('chatter_id', creatorId);
       await supabaseAdmin.from('attendance').delete().eq('chatter_id', creatorId);
       await supabaseAdmin.from('generated_voice_clones').delete().eq('generated_by', creatorId);

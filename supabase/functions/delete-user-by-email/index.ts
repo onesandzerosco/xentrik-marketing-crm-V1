@@ -66,7 +66,65 @@ serve(async (req) => {
       console.error("Warning: Error checking auth users:", listError);
     }
 
-    // Delete all related records in order (foreign key constraints)
+    // Check if this user is also a creator
+    const { data: creator } = await supabaseAdmin
+      .from('creators')
+      .select('id, model_name, email')
+      .eq('id', userId)
+      .maybeSingle();
+
+    // If user is also a creator, delete all creator-related records first
+    if (creator) {
+      console.log(`User is also a creator (${creator.model_name || creator.email}), deleting creator records...`);
+
+      // Delete creator_tags
+      await supabaseAdmin.from('creator_tags').delete().eq('creator_id', userId);
+
+      // Delete creator_social_links
+      await supabaseAdmin.from('creator_social_links').delete().eq('creator_id', userId);
+
+      // Delete creator_team_members (where this is the creator)
+      await supabaseAdmin.from('creator_team_members').delete().eq('creator_id', userId);
+
+      // Delete creator_telegram_groups (where this is the creator)
+      await supabaseAdmin.from('creator_telegram_groups').delete().eq('creator_id', userId);
+
+      // Delete file_uploads
+      await supabaseAdmin.from('file_uploads').delete().eq('creator_id', userId);
+
+      // Delete model_announcements (where this is the creator)
+      await supabaseAdmin.from('model_announcements').delete().eq('creator_id', userId);
+
+      // Delete marketing_media
+      await supabaseAdmin.from('marketing_media').delete().eq('creator_id', userId);
+
+      // Delete media
+      await supabaseAdmin.from('media').delete().eq('creator_id', userId);
+
+      // Delete social_media_logins by email
+      if (creator.email) {
+        await supabaseAdmin.from('social_media_logins').delete().eq('creator_email', creator.email);
+      }
+
+      // Delete customs by model_name if it exists
+      if (creator.model_name) {
+        await supabaseAdmin.from('customs').delete().eq('model_name', creator.model_name);
+      }
+
+      // Delete the creator record
+      const { error: creatorError } = await supabaseAdmin
+        .from('creators')
+        .delete()
+        .eq('id', userId);
+      
+      if (creatorError) {
+        console.error("Error deleting creator:", creatorError);
+      } else {
+        console.log(`Deleted creator record for ${userId}`);
+      }
+    }
+
+    // Delete all user/profile related records
     
     // 1. Delete team_member_roles
     const { error: rolesError } = await supabaseAdmin
