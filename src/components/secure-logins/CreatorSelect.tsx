@@ -51,12 +51,7 @@ const CreatorSelect: React.FC<CreatorSelectProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <UserCircle className="w-4 h-4 flex-shrink-0" />
-                  <div className="flex flex-col">
-                    <span className="truncate">{creator.name}</span>
-                    {creator.modelName && (
-                      <span className="text-xs text-muted-foreground truncate">Model: {creator.modelName}</span>
-                    )}
-                  </div>
+                  <span className="truncate">{creator.modelName || creator.name}</span>
                 </div>
               </SelectItem>
             ))}
