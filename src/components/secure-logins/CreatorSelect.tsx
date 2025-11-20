@@ -21,15 +21,24 @@ const CreatorSelect: React.FC<CreatorSelectProps> = ({
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter creators based on search query
+  // Filter and sort creators based on search query
   const filteredCreators = useMemo(() => {
-    if (!searchQuery.trim()) return creators;
+    let filtered = creators;
     
-    const query = searchQuery.toLowerCase();
-    return creators.filter(creator => {
-      const modelName = creator.modelName?.toLowerCase() || '';
-      const name = creator.name?.toLowerCase() || '';
-      return modelName.includes(query) || name.includes(query);
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = creators.filter(creator => {
+        const modelName = creator.modelName?.toLowerCase() || '';
+        const name = creator.name?.toLowerCase() || '';
+        return modelName.includes(query) || name.includes(query);
+      });
+    }
+    
+    // Sort alphabetically by model name or name
+    return filtered.sort((a, b) => {
+      const aName = (a.modelName || a.name).toLowerCase();
+      const bName = (b.modelName || b.name).toLowerCase();
+      return aName.localeCompare(bName);
     });
   }, [creators, searchQuery]);
 
