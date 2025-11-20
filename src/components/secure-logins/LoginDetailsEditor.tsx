@@ -53,6 +53,7 @@ const LoginDetailsEditor: React.FC<LoginDetailsEditorProps> = ({
         <CardHeader>
           <CardTitle>{creator.name}'s Login Details</CardTitle>
           <CardDescription>
+            {creator.modelName && <span className="font-medium">Model: {creator.modelName} • </span>}
             Securely store login information for {creator.name}'s accounts
           </CardDescription>
         </CardHeader>
