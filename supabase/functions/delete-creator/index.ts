@@ -46,7 +46,7 @@ serve(async (req) => {
     // Check if creator exists
     const { data: creator, error: creatorLookupError } = await supabaseAdmin
       .from('creators')
-      .select('id, email, name')
+      .select('id, email, name, model_name')
       .eq('id', creatorId)
       .maybeSingle();
     
@@ -185,6 +185,16 @@ serve(async (req) => {
       .delete()
       .eq('creator_id', creatorId);
     if (foldersError) console.error("Error deleting file_folders:", foldersError);
+
+    // 13.5. Delete onboarding_submissions for this creator (by email)
+    if (creator.email) {
+      const { error: onboardingError } = await supabaseAdmin
+        .from('onboarding_submissions')
+        .delete()
+        .eq('email', creator.email);
+      if (onboardingError) console.error("Error deleting onboarding_submissions:", onboardingError);
+      else console.log(`Deleted onboarding_submissions for email: ${creator.email}`);
+    }
 
     // 14. Delete the creator record
     const { error: creatorError } = await supabaseAdmin
