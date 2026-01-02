@@ -248,9 +248,18 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
     );
   }
 
+  const onFormSubmit = (e: React.FormEvent) => {
+    // Only allow form submission when on the last step
+    if (currentStepIndex !== steps.length - 1) {
+      e.preventDefault();
+      return;
+    }
+    methods.handleSubmit(handleFinalSubmit)(e);
+  };
+
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleFinalSubmit)} className="space-y-4 sm:space-y-6 lg:space-y-8">
+      <form onSubmit={onFormSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
         <Card className="w-full bg-[#1a1a33]/70 border-[#252538]/50 shadow-xl">
           <CardHeader className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
