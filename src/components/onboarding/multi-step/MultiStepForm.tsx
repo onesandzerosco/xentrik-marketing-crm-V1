@@ -249,12 +249,21 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
   }
 
   const onFormSubmit = (e: React.FormEvent) => {
-    // Only allow form submission when on the last step
-    if (currentStepIndex !== steps.length - 1) {
-      e.preventDefault();
+    // Prevent implicit submissions (e.g., pressing Enter) on all steps.
+    // Submission is triggered explicitly via the primary button click.
+    e.preventDefault();
+  };
+
+  const isLastStep = currentStepIndex === steps.length - 1;
+
+  const handlePrimaryAction = () => {
+    if (isLastStep) {
+      // Trigger RHF submission explicitly (no native form submit).
+      void methods.handleSubmit(handleFinalSubmit)();
       return;
     }
-    methods.handleSubmit(handleFinalSubmit)(e);
+
+    goToNextStep();
   };
 
   return (
@@ -318,24 +327,15 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
               <span>Previous</span>
             </Button>
             
-            {currentStepIndex < steps.length - 1 ? (
-              <Button
-                type="button"
-                variant="premium"
-                onClick={goToNextStep}
-                className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
-              >
-                <span>Next</span> <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                type="submit" 
-                variant="premium"
-                disabled={isSubmitting}
-                onClick={() => console.log("Submit button clicked!")}
-                className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
-              >
-                {isSubmitting ? (
+            <Button
+              type="button"
+              variant="premium"
+              onClick={handlePrimaryAction}
+              disabled={isLastStep ? isSubmitting : false}
+              className="flex items-center justify-center gap-2 w-full sm:w-auto min-h-[44px]"
+            >
+              {isLastStep ? (
+                isSubmitting ? (
                   <>
                     <span>Processing</span> <Upload className="h-4 w-4 animate-bounce" />
                   </>
@@ -343,9 +343,13 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
                   <>
                     <span>Submit</span> <Save className="h-4 w-4" />
                   </>
-                )}
-              </Button>
-            )}
+                )
+              ) : (
+                <>
+                  <span>Next</span> <ChevronRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
           </CardFooter>
         </Card>
       </form>
