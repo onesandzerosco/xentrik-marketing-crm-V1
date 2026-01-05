@@ -167,9 +167,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   const [submissionData, setSubmissionData] = useState<any>(submission?.data || {});
   const [isSaving, setIsSaving] = useState(false);
 
+  // Check if user is Admin
+  const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+
   // Check if user has editing permissions (exclude Chatter role)
-  const canEdit = userRole === 'Admin' || 
-                  userRoles?.includes('Admin') ||
+  const canEdit = isAdmin ||
                   userRole === 'VA' || 
                   userRoles?.includes('VA');
 
@@ -738,7 +740,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
   };
 
   const personalInfoPriority = [
-    'modelName', 'fullName', 'nickname', 'age', 'modelAge', 'dateOfBirth', 'modelBirthday', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
+    'modelName', 'fullName', 'nickname',
+    ...(isAdmin ? ['age'] : []), // Real Age - only for Admin
+    'modelAge',
+    ...(isAdmin ? ['dateOfBirth'] : []), // Real Date of Birth - only for Admin
+    'modelBirthday', 'location', 'additionalLocationNote', 'hometown', 'ethnicity',
     ...(isChatter ? [] : ['email']), // Hide email for Chatter role
     'sex', 'religion', 'relationshipStatus', 'handedness',
     'hasPets', 'pets', 'hasKids', 'numberOfKids', 'occupation', 'workplace', 'placesVisited'
@@ -834,6 +840,11 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         {sortedEntries.map(([key, value]) => {
           // Skip email field for Chatter users
           if (key === 'email' && isChatter) {
+            return null;
+          }
+          
+          // Skip Real Age and Real Date of Birth for non-Admin users
+          if ((key === 'age' || key === 'dateOfBirth') && !isAdmin) {
             return null;
           }
           
