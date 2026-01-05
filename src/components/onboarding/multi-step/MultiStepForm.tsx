@@ -141,6 +141,15 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
         }
       }
 
+      // Format model birthday from YYYY-MM-DD to "March 08, 2002" format
+      if (data.personalInfo.modelBirthday) {
+        const modelDateObject = new Date(data.personalInfo.modelBirthday);
+        // Check if the date is valid
+        if (!isNaN(modelDateObject.getTime())) {
+          data.personalInfo.modelBirthday = format(modelDateObject, "MMMM dd, yyyy");
+        }
+      }
+
       // For new models, ensure pricing fields are null
       if (modelType === 'new') {
         data.contentAndService.pricePerMinute = null;
