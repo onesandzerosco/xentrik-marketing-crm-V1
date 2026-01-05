@@ -105,7 +105,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.modelBirthday"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Model Persona Birthday (Fake)</FormLabel>
+              <FormLabel>Model Persona Birthday (Known to Public)</FormLabel>
               <FormControl>
                 <Input type="date" {...field} className="min-h-[44px]" />
               </FormControl>
@@ -145,7 +145,7 @@ export const PersonalInfoForm = () => {
           name="personalInfo.modelAge"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Model Persona Age (Fake)</FormLabel>
+              <FormLabel>Model Persona Age (Known to Public)</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
