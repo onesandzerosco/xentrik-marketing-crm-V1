@@ -26,29 +26,48 @@ const formatFieldName = (key: string): string => {
 };
 
 const formatValue = (value: any): string => {
-  if (value === null || value === undefined || value === '') return 'Not provided';
+  if (value === null || value === undefined || value === '') return 'N/A';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (Array.isArray(value)) {
-    if (value.length === 0) return 'Not provided';
-    // Handle pets array
+    if (value.length === 0) return 'N/A';
+    // Handle arrays of objects (pets, custom social links, etc.)
     if (value.length > 0 && typeof value[0] === 'object') {
-      return value.map((item, idx) => {
-        if (typeof item === 'object') {
-          return Object.entries(item)
-            .map(([k, v]) => `${formatFieldName(k)}: ${v}`)
-            .join(', ');
-        }
-        return String(item);
-      }).join('; ');
+      const formatted = value
+        .map((item) => {
+          if (typeof item === 'object' && item !== null) {
+            // For custom social links, format as "name: url"
+            if ('name' in item && 'url' in item) {
+              return item.url ? `${item.name}: ${item.url}` : null;
+            }
+            // For other objects like pets
+            const entries = Object.entries(item)
+              .filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'id')
+              .map(([k, v]) => {
+                // Don't try to format nested objects
+                if (typeof v === 'object') return null;
+                return `${formatFieldName(k)}: ${v}`;
+              })
+              .filter(Boolean);
+            return entries.length > 0 ? entries.join(', ') : null;
+          }
+          return String(item);
+        })
+        .filter(Boolean);
+      return formatted.length > 0 ? formatted.join('; ') : 'N/A';
     }
     return value.join(', ');
   }
   if (typeof value === 'object') {
-    // Handle social media handles
-    return Object.entries(value)
-      .filter(([_, v]) => v !== null && v !== undefined && v !== '')
-      .map(([k, v]) => `${formatFieldName(k)}: ${v}`)
-      .join(', ') || 'Not provided';
+    // Handle social media handles and other objects
+    const entries = Object.entries(value)
+      .filter(([k, v]) => {
+        // Filter out empty values and nested objects
+        if (v === null || v === undefined || v === '') return false;
+        if (typeof v === 'object') return false;
+        return true;
+      })
+      .map(([k, v]) => `${formatFieldName(k)}: ${v}`);
+    return entries.length > 0 ? entries.join(', ') : 'N/A';
   }
   return String(value);
 };
