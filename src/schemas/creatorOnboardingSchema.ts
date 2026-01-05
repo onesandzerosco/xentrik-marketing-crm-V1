@@ -6,7 +6,7 @@ export const personalInfoSchema = z.object({
   fullName: z.string().optional().default(""),
   modelName: z.string().optional().default(""),
   nickname: z.string().optional().default(""),
-  email: z.string().optional().default(""),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
   dateOfBirth: z.string().optional().default(""),
   modelBirthday: z.string().optional().default(""),
   age: z.number().optional(),
