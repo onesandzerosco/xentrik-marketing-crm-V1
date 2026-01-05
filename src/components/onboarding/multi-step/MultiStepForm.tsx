@@ -265,8 +265,33 @@ export const MultiStepForm: React.FC<MultiStepFormProps> = ({ token }) => {
 
   const isLastStep = currentStepIndex === steps.length - 1;
 
-  const handlePrimaryAction = () => {
+  const handlePrimaryAction = async () => {
     if (isLastStep) {
+      // Trigger validation first to check for errors
+      const isValid = await methods.trigger();
+      
+      if (!isValid) {
+        // Check if email has an error and navigate to it
+        const emailError = methods.formState.errors.personalInfo?.email;
+        if (emailError) {
+          setCurrentStep("personalInfo");
+          // Focus the email field after a brief delay to allow tab switch
+          setTimeout(() => {
+            const emailInput = document.querySelector('input[name="personalInfo.email"]') as HTMLInputElement;
+            if (emailInput) {
+              emailInput.focus();
+              emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+          toast({
+            title: "Email Required",
+            description: "Please provide your email address to continue.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      
       // Trigger RHF submission explicitly (no native form submit).
       void methods.handleSubmit(handleFinalSubmit)();
       return;
