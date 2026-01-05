@@ -239,9 +239,9 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
     // Handle specific field name mappings
     const fieldMappings: Record<string, string> = {
       'dateOfBirth': 'Real Date of Birth',
-      'modelBirthday': 'Model Persona Birthday (Fake)',
+      'modelBirthday': 'Model Birthday',
       'age': 'Real Age',
-      'modelAge': 'Model Persona Age (Fake)',
+      'modelAge': 'Model Age',
       'pricePerMinute': 'Custom Price per Minute',
       'videoCallPrice': 'Video Call Price per Minute',
       'customVideoNotes': 'Custom Video Notes',

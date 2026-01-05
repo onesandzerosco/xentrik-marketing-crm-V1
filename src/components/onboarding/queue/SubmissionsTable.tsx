@@ -81,9 +81,9 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     // Handle specific field name mappings
     const fieldMappings: Record<string, string> = {
       'dateOfBirth': 'Real Date of Birth',
-      'modelBirthday': 'Model Persona Birthday (Fake)',
+      'modelBirthday': 'Model Birthday',
       'age': 'Real Age',
-      'modelAge': 'Model Persona Age (Fake)',
+      'modelAge': 'Model Age',
     };
     
     if (fieldMappings[key]) {
