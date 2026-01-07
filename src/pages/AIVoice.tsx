@@ -667,7 +667,14 @@ const AIVoice: React.FC = () => {
           <CardTitle>AI Voice Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="generate" className="w-full">
+          <Tabs defaultValue="generate" className="w-full" onValueChange={(value) => {
+            // Refetch data when switching tabs to ensure fresh data
+            if (value === 'upload') {
+              fetchVoiceSources();
+            } else if (value === 'generated') {
+              fetchGeneratedVoices();
+            }
+          }}>
             <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
               <TabsTrigger value="generate">Generate Voice</TabsTrigger>
               {isAdmin && <TabsTrigger value="upload">Upload Voice Source</TabsTrigger>}
