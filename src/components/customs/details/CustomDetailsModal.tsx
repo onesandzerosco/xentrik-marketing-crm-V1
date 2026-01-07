@@ -35,6 +35,8 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
   onDeleteCustom,
   isUpdating 
 }) => {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   // Fetch the latest custom data when modal is open
   const { data: currentCustom } = useQuery({
     queryKey: ['custom', custom?.id],
@@ -67,8 +69,13 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
 
   const handleDelete = () => {
     if (onDeleteCustom && displayCustom) {
-      onDeleteCustom(displayCustom.id);
-      onClose();
+      // Close the AlertDialog first
+      setIsDeleteDialogOpen(false);
+      // Then trigger delete and close main modal after a brief delay
+      setTimeout(() => {
+        onDeleteCustom(displayCustom.id);
+        onClose();
+      }, 100);
     }
   };
 
@@ -125,7 +132,7 @@ const CustomDetailsModal: React.FC<CustomDetailsModalProps> = ({
               </Button>
             )}
             {onDeleteCustom && (
-              <AlertDialog>
+              <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="destructive" 
