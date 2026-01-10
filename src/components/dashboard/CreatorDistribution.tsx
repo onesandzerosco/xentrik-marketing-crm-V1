@@ -19,7 +19,7 @@ const CreatorDistribution: React.FC<CreatorDistributionProps> = ({
 }) => {
   return (
     <div className="premium-card mb-8 hover:border-brand-yellow/50">
-      <h2 className="text-xl font-bold mb-6 text-white flex items-center">
+      <h2 className="text-xl font-bold mb-6 text-foreground flex items-center">
         <LineChart className="h-5 w-5 mr-2 text-brand-yellow" />
         Creator Distribution
       </h2>

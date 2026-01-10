@@ -51,7 +51,7 @@ const CreatorOnboardQueue: React.FC = () => {
   return (
     <div className="p-4 md:p-8 w-full">
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-white">Creator Onboarding Queue</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-foreground">Creator Onboarding Queue</h1>
         <p className="text-sm md:text-base text-muted-foreground">
           Review and approve creator onboarding submissions.
         </p>
