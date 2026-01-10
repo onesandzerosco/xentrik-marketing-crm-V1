@@ -11,7 +11,6 @@ import SidebarLogo from "./sidebar/SidebarLogo";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarUserSection from "./sidebar/SidebarUserSection";
 import { useRouteMemory } from "@/hooks/useRouteMemory";
-import { ModeToggle } from "./ModeToggle";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -31,8 +30,7 @@ const Sidebar = () => {
   return (
     <SidebarComponent>
       <div className="relative h-full flex flex-col">
-        <div className="absolute top-4 right-2 flex items-center gap-1">
-          <ModeToggle />
+        <div className="absolute top-4 right-2">
           <SidebarTrigger />
         </div>
         
