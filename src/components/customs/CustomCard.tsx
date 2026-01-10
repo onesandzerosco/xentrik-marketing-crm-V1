@@ -102,7 +102,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         {/* Fan Information */}
         <div className="flex items-center text-xs text-muted-foreground">
           <User className="h-3 w-3 mr-1 flex-shrink-0" />
-          <span className="font-medium text-white truncate">{custom.fan_display_name}</span>
+          <span className="font-medium text-foreground truncate">{custom.fan_display_name}</span>
           {custom.fan_username && (
             <span className="ml-1 truncate">(@{custom.fan_username})</span>
           )}
@@ -110,7 +110,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
 
         {/* Custom Type - Single line with ellipsis */}
         <div>
-          <p className="text-xs text-gray-300 text-left truncate">
+          <p className="text-xs text-muted-foreground text-left truncate">
             {custom.custom_type || 'Custom type not specified'}
           </p>
         </div>

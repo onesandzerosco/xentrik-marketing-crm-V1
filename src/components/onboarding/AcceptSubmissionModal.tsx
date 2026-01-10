@@ -204,7 +204,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
           <Button 
             variant="outline" 
             onClick={handleClose}
-            className="text-white border-white/20 w-full sm:w-auto min-h-[44px] touch-manipulation order-2 sm:order-1"
+            className="text-foreground border-border w-full sm:w-auto min-h-[44px] touch-manipulation order-2 sm:order-1"
             disabled={isSubmitting || isLoading}
           >
             Cancel
@@ -212,7 +212,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
           <Button 
             onClick={handleAccept} 
             disabled={isButtonDisabled}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white w-full sm:w-auto min-h-[44px] touch-manipulation order-1 sm:order-2"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-primary-foreground w-full sm:w-auto min-h-[44px] touch-manipulation order-1 sm:order-2"
           >
             {(isLoading || isSubmitting) ? (
               <>
