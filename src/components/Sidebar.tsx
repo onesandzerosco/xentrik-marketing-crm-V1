@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,6 +11,7 @@ import SidebarLogo from "./sidebar/SidebarLogo";
 import SidebarNav from "./sidebar/SidebarNav";
 import SidebarUserSection from "./sidebar/SidebarUserSection";
 import { useRouteMemory } from "@/hooks/useRouteMemory";
+import { ModeToggle } from "./ModeToggle";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -31,14 +31,15 @@ const Sidebar = () => {
   return (
     <SidebarComponent>
       <div className="relative h-full flex flex-col">
-        <div className="absolute top-4 right-2">
+        <div className="absolute top-4 right-2 flex items-center gap-1">
+          <ModeToggle />
           <SidebarTrigger />
         </div>
         
         <SidebarContent className="pt-8 h-full flex flex-col">
           <SidebarLogo />
           
-          <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-premium-border/30 scrollbar-track-transparent mt-4">
+          <div className="px-3 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-border/30 scrollbar-track-transparent mt-4">
             <SidebarNav isAdmin={isAdmin} />
           </div>
 
