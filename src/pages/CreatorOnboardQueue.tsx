@@ -57,7 +57,7 @@ const CreatorOnboardQueue: React.FC = () => {
         </p>
       </div>
       
-      <Card className="bg-[#1a1a33]/50 backdrop-blur-sm border border-[#252538]/50">
+      <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
         <CardHeader className="pb-4">
           <CardTitle className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <span className="text-lg md:text-xl">Pending Submissions</span>
