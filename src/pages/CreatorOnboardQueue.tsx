@@ -66,7 +66,7 @@ const CreatorOnboardQueue: React.FC = () => {
               size="sm" 
               onClick={fetchSubmissions}
               disabled={loading}
-              className="text-white border-white/20 w-full sm:w-auto min-h-[44px] touch-manipulation"
+              className="text-foreground border-border w-full sm:w-auto min-h-[44px] touch-manipulation"
             >
               {loading ? (
                 <>
