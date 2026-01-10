@@ -62,7 +62,7 @@ const SidebarUserSection: React.FC = () => {
           </div>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="end" className="w-56 bg-premium-card border-premium-border shadow-premium-md">
+        <DropdownMenuContent align="end" className="w-56 bg-card border-border shadow-lg">
           <DropdownMenuItem 
             onClick={() => navigate('/account')}
             className="cursor-pointer hover:bg-gradient-premium-yellow hover:text-black"
@@ -71,7 +71,7 @@ const SidebarUserSection: React.FC = () => {
             <span>Account Settings</span>
           </DropdownMenuItem>
           
-          <DropdownMenuSeparator className="bg-premium-border/20" />
+          <DropdownMenuSeparator className="bg-border/20" />
           
           <DropdownMenuItem 
             onClick={handleLogout}
