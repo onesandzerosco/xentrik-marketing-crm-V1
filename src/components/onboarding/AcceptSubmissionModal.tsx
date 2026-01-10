@@ -129,10 +129,10 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-[#1a1a33] text-white border-[#252538] mx-4">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto bg-card text-foreground border-border mx-4">
         <DialogHeader>
           <DialogTitle className="text-lg md:text-xl">Accept Creator Submission</DialogTitle>
-          <DialogDescription className="text-gray-300 text-sm md:text-base">
+          <DialogDescription className="text-muted-foreground text-sm md:text-base">
             This will create a new creator account with the email from their submission and set their password to "XentrikBananas". The creator will be able to login with these credentials.
           </DialogDescription>
         </DialogHeader>
@@ -145,7 +145,7 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]"
+              className="md:col-span-3 bg-muted border-border text-foreground min-h-[44px]"
               disabled={isSubmitting || isLoading}
               placeholder="Enter creator name"
             />
@@ -159,10 +159,10 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               onValueChange={(value: TeamEnum) => setTeam(value)}
               disabled={isSubmitting || isLoading}
             >
-              <SelectTrigger className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]">
+              <SelectTrigger className="md:col-span-3 bg-muted border-border text-foreground min-h-[44px]">
                 <SelectValue placeholder="Select a team" />
               </SelectTrigger>
-              <SelectContent className="bg-[#252538] border-[#383854] text-white">
+              <SelectContent className="bg-card border-border text-foreground">
                 <SelectItem value="A Team">A Team</SelectItem>
                 <SelectItem value="B Team">B Team</SelectItem>
                 <SelectItem value="C Team">C Team</SelectItem>
@@ -178,10 +178,10 @@ const AcceptSubmissionModal: React.FC<AcceptSubmissionModalProps> = ({
               onValueChange={(value: CreatorTypeEnum) => setCreatorType(value)}
               disabled={isSubmitting || isLoading}
             >
-              <SelectTrigger className="md:col-span-3 bg-[#252538] border-[#383854] text-white min-h-[44px]">
+              <SelectTrigger className="md:col-span-3 bg-muted border-border text-foreground min-h-[44px]">
                 <SelectValue placeholder="Select creator type" />
               </SelectTrigger>
-              <SelectContent className="bg-[#252538] border-[#383854] text-white">
+              <SelectContent className="bg-card border-border text-foreground">
                 <SelectItem value="Real">Real</SelectItem>
                 <SelectItem value="AI">AI</SelectItem>
               </SelectContent>
