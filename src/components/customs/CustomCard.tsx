@@ -80,7 +80,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
       <div className="p-2 space-y-2">
         {/* Header with Model Name and Overdue Indicator */}
         <div className="flex items-center justify-between">
-          <Badge variant="outline" className="text-brand-yellow border-brand-yellow text-xs flex-shrink-0">
+          <Badge variant="outline" className="text-black border-brand-yellow bg-brand-yellow/20 text-xs flex-shrink-0">
             {custom.model_name}
           </Badge>
           <div className="flex items-center gap-1 flex-shrink-0">
