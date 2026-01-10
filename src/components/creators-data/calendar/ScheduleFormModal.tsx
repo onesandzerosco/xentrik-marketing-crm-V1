@@ -19,14 +19,14 @@ import { cn } from '@/lib/utils';
 import { Schedule, ScheduleFormData } from './types';
 
 const COLOR_OPTIONS = [
-  { value: '#6b7f99', label: 'Slate Blue' },
-  { value: '#8b9a8b', label: 'Sage' },
-  { value: '#a89990', label: 'Taupe' },
-  { value: '#9b8fa3', label: 'Lavender' },
-  { value: '#8fa3a3', label: 'Dusty Teal' },
-  { value: '#a3968f', label: 'Warm Gray' },
-  { value: '#8f9aa3', label: 'Cool Gray' },
-  { value: '#7a8a7a', label: 'Moss' },
+  { value: '#7c9eb8', label: 'Sky Blue' },
+  { value: '#e8a5a5', label: 'Rose' },
+  { value: '#8bb89c', label: 'Mint' },
+  { value: '#d4a574', label: 'Peach' },
+  { value: '#a8a0d4', label: 'Lavender' },
+  { value: '#d4a0c4', label: 'Mauve' },
+  { value: '#7cb8b8', label: 'Teal' },
+  { value: '#c4b896', label: 'Sand' },
 ];
 
 interface ScheduleFormModalProps {
