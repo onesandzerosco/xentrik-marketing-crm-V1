@@ -72,7 +72,7 @@ export function InvoiceComputationTable({
   // Initialize entries for creators that don't have one
   const initializeEntry = async (creator: { id: string; name: string; model_name: string | null }) => {
     if (entries.has(creator.id) || initializingCreators.has(creator.id)) return;
-    
+
     setInitializingCreators(prev => new Set(prev).add(creator.id));
     await onGetOrCreateEntry(creator.id, creator.model_name || creator.name, selectedWeekStart);
     setInitializingCreators(prev => {
@@ -81,6 +81,41 @@ export function InvoiceComputationTable({
       return next;
     });
   };
+
+  // Ensure all creators have an entry for the selected week so carried-forward
+  // values (like Percentage) show up immediately.
+  useEffect(() => {
+    if (!creators.length) return;
+
+    const missing = creators.filter(
+      (c) => !entries.has(c.id) && !initializingCreators.has(c.id)
+    );
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      const queue = [...missing];
+      const concurrency = Math.min(5, queue.length);
+
+      const workers = Array.from({ length: concurrency }, async () => {
+        while (queue.length > 0 && !cancelled) {
+          const creator = queue.shift();
+          if (!creator) break;
+          await initializeEntry(creator);
+        }
+      });
+
+      await Promise.all(workers);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [creators, entries, initializingCreators, selectedWeekStart]);
+
 
   // Get entry for a creator
   const getEntry = (creatorId: string): CreatorInvoicingEntry | undefined => {
