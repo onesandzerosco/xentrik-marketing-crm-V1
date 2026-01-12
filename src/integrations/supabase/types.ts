@@ -86,6 +86,51 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_invoicing: {
+        Row: {
+          created_at: string
+          creator_id: string
+          id: string
+          invoice_link: string | null
+          invoice_number: number | null
+          invoice_payment: boolean
+          model_name: string
+          net_sales: number | null
+          paid: number | null
+          percentage: number | null
+          updated_at: string
+          week_start_date: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          id?: string
+          invoice_link?: string | null
+          invoice_number?: number | null
+          invoice_payment?: boolean
+          model_name: string
+          net_sales?: number | null
+          paid?: number | null
+          percentage?: number | null
+          updated_at?: string
+          week_start_date: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          id?: string
+          invoice_link?: string | null
+          invoice_number?: number | null
+          invoice_payment?: boolean
+          model_name?: string
+          net_sales?: number | null
+          paid?: number | null
+          percentage?: number | null
+          updated_at?: string
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       creator_social_links: {
         Row: {
           chaturbate: string | null
