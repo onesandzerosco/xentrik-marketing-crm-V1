@@ -12,6 +12,7 @@ const CreatorInvoicing = () => {
   const [activeTab, setActiveTab] = useState('computation');
   const {
     invoicingData,
+    previousWeekData,
     creators,
     loading,
     selectedWeekStart,
@@ -27,7 +28,7 @@ const CreatorInvoicing = () => {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8 overflow-auto">
-        <div className="max-w-[1600px] mx-auto space-y-6">
+        <div className="space-y-6">
           {/* Header */}
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Creator Invoicing</h1>
@@ -68,6 +69,7 @@ const CreatorInvoicing = () => {
                   <InvoiceComputationTable
                     creators={creators}
                     invoicingData={invoicingData}
+                    previousWeekData={previousWeekData}
                     selectedWeekStart={selectedWeekStart}
                     loading={loading}
                     onGetOrCreateEntry={getOrCreateEntry}
