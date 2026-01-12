@@ -2,11 +2,12 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { CreatorInvoicingEntry, WeekCutoff } from '../types';
 import { getWeekStart, getWeekEnd } from '@/utils/weekCalculations';
-import { format, addDays } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 export function useCreatorInvoicing() {
   const [invoicingData, setInvoicingData] = useState<CreatorInvoicingEntry[]>([]);
+  const [previousWeekData, setPreviousWeekData] = useState<CreatorInvoicingEntry[]>([]);
   const [creators, setCreators] = useState<{ id: string; name: string; model_name: string | null }[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(() => {
@@ -35,14 +36,26 @@ export function useCreatorInvoicing() {
   const fetchInvoicingData = useCallback(async (weekStart: Date) => {
     setLoading(true);
     const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+    
+    // Calculate previous week start
+    const prevWeekStart = new Date(weekStart);
+    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+    const prevWeekStartStr = format(prevWeekStart, 'yyyy-MM-dd');
 
-    const { data, error } = await supabase
-      .from('creator_invoicing')
-      .select('*')
-      .eq('week_start_date', weekStartStr);
+    // Fetch both current and previous week data in parallel
+    const [currentResult, prevResult] = await Promise.all([
+      supabase
+        .from('creator_invoicing')
+        .select('*')
+        .eq('week_start_date', weekStartStr),
+      supabase
+        .from('creator_invoicing')
+        .select('*')
+        .eq('week_start_date', prevWeekStartStr)
+    ]);
 
-    if (error) {
-      console.error('Error fetching invoicing data:', error);
+    if (currentResult.error) {
+      console.error('Error fetching invoicing data:', currentResult.error);
       toast({
         title: "Error",
         description: "Failed to load invoicing data",
@@ -52,7 +65,8 @@ export function useCreatorInvoicing() {
       return;
     }
 
-    setInvoicingData((data as CreatorInvoicingEntry[]) || []);
+    setInvoicingData((currentResult.data as CreatorInvoicingEntry[]) || []);
+    setPreviousWeekData((prevResult.data as CreatorInvoicingEntry[]) || []);
     setLoading(false);
   }, [toast]);
 
@@ -235,6 +249,7 @@ export function useCreatorInvoicing() {
 
   return {
     invoicingData,
+    previousWeekData,
     creators,
     loading,
     selectedWeekStart,

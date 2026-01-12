@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 interface InvoiceComputationTableProps {
   creators: { id: string; name: string; model_name: string | null }[];
   invoicingData: CreatorInvoicingEntry[];
+  previousWeekData: CreatorInvoicingEntry[];
   selectedWeekStart: Date;
   loading: boolean;
   onGetOrCreateEntry: (creatorId: string, modelName: string, weekStart: Date) => Promise<CreatorInvoicingEntry | null>;
@@ -33,6 +34,7 @@ interface EditingCell {
 export function InvoiceComputationTable({
   creators,
   invoicingData,
+  previousWeekData,
   selectedWeekStart,
   loading,
   onGetOrCreateEntry,
@@ -40,6 +42,7 @@ export function InvoiceComputationTable({
   onUpdatePercentageForward,
 }: InvoiceComputationTableProps) {
   const [entries, setEntries] = useState<Map<string, CreatorInvoicingEntry>>(new Map());
+  const [prevEntries, setPrevEntries] = useState<Map<string, CreatorInvoicingEntry>>(new Map());
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [initializingCreators, setInitializingCreators] = useState<Set<string>>(new Set());
@@ -57,6 +60,15 @@ export function InvoiceComputationTable({
     setEntries(map);
   }, [invoicingData, weekStartStr]);
 
+  // Build previous week entries map
+  useEffect(() => {
+    const map = new Map<string, CreatorInvoicingEntry>();
+    previousWeekData.forEach(entry => {
+      map.set(entry.creator_id, entry);
+    });
+    setPrevEntries(map);
+  }, [previousWeekData]);
+
   // Initialize entries for creators that don't have one
   const initializeEntry = async (creator: { id: string; name: string; model_name: string | null }) => {
     if (entries.has(creator.id) || initializingCreators.has(creator.id)) return;
@@ -73,6 +85,11 @@ export function InvoiceComputationTable({
   // Get entry for a creator
   const getEntry = (creatorId: string): CreatorInvoicingEntry | undefined => {
     return entries.get(creatorId);
+  };
+
+  // Get previous week entry for a creator
+  const getPrevEntry = (creatorId: string): CreatorInvoicingEntry | undefined => {
+    return prevEntries.get(creatorId);
   };
 
   // Handle checkbox change
@@ -145,10 +162,30 @@ export function InvoiceComputationTable({
     }
   };
 
-  // Calculate invoice amount from net_sales and percentage
-  const calculateInvoiceAmount = (entry: CreatorInvoicingEntry | undefined): number | null => {
+  // Calculate balance from previous week (positive = overpayment, negative = underpayment)
+  const calculatePreviousWeekBalance = (creatorId: string): number => {
+    const prevEntry = getPrevEntry(creatorId);
+    if (!prevEntry) return 0;
+    
+    const prevInvoiceAmount = prevEntry.net_sales !== null 
+      ? (prevEntry.net_sales * (prevEntry.percentage / 100))
+      : 0;
+    const prevPaid = prevEntry.paid ?? 0;
+    
+    // Balance = what they paid - what they owed
+    // Positive means overpayment (credit), negative means underpayment (debt)
+    return prevPaid - prevInvoiceAmount;
+  };
+
+  // Calculate invoice amount from net_sales, percentage, and balance from last week
+  const calculateInvoiceAmount = (entry: CreatorInvoicingEntry | undefined, creatorId: string): number | null => {
     if (!entry || entry.net_sales === null) return null;
-    return (entry.net_sales * (entry.percentage / 100));
+    
+    const baseAmount = entry.net_sales * (entry.percentage / 100);
+    const previousBalance = calculatePreviousWeekBalance(creatorId);
+    
+    // Invoice amount = base amount - previous balance (credit reduces, debt increases)
+    return baseAmount - previousBalance;
   };
 
   // Sort creators by invoice_number (nulls last)
@@ -176,10 +213,10 @@ export function InvoiceComputationTable({
             <TableHead className="w-[50px]">#</TableHead>
             <TableHead className="min-w-[150px]">Model Name</TableHead>
             <TableHead className="w-[100px] text-center">Invoice Payment</TableHead>
-            <TableHead className="w-[120px]">Paid ($)</TableHead>
             <TableHead className="w-[100px]">Percentage (%)</TableHead>
             <TableHead className="w-[120px]">Net Sales ($)</TableHead>
             <TableHead className="w-[120px]">Invoice Amount ($)</TableHead>
+            <TableHead className="w-[120px]">Paid ($)</TableHead>
             <TableHead className="w-[200px]">Invoice Link</TableHead>
           </TableRow>
         </TableHeader>
@@ -187,7 +224,8 @@ export function InvoiceComputationTable({
           {sortedCreators.map((creator) => {
             const entry = getEntry(creator.id);
             const isInitializing = initializingCreators.has(creator.id);
-            const invoiceAmount = calculateInvoiceAmount(entry);
+            const invoiceAmount = calculateInvoiceAmount(entry, creator.id);
+            const previousBalance = calculatePreviousWeekBalance(creator.id);
 
             return (
               <TableRow 
@@ -229,29 +267,6 @@ export function InvoiceComputationTable({
                     onCheckedChange={(checked) => handleCheckboxChange(creator.id, checked as boolean)}
                     disabled={isInitializing}
                   />
-                </TableCell>
-
-                {/* Paid Amount */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'paid', entry?.paid)}
-                >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'paid' ? (
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      className="h-8 w-24"
-                    />
-                  ) : (
-                    <span className={cn(entry?.paid != null && "text-foreground")}>
-                      {entry?.paid != null ? `$${entry.paid.toFixed(2)}` : '-'}
-                    </span>
-                  )}
                 </TableCell>
 
                 {/* Percentage */}
@@ -299,14 +314,47 @@ export function InvoiceComputationTable({
                   )}
                 </TableCell>
 
-                {/* Invoice Amount (calculated) */}
+                {/* Invoice Amount (calculated, non-editable) */}
                 <TableCell>
-                  <span className={cn(
-                    "font-medium",
-                    invoiceAmount != null && "text-brand-yellow"
-                  )}>
-                    {invoiceAmount != null ? `$${invoiceAmount.toFixed(2)}` : '-'}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className={cn(
+                      "font-medium",
+                      invoiceAmount != null && "text-brand-yellow"
+                    )}>
+                      {invoiceAmount != null ? `$${invoiceAmount.toFixed(2)}` : '-'}
+                    </span>
+                    {previousBalance !== 0 && entry?.net_sales !== null && (
+                      <span className={cn(
+                        "text-xs",
+                        previousBalance > 0 ? "text-green-500" : "text-red-500"
+                      )}>
+                        {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
+
+                {/* Paid Amount */}
+                <TableCell
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleStartEdit(creator.id, 'paid', entry?.paid)}
+                >
+                  {editingCell?.creatorId === creator.id && editingCell.field === 'paid' ? (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleSaveEdit}
+                      onKeyDown={handleKeyPress}
+                      autoFocus
+                      className="h-8 w-24"
+                    />
+                  ) : (
+                    <span className={cn(entry?.paid != null && "text-foreground")}>
+                      {entry?.paid != null ? `$${entry.paid.toFixed(2)}` : '-'}
+                    </span>
+                  )}
                 </TableCell>
 
                 {/* Invoice Link */}
