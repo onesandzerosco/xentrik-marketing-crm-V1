@@ -300,15 +300,15 @@ export function InvoiceComputationTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[80px] whitespace-nowrap"># (Invoice)</TableHead>
-              <TableHead className="min-w-[150px] whitespace-nowrap">Model Name</TableHead>
-              <TableHead className="w-[100px] text-center whitespace-nowrap">Invoice Payment</TableHead>
-              <TableHead className="w-[100px] whitespace-nowrap">Percentage (%)</TableHead>
-              <TableHead className="w-[120px] whitespace-nowrap">Net Sales ($)</TableHead>
-              <TableHead className="w-[120px] whitespace-nowrap">Invoice Amount ($)</TableHead>
-              <TableHead className="w-[120px] whitespace-nowrap">Paid ($)</TableHead>
-              <TableHead className="w-[180px] whitespace-nowrap">Invoice Link</TableHead>
-              <TableHead className="w-[150px] whitespace-nowrap">Actions</TableHead>
+              <TableHead className="w-[80px] whitespace-nowrap text-center"># (Invoice)</TableHead>
+              <TableHead className="min-w-[150px] whitespace-nowrap text-center">Model Name</TableHead>
+              <TableHead className="w-[100px] whitespace-nowrap text-center">Invoice Payment</TableHead>
+              <TableHead className="w-[100px] whitespace-nowrap text-center">Percentage (%)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap text-center">Net Sales ($)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap text-center">Invoice Amount ($)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap text-center">Paid ($)</TableHead>
+              <TableHead className="w-[180px] whitespace-nowrap text-center">Invoice Link</TableHead>
+              <TableHead className="w-[150px] whitespace-nowrap text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
