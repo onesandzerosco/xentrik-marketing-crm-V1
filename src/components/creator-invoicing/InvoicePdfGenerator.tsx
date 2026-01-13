@@ -164,8 +164,13 @@ export async function generateInvoicePdf({
     pdf.text(`Amount Paid: $${entry.paid.toFixed(2)}`, 20, y);
   }
 
-  // Images section
-  y += 20;
+  // Images section - always start on a new page if there are images
+  const hasImages = entry.statements_image_key || entry.conversion_image_key;
+  if (hasImages) {
+    pdf.addPage();
+    y = 20;
+  }
+  
   const maxImageWidth = 170;
   const maxImageHeight = 80;
 
