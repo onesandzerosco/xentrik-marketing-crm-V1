@@ -11,7 +11,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Loader2, Download, Settings } from 'lucide-react';
+import { ExternalLink, Loader2, Download, Pencil } from 'lucide-react';
 import { CreatorInvoicingEntry, Creator } from './types';
 import { cn } from '@/lib/utils';
 import { UpdateWeekInvoiceModal } from './UpdateWeekInvoiceModal';
@@ -300,15 +300,15 @@ export function InvoiceComputationTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[80px]"># (Invoice)</TableHead>
-              <TableHead className="min-w-[150px]">Model Name</TableHead>
-              <TableHead className="w-[100px] text-center">Invoice Payment</TableHead>
-              <TableHead className="w-[100px]">Percentage (%)</TableHead>
-              <TableHead className="w-[120px]">Net Sales ($)</TableHead>
-              <TableHead className="w-[120px]">Invoice Amount ($)</TableHead>
-              <TableHead className="w-[120px]">Paid ($)</TableHead>
-              <TableHead className="w-[180px]">Invoice Link</TableHead>
-              <TableHead className="w-[150px]">Actions</TableHead>
+              <TableHead className="w-[80px] whitespace-nowrap"># (Invoice)</TableHead>
+              <TableHead className="min-w-[150px] whitespace-nowrap">Model Name</TableHead>
+              <TableHead className="w-[100px] text-center whitespace-nowrap">Invoice Payment</TableHead>
+              <TableHead className="w-[100px] whitespace-nowrap">Percentage (%)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap">Net Sales ($)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap">Invoice Amount ($)</TableHead>
+              <TableHead className="w-[120px] whitespace-nowrap">Paid ($)</TableHead>
+              <TableHead className="w-[180px] whitespace-nowrap">Invoice Link</TableHead>
+              <TableHead className="w-[150px] whitespace-nowrap">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -483,7 +483,7 @@ export function InvoiceComputationTable({
                         onClick={() => setModalCreator(creator)}
                         title="Update Week's Invoice"
                       >
-                        <Settings className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
