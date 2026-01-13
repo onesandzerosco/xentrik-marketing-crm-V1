@@ -10,6 +10,7 @@ interface GeneratePdfParams {
   weekStart: Date;
   invoiceAmount: number | null;
   previousBalance: number;
+  conversionRate: number | null; // USD to AUD conversion rate
 }
 
 // Helper to format invoice number as DueDate-ModelNumber
@@ -91,12 +92,18 @@ export async function generateInvoicePdf({
   weekStart,
   invoiceAmount,
   previousBalance,
+  conversionRate,
 }: GeneratePdfParams): Promise<void> {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;
   const weekEnd = getWeekEnd(weekStart);
   const dueDate = addDays(weekEnd, 1);
+  
+  // Calculate AUD amount if conversion rate is provided
+  const invoiceAmountAud = invoiceAmount !== null && conversionRate !== null
+    ? invoiceAmount * conversionRate
+    : null;
 
   // Invoice Number
   const invoiceNumber = formatInvoiceNumber(dueDate, creator.default_invoice_number);
@@ -216,7 +223,7 @@ export async function generateInvoicePdf({
   pdf.setFontSize(8);
   pdf.text('(Incl GST)', tableLeft + col1Width + col2Width + col3Width + 5, contentY2);
 
-  y += rowHeight + 30;
+  y += rowHeight + 20;
 
   // --- Total Row ---
   pdf.setDrawColor(200, 200, 200);
@@ -228,9 +235,20 @@ export async function generateInvoicePdf({
   pdf.text('Total', tableLeft + col1Width + col2Width + 20, y);
   
   pdf.setFont('helvetica', 'bold');
-  // Show AUD total if we have conversion, otherwise show USD
-  const totalDisplay = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}AUD` : '-';
-  pdf.text(totalDisplay, tableRight - 5, y, { align: 'right' });
+  // Show AUD total if conversion rate provided, otherwise show USD
+  if (invoiceAmountAud !== null) {
+    pdf.text(`$${invoiceAmountAud.toFixed(2)} AUD`, tableRight - 5, y, { align: 'right' });
+    // Show conversion rate below
+    y += 8;
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`(Rate: 1 USD = ${conversionRate!.toFixed(4)} AUD)`, tableRight - 5, y, { align: 'right' });
+    pdf.setTextColor(0, 0, 0);
+  } else {
+    const totalDisplay = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)} USD` : '-';
+    pdf.text(totalDisplay, tableRight - 5, y, { align: 'right' });
+  }
 
   y += 5;
   pdf.line(tableLeft, y, tableRight, y);
