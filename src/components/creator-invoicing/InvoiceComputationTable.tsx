@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -11,12 +11,15 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Loader2 } from 'lucide-react';
-import { CreatorInvoicingEntry } from './types';
+import { ExternalLink, Loader2, Download, Settings } from 'lucide-react';
+import { CreatorInvoicingEntry, Creator } from './types';
 import { cn } from '@/lib/utils';
+import { UpdateWeekInvoiceModal } from './UpdateWeekInvoiceModal';
+import { generateInvoicePdf, formatInvoiceNumber } from './InvoicePdfGenerator';
+import { getWeekEnd } from '@/utils/weekCalculations';
 
 interface InvoiceComputationTableProps {
-  creators: { id: string; name: string; model_name: string | null }[];
+  creators: Creator[];
   invoicingData: CreatorInvoicingEntry[];
   previousWeekData: CreatorInvoicingEntry[];
   selectedWeekStart: Date;
@@ -24,6 +27,7 @@ interface InvoiceComputationTableProps {
   onGetOrCreateEntry: (creatorId: string, modelName: string, weekStart: Date) => Promise<CreatorInvoicingEntry | null>;
   onUpdateEntry: (creatorId: string, weekStartStr: string, field: keyof CreatorInvoicingEntry, value: any) => Promise<boolean>;
   onUpdatePercentageForward: (creatorId: string, fromWeekStartStr: string, newPercentage: number) => Promise<boolean>;
+  onUpdateDefaultInvoiceNumber: (creatorId: string, invoiceNumber: number) => Promise<boolean>;
 }
 
 interface EditingCell {
@@ -40,14 +44,18 @@ export function InvoiceComputationTable({
   onGetOrCreateEntry,
   onUpdateEntry,
   onUpdatePercentageForward,
+  onUpdateDefaultInvoiceNumber,
 }: InvoiceComputationTableProps) {
   const [entries, setEntries] = useState<Map<string, CreatorInvoicingEntry>>(new Map());
   const [prevEntries, setPrevEntries] = useState<Map<string, CreatorInvoicingEntry>>(new Map());
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [initializingCreators, setInitializingCreators] = useState<Set<string>>(new Set());
+  const [modalCreator, setModalCreator] = useState<Creator | null>(null);
 
   const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+  const weekEnd = getWeekEnd(selectedWeekStart);
+  const dueDate = addDays(weekEnd, 1);
 
   // Build entries map from invoicingData
   useEffect(() => {
@@ -70,7 +78,7 @@ export function InvoiceComputationTable({
   }, [previousWeekData]);
 
   // Initialize entries for creators that don't have one
-  const initializeEntry = async (creator: { id: string; name: string; model_name: string | null }) => {
+  const initializeEntry = async (creator: Creator) => {
     if (entries.has(creator.id) || initializingCreators.has(creator.id)) return;
 
     setInitializingCreators(prev => new Set(prev).add(creator.id));
@@ -82,8 +90,7 @@ export function InvoiceComputationTable({
     });
   };
 
-  // Ensure all creators have an entry for the selected week so carried-forward
-  // values (like Percentage) show up immediately.
+  // Ensure all creators have an entry for the selected week
   useEffect(() => {
     if (!creators.length) return;
 
@@ -207,8 +214,6 @@ export function InvoiceComputationTable({
       : 0;
     const prevPaid = prevEntry.paid ?? 0;
     
-    // Balance = what they paid - what they owed
-    // Positive means overpayment (credit), negative means underpayment (debt)
     return prevPaid - prevInvoiceAmount;
   };
 
@@ -219,16 +224,39 @@ export function InvoiceComputationTable({
     const baseAmount = entry.net_sales * (entry.percentage / 100);
     const previousBalance = calculatePreviousWeekBalance(creatorId);
     
-    // Invoice amount = base amount - previous balance (credit reduces, debt increases)
     return baseAmount - previousBalance;
   };
 
-  // Sort creators by invoice_number (nulls last)
+  // Handle PDF download
+  const handleDownloadPdf = (creator: Creator) => {
+    const entry = getEntry(creator.id);
+    if (!entry) return;
+
+    const invoiceAmount = calculateInvoiceAmount(entry, creator.id);
+    const previousBalance = calculatePreviousWeekBalance(creator.id);
+
+    generateInvoicePdf({
+      creator,
+      entry,
+      weekStart: selectedWeekStart,
+      invoiceAmount,
+      previousBalance,
+    });
+  };
+
+  // Handle modal update
+  const handleModalUpdate = async (updates: Partial<CreatorInvoicingEntry>) => {
+    if (!modalCreator) return;
+    
+    for (const [field, value] of Object.entries(updates)) {
+      await onUpdateEntry(modalCreator.id, weekStartStr, field as keyof CreatorInvoicingEntry, value);
+    }
+  };
+
+  // Sort creators by default_invoice_number (nulls last)
   const sortedCreators = [...creators].sort((a, b) => {
-    const entryA = getEntry(a.id);
-    const entryB = getEntry(b.id);
-    const numA = entryA?.invoice_number ?? Infinity;
-    const numB = entryB?.invoice_number ?? Infinity;
+    const numA = a.default_invoice_number ?? Infinity;
+    const numB = b.default_invoice_number ?? Infinity;
     return numA - numB;
   });
 
@@ -241,202 +269,225 @@ export function InvoiceComputationTable({
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-[50px]">#</TableHead>
-            <TableHead className="min-w-[150px]">Model Name</TableHead>
-            <TableHead className="w-[100px] text-center">Invoice Payment</TableHead>
-            <TableHead className="w-[100px]">Percentage (%)</TableHead>
-            <TableHead className="w-[120px]">Net Sales ($)</TableHead>
-            <TableHead className="w-[120px]">Invoice Amount ($)</TableHead>
-            <TableHead className="w-[120px]">Paid ($)</TableHead>
-            <TableHead className="w-[200px]">Invoice Link</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedCreators.map((creator) => {
-            const entry = getEntry(creator.id);
-            const isInitializing = initializingCreators.has(creator.id);
-            const invoiceAmount = calculateInvoiceAmount(entry, creator.id);
-            const previousBalance = calculatePreviousWeekBalance(creator.id);
+    <>
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[80px]"># (Invoice)</TableHead>
+              <TableHead className="min-w-[150px]">Model Name</TableHead>
+              <TableHead className="w-[100px] text-center">Invoice Payment</TableHead>
+              <TableHead className="w-[100px]">Percentage (%)</TableHead>
+              <TableHead className="w-[120px]">Net Sales ($)</TableHead>
+              <TableHead className="w-[120px]">Invoice Amount ($)</TableHead>
+              <TableHead className="w-[120px]">Paid ($)</TableHead>
+              <TableHead className="w-[180px]">Invoice Link</TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedCreators.map((creator) => {
+              const entry = getEntry(creator.id);
+              const isInitializing = initializingCreators.has(creator.id);
+              const invoiceAmount = calculateInvoiceAmount(entry, creator.id);
+              const previousBalance = calculatePreviousWeekBalance(creator.id);
+              const displayInvoiceNumber = formatInvoiceNumber(dueDate, creator.default_invoice_number);
 
-            return (
-              <TableRow 
-                key={creator.id}
-                className="hover:bg-muted/30"
-              >
-                {/* Invoice Number */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'invoice_number', entry?.invoice_number)}
+              return (
+                <TableRow 
+                  key={creator.id}
+                  className="hover:bg-muted/30"
                 >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'invoice_number' ? (
-                    <Input
-                      type="number"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      className="h-8 w-12"
+                  {/* Invoice Number (display format: DueDate-ModelNumber) */}
+                  <TableCell className="font-mono text-sm">
+                    {displayInvoiceNumber}
+                  </TableCell>
+
+                  {/* Model Name */}
+                  <TableCell className="font-medium">
+                    {creator.model_name || creator.name}
+                    {isInitializing && <Loader2 className="h-3 w-3 animate-spin inline ml-2" />}
+                  </TableCell>
+
+                  {/* Invoice Payment Checkbox */}
+                  <TableCell className="text-center">
+                    <Checkbox
+                      checked={entry?.invoice_payment ?? false}
+                      onCheckedChange={(checked) => handleCheckboxChange(creator.id, checked as boolean)}
+                      disabled={isInitializing}
                     />
-                  ) : (
-                    <span className="text-muted-foreground">
-                      {entry?.invoice_number ?? '-'}
-                    </span>
-                  )}
-                </TableCell>
+                  </TableCell>
 
-                {/* Model Name */}
-                <TableCell className="font-medium">
-                  {creator.model_name || creator.name}
-                  {isInitializing && <Loader2 className="h-3 w-3 animate-spin inline ml-2" />}
-                </TableCell>
+                  {/* Percentage */}
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleStartEdit(creator.id, 'percentage', entry?.percentage)}
+                  >
+                    {editingCell?.creatorId === creator.id && editingCell.field === 'percentage' ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={handleKeyPress}
+                        autoFocus
+                        className="h-8 w-20"
+                      />
+                    ) : (
+                      <span>{entry?.percentage ?? 50}%</span>
+                    )}
+                  </TableCell>
 
-                {/* Invoice Payment Checkbox */}
-                <TableCell className="text-center">
-                  <Checkbox
-                    checked={entry?.invoice_payment ?? false}
-                    onCheckedChange={(checked) => handleCheckboxChange(creator.id, checked as boolean)}
-                    disabled={isInitializing}
-                  />
-                </TableCell>
-
-                {/* Percentage */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'percentage', entry?.percentage)}
-                >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'percentage' ? (
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      className="h-8 w-20"
-                    />
-                  ) : (
-                    <span>{entry?.percentage ?? 50}%</span>
-                  )}
-                </TableCell>
-
-                {/* Net Sales */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'net_sales', entry?.net_sales)}
-                >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'net_sales' ? (
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      className="h-8 w-24"
-                    />
-                  ) : (
-                    <span className={cn(entry?.net_sales != null && "text-foreground")}>
-                      {entry?.net_sales != null ? `$${entry.net_sales.toFixed(2)}` : '-'}
-                    </span>
-                  )}
-                </TableCell>
-
-                {/* Invoice Amount (calculated, non-editable) */}
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className={cn(
-                      "font-medium",
-                      invoiceAmount != null && "text-brand-yellow"
-                    )}>
-                      {invoiceAmount != null ? `$${invoiceAmount.toFixed(2)}` : '-'}
-                    </span>
-                    {previousBalance !== 0 && entry?.net_sales !== null && (
-                      <span className={cn(
-                        "text-xs",
-                        previousBalance > 0 ? "text-green-500" : "text-red-500"
-                      )}>
-                        {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
+                  {/* Net Sales */}
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleStartEdit(creator.id, 'net_sales', entry?.net_sales)}
+                  >
+                    {editingCell?.creatorId === creator.id && editingCell.field === 'net_sales' ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={handleKeyPress}
+                        autoFocus
+                        className="h-8 w-24"
+                      />
+                    ) : (
+                      <span className={cn(entry?.net_sales != null && "text-foreground")}>
+                        {entry?.net_sales != null ? `$${entry.net_sales.toFixed(2)}` : '-'}
                       </span>
                     )}
-                  </div>
-                </TableCell>
+                  </TableCell>
 
-                {/* Paid Amount */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'paid', entry?.paid)}
-                >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'paid' ? (
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      className="h-8 w-24"
-                    />
-                  ) : (
-                    <span className={cn(entry?.paid != null && "text-foreground")}>
-                      {entry?.paid != null ? `$${entry.paid.toFixed(2)}` : '-'}
-                    </span>
-                  )}
-                </TableCell>
+                  {/* Invoice Amount (calculated, non-editable) */}
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className={cn(
+                        "font-medium",
+                        invoiceAmount != null && "text-brand-yellow"
+                      )}>
+                        {invoiceAmount != null ? `$${invoiceAmount.toFixed(2)}` : '-'}
+                      </span>
+                      {previousBalance !== 0 && entry?.net_sales !== null && (
+                        <span className={cn(
+                          "text-xs",
+                          previousBalance > 0 ? "text-green-500" : "text-red-500"
+                        )}>
+                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
 
-                {/* Invoice Link */}
-                <TableCell
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleStartEdit(creator.id, 'invoice_link', entry?.invoice_link)}
-                >
-                  {editingCell?.creatorId === creator.id && editingCell.field === 'invoice_link' ? (
-                    <Input
-                      type="url"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={handleSaveEdit}
-                      onKeyDown={handleKeyPress}
-                      autoFocus
-                      placeholder="https://..."
-                      className="h-8"
-                    />
-                  ) : entry?.invoice_link ? (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="p-0 h-auto text-primary"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(entry.invoice_link!, '_blank');
-                      }}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      View Invoice
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground">Click to add</span>
-                  )}
+                  {/* Paid Amount */}
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleStartEdit(creator.id, 'paid', entry?.paid)}
+                  >
+                    {editingCell?.creatorId === creator.id && editingCell.field === 'paid' ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={handleKeyPress}
+                        autoFocus
+                        className="h-8 w-24"
+                      />
+                    ) : (
+                      <span className={cn(entry?.paid != null && "text-foreground")}>
+                        {entry?.paid != null ? `$${entry.paid.toFixed(2)}` : '-'}
+                      </span>
+                    )}
+                  </TableCell>
+
+                  {/* Invoice Link */}
+                  <TableCell
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleStartEdit(creator.id, 'invoice_link', entry?.invoice_link)}
+                  >
+                    {editingCell?.creatorId === creator.id && editingCell.field === 'invoice_link' ? (
+                      <Input
+                        type="url"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={handleKeyPress}
+                        autoFocus
+                        placeholder="https://..."
+                        className="h-8"
+                      />
+                    ) : entry?.invoice_link ? (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="p-0 h-auto text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(entry.invoice_link!, '_blank');
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">Click to add</span>
+                    )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownloadPdf(creator)}
+                        disabled={!entry}
+                        title="Download Invoice PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setModalCreator(creator)}
+                        title="Update Week's Invoice"
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {creators.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                  No creators found
                 </TableCell>
               </TableRow>
-            );
-          })}
-          {creators.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                No creators found
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Update Week Invoice Modal */}
+      {modalCreator && (
+        <UpdateWeekInvoiceModal
+          isOpen={!!modalCreator}
+          onClose={() => setModalCreator(null)}
+          creator={modalCreator}
+          entry={getEntry(modalCreator.id) ?? null}
+          weekStart={selectedWeekStart}
+          onUpdate={handleModalUpdate}
+          onUpdateDefaultInvoiceNumber={onUpdateDefaultInvoiceNumber}
+        />
+      )}
+    </>
   );
 }

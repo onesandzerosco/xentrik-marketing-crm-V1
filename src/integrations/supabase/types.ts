@@ -88,6 +88,7 @@ export type Database = {
       }
       creator_invoicing: {
         Row: {
+          conversion_image_key: string | null
           created_at: string
           creator_id: string
           id: string
@@ -98,10 +99,12 @@ export type Database = {
           net_sales: number | null
           paid: number | null
           percentage: number | null
+          statements_image_key: string | null
           updated_at: string
           week_start_date: string
         }
         Insert: {
+          conversion_image_key?: string | null
           created_at?: string
           creator_id: string
           id?: string
@@ -112,10 +115,12 @@ export type Database = {
           net_sales?: number | null
           paid?: number | null
           percentage?: number | null
+          statements_image_key?: string | null
           updated_at?: string
           week_start_date: string
         }
         Update: {
+          conversion_image_key?: string | null
           created_at?: string
           creator_id?: string
           id?: string
@@ -126,6 +131,7 @@ export type Database = {
           net_sales?: number | null
           paid?: number | null
           percentage?: number | null
+          statements_image_key?: string | null
           updated_at?: string
           week_start_date?: string
         }
@@ -263,6 +269,7 @@ export type Database = {
           active: boolean | null
           created_at: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
+          default_invoice_number: number | null
           email: string | null
           gender: Database["public"]["Enums"]["gender"]
           id: string
@@ -283,6 +290,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string | null
           creator_type: Database["public"]["Enums"]["creator_type"]
+          default_invoice_number?: number | null
           email?: string | null
           gender: Database["public"]["Enums"]["gender"]
           id: string
@@ -303,6 +311,7 @@ export type Database = {
           active?: boolean | null
           created_at?: string | null
           creator_type?: Database["public"]["Enums"]["creator_type"]
+          default_invoice_number?: number | null
           email?: string | null
           gender?: Database["public"]["Enums"]["gender"]
           id?: string
