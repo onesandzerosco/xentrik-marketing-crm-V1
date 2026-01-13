@@ -21,8 +21,8 @@ export function formatInvoiceNumber(dueDate: Date, modelNumber: number | null): 
   return `${month}${day}-${modelNum}`;
 }
 
-// Helper to fetch image and convert to base64
-async function fetchImageAsBase64(url: string): Promise<{ base64: string; format: string } | null> {
+// Helper to fetch image and convert to base64 with dimensions
+async function fetchImageAsBase64(url: string): Promise<{ base64: string; format: string; width: number; height: number } | null> {
   try {
     const response = await fetch(url);
     if (!response.ok) return null;
@@ -40,7 +40,14 @@ async function fetchImageAsBase64(url: string): Promise<{ base64: string; format
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
-        resolve({ base64, format });
+        
+        // Load image to get dimensions
+        const img = new Image();
+        img.onload = () => {
+          resolve({ base64, format, width: img.width, height: img.height });
+        };
+        img.onerror = () => resolve(null);
+        img.src = base64;
       };
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
@@ -49,6 +56,33 @@ async function fetchImageAsBase64(url: string): Promise<{ base64: string; format
     console.error('Error fetching image:', error);
     return null;
   }
+}
+
+// Helper to calculate scaled dimensions maintaining aspect ratio
+function calculateScaledDimensions(
+  originalWidth: number,
+  originalHeight: number,
+  maxWidth: number,
+  maxHeight: number
+): { width: number; height: number } {
+  const aspectRatio = originalWidth / originalHeight;
+  
+  let width = originalWidth;
+  let height = originalHeight;
+  
+  // Scale down if wider than max
+  if (width > maxWidth) {
+    width = maxWidth;
+    height = width / aspectRatio;
+  }
+  
+  // Scale down if still taller than max
+  if (height > maxHeight) {
+    height = maxHeight;
+    width = height * aspectRatio;
+  }
+  
+  return { width, height };
 }
 
 export async function generateInvoicePdf({
@@ -146,14 +180,21 @@ export async function generateInvoicePdf({
         
         const imageData = await fetchImageAsBase64(data.publicUrl);
         if (imageData) {
+          const { width, height } = calculateScaledDimensions(
+            imageData.width,
+            imageData.height,
+            maxImageWidth,
+            maxImageHeight
+          );
+          
           // Check if we need a new page
-          if (y + maxImageHeight > 280) {
+          if (y + height > 280) {
             pdf.addPage();
             y = 20;
           }
           
-          pdf.addImage(imageData.base64, imageData.format, 20, y, maxImageWidth, maxImageHeight);
-          y += maxImageHeight + 10;
+          pdf.addImage(imageData.base64, imageData.format, 20, y, width, height);
+          y += height + 10;
         } else {
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(128, 128, 128);
@@ -172,12 +213,6 @@ export async function generateInvoicePdf({
     try {
       const { data } = supabase.storage.from('invoicing_documents').getPublicUrl(entry.conversion_image_key);
       if (data?.publicUrl) {
-        // Check if we need a new page
-        if (y + maxImageHeight + 15 > 280) {
-          pdf.addPage();
-          y = 20;
-        }
-        
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(0, 0, 0);
         pdf.text('USD to AUD Conversion:', 20, y);
@@ -185,8 +220,21 @@ export async function generateInvoicePdf({
         
         const imageData = await fetchImageAsBase64(data.publicUrl);
         if (imageData) {
-          pdf.addImage(imageData.base64, imageData.format, 20, y, maxImageWidth, maxImageHeight);
-          y += maxImageHeight + 10;
+          const { width, height } = calculateScaledDimensions(
+            imageData.width,
+            imageData.height,
+            maxImageWidth,
+            maxImageHeight
+          );
+          
+          // Check if we need a new page
+          if (y + height > 280) {
+            pdf.addPage();
+            y = 20;
+          }
+          
+          pdf.addImage(imageData.base64, imageData.format, 20, y, width, height);
+          y += height + 10;
         } else {
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(128, 128, 128);
