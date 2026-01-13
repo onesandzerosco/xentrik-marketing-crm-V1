@@ -19,6 +19,7 @@ const CreatorInvoicing = () => {
     getOrCreateEntry,
     updateEntry,
     updatePercentageForward,
+    updateDefaultInvoiceNumber,
     fetchInvoicingDataRange,
     generateWeekCutoffs,
   } = useCreatorInvoicing();
@@ -72,6 +73,7 @@ const CreatorInvoicing = () => {
                   onGetOrCreateEntry={getOrCreateEntry}
                   onUpdateEntry={updateEntry}
                   onUpdatePercentageForward={updatePercentageForward}
+                  onUpdateDefaultInvoiceNumber={updateDefaultInvoiceNumber}
                 />
               </CardContent>
             </Card>

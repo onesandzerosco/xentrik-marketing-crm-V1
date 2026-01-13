@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 export function useCreatorInvoicing() {
   const [invoicingData, setInvoicingData] = useState<CreatorInvoicingEntry[]>([]);
   const [previousWeekData, setPreviousWeekData] = useState<CreatorInvoicingEntry[]>([]);
-  const [creators, setCreators] = useState<{ id: string; name: string; model_name: string | null }[]>([]);
+  const [creators, setCreators] = useState<{ id: string; name: string; model_name: string | null; default_invoice_number: number | null }[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(() => {
     // Default to current week (Thursday-Wednesday cutoff)
@@ -20,7 +20,7 @@ export function useCreatorInvoicing() {
   const fetchCreators = useCallback(async () => {
     const { data, error } = await supabase
       .from('creators')
-      .select('id, name, model_name')
+      .select('id, name, model_name, default_invoice_number')
       .eq('active', true)
       .order('name');
 
@@ -103,6 +103,8 @@ export function useCreatorInvoicing() {
       net_sales: null,
       invoice_number: null,
       invoice_link: prevData?.invoice_link ?? null,
+      statements_image_key: null,
+      conversion_image_key: null,
     };
 
     // Insert the new entry
@@ -239,6 +241,36 @@ export function useCreatorInvoicing() {
     return weeks;
   }, []);
 
+  // Update default invoice number for a creator (persists across all weeks)
+  const updateDefaultInvoiceNumber = useCallback(async (creatorId: string, invoiceNumber: number) => {
+    const { error } = await supabase
+      .from('creators')
+      .update({ default_invoice_number: invoiceNumber })
+      .eq('id', creatorId);
+
+    if (error) {
+      console.error('Error updating default invoice number:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update default invoice number",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Update local state
+    setCreators(prev => prev.map(c => 
+      c.id === creatorId ? { ...c, default_invoice_number: invoiceNumber } : c
+    ));
+
+    toast({
+      title: "Success",
+      description: "Default invoice number updated",
+    });
+
+    return true;
+  }, [toast]);
+
   useEffect(() => {
     fetchCreators();
   }, [fetchCreators]);
@@ -258,6 +290,7 @@ export function useCreatorInvoicing() {
     getOrCreateEntry,
     updateEntry,
     updatePercentageForward,
+    updateDefaultInvoiceNumber,
     fetchInvoicingDataRange,
     generateWeekCutoffs,
     refetch: () => fetchInvoicingData(selectedWeekStart),
