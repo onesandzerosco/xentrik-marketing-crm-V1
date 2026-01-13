@@ -27,7 +27,7 @@ const CURRENT_YEAR = 2026; // Starting year for due dates
 
 interface InvoiceChecklistProps {
   creators: { id: string; name: string; model_name: string | null }[];
-  generateWeekCutoffs: (count?: number) => WeekCutoff[];
+  generateWeekCutoffs: (count?: number, direction?: 'past' | 'future' | 'full-year') => WeekCutoff[];
   fetchInvoicingDataRange: (weeks: WeekCutoff[]) => Promise<CreatorInvoicingEntry[]>;
 }
 
@@ -65,8 +65,8 @@ export function InvoiceChecklist({
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    // Generate more weeks to cover multiple years (52 weeks * 3 years = 156 weeks)
-    const weekCutoffs = generateWeekCutoffs(156);
+    // Generate weeks for full years (2026, 2027, 2028)
+    const weekCutoffs = generateWeekCutoffs(0, 'full-year');
     setAllWeeks(weekCutoffs);
     
     const data = await fetchInvoicingDataRange(weekCutoffs);
