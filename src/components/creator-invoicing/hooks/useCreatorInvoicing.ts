@@ -74,12 +74,20 @@ export function useCreatorInvoicing() {
   const getOrCreateEntry = useCallback(async (creatorId: string, modelName: string, weekStart: Date): Promise<CreatorInvoicingEntry | null> => {
     const weekStartStr = format(weekStart, 'yyyy-MM-dd');
     
-    // Check if entry exists
-    const existing = invoicingData.find(
-      entry => entry.creator_id === creatorId && entry.week_start_date === weekStartStr
-    );
-    
-    if (existing) return existing;
+    // Check if entry exists in database first
+    const { data: existingEntry, error: fetchError } = await supabase
+      .from('creator_invoicing')
+      .select('*')
+      .eq('creator_id', creatorId)
+      .eq('week_start_date', weekStartStr)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('Error checking existing entry:', fetchError);
+      return null;
+    }
+
+    if (existingEntry) return existingEntry as CreatorInvoicingEntry;
 
     // Get previous week's percentage and invoice_link to carry forward
     const prevWeekStart = new Date(weekStart);
@@ -91,9 +99,9 @@ export function useCreatorInvoicing() {
       .select('percentage, invoice_link')
       .eq('creator_id', creatorId)
       .eq('week_start_date', prevWeekStartStr)
-      .single();
+      .maybeSingle();
 
-    const newEntry: CreatorInvoicingEntry = {
+    const newEntry = {
       creator_id: creatorId,
       model_name: modelName,
       week_start_date: weekStartStr,
@@ -101,16 +109,18 @@ export function useCreatorInvoicing() {
       paid: null,
       percentage: prevData?.percentage ?? 50,
       net_sales: null,
-      invoice_number: null,
       invoice_link: prevData?.invoice_link ?? null,
       statements_image_key: null,
       conversion_image_key: null,
     };
 
-    // Insert the new entry
+    // Use upsert to avoid duplicate key errors
     const { data, error } = await supabase
       .from('creator_invoicing')
-      .insert(newEntry)
+      .upsert(newEntry, { 
+        onConflict: 'creator_id,week_start_date',
+        ignoreDuplicates: true 
+      })
       .select()
       .single();
 
@@ -217,25 +227,59 @@ export function useCreatorInvoicing() {
     return (data as CreatorInvoicingEntry[]) || [];
   }, []);
 
-  // Generate week cutoffs
-  const generateWeekCutoffs = useCallback((count: number = 12): WeekCutoff[] => {
+  // Generate week cutoffs - for Invoice Checklist, we generate weeks for the full year(s)
+  const generateWeekCutoffs = useCallback((count: number = 12, direction: 'past' | 'future' | 'full-year' = 'past'): WeekCutoff[] => {
     const weeks: WeekCutoff[] = [];
     const today = new Date();
-    const currentWeekStart = getWeekStart(today);
+    
+    if (direction === 'full-year') {
+      // Generate weeks for multiple years (starting from beginning of 2026)
+      const startYear = 2026;
+      const yearsToGenerate = 3; // 2026, 2027, 2028
+      
+      for (let year = startYear; year < startYear + yearsToGenerate; year++) {
+        // Start from the first Wednesday of the year (week starts Wed)
+        let weekStart = new Date(year, 0, 1); // Jan 1
+        // Find the first Wednesday
+        while (weekStart.getDay() !== 3) { // 3 = Wednesday
+          weekStart.setDate(weekStart.getDate() + 1);
+        }
+        
+        // Generate all weeks for this year
+        while (weekStart.getFullYear() === year) {
+          const weekEnd = getWeekEnd(weekStart);
+          const dueDate = addDays(weekEnd, 1);
+          dueDate.setHours(0, 0, 0, 0);
+          
+          weeks.push({
+            weekStart: new Date(weekStart),
+            weekEnd,
+            dueDate,
+            label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
+          });
+          
+          // Move to next week
+          weekStart.setDate(weekStart.getDate() + 7);
+        }
+      }
+    } else {
+      // Original logic for past weeks (used by Invoice Computation)
+      const currentWeekStart = getWeekStart(today);
 
-    for (let i = count - 1; i >= 0; i--) {
-      const weekStart = new Date(currentWeekStart);
-      weekStart.setDate(weekStart.getDate() - (i * 7));
-      const weekEnd = getWeekEnd(weekStart);
-      const dueDate = addDays(weekEnd, 1);
-      dueDate.setHours(0, 0, 0, 0);
+      for (let i = count - 1; i >= 0; i--) {
+        const weekStart = new Date(currentWeekStart);
+        weekStart.setDate(weekStart.getDate() - (i * 7));
+        const weekEnd = getWeekEnd(weekStart);
+        const dueDate = addDays(weekEnd, 1);
+        dueDate.setHours(0, 0, 0, 0);
 
-      weeks.push({
-        weekStart,
-        weekEnd,
-        dueDate,
-        label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
-      });
+        weeks.push({
+          weekStart,
+          weekEnd,
+          dueDate,
+          label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
+        });
+      }
     }
 
     return weeks;
