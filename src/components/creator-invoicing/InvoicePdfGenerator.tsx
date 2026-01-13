@@ -93,202 +93,86 @@ export async function generateInvoicePdf({
   previousBalance,
 }: GeneratePdfParams): Promise<void> {
   const pdf = new jsPDF();
-  const pageWidth = pdf.internal.pageSize.width;
-  const pageHeight = pdf.internal.pageSize.height;
   const weekEnd = getWeekEnd(weekStart);
   const dueDate = addDays(weekEnd, 1);
 
   // Invoice Number
   const invoiceNumber = formatInvoiceNumber(dueDate, creator.default_invoice_number);
 
-  // ============ FIRST PAGE - PROFESSIONAL INVOICE LAYOUT ============
-  
-  let y = 20;
+  // Header
+  pdf.setFontSize(24);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('INVOICE', 105, 25, { align: 'center' });
 
-  // --- Header Section ---
-  // Xentrik Logo (top left)
-  const xentrikLogo = new Image();
-  xentrikLogo.src = '/lovable-uploads/6f555945-9bc7-43a0-b5aa-a98a240087ba.png';
-  pdf.addImage(xentrikLogo.src, 'PNG', 20, y, 45, 18);
-
-  // Contact info (top right)
+  // Invoice details
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('+61422789156', pageWidth - 20, y + 5, { align: 'right' });
-  pdf.text('Xentrikmarketing@outlook.com', pageWidth - 20, y + 12, { align: 'right' });
+  pdf.text(`Invoice #: ${invoiceNumber}`, 20, 45);
+  pdf.text(`Model: ${creator.model_name || creator.name}`, 20, 52);
+  pdf.text(`Week: ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`, 20, 59);
+  pdf.text(`Due Date: ${format(dueDate, 'MMM d, yyyy')}`, 20, 66);
 
-  y += 35;
-
-  // --- Yellow Invoice Banner ---
-  pdf.setFillColor(255, 255, 0); // Yellow
-  pdf.rect(20, y, pageWidth - 40, 14, 'F');
-  
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('INVOICE', 25, y + 10);
-  
-  pdf.setFontSize(12);
-  pdf.text(`#${invoiceNumber}`, pageWidth - 25, y + 10, { align: 'right' });
-
-  y += 25;
-
-  // --- Billed To / Payment To Section ---
-  pdf.setFontSize(9);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(100, 100, 100);
-  pdf.text('Billed to:', 20, y);
-  pdf.text('Payment to:', pageWidth - 60, y);
-
-  y += 6;
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(0, 0, 0);
-  pdf.text(creator.model_name || creator.name, 20, y);
-  pdf.text('Xentrik PTY LTD', pageWidth - 60, y);
-
-  y += 20;
-
-  // --- Table Section ---
-  const tableLeft = 20;
-  const tableRight = pageWidth - 20;
-  const tableWidth = tableRight - tableLeft;
-  const col1Width = tableWidth * 0.35;  // Description
-  const col2Width = tableWidth * 0.25;  // Total Made
-  const col3Width = tableWidth * 0.20;  // Agency Cut
-  const col4Width = tableWidth * 0.20;  // Amount
-
-  // Table header (yellow background)
-  pdf.setFillColor(255, 255, 0);
-  pdf.rect(tableLeft, y, tableWidth, 12, 'F');
-  
-  // Table header border
-  pdf.setDrawColor(200, 200, 200);
+  // Line
   pdf.setLineWidth(0.5);
-  pdf.rect(tableLeft, y, tableWidth, 12, 'S');
+  pdf.line(20, 75, 190, 75);
 
-  pdf.setFontSize(9);
+  // Table header
+  let y = 85;
   pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(0, 0, 0);
-  
-  const headerY = y + 8;
-  pdf.text('DESCRIPTION', tableLeft + 5, headerY);
-  pdf.text('TOTAL MADE', tableLeft + col1Width + 5, headerY);
-  pdf.text('AGENCY CUT', tableLeft + col1Width + col2Width + 5, headerY);
-  pdf.text('AMOUNT', tableLeft + col1Width + col2Width + col3Width + 5, headerY);
+  pdf.text('Description', 20, y);
+  pdf.text('Amount', 160, y, { align: 'right' });
 
-  y += 12;
-
-  // Table content row
-  const rowHeight = 25;
-  pdf.setDrawColor(200, 200, 200);
-  pdf.rect(tableLeft, y, tableWidth, rowHeight, 'S');
-
-  // Vertical lines for columns
-  pdf.line(tableLeft + col1Width, y, tableLeft + col1Width, y + rowHeight);
-  pdf.line(tableLeft + col1Width + col2Width, y, tableLeft + col1Width + col2Width, y + rowHeight);
-  pdf.line(tableLeft + col1Width + col2Width + col3Width, y, tableLeft + col1Width + col2Width + col3Width, y + rowHeight);
-
+  // Table content
+  y += 10;
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(10);
-  
-  const contentY = y + 10;
-  const contentY2 = y + 17;
-  
-  // Description
-  pdf.text('Marketing Services', tableLeft + 5, contentY);
-  
-  // Total Made (Net Sales with date range)
-  const netSalesText = entry.net_sales !== null ? `$${entry.net_sales.toFixed(2)}USD` : '-';
-  const dateRange = `(${format(weekStart, 'MM/dd')}-${format(weekEnd, 'MM/dd')})`;
-  pdf.text(netSalesText, tableLeft + col1Width + 5, contentY);
-  pdf.setFontSize(8);
-  pdf.text(dateRange, tableLeft + col1Width + 5, contentY2);
-  
-  // Agency Cut (Percentage)
-  pdf.setFontSize(10);
-  pdf.text(`${entry.percentage}%`, tableLeft + col1Width + col2Width + 5, contentY);
-  
-  // Amount (Invoice Amount in USD with GST note)
-  const amountUsd = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}USD` : '-';
-  pdf.text(amountUsd, tableLeft + col1Width + col2Width + col3Width + 5, contentY);
-  pdf.setFontSize(8);
-  pdf.text('(Incl GST)', tableLeft + col1Width + col2Width + col3Width + 5, contentY2);
 
-  y += rowHeight + 30;
+  pdf.text('Net Sales', 20, y);
+  pdf.text(entry.net_sales !== null ? `$${entry.net_sales.toFixed(2)}` : '-', 160, y, { align: 'right' });
 
-  // --- Total Row ---
-  pdf.setDrawColor(200, 200, 200);
+  y += 8;
+  pdf.text(`Commission Rate (${entry.percentage}%)`, 20, y);
+  const baseAmount = entry.net_sales !== null ? entry.net_sales * (entry.percentage / 100) : 0;
+  pdf.text(`$${baseAmount.toFixed(2)}`, 160, y, { align: 'right' });
+
+  if (previousBalance !== 0) {
+    y += 8;
+    if (previousBalance > 0) {
+      pdf.text('Previous Week Credit', 20, y);
+      pdf.text(`-$${previousBalance.toFixed(2)}`, 160, y, { align: 'right' });
+    } else {
+      pdf.text('Previous Week Balance Owed', 20, y);
+      pdf.text(`+$${Math.abs(previousBalance).toFixed(2)}`, 160, y, { align: 'right' });
+    }
+  }
+
+  // Total line
+  y += 15;
   pdf.setLineWidth(0.3);
-  pdf.line(tableLeft, y - 5, tableRight, y - 5);
-  
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text('Total', tableLeft + col1Width + col2Width + 20, y);
-  
+  pdf.line(20, y - 5, 190, y - 5);
+
   pdf.setFont('helvetica', 'bold');
-  // Show AUD total if we have conversion, otherwise show USD
-  const totalDisplay = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}AUD` : '-';
-  pdf.text(totalDisplay, tableRight - 5, y, { align: 'right' });
+  pdf.text('Total Invoice Amount', 20, y);
+  pdf.text(invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}` : '-', 160, y, { align: 'right' });
 
-  y += 5;
-  pdf.line(tableLeft, y, tableRight, y);
-
-  // --- Signature Section ---
-  const signatureY = pageHeight - 85;
-  
-  // CEO Signature (right aligned)
-  const michaelImg = new Image();
-  michaelImg.src = '/lovable-uploads/9aae90b3-e37d-43d5-8bbd-0f0ae1c1b94c.png';
-  pdf.addImage(michaelImg.src, 'PNG', pageWidth - 80, signatureY, 55, 20);
-  
-  pdf.setFontSize(10);
+  // Payment status
+  y += 15;
   pdf.setFont('helvetica', 'normal');
-  pdf.text('CEO', pageWidth - 50, signatureY + 28);
+  pdf.text(`Payment Status: ${entry.invoice_payment ? 'PAID' : 'UNPAID'}`, 20, y);
 
-  // --- Footer Section (Terms & Conditions) ---
-  const footerY = pageHeight - 40;
-  
-  // Separator line
-  pdf.setDrawColor(200, 200, 200);
-  pdf.setLineWidth(0.3);
-  pdf.line(20, footerY - 5, pageWidth - 20, footerY - 5);
-  
-  pdf.setFontSize(8);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('Terms & Conditions:', 20, footerY);
-  
-  pdf.setFont('helvetica', 'normal');
-  const termsText = 'Please send payment within seven (7) days of receiving this invoice. When sending the payment, kindly include the invoice number in the notes and send a screenshot of the transaction in the group chat for confirmation.';
-  const splitTerms = pdf.splitTextToSize(termsText, pageWidth - 40);
-  pdf.text(splitTerms, 20, footerY + 6);
+  if (entry.paid !== null) {
+    y += 8;
+    pdf.text(`Amount Paid: $${entry.paid.toFixed(2)}`, 20, y);
+  }
 
-  // ============ SECOND PAGE - SUPPORTING DOCUMENTS (IF ANY) ============
-  
+  // Images section - always start on a new page if there are images
   const hasImages = entry.statements_image_key || entry.conversion_image_key;
   if (hasImages) {
     pdf.addPage();
     y = 20;
-    
-    // Header for supporting documents page
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(0, 0, 0);
-    pdf.text('Supporting Documents', 20, y);
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`Invoice #${invoiceNumber}`, pageWidth - 20, y, { align: 'right' });
-    
-    y += 15;
-    pdf.setDrawColor(200, 200, 200);
-    pdf.line(20, y, pageWidth - 20, y);
-    y += 10;
   }
   
   const maxImageWidth = 170;
-  const maxImageHeight = 100;
+  const maxImageHeight = 80;
 
   // Load and add statements image if exists
   if (entry.statements_image_key) {
@@ -296,10 +180,8 @@ export async function generateInvoicePdf({
       const { data } = supabase.storage.from('invoicing_documents').getPublicUrl(entry.statements_image_key);
       if (data?.publicUrl) {
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(11);
-        pdf.setTextColor(0, 0, 0);
         pdf.text("Week's Statements:", 20, y);
-        y += 8;
+        y += 5;
         
         const imageData = await fetchImageAsBase64(data.publicUrl);
         if (imageData) {
@@ -317,7 +199,7 @@ export async function generateInvoicePdf({
           }
           
           pdf.addImage(imageData.base64, imageData.format, 20, y, width, height);
-          y += height + 15;
+          y += height + 10;
         } else {
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(128, 128, 128);
@@ -337,10 +219,9 @@ export async function generateInvoicePdf({
       const { data } = supabase.storage.from('invoicing_documents').getPublicUrl(entry.conversion_image_key);
       if (data?.publicUrl) {
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(11);
         pdf.setTextColor(0, 0, 0);
         pdf.text('USD to AUD Conversion:', 20, y);
-        y += 8;
+        y += 5;
         
         const imageData = await fetchImageAsBase64(data.publicUrl);
         if (imageData) {
@@ -370,6 +251,11 @@ export async function generateInvoicePdf({
       console.error('Error adding conversion image:', e);
     }
   }
+
+  // Footer
+  pdf.setFontSize(8);
+  pdf.setTextColor(128, 128, 128);
+  pdf.text(`Generated on ${format(new Date(), 'MMM d, yyyy HH:mm')}`, 105, 285, { align: 'center' });
 
   // Save the PDF
   const fileName = `Invoice_${invoiceNumber}_${creator.model_name || creator.name}.pdf`;
