@@ -9,7 +9,8 @@ interface GeneratePdfParams {
   entry: CreatorInvoicingEntry;
   weekStart: Date;
   invoiceAmount: number | null;
-  previousBalance: number;
+  baseAmount: number | null; // Base amount before balance adjustment (net_sales * percentage)
+  previousBalance: number; // Positive = credit (reduces invoice), Negative = owed (increases invoice)
   conversionRate: number | null; // USD to AUD conversion rate
 }
 
@@ -91,6 +92,7 @@ export async function generateInvoicePdf({
   entry,
   weekStart,
   invoiceAmount,
+  baseAmount,
   previousBalance,
   conversionRate,
 }: GeneratePdfParams): Promise<void> {
@@ -187,8 +189,10 @@ export async function generateInvoicePdf({
 
   y += 12;
 
-  // Table content row
-  const rowHeight = 25;
+  // Determine row height based on whether there's a balance adjustment
+  const hasBalanceAdjustment = previousBalance !== 0 && baseAmount !== null;
+  const rowHeight = hasBalanceAdjustment ? 35 : 25;
+  
   pdf.setDrawColor(200, 200, 200);
   pdf.rect(tableLeft, y, tableWidth, rowHeight, 'S');
 
@@ -202,6 +206,7 @@ export async function generateInvoicePdf({
   
   const contentY = y + 10;
   const contentY2 = y + 17;
+  const contentY3 = y + 24;
   
   // Description
   pdf.text('Marketing Services', tableLeft + 5, contentY);
@@ -217,11 +222,42 @@ export async function generateInvoicePdf({
   pdf.setFontSize(10);
   pdf.text(`${entry.percentage}%`, tableLeft + col1Width + col2Width + 5, contentY);
   
-  // Amount (Invoice Amount in USD with GST note)
-  const amountUsd = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}USD` : '-';
-  pdf.text(amountUsd, tableLeft + col1Width + col2Width + col3Width + 5, contentY);
-  pdf.setFontSize(8);
-  pdf.text('(Incl GST)', tableLeft + col1Width + col2Width + col3Width + 5, contentY2);
+  // Amount column - show base amount and carryover breakdown
+  const amountColX = tableLeft + col1Width + col2Width + col3Width + 5;
+  
+  if (hasBalanceAdjustment && baseAmount !== null) {
+    // Show base amount
+    pdf.setFontSize(9);
+    pdf.text(`$${baseAmount.toFixed(2)}USD`, amountColX, contentY);
+    
+    // Show carryover credit/debit
+    pdf.setFontSize(8);
+    if (previousBalance > 0) {
+      // Credit reduces the invoice (positive balance = overpayment last week)
+      pdf.setTextColor(34, 139, 34); // Green
+      pdf.text(`+$${previousBalance.toFixed(2)} credit`, amountColX, contentY2);
+    } else {
+      // Owed increases the invoice (negative balance = underpayment last week)
+      pdf.setTextColor(220, 53, 69); // Red
+      pdf.text(`-$${Math.abs(previousBalance).toFixed(2)} owed`, amountColX, contentY2);
+    }
+    pdf.setTextColor(0, 0, 0);
+    
+    // Show final amount with GST note
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    const finalAmountText = invoiceAmount !== null ? `= $${invoiceAmount.toFixed(2)}USD` : '-';
+    pdf.text(finalAmountText, amountColX, contentY3);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7);
+    pdf.text('(Incl GST)', amountColX + 45, contentY3);
+  } else {
+    // No balance adjustment - show simple amount
+    const amountUsd = invoiceAmount !== null ? `$${invoiceAmount.toFixed(2)}USD` : '-';
+    pdf.text(amountUsd, amountColX, contentY);
+    pdf.setFontSize(8);
+    pdf.text('(Incl GST)', amountColX, contentY2);
+  }
 
   y += rowHeight + 20;
 

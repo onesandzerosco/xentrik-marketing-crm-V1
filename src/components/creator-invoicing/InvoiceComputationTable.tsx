@@ -236,6 +236,12 @@ export function InvoiceComputationTable({
     setConversionModalCreator(creator);
   };
 
+  // Calculate base amount (before balance adjustment)
+  const calculateBaseAmount = (entry: CreatorInvoicingEntry | undefined): number | null => {
+    if (!entry || entry.net_sales === null) return null;
+    return entry.net_sales * (entry.percentage / 100);
+  };
+
   // Actually generate PDF with conversion rate
   const handleGeneratePdfWithConversion = (conversionRate: number | null) => {
     if (!conversionModalCreator) return;
@@ -244,6 +250,7 @@ export function InvoiceComputationTable({
     if (!entry) return;
 
     const invoiceAmount = calculateInvoiceAmount(entry, conversionModalCreator.id);
+    const baseAmount = calculateBaseAmount(entry);
     const previousBalance = calculatePreviousWeekBalance(conversionModalCreator.id);
 
     generateInvoicePdf({
@@ -251,6 +258,7 @@ export function InvoiceComputationTable({
       entry,
       weekStart: selectedWeekStart,
       invoiceAmount,
+      baseAmount,
       previousBalance,
       conversionRate,
     });
