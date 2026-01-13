@@ -220,15 +220,17 @@ export function InvoiceComputationTable({
   };
 
   // Calculate invoice amount from net_sales, percentage, and balance from last week
-  // Credit (positive balance) = overpayment last week → ADDS to this week's invoice
-  // Owed (negative balance) = underpayment last week → SUBTRACTS from this week's invoice
+  // Balance = paid - invoice (positive = overpaid/credit, negative = underpaid/remaining balance)
+  // Formula: base - balance
+  // - Overpaid (+balance): invoice = base - positive = DECREASED (model gets discount)
+  // - Underpaid (-balance): invoice = base - negative = INCREASED (model owes more)
   const calculateInvoiceAmount = (entry: CreatorInvoicingEntry | undefined, creatorId: string): number | null => {
     if (!entry || entry.net_sales === null) return null;
     
     const baseAmount = entry.net_sales * (entry.percentage / 100);
     const previousBalance = calculatePreviousWeekBalance(creatorId);
     
-    return baseAmount + previousBalance;
+    return baseAmount - previousBalance;
   };
 
   // Handle PDF download - opens conversion rate modal first
@@ -401,7 +403,7 @@ export function InvoiceComputationTable({
                           "text-xs",
                           previousBalance > 0 ? "text-green-500" : "text-red-500"
                         )}>
-                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
+                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} remaining balance)`}
                         </span>
                       )}
                     </div>
