@@ -85,13 +85,19 @@ export function InvoiceChecklist({
     );
   };
 
+  // Get previous week entry for a creator
+  const getPreviousWeekEntry = (creatorId: string, weekIndex: number): CreatorInvoicingEntry | undefined => {
+    if (weekIndex === 0) return undefined; // No previous week for first column
+    
+    const prevWeek = weeksForYear[weekIndex - 1];
+    if (!prevWeek) return undefined;
+    
+    return getEntry(creatorId, format(prevWeek.weekStart, 'yyyy-MM-dd'));
+  };
+
   // Calculate carry over from previous week (using weeksForYear)
   const calculateCarryOver = (creatorId: string, weekIndex: number): number | null => {
-    if (weekIndex === 0) return null; // No previous week for first column
-
-    const prevWeek = weeksForYear[weekIndex - 1];
-    if (!prevWeek) return null;
-    const prevEntry = getEntry(creatorId, format(prevWeek.weekStart, 'yyyy-MM-dd'));
+    const prevEntry = getPreviousWeekEntry(creatorId, weekIndex);
     
     if (!prevEntry || prevEntry.net_sales === null) return null;
     
@@ -107,22 +113,28 @@ export function InvoiceChecklist({
     return difference;
   };
 
+  // Check if previous week's invoice was paid (paid column has value > 0)
+  const isPreviousWeekPaid = (creatorId: string, weekIndex: number): boolean => {
+    const prevEntry = getPreviousWeekEntry(creatorId, weekIndex);
+    return prevEntry?.paid != null && prevEntry.paid > 0;
+  };
+
   // Render cell content
   const renderCellContent = (creatorId: string, weekIndex: number) => {
     const week = weeksForYear[weekIndex];
     if (!week) return null;
-    const weekStartStr = format(week.weekStart, 'yyyy-MM-dd');
-    const entry = getEntry(creatorId, weekStartStr);
+    
     const carryOver = calculateCarryOver(creatorId, weekIndex);
+    const prevWeekPaid = isPreviousWeekPaid(creatorId, weekIndex);
 
-    // If there's a carry over from previous week, show it
+    // If there's a carry over from previous week, show credit/owed with background
     if (carryOver !== null && Math.abs(carryOver) >= 0.01) {
-      const isOverpayment = carryOver > 0;
+      const isCredit = carryOver > 0;
       return (
         <div
           className={cn(
             "px-2 py-1 rounded text-center font-medium text-sm",
-            isOverpayment ? "bg-green-500/20 text-green-600 dark:text-green-400" : "bg-red-500/20 text-red-600 dark:text-red-400"
+            isCredit ? "bg-green-500/20 text-green-600 dark:text-green-400" : "bg-red-500/20 text-red-600 dark:text-red-400"
           )}
         >
           ${Math.abs(carryOver).toFixed(0)}
@@ -130,8 +142,8 @@ export function InvoiceChecklist({
       );
     }
 
-    // Check if paid
-    if (entry?.invoice_payment) {
+    // If previous week's invoice was paid (paid column has value), show check
+    if (prevWeekPaid) {
       return (
         <div className="flex items-center justify-center">
           <Check className="h-5 w-5 text-green-500" />
