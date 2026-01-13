@@ -21,6 +21,36 @@ export function formatInvoiceNumber(dueDate: Date, modelNumber: number | null): 
   return `${month}${day}-${modelNum}`;
 }
 
+// Helper to fetch image and convert to base64
+async function fetchImageAsBase64(url: string): Promise<{ base64: string; format: string } | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    const contentType = blob.type;
+    
+    // Determine format from content type
+    let format = 'JPEG';
+    if (contentType.includes('png')) format = 'PNG';
+    else if (contentType.includes('gif')) format = 'GIF';
+    else if (contentType.includes('webp')) format = 'WEBP';
+    
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        resolve({ base64, format });
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    return null;
+  }
+}
+
 export async function generateInvoicePdf({
   creator,
   entry,
@@ -102,6 +132,8 @@ export async function generateInvoicePdf({
 
   // Images section
   y += 20;
+  const maxImageWidth = 170;
+  const maxImageHeight = 80;
 
   // Load and add statements image if exists
   if (entry.statements_image_key) {
@@ -112,31 +144,55 @@ export async function generateInvoicePdf({
         pdf.text("Week's Statements:", 20, y);
         y += 5;
         
-        // Note: jsPDF addImage requires base64 or data URL, we'll add a link instead
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(0, 0, 255);
-        pdf.textWithLink('View Statements Image', 20, y, { url: data.publicUrl });
-        pdf.setTextColor(0, 0, 0);
-        y += 15;
+        const imageData = await fetchImageAsBase64(data.publicUrl);
+        if (imageData) {
+          // Check if we need a new page
+          if (y + maxImageHeight > 280) {
+            pdf.addPage();
+            y = 20;
+          }
+          
+          pdf.addImage(imageData.base64, imageData.format, 20, y, maxImageWidth, maxImageHeight);
+          y += maxImageHeight + 10;
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(128, 128, 128);
+          pdf.text('(Image could not be loaded)', 20, y);
+          pdf.setTextColor(0, 0, 0);
+          y += 10;
+        }
       }
     } catch (e) {
       console.error('Error adding statements image:', e);
     }
   }
 
-  // Add conversion image link if exists
+  // Add conversion image if exists
   if (entry.conversion_image_key) {
     try {
       const { data } = supabase.storage.from('invoicing_documents').getPublicUrl(entry.conversion_image_key);
       if (data?.publicUrl) {
+        // Check if we need a new page
+        if (y + maxImageHeight + 15 > 280) {
+          pdf.addPage();
+          y = 20;
+        }
+        
         pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 0, 0);
         pdf.text('USD to AUD Conversion:', 20, y);
         y += 5;
         
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(0, 0, 255);
-        pdf.textWithLink('View Conversion Image', 20, y, { url: data.publicUrl });
-        pdf.setTextColor(0, 0, 0);
+        const imageData = await fetchImageAsBase64(data.publicUrl);
+        if (imageData) {
+          pdf.addImage(imageData.base64, imageData.format, 20, y, maxImageWidth, maxImageHeight);
+          y += maxImageHeight + 10;
+        } else {
+          pdf.setFont('helvetica', 'normal');
+          pdf.setTextColor(128, 128, 128);
+          pdf.text('(Image could not be loaded)', 20, y);
+          pdf.setTextColor(0, 0, 0);
+        }
       }
     } catch (e) {
       console.error('Error adding conversion image:', e);
