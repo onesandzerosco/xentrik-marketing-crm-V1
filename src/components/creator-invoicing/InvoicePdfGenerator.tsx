@@ -230,16 +230,16 @@ export async function generateInvoicePdf({
     pdf.setFontSize(9);
     pdf.text(`$${baseAmount.toFixed(2)}USD`, amountColX, contentY);
     
-    // Show carryover credit/debit
+    // Show carryover credit/remaining balance
     pdf.setFontSize(8);
     if (previousBalance > 0) {
-      // Credit reduces the invoice (positive balance = overpayment last week)
+      // Credit (overpayment) - reduces the invoice, shown as subtraction
       pdf.setTextColor(34, 139, 34); // Green
-      pdf.text(`+$${previousBalance.toFixed(2)} credit`, amountColX, contentY2);
+      pdf.text(`-$${previousBalance.toFixed(2)} credit`, amountColX, contentY2);
     } else {
-      // Owed increases the invoice (negative balance = underpayment last week)
+      // Remaining balance (underpayment) - increases the invoice, shown as addition
       pdf.setTextColor(220, 53, 69); // Red
-      pdf.text(`-$${Math.abs(previousBalance).toFixed(2)} owed`, amountColX, contentY2);
+      pdf.text(`+$${Math.abs(previousBalance).toFixed(2)} remaining balance`, amountColX, contentY2);
     }
     pdf.setTextColor(0, 0, 0);
     
