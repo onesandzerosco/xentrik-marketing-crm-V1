@@ -220,13 +220,15 @@ export function InvoiceComputationTable({
   };
 
   // Calculate invoice amount from net_sales, percentage, and balance from last week
+  // Credit (positive balance) = overpayment last week → ADDS to this week's invoice
+  // Owed (negative balance) = underpayment last week → SUBTRACTS from this week's invoice
   const calculateInvoiceAmount = (entry: CreatorInvoicingEntry | undefined, creatorId: string): number | null => {
     if (!entry || entry.net_sales === null) return null;
     
     const baseAmount = entry.net_sales * (entry.percentage / 100);
     const previousBalance = calculatePreviousWeekBalance(creatorId);
     
-    return baseAmount - previousBalance;
+    return baseAmount + previousBalance;
   };
 
   // Handle PDF download - opens conversion rate modal first
