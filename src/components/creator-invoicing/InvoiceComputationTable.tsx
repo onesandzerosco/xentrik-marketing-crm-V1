@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { UpdateWeekInvoiceModal } from './UpdateWeekInvoiceModal';
 import { generateInvoicePdf, formatInvoiceNumber } from './InvoicePdfGenerator';
 import { getWeekEnd } from '@/utils/weekCalculations';
+import { ConversionRateModal } from './ConversionRateModal';
 
 interface InvoiceComputationTableProps {
   creators: Creator[];
@@ -52,6 +53,7 @@ export function InvoiceComputationTable({
   const [editValue, setEditValue] = useState<string>('');
   const [initializingCreators, setInitializingCreators] = useState<Set<string>>(new Set());
   const [modalCreator, setModalCreator] = useState<Creator | null>(null);
+  const [conversionModalCreator, setConversionModalCreator] = useState<Creator | null>(null);
 
   const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
   const weekEnd = getWeekEnd(selectedWeekStart);
@@ -227,21 +229,33 @@ export function InvoiceComputationTable({
     return baseAmount - previousBalance;
   };
 
-  // Handle PDF download
+  // Handle PDF download - opens conversion rate modal first
   const handleDownloadPdf = (creator: Creator) => {
     const entry = getEntry(creator.id);
     if (!entry) return;
+    setConversionModalCreator(creator);
+  };
 
-    const invoiceAmount = calculateInvoiceAmount(entry, creator.id);
-    const previousBalance = calculatePreviousWeekBalance(creator.id);
+  // Actually generate PDF with conversion rate
+  const handleGeneratePdfWithConversion = (conversionRate: number | null) => {
+    if (!conversionModalCreator) return;
+    
+    const entry = getEntry(conversionModalCreator.id);
+    if (!entry) return;
+
+    const invoiceAmount = calculateInvoiceAmount(entry, conversionModalCreator.id);
+    const previousBalance = calculatePreviousWeekBalance(conversionModalCreator.id);
 
     generateInvoicePdf({
-      creator,
+      creator: conversionModalCreator,
       entry,
       weekStart: selectedWeekStart,
       invoiceAmount,
       previousBalance,
+      conversionRate,
     });
+    
+    setConversionModalCreator(null);
   };
 
   // Handle modal update
@@ -488,6 +502,20 @@ export function InvoiceComputationTable({
           onUpdateDefaultInvoiceNumber={onUpdateDefaultInvoiceNumber}
         />
       )}
+
+      {/* Conversion Rate Modal for PDF Download */}
+      <ConversionRateModal
+        open={!!conversionModalCreator}
+        onOpenChange={(open) => {
+          if (!open) setConversionModalCreator(null);
+        }}
+        onConfirm={handleGeneratePdfWithConversion}
+        invoiceAmountUsd={
+          conversionModalCreator
+            ? calculateInvoiceAmount(getEntry(conversionModalCreator.id), conversionModalCreator.id)
+            : null
+        }
+      />
     </>
   );
 }
