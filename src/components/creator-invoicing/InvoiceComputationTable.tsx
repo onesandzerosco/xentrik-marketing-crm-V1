@@ -335,12 +335,11 @@ export function InvoiceComputationTable({
                     {isInitializing && <Loader2 className="h-3 w-3 animate-spin inline ml-2" />}
                   </TableCell>
 
-                  {/* Invoice Payment Checkbox */}
+                  {/* Invoice Payment Checkbox - auto-set based on Paid column */}
                   <TableCell className="text-center">
                     <Checkbox
-                      checked={entry?.invoice_payment ?? false}
-                      onCheckedChange={(checked) => handleCheckboxChange(creator.id, checked as boolean)}
-                      disabled={isInitializing}
+                      checked={entry?.paid != null && entry.paid > 0}
+                      disabled={true}
                     />
                   </TableCell>
 
@@ -403,7 +402,7 @@ export function InvoiceComputationTable({
                           "text-xs",
                           previousBalance > 0 ? "text-green-500" : "text-red-500"
                         )}>
-                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} remaining balance)`}
+                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
                         </span>
                       )}
                     </div>
