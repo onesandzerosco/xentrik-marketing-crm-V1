@@ -233,32 +233,38 @@ export function useCreatorInvoicing() {
     const today = new Date();
     
     if (direction === 'full-year') {
-      // Generate weeks for multiple years (starting from beginning of 2026)
+      // Generate all cutoffs whose DUE DATE falls within each year.
+      // This preserves the existing business logic (Thu-Wed cutoff, due date = weekEnd + 1 day)
+      // and includes the Jan 1 due date (which belongs to a week that starts in the prior year).
       const startYear = 2026;
       const yearsToGenerate = 3; // 2026, 2027, 2028
-      
+
       for (let year = startYear; year < startYear + yearsToGenerate; year++) {
-        // Start from the first Wednesday of the year (week starts Wed)
-        let weekStart = new Date(year, 0, 1); // Jan 1
-        // Find the first Wednesday
-        while (weekStart.getDay() !== 3) { // 3 = Wednesday
-          weekStart.setDate(weekStart.getDate() + 1);
-        }
-        
-        // Generate all weeks for this year
-        while (weekStart.getFullYear() === year) {
+        const yearStartDue = new Date(year, 0, 1);
+        yearStartDue.setHours(0, 0, 0, 0);
+
+        // First due date in-year is Jan 1; it corresponds to weekEnd = Dec 31 of prior year.
+        const weekEndForJan1 = subDays(yearStartDue, 1);
+        let weekStart = getWeekStart(weekEndForJan1);
+
+        while (true) {
           const weekEnd = getWeekEnd(weekStart);
           const dueDate = addDays(weekEnd, 1);
           dueDate.setHours(0, 0, 0, 0);
-          
-          weeks.push({
-            weekStart: new Date(weekStart),
-            weekEnd,
-            dueDate,
-            label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
-          });
-          
-          // Move to next week
+
+          const dueYear = dueDate.getFullYear();
+          if (dueYear > year) break;
+
+          // Guard: skip any spillover due dates from prior year (shouldn't happen, but safe)
+          if (dueYear === year) {
+            weeks.push({
+              weekStart: new Date(weekStart),
+              weekEnd,
+              dueDate,
+              label: `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d')}`,
+            });
+          }
+
           weekStart.setDate(weekStart.getDate() + 7);
         }
       }
