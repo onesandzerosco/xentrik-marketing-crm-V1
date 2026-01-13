@@ -239,7 +239,7 @@ export async function generateInvoicePdf({
     } else {
       // Remaining balance (underpayment) - increases the invoice, shown as addition
       pdf.setTextColor(220, 53, 69); // Red
-      pdf.text(`+$${Math.abs(previousBalance).toFixed(2)} remaining balance`, amountColX, contentY2);
+      pdf.text(`+$${Math.abs(previousBalance).toFixed(2)} owed`, amountColX, contentY2);
     }
     pdf.setTextColor(0, 0, 0);
     
