@@ -402,7 +402,7 @@ export function InvoiceComputationTable({
                           "text-xs",
                           previousBalance > 0 ? "text-green-500" : "text-red-500"
                         )}>
-                          {previousBalance > 0 ? `(+$${previousBalance.toFixed(2)} credit)` : `(-$${Math.abs(previousBalance).toFixed(2)} owed)`}
+                          {previousBalance > 0 ? `(-$${previousBalance.toFixed(2)} credit)` : `(+$${Math.abs(previousBalance).toFixed(2)} owed)`}
                         </span>
                       )}
                     </div>
