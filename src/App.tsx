@@ -43,7 +43,7 @@ import CustomsTracker from './pages/CustomsTracker';
 import Payroll from './pages/Payroll';
 import Invitation from './pages/Invitation';
 import CreatorInvoicingPage from './pages/CreatorInvoicing';
-
+import TasksRewards from './pages/TasksRewards';
 // Call the function to ensure our storage bucket exists
 // We're calling it here in a non-blocking way
 ensureStorageBucket().catch(err => {
@@ -131,7 +131,9 @@ const AppRoutes = () => {
       <Route path="/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       <Route path="/payroll/:id" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       <Route path="/creator-invoicing" element={<ProtectedRoute><CreatorInvoicingPage /></ProtectedRoute>} />
-      
+      <Route path="/tasks-rewards" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
+      <Route path="/tasks-rewards/quests" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
+      <Route path="/tasks-rewards/supply-depot" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
       {/* Add redirects for old route patterns */}
       
       <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />
