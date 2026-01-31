@@ -144,25 +144,57 @@ export const useGamification = () => {
     }
   }, [user]);
 
-  // Fetch leaderboard
+  // Fetch leaderboard - all chatters with their stats
   const fetchLeaderboard = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('gamification_chatter_stats')
-      .select(`
-        *,
-        profile:profiles!gamification_chatter_stats_chatter_id_fkey (
-          name,
-          profile_image
-        )
-      `)
-      .order('total_xp', { ascending: false })
-      .limit(50);
+    // First, get all profiles with "Chatter" in their roles array
+    const { data: chatterProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, name, profile_image, roles')
+      .contains('roles', ['Chatter']);
 
-    if (error) {
-      console.error('Error fetching leaderboard:', error);
+    if (profilesError) {
+      console.error('Error fetching chatter profiles:', profilesError);
       return;
     }
-    setLeaderboard((data as any) || []);
+
+    if (!chatterProfiles || chatterProfiles.length === 0) {
+      setLeaderboard([]);
+      return;
+    }
+
+    // Get stats for all chatters
+    const chatterIds = chatterProfiles.map(p => p.id);
+    const { data: statsData, error: statsError } = await supabase
+      .from('gamification_chatter_stats')
+      .select('*')
+      .in('chatter_id', chatterIds);
+
+    if (statsError) {
+      console.error('Error fetching chatter stats:', statsError);
+      return;
+    }
+
+    // Merge profiles with stats, defaulting to 0 XP/bananas if no stats exist
+    const leaderboardData: ChatterStats[] = chatterProfiles.map(profile => {
+      const stats = statsData?.find(s => s.chatter_id === profile.id);
+      return {
+        id: stats?.id || profile.id,
+        chatter_id: profile.id,
+        total_xp: stats?.total_xp || 0,
+        banana_balance: stats?.banana_balance || 0,
+        created_at: stats?.created_at || new Date().toISOString(),
+        updated_at: stats?.updated_at || new Date().toISOString(),
+        profile: {
+          name: profile.name,
+          profile_image: profile.profile_image || undefined
+        }
+      };
+    });
+
+    // Sort by XP descending
+    leaderboardData.sort((a, b) => b.total_xp - a.total_xp);
+
+    setLeaderboard(leaderboardData);
   }, []);
 
   // Fetch all quests (for admin)
