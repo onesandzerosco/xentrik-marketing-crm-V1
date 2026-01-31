@@ -219,9 +219,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <Trophy className="h-5 w-5" />
             Top Chatters
           </h2>
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              {leaderboard.slice(0, 10).map((stats, index) => {
+          <Card className="max-h-[500px] overflow-hidden flex flex-col">
+            <CardContent className="p-4 space-y-3 overflow-y-auto flex-1">
+              {leaderboard.map((stats, index) => {
                 const rank = getCurrentRank(stats.total_xp);
                 const isMe = stats.chatter_id === user?.id;
                 return (
@@ -229,20 +229,20 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     key={stats.id} 
                     className={`flex items-center gap-3 p-2 rounded-lg ${isMe ? 'bg-primary/10 border border-primary/20' : ''}`}
                   >
-                    <div className="flex items-center justify-center w-6 h-6 text-sm font-bold">
+                    <div className="flex items-center justify-center w-6 h-6 text-sm font-bold shrink-0">
                       {index === 0 && '🥇'}
                       {index === 1 && '🥈'}
                       {index === 2 && '🥉'}
                       {index > 2 && <span className="text-muted-foreground">{index + 1}</span>}
                     </div>
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 shrink-0">
                       <AvatarImage src={stats.profile?.profile_image} />
                       <AvatarFallback className="text-xs">
                         {stats.profile?.name?.charAt(0) || '?'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-medium truncate text-left">
                         {stats.profile?.name || 'Unknown'}
                         {isMe && <span className="text-xs text-primary ml-1">(You)</span>}
                       </p>
@@ -256,7 +256,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         </Badge>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-sm font-bold">{stats.total_xp}</p>
                       <p className="text-xs text-muted-foreground">XP</p>
                     </div>
