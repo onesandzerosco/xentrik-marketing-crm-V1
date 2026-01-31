@@ -23,14 +23,14 @@ export const useDailyQuestSlots = () => {
   const { toast } = useToast();
   
   const [slots, setSlots] = useState<DailyQuestSlot[]>([]);
-  const [availableQuests, setAvailableQuests] = useState<Quest[]>([]);
+  const [allDailyQuests, setAllDailyQuests] = useState<Quest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRerolling, setIsRerolling] = useState<number | null>(null);
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  // Fetch available daily quests
-  const fetchAvailableQuests = useCallback(async () => {
+  // Fetch ALL active daily quests (for re-roll pool)
+  const fetchAllDailyQuests = useCallback(async () => {
     const { data, error } = await supabase
       .from('gamification_quests')
       .select('*')
@@ -38,11 +38,11 @@ export const useDailyQuestSlots = () => {
       .eq('is_active', true);
 
     if (error) {
-      console.error('Error fetching daily quests:', error);
+      console.error('Error fetching all daily quests:', error);
       return [];
     }
     
-    setAvailableQuests((data as Quest[]) || []);
+    setAllDailyQuests((data as Quest[]) || []);
     return (data as Quest[]) || [];
   }, []);
 
@@ -68,55 +68,86 @@ export const useDailyQuestSlots = () => {
     setSlots((data as any) || []);
   }, [user, today]);
 
-  // Assign random quests to empty slots
-  const assignRandomQuests = useCallback(async (quests: Quest[]) => {
-    if (!user || quests.length === 0) return;
+  // Fetch today's admin-assigned quests and populate user slots
+  const populateSlotsFromAdminAssignments = useCallback(async () => {
+    if (!user) return;
 
-    // Check which slots are already filled
+    // Check if user already has slots for today
     const { data: existingSlots } = await supabase
       .from('gamification_daily_quest_slots')
       .select('slot_number')
       .eq('chatter_id', user.id)
       .eq('date', today);
 
+    // If user already has 3 slots for today, no need to populate
+    if (existingSlots && existingSlots.length >= 3) {
+      return;
+    }
+
     const filledSlots = new Set((existingSlots || []).map(s => s.slot_number));
-    const emptySlots = [1, 2, 3].filter(n => !filledSlots.has(n));
 
-    if (emptySlots.length === 0) return;
+    // Fetch today's admin-assigned daily quests
+    const { data: todayAssignments, error: assignmentError } = await supabase
+      .from('gamification_quest_assignments')
+      .select(`
+        quest_id,
+        quest:gamification_quests (*)
+      `)
+      .eq('start_date', today)
+      .eq('end_date', today)
+      .order('created_at');
 
-    // Get random quests (avoiding duplicates if possible)
-    const shuffled = [...quests].sort(() => Math.random() - 0.5);
-    const selectedQuests: Quest[] = [];
-    
-    for (const slot of emptySlots) {
-      // Try to pick a quest not already selected
-      const available = shuffled.filter(q => !selectedQuests.find(s => s.id === q.id));
-      const quest = available.length > 0 ? available[0] : shuffled[slot % shuffled.length];
-      selectedQuests.push(quest);
+    if (assignmentError) {
+      console.error('Error fetching admin assignments:', assignmentError);
+      return;
     }
 
-    // Insert new slots
-    const inserts = emptySlots.map((slotNumber, index) => ({
-      chatter_id: user.id,
-      slot_number: slotNumber,
-      quest_id: selectedQuests[index].id,
-      date: today,
-      has_rerolled: false,
-      completed: false
-    }));
+    // Filter to only daily quests
+    const dailyAssignments = (todayAssignments || []).filter(
+      (a: any) => a.quest?.quest_type === 'daily'
+    );
 
-    const { error } = await supabase
-      .from('gamification_daily_quest_slots')
-      .insert(inserts);
-
-    if (error) {
-      console.error('Error assigning daily quests:', error);
+    if (dailyAssignments.length === 0) {
+      return; // No admin-assigned quests for today
     }
 
-    await fetchSlots();
-  }, [user, today, fetchSlots]);
+    // Assign admin quests to empty slots (up to 3)
+    const inserts: any[] = [];
+    let slotNumber = 1;
 
-  // Re-roll a quest slot
+    for (const assignment of dailyAssignments) {
+      // Find the next empty slot
+      while (filledSlots.has(slotNumber) && slotNumber <= 3) {
+        slotNumber++;
+      }
+      
+      if (slotNumber > 3) break; // All slots filled
+
+      inserts.push({
+        chatter_id: user.id,
+        slot_number: slotNumber,
+        quest_id: assignment.quest_id,
+        date: today,
+        has_rerolled: false,
+        completed: false
+      });
+
+      filledSlots.add(slotNumber);
+      slotNumber++;
+    }
+
+    if (inserts.length > 0) {
+      const { error } = await supabase
+        .from('gamification_daily_quest_slots')
+        .insert(inserts);
+
+      if (error) {
+        console.error('Error populating daily quest slots:', error);
+      }
+    }
+  }, [user, today]);
+
+  // Re-roll a quest slot - picks from ALL active daily quests
   const rerollSlot = async (slotNumber: number) => {
     if (!user) return false;
 
@@ -151,12 +182,12 @@ export const useDailyQuestSlots = () => {
     setIsRerolling(slotNumber);
 
     try {
-      // Get current quest IDs in slots to avoid duplicates
+      // Get current quest IDs in user's slots to avoid duplicates
       const currentQuestIds = slots.map(s => s.quest_id);
       
-      // Filter available quests to exclude current ones if possible
-      const filteredQuests = availableQuests.filter(q => !currentQuestIds.includes(q.id));
-      const questPool = filteredQuests.length > 0 ? filteredQuests : availableQuests;
+      // Filter ALL active daily quests to exclude current ones if possible
+      const filteredQuests = allDailyQuests.filter(q => !currentQuestIds.includes(q.id));
+      const questPool = filteredQuests.length > 0 ? filteredQuests : allDailyQuests.filter(q => q.id !== slot.quest_id);
       
       if (questPool.length === 0) {
         toast({
@@ -167,11 +198,11 @@ export const useDailyQuestSlots = () => {
         return false;
       }
 
-      // Pick a random quest
+      // Pick a random quest from the pool
       const randomIndex = Math.floor(Math.random() * questPool.length);
       const newQuest = questPool[randomIndex];
 
-      // Update the slot
+      // Update the slot - this only affects THIS chatter
       const { error } = await supabase
         .from('gamification_daily_quest_slots')
         .update({
@@ -202,7 +233,7 @@ export const useDailyQuestSlots = () => {
     }
   };
 
-  // Mark slot as completed (for tracking purposes - actual completion is separate)
+  // Mark slot as completed
   const markSlotCompleted = async (slotNumber: number) => {
     if (!user) return false;
 
@@ -229,24 +260,25 @@ export const useDailyQuestSlots = () => {
       if (!user) return;
       
       setIsLoading(true);
-      const quests = await fetchAvailableQuests();
-      await fetchSlots();
       
-      // Check if we need to assign quests (for new day or first time)
-      if (quests.length > 0) {
-        await assignRandomQuests(quests);
-        await fetchSlots();
-      }
+      // Fetch all active daily quests (for re-roll pool)
+      await fetchAllDailyQuests();
+      
+      // Populate slots from admin assignments if needed
+      await populateSlotsFromAdminAssignments();
+      
+      // Fetch the user's slots
+      await fetchSlots();
       
       setIsLoading(false);
     };
 
     init();
-  }, [user, fetchAvailableQuests, fetchSlots, assignRandomQuests]);
+  }, [user, fetchAllDailyQuests, populateSlotsFromAdminAssignments, fetchSlots]);
 
   return {
     slots,
-    availableQuests,
+    allDailyQuests,
     isLoading,
     isRerolling,
     rerollSlot,
