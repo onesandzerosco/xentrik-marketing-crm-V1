@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Dices, Star, Check, Clock, X, Eye } from 'lucide-react';
 import { useDailyQuestSlots, DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
-import { useGamification, QuestAssignment } from '@/hooks/useGamification';
-import QuestCompletionModal from './QuestCompletionModal';
+import { useGamification } from '@/hooks/useGamification';
+import DailyQuestCompletionModal from './DailyQuestCompletionModal';
 import { format } from 'date-fns';
 
 interface DailyQuestSlotsProps {
@@ -14,28 +14,9 @@ interface DailyQuestSlotsProps {
 
 const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) => {
   const { slots, isLoading, isRerolling, rerollSlot, markSlotCompleted, refetch } = useDailyQuestSlots();
-  const { myCompletions, refetch: gamificationRefetch, activeAssignments } = useGamification();
+  const { refetch: gamificationRefetch } = useGamification();
   const [selectedSlot, setSelectedSlot] = useState<DailyQuestSlot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const today = format(new Date(), 'yyyy-MM-dd');
-
-  // Find the active assignment for a quest (if any exists for today)
-  const getAssignmentForQuest = (questId: string): QuestAssignment | null => {
-    return activeAssignments.find(a => 
-      a.quest?.id === questId && 
-      a.start_date <= today && 
-      a.end_date >= today &&
-      a.quest?.quest_type === 'daily'
-    ) || null;
-  };
-
-  // Check if user has submitted completion for this slot's quest
-  const getCompletionStatus = (slot: DailyQuestSlot) => {
-    const assignment = getAssignmentForQuest(slot.quest_id);
-    if (!assignment) return null;
-    return myCompletions.find(c => c.quest_assignment_id === assignment.id);
-  };
 
   const handleViewQuest = (slot: DailyQuestSlot) => {
     setSelectedSlot(slot);
@@ -49,16 +30,6 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
       refetch();
       onQuestComplete?.();
     }
-  };
-
-  // Create a mock assignment for the modal
-  const createMockAssignment = (slot: DailyQuestSlot): QuestAssignment | null => {
-    // Try to find an existing assignment
-    const existingAssignment = getAssignmentForQuest(slot.quest_id);
-    if (existingAssignment) return existingAssignment;
-    
-    // If no assignment exists, we can't submit - the admin needs to assign the quest
-    return null;
   };
 
   if (isLoading) {
@@ -80,17 +51,14 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
             Your Daily Quests
           </CardTitle>
           <CardDescription>
-            No daily quests available. Check back when an admin assigns quests!
+            No daily quests available. Check back when an admin adds daily quests!
           </CardDescription>
         </CardHeader>
       </Card>
     );
   }
 
-  const completedCount = slots.filter(s => {
-    const status = getCompletionStatus(s);
-    return status?.status === 'verified';
-  }).length;
+  const completedCount = slots.filter(s => s.completed).length;
 
   return (
     <>
@@ -114,11 +82,9 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
         <CardContent className="space-y-3">
           {slots.map((slot) => {
             const quest = slot.quest;
-            const completion = getCompletionStatus(slot);
-            const assignment = getAssignmentForQuest(slot.quest_id);
-            const isCompleted = completion?.status === 'verified';
-            const isPending = completion?.status === 'pending';
-            const isRejected = completion?.status === 'rejected';
+            const isCompleted = slot.completed;
+            // For now we use the slot's completed status
+            // In future, this can be expanded to track pending/rejected states
 
             return (
               <div
@@ -126,10 +92,6 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
                 className={`p-4 rounded-lg border transition-all ${
                   isCompleted 
                     ? 'bg-green-500/10 border-green-500/30' 
-                    : isPending
-                    ? 'bg-yellow-500/10 border-yellow-500/30'
-                    : isRejected
-                    ? 'bg-red-500/10 border-red-500/30'
                     : 'bg-card border-border hover:border-primary/50'
                 }`}
               >
@@ -159,47 +121,18 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
                         <Check className="h-3 w-3 mr-1" />
                         Done
                       </Badge>
-                    ) : isPending ? (
-                      <Badge variant="secondary">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Pending
-                      </Badge>
-                    ) : isRejected ? (
-                      <>
-                        <Badge variant="destructive">
-                          <X className="h-3 w-3 mr-1" />
-                          Rejected
-                        </Badge>
-                        {assignment && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleViewQuest(slot)}
-                          >
-                            Retry
-                          </Button>
-                        )}
-                      </>
                     ) : (
-                      <>
-                        {assignment ? (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleViewQuest(slot)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        ) : (
-                          <Badge variant="outline" className="text-muted-foreground">
-                            Not Assigned
-                          </Badge>
-                        )}
-                      </>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleViewQuest(slot)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
                     )}
 
                     {/* Re-roll Button */}
-                    {!isCompleted && !isPending && !slot.has_rerolled && (
+                    {!isCompleted && !slot.has_rerolled && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -227,12 +160,12 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
         </CardContent>
       </Card>
 
-      {/* Quest Completion Modal */}
+      {/* Daily Quest Completion Modal */}
       {selectedSlot && (
-        <QuestCompletionModal
+        <DailyQuestCompletionModal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          assignment={createMockAssignment(selectedSlot)}
+          slot={selectedSlot}
           onSubmitComplete={handleSubmitComplete}
         />
       )}
