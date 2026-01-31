@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Dices, Star, Check, Clock, X, Eye } from 'lucide-react';
 import { useDailyQuestSlots, DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useGamification } from '@/hooks/useGamification';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import DailyQuestCompletionModal from './DailyQuestCompletionModal';
 import { format } from 'date-fns';
 
@@ -12,11 +14,72 @@ interface DailyQuestSlotsProps {
   onQuestComplete?: () => void;
 }
 
+interface SlotCompletionStatus {
+  questId: string;
+  status: 'pending' | 'verified' | 'rejected' | null;
+}
+
 const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) => {
-  const { slots, isLoading, isRerolling, rerollSlot, markSlotCompleted, refetch } = useDailyQuestSlots();
+  const { user } = useAuth();
+  const { slots, isLoading, isRerolling, rerollSlot, refetch } = useDailyQuestSlots();
   const { refetch: gamificationRefetch } = useGamification();
   const [selectedSlot, setSelectedSlot] = useState<DailyQuestSlot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [completionStatuses, setCompletionStatuses] = useState<SlotCompletionStatus[]>([]);
+
+  const today = format(new Date(), 'yyyy-MM-dd');
+
+  // Fetch completion statuses for today's daily quests
+  useEffect(() => {
+    const fetchCompletionStatuses = async () => {
+      if (!user || slots.length === 0) return;
+
+      const questIds = slots.map(s => s.quest_id);
+      
+      // Get all quest assignments for today's daily quests
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+      if (!assignments || assignments.length === 0) {
+        setCompletionStatuses([]);
+        return;
+      }
+
+      const assignmentIds = assignments.map(a => a.id);
+
+      // Get completions for this user on these assignments
+      const { data: completions } = await supabase
+        .from('gamification_quest_completions')
+        .select('quest_assignment_id, status')
+        .eq('chatter_id', user.id)
+        .in('quest_assignment_id', assignmentIds);
+
+      // Map quest_id to status
+      const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+        const assignment = assignments.find(a => a.quest_id === questId);
+        if (!assignment) return { questId, status: null };
+        
+        const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+        return { 
+          questId, 
+          status: completion?.status as 'pending' | 'verified' | 'rejected' | null 
+        };
+      });
+
+      setCompletionStatuses(statuses);
+    };
+
+    fetchCompletionStatuses();
+  }, [user, slots, today]);
+
+  const getSlotStatus = (slot: DailyQuestSlot) => {
+    const statusEntry = completionStatuses.find(s => s.questId === slot.quest_id);
+    return statusEntry?.status || null;
+  };
 
   const handleViewQuest = (slot: DailyQuestSlot) => {
     setSelectedSlot(slot);
@@ -24,11 +87,35 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
   };
 
   const handleSubmitComplete = async () => {
-    if (selectedSlot) {
-      await markSlotCompleted(selectedSlot.slot_number);
-      gamificationRefetch.myCompletions();
-      refetch();
-      onQuestComplete?.();
+    gamificationRefetch.myCompletions();
+    refetch();
+    onQuestComplete?.();
+    // Re-fetch completion statuses
+    if (user && slots.length > 0) {
+      const questIds = slots.map(s => s.quest_id);
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+      if (assignments && assignments.length > 0) {
+        const assignmentIds = assignments.map(a => a.id);
+        const { data: completions } = await supabase
+          .from('gamification_quest_completions')
+          .select('quest_assignment_id, status')
+          .eq('chatter_id', user.id)
+          .in('quest_assignment_id', assignmentIds);
+
+        const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+          const assignment = assignments.find(a => a.quest_id === questId);
+          if (!assignment) return { questId, status: null };
+          const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+          return { questId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
+        });
+        setCompletionStatuses(statuses);
+      }
     }
   };
 
@@ -58,7 +145,7 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
     );
   }
 
-  const completedCount = slots.filter(s => s.completed).length;
+  const completedCount = slots.filter(s => getSlotStatus(s) === 'verified').length;
 
   return (
     <>
@@ -82,16 +169,21 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
         <CardContent className="space-y-3">
           {slots.map((slot) => {
             const quest = slot.quest;
-            const isCompleted = slot.completed;
-            // For now we use the slot's completed status
-            // In future, this can be expanded to track pending/rejected states
+            const status = getSlotStatus(slot);
+            const isVerified = status === 'verified';
+            const isPending = status === 'pending';
+            const isRejected = status === 'rejected';
 
             return (
               <div
                 key={slot.id}
                 className={`p-4 rounded-lg border transition-all ${
-                  isCompleted 
+                  isVerified 
                     ? 'bg-green-500/10 border-green-500/30' 
+                    : isPending
+                    ? 'bg-yellow-500/10 border-yellow-500/30'
+                    : isRejected
+                    ? 'bg-red-500/10 border-red-500/30'
                     : 'bg-card border-border hover:border-primary/50'
                 }`}
               >
@@ -115,12 +207,31 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Status or Action Button */}
-                    {isCompleted ? (
+                    {/* Status Badge or Action Button */}
+                    {isVerified ? (
                       <Badge className="bg-green-500 text-white">
                         <Check className="h-3 w-3 mr-1" />
                         Done
                       </Badge>
+                    ) : isPending ? (
+                      <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Pending
+                      </Badge>
+                    ) : isRejected ? (
+                      <>
+                        <Badge variant="destructive">
+                          <X className="h-3 w-3 mr-1" />
+                          Rejected
+                        </Badge>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewQuest(slot)}
+                        >
+                          Retry
+                        </Button>
+                      </>
                     ) : (
                       <Button 
                         size="sm" 
@@ -131,8 +242,8 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
                       </Button>
                     )}
 
-                    {/* Re-roll Button */}
-                    {!isCompleted && !slot.has_rerolled && (
+                    {/* Re-roll Button - only show if not verified/pending */}
+                    {!isVerified && !isPending && !slot.has_rerolled && (
                       <Button
                         size="sm"
                         variant="ghost"
