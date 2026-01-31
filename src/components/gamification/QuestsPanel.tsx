@@ -56,6 +56,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [editDescription, setEditDescription] = useState('');
+  const [editXpReward, setEditXpReward] = useState(0);
+  const [editBananaReward, setEditBananaReward] = useState(0);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Fetch pending completions for admin
@@ -191,26 +193,32 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const handleOpenEditDialog = (quest: Quest) => {
     setEditingQuest(quest);
     setEditDescription(quest.description || '');
+    setEditXpReward(quest.xp_reward || 0);
+    setEditBananaReward(quest.banana_reward || 0);
   };
 
-  const handleSaveDescription = async () => {
+  const handleSaveQuest = async () => {
     if (!editingQuest) return;
 
     try {
       setIsSavingEdit(true);
       const { error } = await supabase
         .from('gamification_quests')
-        .update({ description: editDescription })
+        .update({ 
+          description: editDescription,
+          xp_reward: editXpReward,
+          banana_reward: editBananaReward
+        })
         .eq('id', editingQuest.id);
 
       if (error) throw error;
 
-      toast({ title: "Success", description: "Instructions updated!" });
+      toast({ title: "Success", description: "Quest updated!" });
       setEditingQuest(null);
       refetch.quests();
     } catch (error) {
       console.error('Error updating quest:', error);
-      toast({ title: "Error", description: "Failed to update instructions", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to update quest", variant: "destructive" });
     } finally {
       setIsSavingEdit(false);
     }
@@ -675,17 +683,39 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         onReject={(id) => handleVerify(id, false)}
       />
 
-      {/* Edit Instructions Dialog (Admin) */}
+      {/* Edit Quest Dialog (Admin) */}
       <Dialog open={!!editingQuest} onOpenChange={(open) => !open && setEditingQuest(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Instructions</DialogTitle>
+            <DialogTitle>Edit Quest</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
               <p className="text-sm font-medium mb-2">Quest: {editingQuest?.title}</p>
               <Badge variant="outline" className="mb-4">{editingQuest?.quest_type}</Badge>
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>XP Reward</Label>
+                <Input 
+                  type="number"
+                  value={editXpReward}
+                  onChange={e => setEditXpReward(parseInt(e.target.value) || 0)}
+                  min={0}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Banana Reward 🍌</Label>
+                <Input 
+                  type="number"
+                  value={editBananaReward}
+                  onChange={e => setEditBananaReward(parseInt(e.target.value) || 0)}
+                  min={0}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Instructions / Description</Label>
               <Textarea 
@@ -703,9 +733,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             <Button variant="outline" onClick={() => setEditingQuest(null)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveDescription} disabled={isSavingEdit}>
+            <Button onClick={handleSaveQuest} disabled={isSavingEdit}>
               {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Save Instructions
+              Save Quest
             </Button>
           </DialogFooter>
         </DialogContent>
