@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil } from 'lucide-react';
+import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil, XCircle } from 'lucide-react';
 import { useGamification, Quest, QuestAssignment } from '@/hooks/useGamification';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -210,6 +210,23 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       toast({ title: "Error", description: "Failed to update instructions", variant: "destructive" });
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  const handleCloseAssignment = async (assignmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gamification_quest_assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Quest assignment closed" });
+      refetch.activeAssignments();
+    } catch (error) {
+      console.error('Error closing assignment:', error);
+      toast({ title: "Error", description: "Failed to close assignment", variant: "destructive" });
     }
   };
 
@@ -461,8 +478,19 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
                 return (
                   <Card key={assignment.id} className="relative overflow-hidden">
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive z-10"
+                        onClick={() => handleCloseAssignment(assignment.id)}
+                        title="Close this quest assignment"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
                     {completion?.status === 'verified' && (
-                      <div className="absolute top-0 right-0 bg-green-500 text-white px-2 py-1 text-xs font-medium">
+                      <div className="absolute top-0 left-0 bg-green-500 text-white px-2 py-1 text-xs font-medium rounded-br">
                         ✓ Completed
                       </div>
                     )}
