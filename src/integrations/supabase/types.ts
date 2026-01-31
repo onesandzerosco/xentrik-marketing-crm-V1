@@ -619,6 +619,57 @@ export type Database = {
           },
         ]
       }
+      gamification_daily_quest_slots: {
+        Row: {
+          chatter_id: string
+          completed: boolean
+          created_at: string
+          date: string
+          has_rerolled: boolean
+          id: string
+          quest_id: string
+          slot_number: number
+          updated_at: string
+        }
+        Insert: {
+          chatter_id: string
+          completed?: boolean
+          created_at?: string
+          date?: string
+          has_rerolled?: boolean
+          id?: string
+          quest_id: string
+          slot_number: number
+          updated_at?: string
+        }
+        Update: {
+          chatter_id?: string
+          completed?: boolean
+          created_at?: string
+          date?: string
+          has_rerolled?: boolean
+          id?: string
+          quest_id?: string
+          slot_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_daily_quest_slots_chatter_id_fkey"
+            columns: ["chatter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gamification_daily_quest_slots_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gamification_daily_words: {
         Row: {
           created_at: string
