@@ -18,6 +18,8 @@ import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } fro
 import QuestCompletionModal from './QuestCompletionModal';
 import QuestReviewModal from './QuestReviewModal';
 import DailyQuestSlots from './DailyQuestSlots';
+import WeeklyQuestSlots from './WeeklyQuestSlots';
+import MonthlyQuestSlots from './MonthlyQuestSlots';
 
 interface QuestsPanelProps {
   isAdmin: boolean;
@@ -452,44 +454,58 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         </Card>
       )}
 
-      {/* Daily Quest Slots for Chatters */}
+      {/* Chatter View: Scrollable sections for all quest types */}
       {!isAdmin && (
-        <DailyQuestSlots 
-          onQuestComplete={() => {
-            refetch.myCompletions();
-            refetch.leaderboard();
-          }} 
-        />
+        <div className="space-y-6">
+          <DailyQuestSlots 
+            onQuestComplete={() => {
+              refetch.myCompletions();
+              refetch.leaderboard();
+            }} 
+          />
+          <WeeklyQuestSlots 
+            onQuestComplete={() => {
+              refetch.myCompletions();
+              refetch.leaderboard();
+            }} 
+          />
+          <MonthlyQuestSlots 
+            onQuestComplete={() => {
+              refetch.myCompletions();
+              refetch.leaderboard();
+            }} 
+          />
+        </div>
       )}
 
-      {/* Quest Tabs */}
-      <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="daily" className="flex items-center gap-2">
-            <Star className="h-4 w-4" />
-            Daily ({filterQuestsByType('daily').length})
-          </TabsTrigger>
-          <TabsTrigger value="weekly" className="flex items-center gap-2">
-            <Medal className="h-4 w-4" />
-            Weekly ({filterQuestsByType('weekly').length})
-          </TabsTrigger>
-          <TabsTrigger value="monthly" className="flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Monthly ({filterQuestsByType('monthly').length})
-          </TabsTrigger>
-        </TabsList>
+      {/* Admin View: Tabs for quest assignments */}
+      {isAdmin && (
+        <Tabs defaultValue="daily" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="daily" className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              Daily ({filterQuestsByType('daily').length})
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2">
+              <Medal className="h-4 w-4" />
+              Weekly ({filterQuestsByType('weekly').length})
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="flex items-center gap-2">
+              <Crown className="h-4 w-4" />
+              Monthly ({filterQuestsByType('monthly').length})
+            </TabsTrigger>
+          </TabsList>
 
-        {['daily', 'weekly', 'monthly'].map(type => (
-          <TabsContent key={type} value={type} className="mt-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').map(assignment => {
-                const completion = getCompletionStatus(assignment.id);
-                const quest = assignment.quest;
-                if (!quest) return null;
+          {['daily', 'weekly', 'monthly'].map(type => (
+            <TabsContent key={type} value={type} className="mt-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').map(assignment => {
+                  const completion = getCompletionStatus(assignment.id);
+                  const quest = assignment.quest;
+                  if (!quest) return null;
 
-                return (
-                  <Card key={assignment.id} className="relative overflow-hidden">
-                    {isAdmin && (
+                  return (
+                    <Card key={assignment.id} className="relative overflow-hidden">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -499,80 +515,80 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                       >
                         <XCircle className="h-4 w-4" />
                       </Button>
-                    )}
-                    {completion?.status === 'verified' && (
-                      <div className="absolute top-0 left-0 bg-green-500 text-white px-2 py-1 text-xs font-medium rounded-br">
-                        ✓ Completed
-                      </div>
-                    )}
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base">{quest.title}</CardTitle>
-                          {quest.description && (
-                            <CardDescription className="mt-1">{quest.description}</CardDescription>
-                          )}
+                      {completion?.status === 'verified' && (
+                        <div className="absolute top-0 left-0 bg-green-500 text-white px-2 py-1 text-xs font-medium rounded-br">
+                          ✓ Completed
                         </div>
-                        {getQuestIcon(quest.quest_type)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="flex items-center gap-1">
-                          <span className="text-sm font-medium">+{quest.xp_reward}</span>
-                          <span className="text-xs text-muted-foreground">XP</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-lg">🍌</span>
-                          <span className="text-sm font-medium">+{quest.banana_reward}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                        <span>Valid: {format(new Date(assignment.start_date), 'MMM d')} - {format(new Date(assignment.end_date), 'MMM d')}</span>
-                      </div>
-
-                      {completion ? (
-                        <Badge 
-                          variant={
-                            completion.status === 'verified' ? 'default' : 
-                            completion.status === 'pending' ? 'secondary' : 
-                            'destructive'
-                          }
-                          className="w-full justify-center py-2"
-                        >
-                          {completion.status === 'verified' && <Check className="h-4 w-4 mr-1" />}
-                          {completion.status === 'pending' && <Clock className="h-4 w-4 mr-1" />}
-                          {completion.status === 'rejected' && <X className="h-4 w-4 mr-1" />}
-                          {completion.status === 'verified' ? 'Completed!' : 
-                           completion.status === 'pending' ? 'Pending Verification' : 
-                           'Rejected'}
-                        </Badge>
-                      ) : (
-                        <Button 
-                          className="w-full" 
-                          onClick={() => handleOpenQuestModal(assignment)}
-                        >
-                          View Quest
-                        </Button>
                       )}
+                      <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-base">{quest.title}</CardTitle>
+                            {quest.description && (
+                              <CardDescription className="mt-1">{quest.description}</CardDescription>
+                            )}
+                          </div>
+                          {getQuestIcon(quest.quest_type)}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium">+{quest.xp_reward}</span>
+                            <span className="text-xs text-muted-foreground">XP</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-lg">🍌</span>
+                            <span className="text-sm font-medium">+{quest.banana_reward}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                          <span>Valid: {format(new Date(assignment.start_date), 'MMM d')} - {format(new Date(assignment.end_date), 'MMM d')}</span>
+                        </div>
+
+                        {completion ? (
+                          <Badge 
+                            variant={
+                              completion.status === 'verified' ? 'default' : 
+                              completion.status === 'pending' ? 'secondary' : 
+                              'destructive'
+                            }
+                            className="w-full justify-center py-2"
+                          >
+                            {completion.status === 'verified' && <Check className="h-4 w-4 mr-1" />}
+                            {completion.status === 'pending' && <Clock className="h-4 w-4 mr-1" />}
+                            {completion.status === 'rejected' && <X className="h-4 w-4 mr-1" />}
+                            {completion.status === 'verified' ? 'Completed!' : 
+                             completion.status === 'pending' ? 'Pending Verification' : 
+                             'Rejected'}
+                          </Badge>
+                        ) : (
+                          <Button 
+                            className="w-full" 
+                            onClick={() => handleOpenQuestModal(assignment)}
+                          >
+                            View Quest
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+
+                {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').length === 0 && (
+                  <Card className="col-span-full">
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      No {type} quests assigned for the current period.
+                      Create and assign quests using the admin controls above.
                     </CardContent>
                   </Card>
-                );
-              })}
-
-              {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').length === 0 && (
-                <Card className="col-span-full">
-                  <CardContent className="py-12 text-center text-muted-foreground">
-                    No {type} quests available right now.
-                    {isAdmin && " Create and assign quests using the admin controls above."}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+                )}
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
 
       {/* All Quests Table (Admin) */}
       {isAdmin && (
