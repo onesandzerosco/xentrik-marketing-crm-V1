@@ -17,6 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import QuestCompletionModal from './QuestCompletionModal';
 import QuestReviewModal from './QuestReviewModal';
+import DailyQuestSlots from './DailyQuestSlots';
 
 interface QuestsPanelProps {
   isAdmin: boolean;
@@ -449,6 +450,16 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Daily Quest Slots for Chatters */}
+      {!isAdmin && (
+        <DailyQuestSlots 
+          onQuestComplete={() => {
+            refetch.myCompletions();
+            refetch.leaderboard();
+          }} 
+        />
       )}
 
       {/* Quest Tabs */}
