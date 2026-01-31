@@ -2,13 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Upload, X, Image, ChevronLeft, ChevronRight, Star, Medal, Crown, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, X, Image, ChevronLeft, ChevronRight, Star, Medal, Crown, CheckCircle, BookOpen } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { Quest, QuestAssignment } from '@/hooks/useGamification';
 import { format } from 'date-fns';
+import { useWordOfTheDay } from '@/hooks/useWordOfTheDay';
 
 interface QuestCompletionModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ const QuestCompletionModal: React.FC<QuestCompletionModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { dailyWord } = useWordOfTheDay();
   const [step, setStep] = useState<ModalStep>('instructions');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
@@ -34,6 +36,9 @@ const QuestCompletionModal: React.FC<QuestCompletionModalProps> = ({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
   const quest = assignment.quest;
+  
+  // Check if this is a Word of the Day quest
+  const isWordOfDayQuest = quest?.title?.toLowerCase().includes('word of the day');
 
   const getQuestIcon = (type: string) => {
     switch (type) {
@@ -186,6 +191,27 @@ const QuestCompletionModal: React.FC<QuestCompletionModalProps> = ({
             </DialogHeader>
             
             <div className="space-y-4 py-4">
+              {/* Word of the Day Feature */}
+              {isWordOfDayQuest && dailyWord && (
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4 border border-purple-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="h-5 w-5 text-purple-400" />
+                    <span className="font-semibold text-sm text-purple-400">Today's Word</span>
+                  </div>
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <h3 className="text-2xl font-bold text-purple-300">{dailyWord.word}</h3>
+                    {dailyWord.part_of_speech && (
+                      <Badge variant="outline" className="text-xs text-purple-300/70 border-purple-300/30">
+                        {dailyWord.part_of_speech}
+                      </Badge>
+                    )}
+                  </div>
+                  {dailyWord.definition && (
+                    <p className="text-sm text-muted-foreground italic">"{dailyWord.definition}"</p>
+                  )}
+                </div>
+              )}
+
               {/* Instructions */}
               <div className="space-y-2">
                 <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Instructions</h4>

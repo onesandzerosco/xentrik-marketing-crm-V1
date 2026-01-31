@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Trophy, Target, Banana, Star, Crown, Medal } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
+import WordOfTheDayWidget from './WordOfTheDayWidget';
 
 interface GameBoardProps {
   isAdmin: boolean;
@@ -105,6 +106,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
 
   return (
     <div className="space-y-6">
+      {/* Word of the Day Widget - Featured at top */}
+      <WordOfTheDayWidget />
+
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Current Rank Card */}

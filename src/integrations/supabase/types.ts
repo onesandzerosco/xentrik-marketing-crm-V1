@@ -619,6 +619,33 @@ export type Database = {
           },
         ]
       }
+      gamification_daily_words: {
+        Row: {
+          created_at: string
+          date: string
+          definition: string | null
+          id: string
+          part_of_speech: string | null
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          definition?: string | null
+          id?: string
+          part_of_speech?: string | null
+          word: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          definition?: string | null
+          id?: string
+          part_of_speech?: string | null
+          word?: string
+        }
+        Relationships: []
+      }
       gamification_purchases: {
         Row: {
           banana_spent: number
