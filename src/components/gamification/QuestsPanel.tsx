@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye } from 'lucide-react';
+import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil } from 'lucide-react';
 import { useGamification, Quest, QuestAssignment } from '@/hooks/useGamification';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +51,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
   const [selectedCompletionForReview, setSelectedCompletionForReview] = useState<any>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
+  const [editDescription, setEditDescription] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Fetch pending completions for admin
   React.useEffect(() => {
@@ -179,6 +182,34 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     if (success) {
       fetchPendingCompletions();
       refetch.leaderboard();
+    }
+  };
+
+  const handleOpenEditDialog = (quest: Quest) => {
+    setEditingQuest(quest);
+    setEditDescription(quest.description || '');
+  };
+
+  const handleSaveDescription = async () => {
+    if (!editingQuest) return;
+
+    try {
+      setIsSavingEdit(true);
+      const { error } = await supabase
+        .from('gamification_quests')
+        .update({ description: editDescription })
+        .eq('id', editingQuest.id);
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Instructions updated!" });
+      setEditingQuest(null);
+      refetch.quests();
+    } catch (error) {
+      console.error('Error updating quest:', error);
+      toast({ title: "Error", description: "Failed to update instructions", variant: "destructive" });
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -515,47 +546,57 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>XP</TableHead>
-                  <TableHead>Bananas</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {quests.map(quest => (
-                  <TableRow key={quest.id}>
-                    <TableCell className="font-medium">{quest.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{quest.quest_type}</Badge>
-                    </TableCell>
-                    <TableCell>{quest.xp_reward}</TableCell>
-                    <TableCell>{quest.banana_reward} 🍌</TableCell>
-                    <TableCell>
-                      <Badge variant={quest.is_active ? 'default' : 'secondary'}>
-                        {quest.is_active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={async () => {
-                          await supabase
-                            .from('gamification_quests')
-                            .update({ is_active: !quest.is_active })
-                            .eq('id', quest.id);
-                          refetch.quests();
-                        }}
-                      >
-                        {quest.is_active ? 'Deactivate' : 'Activate'}
-                      </Button>
-                    </TableCell>
+                    <TableHead className="text-left">Title</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>XP</TableHead>
+                    <TableHead>Bananas</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {quests.map(quest => (
+                    <TableRow key={quest.id}>
+                      <TableCell className="font-medium text-left">{quest.title}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{quest.quest_type}</Badge>
+                      </TableCell>
+                      <TableCell>{quest.xp_reward}</TableCell>
+                      <TableCell>{quest.banana_reward} 🍌</TableCell>
+                      <TableCell>
+                        <Badge variant={quest.is_active ? 'default' : 'secondary'}>
+                          {quest.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleOpenEditDialog(quest)}
+                          >
+                            <Pencil className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={async () => {
+                              await supabase
+                                .from('gamification_quests')
+                                .update({ is_active: !quest.is_active })
+                                .eq('id', quest.id);
+                              refetch.quests();
+                            }}
+                          >
+                            {quest.is_active ? 'Deactivate' : 'Activate'}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
           </CardContent>
         </Card>
       )}
@@ -578,6 +619,42 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         onApprove={(id) => handleVerify(id, true)}
         onReject={(id) => handleVerify(id, false)}
       />
+
+      {/* Edit Instructions Dialog (Admin) */}
+      <Dialog open={!!editingQuest} onOpenChange={(open) => !open && setEditingQuest(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Instructions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <p className="text-sm font-medium mb-2">Quest: {editingQuest?.title}</p>
+              <Badge variant="outline" className="mb-4">{editingQuest?.quest_type}</Badge>
+            </div>
+            <div className="space-y-2">
+              <Label>Instructions / Description</Label>
+              <Textarea 
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Enter detailed instructions for this quest..."
+                rows={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                This will be shown to chatters when they view the quest details.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingQuest(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveDescription} disabled={isSavingEdit}>
+              {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Instructions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
