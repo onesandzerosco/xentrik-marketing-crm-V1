@@ -721,6 +721,7 @@ export type Database = {
       }
       gamification_quest_completions: {
         Row: {
+          attachments: string[] | null
           bananas_earned: number
           chatter_id: string
           completed_at: string
@@ -732,6 +733,7 @@ export type Database = {
           xp_earned: number
         }
         Insert: {
+          attachments?: string[] | null
           bananas_earned?: number
           chatter_id: string
           completed_at?: string
@@ -743,6 +745,7 @@ export type Database = {
           xp_earned?: number
         }
         Update: {
+          attachments?: string[] | null
           bananas_earned?: number
           chatter_id?: string
           completed_at?: string

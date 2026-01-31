@@ -57,6 +57,7 @@ export interface QuestCompletion {
   verified_by: string | null;
   verified_at: string | null;
   status: 'pending' | 'verified' | 'rejected';
+  attachments?: string[];
 }
 
 export interface ShopItem {

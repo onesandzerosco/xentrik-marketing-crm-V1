@@ -9,12 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown } from 'lucide-react';
+import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye } from 'lucide-react';
 import { useGamification, Quest, QuestAssignment } from '@/hooks/useGamification';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import QuestCompletionModal from './QuestCompletionModal';
+import QuestReviewModal from './QuestReviewModal';
 
 interface QuestsPanelProps {
   isAdmin: boolean;
@@ -45,6 +47,10 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   });
   const [selectedQuestForAssign, setSelectedQuestForAssign] = useState<string>('');
   const [pendingCompletions, setPendingCompletions] = useState<any[]>([]);
+  const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
+  const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
+  const [selectedCompletionForReview, setSelectedCompletionForReview] = useState<any>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   // Fetch pending completions for admin
   React.useEffect(() => {
@@ -60,7 +66,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         *,
         profile:profiles!gamification_quest_completions_chatter_id_fkey (name),
         quest_assignment:gamification_quest_assignments (
-          quest:gamification_quests (title, xp_reward, banana_reward)
+          quest:gamification_quests (title, description, xp_reward, banana_reward)
         )
       `)
       .eq('status', 'pending')
@@ -69,6 +75,23 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     if (!error) {
       setPendingCompletions((data as any) || []);
     }
+  };
+
+  const handleOpenQuestModal = (assignment: QuestAssignment) => {
+    setSelectedAssignment(assignment);
+    setIsCompletionModalOpen(true);
+  };
+
+  const handleQuestSubmitComplete = () => {
+    refetch.myCompletions();
+    if (isAdmin) {
+      fetchPendingCompletions();
+    }
+  };
+
+  const handleOpenReviewModal = (completion: any) => {
+    setSelectedCompletionForReview(completion);
+    setIsReviewModalOpen(true);
   };
 
   const handleCreateQuest = async () => {
@@ -341,9 +364,21 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                         <div className="flex gap-2 mt-1">
                           <Badge variant="outline">+{completion.xp_earned} XP</Badge>
                           <Badge variant="outline" className="text-yellow-600">+{completion.bananas_earned} 🍌</Badge>
+                          {completion.attachments?.length > 0 && (
+                            <Badge variant="outline" className="text-blue-600">
+                              {completion.attachments.length} screenshot{completion.attachments.length > 1 ? 's' : ''}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleOpenReviewModal(completion)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" /> Review
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="default"
@@ -446,9 +481,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                       ) : (
                         <Button 
                           className="w-full" 
-                          onClick={() => submitQuestCompletion(assignment.id)}
+                          onClick={() => handleOpenQuestModal(assignment)}
                         >
-                          Mark as Complete
+                          View Quest
                         </Button>
                       )}
                     </CardContent>
@@ -524,6 +559,25 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Quest Completion Modal */}
+      {selectedAssignment && (
+        <QuestCompletionModal
+          open={isCompletionModalOpen}
+          onOpenChange={setIsCompletionModalOpen}
+          assignment={selectedAssignment}
+          onSubmitComplete={handleQuestSubmitComplete}
+        />
+      )}
+
+      {/* Quest Review Modal (Admin) */}
+      <QuestReviewModal
+        open={isReviewModalOpen}
+        onOpenChange={setIsReviewModalOpen}
+        completion={selectedCompletionForReview}
+        onApprove={(id) => handleVerify(id, true)}
+        onReject={(id) => handleVerify(id, false)}
+      />
     </div>
   );
 };
