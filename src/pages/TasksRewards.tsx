@@ -1,10 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Gamepad2, Swords, Store } from 'lucide-react';
 import GameBoard from '@/components/gamification/GameBoard';
 import QuestsPanel from '@/components/gamification/QuestsPanel';
 import SupplyDepot from '@/components/gamification/SupplyDepot';
 import { useAuth } from '@/context/AuthContext';
+import { cn } from '@/lib/utils';
 
 const TasksRewards: React.FC = () => {
   const location = useLocation();
@@ -20,59 +21,68 @@ const TasksRewards: React.FC = () => {
     return 'game-board';
   };
 
-  const handleTabChange = (value: string) => {
-    switch (value) {
+  const activeTab = getActiveTab();
+
+  const navItems = [
+    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards' },
+    { id: 'quests', label: 'Quests', icon: Swords, path: '/tasks-rewards/quests' },
+    { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot' },
+  ];
+
+  const renderContent = () => {
+    switch (activeTab) {
       case 'quests':
-        navigate('/tasks-rewards/quests');
-        break;
+        return <QuestsPanel isAdmin={isAdmin} />;
       case 'supply-depot':
-        navigate('/tasks-rewards/supply-depot');
-        break;
+        return <SupplyDepot isAdmin={isAdmin} />;
       default:
-        navigate('/tasks-rewards');
+        return <GameBoard isAdmin={isAdmin} />;
     }
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent">
-              Tasks & Rewards
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Complete quests to earn XP and Bananas
-            </p>
-          </div>
+    <div className="flex min-h-screen w-full">
+      {/* Left Sidebar Navigation */}
+      <nav className="w-56 shrink-0 border-r border-border/40 bg-card/50 p-4">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent">
+            Tasks & Rewards
+          </h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Complete quests to earn XP and Bananas
+          </p>
         </div>
+        
+        <div className="space-y-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            
+            return (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.path)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
-        <Tabs value={getActiveTab()} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="game-board" className="text-xs md:text-sm">
-              🎮 Game Board
-            </TabsTrigger>
-            <TabsTrigger value="quests" className="text-xs md:text-sm">
-              ⚔️ Quests
-            </TabsTrigger>
-            <TabsTrigger value="supply-depot" className="text-xs md:text-sm">
-              🏪 Supply Depot
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="game-board">
-            <GameBoard isAdmin={isAdmin} />
-          </TabsContent>
-
-          <TabsContent value="quests">
-            <QuestsPanel isAdmin={isAdmin} />
-          </TabsContent>
-
-          <TabsContent value="supply-depot">
-            <SupplyDepot isAdmin={isAdmin} />
-          </TabsContent>
-        </Tabs>
-      </div>
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
+          {renderContent()}
+        </div>
+      </main>
     </div>
   );
 };
