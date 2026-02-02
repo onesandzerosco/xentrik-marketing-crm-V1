@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { SupabaseAuthProvider, useSupabaseAuth } from './context/SupabaseAuthContext';
 import { AuthProvider } from './context/AuthContext';
 import { CreatorProvider } from './context/creator';
 import { ActivityProvider } from './context/ActivityContext';
@@ -96,6 +96,33 @@ const CreatorInvoicesRedirect = () => {
   return <Navigate to={`/creators/${id}/invoices`} replace />;
 };
 
+// Tasks & Rewards uses a minimal layout without sidebar
+const TasksRewardsRoute = () => {
+  const { isAuthenticated, isLoading } = useSupabaseAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-border border-t-primary"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-background">
+      <TasksRewards />
+    </div>
+  );
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -131,9 +158,9 @@ const AppRoutes = () => {
       <Route path="/payroll" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       <Route path="/payroll/:id" element={<ProtectedRoute><Payroll /></ProtectedRoute>} />
       <Route path="/creator-invoicing" element={<ProtectedRoute><CreatorInvoicingPage /></ProtectedRoute>} />
-      <Route path="/tasks-rewards" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
-      <Route path="/tasks-rewards/quests" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
-      <Route path="/tasks-rewards/supply-depot" element={<ProtectedRoute><TasksRewards /></ProtectedRoute>} />
+      <Route path="/tasks-rewards" element={<TasksRewardsRoute />} />
+      <Route path="/tasks-rewards/quests" element={<TasksRewardsRoute />} />
+      <Route path="/tasks-rewards/supply-depot" element={<TasksRewardsRoute />} />
       {/* Add redirects for old route patterns */}
       
       <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />

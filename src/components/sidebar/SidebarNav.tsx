@@ -144,12 +144,13 @@ const navGroups: NavGroup[] = [
         icon: <Bot className="h-5 w-5" />,
         roles: ['Admin', 'VA', 'Chatter'],
       },
-      {
-        path: '/tasks-rewards',
-        label: 'Tasks & Rewards',
-        icon: <Gamepad2 className="h-5 w-5" />,
-        roles: ['Admin', 'Chatter'],
-      },
+      // Tasks & Rewards is accessed via Let's Play! button in header, not sidebar
+      // {
+      //   path: '/tasks-rewards',
+      //   label: 'Tasks & Rewards',
+      //   icon: <Gamepad2 className="h-5 w-5" />,
+      //   roles: ['Admin', 'Chatter'],
+      // },
     ]
   },
   {
