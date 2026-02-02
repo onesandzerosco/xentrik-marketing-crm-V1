@@ -199,9 +199,15 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
                         </Badge>
                       )}
                     </div>
-                    <h4 className="font-medium truncate">{quest?.title || 'Unknown Quest'}</h4>
+                    {/* Game Name as primary display */}
+                    <h4 className="font-bold text-primary truncate text-lg">
+                      {quest?.game_name || quest?.title || 'Unknown Quest'}
+                    </h4>
+                    {quest?.game_name && quest.game_name !== quest.title && (
+                      <p className="text-xs text-muted-foreground truncate">{quest.title}</p>
+                    )}
                     <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                      <span>+{quest?.xp_reward || 0} XP</span>
+                      <span className="text-green-500 font-medium">+{quest?.xp_reward || 0} XP</span>
                       <span>🍌 +{quest?.banana_reward || 0}</span>
                     </div>
                   </div>

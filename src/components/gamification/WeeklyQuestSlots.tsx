@@ -166,12 +166,18 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{quest.title}</h4>
+                    {/* Game Name as primary display */}
+                    <h4 className="font-bold text-primary truncate text-lg">
+                      {quest.game_name || quest.title}
+                    </h4>
+                    {quest.game_name && quest.game_name !== quest.title && (
+                      <p className="text-xs text-muted-foreground truncate">{quest.title}</p>
+                    )}
                     {quest.description && (
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{quest.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                      <span>+{quest.xp_reward} XP</span>
+                      <span className="text-green-500 font-medium">+{quest.xp_reward} XP</span>
                       <span>🍌 +{quest.banana_reward}</span>
                     </div>
                   </div>

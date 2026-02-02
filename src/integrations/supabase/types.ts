@@ -864,6 +864,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          game_name: string | null
           id: string
           is_active: boolean
           quest_type: string
@@ -876,6 +877,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          game_name?: string | null
           id?: string
           is_active?: boolean
           quest_type: string
@@ -888,6 +890,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          game_name?: string | null
           id?: string
           is_active?: boolean
           quest_type?: string
