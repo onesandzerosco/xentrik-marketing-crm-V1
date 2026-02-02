@@ -41,11 +41,14 @@ const TasksRewards: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full" style={{ fontFamily: "'SH Pinscher', sans-serif" }}>
+    <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
       {/* Left Sidebar Navigation */}
       <nav className="w-56 shrink-0 border-r border-border/40 bg-card/50 p-4">
         <div className="mb-6">
-          <h1 className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent">
+          <h1 
+            className="text-2xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          >
             Tasks & Rewards
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
