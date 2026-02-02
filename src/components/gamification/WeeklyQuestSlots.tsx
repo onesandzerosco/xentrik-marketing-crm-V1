@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Medal, Check, Clock, X, Eye } from 'lucide-react';
+import { Loader2, Medal } from 'lucide-react';
 import { useGamification, QuestAssignment } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import QuestCompletionModal from './QuestCompletionModal';
+import QuestSlotCard from './QuestSlotCard';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 
 interface WeeklyQuestSlotsProps {
@@ -124,105 +124,41 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
 
   return (
     <>
-      <Card className="border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-indigo-500/5">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Medal className="h-5 w-5 text-blue-500" />
-                Your Weekly Quests
-              </CardTitle>
-              <CardDescription>
-                {format(new Date(weekStart), 'MMM d')} - {format(new Date(weekEnd), 'MMM d')}
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="text-lg px-3 py-1">
-              {completedCount}/{weeklyAssignments.length}
-            </Badge>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Medal className="h-5 w-5 text-blue-500" />
+              Your Weekly Quests
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {format(new Date(weekStart), 'MMM d')} - {format(new Date(weekEnd), 'MMM d')}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
+          <Badge variant="outline" className="text-lg px-3 py-1 border-blue-500/30">
+            {completedCount}/{weeklyAssignments.length}
+          </Badge>
+        </div>
+
+        {/* Quest Cards Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {weeklyAssignments.map((assignment) => {
             const quest = assignment.quest;
             if (!quest) return null;
-            
-            const status = getAssignmentStatus(assignment.id);
-            const isVerified = status === 'verified';
-            const isPending = status === 'pending';
-            const isRejected = status === 'rejected';
 
             return (
-              <div
+              <QuestSlotCard
                 key={assignment.id}
-                className={`p-4 rounded-lg border transition-all ${
-                  isVerified 
-                    ? 'bg-green-500/10 border-green-500/30' 
-                    : isPending
-                    ? 'bg-yellow-500/10 border-yellow-500/30'
-                    : isRejected
-                    ? 'bg-red-500/10 border-red-500/30'
-                    : 'bg-card border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    {/* Game Name as primary display */}
-                    <h4 className="font-bold text-primary truncate text-lg">
-                      {quest.game_name || quest.title}
-                    </h4>
-                    {quest.game_name && quest.game_name !== quest.title && (
-                      <p className="text-xs text-muted-foreground truncate">{quest.title}</p>
-                    )}
-                    {quest.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{quest.description}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                      <span className="text-green-500 font-medium">+{quest.xp_reward} XP</span>
-                      <span>🍌 +{quest.banana_reward}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {isVerified ? (
-                      <Badge className="bg-green-500 text-white">
-                        <Check className="h-3 w-3 mr-1" />
-                        Done
-                      </Badge>
-                    ) : isPending ? (
-                      <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Pending
-                      </Badge>
-                    ) : isRejected ? (
-                      <>
-                        <Badge variant="destructive">
-                          <X className="h-3 w-3 mr-1" />
-                          Rejected
-                        </Badge>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleViewQuest(assignment)}
-                        >
-                          Retry
-                        </Button>
-                      </>
-                    ) : (
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleViewQuest(assignment)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
+                quest={quest}
+                questType="weekly"
+                status={getAssignmentStatus(assignment.id)}
+                onViewQuest={() => handleViewQuest(assignment)}
+              />
             );
           })}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Quest Completion Modal */}
       {selectedAssignment && (
