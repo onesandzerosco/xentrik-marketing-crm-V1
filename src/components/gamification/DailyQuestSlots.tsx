@@ -149,11 +149,14 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Star className="h-5 w-5 text-yellow-500" />
               Your Daily Quests
             </h2>
@@ -161,13 +164,17 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
               Complete 3 quests daily • Re-roll once each
             </p>
           </div>
-          <Badge variant="outline" className="text-lg px-3 py-1 border-primary/30">
+          <Badge 
+            variant="outline" 
+            className="text-base px-3 py-1 border-primary/30 font-bold"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          >
             {completedCount}/3
           </Badge>
         </div>
 
-        {/* Quest Cards Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quest Cards Grid - Tighter gap */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {slots.map((slot) => (
             <QuestSlotCard
               key={slot.id}
@@ -182,7 +189,7 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
           ))}
         </div>
 
-        <p className="text-xs text-muted-foreground text-center pt-2">
+        <p className="text-xs text-muted-foreground text-center">
           🎲 Click the dice to re-roll a quest (once per quest, per day)
         </p>
       </div>

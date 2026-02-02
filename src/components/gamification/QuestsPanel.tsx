@@ -267,7 +267,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Admin Controls */}
       {isAdmin && (
         <Card className="border-primary/20 bg-primary/5">
@@ -465,18 +465,30 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       {/* Chatter View: Sub-tabs for quest categories */}
       {!isAdmin && (
         <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="daily" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 mb-3 h-auto p-1">
+            <TabsTrigger 
+              value="daily" 
+              className="flex items-center gap-2 py-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Star className="h-4 w-4 text-yellow-500" />
-              <span className="hidden sm:inline">Daily</span>
+              <span className="text-xs">Daily</span>
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="weekly" 
+              className="flex items-center gap-2 py-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Medal className="h-4 w-4 text-blue-500" />
-              <span className="hidden sm:inline">Weekly</span>
+              <span className="text-xs">Weekly</span>
             </TabsTrigger>
-            <TabsTrigger value="special-ops" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="special-ops" 
+              className="flex items-center gap-2 py-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Crown className="h-4 w-4 text-purple-500" />
-              <span className="hidden sm:inline">Special Ops</span>
+              <span className="text-xs">Special Ops</span>
             </TabsTrigger>
           </TabsList>
 
