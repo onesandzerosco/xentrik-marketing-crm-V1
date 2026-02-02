@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Dices, Star, Check, Clock, X, Eye } from 'lucide-react';
+import { Loader2, Star } from 'lucide-react';
 import { useDailyQuestSlots, DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import DailyQuestCompletionModal from './DailyQuestCompletionModal';
+import DailyQuestSlotCard from './DailyQuestSlotCard';
 import { format } from 'date-fns';
 
 interface DailyQuestSlotsProps {
@@ -149,133 +149,41 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
 
   return (
     <>
-      <Card className="border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Star className="h-5 w-5 text-yellow-500" />
-                Your Daily Quests
-              </CardTitle>
-              <CardDescription>
-                Complete 3 quests daily • Re-roll once each
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="text-lg px-3 py-1">
-              {completedCount}/3
-            </Badge>
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              Your Daily Quests
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Complete 3 quests daily • Re-roll once each
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {slots.map((slot) => {
-            const quest = slot.quest;
-            const status = getSlotStatus(slot);
-            const isVerified = status === 'verified';
-            const isPending = status === 'pending';
-            const isRejected = status === 'rejected';
+          <Badge variant="outline" className="text-lg px-3 py-1 border-primary/30">
+            {completedCount}/3
+          </Badge>
+        </div>
 
-            return (
-              <div
-                key={slot.id}
-                className={`p-4 rounded-lg border transition-all ${
-                  isVerified 
-                    ? 'bg-green-500/10 border-green-500/30' 
-                    : isPending
-                    ? 'bg-yellow-500/10 border-yellow-500/30'
-                    : isRejected
-                    ? 'bg-red-500/10 border-red-500/30'
-                    : 'bg-card border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                        Slot {slot.slot_number}
-                      </span>
-                      {slot.has_rerolled && (
-                        <Badge variant="outline" className="text-xs">
-                          Re-rolled
-                        </Badge>
-                      )}
-                    </div>
-                    {/* Game Name as primary display */}
-                    <h4 className="font-bold text-primary truncate text-lg">
-                      {quest?.game_name || quest?.title || 'Unknown Quest'}
-                    </h4>
-                    {quest?.game_name && quest.game_name !== quest.title && (
-                      <p className="text-xs text-muted-foreground truncate">{quest.title}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                      <span className="text-green-500 font-medium">+{quest?.xp_reward || 0} XP</span>
-                      <span>🍌 +{quest?.banana_reward || 0}</span>
-                    </div>
-                  </div>
+        {/* Quest Cards Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {slots.map((slot) => (
+            <DailyQuestSlotCard
+              key={slot.id}
+              slot={slot}
+              status={getSlotStatus(slot)}
+              isRerolling={isRerolling === slot.slot_number}
+              onReroll={() => rerollSlot(slot.slot_number)}
+              onViewQuest={() => handleViewQuest(slot)}
+            />
+          ))}
+        </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Status Badge or Action Button */}
-                    {isVerified ? (
-                      <Badge className="bg-green-500 text-white">
-                        <Check className="h-3 w-3 mr-1" />
-                        Done
-                      </Badge>
-                    ) : isPending ? (
-                      <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Pending
-                      </Badge>
-                    ) : isRejected ? (
-                      <>
-                        <Badge variant="destructive">
-                          <X className="h-3 w-3 mr-1" />
-                          Rejected
-                        </Badge>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleViewQuest(slot)}
-                        >
-                          Retry
-                        </Button>
-                      </>
-                    ) : (
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleViewQuest(slot)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    )}
-
-                    {/* Re-roll Button - only show if not verified/pending */}
-                    {!isVerified && !isPending && !slot.has_rerolled && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => rerollSlot(slot.slot_number)}
-                        disabled={isRerolling === slot.slot_number}
-                        title="Re-roll this quest (once per day)"
-                        className="text-muted-foreground hover:text-primary"
-                      >
-                        {isRerolling === slot.slot_number ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Dices className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          <p className="text-xs text-muted-foreground text-center pt-2">
-            🎲 Click the dice to re-roll a quest (once per quest, per day)
-          </p>
-        </CardContent>
-      </Card>
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          🎲 Click the dice to re-roll a quest (once per quest, per day)
+        </p>
+      </div>
 
       {/* Daily Quest Completion Modal */}
       {selectedSlot && (
