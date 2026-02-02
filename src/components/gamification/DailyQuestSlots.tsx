@@ -7,7 +7,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import DailyQuestCompletionModal from './DailyQuestCompletionModal';
-import DailyQuestSlotCard from './DailyQuestSlotCard';
+import QuestSlotCard from './QuestSlotCard';
 import { format } from 'date-fns';
 
 interface DailyQuestSlotsProps {
@@ -169,10 +169,12 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
         {/* Quest Cards Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {slots.map((slot) => (
-            <DailyQuestSlotCard
+            <QuestSlotCard
               key={slot.id}
-              slot={slot}
+              quest={slot.quest}
+              questType="daily"
               status={getSlotStatus(slot)}
+              hasRerolled={slot.has_rerolled}
               isRerolling={isRerolling === slot.slot_number}
               onReroll={() => rerollSlot(slot.slot_number)}
               onViewQuest={() => handleViewQuest(slot)}
