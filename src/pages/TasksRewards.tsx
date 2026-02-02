@@ -41,14 +41,14 @@ const TasksRewards: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full" style={{ fontFamily: "'Press Start 2P', cursive" }}>
       {/* Left Sidebar Navigation */}
-      <nav className="w-56 shrink-0 border-r border-border/40 bg-card/50 p-4">
+      <nav className="w-64 shrink-0 border-r border-border/40 bg-card/50 p-4">
         <div className="mb-6">
-          <h1 className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent">
+          <h1 className="text-sm font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-relaxed">
             Tasks & Rewards
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-[8px] text-muted-foreground mt-2 leading-relaxed">
             Complete quests to earn XP and Bananas
           </p>
         </div>
@@ -63,13 +63,13 @@ const TasksRewards: React.FC = () => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  "w-full flex items-center gap-3 px-3 py-3 rounded-lg text-[10px] font-medium transition-all duration-200",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span>{item.label}</span>
               </button>
             );
