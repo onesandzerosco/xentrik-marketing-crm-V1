@@ -28,6 +28,7 @@ export interface ChatterStats {
 export interface Quest {
   id: string;
   title: string;
+  game_name: string | null;
   description: string | null;
   quest_type: 'daily' | 'weekly' | 'monthly';
   xp_reward: number;
