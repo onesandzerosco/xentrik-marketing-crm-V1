@@ -462,28 +462,51 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         </Card>
       )}
 
-      {/* Chatter View: Scrollable sections for all quest types */}
+      {/* Chatter View: Sub-tabs for quest categories */}
       {!isAdmin && (
-        <div className="space-y-6">
-          <DailyQuestSlots 
-            onQuestComplete={() => {
-              refetch.myCompletions();
-              refetch.leaderboard();
-            }} 
-          />
-          <WeeklyQuestSlots 
-            onQuestComplete={() => {
-              refetch.myCompletions();
-              refetch.leaderboard();
-            }} 
-          />
-          <MonthlyQuestSlots 
-            onQuestComplete={() => {
-              refetch.myCompletions();
-              refetch.leaderboard();
-            }} 
-          />
-        </div>
+        <Tabs defaultValue="daily" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="daily" className="flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-500" />
+              <span className="hidden sm:inline">Daily</span>
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2">
+              <Medal className="h-4 w-4 text-blue-500" />
+              <span className="hidden sm:inline">Weekly</span>
+            </TabsTrigger>
+            <TabsTrigger value="special-ops" className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-purple-500" />
+              <span className="hidden sm:inline">Special Ops</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily">
+            <DailyQuestSlots 
+              onQuestComplete={() => {
+                refetch.myCompletions();
+                refetch.leaderboard();
+              }} 
+            />
+          </TabsContent>
+
+          <TabsContent value="weekly">
+            <WeeklyQuestSlots 
+              onQuestComplete={() => {
+                refetch.myCompletions();
+                refetch.leaderboard();
+              }} 
+            />
+          </TabsContent>
+
+          <TabsContent value="special-ops">
+            <MonthlyQuestSlots 
+              onQuestComplete={() => {
+                refetch.myCompletions();
+                refetch.leaderboard();
+              }} 
+            />
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Admin View: Tabs for quest assignments */}
