@@ -71,24 +71,30 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
       }`}
     >
       {/* Header Row */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-muted/20">
         <Badge 
           variant="outline" 
-          className={`text-xs font-semibold tracking-wider uppercase ${config.badgeClass}`}
+          className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 ${config.badgeClass}`}
+          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
         >
           {config.label}
         </Badge>
-        <div className={`flex items-center gap-1.5 ${config.iconColor}`}>
+        <div className={`flex items-center gap-1 ${config.iconColor}`}>
           <IconComponent className="h-4 w-4" />
-          <span className="font-bold text-sm">{quest?.xp_reward || 0} XP</span>
+          <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+            {quest?.xp_reward || 0} XP
+          </span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-3 space-y-2.5">
         {/* Game Name - Primary Title */}
         <div>
-          <h3 className="text-xl font-bold text-foreground uppercase tracking-wide">
+          <h3 
+            className="text-lg font-bold text-foreground uppercase tracking-wide leading-tight"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          >
             {quest?.game_name || quest?.title || 'Unknown Quest'}
           </h3>
           {quest?.game_name && quest.game_name !== quest.title && (
@@ -97,27 +103,33 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
             </p>
           )}
           {quest?.description && (
-            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+            <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
               {quest.description}
             </p>
           )}
         </div>
 
         {/* Progress Tracking */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground uppercase tracking-wider font-medium">
-              System Tracking
+            <span 
+              className="text-muted-foreground uppercase tracking-wider font-medium"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
+              Progress
             </span>
-            <span className="text-primary font-semibold">
-              {isVerified ? '1 / 1' : '0 / 1'} calls
+            <span 
+              className="text-primary font-bold"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
+              {isVerified ? '1 / 1' : '0 / 1'}
             </span>
           </div>
           
           {/* Progress Bar */}
           <div className="relative">
-            <Progress value={progressValue} className="h-2 bg-muted/30" />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+            <Progress value={progressValue} className="h-3 bg-muted/30" />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
               <span>0%</span>
               <span>50%</span>
               <span>100%</span>
@@ -129,19 +141,19 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         {(isVerified || isPending || isRejected) && (
           <div className="flex items-center gap-2">
             {isVerified && (
-              <Badge className="bg-green-500 text-white">
+              <Badge className="bg-green-500 text-white text-xs">
                 <Check className="h-3 w-3 mr-1" />
                 Completed
               </Badge>
             )}
             {isPending && (
-              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs">
                 <Clock className="h-3 w-3 mr-1" />
                 Pending Review
               </Badge>
             )}
             {isRejected && (
-              <Badge variant="destructive">
+              <Badge variant="destructive" className="text-xs">
                 <X className="h-3 w-3 mr-1" />
                 Rejected
               </Badge>
@@ -150,17 +162,18 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         )}
 
         {/* Banana Reward */}
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm font-medium" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
           🍌 +{quest?.banana_reward || 0} Bananas
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="px-4 pb-4 flex items-center gap-2">
+      <div className="px-3 pb-3 flex items-center gap-2">
         {!isVerified && (
           <Button
             onClick={onViewQuest}
-            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold"
+            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-sm h-9"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
             <Settings className="h-4 w-4 mr-2" />
             Log Activity
@@ -170,7 +183,8 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         {isVerified && (
           <Button
             disabled
-            className="flex-1 bg-green-500/20 text-green-500 font-semibold"
+            className="flex-1 bg-green-500/20 text-green-500 font-bold text-sm h-9"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
             <Check className="h-4 w-4 mr-2" />
             Completed
@@ -185,7 +199,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
             onClick={onReroll}
             disabled={isRerolling}
             title="Re-roll this quest (once per day)"
-            className="border-border/50 hover:border-primary hover:text-primary"
+            className="border-border/50 hover:border-primary hover:text-primary h-9 w-9"
           >
             {isRerolling ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -196,7 +210,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         )}
 
         {questType === 'daily' && hasRerolled && !isVerified && !isPending && (
-          <Badge variant="outline" className="text-xs text-muted-foreground">
+          <Badge variant="outline" className="text-[10px] text-muted-foreground">
             Re-rolled
           </Badge>
         )}

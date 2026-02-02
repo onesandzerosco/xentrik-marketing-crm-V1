@@ -124,11 +124,14 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Medal className="h-5 w-5 text-blue-500" />
               Your Weekly Quests
             </h2>
@@ -136,13 +139,17 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
               {format(new Date(weekStart), 'MMM d')} - {format(new Date(weekEnd), 'MMM d')}
             </p>
           </div>
-          <Badge variant="outline" className="text-lg px-3 py-1 border-blue-500/30">
+          <Badge 
+            variant="outline" 
+            className="text-base px-3 py-1 border-blue-500/30 font-bold"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          >
             {completedCount}/{weeklyAssignments.length}
           </Badge>
         </div>
 
-        {/* Quest Cards Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quest Cards Grid - Tighter gap */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {weeklyAssignments.map((assignment) => {
             const quest = assignment.quest;
             if (!quest) return null;

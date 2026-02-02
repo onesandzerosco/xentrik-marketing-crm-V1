@@ -42,21 +42,21 @@ const TasksRewards: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
-      {/* Left Sidebar Navigation */}
-      <nav className="w-56 shrink-0 border-r border-border/40 bg-card/50 p-4">
-        <div className="mb-6">
+      {/* Left Sidebar Navigation - Compact */}
+      <nav className="w-48 shrink-0 border-r-2 border-primary/30 bg-card/80 p-3 flex flex-col">
+        <div className="mb-4">
           <h1 
-            className="text-2xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent"
+            className="text-lg font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
             style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
             Tasks & Rewards
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Complete quests to earn XP and Bananas
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Earn XP & Bananas
           </p>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-1.5 flex-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -66,23 +66,24 @@ const TasksRewards: React.FC = () => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                  "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-lg border-2 border-primary"
+                    : "text-muted-foreground hover:bg-primary/20 hover:text-foreground border-2 border-transparent"
                 )}
+                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
               >
-                <Icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="text-xs">{item.label}</span>
               </button>
             );
           })}
         </div>
       </nav>
 
-      {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-        <div className="max-w-6xl mx-auto">
+      {/* Main Content Area - Reduced padding, maximize space */}
+      <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-background">
+        <div className="w-full max-w-none">
           {renderContent()}
         </div>
       </main>

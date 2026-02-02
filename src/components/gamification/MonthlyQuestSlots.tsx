@@ -124,11 +124,14 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete }
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
               <Crown className="h-5 w-5 text-purple-500" />
               Special Ops
             </h2>
@@ -136,13 +139,17 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete }
               {format(new Date(monthStart), 'MMMM yyyy')}
             </p>
           </div>
-          <Badge variant="outline" className="text-lg px-3 py-1 border-purple-500/30">
+          <Badge 
+            variant="outline" 
+            className="text-base px-3 py-1 border-purple-500/30 font-bold"
+            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          >
             {completedCount}/{monthlyAssignments.length}
           </Badge>
         </div>
 
-        {/* Quest Cards Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Quest Cards Grid - Tighter gap */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {monthlyAssignments.map((assignment) => {
             const quest = assignment.quest;
             if (!quest) return null;
