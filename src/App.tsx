@@ -171,6 +171,7 @@ const AppRoutes = () => {
       <Route path="/tasks-rewards" element={<TasksRewardsRoute />} />
       <Route path="/tasks-rewards/quests" element={<TasksRewardsRoute />} />
       <Route path="/tasks-rewards/supply-depot" element={<TasksRewardsRoute />} />
+      <Route path="/tasks-rewards/control-panel" element={<TasksRewardsRoute />} />
       {/* Add redirects for old route patterns */}
       
       <Route path="/onboard" element={<ProtectedRoute><CreatorOnboardForm /></ProtectedRoute>} />

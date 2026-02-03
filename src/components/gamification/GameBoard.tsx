@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Trophy, Star, Crown, TrendingUp, Banana, Settings } from 'lucide-react';
-import { useGamification, QuestAssignment } from '@/hooks/useGamification';
+import { Loader2, Trophy, Star, Crown, Medal } from 'lucide-react';
+import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import WordOfTheDayWidget from './WordOfTheDayWidget';
-import QuestDetailsModal from './QuestDetailsModal';
 
 interface GameBoardProps {
   isAdmin: boolean;
 }
+
+const questTypeConfig = {
+  daily: {
+    label: 'Daily',
+    badgeClass: 'bg-green-500/20 text-green-400 border-green-500/50',
+    icon: Trophy,
+  },
+  weekly: {
+    label: 'Weekly',
+    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+    icon: Medal,
+  },
+  monthly: {
+    label: 'Special Ops',
+    badgeClass: 'bg-pink-500/20 text-pink-400 border-pink-500/50',
+    icon: Crown,
+  },
+};
 
 const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   const { user } = useAuth();
@@ -24,11 +40,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     myCompletions,
     isLoading,
     getCurrentRank,
-    refetch
   } = useGamification();
-
-  const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -61,25 +73,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
 
   const getCompletionStatus = (assignmentId: string) => {
     return myCompletions.find(c => c.quest_assignment_id === assignmentId);
-  };
-
-  const getQuestTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case 'daily': return 'bg-green-500/20 text-green-400 border-green-500/50';
-      case 'weekly': return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
-      case 'monthly': return 'bg-pink-500/20 text-pink-400 border-pink-500/50';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const handleViewQuest = (assignment: QuestAssignment) => {
-    setSelectedAssignment(assignment);
-    setIsModalOpen(true);
-  };
-
-  const handleQuestComplete = () => {
-    refetch.myCompletions();
-    refetch.activeAssignments();
   };
 
   return (
@@ -194,79 +187,60 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].map(assignment => {
               const completion = getCompletionStatus(assignment.id);
               const questType = assignment.quest?.quest_type || 'daily';
+              const config = questTypeConfig[questType];
+              const IconComponent = config.icon;
               const isCompleted = completion?.status === 'verified';
               const isPending = completion?.status === 'pending';
               
               return (
-                <Card key={assignment.id} className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-pointer" onClick={() => handleViewQuest(assignment)}>
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-start justify-between">
+                <Card 
+                  key={assignment.id} 
+                  className={`bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 ${isCompleted ? 'opacity-60' : ''}`}
+                >
+                  <CardContent className="p-4">
+                    {/* Type Badge & Rewards */}
+                    <div className="flex items-center justify-between mb-3">
                       <Badge 
                         variant="outline" 
-                        className={`text-xs uppercase tracking-wider ${getQuestTypeBadgeColor(questType)}`}
+                        className={`text-xs uppercase tracking-wider ${config.badgeClass}`}
+                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                       >
-                        {questType} Quest
+                        <IconComponent className="h-3 w-3 mr-1" />
+                        {config.label}
                       </Badge>
-                      <span 
-                        className="text-base font-bold text-primary"
-                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-                      >
-                        ⚔ {assignment.quest?.xp_reward} XP
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span 
+                          className="text-sm font-bold text-primary"
+                          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                        >
+                          {assignment.quest?.xp_reward} XP
+                        </span>
+                        <span className="text-sm text-yellow-500">🍌{assignment.quest?.banana_reward}</span>
+                      </div>
                     </div>
 
-                    <div>
-                      <h3 
-                        className="text-xl font-bold uppercase text-foreground"
-                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-                      >
-                        {assignment.quest?.game_name || assignment.quest?.title}
-                      </h3>
-                      {assignment.quest?.game_name && assignment.quest.game_name !== assignment.quest.title && (
-                        <p className="text-sm text-muted-foreground italic">
-                          {assignment.quest.title}
-                        </p>
-                      )}
-                      <p className="text-base text-muted-foreground mt-1 line-clamp-2">
-                        {assignment.quest?.description || 'Complete this quest to earn rewards.'}
-                      </p>
-                    </div>
+                    {/* Game Name */}
+                    <h3 
+                      className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
+                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                    >
+                      {assignment.quest?.game_name || assignment.quest?.title}
+                    </h3>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-muted-foreground uppercase">
+                    {/* Progress */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
                         <span>Progress</span>
-                        <span>{isCompleted ? '1 / 1' : '0 / 1'}</span>
+                        <span className="flex items-center gap-2">
+                          {isCompleted ? '1 / 1' : isPending ? '0 / 1' : '0 / 1'}
+                          {isCompleted && <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0">✓</Badge>}
+                          {isPending && <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 text-[10px] px-1.5 py-0">⏳</Badge>}
+                        </span>
                       </div>
                       <Progress 
                         value={isCompleted ? 100 : isPending ? 50 : 0} 
-                        className="h-3" 
+                        className="h-2" 
                       />
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-yellow-500">+{assignment.quest?.banana_reward} 🍌</span>
-                      
-                      {completion ? (
-                        <Badge 
-                          variant={isCompleted ? 'default' : 'secondary'}
-                          className="text-sm"
-                        >
-                          {isCompleted ? '✓ Complete' : isPending ? '⏳ Pending' : '✗ Rejected'}
-                        </Badge>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs h-8"
-                          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewQuest(assignment);
-                          }}
-                        >
-                          <Settings className="h-3 w-3 mr-1" />
-                          Log Activity
-                        </Button>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -376,16 +350,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </div>
       </div>
 
-      {/* Quest Details Modal */}
-      {selectedAssignment && (
-        <QuestDetailsModal
-          open={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          assignment={selectedAssignment}
-          completionStatus={getCompletionStatus(selectedAssignment.id)?.status || null}
-          onSubmitComplete={handleQuestComplete}
-        />
-      )}
     </div>
   );
 };
