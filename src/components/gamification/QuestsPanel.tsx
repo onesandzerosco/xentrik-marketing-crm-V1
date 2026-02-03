@@ -270,12 +270,12 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   }
 
   return (
-    <div className="space-y-4" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+    <div className="space-y-4">
       {/* Admin Controls */}
       {isAdmin && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-xl" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>Admin Controls</CardTitle>
+            <CardTitle className="text-xl">Admin Controls</CardTitle>
             <CardDescription className="text-base">Create and manage quests for chatters</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -472,7 +472,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             <TabsTrigger 
               value="daily" 
               className="flex items-center gap-2 py-3"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
               <Star className="h-5 w-5 text-yellow-500" />
               <span className="text-base">Daily</span>
@@ -480,7 +479,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             <TabsTrigger 
               value="weekly" 
               className="flex items-center gap-2 py-3"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
               <Medal className="h-5 w-5 text-blue-500" />
               <span className="text-base">Weekly</span>
@@ -488,7 +486,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             <TabsTrigger 
               value="special-ops" 
               className="flex items-center gap-2 py-3"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
               <Crown className="h-5 w-5 text-purple-500" />
               <span className="text-base">Special Ops</span>
@@ -640,7 +637,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       {isAdmin && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>All Quests</CardTitle>
+            <CardTitle className="text-xl">All Quests</CardTitle>
             <CardDescription className="text-base">Manage all quest definitions</CardDescription>
           </CardHeader>
           <CardContent>
