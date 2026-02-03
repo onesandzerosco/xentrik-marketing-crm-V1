@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 
 export const LetsPlayButton: React.FC = () => {
   const handleClick = () => {
-    // Open Tasks & Rewards in a new tab
-    window.open('/tasks-rewards', '_blank');
+    // Open Tasks & Rewards in a new tab using full URL
+    window.open(`${window.location.origin}/tasks-rewards`, '_blank');
   };
 
   return (
