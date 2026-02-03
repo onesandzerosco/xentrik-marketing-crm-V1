@@ -71,12 +71,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
       {/* Header */}
       <div>
         <h1 
-          className="text-3xl font-bold text-foreground uppercase tracking-wide"
+          className="text-4xl font-bold text-foreground uppercase tracking-wide"
           style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
         >
           Game Board
         </h1>
-        <p className="text-muted-foreground text-sm mt-1">
+        <p className="text-muted-foreground text-base mt-1">
           Welcome back, Chatter. Status report follows.
         </p>
       </div>
@@ -86,16 +86,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         {/* Current Points */}
         <Card className="bg-card/80 border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Current XP</p>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current XP</p>
             <div className="flex items-center justify-between">
               <span 
-                className="text-3xl font-bold text-primary"
+                className="text-4xl font-bold text-primary"
                 style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
               >
                 {myStats?.total_xp || 0}
               </span>
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Star className="h-6 w-6 text-primary" />
+              <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Star className="h-7 w-7 text-primary" />
               </div>
             </div>
           </CardContent>
@@ -104,16 +104,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         {/* Banana Balance */}
         <Card className="bg-card/80 border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Banana Balance</p>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Banana Balance</p>
             <div className="flex items-center justify-between">
               <span 
-                className="text-3xl font-bold text-yellow-500"
+                className="text-4xl font-bold text-yellow-500"
                 style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
               >
                 {myStats?.banana_balance || 0}
               </span>
-              <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <span className="text-2xl">🍌</span>
+              <div className="w-14 h-14 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <span className="text-3xl">🍌</span>
               </div>
             </div>
           </CardContent>
@@ -122,10 +122,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         {/* Current Rank */}
         <Card className="bg-card/80 border-border/50">
           <CardContent className="p-5">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Current Rank</p>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current Rank</p>
             <div className="flex items-center justify-between">
               <span 
-                className="text-2xl font-bold uppercase"
+                className="text-3xl font-bold uppercase"
                 style={{ 
                   fontFamily: "'Macs Minecraft', sans-serif",
                   color: currentRank?.badge_color || '#808080'
@@ -134,10 +134,10 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                 {currentRank?.name || 'Unranked'}
               </span>
               <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                className="w-14 h-14 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${currentRank?.badge_color || '#808080'}20` }}
               >
-                <Crown className="h-6 w-6" style={{ color: currentRank?.badge_color || '#808080' }} />
+                <Crown className="h-7 w-7" style={{ color: currentRank?.badge_color || '#808080' }} />
               </div>
             </div>
           </CardContent>
@@ -149,8 +149,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         <Card className="bg-card/80 border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground uppercase tracking-wider">Progress to {nextRank.name}</span>
-              <span className="text-xs text-muted-foreground">{xpToNextRank} XP to go</span>
+              <span className="text-sm text-muted-foreground uppercase tracking-wider">Progress to {nextRank.name}</span>
+              <span className="text-sm text-muted-foreground">{xpToNextRank} XP to go</span>
             </div>
             <Progress value={xpProgress} className="h-3" />
           </CardContent>
@@ -165,9 +165,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         {/* Active Directives - Left Column */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-1 h-6 bg-primary rounded-full" />
+            <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
-              className="text-xl font-bold uppercase tracking-wide"
+              className="text-2xl font-bold uppercase tracking-wide"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
               Active Directives
@@ -185,12 +185,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     <div className="flex items-start justify-between">
                       <Badge 
                         variant="outline" 
-                        className={`text-[10px] uppercase tracking-wider ${getQuestTypeBadgeColor(questType)}`}
+                        className={`text-xs uppercase tracking-wider ${getQuestTypeBadgeColor(questType)}`}
                       >
                         {questType} Quest
                       </Badge>
                       <span 
-                        className="text-sm font-bold text-primary"
+                        className="text-base font-bold text-primary"
                         style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                       >
                         ⚔ {assignment.quest?.xp_reward} XP
@@ -199,33 +199,33 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
 
                     <div>
                       <h3 
-                        className="text-lg font-bold uppercase text-foreground"
+                        className="text-xl font-bold uppercase text-foreground"
                         style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                       >
                         {assignment.quest?.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-base text-muted-foreground mt-1">
                         {assignment.quest?.description || 'Complete this quest to earn rewards.'}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
+                      <div className="flex items-center justify-between text-sm text-muted-foreground uppercase">
                         <span>Progress</span>
                         <span>{completion ? (completion.status === 'verified' ? '1 / 1' : '0 / 1') : '0 / 1'}</span>
                       </div>
                       <Progress 
                         value={completion?.status === 'verified' ? 100 : 0} 
-                        className="h-2" 
+                        className="h-3" 
                       />
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-yellow-500">+{assignment.quest?.banana_reward} 🍌</span>
+                      <span className="text-sm text-yellow-500">+{assignment.quest?.banana_reward} 🍌</span>
                       {completion && (
                         <Badge 
                           variant={completion.status === 'verified' ? 'default' : 'secondary'}
-                          className="text-xs ml-auto"
+                          className="text-sm ml-auto"
                         >
                           {completion.status === 'verified' ? '✓ Complete' : completion.status === 'pending' ? '⏳ Pending' : '✗ Rejected'}
                         </Badge>
@@ -249,9 +249,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         {/* Top Agents - Right Column */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <div className="w-1 h-6 bg-primary rounded-full" />
+            <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
-              className="text-xl font-bold uppercase tracking-wide"
+              className="text-2xl font-bold uppercase tracking-wide"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
               Top Agents
@@ -261,7 +261,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           <Card className="bg-card/80 border-border/50">
             <CardContent className="p-4">
               {/* Header */}
-              <div className="grid grid-cols-12 gap-2 pb-3 border-b border-border/50 text-xs text-muted-foreground uppercase tracking-wider">
+              <div className="grid grid-cols-12 gap-2 pb-3 border-b border-border/50 text-sm text-muted-foreground uppercase tracking-wider">
                 <div className="col-span-2">Rank</div>
                 <div className="col-span-7">Agent</div>
                 <div className="col-span-3 text-right">PTS</div>
@@ -279,26 +279,26 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       className={`grid grid-cols-12 gap-2 items-center py-2 rounded ${isMe ? 'bg-primary/10' : ''}`}
                     >
                       <div className="col-span-2 flex items-center justify-center">
-                        {index === 0 && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
-                        {index === 1 && <span className="text-muted-foreground text-sm">2</span>}
-                        {index === 2 && <span className="text-muted-foreground text-sm">3</span>}
-                        {index > 2 && <span className="text-muted-foreground text-sm">{index + 1}</span>}
+                        {index === 0 && <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />}
+                        {index === 1 && <span className="text-muted-foreground text-base">2</span>}
+                        {index === 2 && <span className="text-muted-foreground text-base">3</span>}
+                        {index > 2 && <span className="text-muted-foreground text-base">{index + 1}</span>}
                       </div>
                       <div className="col-span-7 flex items-center gap-2 min-w-0">
-                        <Avatar className="h-6 w-6 shrink-0">
+                        <Avatar className="h-7 w-7 shrink-0">
                           <AvatarImage src={stats.profile?.profile_image} />
-                          <AvatarFallback className="text-[10px]">
+                          <AvatarFallback className="text-xs">
                             {stats.profile?.name?.charAt(0) || '?'}
                           </AvatarFallback>
                         </Avatar>
                         <span 
-                          className={`text-sm truncate ${isMe ? 'text-primary font-medium' : 'text-foreground'}`}
+                          className={`text-base truncate ${isMe ? 'text-primary font-medium' : 'text-foreground'}`}
                         >
                           {stats.profile?.name || 'Unknown'}
                         </span>
                       </div>
-                      <div 
-                        className="col-span-3 text-right text-sm font-bold"
+                      <div
+                        className="col-span-3 text-right text-base font-bold"
                         style={{ 
                           fontFamily: "'Macs Minecraft', sans-serif",
                           color: rank?.badge_color || '#808080'
@@ -315,18 +315,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               {myPosition > 10 && (
                 <div className="mt-4 pt-3 border-t border-border/50">
                   <div className="grid grid-cols-12 gap-2 items-center py-2 bg-primary/10 rounded">
-                    <div className="col-span-2 text-center text-sm text-muted-foreground">
+                    <div className="col-span-2 text-center text-base text-muted-foreground">
                       {myPosition}
                     </div>
                     <div className="col-span-7 flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
+                      <Avatar className="h-7 w-7">
                         <AvatarImage src={myStats?.profile?.profile_image} />
-                        <AvatarFallback className="text-[10px]">You</AvatarFallback>
+                        <AvatarFallback className="text-xs">You</AvatarFallback>
                       </Avatar>
-                      <span className="text-sm text-primary font-medium">You</span>
+                      <span className="text-base text-primary font-medium">You</span>
                     </div>
                     <div 
-                      className="col-span-3 text-right text-sm font-bold text-primary"
+                      className="col-span-3 text-right text-base font-bold text-primary"
                       style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                     >
                       {myStats?.total_xp || 0}
