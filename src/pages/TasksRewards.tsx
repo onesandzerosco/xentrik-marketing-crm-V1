@@ -43,7 +43,7 @@ const TasksRewards: React.FC = () => {
   return (
     <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
       {/* Left Sidebar Navigation */}
-      <nav className="w-64 shrink-0 border-r-2 border-primary/30 bg-card/80 p-5 flex flex-col">
+      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-5 flex flex-col" style={{ width: '16rem' }}>
         <div className="mb-4">
           <h1 
             className="text-lg font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
