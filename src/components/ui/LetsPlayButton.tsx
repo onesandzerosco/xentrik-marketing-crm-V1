@@ -15,19 +15,19 @@ export const LetsPlayButton: React.FC = () => {
       className={cn(
         "relative px-4 py-2 font-bold text-sm",
         "font-['Press_Start_2P',_monospace]",
-        "text-foreground hover:text-primary-foreground",
-        "hover:bg-primary",
+        // Yellow styling with translucent halo
+        "bg-yellow-500/90 text-black",
+        "hover:bg-yellow-400",
+        "shadow-[0_0_15px_hsl(45_100%_50%/0.4),_0_0_30px_hsl(45_100%_50%/0.2)]",
+        "hover:shadow-[0_0_20px_hsl(45_100%_50%/0.6),_0_0_40px_hsl(45_100%_50%/0.3)]",
         "transition-all duration-300",
-        // Pulsing glow animation
-        "animate-pulse-glow",
-        "hover:shadow-[0_0_25px_hsl(var(--primary)/0.8)]",
         "before:absolute before:inset-0 before:rounded-[15px]",
         "before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent",
         "before:translate-x-[-100%] before:opacity-0",
         "hover:before:translate-x-[100%] hover:before:opacity-100",
         "before:transition-all before:duration-700",
         "overflow-hidden",
-        "border border-primary/50 hover:border-primary"
+        "border border-yellow-400/50 hover:border-yellow-300"
       )}
       style={{
         fontFamily: "'Press Start 2P', monospace",
