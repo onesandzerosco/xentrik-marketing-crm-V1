@@ -1,8 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Gamepad2, Swords, Store } from 'lucide-react';
+import { Gamepad2, Swords, Store, Settings } from 'lucide-react';
 import GameBoard from '@/components/gamification/GameBoard';
 import QuestsPanel from '@/components/gamification/QuestsPanel';
+import ChatterQuestsPage from '@/components/gamification/ChatterQuestsPage';
 import SupplyDepot from '@/components/gamification/SupplyDepot';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,7 @@ const TasksRewards: React.FC = () => {
   
   // Determine active tab from URL
   const getActiveTab = () => {
+    if (location.pathname.includes('/control-panel')) return 'control-panel';
     if (location.pathname.includes('/quests')) return 'quests';
     if (location.pathname.includes('/supply-depot')) return 'supply-depot';
     return 'game-board';
@@ -25,8 +27,9 @@ const TasksRewards: React.FC = () => {
 
   const navItems = [
     { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards', adminOnly: false },
-    { id: 'quests', label: 'Control Panel', icon: Swords, path: '/tasks-rewards/quests', adminOnly: true },
+    { id: 'quests', label: 'Quests', icon: Swords, path: '/tasks-rewards/quests', adminOnly: false },
     { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot', adminOnly: false },
+    { id: 'control-panel', label: 'Control Panel', icon: Settings, path: '/tasks-rewards/control-panel', adminOnly: true },
   ];
 
   // Filter nav items based on admin status
@@ -34,8 +37,10 @@ const TasksRewards: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'quests':
+      case 'control-panel':
         return <QuestsPanel isAdmin={isAdmin} />;
+      case 'quests':
+        return <ChatterQuestsPage />;
       case 'supply-depot':
         return <SupplyDepot isAdmin={isAdmin} />;
       default:
