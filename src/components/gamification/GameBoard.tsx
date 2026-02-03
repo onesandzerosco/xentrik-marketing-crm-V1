@@ -191,7 +191,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].slice(0, 4).map(assignment => {
+            {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].map(assignment => {
               const completion = getCompletionStatus(assignment.id);
               const questType = assignment.quest?.quest_type || 'daily';
               const isCompleted = completion?.status === 'verified';

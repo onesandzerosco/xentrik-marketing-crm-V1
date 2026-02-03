@@ -45,8 +45,8 @@ const TasksRewards: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
-      {/* Left Sidebar Navigation */}
-      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col" style={{ width: '20rem' }}>
+      {/* Left Sidebar Navigation - Fixed position */}
+      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto" style={{ width: '20rem' }}>
         <div className="mb-6">
           <h1 
             className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
@@ -54,7 +54,7 @@ const TasksRewards: React.FC = () => {
           >
             Tasks & Rewards
           </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">
+          <p className="text-sm text-muted-foreground mt-1.5" style={{ fontFamily: "'Pixellari', sans-serif" }}>
             Earn XP & Bananas
           </p>
         </div>
