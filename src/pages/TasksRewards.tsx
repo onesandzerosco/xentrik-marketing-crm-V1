@@ -24,10 +24,13 @@ const TasksRewards: React.FC = () => {
   const activeTab = getActiveTab();
 
   const navItems = [
-    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards' },
-    { id: 'quests', label: 'Quests', icon: Swords, path: '/tasks-rewards/quests' },
-    { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot' },
+    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards', adminOnly: false },
+    { id: 'quests', label: 'Control Panel', icon: Swords, path: '/tasks-rewards/quests', adminOnly: true },
+    { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot', adminOnly: false },
   ];
+
+  // Filter nav items based on admin status
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -57,7 +60,7 @@ const TasksRewards: React.FC = () => {
         </div>
         
         <div className="space-y-2 flex-1">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             
