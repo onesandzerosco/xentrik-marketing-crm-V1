@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Trophy, Star, Crown, TrendingUp, Banana } from 'lucide-react';
-import { useGamification } from '@/hooks/useGamification';
+import { Loader2, Trophy, Star, Crown, TrendingUp, Banana, Settings } from 'lucide-react';
+import { useGamification, QuestAssignment } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import WordOfTheDayWidget from './WordOfTheDayWidget';
+import QuestDetailsModal from './QuestDetailsModal';
 
 interface GameBoardProps {
   isAdmin: boolean;
@@ -21,8 +23,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     activeAssignments,
     myCompletions,
     isLoading,
-    getCurrentRank
+    getCurrentRank,
+    refetch
   } = useGamification();
+
+  const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -64,6 +70,16 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
       case 'monthly': return 'bg-pink-500/20 text-pink-400 border-pink-500/50';
       default: return 'bg-muted text-muted-foreground';
     }
+  };
+
+  const handleViewQuest = (assignment: QuestAssignment) => {
+    setSelectedAssignment(assignment);
+    setIsModalOpen(true);
+  };
+
+  const handleQuestComplete = () => {
+    refetch.myCompletions();
+    refetch.activeAssignments();
   };
 
   return (
@@ -178,9 +194,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].slice(0, 4).map(assignment => {
               const completion = getCompletionStatus(assignment.id);
               const questType = assignment.quest?.quest_type || 'daily';
+              const isCompleted = completion?.status === 'verified';
+              const isPending = completion?.status === 'pending';
               
               return (
-                <Card key={assignment.id} className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-default">
+                <Card key={assignment.id} className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-pointer" onClick={() => handleViewQuest(assignment)}>
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <Badge 
@@ -209,7 +227,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                           {assignment.quest.title}
                         </p>
                       )}
-                      <p className="text-base text-muted-foreground mt-1">
+                      <p className="text-base text-muted-foreground mt-1 line-clamp-2">
                         {assignment.quest?.description || 'Complete this quest to earn rewards.'}
                       </p>
                     </div>
@@ -217,23 +235,37 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm text-muted-foreground uppercase">
                         <span>Progress</span>
-                        <span>{completion ? (completion.status === 'verified' ? '1 / 1' : '0 / 1') : '0 / 1'}</span>
+                        <span>{isCompleted ? '1 / 1' : '0 / 1'}</span>
                       </div>
                       <Progress 
-                        value={completion?.status === 'verified' ? 100 : 0} 
+                        value={isCompleted ? 100 : isPending ? 50 : 0} 
                         className="h-3" 
                       />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="text-sm text-yellow-500">+{assignment.quest?.banana_reward} 🍌</span>
-                      {completion && (
+                      
+                      {completion ? (
                         <Badge 
-                          variant={completion.status === 'verified' ? 'default' : 'secondary'}
-                          className="text-sm ml-auto"
+                          variant={isCompleted ? 'default' : 'secondary'}
+                          className="text-sm"
                         >
-                          {completion.status === 'verified' ? '✓ Complete' : completion.status === 'pending' ? '⏳ Pending' : '✗ Rejected'}
+                          {isCompleted ? '✓ Complete' : isPending ? '⏳ Pending' : '✗ Rejected'}
                         </Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xs h-8"
+                          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewQuest(assignment);
+                          }}
+                        >
+                          <Settings className="h-3 w-3 mr-1" />
+                          Log Activity
+                        </Button>
                       )}
                     </div>
                   </CardContent>
@@ -343,6 +375,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </Card>
         </div>
       </div>
+
+      {/* Quest Details Modal */}
+      {selectedAssignment && (
+        <QuestDetailsModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          assignment={selectedAssignment}
+          completionStatus={getCompletionStatus(selectedAssignment.id)?.status || null}
+          onSubmitComplete={handleQuestComplete}
+        />
+      )}
     </div>
   );
 };
