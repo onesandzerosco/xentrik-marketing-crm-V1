@@ -43,20 +43,20 @@ const TasksRewards: React.FC = () => {
   return (
     <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
       {/* Left Sidebar Navigation */}
-      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-5 flex flex-col" style={{ width: '16rem' }}>
-        <div className="mb-4">
+      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col" style={{ width: '20rem' }}>
+        <div className="mb-6">
           <h1 
-            className="text-lg font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
+            className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
             style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
             Tasks & Rewards
           </h1>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1.5">
             Earn XP & Bananas
           </p>
         </div>
         
-        <div className="space-y-1.5 flex-1">
+        <div className="space-y-2 flex-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -66,15 +66,15 @@ const TasksRewards: React.FC = () => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-lg border-2 border-primary"
                     : "text-muted-foreground hover:bg-primary/20 hover:text-foreground border-2 border-transparent"
                 )}
                 style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                <span className="text-xs">{item.label}</span>
+                <Icon className="h-6 w-6 shrink-0" />
+                <span className="text-base">{item.label}</span>
               </button>
             );
           })}
