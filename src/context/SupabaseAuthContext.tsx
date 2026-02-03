@@ -326,8 +326,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   useEffect(() => {
-    let isInitialLoad = true;
-    
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event, !!currentSession);
@@ -381,15 +379,28 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setCreatorId(null);
         setUserRole('Employee');
         setUserRoles([]);
-      } else if (event === 'SIGNED_IN' && !isInitialLoad) {
-        // Only redirect on actual sign-in events, NOT on page refresh/initial load
-        // This prevents redirecting away from the current page when refreshing
-        const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
-        navigate(lastVisitedRoute || '/dashboard');
+      } else if (event === 'SIGNED_IN') {
+        // CRITICAL: Only redirect if this tab explicitly initiated a login action
+        // We use sessionStorage (tab-specific) to track this - set by signInWithEmail/signInWithOAuth
+        const pendingLoginRedirect = sessionStorage.getItem('pendingLoginRedirect');
+        
+        if (pendingLoginRedirect === 'true') {
+          // Clear the flag immediately to prevent re-triggering on subsequent auth events
+          sessionStorage.removeItem('pendingLoginRedirect');
+          
+          // Redirect to last visited route or dashboard
+          const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
+          console.log("Explicit sign-in detected, redirecting to:", lastVisitedRoute || '/dashboard');
+          navigate(lastVisitedRoute || '/dashboard');
+        } else {
+          // This is session recovery (page load, tab focus, token refresh) - do NOT redirect
+          console.log("Session recovered/refreshed, staying on current route");
+        }
+      } else if (event === 'PASSWORD_RECOVERY') {
+        // Handle password recovery redirect
+        navigate('/reset-password');
       }
       
-      // After first auth state change, mark initial load as complete
-      isInitialLoad = false;
       setIsLoading(false);
     });
 
@@ -413,13 +424,21 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      // Mark that this tab is explicitly logging in - used by auth listener to know whether to redirect
+      sessionStorage.setItem('pendingLoginRedirect', 'true');
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Clear the flag if login failed
+        sessionStorage.removeItem('pendingLoginRedirect');
+        throw error;
+      }
     } catch (error: any) {
+      sessionStorage.removeItem('pendingLoginRedirect');
       toast({
         variant: "destructive",
         title: "Login failed",
@@ -431,12 +450,20 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const signInWithOAuth = async (provider: 'google') => {
     try {
+      // Mark that this tab is explicitly logging in - used by auth listener to know whether to redirect
+      sessionStorage.setItem('pendingLoginRedirect', 'true');
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Clear the flag if login failed
+        sessionStorage.removeItem('pendingLoginRedirect');
+        throw error;
+      }
     } catch (error: any) {
+      sessionStorage.removeItem('pendingLoginRedirect');
       toast({
         variant: "destructive",
         title: "Login failed",

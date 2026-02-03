@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
 import { SupabaseAuthProvider, useSupabaseAuth } from './context/SupabaseAuthContext';
@@ -100,6 +100,16 @@ const CreatorInvoicesRedirect = () => {
 const TasksRewardsRoute = () => {
   const { isAuthenticated, isLoading } = useSupabaseAuth();
   const location = useLocation();
+  
+  // Store this route in memory so it persists correctly per-tab
+  useEffect(() => {
+    // Store route in localStorage for this route specifically
+    // This is separate from the ProtectedRoute's useRouteMemory to ensure
+    // Tasks & Rewards tabs maintain their own route memory
+    if (location.pathname.startsWith('/tasks-rewards')) {
+      localStorage.setItem('lastVisitedRoute', location.pathname);
+    }
+  }, [location.pathname]);
 
   if (isLoading) {
     return (
