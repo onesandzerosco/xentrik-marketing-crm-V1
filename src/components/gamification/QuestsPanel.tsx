@@ -56,6 +56,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingQuest, setEditingQuest] = useState<Quest | null>(null);
   const [editDescription, setEditDescription] = useState('');
+  const [editGameName, setEditGameName] = useState('');
   const [editXpReward, setEditXpReward] = useState(0);
   const [editBananaReward, setEditBananaReward] = useState(0);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -193,6 +194,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const handleOpenEditDialog = (quest: Quest) => {
     setEditingQuest(quest);
     setEditDescription(quest.description || '');
+    setEditGameName(quest.game_name || '');
     setEditXpReward(quest.xp_reward || 0);
     setEditBananaReward(quest.banana_reward || 0);
   };
@@ -206,6 +208,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
         .from('gamification_quests')
         .update({ 
           description: editDescription,
+          game_name: editGameName || null,
           xp_reward: editXpReward,
           banana_reward: editBananaReward
         })
@@ -267,13 +270,13 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" style={{ fontFamily: "'Pixellari', sans-serif" }}>
       {/* Admin Controls */}
       {isAdmin && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-lg">Admin Controls</CardTitle>
-            <CardDescription>Create and manage quests for chatters</CardDescription>
+            <CardTitle className="text-xl" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>Admin Controls</CardTitle>
+            <CardDescription className="text-base">Create and manage quests for chatters</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-4">
@@ -637,30 +640,32 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       {isAdmin && (
         <Card>
           <CardHeader>
-            <CardTitle>All Quests</CardTitle>
-            <CardDescription>Manage all quest definitions</CardDescription>
+            <CardTitle className="text-xl" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>All Quests</CardTitle>
+            <CardDescription className="text-base">Manage all quest definitions</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                    <TableHead className="text-left">Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>XP</TableHead>
-                    <TableHead>Bananas</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-left text-base">Title</TableHead>
+                    <TableHead className="text-left text-base">Game Name</TableHead>
+                    <TableHead className="text-base">Type</TableHead>
+                    <TableHead className="text-base">XP</TableHead>
+                    <TableHead className="text-base">Bananas</TableHead>
+                    <TableHead className="text-base">Status</TableHead>
+                    <TableHead className="text-base">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {quests.map(quest => (
                     <TableRow key={quest.id}>
-                      <TableCell className="font-medium text-left">{quest.title}</TableCell>
+                      <TableCell className="font-medium text-left text-base">{quest.title}</TableCell>
+                      <TableCell className="text-left text-base text-muted-foreground">{quest.game_name || '—'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{quest.quest_type}</Badge>
+                        <Badge variant="outline" className="text-sm">{quest.quest_type}</Badge>
                       </TableCell>
-                      <TableCell>{quest.xp_reward}</TableCell>
-                      <TableCell>{quest.banana_reward} 🍌</TableCell>
+                      <TableCell className="text-base">{quest.xp_reward}</TableCell>
+                      <TableCell className="text-base">{quest.banana_reward} 🍌</TableCell>
                       <TableCell>
                         <Badge variant={quest.is_active ? 'default' : 'secondary'}>
                           {quest.is_active ? 'Active' : 'Inactive'}
@@ -726,40 +731,56 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <p className="text-sm font-medium mb-2">Quest: {editingQuest?.title}</p>
-              <Badge variant="outline" className="mb-4">{editingQuest?.quest_type}</Badge>
+              <p className="text-base font-medium mb-2">Quest: {editingQuest?.title}</p>
+              <Badge variant="outline" className="mb-4 text-sm">{editingQuest?.quest_type}</Badge>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-base">Game Name</Label>
+              <Input 
+                value={editGameName}
+                onChange={e => setEditGameName(e.target.value)}
+                placeholder="Enter game-themed name (e.g., 'Shadow Strike')"
+                className="text-base"
+              />
+              <p className="text-sm text-muted-foreground">
+                An optional game-themed alias displayed alongside the quest title.
+              </p>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>XP Reward</Label>
+                <Label className="text-base">XP Reward</Label>
                 <Input 
                   type="number"
                   value={editXpReward}
                   onChange={e => setEditXpReward(parseInt(e.target.value) || 0)}
                   min={0}
+                  className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Banana Reward 🍌</Label>
+                <Label className="text-base">Banana Reward 🍌</Label>
                 <Input 
                   type="number"
                   value={editBananaReward}
                   onChange={e => setEditBananaReward(parseInt(e.target.value) || 0)}
                   min={0}
+                  className="text-base"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Instructions / Description</Label>
+              <Label className="text-base">Instructions / Description</Label>
               <Textarea 
                 value={editDescription}
                 onChange={e => setEditDescription(e.target.value)}
                 placeholder="Enter detailed instructions for this quest..."
                 rows={6}
+                className="text-base"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 This will be shown to chatters when they view the quest details.
               </p>
             </div>
