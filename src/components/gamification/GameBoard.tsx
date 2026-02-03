@@ -84,7 +84,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
       {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Current Points */}
-        <Card className="bg-card/80 border-border/50">
+        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-default">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current XP</p>
             <div className="flex items-center justify-between">
@@ -102,7 +102,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </Card>
 
         {/* Banana Balance */}
-        <Card className="bg-card/80 border-border/50">
+        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-yellow-500/10 hover:border-yellow-500/50 cursor-default">
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Banana Balance</p>
             <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </Card>
 
         {/* Current Rank */}
-        <Card className="bg-card/80 border-border/50">
+        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 cursor-default" style={{ '--tw-shadow-color': `${currentRank?.badge_color || '#808080'}20` } as React.CSSProperties}>
           <CardContent className="p-5">
             <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current Rank</p>
             <div className="flex items-center justify-between">
@@ -180,7 +180,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               const questType = assignment.quest?.quest_type || 'daily';
               
               return (
-                <Card key={assignment.id} className="bg-card/80 border-border/50">
+                <Card key={assignment.id} className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-default">
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <Badge 
