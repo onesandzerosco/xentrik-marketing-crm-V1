@@ -202,8 +202,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         className="text-xl font-bold uppercase text-foreground"
                         style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                       >
-                        {assignment.quest?.title}
+                        {assignment.quest?.game_name || assignment.quest?.title}
                       </h3>
+                      {assignment.quest?.game_name && assignment.quest.game_name !== assignment.quest.title && (
+                        <p className="text-sm text-muted-foreground italic">
+                          {assignment.quest.title}
+                        </p>
+                      )}
                       <p className="text-base text-muted-foreground mt-1">
                         {assignment.quest?.description || 'Complete this quest to earn rewards.'}
                       </p>
