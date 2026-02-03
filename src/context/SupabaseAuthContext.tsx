@@ -326,6 +326,8 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   useEffect(() => {
+    let isInitialLoad = true;
+    
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event, !!currentSession);
@@ -379,13 +381,15 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setCreatorId(null);
         setUserRole('Employee');
         setUserRoles([]);
-      } else if (event === 'SIGNED_IN') {
-        // Check for a stored route in localStorage
+      } else if (event === 'SIGNED_IN' && !isInitialLoad) {
+        // Only redirect on actual sign-in events, NOT on page refresh/initial load
+        // This prevents redirecting away from the current page when refreshing
         const lastVisitedRoute = localStorage.getItem('lastVisitedRoute');
-        // Navigate to the last visited route or default to dashboard
         navigate(lastVisitedRoute || '/dashboard');
       }
       
+      // After first auth state change, mark initial load as complete
+      isInitialLoad = false;
       setIsLoading(false);
     });
 
