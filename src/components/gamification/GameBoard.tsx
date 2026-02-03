@@ -1,9 +1,9 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Trophy, Target, Banana, Star, Crown, Medal } from 'lucide-react';
+import { Loader2, Trophy, Star, Crown, TrendingUp, Banana } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import WordOfTheDayWidget from './WordOfTheDayWidget';
@@ -28,7 +28,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Loading game board...</span>
+        <span className="ml-2" style={{ fontFamily: "'Pixellari', sans-serif" }}>Loading game board...</span>
       </div>
     );
   }
@@ -46,7 +46,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     ? ((myStats?.total_xp || 0) - currentRank.min_xp) / (nextRank.min_xp - currentRank.min_xp) * 100
     : 100;
 
-  // Get my position in leaderboard
   const myPosition = leaderboard.findIndex(s => s.chatter_id === user?.id) + 1;
 
   // Categorize active quests
@@ -58,215 +57,283 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     return myCompletions.find(c => c.quest_assignment_id === assignmentId);
   };
 
-  const renderQuestList = (quests: typeof activeAssignments, title: string, icon: React.ReactNode) => (
-    <Card className="border-border/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          {icon}
-          {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {quests.length === 0 ? (
-          <p className="text-xs text-muted-foreground">No {title.toLowerCase()} available</p>
-        ) : (
-          quests.slice(0, 3).map(assignment => {
-            const completion = getCompletionStatus(assignment.id);
-            return (
-              <div 
-                key={assignment.id} 
-                className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{assignment.quest?.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-muted-foreground">
-                      +{assignment.quest?.xp_reward} XP
-                    </span>
-                    <span className="text-xs text-yellow-500">
-                      +{assignment.quest?.banana_reward} 🍌
-                    </span>
-                  </div>
-                </div>
-                {completion ? (
-                  <Badge 
-                    variant={completion.status === 'verified' ? 'default' : 'secondary'}
-                    className="text-xs"
-                  >
-                    {completion.status === 'verified' ? '✓' : completion.status === 'pending' ? '⏳' : '✗'}
-                  </Badge>
-                ) : null}
-              </div>
-            );
-          })
-        )}
-      </CardContent>
-    </Card>
-  );
+  const getQuestTypeBadgeColor = (type: string) => {
+    switch (type) {
+      case 'daily': return 'bg-green-500/20 text-green-400 border-green-500/50';
+      case 'weekly': return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
+      case 'monthly': return 'bg-pink-500/20 text-pink-400 border-pink-500/50';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Word of the Day Widget - Featured at top */}
-      <WordOfTheDayWidget />
+    <div className="space-y-6" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+      {/* Header */}
+      <div>
+        <h1 
+          className="text-3xl font-bold text-foreground uppercase tracking-wide"
+          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+        >
+          Game Board
+        </h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Welcome back, Chatter. Status report follows.
+        </p>
+      </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Current Rank Card */}
-        <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Current Rank</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: currentRank?.badge_color || '#808080' }}
+      {/* Top Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Current Points */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Current XP</p>
+            <div className="flex items-center justify-between">
+              <span 
+                className="text-3xl font-bold text-primary"
+                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
               >
-                <Crown className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xl font-bold">{currentRank?.name || 'Unranked'}</p>
-                <p className="text-xs text-muted-foreground">{myStats?.total_xp || 0} XP</p>
+                {myStats?.total_xp || 0}
+              </span>
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Star className="h-6 w-6 text-primary" />
               </div>
             </div>
-            {nextRank && (
-              <div className="mt-4">
-                <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                  <span>Next: {nextRank.name}</span>
-                  <span>{xpToNextRank} XP to go</span>
-                </div>
-                <Progress value={xpProgress} className="h-2" />
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Banana Balance Card */}
-        <Card className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border-yellow-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Banana Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+        {/* Banana Balance */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Banana Balance</p>
+            <div className="flex items-center justify-between">
+              <span 
+                className="text-3xl font-bold text-yellow-500"
+                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              >
+                {myStats?.banana_balance || 0}
+              </span>
+              <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                 <span className="text-2xl">🍌</span>
               </div>
-              <div>
-                <p className="text-3xl font-bold text-yellow-500">{myStats?.banana_balance || 0}</p>
-                <p className="text-xs text-muted-foreground">Available to spend</p>
-              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Leaderboard Position */}
-        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Leaderboard</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <Trophy className="h-6 w-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-blue-500">
-                  #{myPosition || '-'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  of {leaderboard.length} chatters
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Active Quests */}
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Quests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                <Target className="h-6 w-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold text-green-500">{activeAssignments.length}</p>
-                <p className="text-xs text-muted-foreground">
-                  {myCompletions.filter(c => c.status === 'verified').length} completed
-                </p>
+        {/* Current Rank */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Current Rank</p>
+            <div className="flex items-center justify-between">
+              <span 
+                className="text-2xl font-bold uppercase"
+                style={{ 
+                  fontFamily: "'Macs Minecraft', sans-serif",
+                  color: currentRank?.badge_color || '#808080'
+                }}
+              >
+                {currentRank?.name || 'Unranked'}
+              </span>
+              <div 
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: `${currentRank?.badge_color || '#808080'}20` }}
+              >
+                <Crown className="h-6 w-6" style={{ color: currentRank?.badge_color || '#808080' }} />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Progress to Next Rank */}
+      {nextRank && (
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">Progress to {nextRank.name}</span>
+              <span className="text-xs text-muted-foreground">{xpToNextRank} XP to go</span>
+            </div>
+            <Progress value={xpProgress} className="h-3" />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Word of the Day */}
+      <WordOfTheDayWidget />
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quests Column */}
+        {/* Active Directives - Left Column */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Your Quests
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {renderQuestList(dailyQuests, 'Daily Quests', <Star className="h-4 w-4 text-yellow-500" />)}
-            {renderQuestList(weeklyQuests, 'Weekly Quests', <Medal className="h-4 w-4 text-blue-500" />)}
-            {renderQuestList(monthlyQuests, 'Monthly Quests', <Crown className="h-4 w-4 text-purple-500" />)}
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-6 bg-primary rounded-full" />
+            <h2 
+              className="text-xl font-bold uppercase tracking-wide"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
+              Active Directives
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].slice(0, 4).map(assignment => {
+              const completion = getCompletionStatus(assignment.id);
+              const questType = assignment.quest?.quest_type || 'daily';
+              
+              return (
+                <Card key={assignment.id} className="bg-card/80 border-border/50">
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <Badge 
+                        variant="outline" 
+                        className={`text-[10px] uppercase tracking-wider ${getQuestTypeBadgeColor(questType)}`}
+                      >
+                        {questType} Quest
+                      </Badge>
+                      <span 
+                        className="text-sm font-bold text-primary"
+                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                      >
+                        ⚔ {assignment.quest?.xp_reward} XP
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 
+                        className="text-lg font-bold uppercase text-foreground"
+                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                      >
+                        {assignment.quest?.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {assignment.quest?.description || 'Complete this quest to earn rewards.'}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
+                        <span>Progress</span>
+                        <span>{completion ? (completion.status === 'verified' ? '1 / 1' : '0 / 1') : '0 / 1'}</span>
+                      </div>
+                      <Progress 
+                        value={completion?.status === 'verified' ? 100 : 0} 
+                        className="h-2" 
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-yellow-500">+{assignment.quest?.banana_reward} 🍌</span>
+                      {completion && (
+                        <Badge 
+                          variant={completion.status === 'verified' ? 'default' : 'secondary'}
+                          className="text-xs ml-auto"
+                        >
+                          {completion.status === 'verified' ? '✓ Complete' : completion.status === 'pending' ? '⏳ Pending' : '✗ Rejected'}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+
+            {activeAssignments.length === 0 && (
+              <Card className="bg-card/80 border-border/50 col-span-2">
+                <CardContent className="p-8 text-center">
+                  <p className="text-muted-foreground">No active directives at this time.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
-        {/* Leaderboard Column */}
+        {/* Top Agents - Right Column */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Trophy className="h-5 w-5" />
-            Top Chatters
-          </h2>
-          <Card className="max-h-[500px] overflow-hidden flex flex-col">
-            <CardContent className="p-4 space-y-3 overflow-y-auto flex-1">
-              {leaderboard.map((stats, index) => {
-                const rank = getCurrentRank(stats.total_xp);
-                const isMe = stats.chatter_id === user?.id;
-                return (
-                  <div 
-                    key={stats.id} 
-                    className={`flex items-center gap-3 p-2 rounded-lg ${isMe ? 'bg-primary/10 border border-primary/20' : ''}`}
-                  >
-                    <div className="flex items-center justify-center w-6 h-6 text-sm font-bold shrink-0">
-                      {index === 0 && '🥇'}
-                      {index === 1 && '🥈'}
-                      {index === 2 && '🥉'}
-                      {index > 2 && <span className="text-muted-foreground">{index + 1}</span>}
-                    </div>
-                    <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarImage src={stats.profile?.profile_image} />
-                      <AvatarFallback className="text-xs">
-                        {stats.profile?.name?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-medium truncate text-left">
-                        {stats.profile?.name || 'Unknown'}
-                        {isMe && <span className="text-xs text-primary ml-1">(You)</span>}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="outline" 
-                          className="text-xs"
-                          style={{ borderColor: rank?.badge_color, color: rank?.badge_color }}
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-6 bg-primary rounded-full" />
+            <h2 
+              className="text-xl font-bold uppercase tracking-wide"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
+              Top Agents
+            </h2>
+          </div>
+
+          <Card className="bg-card/80 border-border/50">
+            <CardContent className="p-4">
+              {/* Header */}
+              <div className="grid grid-cols-12 gap-2 pb-3 border-b border-border/50 text-xs text-muted-foreground uppercase tracking-wider">
+                <div className="col-span-2">Rank</div>
+                <div className="col-span-7">Agent</div>
+                <div className="col-span-3 text-right">PTS</div>
+              </div>
+
+              {/* Leaderboard Items */}
+              <div className="space-y-2 mt-3">
+                {leaderboard.slice(0, 10).map((stats, index) => {
+                  const rank = getCurrentRank(stats.total_xp);
+                  const isMe = stats.chatter_id === user?.id;
+                  
+                  return (
+                    <div 
+                      key={stats.id} 
+                      className={`grid grid-cols-12 gap-2 items-center py-2 rounded ${isMe ? 'bg-primary/10' : ''}`}
+                    >
+                      <div className="col-span-2 flex items-center justify-center">
+                        {index === 0 && <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />}
+                        {index === 1 && <span className="text-muted-foreground text-sm">2</span>}
+                        {index === 2 && <span className="text-muted-foreground text-sm">3</span>}
+                        {index > 2 && <span className="text-muted-foreground text-sm">{index + 1}</span>}
+                      </div>
+                      <div className="col-span-7 flex items-center gap-2 min-w-0">
+                        <Avatar className="h-6 w-6 shrink-0">
+                          <AvatarImage src={stats.profile?.profile_image} />
+                          <AvatarFallback className="text-[10px]">
+                            {stats.profile?.name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span 
+                          className={`text-sm truncate ${isMe ? 'text-primary font-medium' : 'text-foreground'}`}
                         >
-                          {rank?.name || 'Unranked'}
-                        </Badge>
+                          {stats.profile?.name || 'Unknown'}
+                        </span>
+                      </div>
+                      <div 
+                        className="col-span-3 text-right text-sm font-bold"
+                        style={{ 
+                          fontFamily: "'Macs Minecraft', sans-serif",
+                          color: rank?.badge_color || '#808080'
+                        }}
+                      >
+                        {stats.total_xp}
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-bold">{stats.total_xp}</p>
-                      <p className="text-xs text-muted-foreground">XP</p>
+                  );
+                })}
+              </div>
+
+              {/* My Position (if not in top 10) */}
+              {myPosition > 10 && (
+                <div className="mt-4 pt-3 border-t border-border/50">
+                  <div className="grid grid-cols-12 gap-2 items-center py-2 bg-primary/10 rounded">
+                    <div className="col-span-2 text-center text-sm text-muted-foreground">
+                      {myPosition}
+                    </div>
+                    <div className="col-span-7 flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={myStats?.profile?.profile_image} />
+                        <AvatarFallback className="text-[10px]">You</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-primary font-medium">You</span>
+                    </div>
+                    <div 
+                      className="col-span-3 text-right text-sm font-bold text-primary"
+                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                    >
+                      {myStats?.total_xp || 0}
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
