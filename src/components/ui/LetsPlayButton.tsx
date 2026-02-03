@@ -18,7 +18,9 @@ export const LetsPlayButton: React.FC = () => {
         "text-foreground hover:text-primary-foreground",
         "hover:bg-primary",
         "transition-all duration-300",
-        "hover:shadow-[0_0_20px_hsl(var(--primary)/0.6)]",
+        // Pulsing glow animation
+        "animate-pulse-glow",
+        "hover:shadow-[0_0_25px_hsl(var(--primary)/0.8)]",
         "before:absolute before:inset-0 before:rounded-[15px]",
         "before:bg-gradient-to-r before:from-transparent before:via-white/30 before:to-transparent",
         "before:translate-x-[-100%] before:opacity-0",
