@@ -468,30 +468,30 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       {/* Chatter View: Sub-tabs for quest categories */}
       {!isAdmin && (
         <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-3 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto p-1.5">
             <TabsTrigger 
               value="daily" 
-              className="flex items-center gap-2 py-2"
+              className="flex items-center gap-2 py-3"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              <Star className="h-4 w-4 text-yellow-500" />
-              <span className="text-xs">Daily</span>
+              <Star className="h-5 w-5 text-yellow-500" />
+              <span className="text-base">Daily</span>
             </TabsTrigger>
             <TabsTrigger 
               value="weekly" 
-              className="flex items-center gap-2 py-2"
+              className="flex items-center gap-2 py-3"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              <Medal className="h-4 w-4 text-blue-500" />
-              <span className="text-xs">Weekly</span>
+              <Medal className="h-5 w-5 text-blue-500" />
+              <span className="text-base">Weekly</span>
             </TabsTrigger>
             <TabsTrigger 
               value="special-ops" 
-              className="flex items-center gap-2 py-2"
+              className="flex items-center gap-2 py-3"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              <Crown className="h-4 w-4 text-purple-500" />
-              <span className="text-xs">Special Ops</span>
+              <Crown className="h-5 w-5 text-purple-500" />
+              <span className="text-base">Special Ops</span>
             </TabsTrigger>
           </TabsList>
 
@@ -527,17 +527,17 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       {/* Admin View: Tabs for quest assignments */}
       {isAdmin && (
         <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="daily" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1.5">
+            <TabsTrigger value="daily" className="flex items-center gap-2 py-3 text-base">
+              <Star className="h-5 w-5" />
               Daily ({filterQuestsByType('daily').length})
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2">
-              <Medal className="h-4 w-4" />
+            <TabsTrigger value="weekly" className="flex items-center gap-2 py-3 text-base">
+              <Medal className="h-5 w-5" />
               Weekly ({filterQuestsByType('weekly').length})
             </TabsTrigger>
-            <TabsTrigger value="monthly" className="flex items-center gap-2">
-              <Crown className="h-4 w-4" />
+            <TabsTrigger value="monthly" className="flex items-center gap-2 py-3 text-base">
+              <Crown className="h-5 w-5" />
               Monthly ({filterQuestsByType('monthly').length})
             </TabsTrigger>
           </TabsList>
