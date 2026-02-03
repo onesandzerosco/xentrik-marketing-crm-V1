@@ -23,29 +23,29 @@ const WordOfTheDayWidget: React.FC = () => {
 
   return (
     <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 border-purple-500/20 overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-          <BookOpen className="h-4 w-4" />
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
           Word of the Day
-          <Sparkles className="h-3 w-3 text-yellow-500" />
+          <Sparkles className="h-4 w-4 text-yellow-500" />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold text-purple-400">{dailyWord.word}</h3>
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-3">
+            <h3 className="text-3xl font-bold text-purple-400" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{dailyWord.word}</h3>
             {dailyWord.part_of_speech && (
-              <Badge variant="outline" className="text-xs text-purple-300 border-purple-300/50">
+              <Badge variant="outline" className="text-sm text-purple-300 border-purple-300/50">
                 {dailyWord.part_of_speech}
               </Badge>
             )}
           </div>
           {dailyWord.definition && (
-            <p className="text-sm text-muted-foreground italic">
+            <p className="text-base text-muted-foreground italic">
               "{dailyWord.definition}"
             </p>
           )}
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-sm text-muted-foreground mt-3">
             Use this word in your conversations today! 🎯
           </p>
         </div>
