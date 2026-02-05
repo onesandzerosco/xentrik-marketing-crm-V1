@@ -72,19 +72,20 @@ export const useDailyQuestSlots = () => {
   const populateSlotsFromAdminAssignments = useCallback(async () => {
     if (!user) return;
 
-    // Check if user already has slots for today
-    const { data: existingSlots } = await supabase
+    // Read existing slots (we may need to backfill OR repair a previously-misfilled slot)
+    const { data: existingSlots, error: existingError } = await supabase
       .from('gamification_daily_quest_slots')
-      .select('slot_number')
+      .select('id, slot_number, quest_id, has_rerolled, completed')
       .eq('chatter_id', user.id)
       .eq('date', today);
 
-    // If user already has 4 slots for today, no need to populate
-    if (existingSlots && existingSlots.length >= 4) {
+    if (existingError) {
+      console.error('Error fetching existing daily quest slots:', existingError);
       return;
     }
 
     const filledSlots = new Set((existingSlots || []).map(s => s.slot_number));
+    const existingQuestIds = new Set((existingSlots || []).map(s => s.quest_id));
 
     // Fetch today's ADMIN-assigned daily quests (assigned_by is null)
     // Personal assignments (assigned_by = user.id) are NOT included to prevent re-rolls from propagating
@@ -113,29 +114,81 @@ export const useDailyQuestSlots = () => {
       return; // No admin-assigned quests for today
     }
 
-    // Assign admin quests to empty slots (up to 3)
+    const orderedAdminQuestIds = dailyAssignments.map((a: any) => a.quest_id as string);
+    const missingAdminQuestIds = orderedAdminQuestIds.filter(qid => !existingQuestIds.has(qid));
+
+    // If user already has 4 slots, we normally do nothing.
+    // However, a previous bug could have backfilled slot #4 with a duplicate (e.g. Game 1)
+    // instead of the missing admin assignment (e.g. Game 4). Repair that case safely.
+    if ((existingSlots?.length || 0) >= 4) {
+      if (missingAdminQuestIds.length === 0) return;
+
+      const counts = (existingSlots || []).reduce((acc, s) => {
+        acc[s.quest_id] = (acc[s.quest_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const duplicateQuestIds = new Set(
+        Object.entries(counts)
+          .filter(([, count]) => count > 1)
+          .map(([questId]) => questId)
+      );
+
+      // Only fix slots that are untouched by the user (not rerolled) and not completed.
+      // Prefer the highest slot number so we correct the typical "slot 4" issue.
+      const repairCandidates = (existingSlots || [])
+        .filter(s => !s.has_rerolled && !s.completed && duplicateQuestIds.has(s.quest_id))
+        .sort((a, b) => b.slot_number - a.slot_number);
+
+      for (let i = 0; i < missingAdminQuestIds.length && i < repairCandidates.length; i++) {
+        const slotToFix = repairCandidates[i];
+        const newQuestId = missingAdminQuestIds[i];
+
+        const { error: updateError } = await supabase
+          .from('gamification_daily_quest_slots')
+          .update({ quest_id: newQuestId })
+          .eq('id', slotToFix.id);
+
+        if (updateError) {
+          console.error('Error repairing daily quest slot:', updateError);
+        }
+      }
+
+      return;
+    }
+
+    // Assign missing admin quests to empty slots (up to 4)
     const inserts: any[] = [];
     let slotNumber = 1;
 
-    for (const assignment of dailyAssignments) {
+    for (const questId of orderedAdminQuestIds) {
+      // Don’t insert duplicates if the user already has this quest in a slot
+      if (existingQuestIds.has(questId)) continue;
+
       // Find the next empty slot
-      while (filledSlots.has(slotNumber) && slotNumber <= 3) {
+      while (filledSlots.has(slotNumber) && slotNumber <= 4) {
         slotNumber++;
       }
-      
+
       if (slotNumber > 4) break; // All slots filled (max 4 daily quests)
 
       inserts.push({
         chatter_id: user.id,
         slot_number: slotNumber,
-        quest_id: assignment.quest_id,
+        quest_id: questId,
         date: today,
         has_rerolled: false,
         completed: false
       });
 
       filledSlots.add(slotNumber);
+      existingQuestIds.add(questId);
       slotNumber++;
+
+      // Stop once we’ve filled all missing admin quests
+      if (missingAdminQuestIds.length > 0 && inserts.length >= missingAdminQuestIds.length) {
+        break;
+      }
     }
 
     if (inserts.length > 0) {
