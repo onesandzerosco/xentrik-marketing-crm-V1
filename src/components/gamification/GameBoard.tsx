@@ -2,7 +2,6 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Trophy, Star, Crown, Medal } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
@@ -296,12 +295,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         {index > 2 && <span className="text-muted-foreground text-sm">{index + 1}</span>}
                       </div>
                       <div className="col-span-7 flex items-center gap-2 min-w-0">
-                        <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarImage src={stats.profile?.profile_image} />
-                          <AvatarFallback className="text-xs">
-                            {stats.profile?.name?.charAt(0) || '?'}
-                          </AvatarFallback>
-                        </Avatar>
+                        {/* Rank badge instead of avatar */}
+                        <span 
+                          className="text-xs font-bold uppercase shrink-0 px-1.5 py-0.5 rounded"
+                          style={{ 
+                            fontFamily: "'Macs Minecraft', sans-serif",
+                            color: rank?.badge_color || '#808080',
+                            backgroundColor: `${rank?.badge_color || '#808080'}20`
+                          }}
+                        >
+                          {rank?.name?.substring(0, 3) || 'N/A'}
+                        </span>
                         <span 
                           className={`text-sm truncate ${isMe ? 'text-primary font-bold' : 'text-foreground'}`}
                         >
