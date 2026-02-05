@@ -285,15 +285,22 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   };
 
   // Delete a quest definition (admin only)
+  // This removes assignments, personal slots, and the quest itself
   const handleDeleteQuest = async (questId: string) => {
     try {
-      // First delete any assignments for this quest
+      // 1. Delete any assignments for this quest
       await supabase
         .from('gamification_quest_assignments')
         .delete()
         .eq('quest_id', questId);
 
-      // Then delete the quest itself
+      // 2. Delete all personal slots for this quest (for ALL users)
+      await supabase
+        .from('gamification_daily_quest_slots')
+        .delete()
+        .eq('quest_id', questId);
+
+      // 3. Delete the quest itself
       const { error } = await supabase
         .from('gamification_quests')
         .delete()
@@ -311,16 +318,30 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   };
 
   // Remove a quest assignment by quest_id (admin only)
+  // This removes the global assignment AND all personal slots for this quest
   const handleRemoveAssignmentByQuestId = async (questId: string) => {
     try {
-      const { error } = await supabase
+      // 1. Delete the global assignment
+      const { error: assignmentError } = await supabase
         .from('gamification_quest_assignments')
         .delete()
         .eq('quest_id', questId);
 
-      if (error) throw error;
+      if (assignmentError) throw assignmentError;
 
-      toast({ title: "Success", description: "Quest assignment removed" });
+      // 2. Delete all personal slots for this quest (for ALL users)
+      // This ensures the quest is removed from everyone's Quests page
+      const { error: slotsError } = await supabase
+        .from('gamification_daily_quest_slots')
+        .delete()
+        .eq('quest_id', questId);
+
+      if (slotsError) {
+        console.error('Error removing personal slots:', slotsError);
+        // Don't throw - assignment was already removed
+      }
+
+      toast({ title: "Success", description: "Quest assignment removed from all users" });
       refetch.activeAssignments();
     } catch (error) {
       console.error('Error removing assignment:', error);
