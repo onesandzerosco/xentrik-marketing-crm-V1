@@ -198,17 +198,17 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
               <Star className="h-5 w-5 text-yellow-500" />
               Your Daily Quests
             </h2>
-            <p className="text-sm text-muted-foreground">
-              Complete 3 quests daily • Re-roll once each
-            </p>
-          </div>
-          <Badge 
-            variant="outline" 
-            className="text-base px-3 py-1 border-primary/30 font-bold"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-          >
-            {completedCount}/3
-          </Badge>
+          <p className="text-sm text-muted-foreground">
+            Complete up to 4 quests daily • Re-roll once each
+          </p>
+        </div>
+        <Badge 
+          variant="outline" 
+          className="text-base px-3 py-1 border-primary/30 font-bold"
+          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+        >
+          {completedCount}/{slots.length || 4}
+        </Badge>
         </div>
 
         {/* Quest Cards Grid - 2 columns for daily quests (max 4) */}

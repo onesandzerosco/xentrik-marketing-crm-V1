@@ -79,8 +79,8 @@ export const useDailyQuestSlots = () => {
       .eq('chatter_id', user.id)
       .eq('date', today);
 
-    // If user already has 3 slots for today, no need to populate
-    if (existingSlots && existingSlots.length >= 3) {
+    // If user already has 4 slots for today, no need to populate
+    if (existingSlots && existingSlots.length >= 4) {
       return;
     }
 
@@ -123,7 +123,7 @@ export const useDailyQuestSlots = () => {
         slotNumber++;
       }
       
-      if (slotNumber > 3) break; // All slots filled
+      if (slotNumber > 4) break; // All slots filled (max 4 daily quests)
 
       inserts.push({
         chatter_id: user.id,
