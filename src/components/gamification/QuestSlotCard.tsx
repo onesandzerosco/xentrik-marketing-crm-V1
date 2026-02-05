@@ -12,7 +12,7 @@ interface QuestSlotCardProps {
   quest: Quest | undefined;
   questType: QuestType;
   status: 'pending' | 'verified' | 'rejected' | null;
-  onViewQuest: () => void;
+  onViewQuest?: () => void;
   // Optional for daily quests
   hasRerolled?: boolean;
   isRerolling?: boolean;
