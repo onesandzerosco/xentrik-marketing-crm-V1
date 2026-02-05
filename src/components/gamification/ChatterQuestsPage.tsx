@@ -204,6 +204,11 @@ const ChatterQuestsPage: React.FC = () => {
                     {assignment.quest?.banana_reward}
                   </span>
                 </div>
+                {assignment.shift && (
+                  <Badge variant="outline" className="text-xs ml-2">
+                    {assignment.shift}
+                  </Badge>
+                )}
               </div>
               
               {!completion && (

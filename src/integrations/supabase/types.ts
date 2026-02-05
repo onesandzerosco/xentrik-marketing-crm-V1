@@ -762,6 +762,7 @@ export type Database = {
           end_date: string
           id: string
           quest_id: string
+          shift: string | null
           start_date: string
         }
         Insert: {
@@ -770,6 +771,7 @@ export type Database = {
           end_date: string
           id?: string
           quest_id: string
+          shift?: string | null
           start_date: string
         }
         Update: {
@@ -778,6 +780,7 @@ export type Database = {
           end_date?: string
           id?: string
           quest_id?: string
+          shift?: string | null
           start_date?: string
         }
         Relationships: [
