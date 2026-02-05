@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Medal } from 'lucide-react';
-import { useGamification, QuestAssignment } from '@/hooks/useGamification';
+import { useWeeklyQuestSlots, WeeklyQuestSlot } from '@/hooks/useWeeklyQuestSlots';
+import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import QuestCompletionModal from './QuestCompletionModal';
+import WeeklyQuestCompletionModal from './WeeklyQuestCompletionModal';
 import QuestSlotCard from './QuestSlotCard';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 
@@ -14,46 +15,60 @@ interface WeeklyQuestSlotsProps {
   isAdminView?: boolean;
 }
 
-interface QuestCompletionStatus {
-  assignmentId: string;
+interface SlotCompletionStatus {
+  questId: string;
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
 const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
   const { user } = useAuth();
-  const { activeAssignments, isLoading, refetch } = useGamification();
-  const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
+  const { slots, isLoading, isRerolling, rerollSlot, refetch } = useWeeklyQuestSlots();
+  const { refetch: gamificationRefetch } = useGamification();
+  const [selectedSlot, setSelectedSlot] = useState<WeeklyQuestSlot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [completionStatuses, setCompletionStatuses] = useState<QuestCompletionStatus[]>([]);
+  const [completionStatuses, setCompletionStatuses] = useState<SlotCompletionStatus[]>([]);
 
   const today = new Date();
   const weekStart = format(startOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
   const weekEnd = format(endOfWeek(today, { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
-  // Filter to only weekly quests for this week
-  const weeklyAssignments = activeAssignments.filter(
-    a => a.quest?.quest_type === 'weekly' && 
-         a.start_date <= weekEnd && 
-         a.end_date >= weekStart
-  );
-
   // Fetch completion statuses for weekly quests
   useEffect(() => {
     const fetchCompletionStatuses = async () => {
-      if (!user || weeklyAssignments.length === 0) return;
+      if (!user || slots.length === 0) return;
 
-      const assignmentIds = weeklyAssignments.map(a => a.id);
+      const questIds = slots.map(s => s.quest_id);
+      
+      // Get all quest assignments for this week's quests
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', weekEnd)
+        .gte('end_date', weekStart);
 
+      if (!assignments || assignments.length === 0) {
+        setCompletionStatuses([]);
+        return;
+      }
+
+      const assignmentIds = assignments.map(a => a.id);
+
+      // Get completions for this user on these assignments
       const { data: completions } = await supabase
         .from('gamification_quest_completions')
         .select('quest_assignment_id, status')
         .eq('chatter_id', user.id)
         .in('quest_assignment_id', assignmentIds);
 
-      const statuses: QuestCompletionStatus[] = assignmentIds.map(assignmentId => {
-        const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
+      // Map quest_id to status
+      const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+        const assignment = assignments.find(a => a.quest_id === questId);
+        if (!assignment) return { questId, status: null };
+        
+        const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
         return { 
-          assignmentId, 
+          questId, 
           status: completion?.status as 'pending' | 'verified' | 'rejected' | null 
         };
       });
@@ -62,36 +77,49 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
     };
 
     fetchCompletionStatuses();
-  }, [user, weeklyAssignments.length, activeAssignments]);
+  }, [user, slots, weekStart, weekEnd]);
 
-  const getAssignmentStatus = (assignmentId: string) => {
-    const statusEntry = completionStatuses.find(s => s.assignmentId === assignmentId);
+  const getSlotStatus = (slot: WeeklyQuestSlot) => {
+    const statusEntry = completionStatuses.find(s => s.questId === slot.quest_id);
     return statusEntry?.status || null;
   };
 
-  const handleViewQuest = (assignment: QuestAssignment) => {
-    setSelectedAssignment(assignment);
+  const handleViewQuest = (slot: WeeklyQuestSlot) => {
+    setSelectedSlot(slot);
     setIsModalOpen(true);
   };
 
   const handleSubmitComplete = async () => {
-    refetch.myCompletions();
+    gamificationRefetch.myCompletions();
+    refetch();
     onQuestComplete?.();
     
     // Re-fetch completion statuses
-    if (user && weeklyAssignments.length > 0) {
-      const assignmentIds = weeklyAssignments.map(a => a.id);
-      const { data: completions } = await supabase
-        .from('gamification_quest_completions')
-        .select('quest_assignment_id, status')
-        .eq('chatter_id', user.id)
-        .in('quest_assignment_id', assignmentIds);
+    if (user && slots.length > 0) {
+      const questIds = slots.map(s => s.quest_id);
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', weekEnd)
+        .gte('end_date', weekStart);
 
-      const statuses: QuestCompletionStatus[] = assignmentIds.map(assignmentId => {
-        const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
-        return { assignmentId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
-      });
-      setCompletionStatuses(statuses);
+      if (assignments && assignments.length > 0) {
+        const assignmentIds = assignments.map(a => a.id);
+        const { data: completions } = await supabase
+          .from('gamification_quest_completions')
+          .select('quest_assignment_id, status')
+          .eq('chatter_id', user.id)
+          .in('quest_assignment_id', assignmentIds);
+
+        const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+          const assignment = assignments.find(a => a.quest_id === questId);
+          if (!assignment) return { questId, status: null };
+          const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+          return { questId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
+        });
+        setCompletionStatuses(statuses);
+      }
     }
   };
 
@@ -105,7 +133,7 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
     );
   }
 
-  if (weeklyAssignments.length === 0) {
+  if (slots.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -121,7 +149,7 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
     );
   }
 
-  const completedCount = weeklyAssignments.filter(a => getAssignmentStatus(a.id) === 'verified').length;
+  const completedCount = slots.filter(s => getSlotStatus(s) === 'verified').length;
 
   return (
     <>
@@ -137,7 +165,7 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
               Your Weekly Quests
             </h2>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(weekStart), 'MMM d')} - {format(new Date(weekEnd), 'MMM d')}
+              {format(new Date(weekStart), 'MMM d')} - {format(new Date(weekEnd), 'MMM d')} • Re-roll once per week
             </p>
           </div>
           <Badge 
@@ -145,36 +173,38 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
             className="text-base px-3 py-1 border-blue-500/30 font-bold"
             style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
-            {completedCount}/{weeklyAssignments.length}
+            {completedCount}/{slots.length}
           </Badge>
         </div>
 
-        {/* Quest Cards - Full width for single weekly quest */}
+        {/* Quest Cards */}
         <div className="grid gap-3">
-          {weeklyAssignments.map((assignment) => {
-            const quest = assignment.quest;
-            if (!quest) return null;
-
-            return (
-              <QuestSlotCard
-                key={assignment.id}
-                quest={quest}
-                questType="weekly"
-                status={getAssignmentStatus(assignment.id)}
-                onViewQuest={() => handleViewQuest(assignment)}
-                isAdminView={isAdminView}
-              />
-            );
-          })}
+          {slots.map((slot) => (
+            <QuestSlotCard
+              key={slot.id}
+              quest={slot.quest}
+              questType="weekly"
+              status={getSlotStatus(slot)}
+              hasRerolled={slot.has_rerolled}
+              isRerolling={isRerolling}
+              onReroll={isAdminView ? undefined : () => rerollSlot()}
+              onViewQuest={() => handleViewQuest(slot)}
+              isAdminView={isAdminView}
+            />
+          ))}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center">
+          🎲 Click the dice to re-roll this quest (once per week)
+        </p>
       </div>
 
-      {/* Quest Completion Modal */}
-      {selectedAssignment && (
-        <QuestCompletionModal
+      {/* Weekly Quest Completion Modal */}
+      {selectedSlot && (
+        <WeeklyQuestCompletionModal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          assignment={selectedAssignment}
+          slot={selectedSlot}
           onSubmitComplete={handleSubmitComplete}
         />
       )}

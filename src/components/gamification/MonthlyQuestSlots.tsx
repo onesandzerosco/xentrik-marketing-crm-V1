@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Crown } from 'lucide-react';
-import { useGamification, QuestAssignment } from '@/hooks/useGamification';
+import { useMonthlyQuestSlots, MonthlyQuestSlot } from '@/hooks/useMonthlyQuestSlots';
+import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import QuestCompletionModal from './QuestCompletionModal';
+import MonthlyQuestCompletionModal from './MonthlyQuestCompletionModal';
 import QuestSlotCard from './QuestSlotCard';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
@@ -14,46 +15,60 @@ interface MonthlyQuestSlotsProps {
   isAdminView?: boolean;
 }
 
-interface QuestCompletionStatus {
-  assignmentId: string;
+interface SlotCompletionStatus {
+  questId: string;
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
 const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
   const { user } = useAuth();
-  const { activeAssignments, isLoading, refetch } = useGamification();
-  const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
+  const { slots, isLoading, isRerolling, rerollSlot, refetch } = useMonthlyQuestSlots();
+  const { refetch: gamificationRefetch } = useGamification();
+  const [selectedSlot, setSelectedSlot] = useState<MonthlyQuestSlot | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [completionStatuses, setCompletionStatuses] = useState<QuestCompletionStatus[]>([]);
+  const [completionStatuses, setCompletionStatuses] = useState<SlotCompletionStatus[]>([]);
 
   const today = new Date();
   const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
   const monthEnd = format(endOfMonth(today), 'yyyy-MM-dd');
 
-  // Filter to only monthly quests for this month
-  const monthlyAssignments = activeAssignments.filter(
-    a => a.quest?.quest_type === 'monthly' && 
-         a.start_date <= monthEnd && 
-         a.end_date >= monthStart
-  );
-
   // Fetch completion statuses for monthly quests
   useEffect(() => {
     const fetchCompletionStatuses = async () => {
-      if (!user || monthlyAssignments.length === 0) return;
+      if (!user || slots.length === 0) return;
 
-      const assignmentIds = monthlyAssignments.map(a => a.id);
+      const questIds = slots.map(s => s.quest_id);
+      
+      // Get all quest assignments for this month's quests
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', monthEnd)
+        .gte('end_date', monthStart);
 
+      if (!assignments || assignments.length === 0) {
+        setCompletionStatuses([]);
+        return;
+      }
+
+      const assignmentIds = assignments.map(a => a.id);
+
+      // Get completions for this user on these assignments
       const { data: completions } = await supabase
         .from('gamification_quest_completions')
         .select('quest_assignment_id, status')
         .eq('chatter_id', user.id)
         .in('quest_assignment_id', assignmentIds);
 
-      const statuses: QuestCompletionStatus[] = assignmentIds.map(assignmentId => {
-        const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
+      // Map quest_id to status
+      const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+        const assignment = assignments.find(a => a.quest_id === questId);
+        if (!assignment) return { questId, status: null };
+        
+        const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
         return { 
-          assignmentId, 
+          questId, 
           status: completion?.status as 'pending' | 'verified' | 'rejected' | null 
         };
       });
@@ -62,36 +77,49 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
     };
 
     fetchCompletionStatuses();
-  }, [user, monthlyAssignments.length, activeAssignments]);
+  }, [user, slots, monthStart, monthEnd]);
 
-  const getAssignmentStatus = (assignmentId: string) => {
-    const statusEntry = completionStatuses.find(s => s.assignmentId === assignmentId);
+  const getSlotStatus = (slot: MonthlyQuestSlot) => {
+    const statusEntry = completionStatuses.find(s => s.questId === slot.quest_id);
     return statusEntry?.status || null;
   };
 
-  const handleViewQuest = (assignment: QuestAssignment) => {
-    setSelectedAssignment(assignment);
+  const handleViewQuest = (slot: MonthlyQuestSlot) => {
+    setSelectedSlot(slot);
     setIsModalOpen(true);
   };
 
   const handleSubmitComplete = async () => {
-    refetch.myCompletions();
+    gamificationRefetch.myCompletions();
+    refetch();
     onQuestComplete?.();
     
     // Re-fetch completion statuses
-    if (user && monthlyAssignments.length > 0) {
-      const assignmentIds = monthlyAssignments.map(a => a.id);
-      const { data: completions } = await supabase
-        .from('gamification_quest_completions')
-        .select('quest_assignment_id, status')
-        .eq('chatter_id', user.id)
-        .in('quest_assignment_id', assignmentIds);
+    if (user && slots.length > 0) {
+      const questIds = slots.map(s => s.quest_id);
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', monthEnd)
+        .gte('end_date', monthStart);
 
-      const statuses: QuestCompletionStatus[] = assignmentIds.map(assignmentId => {
-        const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
-        return { assignmentId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
-      });
-      setCompletionStatuses(statuses);
+      if (assignments && assignments.length > 0) {
+        const assignmentIds = assignments.map(a => a.id);
+        const { data: completions } = await supabase
+          .from('gamification_quest_completions')
+          .select('quest_assignment_id, status')
+          .eq('chatter_id', user.id)
+          .in('quest_assignment_id', assignmentIds);
+
+        const statuses: SlotCompletionStatus[] = questIds.map(questId => {
+          const assignment = assignments.find(a => a.quest_id === questId);
+          if (!assignment) return { questId, status: null };
+          const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+          return { questId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
+        });
+        setCompletionStatuses(statuses);
+      }
     }
   };
 
@@ -105,7 +133,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
     );
   }
 
-  if (monthlyAssignments.length === 0) {
+  if (slots.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -121,7 +149,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
     );
   }
 
-  const completedCount = monthlyAssignments.filter(a => getAssignmentStatus(a.id) === 'verified').length;
+  const completedCount = slots.filter(s => getSlotStatus(s) === 'verified').length;
 
   return (
     <>
@@ -137,7 +165,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
               Special Ops
             </h2>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(monthStart), 'MMMM yyyy')}
+              {format(new Date(monthStart), 'MMMM yyyy')} • Re-roll once per month
             </p>
           </div>
           <Badge 
@@ -145,36 +173,38 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
             className="text-base px-3 py-1 border-purple-500/30 font-bold"
             style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
-            {completedCount}/{monthlyAssignments.length}
+            {completedCount}/{slots.length}
           </Badge>
         </div>
 
-        {/* Quest Cards - Full width for single monthly quest */}
+        {/* Quest Cards */}
         <div className="grid gap-3">
-          {monthlyAssignments.map((assignment) => {
-            const quest = assignment.quest;
-            if (!quest) return null;
-
-            return (
-              <QuestSlotCard
-                key={assignment.id}
-                quest={quest}
-                questType="monthly"
-                status={getAssignmentStatus(assignment.id)}
-                onViewQuest={() => handleViewQuest(assignment)}
-                isAdminView={isAdminView}
-              />
-            );
-          })}
+          {slots.map((slot) => (
+            <QuestSlotCard
+              key={slot.id}
+              quest={slot.quest}
+              questType="monthly"
+              status={getSlotStatus(slot)}
+              hasRerolled={slot.has_rerolled}
+              isRerolling={isRerolling}
+              onReroll={isAdminView ? undefined : () => rerollSlot()}
+              onViewQuest={() => handleViewQuest(slot)}
+              isAdminView={isAdminView}
+            />
+          ))}
         </div>
+
+        <p className="text-xs text-muted-foreground text-center">
+          🎲 Click the dice to re-roll this quest (once per month)
+        </p>
       </div>
 
-      {/* Quest Completion Modal */}
-      {selectedAssignment && (
-        <QuestCompletionModal
+      {/* Monthly Quest Completion Modal */}
+      {selectedSlot && (
+        <MonthlyQuestCompletionModal
           open={isModalOpen}
           onOpenChange={setIsModalOpen}
-          assignment={selectedAssignment}
+          slot={selectedSlot}
           onSubmitComplete={handleSubmitComplete}
         />
       )}
