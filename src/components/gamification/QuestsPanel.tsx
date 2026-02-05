@@ -610,13 +610,13 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </TabsList>
 
             <TabsContent value="daily">
-              <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+              <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
             </TabsContent>
             <TabsContent value="weekly">
-              <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+              <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
             </TabsContent>
             <TabsContent value="monthly">
-              <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+              <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
             </TabsContent>
           </Tabs>
 

@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 
 interface DailyQuestSlotsProps {
   onQuestComplete?: () => void;
+  isAdminView?: boolean;
 }
 
 interface SlotCompletionStatus {
@@ -19,7 +20,7 @@ interface SlotCompletionStatus {
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
-const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) => {
+const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
   const { user } = useAuth();
   const { slots, isLoading, isRerolling, rerollSlot, refetch } = useDailyQuestSlots();
   const { refetch: gamificationRefetch } = useGamification();
@@ -183,8 +184,9 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
               status={getSlotStatus(slot)}
               hasRerolled={slot.has_rerolled}
               isRerolling={isRerolling === slot.slot_number}
-              onReroll={() => rerollSlot(slot.slot_number)}
+              onReroll={isAdminView ? undefined : () => rerollSlot(slot.slot_number)}
               onViewQuest={() => handleViewQuest(slot)}
+              isAdminView={isAdminView}
             />
           ))}
         </div>

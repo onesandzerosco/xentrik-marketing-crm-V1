@@ -11,6 +11,7 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 
 interface WeeklyQuestSlotsProps {
   onQuestComplete?: () => void;
+  isAdminView?: boolean;
 }
 
 interface QuestCompletionStatus {
@@ -18,7 +19,7 @@ interface QuestCompletionStatus {
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
-const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) => {
+const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
   const { user } = useAuth();
   const { activeAssignments, isLoading, refetch } = useGamification();
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
@@ -161,6 +162,7 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
                 questType="weekly"
                 status={getAssignmentStatus(assignment.id)}
                 onViewQuest={() => handleViewQuest(assignment)}
+                isAdminView={isAdminView}
               />
             );
           })}

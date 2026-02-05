@@ -11,6 +11,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 interface MonthlyQuestSlotsProps {
   onQuestComplete?: () => void;
+  isAdminView?: boolean;
 }
 
 interface QuestCompletionStatus {
@@ -18,7 +19,7 @@ interface QuestCompletionStatus {
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
-const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete }) => {
+const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
   const { user } = useAuth();
   const { activeAssignments, isLoading, refetch } = useGamification();
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
@@ -161,6 +162,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete }
                 questType="monthly"
                 status={getAssignmentStatus(assignment.id)}
                 onViewQuest={() => handleViewQuest(assignment)}
+                isAdminView={isAdminView}
               />
             );
           })}
