@@ -106,7 +106,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
 
       {/* Stats Grid - 4 Panels */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Rank Panel - colored by rank */}
+        {/* Rank Panel - colored by rank, crown only */}
         <Card 
           className="border-2"
           style={{ 
@@ -116,22 +116,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         >
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center">
               <Crown 
-                className="h-6 w-6" 
+                className="h-10 w-10" 
                 style={{ color: rankCrownColor }}
                 fill={rankCrownColor}
                 strokeWidth={1.5}
               />
-              <p 
-                className="text-xl font-bold uppercase"
-                style={{ 
-                  fontFamily: "'Macs Minecraft', sans-serif",
-                  color: rankCrownColor
-                }}
-              >
-                {currentRank?.name || 'Unranked'}
-              </p>
             </div>
           </CardContent>
         </Card>
