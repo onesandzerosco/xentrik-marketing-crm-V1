@@ -32,16 +32,17 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
   const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch completion statuses for today's daily quests
+  // We need to check both admin assignments AND personal assignments (for re-rolled quests)
   useEffect(() => {
     const fetchCompletionStatuses = async () => {
       if (!user || slots.length === 0) return;
 
       const questIds = slots.map(s => s.quest_id);
       
-      // Get all quest assignments for today's daily quests
+      // Get all quest assignments for today's daily quests (both admin and personal)
       const { data: assignments } = await supabase
         .from('gamification_quest_assignments')
-        .select('id, quest_id')
+        .select('id, quest_id, assigned_by')
         .in('quest_id', questIds)
         .lte('start_date', today)
         .gte('end_date', today);
@@ -51,7 +52,28 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
         return;
       }
 
-      const assignmentIds = assignments.map(a => a.id);
+      // For each quest, prefer admin assignment if exists, else use personal assignment
+      const questAssignmentMap = new Map<string, string>();
+      for (const qId of questIds) {
+        // Find admin assignment first (assigned_by is null)
+        const adminAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === null);
+        if (adminAssignment) {
+          questAssignmentMap.set(qId, adminAssignment.id);
+          continue;
+        }
+        // Fall back to personal assignment (assigned_by = user.id)
+        const personalAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === user.id);
+        if (personalAssignment) {
+          questAssignmentMap.set(qId, personalAssignment.id);
+        }
+      }
+
+      const assignmentIds = Array.from(questAssignmentMap.values());
+
+      if (assignmentIds.length === 0) {
+        setCompletionStatuses([]);
+        return;
+      }
 
       // Get completions for this user on these assignments
       const { data: completions } = await supabase
@@ -62,10 +84,10 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
 
       // Map quest_id to status
       const statuses: SlotCompletionStatus[] = questIds.map(questId => {
-        const assignment = assignments.find(a => a.quest_id === questId);
-        if (!assignment) return { questId, status: null };
+        const assignmentId = questAssignmentMap.get(questId);
+        if (!assignmentId) return { questId, status: null };
         
-        const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+        const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
         return { 
           questId, 
           status: completion?.status as 'pending' | 'verified' | 'rejected' | null 
@@ -92,18 +114,32 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
     gamificationRefetch.myCompletions();
     refetch();
     onQuestComplete?.();
-    // Re-fetch completion statuses
+    // Re-fetch completion statuses (same logic as useEffect above)
     if (user && slots.length > 0) {
       const questIds = slots.map(s => s.quest_id);
       const { data: assignments } = await supabase
         .from('gamification_quest_assignments')
-        .select('id, quest_id')
+        .select('id, quest_id, assigned_by')
         .in('quest_id', questIds)
         .lte('start_date', today)
         .gte('end_date', today);
 
       if (assignments && assignments.length > 0) {
-        const assignmentIds = assignments.map(a => a.id);
+        // For each quest, prefer admin assignment if exists, else use personal assignment
+        const questAssignmentMap = new Map<string, string>();
+        for (const qId of questIds) {
+          const adminAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === null);
+          if (adminAssignment) {
+            questAssignmentMap.set(qId, adminAssignment.id);
+            continue;
+          }
+          const personalAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === user.id);
+          if (personalAssignment) {
+            questAssignmentMap.set(qId, personalAssignment.id);
+          }
+        }
+
+        const assignmentIds = Array.from(questAssignmentMap.values());
         const { data: completions } = await supabase
           .from('gamification_quest_completions')
           .select('quest_assignment_id, status')
@@ -111,9 +147,9 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
           .in('quest_assignment_id', assignmentIds);
 
         const statuses: SlotCompletionStatus[] = questIds.map(questId => {
-          const assignment = assignments.find(a => a.quest_id === questId);
-          if (!assignment) return { questId, status: null };
-          const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+          const assignmentId = questAssignmentMap.get(questId);
+          if (!assignmentId) return { questId, status: null };
+          const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
           return { questId, status: completion?.status as 'pending' | 'verified' | 'rejected' | null };
         });
         setCompletionStatuses(statuses);

@@ -88,7 +88,8 @@ export const useWeeklyQuestSlots = () => {
       return; // Already has a slot
     }
 
-    // Fetch this week's admin-assigned weekly quest
+    // Fetch this week's ADMIN-assigned weekly quest (assigned_by is null)
+    // Personal assignments are NOT included to prevent re-rolls from propagating
     const today = format(new Date(), 'yyyy-MM-dd');
     const { data: weeklyAssignments, error: assignmentError } = await supabase
       .from('gamification_quest_assignments')
@@ -97,7 +98,8 @@ export const useWeeklyQuestSlots = () => {
         quest:gamification_quests (*)
       `)
       .lte('start_date', today)
-      .gte('end_date', today);
+      .gte('end_date', today)
+      .is('assigned_by', null);
 
     if (assignmentError) {
       console.error('Error fetching admin assignments:', assignmentError);
