@@ -90,68 +90,49 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </p>
       </div>
 
-      {/* Top Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Current Points */}
-        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 cursor-default">
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current XP</p>
-            <div className="flex items-center justify-between">
-              <span 
-                className="text-4xl font-bold text-primary"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+      {/* Your Standing Card - Prominent leaderboard position */}
+      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-bold"
+                style={{ 
+                  fontFamily: "'Macs Minecraft', sans-serif",
+                  backgroundColor: `${currentRank?.badge_color || '#808080'}20`,
+                  color: currentRank?.badge_color || '#808080'
+                }}
               >
-                {myStats?.total_xp || 0}
-              </span>
-              <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Star className="h-7 w-7 text-primary" />
+                #{myPosition || '-'}
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground uppercase tracking-wider">Your Leaderboard Position</p>
+                <p 
+                  className="text-2xl font-bold"
+                  style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                >
+                  {myStats?.total_xp || 0} XP
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Banana Balance */}
-        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-yellow-500/10 hover:border-yellow-500/50 cursor-default">
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Banana Balance</p>
-            <div className="flex items-center justify-between">
-              <span 
-                className="text-4xl font-bold text-yellow-500"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-              >
-                {myStats?.banana_balance || 0}
-              </span>
-              <div className="w-14 h-14 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <span className="text-3xl">🍌</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Current Rank */}
-        <Card className="bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/50 cursor-default" style={{ '--tw-shadow-color': `${currentRank?.badge_color || '#808080'}20` } as React.CSSProperties}>
-          <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground uppercase tracking-wider mb-3">Current Rank</p>
-            <div className="flex items-center justify-between">
-              <span 
-                className="text-3xl font-bold uppercase"
+            <div className="text-right">
+              <p 
+                className="text-xl font-bold uppercase"
                 style={{ 
                   fontFamily: "'Macs Minecraft', sans-serif",
                   color: currentRank?.badge_color || '#808080'
                 }}
               >
                 {currentRank?.name || 'Unranked'}
-              </span>
-              <div 
-                className="w-14 h-14 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: `${currentRank?.badge_color || '#808080'}20` }}
-              >
-                <Crown className="h-7 w-7" style={{ color: currentRank?.badge_color || '#808080' }} />
-              </div>
+              </p>
+              <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
+                <span className="text-lg">🍌</span>
+                <span className="font-bold text-yellow-500">{myStats?.banana_balance || 0}</span>
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Progress to Next Rank */}
       {nextRank && (
@@ -191,6 +172,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               const IconComponent = config.icon;
               const isCompleted = completion?.status === 'verified';
               const isPending = completion?.status === 'pending';
+              const progressTarget = assignment.quest?.progress_target || 1;
+              const currentProgress = isCompleted ? progressTarget : isPending ? Math.floor(progressTarget / 2) : 0;
               
               return (
                 <Card 
@@ -227,18 +210,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       {assignment.quest?.game_name || assignment.quest?.title}
                     </h3>
 
-                    {/* Progress */}
+                    {/* Progress with target from DB */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
                         <span>Progress</span>
                         <span className="flex items-center gap-2">
-                          {isCompleted ? '1 / 1' : isPending ? '0 / 1' : '0 / 1'}
+                          {currentProgress} / {progressTarget}
                           {isCompleted && <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0">✓</Badge>}
                           {isPending && <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 text-[10px] px-1.5 py-0">⏳</Badge>}
                         </span>
                       </div>
                       <Progress 
-                        value={isCompleted ? 100 : isPending ? 50 : 0} 
+                        value={(currentProgress / progressTarget) * 100} 
                         className="h-2" 
                       />
                     </div>
@@ -257,7 +240,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </div>
         </div>
 
-        {/* Top Agents - Right Column */}
+        {/* Leaderboard - Right Column (Full) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-7 bg-primary rounded-full" />
@@ -265,7 +248,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               className="text-2xl font-bold uppercase tracking-wide"
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              Top Agents
+              Leaderboard
             </h2>
           </div>
 
@@ -275,25 +258,25 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               <div className="grid grid-cols-12 gap-2 pb-3 border-b border-border/50 text-sm text-muted-foreground uppercase tracking-wider">
                 <div className="col-span-2">Rank</div>
                 <div className="col-span-7">Agent</div>
-                <div className="col-span-3 text-right">PTS</div>
+                <div className="col-span-3 text-right">XP</div>
               </div>
 
-              {/* Leaderboard Items */}
-              <div className="space-y-2 mt-3">
-                {leaderboard.slice(0, 10).map((stats, index) => {
+              {/* Full Leaderboard */}
+              <div className="space-y-1 mt-3 max-h-96 overflow-y-auto">
+                {leaderboard.map((stats, index) => {
                   const rank = getCurrentRank(stats.total_xp);
                   const isMe = stats.chatter_id === user?.id;
                   
                   return (
                     <div 
                       key={stats.id} 
-                      className={`grid grid-cols-12 gap-2 items-center py-2 rounded ${isMe ? 'bg-primary/10' : ''}`}
+                      className={`grid grid-cols-12 gap-2 items-center py-2 rounded px-1 ${isMe ? 'bg-primary/10 border border-primary/30' : ''}`}
                     >
                       <div className="col-span-2 flex items-center justify-center">
                         {index === 0 && <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />}
-                        {index === 1 && <span className="text-muted-foreground text-base">2</span>}
-                        {index === 2 && <span className="text-muted-foreground text-base">3</span>}
-                        {index > 2 && <span className="text-muted-foreground text-base">{index + 1}</span>}
+                        {index === 1 && <span className="text-muted-foreground text-base font-bold">2</span>}
+                        {index === 2 && <span className="text-muted-foreground text-base font-bold">3</span>}
+                        {index > 2 && <span className="text-muted-foreground text-sm">{index + 1}</span>}
                       </div>
                       <div className="col-span-7 flex items-center gap-2 min-w-0">
                         <Avatar className="h-7 w-7 shrink-0">
@@ -303,13 +286,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                           </AvatarFallback>
                         </Avatar>
                         <span 
-                          className={`text-base truncate ${isMe ? 'text-primary font-medium' : 'text-foreground'}`}
+                          className={`text-sm truncate ${isMe ? 'text-primary font-bold' : 'text-foreground'}`}
                         >
-                          {stats.profile?.name || 'Unknown'}
+                          {isMe ? 'You' : stats.profile?.name || 'Unknown'}
                         </span>
                       </div>
                       <div
-                        className="col-span-3 text-right text-base font-bold"
+                        className="col-span-3 text-right text-sm font-bold"
                         style={{ 
                           fontFamily: "'Macs Minecraft', sans-serif",
                           color: rank?.badge_color || '#808080'
@@ -320,31 +303,11 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     </div>
                   );
                 })}
-              </div>
 
-              {/* My Position (if not in top 10) */}
-              {myPosition > 10 && (
-                <div className="mt-4 pt-3 border-t border-border/50">
-                  <div className="grid grid-cols-12 gap-2 items-center py-2 bg-primary/10 rounded">
-                    <div className="col-span-2 text-center text-base text-muted-foreground">
-                      {myPosition}
-                    </div>
-                    <div className="col-span-7 flex items-center gap-2">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={myStats?.profile?.profile_image} />
-                        <AvatarFallback className="text-xs">You</AvatarFallback>
-                      </Avatar>
-                      <span className="text-base text-primary font-medium">You</span>
-                    </div>
-                    <div 
-                      className="col-span-3 text-right text-base font-bold text-primary"
-                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-                    >
-                      {myStats?.total_xp || 0}
-                    </div>
-                  </div>
-                </div>
-              )}
+                {leaderboard.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No agents on the leaderboard yet.</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>

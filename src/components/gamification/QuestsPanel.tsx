@@ -46,7 +46,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     description: '',
     quest_type: 'daily' as 'daily' | 'weekly' | 'monthly',
     xp_reward: 10,
-    banana_reward: 5
+    banana_reward: 5,
+    progress_target: 1
   });
   const [selectedQuestForAssign, setSelectedQuestForAssign] = useState<string>('');
   const [pendingCompletions, setPendingCompletions] = useState<any[]>([]);
@@ -59,6 +60,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [editGameName, setEditGameName] = useState('');
   const [editXpReward, setEditXpReward] = useState(0);
   const [editBananaReward, setEditBananaReward] = useState(0);
+  const [editProgressTarget, setEditProgressTarget] = useState(1);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   // Fetch pending completions for admin
@@ -121,7 +123,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       if (error) throw error;
 
       toast({ title: "Success", description: "Quest created successfully!" });
-      setNewQuest({ title: '', description: '', quest_type: 'daily', xp_reward: 10, banana_reward: 5 });
+      setNewQuest({ title: '', description: '', quest_type: 'daily', xp_reward: 10, banana_reward: 5, progress_target: 1 });
       refetch.quests();
     } catch (error) {
       console.error('Error creating quest:', error);
@@ -139,6 +141,23 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
     const quest = quests.find(q => q.id === selectedQuestForAssign);
     if (!quest) return;
+
+    // Check assignment limits: max 4 daily, 1 weekly, 1 monthly
+    const currentDailyCount = filterQuestsByType('daily').length;
+    const currentWeeklyCount = filterQuestsByType('weekly').length;
+    const currentMonthlyCount = filterQuestsByType('monthly').length;
+
+    const limits = { daily: 4, weekly: 1, monthly: 1 };
+    const currentCounts = { daily: currentDailyCount, weekly: currentWeeklyCount, monthly: currentMonthlyCount };
+
+    if (currentCounts[quest.quest_type] >= limits[quest.quest_type]) {
+      toast({ 
+        title: "Assignment Limit Reached", 
+        description: `You can only assign ${limits[quest.quest_type]} ${quest.quest_type} quest${limits[quest.quest_type] > 1 ? 's' : ''} at a time`,
+        variant: "destructive" 
+      });
+      return;
+    }
 
     let startDate: Date;
     let endDate: Date;
@@ -197,6 +216,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     setEditGameName(quest.game_name || '');
     setEditXpReward(quest.xp_reward || 0);
     setEditBananaReward(quest.banana_reward || 0);
+    setEditProgressTarget(quest.progress_target || 1);
   };
 
   const handleSaveQuest = async () => {
@@ -210,7 +230,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
           description: editDescription,
           game_name: editGameName || null,
           xp_reward: editXpReward,
-          banana_reward: editBananaReward
+          banana_reward: editBananaReward,
+          progress_target: editProgressTarget
         })
         .eq('id', editingQuest.id);
 
@@ -270,12 +291,18 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Page Header - Admin Control Panel uses standard CRM fonts */}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Control Panel</h1>
+        <p className="text-muted-foreground mt-1">Manage quests, assignments, and review submissions</p>
+      </div>
+
       {/* Admin Controls */}
       {isAdmin && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-xl">Admin Controls</CardTitle>
+            <CardTitle className="text-xl">Quest Management</CardTitle>
             <CardDescription className="text-base">Create and manage quests for chatters</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -325,7 +352,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label>XP Reward</Label>
                         <Input 
@@ -340,6 +367,15 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           type="number"
                           value={newQuest.banana_reward}
                           onChange={e => setNewQuest({ ...newQuest, banana_reward: parseInt(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Progress Target</Label>
+                        <Input 
+                          type="number"
+                          value={newQuest.progress_target}
+                          onChange={e => setNewQuest({ ...newQuest, progress_target: parseInt(e.target.value) || 1 })}
+                          min={1}
                         />
                       </div>
                     </div>
@@ -541,7 +577,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
           {['daily', 'weekly', 'monthly'].map(type => (
             <TabsContent key={type} value={type} className="mt-4">
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {/* Daily quests use 2 columns, weekly/monthly use full width */}
+              <div className={`grid gap-4 ${type === 'daily' ? 'md:grid-cols-2' : 'md:grid-cols-1 lg:grid-cols-2'}`}>
                 {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').map(assignment => {
                   const completion = getCompletionStatus(assignment.id);
                   const quest = assignment.quest;
@@ -765,6 +802,19 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                   min={0}
                   className="text-base"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-base">Progress Target</Label>
+                <Input 
+                  type="number"
+                  value={editProgressTarget}
+                  onChange={e => setEditProgressTarget(parseInt(e.target.value) || 1)}
+                  min={1}
+                  className="text-base"
+                />
+                <p className="text-sm text-muted-foreground">
+                  How many times this quest needs to be completed (e.g., 5 for "5/5 progress")
+                </p>
               </div>
             </div>
 

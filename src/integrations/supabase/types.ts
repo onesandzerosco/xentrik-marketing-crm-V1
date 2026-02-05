@@ -867,6 +867,7 @@ export type Database = {
           game_name: string | null
           id: string
           is_active: boolean
+          progress_target: number
           quest_type: string
           title: string
           updated_at: string
@@ -880,6 +881,7 @@ export type Database = {
           game_name?: string | null
           id?: string
           is_active?: boolean
+          progress_target?: number
           quest_type: string
           title: string
           updated_at?: string
@@ -893,6 +895,7 @@ export type Database = {
           game_name?: string | null
           id?: string
           is_active?: boolean
+          progress_target?: number
           quest_type?: string
           title?: string
           updated_at?: string

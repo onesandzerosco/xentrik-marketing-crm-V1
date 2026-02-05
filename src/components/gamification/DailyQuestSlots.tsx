@@ -173,8 +173,8 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete }) =>
           </Badge>
         </div>
 
-        {/* Quest Cards Grid - Tighter gap */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Quest Cards Grid - 2 columns for daily quests (max 4) */}
+        <div className="grid gap-3 sm:grid-cols-2">
           {slots.map((slot) => (
             <QuestSlotCard
               key={slot.id}

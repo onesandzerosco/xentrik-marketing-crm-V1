@@ -115,6 +115,8 @@ const ChatterQuestsPage: React.FC = () => {
       const isCompleted = completion?.status === 'verified';
       const isPending = completion?.status === 'pending';
       const isRejected = completion?.status === 'rejected';
+      const progressTarget = assignment.quest?.progress_target || 1;
+      const currentProgress = isCompleted ? progressTarget : 0;
       
       return (
         <Card 
@@ -166,10 +168,10 @@ const ChatterQuestsPage: React.FC = () => {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
                 <span>Progress</span>
-                <span>{isCompleted ? '1 / 1' : '0 / 1'}</span>
+                <span>{currentProgress} / {progressTarget}</span>
               </div>
               <Progress 
-                value={isCompleted ? 100 : isPending ? 50 : 0} 
+                value={(currentProgress / progressTarget) * 100} 
                 className="h-2" 
               />
             </div>
@@ -273,19 +275,22 @@ const ChatterQuestsPage: React.FC = () => {
         </TabsList>
 
         <TabsContent value="daily" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Daily quests: max 4, display in 2 columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderQuestCards(dailyQuests)}
           </div>
         </TabsContent>
 
         <TabsContent value="weekly" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Weekly quests: max 1, full width */}
+          <div className="grid grid-cols-1 gap-4">
             {renderQuestCards(weeklyQuests)}
           </div>
         </TabsContent>
 
         <TabsContent value="monthly" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Monthly quests: max 1, full width */}
+          <div className="grid grid-cols-1 gap-4">
             {renderQuestCards(monthlyQuests)}
           </div>
         </TabsContent>
