@@ -50,7 +50,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     progress_target: 1
   });
   const [selectedQuestForAssign, setSelectedQuestForAssign] = useState<string>('');
-  const [selectedShift, setSelectedShift] = useState<'6am' | '2pm' | '10pm' | ''>('');
+  
   const [pendingCompletions, setPendingCompletions] = useState<any[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
@@ -140,11 +140,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       return;
     }
 
-    if (!selectedShift) {
-      toast({ title: "Error", description: "Please select a team shift", variant: "destructive" });
-      return;
-    }
-
     const quest = quests.find(q => q.id === selectedQuestForAssign);
     if (!quest) return;
 
@@ -192,15 +187,13 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
           quest_id: selectedQuestForAssign,
           start_date: format(startDate, 'yyyy-MM-dd'),
           end_date: format(endDate, 'yyyy-MM-dd'),
-          assigned_by: user?.id,
-          shift: selectedShift
+          assigned_by: user?.id
         });
 
       if (error) throw error;
 
-      toast({ title: "Success", description: `Quest assigned to ${selectedShift} shift successfully!` });
+      toast({ title: "Success", description: "Quest assigned successfully!" });
       setSelectedQuestForAssign('');
-      setSelectedShift('');
       refetch.activeAssignments();
     } catch (error) {
       console.error('Error assigning quest:', error);
@@ -444,40 +437,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                         </ul>
                       </div>
                     )}
-                    <div className="space-y-2">
-                      <Label>Team Shift</Label>
-                      <Select 
-                        value={selectedShift}
-                        onValueChange={(v: '6am' | '2pm' | '10pm') => setSelectedShift(v)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select shift..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="6am">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-orange-500" />
-                              <span>6:00 AM Shift</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="2pm">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-yellow-500" />
-                              <span>2:00 PM Shift</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="10pm">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-purple-500" />
-                              <span>10:00 PM Shift</span>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleAssignQuest} disabled={isAssigning || !selectedQuestForAssign || !selectedShift}>
+                    <Button onClick={handleAssignQuest} disabled={isAssigning || !selectedQuestForAssign}>
                       {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                       Assign Quest
                     </Button>
@@ -662,14 +624,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           </div>
                         </div>
                         
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                        <div className="text-xs text-muted-foreground mb-3">
                           <span>Valid: {format(new Date(assignment.start_date), 'MMM d')} - {format(new Date(assignment.end_date), 'MMM d')}</span>
-                          {assignment.shift && (
-                            <Badge variant="outline" className="text-xs">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {assignment.shift}
-                            </Badge>
-                          )}
                         </div>
 
                         {completion ? (
