@@ -47,25 +47,38 @@ const TasksRewards: React.FC = () => {
 
   const activeTab = getActiveTab();
 
-  const navItems = [
-    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards', adminOnly: false },
-    { id: 'quests', label: 'Quests', icon: Swords, path: '/tasks-rewards/quests', adminOnly: false },
-    { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot', adminOnly: false },
-    { id: 'control-panel', label: 'Control Panel', icon: Settings, path: '/tasks-rewards/control-panel', adminOnly: true },
+  // Separate navigation items for admin vs non-admin
+  // Admin ONLY sees Control Panel
+  // Non-admin sees Game Board, Quests, Supply Depot
+  const adminNavItems = [
+    { id: 'control-panel', label: 'Control Panel', icon: Settings, path: '/tasks-rewards/control-panel' },
   ];
 
-  // Filter nav items based on admin status
-  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
+  const playerNavItems = [
+    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards' },
+    { id: 'quests', label: 'Quests', icon: Swords, path: '/tasks-rewards/quests' },
+    { id: 'supply-depot', label: 'Supply Depot', icon: Store, path: '/tasks-rewards/supply-depot' },
+  ];
+
+  const visibleNavItems = isAdmin ? adminNavItems : playerNavItems;
 
   const renderContent = () => {
+    // Admin can ONLY access control-panel
+    if (isAdmin) {
+      // Redirect admin to control-panel if they're on any other tab
+      if (activeTab !== 'control-panel') {
+        navigate('/tasks-rewards/control-panel', { replace: true });
+        return <QuestsPanel isAdmin={isAdmin} />;
+      }
+      return <QuestsPanel isAdmin={isAdmin} />;
+    }
+
+    // Non-admin logic
     switch (activeTab) {
       case 'control-panel':
-        // Only admins can access control panel - redirect others to game board
-        if (!isAdmin) {
-          navigate('/tasks-rewards', { replace: true });
-          return <GameBoard isAdmin={false} />;
-        }
-        return <QuestsPanel isAdmin={isAdmin} />;
+        // Non-admins cannot access control panel - redirect to game board
+        navigate('/tasks-rewards', { replace: true });
+        return <GameBoard isAdmin={false} />;
       case 'quests':
         return <ChatterQuestsPage />;
       case 'supply-depot':
