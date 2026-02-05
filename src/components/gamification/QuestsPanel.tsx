@@ -21,6 +21,9 @@ import QuestReviewModal from './QuestReviewModal';
 import DailyQuestSlots from './DailyQuestSlots';
 import WeeklyQuestSlots from './WeeklyQuestSlots';
 import MonthlyQuestSlots from './MonthlyQuestSlots';
+import AdminDailyQuestSlots from './AdminDailyQuestSlots';
+import AdminWeeklyQuestSlots from './AdminWeeklyQuestSlots';
+import AdminMonthlyQuestSlots from './AdminMonthlyQuestSlots';
 
 interface QuestsPanelProps {
   isAdmin: boolean;
@@ -678,25 +681,37 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </TabsList>
 
             <TabsContent value="daily">
-              <DailyQuestSlots 
-                onQuestComplete={handleQuestSubmitComplete} 
-                isAdminView={isAdmin} 
-                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
-              />
+              {isAdmin ? (
+                <AdminDailyQuestSlots 
+                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
+                />
+              ) : (
+                <DailyQuestSlots 
+                  onQuestComplete={handleQuestSubmitComplete} 
+                />
+              )}
             </TabsContent>
             <TabsContent value="weekly">
-              <WeeklyQuestSlots 
-                onQuestComplete={handleQuestSubmitComplete} 
-                isAdminView={isAdmin}
-                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
-              />
+              {isAdmin ? (
+                <AdminWeeklyQuestSlots 
+                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
+                />
+              ) : (
+                <WeeklyQuestSlots 
+                  onQuestComplete={handleQuestSubmitComplete} 
+                />
+              )}
             </TabsContent>
             <TabsContent value="monthly">
-              <MonthlyQuestSlots 
-                onQuestComplete={handleQuestSubmitComplete} 
-                isAdminView={isAdmin}
-                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
-              />
+              {isAdmin ? (
+                <AdminMonthlyQuestSlots 
+                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
+                />
+              ) : (
+                <MonthlyQuestSlots 
+                  onQuestComplete={handleQuestSubmitComplete} 
+                />
+              )}
             </TabsContent>
           </Tabs>
 
