@@ -58,6 +58,11 @@ const TasksRewards: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'control-panel':
+        // Only admins can access control panel - redirect others to game board
+        if (!isAdmin) {
+          navigate('/tasks-rewards', { replace: true });
+          return <GameBoard isAdmin={false} />;
+        }
         return <QuestsPanel isAdmin={isAdmin} />;
       case 'quests':
         return <ChatterQuestsPage />;
