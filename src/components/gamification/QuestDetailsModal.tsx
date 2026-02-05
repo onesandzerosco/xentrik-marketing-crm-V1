@@ -164,17 +164,17 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                     className="text-muted-foreground uppercase tracking-wider font-medium"
                     style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                   >
-                    Progress
+                    Screenshots Required
                   </span>
                   <span 
                     className="font-bold text-primary"
                     style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                   >
-                    {isCompleted ? '1 / 1' : '0 / 1'}
+                    {isCompleted ? `${quest.progress_target || 1} / ${quest.progress_target || 1}` : `0 / ${quest.progress_target || 1}`}
                   </span>
                 </div>
                 <Progress 
-                  value={isCompleted ? 100 : isPending ? 50 : 0} 
+                  value={isCompleted ? 100 : isPending ? 100 : 0} 
                   className="h-3" 
                 />
               </div>

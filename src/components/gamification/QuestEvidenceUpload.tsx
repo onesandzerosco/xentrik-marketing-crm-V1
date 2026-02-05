@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Upload, X, ChevronLeft, Camera, FileImage } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, Upload, X, ChevronLeft, Camera, FileImage, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -29,13 +30,31 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   const quest = assignment.quest;
   if (!quest) return null;
 
+  // Get progress target from quest (default to 1)
+  const progressTarget = quest.progress_target || 1;
+  const currentProgress = files.length;
+  const progressPercentage = Math.min((currentProgress / progressTarget) * 100, 100);
+  const canSubmit = currentProgress >= progressTarget;
+
   // Check if this is a Word of the Day quest
   const isWordOfDayQuest = quest.title?.toLowerCase().includes('word of the day');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles(prev => [...prev, ...newFiles]);
+      // Limit total files to progress target
+      const remainingSlots = progressTarget - files.length;
+      const filesToAdd = newFiles.slice(0, remainingSlots);
+      
+      if (filesToAdd.length < newFiles.length) {
+        toast({
+          title: "Upload Limit",
+          description: `You can only upload ${progressTarget} screenshot${progressTarget > 1 ? 's' : ''} for this quest.`,
+          variant: "default"
+        });
+      }
+      
+      setFiles(prev => [...prev, ...filesToAdd]);
     }
   };
 
@@ -71,14 +90,20 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 
   const handleSubmit = async () => {
     if (!user || !quest) return;
+    
+    if (!canSubmit) {
+      toast({
+        title: "Incomplete",
+        description: `Please upload ${progressTarget} screenshot${progressTarget > 1 ? 's' : ''} to complete this quest.`,
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      // Upload any files first
-      let attachmentUrls: string[] = [];
-      if (files.length > 0) {
-        attachmentUrls = await uploadFiles();
-      }
+      // Upload all files
+      const attachmentUrls = await uploadFiles();
 
       // Check if a completion already exists
       const { data: existingCompletion } = await supabase
@@ -101,7 +126,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           status: 'pending',
           xp_earned: quest.xp_reward || 0,
           bananas_earned: quest.banana_reward || 0,
-          attachments: attachmentUrls.length > 0 ? attachmentUrls : null
+          attachments: attachmentUrls
         });
 
       if (completionError) {
@@ -177,31 +202,55 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           </div>
         )}
 
-        {/* Upload Instructions */}
+        {/* Progress Section */}
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Camera className="h-5 w-5 text-primary" />
-            <Label 
-              className="text-sm font-bold uppercase tracking-wider"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-primary" />
+              <Label 
+                className="text-sm font-bold uppercase tracking-wider"
+                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              >
+                Upload Progress
+              </Label>
+            </div>
+            <span 
+              className={`text-sm font-bold ${canSubmit ? 'text-green-500' : 'text-primary'}`}
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              Proof of Completion
-            </Label>
+              {currentProgress} / {progressTarget}
+            </span>
           </div>
+          <Progress value={progressPercentage} className="h-3" />
+          {canSubmit && (
+            <div className="flex items-center gap-2 text-green-500 text-sm">
+              <CheckCircle className="h-4 w-4" />
+              <span>Ready to submit!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Upload Area */}
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Upload {progressTarget} screenshot{progressTarget > 1 ? 's' : ''} as proof of completing the quest
+          </p>
           
-          <div className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-            <FileImage className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-sm text-muted-foreground mb-3">
-              Upload screenshots as proof of completing the quest
-            </p>
-            <Input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileChange}
-              className="cursor-pointer max-w-xs mx-auto"
-            />
-          </div>
+          {!canSubmit && (
+            <div className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+              <FileImage className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground mb-3">
+                {progressTarget - currentProgress} more screenshot{progressTarget - currentProgress > 1 ? 's' : ''} needed
+              </p>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+                className="cursor-pointer max-w-xs mx-auto"
+              />
+            </div>
+          )}
           
           {/* File List */}
           {files.length > 0 && (
@@ -211,7 +260,10 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
                   key={index}
                   className="flex items-center justify-between bg-muted/50 px-3 py-2 rounded-lg"
                 >
-                  <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -234,8 +286,8 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold"
+          disabled={isSubmitting || !canSubmit}
+          className={`font-bold ${canSubmit ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : 'bg-muted text-muted-foreground'}`}
           style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
         >
           {isSubmitting ? (
@@ -246,7 +298,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           ) : (
             <>
               <Upload className="h-4 w-4 mr-2" />
-              Submit Quest
+              {canSubmit ? 'Submit Quest' : `Need ${progressTarget - currentProgress} more`}
             </>
           )}
         </Button>
