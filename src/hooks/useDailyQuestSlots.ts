@@ -86,7 +86,8 @@ export const useDailyQuestSlots = () => {
 
     const filledSlots = new Set((existingSlots || []).map(s => s.slot_number));
 
-    // Fetch today's admin-assigned daily quests
+    // Fetch today's ADMIN-assigned daily quests (assigned_by is null)
+    // Personal assignments (assigned_by = user.id) are NOT included to prevent re-rolls from propagating
     const { data: todayAssignments, error: assignmentError } = await supabase
       .from('gamification_quest_assignments')
       .select(`
@@ -95,6 +96,7 @@ export const useDailyQuestSlots = () => {
       `)
       .eq('start_date', today)
       .eq('end_date', today)
+      .is('assigned_by', null)
       .order('created_at');
 
     if (assignmentError) {

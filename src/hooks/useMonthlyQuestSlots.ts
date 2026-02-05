@@ -88,7 +88,8 @@ export const useMonthlyQuestSlots = () => {
       return; // Already has a slot
     }
 
-    // Fetch this month's admin-assigned monthly quest
+    // Fetch this month's ADMIN-assigned monthly quest (assigned_by is null)
+    // Personal assignments are NOT included to prevent re-rolls from propagating
     const today = format(new Date(), 'yyyy-MM-dd');
     const { data: monthlyAssignments, error: assignmentError } = await supabase
       .from('gamification_quest_assignments')
@@ -97,7 +98,8 @@ export const useMonthlyQuestSlots = () => {
         quest:gamification_quests (*)
       `)
       .lte('start_date', today)
-      .gte('end_date', today);
+      .gte('end_date', today)
+      .is('assigned_by', null);
 
     if (assignmentError) {
       console.error('Error fetching admin assignments:', assignmentError);

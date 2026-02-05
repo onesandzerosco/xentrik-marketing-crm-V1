@@ -53,6 +53,7 @@ const ChatterQuestsPage: React.FC = () => {
   const activeSlots = allSlots[activeTab];
 
   // Fetch completion statuses for all currently shown slots
+  // We need to find both admin assignments AND personal assignments (for re-rolled quests)
   const refreshSlotStatuses = async () => {
     if (!user) return;
 
@@ -67,10 +68,11 @@ const ChatterQuestsPage: React.FC = () => {
       return;
     }
 
-    // Assignments that are active "today" (covers daily/weekly/monthly in one query)
+    // Find all assignments (both admin and personal) for the user's quests that are active today
+    // Admin assignments have assigned_by = null, personal ones have assigned_by = user.id
     const { data: assignments, error: aErr } = await supabase
       .from('gamification_quest_assignments')
-      .select('id, quest_id')
+      .select('id, quest_id, assigned_by')
       .in('quest_id', questIds)
       .lte('start_date', today)
       .gte('end_date', today);
@@ -85,7 +87,28 @@ const ChatterQuestsPage: React.FC = () => {
       return;
     }
 
-    const assignmentIds = assignments.map(a => a.id);
+    // For each quest, prefer admin assignment if exists, else use personal assignment
+    const questAssignmentMap = new Map<string, string>();
+    for (const qId of questIds) {
+      // Find admin assignment first (assigned_by is null)
+      const adminAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === null);
+      if (adminAssignment) {
+        questAssignmentMap.set(qId, adminAssignment.id);
+        continue;
+      }
+      // Fall back to personal assignment (assigned_by = user.id)
+      const personalAssignment = assignments.find(a => a.quest_id === qId && a.assigned_by === user.id);
+      if (personalAssignment) {
+        questAssignmentMap.set(qId, personalAssignment.id);
+      }
+    }
+
+    const assignmentIds = Array.from(questAssignmentMap.values());
+
+    if (assignmentIds.length === 0) {
+      setSlotStatuses({});
+      return;
+    }
 
     const { data: completions, error: cErr } = await supabase
       .from('gamification_quest_completions')
@@ -101,12 +124,12 @@ const ChatterQuestsPage: React.FC = () => {
     const statusMap: Record<string, CompletionStatus> = {};
 
     for (const qId of questIds) {
-      const assignment = assignments.find(a => a.quest_id === qId);
-      if (!assignment) {
+      const assignmentId = questAssignmentMap.get(qId);
+      if (!assignmentId) {
         statusMap[qId] = null;
         continue;
       }
-      const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+      const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
       statusMap[qId] = (completion?.status as CompletionStatus) ?? null;
     }
 
@@ -121,6 +144,10 @@ const ChatterQuestsPage: React.FC = () => {
     return slotStatuses[questId] ?? null;
   };
 
+  // Find or create a user-scoped assignment for tracking progress and completion.
+  // CRITICAL: We create "personal" assignments that are isolated per-user.
+  // These are identified by having assigned_by = user.id (not null/admin ID).
+  // Re-rolled quests get their own personal assignments that don't affect other players.
   const ensureAssignmentForQuest = async (questId: string, questType: QuestType) => {
     if (!user) return null;
 
@@ -130,32 +157,54 @@ const ChatterQuestsPage: React.FC = () => {
       return { start: monthStart, end: monthEnd };
     })();
 
-    // Try exact match first (how admin assignments are stored)
-    const { data: existing, error: eErr } = await supabase
+    // First, check if user already has a personal assignment for this quest
+    // Personal assignments have assigned_by = user.id
+    const { data: personalAssignment, error: pErr } = await supabase
       .from('gamification_quest_assignments')
       .select(`*, quest:gamification_quests (*)`)
       .eq('quest_id', questId)
       .eq('start_date', period.start)
       .eq('end_date', period.end)
+      .eq('assigned_by', user.id)
       .maybeSingle();
 
-    if (eErr) {
-      console.error('Error looking up assignment:', eErr);
+    if (pErr) {
+      console.error('Error looking up personal assignment:', pErr);
     }
 
-    if (existing?.id) {
-      return existing as any as QuestAssignment;
+    if (personalAssignment?.id) {
+      return personalAssignment as any as QuestAssignment;
     }
 
-    // Create a personal assignment so progress slots (quest_progress) can be tracked.
-    // This remains isolated in the UI because activeAssignments are filtered to admin-created assignments.
+    // Next, check for an admin-created assignment (assigned_by is null or different user)
+    const { data: adminAssignment, error: aErr } = await supabase
+      .from('gamification_quest_assignments')
+      .select(`*, quest:gamification_quests (*)`)
+      .eq('quest_id', questId)
+      .eq('start_date', period.start)
+      .eq('end_date', period.end)
+      .is('assigned_by', null)
+      .maybeSingle();
+
+    if (aErr) {
+      console.error('Error looking up admin assignment:', aErr);
+    }
+
+    // If admin assignment exists, use it (this is the normal case for non-rerolled quests)
+    if (adminAssignment?.id) {
+      return adminAssignment as any as QuestAssignment;
+    }
+
+    // No admin assignment exists - this quest was obtained via re-roll.
+    // Create a PERSONAL assignment for this user only.
+    // Other players won't see this because it has assigned_by = user.id
     const { data: created, error: cErr } = await supabase
       .from('gamification_quest_assignments')
       .insert({
         quest_id: questId,
         start_date: period.start,
         end_date: period.end,
-        assigned_by: user.id,
+        assigned_by: user.id, // Mark as personal assignment
       })
       .select(`*, quest:gamification_quests (*)`)
       .single();

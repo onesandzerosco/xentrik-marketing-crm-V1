@@ -199,13 +199,15 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
     try {
       setIsAssigning(true);
+      // Admin assignments have assigned_by = null to distinguish from personal assignments
+      // Personal assignments (from re-rolls) have assigned_by = user.id
       const { error } = await supabase
         .from('gamification_quest_assignments')
         .insert({
           quest_id: selectedQuestForAssign,
           start_date: format(startDate, 'yyyy-MM-dd'),
           end_date: format(endDate, 'yyyy-MM-dd'),
-          assigned_by: user?.id
+          assigned_by: null // NULL = admin/global assignment, visible to all players
         });
 
       if (error) throw error;
