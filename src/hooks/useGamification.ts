@@ -224,11 +224,24 @@ export const useGamification = () => {
 
   // Fetch active assignments (current quests)
   const fetchActiveAssignments = useCallback(async () => {
-    // Use local date to match how dates are saved in handleAssignQuest
+    // Use local date to match how dates are saved
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    
-    const { data, error } = await supabase
+
+    // Only treat assignments created by Admins (or with null assigned_by) as globally active.
+    // This prevents chatter-created assignments (e.g. from personal re-roll flows) from showing up for everyone.
+    const { data: adminProfiles, error: adminError } = await supabase
+      .from('profiles')
+      .select('id')
+      .or('role.eq.Admin,roles.cs.{Admin}');
+
+    if (adminError) {
+      console.error('Error fetching admin profiles:', adminError);
+    }
+
+    const adminIds = (adminProfiles || []).map((p: any) => p.id).filter(Boolean);
+
+    let query = supabase
       .from('gamification_quest_assignments')
       .select(`
         *,
@@ -237,10 +250,20 @@ export const useGamification = () => {
       .lte('start_date', today)
       .gte('end_date', today);
 
+    if (adminIds.length > 0) {
+      query = query.or(`assigned_by.is.null,assigned_by.in.(${adminIds.join(',')})`);
+    } else {
+      // Fallback: if we couldn't resolve admins, only show system assignments.
+      query = query.is('assigned_by', null);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error('Error fetching assignments:', error);
       return;
     }
+
     setActiveAssignments((data as any) || []);
   }, []);
 
