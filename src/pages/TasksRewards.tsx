@@ -5,15 +5,16 @@ import GameBoard from '@/components/gamification/GameBoard';
 import QuestsPanel from '@/components/gamification/QuestsPanel';
 import ChatterQuestsPage from '@/components/gamification/ChatterQuestsPage';
 import SupplyDepot from '@/components/gamification/SupplyDepot';
-import { useAuth } from '@/context/AuthContext';
+import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 
 const TasksRewards: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userRole, userRoles } = useAuth();
+  const { userRole, userRoles, isLoading } = useSupabaseAuth();
   
-  const isAdmin = userRole === 'Admin' || userRoles?.includes('Admin');
+  // Wait for auth to finish loading before determining admin status
+  const isAdmin = !isLoading && (userRole === 'Admin' || userRoles?.includes('Admin'));
   
   // Determine active tab from URL
   const getActiveTab = () => {
