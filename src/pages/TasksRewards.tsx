@@ -82,12 +82,12 @@ const TasksRewards: React.FC = () => {
         className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto"
         style={{ width: '20rem' }}
       >
-        <div className="mb-6 flex items-center justify-center">
+        <div className="mb-8 flex items-center justify-center">
           {logoUrl && (
             <img
               src={logoUrl}
               alt="Xentrik Marketing"
-              className="h-12 w-auto object-contain"
+              className="h-[70px] w-auto object-contain"
             />
           )}
         </div>

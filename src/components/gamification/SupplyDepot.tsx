@@ -129,19 +129,19 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
   const activeItems = shopItems.filter(item => item.is_active);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Balance Card */}
       <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
-        <CardContent className="py-6">
+        <CardContent className="py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="text-5xl">🍌</div>
+              <div className="text-6xl">🍌</div>
               <div>
-                <p className="text-sm text-muted-foreground">Your Balance</p>
-                <p className="text-3xl font-bold text-yellow-500">{myStats?.banana_balance || 0} Bananas</p>
+                <p className="text-base text-muted-foreground">Your Balance</p>
+                <p className="text-4xl font-bold text-yellow-500">{myStats?.banana_balance || 0} Bananas</p>
               </div>
             </div>
-            <ShoppingCart className="h-12 w-12 text-muted-foreground/30" />
+            <ShoppingCart className="h-14 w-14 text-muted-foreground/30" />
           </div>
         </CardContent>
       </Card>
@@ -150,8 +150,8 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
       {isAdmin && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-lg">Admin Controls</CardTitle>
-            <CardDescription>Manage shop items and view purchases</CardDescription>
+            <CardTitle className="text-xl">Admin Controls</CardTitle>
+            <CardDescription className="text-base">Manage shop items and view purchases</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Create Item Dialog */}
@@ -220,18 +220,18 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
 
       {/* Tabs for Shop / My Purchases / (Admin: All Purchases) */}
       <Tabs defaultValue="shop" className="w-full">
-        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <TabsTrigger value="shop" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
+        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} h-auto p-1`}>
+          <TabsTrigger value="shop" className="flex items-center gap-2 py-3 text-base">
+            <Package className="h-5 w-5" />
             Shop
           </TabsTrigger>
-          <TabsTrigger value="my-purchases" className="flex items-center gap-2">
-            <Ticket className="h-4 w-4" />
+          <TabsTrigger value="my-purchases" className="flex items-center gap-2 py-3 text-base">
+            <Ticket className="h-5 w-5" />
             My Vouchers
           </TabsTrigger>
           {isAdmin && (
-            <TabsTrigger value="all-purchases" className="flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4" />
+            <TabsTrigger value="all-purchases" className="flex items-center gap-2 py-3 text-base">
+              <ShoppingCart className="h-5 w-5" />
               All Purchases
             </TabsTrigger>
           )}
@@ -244,34 +244,34 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
               <Card key={item.id} className="relative overflow-hidden">
                 {item.stock !== null && item.stock <= 0 && (
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
-                    <Badge variant="destructive" className="text-lg px-4 py-2">Out of Stock</Badge>
+                    <Badge variant="destructive" className="text-xl px-5 py-3">Out of Stock</Badge>
                   </div>
                 )}
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{item.name}</CardTitle>
+                      <CardTitle className="text-xl">{item.name}</CardTitle>
                       {item.description && (
-                        <CardDescription className="mt-1">{item.description}</CardDescription>
+                        <CardDescription className="mt-2 text-base">{item.description}</CardDescription>
                       )}
                     </div>
-                    <Package className="h-5 w-5 text-muted-foreground" />
+                    <Package className="h-6 w-6 text-muted-foreground" />
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">🍌</span>
-                    <span className="text-2xl font-bold text-yellow-500">{item.banana_cost}</span>
+                <CardContent className="pb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-3xl">🍌</span>
+                    <span className="text-3xl font-bold text-yellow-500">{item.banana_cost}</span>
                   </div>
                   {item.stock !== null && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-base text-muted-foreground">
                       {item.stock} in stock
                     </p>
                   )}
                 </CardContent>
                 <CardFooter>
                   <Button 
-                    className="w-full" 
+                    className="w-full text-base py-5" 
                     disabled={(myStats?.banana_balance || 0) < item.banana_cost || (item.stock !== null && item.stock <= 0)}
                     onClick={() => purchaseItem(item.id)}
                   >
@@ -283,7 +283,7 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
 
             {activeItems.length === 0 && (
               <Card className="col-span-full">
-                <CardContent className="py-12 text-center text-muted-foreground">
+                <CardContent className="py-16 text-center text-muted-foreground text-lg">
                   No items available in the shop right now.
                   {isAdmin && " Add items using the admin controls above."}
                 </CardContent>
@@ -293,11 +293,11 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
         </TabsContent>
 
         {/* My Purchases Tab */}
-        <TabsContent value="my-purchases" className="mt-4">
+        <TabsContent value="my-purchases" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>My Vouchers</CardTitle>
-              <CardDescription>Your purchased vouchers and their redemption status</CardDescription>
+              <CardTitle className="text-xl">My Vouchers</CardTitle>
+              <CardDescription className="text-base">Your purchased vouchers and their redemption status</CardDescription>
             </CardHeader>
             <CardContent>
               {myPurchases.length === 0 ? (
@@ -360,11 +360,11 @@ const SupplyDepot: React.FC<SupplyDepotProps> = ({ isAdmin }) => {
 
         {/* All Purchases Tab (Admin) */}
         {isAdmin && (
-          <TabsContent value="all-purchases" className="mt-4">
+          <TabsContent value="all-purchases" className="mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>All Purchases</CardTitle>
-                <CardDescription>View and manage all chatter purchases</CardDescription>
+                <CardTitle className="text-xl">All Purchases</CardTitle>
+                <CardDescription className="text-base">View and manage all chatter purchases</CardDescription>
               </CardHeader>
               <CardContent>
                 {allPurchases.length === 0 ? (
