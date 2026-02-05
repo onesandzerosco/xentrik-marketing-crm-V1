@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Trophy, Medal, Crown, Star, Banana, ArrowRight, ChevronLeft } from 'lucide-react';
 import { Quest, QuestAssignment } from '@/hooks/useGamification';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import QuestEvidenceUpload from './QuestEvidenceUpload';
 
 interface QuestDetailsModalProps {
@@ -49,9 +51,31 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
   completionStatus,
   onSubmitComplete,
 }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState<'details' | 'upload'>('details');
+  const [currentProgress, setCurrentProgress] = useState(0);
   
   const quest = assignment.quest;
+  
+  // Fetch current progress when modal opens
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!user || !open || !assignment) return;
+      
+      const { data, error } = await supabase
+        .from('gamification_quest_progress')
+        .select('*')
+        .eq('quest_assignment_id', assignment.id)
+        .eq('chatter_id', user.id);
+      
+      if (!error && data) {
+        setCurrentProgress(data.length);
+      }
+    };
+    
+    fetchProgress();
+  }, [user, open, assignment]);
+  
   if (!quest) return null;
   
   const questType = quest.quest_type || 'daily';
@@ -170,11 +194,11 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                     className="font-bold text-primary"
                     style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                   >
-                    {isCompleted ? `${quest.progress_target || 1} / ${quest.progress_target || 1}` : `0 / ${quest.progress_target || 1}`}
+                    {isCompleted || isPending ? `${quest.progress_target || 1} / ${quest.progress_target || 1}` : `${currentProgress} / ${quest.progress_target || 1}`}
                   </span>
                 </div>
                 <Progress 
-                  value={isCompleted ? 100 : isPending ? 100 : 0} 
+                  value={isCompleted || isPending ? 100 : (currentProgress / (quest.progress_target || 1)) * 100} 
                   className="h-3" 
                 />
               </div>

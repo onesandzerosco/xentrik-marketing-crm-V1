@@ -858,6 +858,48 @@ export type Database = {
           },
         ]
       }
+      gamification_quest_progress: {
+        Row: {
+          attachment_url: string
+          chatter_id: string
+          id: string
+          quest_assignment_id: string
+          slot_number: number
+          uploaded_at: string
+        }
+        Insert: {
+          attachment_url: string
+          chatter_id: string
+          id?: string
+          quest_assignment_id: string
+          slot_number: number
+          uploaded_at?: string
+        }
+        Update: {
+          attachment_url?: string
+          chatter_id?: string
+          id?: string
+          quest_assignment_id?: string
+          slot_number?: number
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_quest_progress_chatter_id_fkey"
+            columns: ["chatter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gamification_quest_progress_quest_assignment_id_fkey"
+            columns: ["quest_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_quest_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gamification_quests: {
         Row: {
           banana_reward: number

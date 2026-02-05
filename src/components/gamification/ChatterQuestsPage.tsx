@@ -39,6 +39,7 @@ const ChatterQuestsPage: React.FC = () => {
     activeAssignments,
     myCompletions,
     isLoading,
+    getProgressCount,
     refetch
   } = useGamification();
 
@@ -72,6 +73,7 @@ const ChatterQuestsPage: React.FC = () => {
   const handleQuestComplete = () => {
     refetch.myCompletions();
     refetch.activeAssignments();
+    refetch.myProgress();
   };
 
   // Get quests for current tab
@@ -116,7 +118,12 @@ const ChatterQuestsPage: React.FC = () => {
       const isPending = completion?.status === 'pending';
       const isRejected = completion?.status === 'rejected';
       const progressTarget = assignment.quest?.progress_target || 1;
-      const currentProgress = isCompleted ? progressTarget : 0;
+      // Use real progress from database
+      const currentProgress = isCompleted 
+        ? progressTarget 
+        : isPending 
+          ? progressTarget
+          : getProgressCount(assignment.id);
       
       return (
         <Card 

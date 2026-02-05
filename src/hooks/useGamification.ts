@@ -86,6 +86,13 @@ export interface Purchase {
   shop_item?: ShopItem;
 }
 
+export interface QuestProgress {
+  quest_assignment_id: string;
+  chatter_id: string;
+  slot_number: number;
+  attachment_url: string;
+}
+
 export const useGamification = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -98,6 +105,7 @@ export const useGamification = () => {
   const [myCompletions, setMyCompletions] = useState<QuestCompletion[]>([]);
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [myPurchases, setMyPurchases] = useState<Purchase[]>([]);
+  const [myProgress, setMyProgress] = useState<QuestProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch ranks
@@ -282,6 +290,22 @@ export const useGamification = () => {
       return;
     }
     setMyPurchases((data as any) || []);
+  }, [user]);
+
+  // Fetch my quest progress (uploaded screenshots)
+  const fetchMyProgress = useCallback(async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('gamification_quest_progress')
+      .select('*')
+      .eq('chatter_id', user.id);
+
+    if (error) {
+      console.error('Error fetching progress:', error);
+      return;
+    }
+    setMyProgress((data as QuestProgress[]) || []);
   }, [user]);
 
   // Get current rank based on XP
@@ -525,7 +549,8 @@ export const useGamification = () => {
         fetchActiveAssignments(),
         fetchMyCompletions(),
         fetchShopItems(),
-        fetchMyPurchases()
+        fetchMyPurchases(),
+        fetchMyProgress()
       ]);
       setIsLoading(false);
     };
@@ -533,7 +558,12 @@ export const useGamification = () => {
     if (user) {
       loadData();
     }
-  }, [user, fetchRanks, fetchMyStats, fetchLeaderboard, fetchQuests, fetchActiveAssignments, fetchMyCompletions, fetchShopItems, fetchMyPurchases]);
+  }, [user, fetchRanks, fetchMyStats, fetchLeaderboard, fetchQuests, fetchActiveAssignments, fetchMyCompletions, fetchShopItems, fetchMyPurchases, fetchMyProgress]);
+
+  // Helper to get progress count for an assignment
+  const getProgressCount = useCallback((assignmentId: string): number => {
+    return myProgress.filter(p => p.quest_assignment_id === assignmentId).length;
+  }, [myProgress]);
 
   return {
     ranks,
@@ -544,8 +574,10 @@ export const useGamification = () => {
     myCompletions,
     shopItems,
     myPurchases,
+    myProgress,
     isLoading,
     getCurrentRank,
+    getProgressCount,
     submitQuestCompletion,
     verifyQuestCompletion,
     purchaseItem,
@@ -557,7 +589,8 @@ export const useGamification = () => {
       activeAssignments: fetchActiveAssignments,
       myCompletions: fetchMyCompletions,
       shopItems: fetchShopItems,
-      myPurchases: fetchMyPurchases
+      myPurchases: fetchMyPurchases,
+      myProgress: fetchMyProgress
     }
   };
 };
