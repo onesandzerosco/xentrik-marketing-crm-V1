@@ -33,6 +33,7 @@ export interface Quest {
   quest_type: 'daily' | 'weekly' | 'monthly';
   xp_reward: number;
   banana_reward: number;
+  progress_target: number;
   is_active: boolean;
   created_by: string | null;
   created_at: string;

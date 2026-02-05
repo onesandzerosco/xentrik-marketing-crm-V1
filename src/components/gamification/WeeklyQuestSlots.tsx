@@ -148,8 +148,8 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete }) 
           </Badge>
         </div>
 
-        {/* Quest Cards Grid - Tighter gap */}
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Quest Cards - Full width for single weekly quest */}
+        <div className="grid gap-3">
           {weeklyAssignments.map((assignment) => {
             const quest = assignment.quest;
             if (!quest) return null;
