@@ -69,7 +69,7 @@ const TasksRewards: React.FC = () => {
       case 'quests':
         return <ChatterQuestsPage />;
       case 'supply-depot':
-        return <SupplyDepot isAdmin={isAdmin} />;
+        return <SupplyDepot />;
       default:
         return <GameBoard isAdmin={isAdmin} />;
     }

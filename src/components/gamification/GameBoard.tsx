@@ -116,13 +116,22 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         >
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center gap-1">
               <Crown 
-                className="h-10 w-10" 
+                className="h-8 w-8" 
                 style={{ color: rankCrownColor }}
                 fill={rankCrownColor}
                 strokeWidth={1.5}
               />
+              <p 
+                className="text-lg font-bold uppercase"
+                style={{ 
+                  fontFamily: "'Macs Minecraft', sans-serif",
+                  color: rankCrownColor
+                }}
+              >
+                {currentRank?.name || 'Unranked'}
+              </p>
             </div>
           </CardContent>
         </Card>
