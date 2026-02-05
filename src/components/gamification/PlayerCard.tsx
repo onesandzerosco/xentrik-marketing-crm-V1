@@ -4,7 +4,7 @@ import { useGamification, GamificationRank } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 
 // Rank crown colors based on rank name
-const RANK_CROWN_COLORS: Record<string, string> = {
+export const RANK_CROWN_COLORS: Record<string, string> = {
   'Diamond': '#9b59b6',   // Purple
   'Platinum': '#3498db',  // Blue
   'Gold': '#f1c40f',      // Yellow
@@ -14,7 +14,7 @@ const RANK_CROWN_COLORS: Record<string, string> = {
   'Plastic': '#ffffff',   // White
 };
 
-const getRankCrownColor = (rankName: string): string => {
+export const getRankCrownColor = (rankName: string): string => {
   return RANK_CROWN_COLORS[rankName] || '#ffffff';
 };
 
@@ -68,7 +68,7 @@ const PlayerCard: React.FC = () => {
         <div 
           className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
           style={{ 
-            backgroundColor: 'rgba(211, 164, 45, 0.2)',
+            backgroundColor: `${crownColor}20`,
           }}
         >
           <Crown 
@@ -96,27 +96,6 @@ const PlayerCard: React.FC = () => {
           >
             {displayRole}
           </p>
-          {currentRank && (
-            <div 
-              className="flex items-center gap-1 mt-1"
-            >
-              <Crown 
-                className="w-3 h-3" 
-                style={{ color: crownColor }}
-                fill={crownColor}
-                strokeWidth={1.5}
-              />
-              <span 
-                className="text-xs font-medium"
-                style={{ 
-                  color: crownColor,
-                  fontFamily: "'Pixellari', sans-serif"
-                }}
-              >
-                {currentRank.name}
-              </span>
-            </div>
-          )}
         </div>
       </div>
     </div>
