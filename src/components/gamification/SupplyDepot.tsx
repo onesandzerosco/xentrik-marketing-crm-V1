@@ -46,8 +46,8 @@ const SupplyDepot: React.FC = () => {
             <div className="flex items-center gap-4">
               <div className="text-6xl">🍌</div>
               <div>
-                <p className="text-base text-muted-foreground" style={{ fontFamily: "'Pixellari', sans-serif" }}>Your Balance</p>
-                <p className="text-4xl font-bold text-yellow-500" style={{ fontFamily: "'Pixellari', sans-serif" }}>{myStats?.banana_balance || 0} Bananas</p>
+                <p className="text-base text-muted-foreground" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>Your Balance</p>
+                <p className="text-4xl font-bold text-yellow-500" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{myStats?.banana_balance || 0} Bananas</p>
               </div>
             </div>
             <ShoppingCart className="h-14 w-14 text-muted-foreground/30" />
@@ -92,7 +92,7 @@ const SupplyDepot: React.FC = () => {
                 <CardContent className="pb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-3xl">🍌</span>
-                    <span className="text-3xl font-bold text-yellow-500" style={{ fontFamily: "'Pixellari', sans-serif" }}>{item.banana_cost}</span>
+                    <span className="text-3xl font-bold text-yellow-500" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{item.banana_cost}</span>
                   </div>
                   {item.stock !== null && (
                     <p className="text-base text-muted-foreground">

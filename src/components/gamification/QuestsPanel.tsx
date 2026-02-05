@@ -393,7 +393,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
       {/* Main Tabs for Quest Management vs Supply Management */}
       <Tabs value={controlPanelTab} onValueChange={(v) => setControlPanelTab(v as 'quests' | 'supply')} className="w-full">
-        <TabsList className="w-auto">
+        <TabsList className="w-auto justify-start">
           <TabsTrigger value="quests" className="flex items-center gap-2">
             <Swords className="h-4 w-4" />
             Quest Management
@@ -519,7 +519,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                             <SelectTrigger>
                               <SelectValue placeholder="Choose a quest..." />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-60 overflow-y-auto">
                               {quests.filter(q => q.is_active).map(quest => (
                                 <SelectItem key={quest.id} value={quest.id}>
                                   <div className="flex items-center gap-2">
@@ -592,12 +592,33 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </Card>
           )}
 
-          {/* Quest Slots Section */}
-          <div className="space-y-4">
-            <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
-            <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
-            <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
-          </div>
+          {/* Quest Category Sub-tabs */}
+          <Tabs defaultValue="daily" className="w-full">
+            <TabsList className="w-auto justify-start mb-4">
+              <TabsTrigger value="daily" className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-yellow-500" />
+                Daily Quests
+              </TabsTrigger>
+              <TabsTrigger value="weekly" className="flex items-center gap-2">
+                <Medal className="h-4 w-4 text-blue-500" />
+                Weekly Quests
+              </TabsTrigger>
+              <TabsTrigger value="monthly" className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-purple-500" />
+                Monthly Quests
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="daily">
+              <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+            </TabsContent>
+            <TabsContent value="weekly">
+              <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+            </TabsContent>
+            <TabsContent value="monthly">
+              <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+            </TabsContent>
+          </Tabs>
 
           {/* All Quests Table for Admin */}
           {isAdmin && (
