@@ -25,7 +25,7 @@ const questTypeConfig = {
     label: 'Daily Quest',
     badgeClass: 'bg-primary/20 text-primary border-primary/30',
     icon: Trophy,
-    iconColor: 'text-yellow-500',
+    iconColor: 'text-primary',
   },
   weekly: {
     label: 'Weekly Quest',
@@ -67,26 +67,35 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         isVerified
           ? 'border-green-500/50 bg-green-500/5'
           : isPending
-          ? 'border-yellow-500/50 bg-yellow-500/5'
+          ? 'border-primary/50 bg-primary/5'
           : isRejected
           ? 'border-red-500/50 bg-red-500/5'
           : 'border-border/50 bg-card/50 hover:border-primary/50'
       }`}
     >
-      {/* Header Row */}
+      {/* Header Row - Quest Type, XP, and Bananas */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/30 bg-muted/20">
         <Badge 
           variant="outline" 
           className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 ${config.badgeClass}`}
           style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
         >
+          <IconComponent className="h-3 w-3 mr-1" />
           {config.label}
         </Badge>
-        <div className={`flex items-center gap-1 ${config.iconColor}`}>
-          <IconComponent className="h-4 w-4" />
-          <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
-            {quest?.xp_reward || 0} XP
-          </span>
+        <div className="flex items-center gap-3">
+          {/* XP Reward */}
+          <div className={`flex items-center gap-1 ${config.iconColor}`}>
+            <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+              ⭐ {quest?.xp_reward || 0} XP
+            </span>
+          </div>
+          {/* Banana Reward */}
+          <div className="flex items-center gap-1 text-primary">
+            <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+              🍌 {quest?.banana_reward || 0}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -150,7 +159,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
               </Badge>
             )}
             {isPending && (
-              <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30 text-xs">
+              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30 text-xs">
                 <Clock className="h-3 w-3 mr-1" />
                 Pending Review
               </Badge>
@@ -163,25 +172,44 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
             )}
           </div>
         )}
-
-        {/* Banana Reward */}
-        <div className="text-sm font-medium" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
-          🍌 +{quest?.banana_reward || 0} Bananas
-        </div>
       </div>
 
       {/* Footer Actions */}
       <div className="px-3 pb-3 flex items-center gap-2">
-        {/* Log Activity Button - Only for user view, not admin */}
+        {/* Log Activity Button - Only for user view, not admin - Stretched */}
         {!isVerified && !isAdminView && (
           <Button
             onClick={onViewQuest}
-            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-sm h-9"
+            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm h-9"
             style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
           >
             <Settings className="h-4 w-4 mr-2" />
             Log Activity
           </Button>
+        )}
+
+        {/* Re-roll Button (Daily only, user view only) - Right side of button */}
+        {questType === 'daily' && !isVerified && !isPending && !hasRerolled && onReroll && !isAdminView && (
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={onReroll}
+            disabled={isRerolling}
+            title="Re-roll this quest (once per day)"
+            className="border-border/50 hover:border-primary hover:text-primary h-9 w-9 shrink-0"
+          >
+            {isRerolling ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Dices className="h-4 w-4" />
+            )}
+          </Button>
+        )}
+
+        {questType === 'daily' && hasRerolled && !isVerified && !isPending && !isAdminView && (
+          <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
+            Re-rolled
+          </Badge>
         )}
 
         {/* Awaiting Submission Badge - Only for admin view when not completed */}
@@ -201,30 +229,6 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
             <Check className="h-4 w-4 mr-2" />
             Completed
           </Button>
-        )}
-
-        {/* Re-roll Button (Daily only, user view only) */}
-        {questType === 'daily' && !isVerified && !isPending && !hasRerolled && onReroll && !isAdminView && (
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={onReroll}
-            disabled={isRerolling}
-            title="Re-roll this quest (once per day)"
-            className="border-border/50 hover:border-primary hover:text-primary h-9 w-9"
-          >
-            {isRerolling ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Dices className="h-4 w-4" />
-            )}
-          </Button>
-        )}
-
-        {questType === 'daily' && hasRerolled && !isVerified && !isPending && !isAdminView && (
-          <Badge variant="outline" className="text-[10px] text-muted-foreground">
-            Re-rolled
-          </Badge>
         )}
       </div>
     </div>
