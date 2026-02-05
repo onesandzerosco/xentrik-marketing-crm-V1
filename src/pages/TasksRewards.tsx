@@ -69,9 +69,19 @@ const TasksRewards: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+    <div
+      className="flex min-h-screen w-full"
+      style={
+        activeTab === 'control-panel'
+          ? undefined
+          : { fontFamily: "'Pixellari', sans-serif" }
+      }
+    >
       {/* Left Sidebar Navigation - Fixed position */}
-      <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto" style={{ width: '20rem' }}>
+      <nav
+        className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto"
+        style={{ width: '20rem' }}
+      >
         <div className="mb-6 flex items-center justify-center">
           {logoUrl && (
             <img
@@ -97,7 +107,11 @@ const TasksRewards: React.FC = () => {
                     ? "bg-primary text-primary-foreground shadow-lg border-2 border-primary"
                     : "text-muted-foreground hover:bg-primary/20 hover:text-foreground border-2 border-transparent"
                 )}
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={
+                  activeTab === 'control-panel'
+                    ? undefined
+                    : { fontFamily: "'Macs Minecraft', sans-serif" }
+                }
               >
                 <Icon className="h-6 w-6 shrink-0" />
                 <span className="text-base">{item.label}</span>
