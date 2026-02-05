@@ -5,9 +5,11 @@ import GameBoard from '@/components/gamification/GameBoard';
 import QuestsPanel from '@/components/gamification/QuestsPanel';
 import ChatterQuestsPage from '@/components/gamification/ChatterQuestsPage';
 import SupplyDepot from '@/components/gamification/SupplyDepot';
+import PlayerCard from '@/components/gamification/PlayerCard';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import '@/styles/gamification.css';
 
 const LOGO_PATH = 'xentrik-logo.png';
 const BUCKET_NAME = 'logos';
@@ -75,7 +77,7 @@ const TasksRewards: React.FC = () => {
 
   return (
     <div
-      className="flex min-h-screen w-full"
+      className="gamification-module flex min-h-screen w-full"
       style={
         activeTab === 'control-panel'
           ? undefined
@@ -84,10 +86,10 @@ const TasksRewards: React.FC = () => {
     >
       {/* Left Sidebar Navigation - Fixed position */}
       <nav
-        className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto"
+        className="gamification-sidebar shrink-0 border-r-2 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto"
         style={{ width: '20rem' }}
       >
-        <div className="mb-8 flex items-center justify-center">
+        <div className="mb-6 flex items-center justify-center">
           {logoUrl && (
             <img
               src={logoUrl}
@@ -96,6 +98,9 @@ const TasksRewards: React.FC = () => {
             />
           )}
         </div>
+
+        {/* Player Card */}
+        <PlayerCard />
         
         <div className="space-y-2 flex-1">
           {visibleNavItems.map((item) => {
@@ -107,16 +112,9 @@ const TasksRewards: React.FC = () => {
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-lg border-2 border-primary"
-                    : "text-muted-foreground hover:bg-primary/20 hover:text-foreground border-2 border-transparent"
+                  "gamification-nav-item w-full",
+                  isActive && "gamification-nav-item-active"
                 )}
-                style={
-                  activeTab === 'control-panel'
-                    ? undefined
-                    : { fontFamily: "'Pixellari', sans-serif" }
-                }
               >
                 <Icon className="h-6 w-6 shrink-0" />
                 <span className="text-base">{item.label}</span>
@@ -127,7 +125,7 @@ const TasksRewards: React.FC = () => {
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-background">
+      <main className="gamification-content flex-1 overflow-y-auto p-6 md:p-8 lg:p-10">
         <div className="w-full max-w-none">
           {renderContent()}
         </div>
