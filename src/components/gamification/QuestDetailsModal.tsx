@@ -130,7 +130,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
               {/* Quest Title */}
               <h2 
                 className="text-2xl font-bold text-foreground uppercase tracking-wide leading-tight"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={{ fontFamily: "'Pixellari', sans-serif" }}
               >
                 {quest.game_name || quest.title}
               </h2>

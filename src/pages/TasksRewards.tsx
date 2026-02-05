@@ -115,7 +115,7 @@ const TasksRewards: React.FC = () => {
                 style={
                   activeTab === 'control-panel'
                     ? undefined
-                    : { fontFamily: "'Macs Minecraft', sans-serif" }
+                    : { fontFamily: "'Pixellari', sans-serif" }
                 }
               >
                 <Icon className="h-6 w-6 shrink-0" />

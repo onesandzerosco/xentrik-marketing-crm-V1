@@ -156,17 +156,17 @@ const ChatterQuestsPage: React.FC = () => {
             {/* Quest Title */}
             <div>
               <h3 
-                className="text-xl font-bold uppercase text-foreground leading-tight"
+                className="text-2xl font-bold uppercase text-foreground leading-tight"
                 style={{ fontFamily: "'Pixellari', sans-serif" }}
               >
                 {assignment.quest?.game_name || assignment.quest?.title}
               </h3>
               {assignment.quest?.game_name && assignment.quest.game_name !== assignment.quest.title && (
-                <p className="text-sm text-muted-foreground italic mt-0.5">
+                <p className="text-base text-muted-foreground italic mt-0.5">
                   {assignment.quest.title}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+              <p className="text-base text-muted-foreground mt-2 line-clamp-2">
                 {assignment.quest?.description || 'Complete this quest to earn rewards.'}
               </p>
             </div>
