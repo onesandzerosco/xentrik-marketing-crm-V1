@@ -45,6 +45,7 @@ export interface QuestAssignment {
   start_date: string;
   end_date: string;
   assigned_by: string | null;
+  shift: '6am' | '2pm' | '10pm' | null;
   created_at: string;
   quest?: Quest;
 }
