@@ -53,68 +53,68 @@ const ChatterQuestsPage: React.FC = () => {
   const activeSlots = allSlots[activeTab];
 
   // Fetch completion statuses for all currently shown slots
+  const refreshSlotStatuses = async () => {
+    if (!user) return;
+
+    const questIds = [
+      ...daily.slots.map(s => s.quest_id),
+      ...weekly.slots.map(s => s.quest_id),
+      ...monthly.slots.map(s => s.quest_id),
+    ].filter(Boolean);
+
+    if (questIds.length === 0) {
+      setSlotStatuses({});
+      return;
+    }
+
+    // Assignments that are active "today" (covers daily/weekly/monthly in one query)
+    const { data: assignments, error: aErr } = await supabase
+      .from('gamification_quest_assignments')
+      .select('id, quest_id')
+      .in('quest_id', questIds)
+      .lte('start_date', today)
+      .gte('end_date', today);
+
+    if (aErr) {
+      console.error('Error fetching quest assignments for status:', aErr);
+      return;
+    }
+
+    if (!assignments || assignments.length === 0) {
+      setSlotStatuses({});
+      return;
+    }
+
+    const assignmentIds = assignments.map(a => a.id);
+
+    const { data: completions, error: cErr } = await supabase
+      .from('gamification_quest_completions')
+      .select('quest_assignment_id, status')
+      .eq('chatter_id', user.id)
+      .in('quest_assignment_id', assignmentIds);
+
+    if (cErr) {
+      console.error('Error fetching completions for status:', cErr);
+      return;
+    }
+
+    const statusMap: Record<string, CompletionStatus> = {};
+
+    for (const qId of questIds) {
+      const assignment = assignments.find(a => a.quest_id === qId);
+      if (!assignment) {
+        statusMap[qId] = null;
+        continue;
+      }
+      const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
+      statusMap[qId] = (completion?.status as CompletionStatus) ?? null;
+    }
+
+    setSlotStatuses(statusMap);
+  };
+
   useEffect(() => {
-    const run = async () => {
-      if (!user) return;
-
-      const questIds = [
-        ...daily.slots.map(s => s.quest_id),
-        ...weekly.slots.map(s => s.quest_id),
-        ...monthly.slots.map(s => s.quest_id),
-      ].filter(Boolean);
-
-      if (questIds.length === 0) {
-        setSlotStatuses({});
-        return;
-      }
-
-      // Assignments that are active "today" (covers daily/weekly/monthly in one query)
-      const { data: assignments, error: aErr } = await supabase
-        .from('gamification_quest_assignments')
-        .select('id, quest_id')
-        .in('quest_id', questIds)
-        .lte('start_date', today)
-        .gte('end_date', today);
-
-      if (aErr) {
-        console.error('Error fetching quest assignments for status:', aErr);
-        return;
-      }
-
-      if (!assignments || assignments.length === 0) {
-        setSlotStatuses({});
-        return;
-      }
-
-      const assignmentIds = assignments.map(a => a.id);
-
-      const { data: completions, error: cErr } = await supabase
-        .from('gamification_quest_completions')
-        .select('quest_assignment_id, status')
-        .eq('chatter_id', user.id)
-        .in('quest_assignment_id', assignmentIds);
-
-      if (cErr) {
-        console.error('Error fetching completions for status:', cErr);
-        return;
-      }
-
-      const statusMap: Record<string, CompletionStatus> = {};
-
-      for (const qId of questIds) {
-        const assignment = assignments.find(a => a.quest_id === qId);
-        if (!assignment) {
-          statusMap[qId] = null;
-          continue;
-        }
-        const completion = completions?.find(c => c.quest_assignment_id === assignment.id);
-        statusMap[qId] = (completion?.status as CompletionStatus) ?? null;
-      }
-
-      setSlotStatuses(statusMap);
-    };
-
-    run();
+    refreshSlotStatuses();
   }, [user, today, daily.slots, weekly.slots, monthly.slots]);
 
   const getSlotStatus = (questId: string): CompletionStatus => {
@@ -185,6 +185,9 @@ const ChatterQuestsPage: React.FC = () => {
     daily.refetch();
     weekly.refetch();
     monthly.refetch();
+    
+    // Force refresh statuses after state updates
+    setTimeout(() => refreshSlotStatuses(), 100);
   };
 
   const dailyStats = {
@@ -234,11 +237,19 @@ const ChatterQuestsPage: React.FC = () => {
           ? weekly.isRerolling
           : monthly.isRerolling;
 
-      const onReroll = questType === 'daily'
-        ? () => daily.rerollSlot(slot.slot_number)
-        : questType === 'weekly'
-          ? () => weekly.rerollSlot()
-          : () => monthly.rerollSlot();
+      const handleReroll = async () => {
+        const rerollFn = questType === 'daily'
+          ? () => daily.rerollSlot(slot.slot_number)
+          : questType === 'weekly'
+            ? () => weekly.rerollSlot()
+            : () => monthly.rerollSlot();
+        
+        const success = await rerollFn();
+        if (success) {
+          // After successful re-roll, refresh slot statuses so Log Activity works correctly
+          setTimeout(() => refreshSlotStatuses(), 100);
+        }
+      };
 
       return (
         <QuestSlotCard
@@ -248,7 +259,7 @@ const ChatterQuestsPage: React.FC = () => {
           status={status}
           hasRerolled={slot.has_rerolled}
           isRerolling={isRerolling}
-          onReroll={onReroll}
+          onReroll={handleReroll}
           onViewQuest={() => handleViewQuest(slot.quest_id, questType)}
           isAdminView={false}
         />
