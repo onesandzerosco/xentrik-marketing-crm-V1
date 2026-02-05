@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Gamepad2, Swords, Store, Settings } from 'lucide-react';
 import GameBoard from '@/components/gamification/GameBoard';
@@ -7,14 +7,33 @@ import ChatterQuestsPage from '@/components/gamification/ChatterQuestsPage';
 import SupplyDepot from '@/components/gamification/SupplyDepot';
 import { useSupabaseAuth } from '@/context/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+
+const LOGO_PATH = 'xentrik-logo.png';
+const BUCKET_NAME = 'logos';
 
 const TasksRewards: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userRole, userRoles, isLoading } = useSupabaseAuth();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   
   // Wait for auth to finish loading before determining admin status
   const isAdmin = !isLoading && (userRole === 'Admin' || userRoles?.includes('Admin'));
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(LOGO_PATH);
+        if (publicUrl) {
+          setLogoUrl(publicUrl);
+        }
+      } catch (error) {
+        console.error('Error loading logo:', error);
+      }
+    };
+    loadLogo();
+  }, []);
   
   // Determine active tab from URL
   const getActiveTab = () => {
@@ -53,16 +72,14 @@ const TasksRewards: React.FC = () => {
     <div className="flex min-h-screen w-full" style={{ fontFamily: "'Pixellari', sans-serif" }}>
       {/* Left Sidebar Navigation - Fixed position */}
       <nav className="shrink-0 border-r-2 border-primary/30 bg-card/80 p-6 flex flex-col sticky top-0 h-screen overflow-y-auto" style={{ width: '20rem' }}>
-        <div className="mb-6">
-          <h1 
-            className="text-xl font-bold bg-gradient-premium-yellow bg-clip-text text-transparent leading-tight"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-          >
-            Tasks & Rewards
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1.5" style={{ fontFamily: "'Pixellari', sans-serif" }}>
-            Earn XP & Bananas
-          </p>
+        <div className="mb-6 flex items-center justify-center">
+          {logoUrl && (
+            <img
+              src={logoUrl}
+              alt="Xentrik Marketing"
+              className="h-12 w-auto object-contain"
+            />
+          )}
         </div>
         
         <div className="space-y-2 flex-1">

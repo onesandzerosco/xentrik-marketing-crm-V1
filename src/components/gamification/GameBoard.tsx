@@ -90,49 +90,64 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </p>
       </div>
 
-      {/* Your Standing Card - Prominent leaderboard position */}
-      <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div 
-                className="w-16 h-16 rounded-xl flex items-center justify-center text-3xl font-bold"
-                style={{ 
-                  fontFamily: "'Macs Minecraft', sans-serif",
-                  backgroundColor: `${currentRank?.badge_color || '#808080'}20`,
-                  color: currentRank?.badge_color || '#808080'
-                }}
-              >
-                #{myPosition || '-'}
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground uppercase tracking-wider">Your Leaderboard Position</p>
-                <p 
-                  className="text-2xl font-bold"
-                  style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
-                >
-                  {myStats?.total_xp || 0} XP
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p 
-                className="text-xl font-bold uppercase"
-                style={{ 
-                  fontFamily: "'Macs Minecraft', sans-serif",
-                  color: currentRank?.badge_color || '#808080'
-                }}
-              >
-                {currentRank?.name || 'Unranked'}
-              </p>
-              <p className="text-sm text-muted-foreground flex items-center justify-end gap-1">
-                <span className="text-lg">🍌</span>
-                <span className="font-bold text-yellow-500">{myStats?.banana_balance || 0}</span>
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Grid - 4 Panels */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Rank Panel */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
+            <p 
+              className="text-xl font-bold uppercase"
+              style={{ 
+                fontFamily: "'Macs Minecraft', sans-serif",
+                color: currentRank?.badge_color || '#808080'
+              }}
+            >
+              {currentRank?.name || 'Unranked'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Leaderboard Position Panel */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Leaderboard</p>
+            <p 
+              className="text-3xl font-bold"
+              style={{ 
+                fontFamily: "'Macs Minecraft', sans-serif",
+                color: currentRank?.badge_color || '#808080'
+              }}
+            >
+              #{myPosition || '-'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Banana Count Panel */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Bananas</p>
+            <p className="text-3xl font-bold text-yellow-500 flex items-center justify-center gap-2">
+              <span>🍌</span>
+              <span style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{myStats?.banana_balance || 0}</span>
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* XP Count Panel */}
+        <Card className="bg-card/80 border-border/50">
+          <CardContent className="p-4 text-center">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total XP</p>
+            <p 
+              className="text-3xl font-bold text-primary"
+              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            >
+              {myStats?.total_xp || 0}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Progress to Next Rank */}
       {nextRank && (
@@ -205,7 +220,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     {/* Game Name */}
                     <h3 
                       className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
-                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                      style={{ fontFamily: "'Pixellari', sans-serif" }}
                     >
                       {assignment.quest?.game_name || assignment.quest?.title}
                     </h3>
