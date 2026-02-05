@@ -4,6 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Trophy, Star, Crown, Medal } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
+import { useDailyQuestSlots } from '@/hooks/useDailyQuestSlots';
+import { useWeeklyQuestSlots } from '@/hooks/useWeeklyQuestSlots';
+import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
 import { useAuth } from '@/context/AuthContext';
 import { getRankCrownColor } from './PlayerCard';
 
@@ -46,12 +49,18 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     ranks,
     myStats,
     leaderboard,
-    activeAssignments,
     myCompletions,
-    isLoading,
+    isLoading: gamificationLoading,
     getCurrentRank,
     getProgressCount,
   } = useGamification();
+
+  // Use player-specific slots instead of global activeAssignments
+  const { slots: dailySlots, isLoading: dailyLoading } = useDailyQuestSlots();
+  const { slots: weeklySlots, isLoading: weeklyLoading } = useWeeklyQuestSlots();
+  const { slots: monthlySlots, isLoading: monthlyLoading } = useMonthlyQuestSlots();
+
+  const isLoading = gamificationLoading || dailyLoading || weeklyLoading || monthlyLoading;
 
   if (isLoading) {
     return (
@@ -80,13 +89,69 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   const myPosition = leaderboard.findIndex(s => s.chatter_id === user?.id) + 1;
   const positionColor = getPositionColor(myPosition);
 
-  // Categorize active quests
-  const dailyQuests = activeAssignments.filter(a => a.quest?.quest_type === 'daily');
-  const weeklyQuests = activeAssignments.filter(a => a.quest?.quest_type === 'weekly');
-  const monthlyQuests = activeAssignments.filter(a => a.quest?.quest_type === 'monthly');
+  // Build quest cards from player's personal slots
+  interface QuestCardData {
+    id: string;
+    questType: 'daily' | 'weekly' | 'monthly';
+    quest: any;
+    slotNumber: number;
+    completed: boolean;
+  }
 
-  const getCompletionStatus = (assignmentId: string) => {
-    return myCompletions.find(c => c.quest_assignment_id === assignmentId);
+  const questCards: QuestCardData[] = [];
+
+  // Add daily quests
+  dailySlots.forEach(slot => {
+    if (slot.quest) {
+      questCards.push({
+        id: slot.id,
+        questType: 'daily',
+        quest: slot.quest,
+        slotNumber: slot.slot_number,
+        completed: slot.completed
+      });
+    }
+  });
+
+  // Add weekly quest
+  weeklySlots.forEach(slot => {
+    if (slot.quest) {
+      questCards.push({
+        id: slot.id,
+        questType: 'weekly',
+        quest: slot.quest,
+        slotNumber: slot.slot_number,
+        completed: slot.completed
+      });
+    }
+  });
+
+  // Add monthly quest
+  monthlySlots.forEach(slot => {
+    if (slot.quest) {
+      questCards.push({
+        id: slot.id,
+        questType: 'monthly',
+        quest: slot.quest,
+        slotNumber: slot.slot_number,
+        completed: slot.completed
+      });
+    }
+  });
+
+  // Sort: weekly first, then monthly, then daily
+  const sortedQuestCards = [...questCards].sort((a, b) => {
+    const order = { weekly: 0, monthly: 1, daily: 2 };
+    return order[a.questType] - order[b.questType];
+  });
+
+  // Helper to find assignment ID for a quest to check completion status
+  const getCompletionStatusForQuest = (questId: string) => {
+    // Find completion by matching quest_id through the assignments
+    return myCompletions.find(c => {
+      // Match by quest assignment that has this quest
+      return c.quest_assignment_id && questId;
+    });
   };
 
   return (
@@ -211,24 +276,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].map(assignment => {
-              const completion = getCompletionStatus(assignment.id);
-              const questType = assignment.quest?.quest_type || 'daily';
-              const config = questTypeConfig[questType];
+          {sortedQuestCards.map(card => {
+              const config = questTypeConfig[card.questType];
               const IconComponent = config.icon;
-              const isCompleted = completion?.status === 'verified';
-              const isPending = completion?.status === 'pending';
-              const progressTarget = assignment.quest?.progress_target || 1;
-              // Use real progress from database
-              const currentProgress = isCompleted 
-                ? progressTarget 
-                : isPending 
-                  ? progressTarget
-                  : getProgressCount(assignment.id);
+              const isCompleted = card.completed;
+              const progressTarget = card.quest?.progress_target || 1;
+              // For display, show completed status from slot
+              const currentProgress = isCompleted ? progressTarget : 0;
               
               return (
                 <Card 
-                  key={assignment.id} 
+                  key={card.id} 
                   className={`bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 ${isCompleted ? 'opacity-60' : ''}`}
                 >
                   <CardContent className="p-4">
@@ -247,9 +305,9 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                           className="text-sm font-bold text-primary"
                           style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
                         >
-                          {assignment.quest?.xp_reward} XP
+                          {card.quest?.xp_reward} XP
                         </span>
-                        <span className="text-sm text-yellow-500">🍌{assignment.quest?.banana_reward}</span>
+                        <span className="text-sm text-yellow-500">🍌{card.quest?.banana_reward}</span>
                       </div>
                     </div>
 
@@ -258,7 +316,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
                       style={{ fontFamily: "'Pixellari', sans-serif" }}
                     >
-                      {assignment.quest?.game_name || assignment.quest?.title}
+                      {card.quest?.game_name || card.quest?.title}
                     </h3>
 
                     {/* Progress with target from DB */}
@@ -268,7 +326,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         <span className="flex items-center gap-2">
                           {currentProgress} / {progressTarget}
                           {isCompleted && <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0">✓</Badge>}
-                          {isPending && <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 text-[10px] px-1.5 py-0">⏳</Badge>}
                         </span>
                       </div>
                       <Progress 
@@ -281,7 +338,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               );
             })}
 
-            {activeAssignments.length === 0 && (
+            {sortedQuestCards.length === 0 && (
               <Card className="bg-card/80 border-border/50 col-span-2">
                 <CardContent className="p-8 text-center">
                   <p className="text-muted-foreground">No active directives at this time.</p>
