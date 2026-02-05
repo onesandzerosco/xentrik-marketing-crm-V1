@@ -188,14 +188,14 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           </Button>
         )}
 
-        {/* Re-roll Button (Daily only, user view only) - Right side of button */}
-        {questType === 'daily' && !isVerified && !isPending && !hasRerolled && onReroll && !isAdminView && (
+        {/* Re-roll Button (All quest types, user view only) - Right side of button */}
+        {!isVerified && !isPending && !hasRerolled && onReroll && !isAdminView && (
           <Button
             size="icon"
             variant="outline"
             onClick={onReroll}
             disabled={isRerolling}
-            title="Re-roll this quest (once per day)"
+            title={`Re-roll this quest (once per ${questType === 'daily' ? 'day' : questType === 'weekly' ? 'week' : 'month'})`}
             className="border-border/50 hover:border-primary hover:text-primary h-9 w-9 shrink-0"
           >
             {isRerolling ? (
@@ -206,7 +206,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           </Button>
         )}
 
-        {questType === 'daily' && hasRerolled && !isVerified && !isPending && !isAdminView && (
+        {hasRerolled && !isVerified && !isPending && !isAdminView && (
           <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
             Re-rolled
           </Badge>
