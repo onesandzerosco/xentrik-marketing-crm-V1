@@ -13,6 +13,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 interface MonthlyQuestSlotsProps {
   onQuestComplete?: () => void;
   isAdminView?: boolean;
+  onRemoveAssignment?: (questId: string) => void;
 }
 
 interface SlotCompletionStatus {
@@ -20,7 +21,7 @@ interface SlotCompletionStatus {
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
-const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
+const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false, onRemoveAssignment }) => {
   const { user } = useAuth();
   const { slots, isLoading, isRerolling, rerollSlot, refetch } = useMonthlyQuestSlots();
   const { refetch: gamificationRefetch } = useGamification();
@@ -190,6 +191,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
               onReroll={isAdminView ? undefined : () => rerollSlot()}
               onViewQuest={() => handleViewQuest(slot)}
               isAdminView={isAdminView}
+              onRemoveAssignment={isAdminView && onRemoveAssignment ? () => onRemoveAssignment(slot.quest_id) : undefined}
             />
           ))}
         </div>

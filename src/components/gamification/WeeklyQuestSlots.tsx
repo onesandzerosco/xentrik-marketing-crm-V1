@@ -13,6 +13,7 @@ import { format, startOfWeek, endOfWeek } from 'date-fns';
 interface WeeklyQuestSlotsProps {
   onQuestComplete?: () => void;
   isAdminView?: boolean;
+  onRemoveAssignment?: (questId: string) => void;
 }
 
 interface SlotCompletionStatus {
@@ -20,7 +21,7 @@ interface SlotCompletionStatus {
   status: 'pending' | 'verified' | 'rejected' | null;
 }
 
-const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false }) => {
+const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, isAdminView = false, onRemoveAssignment }) => {
   const { user } = useAuth();
   const { slots, isLoading, isRerolling, rerollSlot, refetch } = useWeeklyQuestSlots();
   const { refetch: gamificationRefetch } = useGamification();
@@ -190,6 +191,7 @@ const WeeklyQuestSlots: React.FC<WeeklyQuestSlotsProps> = ({ onQuestComplete, is
               onReroll={isAdminView ? undefined : () => rerollSlot()}
               onViewQuest={() => handleViewQuest(slot)}
               isAdminView={isAdminView}
+              onRemoveAssignment={isAdminView && onRemoveAssignment ? () => onRemoveAssignment(slot.quest_id) : undefined}
             />
           ))}
         </div>

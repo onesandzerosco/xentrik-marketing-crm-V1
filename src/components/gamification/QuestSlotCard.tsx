@@ -2,8 +2,9 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Trophy, Medal, Crown, Check, Clock, X, Settings, Dices } from 'lucide-react';
+import { Loader2, Trophy, Medal, Crown, Check, Clock, X, Settings, Dices, Trash2 } from 'lucide-react';
 import { Quest } from '@/hooks/useGamification';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 type QuestType = 'daily' | 'weekly' | 'monthly';
 
@@ -18,6 +19,8 @@ interface QuestSlotCardProps {
   onReroll?: () => void;
   // Admin view hides Log Activity button
   isAdminView?: boolean;
+  // Admin can remove assignments
+  onRemoveAssignment?: () => void;
 }
 
 const questTypeConfig = {
@@ -50,6 +53,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
   isRerolling,
   onReroll,
   isAdminView = false,
+  onRemoveAssignment,
 }) => {
   const isVerified = status === 'verified';
   const isPending = status === 'pending';
@@ -220,8 +224,43 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           </Badge>
         )}
 
-        {/* Awaiting Submission Badge - Only for admin view when not completed */}
-        {!isVerified && !isPending && isAdminView && (
+        {/* Admin View: Remove Assignment Button */}
+        {isAdminView && onRemoveAssignment && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive border-destructive/50 hover:border-destructive h-9"
+                title="Remove this quest assignment"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Remove
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove Assignment</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to remove this quest assignment? 
+                  Users will no longer see this quest in their {questType} quests.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={onRemoveAssignment}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Remove Assignment
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {/* Awaiting Submission Badge - Only for admin view when not completed and no remove button */}
+        {!isVerified && !isPending && isAdminView && !onRemoveAssignment && (
           <Badge variant="outline" className="text-xs text-muted-foreground border-border/50">
             <Clock className="h-3 w-3 mr-1" />
             Awaiting Submission

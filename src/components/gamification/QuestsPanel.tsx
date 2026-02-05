@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil, XCircle, Swords, Package } from 'lucide-react';
+import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil, XCircle, Swords, Package, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useGamification, Quest, QuestAssignment } from '@/hooks/useGamification';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -280,6 +281,50 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     } catch (error) {
       console.error('Error closing assignment:', error);
       toast({ title: "Error", description: "Failed to close assignment", variant: "destructive" });
+    }
+  };
+
+  // Delete a quest definition (admin only)
+  const handleDeleteQuest = async (questId: string) => {
+    try {
+      // First delete any assignments for this quest
+      await supabase
+        .from('gamification_quest_assignments')
+        .delete()
+        .eq('quest_id', questId);
+
+      // Then delete the quest itself
+      const { error } = await supabase
+        .from('gamification_quests')
+        .delete()
+        .eq('id', questId);
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Quest deleted successfully" });
+      refetch.quests();
+      refetch.activeAssignments();
+    } catch (error) {
+      console.error('Error deleting quest:', error);
+      toast({ title: "Error", description: "Failed to delete quest", variant: "destructive" });
+    }
+  };
+
+  // Remove a quest assignment by quest_id (admin only)
+  const handleRemoveAssignmentByQuestId = async (questId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gamification_quest_assignments')
+        .delete()
+        .eq('quest_id', questId);
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Quest assignment removed" });
+      refetch.activeAssignments();
+    } catch (error) {
+      console.error('Error removing assignment:', error);
+      toast({ title: "Error", description: "Failed to remove assignment", variant: "destructive" });
     }
   };
 
@@ -610,13 +655,25 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </TabsList>
 
             <TabsContent value="daily">
-              <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
+              <DailyQuestSlots 
+                onQuestComplete={handleQuestSubmitComplete} 
+                isAdminView={isAdmin} 
+                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
+              />
             </TabsContent>
             <TabsContent value="weekly">
-              <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
+              <WeeklyQuestSlots 
+                onQuestComplete={handleQuestSubmitComplete} 
+                isAdminView={isAdmin}
+                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
+              />
             </TabsContent>
             <TabsContent value="monthly">
-              <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} isAdminView={isAdmin} />
+              <MonthlyQuestSlots 
+                onQuestComplete={handleQuestSubmitComplete} 
+                isAdminView={isAdmin}
+                onRemoveAssignment={isAdmin ? handleRemoveAssignmentByQuestId : undefined}
+              />
             </TabsContent>
           </Tabs>
 
@@ -658,13 +715,46 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleOpenEditDialog(quest)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleOpenEditDialog(quest)}
+                              title="Edit quest"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
+                                  title="Delete quest"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Quest</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{quest.game_name || quest.title}"? 
+                                    This will also remove all active assignments for this quest. This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => handleDeleteQuest(quest.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete Quest
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
