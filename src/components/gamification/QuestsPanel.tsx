@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil, XCircle } from 'lucide-react';
+import { Loader2, Plus, Check, X, Clock, Calendar, Star, Medal, Crown, Eye, Pencil, XCircle, Swords, Package } from 'lucide-react';
 import { useGamification, Quest, QuestAssignment } from '@/hooks/useGamification';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -32,12 +32,14 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     quests,
     activeAssignments,
     myCompletions,
+    shopItems,
     isLoading,
     submitQuestCompletion,
     verifyQuestCompletion,
     refetch
   } = useGamification();
 
+  const [controlPanelTab, setControlPanelTab] = useState<'quests' | 'supply'>('quests');
   const [isCreating, setIsCreating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -63,6 +65,21 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [editBananaReward, setEditBananaReward] = useState(0);
   const [editProgressTarget, setEditProgressTarget] = useState(1);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Shop item states
+  const [isCreatingItem, setIsCreatingItem] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    description: '',
+    banana_cost: 100,
+    stock: null as number | null
+  });
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editItemName, setEditItemName] = useState('');
+  const [editItemDescription, setEditItemDescription] = useState('');
+  const [editItemCost, setEditItemCost] = useState(0);
+  const [editItemStock, setEditItemStock] = useState<number | null>(null);
+  const [isSavingItem, setIsSavingItem] = useState(false);
 
   // Fetch pending completions for admin
   React.useEffect(() => {
@@ -266,6 +283,79 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     }
   };
 
+  // Shop Item handlers
+  const handleCreateItem = async () => {
+    if (!newItem.name.trim()) {
+      toast({ title: "Error", description: "Item name is required", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsCreatingItem(true);
+      const { error } = await supabase
+        .from('gamification_shop_items')
+        .insert({
+          ...newItem,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Shop item created successfully!" });
+      setNewItem({ name: '', description: '', banana_cost: 100, stock: null });
+      refetch.shopItems();
+    } catch (error) {
+      console.error('Error creating item:', error);
+      toast({ title: "Error", description: "Failed to create shop item", variant: "destructive" });
+    } finally {
+      setIsCreatingItem(false);
+    }
+  };
+
+  const handleOpenEditItemDialog = (item: any) => {
+    setEditingItem(item);
+    setEditItemName(item.name || '');
+    setEditItemDescription(item.description || '');
+    setEditItemCost(item.banana_cost || 0);
+    setEditItemStock(item.stock);
+  };
+
+  const handleSaveItem = async () => {
+    if (!editingItem) return;
+
+    try {
+      setIsSavingItem(true);
+      const { error } = await supabase
+        .from('gamification_shop_items')
+        .update({ 
+          name: editItemName,
+          description: editItemDescription,
+          banana_cost: editItemCost,
+          stock: editItemStock
+        })
+        .eq('id', editingItem.id);
+
+      if (error) throw error;
+
+      toast({ title: "Success", description: "Shop item updated!" });
+      setEditingItem(null);
+      refetch.shopItems();
+    } catch (error) {
+      console.error('Error updating item:', error);
+      toast({ title: "Error", description: "Failed to update shop item", variant: "destructive" });
+    } finally {
+      setIsSavingItem(false);
+    }
+  };
+
+  const handleToggleItemActive = async (item: any) => {
+    await supabase
+      .from('gamification_shop_items')
+      .update({ is_active: !item.is_active })
+      .eq('id', item.id);
+    refetch.shopItems();
+  };
+
   const getCompletionStatus = (assignmentId: string) => {
     return myCompletions.find(c => c.quest_assignment_id === assignmentId);
   };
@@ -294,414 +384,375 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   return (
     <div className="space-y-6">
       {/* Page Header - Admin Control Panel uses standard CRM fonts */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Control Panel</h1>
-        <p className="text-muted-foreground mt-1">Manage quests, assignments, and review submissions</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Control Panel</h1>
+          <p className="text-muted-foreground mt-1">Manage quests, shop items, and review submissions</p>
+        </div>
       </div>
 
-      {/* Admin Controls */}
-      {isAdmin && (
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-xl">Quest Management</CardTitle>
-            <CardDescription className="text-base">Create and manage quests for chatters</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-4">
-              {/* Create Quest Dialog */}
+      {/* Main Tabs for Quest Management vs Supply Management */}
+      <Tabs value={controlPanelTab} onValueChange={(v) => setControlPanelTab(v as 'quests' | 'supply')} className="w-full">
+        <TabsList className="w-auto">
+          <TabsTrigger value="quests" className="flex items-center gap-2">
+            <Swords className="h-4 w-4" />
+            Quest Management
+          </TabsTrigger>
+          <TabsTrigger value="supply" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Supply Management
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Quest Management Tab */}
+        <TabsContent value="quests" className="mt-6 space-y-6">
+          {/* Admin Controls */}
+          {isAdmin && (
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="text-xl">Quest Management</CardTitle>
+                <CardDescription className="text-base">Create and manage quests for chatters</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-4">
+                  {/* Create Quest Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Quest
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Quest</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Title</Label>
+                          <Input 
+                            value={newQuest.title}
+                            onChange={e => setNewQuest({ ...newQuest, title: e.target.value })}
+                            placeholder="e.g., Sell 5 customs today"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Description</Label>
+                          <Textarea 
+                            value={newQuest.description}
+                            onChange={e => setNewQuest({ ...newQuest, description: e.target.value })}
+                            placeholder="Describe what needs to be done..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Quest Type</Label>
+                          <Select 
+                            value={newQuest.quest_type}
+                            onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setNewQuest({ ...newQuest, quest_type: v })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label>XP Reward</Label>
+                            <Input 
+                              type="number"
+                              value={newQuest.xp_reward}
+                              onChange={e => setNewQuest({ ...newQuest, xp_reward: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Banana Reward 🍌</Label>
+                            <Input 
+                              type="number"
+                              value={newQuest.banana_reward}
+                              onChange={e => setNewQuest({ ...newQuest, banana_reward: parseInt(e.target.value) || 0 })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Progress Target</Label>
+                            <Input 
+                              type="number"
+                              value={newQuest.progress_target}
+                              onChange={e => setNewQuest({ ...newQuest, progress_target: parseInt(e.target.value) || 1 })}
+                              min={1}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handleCreateQuest} disabled={isCreating}>
+                          {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          Create Quest
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Assign Quest Dialog */}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Assign Quest
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Assign Quest for Current Period</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label>Select Quest</Label>
+                          <Select 
+                            value={selectedQuestForAssign}
+                            onValueChange={setSelectedQuestForAssign}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Choose a quest..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {quests.filter(q => q.is_active).map(quest => (
+                                <SelectItem key={quest.id} value={quest.id}>
+                                  <div className="flex items-center gap-2">
+                                    {getQuestIcon(quest.quest_type)}
+                                    <span>{quest.title}</span>
+                                    <Badge variant="outline" className="ml-2">
+                                      {quest.quest_type}
+                                    </Badge>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {selectedQuestForAssign && (
+                          <div className="text-sm text-muted-foreground">
+                            The quest will be assigned based on its type:
+                            <ul className="list-disc list-inside mt-1">
+                              <li>Daily: Today only</li>
+                              <li>Weekly: Current week (Mon-Sun)</li>
+                              <li>Monthly: Current month</li>
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handleAssignQuest} disabled={isAssigning || !selectedQuestForAssign}>
+                          {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          Assign Quest
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {/* Pending Verifications */}
+                {pendingCompletions.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-yellow-500" />
+                      Pending Verifications ({pendingCompletions.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {pendingCompletions.map(completion => (
+                        <Card key={completion.id} className="bg-yellow-500/10 border-yellow-500/30">
+                          <CardContent className="py-3 flex items-center justify-between">
+                            <div>
+                              <p className="font-medium">{completion.profile?.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {completion.quest_assignment?.quest?.title}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleOpenReviewModal(completion)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Review
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quest Slots Section */}
+          <div className="space-y-4">
+            <DailyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+            <WeeklyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+            <MonthlyQuestSlots onQuestComplete={handleQuestSubmitComplete} />
+          </div>
+
+          {/* All Quests Table for Admin */}
+          {isAdmin && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>All Quests</CardTitle>
+                <CardDescription>View and manage all created quests</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>XP</TableHead>
+                      <TableHead>Bananas</TableHead>
+                      <TableHead>Target</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {quests.map(quest => (
+                      <TableRow key={quest.id}>
+                        <TableCell className="font-medium">
+                          {quest.game_name || quest.title}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{quest.quest_type}</Badge>
+                        </TableCell>
+                        <TableCell>{quest.xp_reward}</TableCell>
+                        <TableCell>{quest.banana_reward} 🍌</TableCell>
+                        <TableCell>{quest.progress_target}</TableCell>
+                        <TableCell>
+                          <Badge variant={quest.is_active ? 'default' : 'secondary'}>
+                            {quest.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleOpenEditDialog(quest)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Supply Management Tab */}
+        <TabsContent value="supply" className="mt-6 space-y-6">
+          <Card className="border-border bg-card">
+            <CardHeader>
+              <CardTitle className="text-xl">Supply Management</CardTitle>
+              <CardDescription className="text-base">Create and manage shop items for chatters to purchase</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Create Item Dialog */}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Quest
+                    Add Shop Item
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Create New Quest</DialogTitle>
+                    <DialogTitle>Create New Shop Item</DialogTitle>
+                    <DialogDescription>
+                      Add a new perk or reward that chatters can purchase with bananas.
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label>Title</Label>
+                      <Label>Item Name</Label>
                       <Input 
-                        value={newQuest.title}
-                        onChange={e => setNewQuest({ ...newQuest, title: e.target.value })}
-                        placeholder="e.g., Sell 5 customs today"
+                        value={newItem.name}
+                        onChange={e => setNewItem({ ...newItem, name: e.target.value })}
+                        placeholder="e.g., Extra Day Off"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label>Description</Label>
                       <Textarea 
-                        value={newQuest.description}
-                        onChange={e => setNewQuest({ ...newQuest, description: e.target.value })}
-                        placeholder="Describe what needs to be done..."
+                        value={newItem.description}
+                        onChange={e => setNewItem({ ...newItem, description: e.target.value })}
+                        placeholder="Describe the perk or reward..."
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Quest Type</Label>
-                      <Select 
-                        value={newQuest.quest_type}
-                        onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setNewQuest({ ...newQuest, quest_type: v })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>XP Reward</Label>
+                        <Label>Banana Cost 🍌</Label>
                         <Input 
                           type="number"
-                          value={newQuest.xp_reward}
-                          onChange={e => setNewQuest({ ...newQuest, xp_reward: parseInt(e.target.value) || 0 })}
+                          value={newItem.banana_cost}
+                          onChange={e => setNewItem({ ...newItem, banana_cost: parseInt(e.target.value) || 0 })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Banana Reward 🍌</Label>
+                        <Label>Stock (leave empty for unlimited)</Label>
                         <Input 
                           type="number"
-                          value={newQuest.banana_reward}
-                          onChange={e => setNewQuest({ ...newQuest, banana_reward: parseInt(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Progress Target</Label>
-                        <Input 
-                          type="number"
-                          value={newQuest.progress_target}
-                          onChange={e => setNewQuest({ ...newQuest, progress_target: parseInt(e.target.value) || 1 })}
-                          min={1}
+                          value={newItem.stock ?? ''}
+                          onChange={e => setNewItem({ ...newItem, stock: e.target.value ? parseInt(e.target.value) : null })}
+                          placeholder="Unlimited"
                         />
                       </div>
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button onClick={handleCreateQuest} disabled={isCreating}>
-                      {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Create Quest
+                    <Button onClick={handleCreateItem} disabled={isCreatingItem}>
+                      {isCreatingItem && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Create Item
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            </CardContent>
+          </Card>
 
-              {/* Assign Quest Dialog */}
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Assign Quest
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Assign Quest for Current Period</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Select Quest</Label>
-                      <Select 
-                        value={selectedQuestForAssign}
-                        onValueChange={setSelectedQuestForAssign}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose a quest..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {quests.filter(q => q.is_active).map(quest => (
-                            <SelectItem key={quest.id} value={quest.id}>
-                              <div className="flex items-center gap-2">
-                                {getQuestIcon(quest.quest_type)}
-                                <span>{quest.title}</span>
-                                <Badge variant="outline" className="ml-2">
-                                  {quest.quest_type}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {selectedQuestForAssign && (
-                      <div className="text-sm text-muted-foreground">
-                        The quest will be assigned based on its type:
-                        <ul className="list-disc list-inside mt-1">
-                          <li>Daily: Today only</li>
-                          <li>Weekly: Current week (Mon-Sun)</li>
-                          <li>Monthly: Current month</li>
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleAssignQuest} disabled={isAssigning || !selectedQuestForAssign}>
-                      {isAssigning && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                      Assign Quest
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Pending Verifications */}
-            {pendingCompletions.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold mb-3">Pending Verifications ({pendingCompletions.length})</h3>
-                <div className="space-y-2">
-                  {pendingCompletions.map(completion => (
-                    <div key={completion.id} className="flex items-center justify-between p-3 rounded-lg bg-background border">
-                      <div>
-                        <p className="font-medium">{completion.profile?.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {completion.quest_assignment?.quest?.title}
-                        </p>
-                        <div className="flex gap-2 mt-1">
-                          <Badge variant="outline">+{completion.xp_earned} XP</Badge>
-                          <Badge variant="outline" className="text-yellow-600">+{completion.bananas_earned} 🍌</Badge>
-                          {completion.attachments?.length > 0 && (
-                            <Badge variant="outline" className="text-blue-600">
-                              {completion.attachments.length} screenshot{completion.attachments.length > 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleOpenReviewModal(completion)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" /> Review
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="default"
-                          onClick={() => handleVerify(completion.id, true)}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleVerify(completion.id, false)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Chatter View: Sub-tabs for quest categories */}
-      {!isAdmin && (
-        <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto p-1.5">
-            <TabsTrigger 
-              value="daily" 
-              className="flex items-center gap-2 py-3"
-            >
-              <Star className="h-5 w-5 text-yellow-500" />
-              <span className="text-base">Daily</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="weekly" 
-              className="flex items-center gap-2 py-3"
-            >
-              <Medal className="h-5 w-5 text-blue-500" />
-              <span className="text-base">Weekly</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="special-ops" 
-              className="flex items-center gap-2 py-3"
-            >
-              <Crown className="h-5 w-5 text-purple-500" />
-              <span className="text-base">Special Ops</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="daily">
-            <DailyQuestSlots 
-              onQuestComplete={() => {
-                refetch.myCompletions();
-                refetch.leaderboard();
-              }} 
-            />
-          </TabsContent>
-
-          <TabsContent value="weekly">
-            <WeeklyQuestSlots 
-              onQuestComplete={() => {
-                refetch.myCompletions();
-                refetch.leaderboard();
-              }} 
-            />
-          </TabsContent>
-
-          <TabsContent value="special-ops">
-            <MonthlyQuestSlots 
-              onQuestComplete={() => {
-                refetch.myCompletions();
-                refetch.leaderboard();
-              }} 
-            />
-          </TabsContent>
-        </Tabs>
-      )}
-
-      {/* Admin View: Tabs for quest assignments */}
-      {isAdmin && (
-        <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1.5">
-            <TabsTrigger value="daily" className="flex items-center gap-2 py-3 text-base">
-              <Star className="h-5 w-5" />
-              Daily ({filterQuestsByType('daily').length})
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2 py-3 text-base">
-              <Medal className="h-5 w-5" />
-              Weekly ({filterQuestsByType('weekly').length})
-            </TabsTrigger>
-            <TabsTrigger value="monthly" className="flex items-center gap-2 py-3 text-base">
-              <Crown className="h-5 w-5" />
-              Monthly ({filterQuestsByType('monthly').length})
-            </TabsTrigger>
-          </TabsList>
-
-          {['daily', 'weekly', 'monthly'].map(type => (
-            <TabsContent key={type} value={type} className="mt-4">
-              {/* Daily quests use 2 columns, weekly/monthly use full width */}
-              <div className={`grid gap-4 ${type === 'daily' ? 'md:grid-cols-2' : 'md:grid-cols-1 lg:grid-cols-2'}`}>
-                {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').map(assignment => {
-                  const completion = getCompletionStatus(assignment.id);
-                  const quest = assignment.quest;
-                  if (!quest) return null;
-
-                  return (
-                    <Card key={assignment.id} className="relative overflow-hidden">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6 text-muted-foreground hover:text-destructive z-10"
-                        onClick={() => handleCloseAssignment(assignment.id)}
-                        title="Close this quest assignment"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </Button>
-                      {completion?.status === 'verified' && (
-                        <div className="absolute top-0 left-0 bg-green-500 text-white px-2 py-1 text-xs font-medium rounded-br">
-                          ✓ Completed
-                        </div>
-                      )}
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-base">{quest.title}</CardTitle>
-                            {quest.description && (
-                              <CardDescription className="mt-1">{quest.description}</CardDescription>
-                            )}
-                          </div>
-                          {getQuestIcon(quest.quest_type)}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-medium">+{quest.xp_reward}</span>
-                            <span className="text-xs text-muted-foreground">XP</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-lg">🍌</span>
-                            <span className="text-sm font-medium">+{quest.banana_reward}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground mb-3">
-                          <span>Valid: {format(new Date(assignment.start_date), 'MMM d')} - {format(new Date(assignment.end_date), 'MMM d')}</span>
-                        </div>
-
-                        {completion ? (
-                          <Badge 
-                            variant={
-                              completion.status === 'verified' ? 'default' : 
-                              completion.status === 'pending' ? 'secondary' : 
-                              'destructive'
-                            }
-                            className="w-full justify-center py-2"
-                          >
-                            {completion.status === 'verified' && <Check className="h-4 w-4 mr-1" />}
-                            {completion.status === 'pending' && <Clock className="h-4 w-4 mr-1" />}
-                            {completion.status === 'rejected' && <X className="h-4 w-4 mr-1" />}
-                            {completion.status === 'verified' ? 'Completed!' : 
-                             completion.status === 'pending' ? 'Pending Verification' : 
-                             'Rejected'}
-                          </Badge>
-                      ) : (
-                          <Badge variant="secondary" className="w-full justify-center py-2">
-                            <Clock className="h-4 w-4 mr-1" />
-                            Awaiting Submission
-                          </Badge>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-
-                {filterQuestsByType(type as 'daily' | 'weekly' | 'monthly').length === 0 && (
-                  <Card className="col-span-full">
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      No {type} quests assigned for the current period.
-                      Create and assign quests using the admin controls above.
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-      )}
-
-      {/* All Quests Table (Admin) */}
-      {isAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">All Quests</CardTitle>
-            <CardDescription className="text-base">Manage all quest definitions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                    <TableHead className="text-left text-base">Title</TableHead>
-                    <TableHead className="text-left text-base">Game Name</TableHead>
-                    <TableHead className="text-base">Type</TableHead>
-                    <TableHead className="text-base">XP</TableHead>
-                    <TableHead className="text-base">Bananas</TableHead>
-                    <TableHead className="text-base">Status</TableHead>
-                    <TableHead className="text-base">Actions</TableHead>
+          {/* Manage Shop Items Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Shop Items</CardTitle>
+              <CardDescription>All shop items available for purchase</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Cost</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {quests.map(quest => (
-                    <TableRow key={quest.id}>
-                      <TableCell className="font-medium text-left text-base">{quest.title}</TableCell>
-                      <TableCell className="text-left text-base text-muted-foreground">{quest.game_name || '—'}</TableCell>
+                  {shopItems.map(item => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="max-w-xs truncate">{item.description}</TableCell>
+                      <TableCell>{item.banana_cost} 🍌</TableCell>
+                      <TableCell>{item.stock ?? '∞'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-sm">{quest.quest_type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-base">{quest.xp_reward}</TableCell>
-                      <TableCell className="text-base">{quest.banana_reward} 🍌</TableCell>
-                      <TableCell>
-                        <Badge variant={quest.is_active ? 'default' : 'secondary'}>
-                          {quest.is_active ? 'Active' : 'Inactive'}
+                        <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                          {item.is_active ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -709,126 +760,84 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleOpenEditDialog(quest)}
+                            onClick={() => handleOpenEditItemDialog(item)}
                           >
-                            <Pencil className="h-4 w-4 mr-1" />
-                            Edit
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={async () => {
-                              await supabase
-                                .from('gamification_quests')
-                                .update({ is_active: !quest.is_active })
-                                .eq('id', quest.id);
-                              refetch.quests();
-                            }}
+                            onClick={() => handleToggleItemActive(item)}
                           >
-                            {quest.is_active ? 'Deactivate' : 'Activate'}
+                            {item.is_active ? 'Deactivate' : 'Activate'}
                           </Button>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
+                  {shopItems.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No shop items created yet. Add your first item above.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-      {/* Quest Completion Modal */}
-      {selectedAssignment && (
-        <QuestCompletionModal
-          open={isCompletionModalOpen}
-          onOpenChange={setIsCompletionModalOpen}
-          assignment={selectedAssignment}
-          onSubmitComplete={handleQuestSubmitComplete}
-        />
-      )}
-
-      {/* Quest Review Modal (Admin) */}
-      <QuestReviewModal
-        open={isReviewModalOpen}
-        onOpenChange={setIsReviewModalOpen}
-        completion={selectedCompletionForReview}
-        onApprove={(id) => handleVerify(id, true)}
-        onReject={(id) => handleVerify(id, false)}
-      />
-
-      {/* Edit Quest Dialog (Admin) */}
-      <Dialog open={!!editingQuest} onOpenChange={(open) => !open && setEditingQuest(null)}>
+      {/* Edit Quest Dialog */}
+      <Dialog open={!!editingQuest} onOpenChange={() => setEditingQuest(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Quest</DialogTitle>
+            <DialogTitle>Edit Quest: {editingQuest?.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div>
-              <p className="text-base font-medium mb-2">Quest: {editingQuest?.title}</p>
-              <Badge variant="outline" className="mb-4 text-sm">{editingQuest?.quest_type}</Badge>
-            </div>
-
             <div className="space-y-2">
-              <Label className="text-base">Game Name</Label>
+              <Label>Game Name (Display Name)</Label>
               <Input 
                 value={editGameName}
                 onChange={e => setEditGameName(e.target.value)}
-                placeholder="Enter game-themed name (e.g., 'Shadow Strike')"
-                className="text-base"
+                placeholder="e.g., CUSTOM CRUSADER"
               />
-              <p className="text-sm text-muted-foreground">
-                An optional game-themed alias displayed alongside the quest title.
-              </p>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea 
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                placeholder="Quest description..."
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label className="text-base">XP Reward</Label>
+                <Label>XP Reward</Label>
                 <Input 
                   type="number"
                   value={editXpReward}
                   onChange={e => setEditXpReward(parseInt(e.target.value) || 0)}
-                  min={0}
-                  className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-base">Banana Reward 🍌</Label>
+                <Label>Banana Reward 🍌</Label>
                 <Input 
                   type="number"
                   value={editBananaReward}
                   onChange={e => setEditBananaReward(parseInt(e.target.value) || 0)}
-                  min={0}
-                  className="text-base"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-base">Progress Target</Label>
+                <Label>Progress Target</Label>
                 <Input 
                   type="number"
                   value={editProgressTarget}
                   onChange={e => setEditProgressTarget(parseInt(e.target.value) || 1)}
                   min={1}
-                  className="text-base"
                 />
-                <p className="text-sm text-muted-foreground">
-                  How many times this quest needs to be completed (e.g., 5 for "5/5 progress")
-                </p>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-base">Instructions / Description</Label>
-              <Textarea 
-                value={editDescription}
-                onChange={e => setEditDescription(e.target.value)}
-                placeholder="Enter detailed instructions for this quest..."
-                rows={6}
-                className="text-base"
-              />
-              <p className="text-sm text-muted-foreground">
-                This will be shown to chatters when they view the quest details.
-              </p>
             </div>
           </div>
           <DialogFooter>
@@ -837,11 +846,93 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </Button>
             <Button onClick={handleSaveQuest} disabled={isSavingEdit}>
               {isSavingEdit && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Save Quest
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Shop Item Dialog */}
+      <Dialog open={!!editingItem} onOpenChange={() => setEditingItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Shop Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Item Name</Label>
+              <Input 
+                value={editItemName}
+                onChange={e => setEditItemName(e.target.value)}
+                placeholder="e.g., Extra Day Off"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea 
+                value={editItemDescription}
+                onChange={e => setEditItemDescription(e.target.value)}
+                placeholder="Describe the perk or reward..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Banana Cost 🍌</Label>
+                <Input 
+                  type="number"
+                  value={editItemCost}
+                  onChange={e => setEditItemCost(parseInt(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Stock (leave empty for unlimited)</Label>
+                <Input 
+                  type="number"
+                  value={editItemStock ?? ''}
+                  onChange={e => setEditItemStock(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="Unlimited"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingItem(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveItem} disabled={isSavingItem}>
+              {isSavingItem && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quest Completion Modal */}
+      {selectedAssignment && (
+        <QuestCompletionModal
+          open={isCompletionModalOpen}
+          onOpenChange={(open) => {
+            setIsCompletionModalOpen(open);
+            if (!open) setSelectedAssignment(null);
+          }}
+          assignment={selectedAssignment}
+          onSubmitComplete={handleQuestSubmitComplete}
+        />
+      )}
+
+      {/* Quest Review Modal */}
+      {selectedCompletionForReview && (
+        <QuestReviewModal
+          open={isReviewModalOpen}
+          onOpenChange={(open) => {
+            setIsReviewModalOpen(open);
+            if (!open) setSelectedCompletionForReview(null);
+          }}
+          completion={selectedCompletionForReview}
+          onApprove={(completionId) => handleVerify(completionId, true)}
+          onReject={(completionId) => handleVerify(completionId, false)}
+        />
+      )}
     </div>
   );
 };

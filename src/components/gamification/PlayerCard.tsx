@@ -79,8 +79,8 @@ const PlayerCard: React.FC = () => {
           />
         </div>
         
-        {/* Player Info */}
-        <div className="flex-1 min-w-0">
+        {/* Player Info - Left aligned */}
+        <div className="flex-1 min-w-0 text-left">
           <h3 
             className="font-bold text-base truncate"
             style={{ 
