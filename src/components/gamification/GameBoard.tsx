@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Loader2, Trophy, Star, Crown, Medal } from 'lucide-react';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
+import { getRankCrownColor } from './PlayerCard';
 
 interface GameBoardProps {
   isAdmin: boolean;
@@ -26,6 +27,17 @@ const questTypeConfig = {
     badgeClass: 'bg-pink-500/20 text-pink-400 border-pink-500/50',
     icon: Crown,
   },
+};
+
+// Leaderboard position colors (top 3)
+const POSITION_COLORS = {
+  1: '#f1c40f', // Gold
+  2: '#95a5a6', // Silver
+  3: '#cd7f32', // Bronze
+};
+
+const getPositionColor = (position: number): string | null => {
+  return POSITION_COLORS[position as keyof typeof POSITION_COLORS] || null;
 };
 
 const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
@@ -51,6 +63,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   }
 
   const currentRank = myStats ? getCurrentRank(myStats.total_xp) : null;
+  const rankCrownColor = currentRank ? getRankCrownColor(currentRank.name) : '#808080';
+  
   const nextRank = currentRank && ranks.length > 0
     ? ranks.find(r => r.sort_order === (currentRank?.sort_order || 0) + 1)
     : null;
@@ -64,6 +78,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     : 100;
 
   const myPosition = leaderboard.findIndex(s => s.chatter_id === user?.id) + 1;
+  const positionColor = getPositionColor(myPosition);
 
   // Categorize active quests
   const dailyQuests = activeAssignments.filter(a => a.quest?.quest_type === 'daily');
@@ -91,31 +106,51 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
 
       {/* Stats Grid - 4 Panels */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Rank Panel */}
-        <Card className="bg-card/80 border-border/50">
+        {/* Rank Panel - colored by rank */}
+        <Card 
+          className="border-2"
+          style={{ 
+            backgroundColor: `${rankCrownColor}15`,
+            borderColor: `${rankCrownColor}50`
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
-            <p 
-              className="text-xl font-bold uppercase"
-              style={{ 
-                fontFamily: "'Macs Minecraft', sans-serif",
-                color: currentRank?.badge_color || '#808080'
-              }}
-            >
-              {currentRank?.name || 'Unranked'}
-            </p>
+            <div className="flex items-center justify-center gap-2">
+              <Crown 
+                className="h-6 w-6" 
+                style={{ color: rankCrownColor }}
+                fill={rankCrownColor}
+                strokeWidth={1.5}
+              />
+              <p 
+                className="text-xl font-bold uppercase"
+                style={{ 
+                  fontFamily: "'Macs Minecraft', sans-serif",
+                  color: rankCrownColor
+                }}
+              >
+                {currentRank?.name || 'Unranked'}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Leaderboard Position Panel */}
-        <Card className="bg-card/80 border-border/50">
+        {/* Leaderboard Position Panel - colored by position */}
+        <Card 
+          className="border-2"
+          style={{ 
+            backgroundColor: positionColor ? `${positionColor}15` : 'rgba(var(--card), 0.8)',
+            borderColor: positionColor ? `${positionColor}50` : 'rgba(var(--border), 0.5)'
+          }}
+        >
           <CardContent className="p-4 text-center">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Leaderboard</p>
             <p 
               className="text-3xl font-bold"
               style={{ 
                 fontFamily: "'Macs Minecraft', sans-serif",
-                color: currentRank?.badge_color || '#808080'
+                color: positionColor || rankCrownColor
               }}
             >
               #{myPosition || '-'}
@@ -281,6 +316,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               <div className="space-y-1 mt-3 max-h-96 overflow-y-auto">
                 {leaderboard.map((stats, index) => {
                   const rank = getCurrentRank(stats.total_xp);
+                  const crownColor = rank ? getRankCrownColor(rank.name) : '#808080';
                   const isMe = stats.chatter_id === user?.id;
                   
                   return (
@@ -295,17 +331,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         {index > 2 && <span className="text-muted-foreground text-sm">{index + 1}</span>}
                       </div>
                       <div className="col-span-7 flex items-center gap-2 min-w-0">
-                        {/* Rank badge instead of avatar */}
-                        <span 
-                          className="text-xs font-bold uppercase shrink-0 px-1.5 py-0.5 rounded"
-                          style={{ 
-                            fontFamily: "'Macs Minecraft', sans-serif",
-                            color: rank?.badge_color || '#808080',
-                            backgroundColor: `${rank?.badge_color || '#808080'}20`
-                          }}
-                        >
-                          {rank?.name?.substring(0, 3) || 'N/A'}
-                        </span>
+                        {/* Crown icon instead of text badge */}
+                        <Crown 
+                          className="h-4 w-4 shrink-0" 
+                          style={{ color: crownColor }}
+                          fill={crownColor}
+                          strokeWidth={1.5}
+                        />
                         <span 
                           className={`text-sm truncate ${isMe ? 'text-primary font-bold' : 'text-foreground'}`}
                         >
@@ -316,7 +348,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                         className="col-span-3 text-right text-sm font-bold"
                         style={{ 
                           fontFamily: "'Macs Minecraft', sans-serif",
-                          color: rank?.badge_color || '#808080'
+                          color: crownColor
                         }}
                       >
                         {stats.total_xp}
