@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Upload, X, ChevronLeft, Camera, FileImage, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, X, ChevronLeft, Camera, FileImage, CheckCircle, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,12 @@ interface QuestEvidenceUploadProps {
   onSubmitComplete: () => void;
 }
 
+interface ProgressSlot {
+  slot_number: number;
+  attachment_url: string | null;
+  isUploading: boolean;
+}
+
 const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   assignment,
   onBack,
@@ -25,67 +31,158 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   const { toast } = useToast();
   const { dailyWord } = useWordOfTheDay();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const [slots, setSlots] = useState<ProgressSlot[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const quest = assignment.quest;
+  
+  // Get progress target from quest (default to 1)
+  const progressTarget = quest?.progress_target || 1;
+
+  // Load existing progress from database
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user || !quest) return;
+
+      setIsLoading(true);
+      try {
+        // Fetch existing progress
+        const { data: existingProgress, error } = await supabase
+          .from('gamification_quest_progress')
+          .select('*')
+          .eq('quest_assignment_id', assignment.id)
+          .eq('chatter_id', user.id)
+          .order('slot_number', { ascending: true });
+
+        if (error) throw error;
+
+        // Initialize slots based on progress_target
+        const initialSlots: ProgressSlot[] = [];
+        for (let i = 0; i < progressTarget; i++) {
+          const existing = existingProgress?.find(p => p.slot_number === i);
+          initialSlots.push({
+            slot_number: i,
+            attachment_url: existing?.attachment_url || null,
+            isUploading: false,
+          });
+        }
+        setSlots(initialSlots);
+      } catch (error) {
+        console.error('Error loading progress:', error);
+        // Initialize empty slots on error
+        const emptySlots: ProgressSlot[] = Array.from({ length: progressTarget }, (_, i) => ({
+          slot_number: i,
+          attachment_url: null,
+          isUploading: false,
+        }));
+        setSlots(emptySlots);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [user, quest, assignment.id, progressTarget]);
+
   if (!quest) return null;
 
-  // Get progress target from quest (default to 1)
-  const progressTarget = quest.progress_target || 1;
-  const currentProgress = files.length;
-  const progressPercentage = Math.min((currentProgress / progressTarget) * 100, 100);
-  const canSubmit = currentProgress >= progressTarget;
+  const filledSlots = slots.filter(s => s.attachment_url !== null).length;
+  const progressPercentage = Math.min((filledSlots / progressTarget) * 100, 100);
+  const canSubmit = filledSlots >= progressTarget;
 
   // Check if this is a Word of the Day quest
   const isWordOfDayQuest = quest.title?.toLowerCase().includes('word of the day');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      // Limit total files to progress target
-      const remainingSlots = progressTarget - files.length;
-      const filesToAdd = newFiles.slice(0, remainingSlots);
-      
-      if (filesToAdd.length < newFiles.length) {
-        toast({
-          title: "Upload Limit",
-          description: `You can only upload ${progressTarget} screenshot${progressTarget > 1 ? 's' : ''} for this quest.`,
-          variant: "default"
-        });
-      }
-      
-      setFiles(prev => [...prev, ...filesToAdd]);
-    }
-  };
+  const handleSlotUpload = async (slotIndex: number, file: File) => {
+    if (!user) return;
 
-  const removeFile = (index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-  };
+    // Update slot to show uploading state
+    setSlots(prev => prev.map((s, i) => 
+      i === slotIndex ? { ...s, isUploading: true } : s
+    ));
 
-  const uploadFiles = async (): Promise<string[]> => {
-    if (!user || files.length === 0) return [];
-
-    const urls: string[] = [];
-    for (const file of files) {
+    try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${assignment.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${user.id}/${assignment.id}/slot_${slotIndex}_${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('quest-submissions')
         .upload(fileName, file);
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw new Error(`Failed to upload ${file.name}`);
-      }
+      if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
         .from('quest-submissions')
         .getPublicUrl(fileName);
 
-      urls.push(urlData.publicUrl);
+      const publicUrl = urlData.publicUrl;
+
+      // Save to database (upsert)
+      const { error: dbError } = await supabase
+        .from('gamification_quest_progress')
+        .upsert({
+          quest_assignment_id: assignment.id,
+          chatter_id: user.id,
+          slot_number: slotIndex,
+          attachment_url: publicUrl,
+        }, {
+          onConflict: 'quest_assignment_id,chatter_id,slot_number'
+        });
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setSlots(prev => prev.map((s, i) => 
+        i === slotIndex ? { ...s, attachment_url: publicUrl, isUploading: false } : s
+      ));
+
+      toast({
+        title: "Screenshot uploaded!",
+        description: `Progress: ${filledSlots + 1}/${progressTarget}`,
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setSlots(prev => prev.map((s, i) => 
+        i === slotIndex ? { ...s, isUploading: false } : s
+      ));
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload screenshot",
+        variant: "destructive"
+      });
     }
-    return urls;
+  };
+
+  const handleRemoveSlot = async (slotIndex: number) => {
+    if (!user) return;
+
+    try {
+      // Delete from database
+      const { error } = await supabase
+        .from('gamification_quest_progress')
+        .delete()
+        .eq('quest_assignment_id', assignment.id)
+        .eq('chatter_id', user.id)
+        .eq('slot_number', slotIndex);
+
+      if (error) throw error;
+
+      // Update local state
+      setSlots(prev => prev.map((s, i) => 
+        i === slotIndex ? { ...s, attachment_url: null } : s
+      ));
+
+      toast({
+        title: "Screenshot removed",
+      });
+    } catch (error: any) {
+      console.error('Remove error:', error);
+      toast({
+        title: "Failed to remove",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -102,9 +199,6 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 
     setIsSubmitting(true);
     try {
-      // Upload all files
-      const attachmentUrls = await uploadFiles();
-
       // Check if a completion already exists
       const { data: existingCompletion } = await supabase
         .from('gamification_quest_completions')
@@ -116,6 +210,11 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
       if (existingCompletion) {
         throw new Error('You have already submitted this quest');
       }
+
+      // Collect all attachment URLs from slots
+      const attachmentUrls = slots
+        .filter(s => s.attachment_url !== null)
+        .map(s => s.attachment_url as string);
 
       // Create the completion record
       const { error: completionError } = await supabase
@@ -153,6 +252,14 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col" style={{ fontFamily: "'Pixellari', sans-serif" }}>
@@ -218,71 +325,81 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
               className={`text-sm font-bold ${canSubmit ? 'text-green-500' : 'text-primary'}`}
               style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
             >
-              {currentProgress} / {progressTarget}
+              {filledSlots} / {progressTarget}
             </span>
           </div>
           <Progress value={progressPercentage} className="h-3" />
           {canSubmit && (
             <div className="flex items-center gap-2 text-green-500 text-sm">
               <CheckCircle className="h-4 w-4" />
-              <span>Ready to submit!</span>
+              <span>All screenshots uploaded! Ready to submit.</span>
             </div>
           )}
         </div>
 
-        {/* Upload Area */}
+        {/* Upload Slots Grid */}
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
             Upload {progressTarget} screenshot{progressTarget > 1 ? 's' : ''} as proof of completing the quest
           </p>
           
-          {!canSubmit && (
-            <div className="border-2 border-dashed border-border/50 rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-              <FileImage className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground mb-3">
-                {progressTarget - currentProgress} more screenshot{progressTarget - currentProgress > 1 ? 's' : ''} needed
-              </p>
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileChange}
-                className="cursor-pointer max-w-xs mx-auto"
-              />
-            </div>
-          )}
-          
-          {/* File List */}
-          {files.length > 0 && (
-            <div className="space-y-2">
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between bg-muted/50 px-3 py-2 rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {slots.map((slot, index) => (
+              <div 
+                key={index}
+                className="relative aspect-square border-2 border-dashed border-border/50 rounded-lg overflow-hidden hover:border-primary/50 transition-colors"
+              >
+                {slot.isUploading ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
-                    onClick={() => removeFile(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
+                ) : slot.attachment_url ? (
+                  <>
+                    <img 
+                      src={slot.attachment_url} 
+                      alt={`Screenshot ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveSlot(index)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="absolute top-2 right-2">
+                      <CheckCircle className="h-5 w-5 text-green-500 drop-shadow-lg" />
+                    </div>
+                  </>
+                ) : (
+                  <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors">
+                    <Plus className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-xs text-muted-foreground">Slot {index + 1}</span>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          handleSlotUpload(index, e.target.files[0]);
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="px-6 pb-6 flex items-center justify-end gap-3">
+      <div className="px-6 pb-6 flex items-center justify-between">
         <Button variant="outline" onClick={onBack}>
-          Back
+          Save & Close
         </Button>
         <Button
           onClick={handleSubmit}
@@ -298,7 +415,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           ) : (
             <>
               <Upload className="h-4 w-4 mr-2" />
-              {canSubmit ? 'Submit Quest' : `Need ${progressTarget - currentProgress} more`}
+              {canSubmit ? 'Submit Quest' : `Need ${progressTarget - filledSlots} more`}
             </>
           )}
         </Button>

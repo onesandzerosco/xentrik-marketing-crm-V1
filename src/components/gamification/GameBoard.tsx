@@ -40,6 +40,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     myCompletions,
     isLoading,
     getCurrentRank,
+    getProgressCount,
   } = useGamification();
 
   if (isLoading) {
@@ -180,7 +181,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].map(assignment => {
+          {[...weeklyQuests, ...monthlyQuests, ...dailyQuests].map(assignment => {
               const completion = getCompletionStatus(assignment.id);
               const questType = assignment.quest?.quest_type || 'daily';
               const config = questTypeConfig[questType];
@@ -188,7 +189,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               const isCompleted = completion?.status === 'verified';
               const isPending = completion?.status === 'pending';
               const progressTarget = assignment.quest?.progress_target || 1;
-              const currentProgress = isCompleted ? progressTarget : isPending ? Math.floor(progressTarget / 2) : 0;
+              // Use real progress from database
+              const currentProgress = isCompleted 
+                ? progressTarget 
+                : isPending 
+                  ? progressTarget
+                  : getProgressCount(assignment.id);
               
               return (
                 <Card 

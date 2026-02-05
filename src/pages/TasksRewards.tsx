@@ -107,8 +107,8 @@ const TasksRewards: React.FC = () => {
         </div>
       </nav>
 
-      {/* Main Content Area - Reduced padding, maximize space */}
-      <main className="flex-1 overflow-y-auto p-3 md:p-4 bg-background">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 bg-background">
         <div className="w-full max-w-none">
           {renderContent()}
         </div>
