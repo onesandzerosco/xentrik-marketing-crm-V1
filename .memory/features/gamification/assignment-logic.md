@@ -15,13 +15,9 @@ Quest assignments follow a two-tier architecture:
 - When a player loads the Quests page, their slots are populated from admin assignments
 - Players can re-roll slots to get different quests without affecting others
 
-## Personal Assignments (for Re-rolled Quests)
-- When a player re-rolls and then clicks "Log Activity", a personal assignment is created
-- These have `assigned_by = user.id` (not NULL)
-- They are ONLY used for tracking that specific user's progress/completion
-- Other players do NOT see these assignments when loading quests (filtered by `assigned_by IS NULL`)
-
 ## Critical Implementation Details
+- **Control Panel (Admin View)**: Uses `AdminDailyQuestSlots`, `AdminWeeklyQuestSlots`, `AdminMonthlyQuestSlots` components that fetch directly from `gamification_quest_assignments WHERE assigned_by IS NULL`
+- **Player View**: Uses `DailyQuestSlots`, `WeeklyQuestSlots`, `MonthlyQuestSlots` that read from `gamification_daily_quest_slots` (personal slots)
 - Slot population queries MUST filter: `.is('assigned_by', null)` to only get admin assignments
-- Completion status queries should check admin assignments first, then fall back to personal assignments
-- This ensures re-rolls are isolated per-player while still allowing progress tracking
+- The `slot_number` constraint now allows: 1-4 (daily), 100 (weekly), 200 (monthly)
+- Personal assignments (assigned_by = user.id) are only created for tracking re-rolled quest completions
