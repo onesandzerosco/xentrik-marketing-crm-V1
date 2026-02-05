@@ -643,13 +643,11 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                              completion.status === 'pending' ? 'Pending Verification' : 
                              'Rejected'}
                           </Badge>
-                        ) : (
-                          <Button 
-                            className="w-full" 
-                            onClick={() => handleOpenQuestModal(assignment)}
-                          >
-                            View Quest
-                          </Button>
+                      ) : (
+                          <Badge variant="secondary" className="w-full justify-center py-2">
+                            <Clock className="h-4 w-4 mr-1" />
+                            Awaiting Submission
+                          </Badge>
                         )}
                       </CardContent>
                     </Card>

@@ -82,7 +82,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
       <div>
         <h1 
           className="text-4xl font-bold text-foreground uppercase tracking-wide"
-          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          style={{ fontFamily: "'Pixellari', sans-serif" }}
         >
           Game Board
         </h1>
@@ -174,7 +174,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
               className="text-2xl font-bold uppercase tracking-wide"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Pixellari', sans-serif" }}
             >
               Active Directives
             </h2>
@@ -267,7 +267,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
               className="text-2xl font-bold uppercase tracking-wide"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Pixellari', sans-serif" }}
             >
               Leaderboard
             </h2>

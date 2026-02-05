@@ -157,7 +157,7 @@ const ChatterQuestsPage: React.FC = () => {
             <div>
               <h3 
                 className="text-xl font-bold uppercase text-foreground leading-tight"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={{ fontFamily: "'Pixellari', sans-serif" }}
               >
                 {assignment.quest?.game_name || assignment.quest?.title}
               </h3>
