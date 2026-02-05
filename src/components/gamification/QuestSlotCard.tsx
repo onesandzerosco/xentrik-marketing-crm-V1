@@ -16,6 +16,8 @@ interface QuestSlotCardProps {
   hasRerolled?: boolean;
   isRerolling?: boolean;
   onReroll?: () => void;
+  // Admin view hides Log Activity button
+  isAdminView?: boolean;
 }
 
 const questTypeConfig = {
@@ -47,6 +49,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
   hasRerolled,
   isRerolling,
   onReroll,
+  isAdminView = false,
 }) => {
   const isVerified = status === 'verified';
   const isPending = status === 'pending';
@@ -169,7 +172,8 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
 
       {/* Footer Actions */}
       <div className="px-3 pb-3 flex items-center gap-2">
-        {!isVerified && (
+        {/* Log Activity Button - Only for user view, not admin */}
+        {!isVerified && !isAdminView && (
           <Button
             onClick={onViewQuest}
             className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-sm h-9"
@@ -178,6 +182,14 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
             <Settings className="h-4 w-4 mr-2" />
             Log Activity
           </Button>
+        )}
+
+        {/* Awaiting Submission Badge - Only for admin view when not completed */}
+        {!isVerified && !isPending && isAdminView && (
+          <Badge variant="outline" className="text-xs text-muted-foreground border-border/50">
+            <Clock className="h-3 w-3 mr-1" />
+            Awaiting Submission
+          </Badge>
         )}
 
         {isVerified && (
@@ -191,8 +203,8 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           </Button>
         )}
 
-        {/* Re-roll Button (Daily only) */}
-        {questType === 'daily' && !isVerified && !isPending && !hasRerolled && onReroll && (
+        {/* Re-roll Button (Daily only, user view only) */}
+        {questType === 'daily' && !isVerified && !isPending && !hasRerolled && onReroll && !isAdminView && (
           <Button
             size="icon"
             variant="outline"
@@ -209,7 +221,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           </Button>
         )}
 
-        {questType === 'daily' && hasRerolled && !isVerified && !isPending && (
+        {questType === 'daily' && hasRerolled && !isVerified && !isPending && !isAdminView && (
           <Badge variant="outline" className="text-[10px] text-muted-foreground">
             Re-rolled
           </Badge>
