@@ -160,6 +160,14 @@ export default {
                     '50%': {
                         boxShadow: '0 0 20px hsl(var(--primary) / 0.6), 0 0 40px hsl(var(--primary) / 0.3)'
                     }
+                },
+                'progress-indeterminate': {
+                    '0%': {
+                        transform: 'translateX(-100%)'
+                    },
+                    '100%': {
+                        transform: 'translateX(100%)'
+                    }
                 }
 			},
 			animation: {
@@ -170,7 +178,8 @@ export default {
                 'slide-in': 'slide-in 0.6s ease-out',
                 'scale-in': 'scale-in 0.4s ease-out',
                 'bounce-in': 'bounce-in 0.5s ease-out',
-                'pulse-glow': 'pulse-glow 2s ease-in-out infinite'
+                'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+                'progress-indeterminate': 'progress-indeterminate 1.5s ease-in-out infinite'
 			},
             transitionDuration: {
                 '400': '400ms',
