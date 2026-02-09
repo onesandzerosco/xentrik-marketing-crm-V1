@@ -82,7 +82,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         <Badge 
           variant="outline" 
           className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 ${config.badgeClass}`}
-          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
           <IconComponent className="h-3 w-3 mr-1" />
           {config.label}
@@ -90,13 +90,13 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         <div className="flex items-center gap-3">
           {/* XP Reward */}
           <div className={`flex items-center gap-1 ${config.iconColor}`}>
-            <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+            <span className="font-bold text-sm" style={{ fontFamily: "'Orbitron', sans-serif" }}>
               ⭐ {quest?.xp_reward || 0} XP
             </span>
           </div>
           {/* Banana Reward */}
           <div className="flex items-center gap-1 text-primary">
-            <span className="font-bold text-sm" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+            <span className="font-bold text-sm" style={{ fontFamily: "'Orbitron', sans-serif" }}>
               🍌 {quest?.banana_reward || 0}
             </span>
           </div>
@@ -109,7 +109,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
         <div>
           <h3 
             className="text-lg font-bold text-foreground uppercase tracking-wide leading-tight"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             {quest?.game_name || quest?.title || 'Unknown Quest'}
           </h3>
@@ -130,13 +130,13 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span 
               className="text-muted-foreground uppercase tracking-wider font-medium"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               Progress
             </span>
             <span 
               className="text-primary font-bold"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               {isVerified ? '1 / 1' : '0 / 1'}
             </span>
@@ -185,7 +185,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           <Button
             onClick={onViewQuest}
             className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm h-9"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             <Settings className="h-4 w-4 mr-2" />
             Log Activity
@@ -271,7 +271,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
           <Button
             disabled
             className="flex-1 bg-green-500/20 text-green-500 font-bold text-sm h-9"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             <Check className="h-4 w-4 mr-2" />
             Completed

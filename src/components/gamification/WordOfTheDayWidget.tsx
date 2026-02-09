@@ -33,7 +33,7 @@ const WordOfTheDayWidget: React.FC = () => {
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-baseline gap-3">
-            <h3 className="text-3xl font-bold text-purple-400" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{dailyWord.word}</h3>
+            <h3 className="text-3xl font-bold text-purple-400" style={{ fontFamily: "'Orbitron', sans-serif" }}>{dailyWord.word}</h3>
             {dailyWord.part_of_speech && (
               <Badge variant="outline" className="text-sm text-purple-300 border-purple-300/50">
                 {dailyWord.part_of_speech}

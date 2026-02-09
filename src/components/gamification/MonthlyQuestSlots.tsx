@@ -160,7 +160,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
           <div>
             <h2 
               className="text-xl font-bold flex items-center gap-2"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               <Crown className="h-5 w-5 text-purple-500" />
               Special Ops
@@ -172,7 +172,7 @@ const MonthlyQuestSlots: React.FC<MonthlyQuestSlotsProps> = ({ onQuestComplete, 
           <Badge 
             variant="outline" 
             className="text-base px-3 py-1 border-purple-500/30 font-bold"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             {completedCount}/{slots.length}
           </Badge>

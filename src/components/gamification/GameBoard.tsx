@@ -191,7 +191,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               <p 
                 className="text-lg font-bold uppercase"
                 style={{ 
-                  fontFamily: "'Macs Minecraft', sans-serif",
+                  fontFamily: "'Orbitron', sans-serif",
                   color: rankCrownColor
                 }}
               >
@@ -214,7 +214,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <p 
               className="text-3xl font-bold"
               style={{ 
-                fontFamily: "'Macs Minecraft', sans-serif",
+                fontFamily: "'Orbitron', sans-serif",
                 color: positionColor || rankCrownColor
               }}
             >
@@ -229,7 +229,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Bananas</p>
             <p className="text-3xl font-bold text-yellow-500 flex items-center justify-center gap-2">
               <span>🍌</span>
-              <span style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>{myStats?.banana_balance || 0}</span>
+              <span style={{ fontFamily: "'Orbitron', sans-serif" }}>{myStats?.banana_balance || 0}</span>
             </p>
           </CardContent>
         </Card>
@@ -240,7 +240,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total XP</p>
             <p 
               className="text-3xl font-bold text-primary"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               {myStats?.total_xp || 0}
             </p>
@@ -295,7 +295,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       <Badge 
                         variant="outline" 
                         className={`text-xs uppercase tracking-wider ${config.badgeClass}`}
-                        style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                        style={{ fontFamily: "'Orbitron', sans-serif" }}
                       >
                         <IconComponent className="h-3 w-3 mr-1" />
                         {config.label}
@@ -303,7 +303,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       <div className="flex items-center gap-2">
                         <span 
                           className="text-sm font-bold text-primary"
-                          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                          style={{ fontFamily: "'Orbitron', sans-serif" }}
                         >
                           {card.quest?.xp_reward} XP
                         </span>
@@ -404,7 +404,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                       <div
                         className="col-span-3 text-right text-sm font-bold"
                         style={{ 
-                          fontFamily: "'Macs Minecraft', sans-serif",
+                          fontFamily: "'Orbitron', sans-serif",
                           color: crownColor
                         }}
                       >

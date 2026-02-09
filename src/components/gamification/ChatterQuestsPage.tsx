@@ -322,7 +322,7 @@ const ChatterQuestsPage: React.FC = () => {
       <div>
         <h1 
           className="text-4xl font-bold text-foreground uppercase tracking-wide flex items-center gap-3"
-          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
           <Swords className="h-9 w-9 text-primary" />
           Active Quests
@@ -338,7 +338,7 @@ const ChatterQuestsPage: React.FC = () => {
           <TabsTrigger 
             value="daily" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             <Trophy className="h-4 w-4" />
             <span>Daily</span>
@@ -349,7 +349,7 @@ const ChatterQuestsPage: React.FC = () => {
           <TabsTrigger 
             value="weekly" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             <Medal className="h-4 w-4" />
             <span>Weekly</span>
@@ -360,7 +360,7 @@ const ChatterQuestsPage: React.FC = () => {
           <TabsTrigger 
             value="monthly" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             <Crown className="h-4 w-4" />
             <span>Special Ops</span>
