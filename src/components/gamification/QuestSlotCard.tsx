@@ -26,9 +26,9 @@ interface QuestSlotCardProps {
 const questTypeConfig = {
   daily: {
     label: 'Daily Quest',
-    badgeClass: 'bg-primary/20 text-primary border-primary/30',
+    badgeClass: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     icon: Trophy,
-    iconColor: 'text-primary',
+    iconColor: 'text-blue-400',
   },
   weekly: {
     label: 'Weekly Quest',
