@@ -1,8 +1,8 @@
 /* Gamification Module Theme - Tasks & Rewards */
 
-/* Module-specific background color - diagonal gradient */
+/* Module-specific background color - diagonal gradient (more blue, purple at bottom-right) */
 .gamification-module {
-  background: linear-gradient(135deg, #151525 0%, #201526 100%);
+  background: linear-gradient(135deg, #151525 0%, #151828 40%, #181530 70%, #201526 100%);
   min-height: 100vh;
 }
 

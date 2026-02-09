@@ -17,7 +17,7 @@ interface GameBoardProps {
 const questTypeConfig = {
   daily: {
     label: 'Daily',
-    badgeClass: 'bg-green-500/20 text-green-400 border-green-500/50',
+    badgeClass: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
     icon: Trophy,
   },
   weekly: {
