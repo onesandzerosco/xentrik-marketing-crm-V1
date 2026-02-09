@@ -94,7 +94,7 @@ const TasksRewards: React.FC = () => {
       style={
         activeTab === 'control-panel'
           ? undefined
-          : { fontFamily: "'Pixellari', sans-serif" }
+          : { fontFamily: "'Orbitron', sans-serif" }
       }
     >
       {/* Left Sidebar Navigation - Fixed position */}

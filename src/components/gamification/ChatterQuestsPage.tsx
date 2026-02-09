@@ -258,7 +258,7 @@ const ChatterQuestsPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2" style={{ fontFamily: "'Pixellari', sans-serif" }}>Loading quests...</span>
+        <span className="ml-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>Loading quests...</span>
       </div>
     );
   }
@@ -317,7 +317,7 @@ const ChatterQuestsPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+    <div className="space-y-6" style={{ fontFamily: "'Orbitron', sans-serif" }}>
       {/* Header */}
       <div>
         <h1 

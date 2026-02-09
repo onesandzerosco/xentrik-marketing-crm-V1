@@ -66,7 +66,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2" style={{ fontFamily: "'Pixellari', sans-serif" }}>Loading game board...</span>
+        <span className="ml-2" style={{ fontFamily: "'Orbitron', sans-serif" }}>Loading game board...</span>
       </div>
     );
   }
@@ -155,12 +155,12 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   };
 
   return (
-    <div className="space-y-6" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+    <div className="space-y-6" style={{ fontFamily: "'Orbitron', sans-serif" }}>
       {/* Header */}
       <div>
         <h1 
           className="text-4xl font-bold text-foreground uppercase tracking-wide"
-          style={{ fontFamily: "'Pixellari', sans-serif" }}
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
           Game Board
         </h1>
@@ -269,7 +269,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
               className="text-2xl font-bold uppercase tracking-wide"
-              style={{ fontFamily: "'Pixellari', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               Active Directives
             </h2>
@@ -314,7 +314,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
                     {/* Game Name */}
                     <h3 
                       className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
-                      style={{ fontFamily: "'Pixellari', sans-serif" }}
+                      style={{ fontFamily: "'Orbitron', sans-serif" }}
                     >
                       {card.quest?.game_name || card.quest?.title}
                     </h3>
@@ -354,7 +354,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             <div className="w-1.5 h-7 bg-primary rounded-full" />
             <h2 
               className="text-2xl font-bold uppercase tracking-wide"
-              style={{ fontFamily: "'Pixellari', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               Leaderboard
             </h2>
