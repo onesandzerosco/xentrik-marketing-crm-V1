@@ -276,7 +276,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           </Button>
           <h2 
             className="text-xl font-bold text-foreground uppercase tracking-wide"
-            style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             Upload Evidence
           </h2>
@@ -295,7 +295,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
               <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">Today's Word</p>
               <p 
                 className="text-2xl font-bold text-primary"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
               >
                 {dailyWord.word}
               </p>
@@ -316,14 +316,14 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
               <Camera className="h-5 w-5 text-primary" />
               <Label 
                 className="text-sm font-bold uppercase tracking-wider"
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
               >
                 Upload Progress
               </Label>
             </div>
             <span 
               className={`text-sm font-bold ${canSubmit ? 'text-green-500' : 'text-primary'}`}
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               {filledSlots} / {progressTarget}
             </span>
@@ -405,7 +405,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           onClick={handleSubmit}
           disabled={isSubmitting || !canSubmit}
           className={`font-bold ${canSubmit ? 'bg-yellow-500 hover:bg-yellow-600 text-black' : 'bg-muted text-muted-foreground'}`}
-          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
           {isSubmitting ? (
             <>

@@ -121,7 +121,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
               <Badge 
                 variant="outline" 
                 className={`text-xs font-bold tracking-wider uppercase ${config.badgeClass} mb-4`}
-                style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
               >
                 <IconComponent className={`h-3 w-3 mr-1 ${config.iconColor}`} />
                 {config.label}
@@ -148,7 +148,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
               <div className="space-y-2">
                 <h3 
                   className="text-sm font-bold text-muted-foreground uppercase tracking-wider"
-                  style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
                   Mission Briefing
                 </h3>
@@ -161,13 +161,13 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                   <div className="mt-4 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <BookOpen className="h-4 w-4 text-purple-400" />
-                      <span className="text-sm font-medium text-purple-400 uppercase tracking-wider" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+                      <span className="text-sm font-medium text-purple-400 uppercase tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                         Today's Word
                       </span>
                       <Sparkles className="h-3 w-3 text-yellow-500" />
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xl font-bold text-purple-300" style={{ fontFamily: "'Macs Minecraft', sans-serif" }}>
+                      <span className="text-xl font-bold text-purple-300" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                         {dailyWord.word}
                       </span>
                       {dailyWord.part_of_speech && (
@@ -189,7 +189,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
               <div className="space-y-2">
                 <h3 
                   className="text-sm font-bold text-muted-foreground uppercase tracking-wider"
-                  style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
                   Rewards
                 </h3>
@@ -198,7 +198,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                     <Star className="h-5 w-5 text-primary" />
                     <span 
                       className="text-xl font-bold text-primary"
-                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                      style={{ fontFamily: "'Orbitron', sans-serif" }}
                     >
                       +{quest.xp_reward} XP
                     </span>
@@ -207,7 +207,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                     <span className="text-xl">🍌</span>
                     <span 
                       className="text-xl font-bold text-yellow-500"
-                      style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                      style={{ fontFamily: "'Orbitron', sans-serif" }}
                     >
                       +{quest.banana_reward}
                     </span>
@@ -220,13 +220,13 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                 <div className="flex items-center justify-between text-sm">
                   <span 
                     className="text-muted-foreground uppercase tracking-wider font-medium"
-                    style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                    style={{ fontFamily: "'Orbitron', sans-serif" }}
                   >
                     Screenshots Required
                   </span>
                   <span 
                     className="font-bold text-primary"
-                    style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                    style={{ fontFamily: "'Orbitron', sans-serif" }}
                   >
                     {isCompleted || isPending ? `${quest.progress_target || 1} / ${quest.progress_target || 1}` : `${currentProgress} / ${quest.progress_target || 1}`}
                   </span>
@@ -264,7 +264,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                 <Button 
                   onClick={handleContinue}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
-                  style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
                 >
                   Continue
                   <ArrowRight className="h-4 w-4 ml-2" />

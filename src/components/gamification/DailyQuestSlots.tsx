@@ -193,7 +193,7 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
           <div>
             <h2 
               className="text-xl font-bold flex items-center gap-2"
-              style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
               <Star className="h-5 w-5 text-yellow-500" />
               Your Daily Quests
@@ -205,7 +205,7 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
         <Badge 
           variant="outline" 
           className="text-base px-3 py-1 border-primary/30 font-bold"
-          style={{ fontFamily: "'Macs Minecraft', sans-serif" }}
+          style={{ fontFamily: "'Orbitron', sans-serif" }}
         >
           {completedCount}/{slots.length || 4}
         </Badge>
