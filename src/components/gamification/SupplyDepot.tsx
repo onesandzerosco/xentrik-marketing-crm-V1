@@ -72,37 +72,43 @@ const SupplyDepot: React.FC = () => {
         <TabsContent value="shop" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {activeItems.map(item => (
-              <Card key={item.id} className="relative overflow-hidden">
+              <Card key={item.id} className="relative overflow-hidden flex flex-col h-[280px]">
                 {item.stock !== null && item.stock <= 0 && (
                   <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
-                    <Badge variant="destructive" className="text-xl px-5 py-3">Out of Stock</Badge>
+                    <Badge variant="destructive" className="text-xl px-5 py-3" style={{ fontFamily: "'Orbitron', sans-serif" }}>Out of Stock</Badge>
                   </div>
                 )}
-                <CardHeader className="pb-3">
+                {/* Header - Item Name */}
+                <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-xl">{item.name}</CardTitle>
-                      {item.description && (
-                        <CardDescription className="mt-2 text-base">{item.description}</CardDescription>
-                      )}
-                    </div>
-                    <Package className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-3xl">🍌</span>
-                    <span className="text-3xl font-bold text-yellow-500" style={{ fontFamily: "'Orbitron', sans-serif" }}>{item.banana_cost}</span>
+                    <CardTitle className="text-xl" style={{ fontFamily: "'Orbitron', sans-serif" }}>{item.name}</CardTitle>
+                    <Package className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                   </div>
                   {item.stock !== null && (
-                    <p className="text-base text-muted-foreground">
+                    <p className="text-sm text-muted-foreground" style={{ fontFamily: "'Orbitron', sans-serif" }}>
                       {item.stock} in stock
                     </p>
                   )}
+                </CardHeader>
+
+                {/* Body - Description (fixed height with overflow) */}
+                <CardContent className="flex-1 overflow-hidden">
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-4" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      {item.description}
+                    </p>
+                  )}
                 </CardContent>
-                <CardFooter>
+
+                {/* Footer - Banana Cost & Button */}
+                <CardFooter className="flex-col gap-3 pt-0">
+                  <div className="flex items-center justify-center gap-2 w-full">
+                    <span className="text-2xl">🍌</span>
+                    <span className="text-2xl font-bold text-yellow-500" style={{ fontFamily: "'Orbitron', sans-serif" }}>{item.banana_cost}</span>
+                  </div>
                   <Button 
-                    className="w-full text-base py-5" 
+                    className="w-full text-sm py-4" 
+                    style={{ fontFamily: "'Orbitron', sans-serif" }}
                     disabled={(myStats?.banana_balance || 0) < item.banana_cost || (item.stock !== null && item.stock <= 0)}
                     onClick={() => purchaseItem(item.id)}
                   >
