@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +9,8 @@ import { useWeeklyQuestSlots } from '@/hooks/useWeeklyQuestSlots';
 import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
 import { useAuth } from '@/context/AuthContext';
 import { getRankCrownColor } from './PlayerCard';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 interface GameBoardProps {
   isAdmin: boolean;
@@ -60,6 +62,62 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   const { slots: weeklySlots, isLoading: weeklyLoading } = useWeeklyQuestSlots();
   const { slots: monthlySlots, isLoading: monthlyLoading } = useMonthlyQuestSlots();
 
+  // Track progress counts per quest
+  const [questProgress, setQuestProgress] = useState<Record<string, number>>({});
+
+  const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
+  // Fetch progress for all quests
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!user) return;
+
+      const questIds = [
+        ...dailySlots.map(s => s.quest_id),
+        ...weeklySlots.map(s => s.quest_id),
+        ...monthlySlots.map(s => s.quest_id),
+      ].filter(Boolean);
+
+      if (questIds.length === 0) return;
+
+      // Find assignments for these quests
+      const { data: assignments } = await supabase
+        .from('gamification_quest_assignments')
+        .select('id, quest_id')
+        .in('quest_id', questIds)
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+      if (!assignments || assignments.length === 0) return;
+
+      const assignmentIds = assignments.map(a => a.id);
+
+      // Fetch progress for these assignments
+      const { data: progressData } = await supabase
+        .from('gamification_quest_progress')
+        .select('quest_assignment_id')
+        .eq('chatter_id', user.id)
+        .in('quest_assignment_id', assignmentIds);
+
+      if (!progressData) return;
+
+      // Build map: quest_id -> progress count
+      const progressMap: Record<string, number> = {};
+      for (const qId of questIds) {
+        const assignment = assignments.find(a => a.quest_id === qId);
+        if (assignment) {
+          progressMap[qId] = progressData.filter(p => p.quest_assignment_id === assignment.id).length;
+        } else {
+          progressMap[qId] = 0;
+        }
+      }
+
+      setQuestProgress(progressMap);
+    };
+
+    fetchProgress();
+  }, [user, dailySlots, weeklySlots, monthlySlots, today]);
+
   const isLoading = gamificationLoading || dailyLoading || weeklyLoading || monthlyLoading;
 
   if (isLoading) {
@@ -92,6 +150,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
   // Build quest cards from player's personal slots
   interface QuestCardData {
     id: string;
+    questId: string;
     questType: 'daily' | 'weekly' | 'monthly';
     quest: any;
     slotNumber: number;
@@ -105,6 +164,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     if (slot.quest) {
       questCards.push({
         id: slot.id,
+        questId: slot.quest_id,
         questType: 'daily',
         quest: slot.quest,
         slotNumber: slot.slot_number,
@@ -118,6 +178,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     if (slot.quest) {
       questCards.push({
         id: slot.id,
+        questId: slot.quest_id,
         questType: 'weekly',
         quest: slot.quest,
         slotNumber: slot.slot_number,
@@ -131,6 +192,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
     if (slot.quest) {
       questCards.push({
         id: slot.id,
+        questId: slot.quest_id,
         questType: 'monthly',
         quest: slot.quest,
         slotNumber: slot.slot_number,
@@ -281,8 +343,8 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
               const IconComponent = config.icon;
               const isCompleted = card.completed;
               const progressTarget = card.quest?.progress_target || 1;
-              // For display, show completed status from slot
-              const currentProgress = isCompleted ? progressTarget : 0;
+              // Use actual progress from questProgress map, or full if completed
+              const currentProgress = isCompleted ? progressTarget : (questProgress[card.questId] || 0);
               
               return (
                 <Card 

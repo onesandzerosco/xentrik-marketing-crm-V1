@@ -12,6 +12,7 @@ interface QuestSlotCardProps {
   quest: Quest | undefined;
   questType: QuestType;
   status: 'pending' | 'verified' | 'rejected' | null;
+  currentProgress?: number; // Number of uploads completed
   onViewQuest?: () => void;
   // Optional for daily quests
   hasRerolled?: boolean;
@@ -48,6 +49,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
   quest,
   questType,
   status,
+  currentProgress = 0,
   onViewQuest,
   hasRerolled,
   isRerolling,
@@ -59,8 +61,11 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
   const isPending = status === 'pending';
   const isRejected = status === 'rejected';
 
-  // Calculate progress (0 if not started, 100 if verified)
-  const progressValue = isVerified ? 100 : isPending ? 50 : 0;
+  // Use actual progress_target from quest
+  const progressTarget = quest?.progress_target || 1;
+  // Calculate actual progress percentage based on uploads
+  const actualProgress = isVerified || isPending ? progressTarget : currentProgress;
+  const progressValue = (actualProgress / progressTarget) * 100;
 
   const config = questTypeConfig[questType];
   const IconComponent = config.icon;
@@ -138,7 +143,7 @@ const QuestSlotCard: React.FC<QuestSlotCardProps> = ({
               className="text-primary font-bold"
               style={{ fontFamily: "'Orbitron', sans-serif" }}
             >
-              {isVerified ? '1 / 1' : '0 / 1'}
+              {actualProgress} / {progressTarget}
             </span>
           </div>
           

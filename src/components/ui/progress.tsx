@@ -21,16 +21,18 @@ const Progress = React.forwardRef<
     <ProgressPrimitive.Root
       ref={ref}
       className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
+        "relative h-2 w-full overflow-hidden rounded-full bg-muted/30",
         className
       )}
       {...props}
     >
       {showIndeterminate ? (
-        <div className="h-full w-full animate-progress-indeterminate bg-gradient-to-r from-transparent via-primary to-transparent" />
+        // Gray gradient for indeterminate/zero progress
+        <div className="h-full w-full animate-progress-indeterminate bg-gradient-to-r from-transparent via-gray-400 to-transparent" />
       ) : (
+        // Yellow gradient for actual progress
         <ProgressPrimitive.Indicator
-          className="h-full w-full flex-1 bg-gradient-to-r from-primary/40 via-primary/70 to-primary transition-all duration-300"
+          className="h-full w-full flex-1 bg-gradient-to-r from-yellow-500/40 via-yellow-500/70 to-yellow-500 transition-all duration-300"
           style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
         />
       )}

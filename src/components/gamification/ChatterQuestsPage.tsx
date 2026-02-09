@@ -35,6 +35,7 @@ const ChatterQuestsPage: React.FC = () => {
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [slotStatuses, setSlotStatuses] = useState<Record<string, CompletionStatus>>({});
+  const [slotProgress, setSlotProgress] = useState<Record<string, number>>({});
 
   const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
   const weekStart = useMemo(() => format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd'), []);
@@ -107,33 +108,51 @@ const ChatterQuestsPage: React.FC = () => {
 
     if (assignmentIds.length === 0) {
       setSlotStatuses({});
+      setSlotProgress({});
       return;
     }
 
-    const { data: completions, error: cErr } = await supabase
-      .from('gamification_quest_completions')
-      .select('quest_assignment_id, status')
-      .eq('chatter_id', user.id)
-      .in('quest_assignment_id', assignmentIds);
+    // Fetch completions and progress in parallel
+    const [completionsResult, progressResult] = await Promise.all([
+      supabase
+        .from('gamification_quest_completions')
+        .select('quest_assignment_id, status')
+        .eq('chatter_id', user.id)
+        .in('quest_assignment_id', assignmentIds),
+      supabase
+        .from('gamification_quest_progress')
+        .select('quest_assignment_id')
+        .eq('chatter_id', user.id)
+        .in('quest_assignment_id', assignmentIds)
+    ]);
 
-    if (cErr) {
-      console.error('Error fetching completions for status:', cErr);
+    if (completionsResult.error) {
+      console.error('Error fetching completions for status:', completionsResult.error);
       return;
     }
+
+    const completions = completionsResult.data;
+    const progressData = progressResult.data || [];
 
     const statusMap: Record<string, CompletionStatus> = {};
+    const progressMap: Record<string, number> = {};
 
     for (const qId of questIds) {
       const assignmentId = questAssignmentMap.get(qId);
       if (!assignmentId) {
         statusMap[qId] = null;
+        progressMap[qId] = 0;
         continue;
       }
       const completion = completions?.find(c => c.quest_assignment_id === assignmentId);
       statusMap[qId] = (completion?.status as CompletionStatus) ?? null;
+      
+      // Count progress uploads for this assignment
+      progressMap[qId] = progressData.filter(p => p.quest_assignment_id === assignmentId).length;
     }
 
     setSlotStatuses(statusMap);
+    setSlotProgress(progressMap);
   };
 
   useEffect(() => {
@@ -142,6 +161,10 @@ const ChatterQuestsPage: React.FC = () => {
 
   const getSlotStatus = (questId: string): CompletionStatus => {
     return slotStatuses[questId] ?? null;
+  };
+
+  const getSlotProgress = (questId: string): number => {
+    return slotProgress[questId] ?? 0;
   };
 
   // Find or create a user-scoped assignment for tracking progress and completion.
@@ -306,6 +329,7 @@ const ChatterQuestsPage: React.FC = () => {
           quest={slot.quest}
           questType={questType}
           status={status}
+          currentProgress={getSlotProgress(slot.quest_id)}
           hasRerolled={slot.has_rerolled}
           isRerolling={isRerolling}
           onReroll={handleReroll}
