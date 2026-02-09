@@ -262,7 +262,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   }
 
   return (
-    <div className="flex flex-col" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+    <div className="flex flex-col" style={{ fontFamily: "'Orbitron', sans-serif" }}>
       {/* Header */}
       <div className="bg-muted/30 p-6 border-b border-border/50">
         <div className="flex items-center gap-2 mb-3">

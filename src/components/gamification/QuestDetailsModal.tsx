@@ -114,7 +114,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-2 border-primary/30">
         {step === 'details' ? (
           // Step 1: Quest Details (Like a game level intro)
-          <div className="flex flex-col" style={{ fontFamily: "'Pixellari', sans-serif" }}>
+          <div className="flex flex-col" style={{ fontFamily: "'Orbitron', sans-serif" }}>
             {/* Header with gradient background */}
             <div className={`relative bg-gradient-to-br ${config.bgGradient} p-6 pb-8`}>
               {/* Quest type badge */}
@@ -130,7 +130,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
               {/* Quest Title */}
               <h2 
                 className="text-2xl font-bold text-foreground uppercase tracking-wide leading-tight"
-                style={{ fontFamily: "'Pixellari', sans-serif" }}
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
               >
                 {quest.game_name || quest.title}
               </h2>

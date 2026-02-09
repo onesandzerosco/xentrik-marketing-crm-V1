@@ -84,7 +84,7 @@ const PlayerCard: React.FC = () => {
           <h3 
             className="font-bold text-base truncate"
             style={{ 
-              fontFamily: "'Pixellari', sans-serif",
+              fontFamily: "'Orbitron', sans-serif",
               color: '#d3a42d'
             }}
           >
@@ -92,7 +92,7 @@ const PlayerCard: React.FC = () => {
           </h3>
           <p 
             className="text-sm opacity-70"
-            style={{ fontFamily: "'Pixellari', sans-serif" }}
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
           >
             {displayRole}
           </p>
