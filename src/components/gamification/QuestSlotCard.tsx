@@ -32,15 +32,15 @@ const questTypeConfig = {
   },
   weekly: {
     label: 'Weekly Quest',
-    badgeClass: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     icon: Medal,
-    iconColor: 'text-blue-500',
+    iconColor: 'text-purple-400',
   },
   monthly: {
     label: 'Special Ops',
-    badgeClass: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    badgeClass: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
     icon: Crown,
-    iconColor: 'text-purple-500',
+    iconColor: 'text-pink-400',
   },
 };
 
