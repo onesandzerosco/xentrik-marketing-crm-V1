@@ -46,7 +46,7 @@ export const useDailyQuestSlots = () => {
     return (data as Quest[]) || [];
   }, []);
 
-  // Fetch user's daily quest slots
+  // Fetch user's daily quest slots (slots 1-4 only)
   const fetchSlots = useCallback(async () => {
     if (!user) return;
 
@@ -58,6 +58,8 @@ export const useDailyQuestSlots = () => {
       `)
       .eq('chatter_id', user.id)
       .eq('date', today)
+      .gte('slot_number', 1)
+      .lte('slot_number', 4)
       .order('slot_number');
 
     if (error) {
