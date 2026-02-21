@@ -715,7 +715,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </TabsContent>
           </Tabs>
 
-          {/* All Quests Table for Admin */}
+          {/* All Quests Table for Admin - Tabbed by Category */}
           {isAdmin && (
             <Card className="mt-6">
               <CardHeader>
@@ -723,81 +723,95 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                 <CardDescription>View and manage all created quests</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>XP</TableHead>
-                      <TableHead>Bananas</TableHead>
-                      <TableHead>Target</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {quests.map(quest => (
-                      <TableRow key={quest.id}>
-                        <TableCell className="font-medium">
-                          {quest.game_name || quest.title}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{quest.quest_type}</Badge>
-                        </TableCell>
-                        <TableCell>{quest.xp_reward}</TableCell>
-                        <TableCell>{quest.banana_reward} 🍌</TableCell>
-                        <TableCell>{quest.progress_target}</TableCell>
-                        <TableCell>
-                          <Badge variant={quest.is_active ? 'default' : 'secondary'}>
-                            {quest.is_active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleOpenEditDialog(quest)}
-                              title="Edit quest"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  className="text-destructive hover:text-destructive"
-                                  title="Delete quest"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Quest</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{quest.game_name || quest.title}"? 
-                                    This will also remove all active assignments for this quest. This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteQuest(quest.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                <Tabs defaultValue="daily">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="daily">Daily</TabsTrigger>
+                    <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                    <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                  </TabsList>
+                  {['daily', 'weekly', 'monthly'].map(type => (
+                    <TabsContent key={type} value={type}>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Title</TableHead>
+                            <TableHead>XP</TableHead>
+                            <TableHead>Bananas</TableHead>
+                            <TableHead>Target</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {quests.filter(q => q.quest_type === type).map(quest => (
+                            <TableRow key={quest.id}>
+                              <TableCell className="font-medium">
+                                {quest.game_name || quest.title}
+                              </TableCell>
+                              <TableCell>{quest.xp_reward}</TableCell>
+                              <TableCell>{quest.banana_reward} 🍌</TableCell>
+                              <TableCell>{quest.progress_target}</TableCell>
+                              <TableCell>
+                                <Badge variant={quest.is_active ? 'default' : 'secondary'}>
+                                  {quest.is_active ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleOpenEditDialog(quest)}
+                                    title="Edit quest"
                                   >
-                                    Delete Quest
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive"
+                                        title="Delete quest"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Quest</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Are you sure you want to delete "{quest.game_name || quest.title}"? 
+                                          This will also remove all active assignments for this quest. This action cannot be undone.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                          onClick={() => handleDeleteQuest(quest.id)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete Quest
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {quests.filter(q => q.quest_type === type).length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                                No {type} quests found.
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+                  ))}
+                </Tabs>
               </CardContent>
             </Card>
           )}
