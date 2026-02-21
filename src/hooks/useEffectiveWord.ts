@@ -20,6 +20,9 @@ export const useEffectiveWord = (questId?: string) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Reset custom word when questId changes to prevent stale data
+    setCustomWord(null);
+    
     const fetchCustomWord = async () => {
       if (!questId) {
         setIsLoading(false);
