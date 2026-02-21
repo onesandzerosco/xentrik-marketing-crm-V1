@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -266,7 +266,12 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  const isLoggingOut = useRef(false);
+
   const signOut = async () => {
+    if (isLoggingOut.current) return;
+    isLoggingOut.current = true;
+    
     try {
       console.log("Starting signOut process");
       
@@ -286,16 +291,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       console.log("Local state cleared, now calling Supabase signOut");
       
-      // Force signOut which will invalidate all sessions
+      // Use 'local' scope to avoid 403 errors on stale/expired sessions
       try {
-        const { error } = await supabase.auth.signOut({ scope: 'global' });
-        
-        if (error) {
-          console.error("Supabase signOut error:", error);
-        }
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (error) {
         console.error("Error during signOut API call:", error);
-        // Continue with logout flow even if the API call fails
       }
       
       console.log("Supabase signOut completed, redirecting to login");
@@ -305,10 +305,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         description: "You have been securely logged out",
       });
       
-      // Always force navigation to login page regardless of API call success
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 0);
+      navigate('/login', { replace: true });
       
     } catch (error: any) {
       console.error("Logout error:", error);
@@ -317,11 +314,9 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         title: "Logout failed",
         description: error.message || "Auth session missing!",
       });
-      
-      // Even with an error, redirect to login
-      setTimeout(() => {
-        navigate('/login', { replace: true });
-      }, 0);
+      navigate('/login', { replace: true });
+    } finally {
+      isLoggingOut.current = false;
     }
   };
 
@@ -329,6 +324,10 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event, !!currentSession);
+      
+      // Skip state updates during logout to prevent race conditions
+      if (isLoggingOut.current) return;
+      
       setIsAuthenticated(!!currentSession);
       setUser(currentSession?.user ?? null);
       setSession(currentSession);
