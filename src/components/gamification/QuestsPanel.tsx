@@ -624,6 +624,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           const selectedQuest = quests.find(q => q.id === selectedQuestForAssign);
                           const isWordQuest = selectedQuest?.title?.toLowerCase().includes('word of the day') ||
                                               selectedQuest?.game_name?.toLowerCase().includes('ability rotation') ||
+                                              selectedQuest?.game_name?.toLowerCase().includes('empowered ability') ||
                                               selectedQuest?.title?.toLowerCase().includes('naughty word');
                           return (
                             <>

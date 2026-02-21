@@ -59,9 +59,10 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
   
   const quest = assignment.quest;
   
-  // Check if this is an Ability Rotation quest
-  const isAbilityRotation = quest?.game_name?.toLowerCase().includes('ability rotation') || 
-                            quest?.title?.toLowerCase().includes('ability rotation');
+  // Check if this is a word-based quest (Ability Rotation or Empowered Ability)
+  const isWordQuest = quest?.game_name?.toLowerCase().includes('ability rotation') || 
+                      quest?.game_name?.toLowerCase().includes('empowered ability') ||
+                      quest?.title?.toLowerCase().includes('word of the day');
   
   // Fetch current progress when modal opens
   useEffect(() => {
@@ -157,7 +158,7 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
                 </p>
                 
                 {/* Word of the Day - Only for Ability Rotation quests */}
-                {isAbilityRotation && effectiveWord && !wordLoading && (
+                {isWordQuest && effectiveWord && !wordLoading && (
                   <div className="mt-4 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <BookOpen className="h-4 w-4 text-purple-400" />
