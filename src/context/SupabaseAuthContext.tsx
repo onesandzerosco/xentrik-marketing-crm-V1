@@ -275,7 +275,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       console.log("Starting signOut process");
       
-      // Clear local state first before API call to ensure UI updates immediately
+      // Clear local state
       localStorage.removeItem('isCreator');
       localStorage.removeItem('creatorId');
       localStorage.removeItem('userRole');
@@ -289,8 +289,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setUser(null);
       setSession(null);
       
-      console.log("Local state cleared, now calling Supabase signOut");
-      
       // Use 'local' scope to avoid 403 errors on stale/expired sessions
       try {
         await supabase.auth.signOut({ scope: 'local' });
@@ -298,25 +296,13 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.error("Error during signOut API call:", error);
       }
       
-      console.log("Supabase signOut completed, redirecting to login");
-      
-      toast({
-        title: "Logged out successfully",
-        description: "You have been securely logged out",
-      });
-      
-      navigate('/login', { replace: true });
+      console.log("SignOut completed, hard redirecting to login");
       
     } catch (error: any) {
       console.error("Logout error:", error);
-      toast({
-        variant: "destructive",
-        title: "Logout failed",
-        description: error.message || "Auth session missing!",
-      });
-      navigate('/login', { replace: true });
     } finally {
-      isLoggingOut.current = false;
+      // Hard redirect to login - avoids React router / auth state race conditions
+      window.location.href = '/login';
     }
   };
 
