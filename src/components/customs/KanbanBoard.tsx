@@ -147,7 +147,7 @@ const KanbanBoard: React.FC<KanbanBoardProps> = ({
   return (
     <>
       {/* Wrapper flipped so native horizontal scrollbar appears at top */}
-      <div className="w-full" style={{ transform: 'scaleY(-1)', overflowX: 'auto', overflowY: 'hidden' }}>
+      <div className="w-full [&::-webkit-scrollbar]{height:8px} [&::-webkit-scrollbar-track]{background:transparent} [&::-webkit-scrollbar-thumb]{background:hsl(var(--border))} [&::-webkit-scrollbar-thumb]:rounded-full" style={{ transform: 'scaleY(-1)', overflowX: 'auto', overflowY: 'hidden', scrollbarColor: 'hsl(var(--border)) transparent' }}>
         <div style={{ transform: 'scaleY(-1)' }}>
           <div className="flex gap-4 h-full pb-4" style={{ width: '100%' }}>
             {COLUMNS.map((column) => (
