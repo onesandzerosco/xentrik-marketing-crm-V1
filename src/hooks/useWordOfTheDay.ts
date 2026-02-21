@@ -10,18 +10,49 @@ export interface DailyWord {
   created_at: string;
 }
 
-export const useWordOfTheDay = () => {
+/**
+ * Fetch the word to display for a quest.
+ * 
+ * Priority:
+ * 1. Custom word set by admin on the assignment (custom_word / custom_word_description)
+ * 2. Fallback to auto-generated word from gamification_daily_words table
+ * 
+ * @param assignmentId - optional quest assignment ID to check for custom word
+ */
+export const useWordOfTheDay = (assignmentId?: string) => {
   const [dailyWord, setDailyWord] = useState<DailyWord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchWordOfTheDay = async () => {
+    const fetchWord = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // First try to get today's word from the database
+        // 1. If we have an assignmentId, check for a custom word on the assignment
+        if (assignmentId) {
+          const { data: assignment, error: aErr } = await supabase
+            .from('gamification_quest_assignments')
+            .select('custom_word, custom_word_description')
+            .eq('id', assignmentId)
+            .maybeSingle();
+
+          if (!aErr && assignment?.custom_word) {
+            setDailyWord({
+              id: assignmentId,
+              word: assignment.custom_word,
+              definition: assignment.custom_word_description || null,
+              part_of_speech: null,
+              date: new Date().toISOString().split('T')[0],
+              created_at: new Date().toISOString(),
+            });
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // 2. Fallback: fetch from gamification_daily_words
         const today = new Date().toISOString().split('T')[0];
         const { data: existingWord, error: fetchError } = await supabase
           .from('gamification_daily_words')
@@ -55,8 +86,8 @@ export const useWordOfTheDay = () => {
       }
     };
 
-    fetchWordOfTheDay();
-  }, []);
+    fetchWord();
+  }, [assignmentId]);
 
   return { dailyWord, isLoading, error };
 };

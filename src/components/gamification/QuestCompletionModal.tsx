@@ -28,7 +28,7 @@ const QuestCompletionModal: React.FC<QuestCompletionModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const { dailyWord } = useWordOfTheDay();
+  const { dailyWord } = useWordOfTheDay(assignment?.id);
   const [step, setStep] = useState<ModalStep>('instructions');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
@@ -37,8 +37,10 @@ const QuestCompletionModal: React.FC<QuestCompletionModalProps> = ({
 
   const quest = assignment.quest;
   
-  // Check if this is a Word of the Day quest
-  const isWordOfDayQuest = quest?.title?.toLowerCase().includes('word of the day');
+  // Check if this is a Word of the Day / Ability Rotation quest
+  const isWordOfDayQuest = quest?.title?.toLowerCase().includes('word of the day') ||
+    quest?.game_name?.toLowerCase().includes('ability rotation') ||
+    quest?.game_name?.toLowerCase().includes('empowered ability');
 
   const getQuestIcon = (type: string) => {
     switch (type) {
