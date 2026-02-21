@@ -1007,14 +1007,10 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
             />
           </div>
           <Tabs defaultValue="announcements" className="w-full h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 mb-4 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 mb-4 h-auto p-1">
               <TabsTrigger value="announcements" className="text-xs sm:text-sm py-2 px-1">Announce</TabsTrigger>
               <TabsTrigger value="calendar" className="text-xs sm:text-sm py-2 px-1">Calendar</TabsTrigger>
               <TabsTrigger value="all" className="text-xs sm:text-sm py-2 px-1">All Data</TabsTrigger>
-              <TabsTrigger value="personal" className="text-xs sm:text-sm py-2 px-1">Personal</TabsTrigger>
-              <TabsTrigger value="physical" className="text-xs sm:text-sm py-2 px-1">Physical</TabsTrigger>
-              <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2 px-1">Preferences</TabsTrigger>
-              <TabsTrigger value="content" className="text-xs sm:text-sm py-2 px-1">Content</TabsTrigger>
             </TabsList>
             
             <div className="flex-1 min-h-0">
@@ -1044,25 +1040,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                     {renderAllData()}
                   </TabsContent>
 
-                  <TabsContent value="personal" className="space-y-4 mt-0">
-                    <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                    {renderDataSection(submissionData?.personalInfo, 'Personal Information', personalInfoPriority, 'personalInfo')}
-                  </TabsContent>
-                  
-                  <TabsContent value="physical" className="space-y-4 mt-0">
-                    <h3 className="text-lg font-semibold mb-4">Physical Attributes</h3>
-                    {renderDataSection(submissionData?.physicalAttributes, 'Physical Attributes', physicalPriority, 'physicalAttributes')}
-                  </TabsContent>
-                  
-                  <TabsContent value="preferences" className="space-y-4 mt-0">
-                    <h3 className="text-lg font-semibold mb-4">Personal Preferences</h3>
-                    {renderDataSection(submissionData?.personalPreferences, 'Personal Preferences', preferencesPriority, 'personalPreferences')}
-                  </TabsContent>
-                  
-                  <TabsContent value="content" className="space-y-4 mt-0">
-                    <h3 className="text-lg font-semibold mb-4">Content & Service</h3>
-                    {renderDataSection(submissionData?.contentAndService, 'Content & Service', contentPriority, 'contentAndService')}
-                  </TabsContent>
                 </div>
               </ScrollArea>
             </div>
