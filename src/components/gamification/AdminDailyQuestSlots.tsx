@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import QuestSlotCard from './QuestSlotCard';
 import { Quest } from '@/hooks/useGamification';
 import { format } from 'date-fns';
-import { getDailyQuestDate } from '@/utils/dailyQuestDate';
 
 interface AdminDailyQuestSlotsProps {
   onRemoveAssignment?: (questId: string) => void;
@@ -24,7 +23,7 @@ const AdminDailyQuestSlots: React.FC<AdminDailyQuestSlotsProps> = ({ onRemoveAss
   const [assignments, setAssignments] = useState<AdminAssignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const today = getDailyQuestDate();
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch ADMIN-assigned daily quests (assigned_by IS NULL)
   useEffect(() => {
@@ -79,7 +78,7 @@ const AdminDailyQuestSlots: React.FC<AdminDailyQuestSlotsProps> = ({ onRemoveAss
             Daily Quests
           </CardTitle>
           <CardDescription>
-            No daily quests assigned for the current period. Use "Assign Quest" to add up to 4 daily quests. Quests reset at 10pm.
+            No daily quests assigned for today. Use "Assign Quest" to add up to 4 daily quests.
           </CardDescription>
         </CardHeader>
       </Card>

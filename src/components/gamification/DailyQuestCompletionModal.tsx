@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useWordOfTheDay } from '@/hooks/useWordOfTheDay';
-import { getDailyQuestDate } from '@/utils/dailyQuestDate';
 
 interface DailyQuestCompletionModalProps {
   open: boolean;
@@ -33,41 +32,15 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [assignmentId, setAssignmentId] = useState<string | null>(null);
-  const { dailyWord } = useWordOfTheDay(assignmentId || undefined);
+  const { dailyWord } = useWordOfTheDay();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
 
   const quest = slot.quest;
 
-  // Check if this is a Word of the Day / Ability Rotation quest
-  const isWordOfDayQuest = quest?.title?.toLowerCase().includes('word of the day') ||
-    quest?.game_name?.toLowerCase().includes('ability rotation') ||
-    quest?.game_name?.toLowerCase().includes('empowered ability');
-
-  // Fetch the assignment ID for this quest to get custom word
-  useEffect(() => {
-    const fetchAssignment = async () => {
-      if (!quest || !isWordOfDayQuest) return;
-      
-      const today = getDailyQuestDate();
-      const { data } = await supabase
-        .from('gamification_quest_assignments')
-        .select('id')
-        .eq('quest_id', quest.id)
-        .lte('start_date', today)
-        .gte('end_date', today)
-        .is('assigned_by', null)
-        .maybeSingle();
-
-      if (data) {
-        setAssignmentId(data.id);
-      }
-    };
-
-    if (open) fetchAssignment();
-  }, [open, quest, isWordOfDayQuest]);
+  // Check if this is a Word of the Day quest
+  const isWordOfDayQuest = quest?.title?.toLowerCase().includes('word of the day');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -111,12 +84,15 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      // Upload any files first
       let attachmentUrls: string[] = [];
       if (files.length > 0) {
         attachmentUrls = await uploadFiles();
       }
 
-      const today = getDailyQuestDate();
+      // Create a quest assignment for this daily slot if it doesn't exist
+      // First check if an assignment exists for this quest today
+      const today = new Date().toISOString().split('T')[0];
       
       let { data: existingAssignment } = await supabase
         .from('gamification_quest_assignments')
@@ -126,9 +102,10 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         .eq('end_date', today)
         .maybeSingle();
 
-      let questAssignmentId = existingAssignment?.id;
+      let assignmentId = existingAssignment?.id;
 
-      if (!questAssignmentId) {
+      // If no assignment exists, create one automatically for this daily quest
+      if (!assignmentId) {
         const { data: newAssignment, error: assignmentError } = await supabase
           .from('gamification_quest_assignments')
           .insert({
@@ -143,13 +120,14 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         if (assignmentError) {
           throw new Error('Failed to create quest assignment');
         }
-        questAssignmentId = newAssignment.id;
+        assignmentId = newAssignment.id;
       }
 
+      // Now create the completion record
       const { error: completionError } = await supabase
         .from('gamification_quest_completions')
         .insert({
-          quest_assignment_id: questAssignmentId,
+          quest_assignment_id: assignmentId,
           chatter_id: user.id,
           status: 'pending',
           xp_earned: 0,
@@ -158,12 +136,14 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         });
 
       if (completionError) {
+        // Check if already submitted
         if (completionError.code === '23505') {
           throw new Error('You have already submitted this quest today');
         }
         throw new Error('Failed to submit completion');
       }
 
+      // Mark the slot as completed locally
       const { error: slotError } = await supabase
         .from('gamification_daily_quest_slots')
         .update({ completed: true })
@@ -229,6 +209,7 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         )}
 
         <div className="space-y-4">
+          {/* File Upload */}
           <div className="space-y-2">
             <Label>Proof of Completion (Screenshots)</Label>
             <div className="flex flex-col gap-2">

@@ -56,8 +56,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
     progress_target: 1
   });
   const [selectedQuestForAssign, setSelectedQuestForAssign] = useState<string>('');
-  const [assignCustomWord, setAssignCustomWord] = useState('');
-  const [assignCustomWordDescription, setAssignCustomWordDescription] = useState('');
+  
   const [pendingCompletions, setPendingCompletions] = useState<any[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
   const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
@@ -205,29 +204,19 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       setIsAssigning(true);
       // Admin assignments have assigned_by = null to distinguish from personal assignments
       // Personal assignments (from re-rolls) have assigned_by = user.id
-      const insertData: any = {
-        quest_id: selectedQuestForAssign,
-        start_date: format(startDate, 'yyyy-MM-dd'),
-        end_date: format(endDate, 'yyyy-MM-dd'),
-        assigned_by: null // NULL = admin/global assignment, visible to all players
-      };
-
-      // Add custom word fields if provided (for Ability Rotation / Empowered Ability quests)
-      if (assignCustomWord.trim()) {
-        insertData.custom_word = assignCustomWord.trim();
-        insertData.custom_word_description = assignCustomWordDescription.trim() || null;
-      }
-
       const { error } = await supabase
         .from('gamification_quest_assignments')
-        .insert(insertData);
+        .insert({
+          quest_id: selectedQuestForAssign,
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
+          assigned_by: null // NULL = admin/global assignment, visible to all players
+        });
 
       if (error) throw error;
 
       toast({ title: "Success", description: "Quest assigned successfully!" });
       setSelectedQuestForAssign('');
-      setAssignCustomWord('');
-      setAssignCustomWordDescription('');
       refetch.activeAssignments();
     } catch (error) {
       console.error('Error assigning quest:', error);
@@ -616,47 +605,16 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                             </SelectContent>
                           </Select>
                         </div>
-                        {selectedQuestForAssign && (() => {
-                          const selectedQuest = quests.find(q => q.id === selectedQuestForAssign);
-                          const isAbilityQuest = selectedQuest?.game_name?.toLowerCase().includes('ability rotation') ||
-                            selectedQuest?.game_name?.toLowerCase().includes('empowered ability') ||
-                            selectedQuest?.title?.toLowerCase().includes('word of the day');
-                          
-                          return (
-                            <>
-                              {isAbilityQuest && (
-                                <div className="space-y-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                                  <p className="text-sm font-medium text-purple-400">📖 Word of the Day</p>
-                                  <div className="space-y-2">
-                                    <Label>Word</Label>
-                                    <Input
-                                      value={assignCustomWord}
-                                      onChange={e => setAssignCustomWord(e.target.value)}
-                                      placeholder="e.g., Serendipity"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Word Description</Label>
-                                    <Textarea
-                                      value={assignCustomWordDescription}
-                                      onChange={e => setAssignCustomWordDescription(e.target.value)}
-                                      placeholder="e.g., The occurrence of events by chance in a happy way"
-                                      rows={2}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                              <div className="text-sm text-muted-foreground">
-                                The quest will be assigned based on its type:
-                                <ul className="list-disc list-inside mt-1">
-                                  <li>Daily: Today only</li>
-                                  <li>Weekly: Current week (Mon-Sun)</li>
-                                  <li>Monthly: Current month</li>
-                                </ul>
-                              </div>
-                            </>
-                          );
-                        })()}
+                        {selectedQuestForAssign && (
+                          <div className="text-sm text-muted-foreground">
+                            The quest will be assigned based on its type:
+                            <ul className="list-disc list-inside mt-1">
+                              <li>Daily: Today only</li>
+                              <li>Weekly: Current week (Mon-Sun)</li>
+                              <li>Monthly: Current month</li>
+                            </ul>
+                          </div>
+                        )}
                       </div>
                       <DialogFooter>
                         <Button onClick={handleAssignQuest} disabled={isAssigning || !selectedQuestForAssign}>

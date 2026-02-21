@@ -29,7 +29,7 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { dailyWord } = useWordOfTheDay(assignment?.id);
+  const { dailyWord } = useWordOfTheDay();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slots, setSlots] = useState<ProgressSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,10 +90,8 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   const progressPercentage = Math.min((filledSlots / progressTarget) * 100, 100);
   const canSubmit = filledSlots >= progressTarget;
 
-  // Check if this is a Word of the Day / Ability Rotation quest
-  const isWordOfDayQuest = quest.title?.toLowerCase().includes('word of the day') ||
-    quest.game_name?.toLowerCase().includes('ability rotation') ||
-    quest.game_name?.toLowerCase().includes('empowered ability');
+  // Check if this is a Word of the Day quest
+  const isWordOfDayQuest = quest.title?.toLowerCase().includes('word of the day');
 
   const handleSlotUpload = async (slotIndex: number, file: File) => {
     if (!user) return;

@@ -762,8 +762,6 @@ export type Database = {
         Row: {
           assigned_by: string | null
           created_at: string
-          custom_word: string | null
-          custom_word_description: string | null
           end_date: string
           id: string
           quest_id: string
@@ -772,8 +770,6 @@ export type Database = {
         Insert: {
           assigned_by?: string | null
           created_at?: string
-          custom_word?: string | null
-          custom_word_description?: string | null
           end_date: string
           id?: string
           quest_id: string
@@ -782,8 +778,6 @@ export type Database = {
         Update: {
           assigned_by?: string | null
           created_at?: string
-          custom_word?: string | null
-          custom_word_description?: string | null
           end_date?: string
           id?: string
           quest_id?: string

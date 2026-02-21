@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Quest } from '@/hooks/useGamification';
-import { getDailyQuestDate } from '@/utils/dailyQuestDate';
+import { format } from 'date-fns';
 
 export interface DailyQuestSlot {
   id: string;
@@ -27,7 +27,7 @@ export const useDailyQuestSlots = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRerolling, setIsRerolling] = useState<number | null>(null);
 
-  const today = getDailyQuestDate();
+  const today = format(new Date(), 'yyyy-MM-dd');
 
   // Fetch ALL active daily quests (for re-roll pool)
   const fetchAllDailyQuests = useCallback(async () => {

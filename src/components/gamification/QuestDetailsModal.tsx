@@ -55,15 +55,13 @@ const QuestDetailsModal: React.FC<QuestDetailsModalProps> = ({
   const { user } = useAuth();
   const [step, setStep] = useState<'details' | 'upload'>('details');
   const [currentProgress, setCurrentProgress] = useState(0);
-  const { dailyWord, isLoading: wordLoading } = useWordOfTheDay(assignment?.id);
+  const { dailyWord, isLoading: wordLoading } = useWordOfTheDay();
   
   const quest = assignment.quest;
   
-  // Check if this is an Ability Rotation / Empowered Ability quest
+  // Check if this is an Ability Rotation quest
   const isAbilityRotation = quest?.game_name?.toLowerCase().includes('ability rotation') || 
-                            quest?.title?.toLowerCase().includes('ability rotation') ||
-                            quest?.game_name?.toLowerCase().includes('empowered ability') ||
-                            quest?.title?.toLowerCase().includes('word of the day');
+                            quest?.title?.toLowerCase().includes('ability rotation');
   
   // Fetch current progress when modal opens
   useEffect(() => {
