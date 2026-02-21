@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DailyQuestCompletionModal from './DailyQuestCompletionModal';
 import QuestSlotCard from './QuestSlotCard';
 import { format } from 'date-fns';
+import { getDailyQuestDate } from '@/utils/dailyQuestDate';
 
 interface DailyQuestSlotsProps {
   onQuestComplete?: () => void;
@@ -29,7 +30,7 @@ const DailyQuestSlots: React.FC<DailyQuestSlotsProps> = ({ onQuestComplete, isAd
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [completionStatuses, setCompletionStatuses] = useState<SlotCompletionStatus[]>([]);
 
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const today = getDailyQuestDate();
 
   // Fetch completion statuses for today's daily quests
   // We need to check both admin assignments AND personal assignments (for re-rolled quests)
