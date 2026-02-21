@@ -884,12 +884,21 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
 
     return (
       <div className="space-y-6">
-        {sections.map((sectionInfo, index) => (
-          <div key={index} className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 border-b pb-2">{sectionInfo.title}</h3>
-            {renderDataSection(sectionInfo.data, sectionInfo.title, sectionInfo.priority, sectionInfo.section)}
-          </div>
-        ))}
+        {sections.map((sectionInfo, index) => {
+          const sortedEntries = sortFieldsByPriority(sectionInfo.data || {}, sectionInfo.priority);
+          const filteredEntries = sortedEntries.filter(([key, value]) => {
+            if (key === 'email' && isChatter) return false;
+            if ((key === 'age' || key === 'dateOfBirth' || key === 'mobilePhone') && !isAdmin) return false;
+            return matchesSearch(key, value);
+          });
+          if (filteredEntries.length === 0) return null;
+          return (
+            <div key={index} className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">{sectionInfo.title}</h3>
+              {renderDataSection(sectionInfo.data, sectionInfo.title, sectionInfo.priority, sectionInfo.section)}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -915,8 +924,8 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
       return matchesSearch(key, value);
     });
 
-    if (filteredEntries.length === 0 && searchQuery.trim()) {
-      return <div className="text-center py-4 text-muted-foreground text-sm">No matching fields found</div>;
+    if (filteredEntries.length === 0) {
+      return null;
     }
 
     return (
@@ -997,15 +1006,6 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
         </div>
         
         <div className="px-4 sm:px-6 pb-4 sm:pb-6 flex-1 min-h-0">
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search model info..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-9"
-            />
-          </div>
           <Tabs defaultValue="announcements" className="w-full h-full flex flex-col">
             <TabsList className="grid w-full grid-cols-3 mb-4 h-auto p-1">
               <TabsTrigger value="announcements" className="text-xs sm:text-sm py-2 px-1">Announce</TabsTrigger>
@@ -1037,6 +1037,15 @@ const CreatorDataModal: React.FC<CreatorDataModalProps> = ({
                   </TabsContent>
 
                   <TabsContent value="all" className="space-y-4 mt-0">
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search model info..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
                     {renderAllData()}
                   </TabsContent>
 
