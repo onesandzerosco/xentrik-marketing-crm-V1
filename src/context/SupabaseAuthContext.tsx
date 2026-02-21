@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -266,16 +266,11 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const isLoggingOut = useRef(false);
-
   const signOut = async () => {
-    if (isLoggingOut.current) return;
-    isLoggingOut.current = true;
-    
     try {
       console.log("Starting signOut process");
       
-      // Clear local state
+      // Clear local state first before API call to ensure UI updates immediately
       localStorage.removeItem('isCreator');
       localStorage.removeItem('creatorId');
       localStorage.removeItem('userRole');
@@ -289,20 +284,44 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setUser(null);
       setSession(null);
       
-      // Use 'local' scope to avoid 403 errors on stale/expired sessions
+      console.log("Local state cleared, now calling Supabase signOut");
+      
+      // Force signOut which will invalidate all sessions
       try {
-        await supabase.auth.signOut({ scope: 'local' });
+        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        
+        if (error) {
+          console.error("Supabase signOut error:", error);
+        }
       } catch (error) {
         console.error("Error during signOut API call:", error);
+        // Continue with logout flow even if the API call fails
       }
       
-      console.log("SignOut completed, hard redirecting to login");
+      console.log("Supabase signOut completed, redirecting to login");
+      
+      toast({
+        title: "Logged out successfully",
+        description: "You have been securely logged out",
+      });
+      
+      // Always force navigation to login page regardless of API call success
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
       
     } catch (error: any) {
       console.error("Logout error:", error);
-    } finally {
-      // Hard redirect to login - avoids React router / auth state race conditions
-      window.location.href = '/login';
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: error.message || "Auth session missing!",
+      });
+      
+      // Even with an error, redirect to login
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 0);
     }
   };
 
@@ -310,10 +329,6 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log("Auth state changed:", event, !!currentSession);
-      
-      // Skip state updates during logout to prevent race conditions
-      if (isLoggingOut.current) return;
-      
       setIsAuthenticated(!!currentSession);
       setUser(currentSession?.user ?? null);
       setSession(currentSession);
