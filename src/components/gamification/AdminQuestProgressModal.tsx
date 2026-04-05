@@ -91,28 +91,38 @@ const AdminQuestProgressModal: React.FC<AdminQuestProgressModalProps> = ({
         .eq('quest_assignment_id', assignmentId)
         .in('chatter_id', chatterIds);
 
-      // 3. Fetch completions for this assignment from these users
+      // 3. Fetch completions for this assignment from these users (include attachments for fallback count)
       const { data: completionsData } = await supabase
         .from('gamification_quest_completions')
-        .select('chatter_id, status')
+        .select('chatter_id, status, attachments')
         .eq('quest_assignment_id', assignmentId)
         .in('chatter_id', chatterIds);
 
-      // Build progress map
+      // Build progress map from gamification_quest_progress
       const progressMap: Record<string, number> = {};
       (progressData || []).forEach((p: any) => {
         progressMap[p.chatter_id] = (progressMap[p.chatter_id] || 0) + 1;
       });
 
-      const completionMap: Record<string, string> = {};
+      const completionMap: Record<string, { status: string; attachmentCount: number }> = {};
       (completionsData || []).forEach((c: any) => {
-        completionMap[c.chatter_id] = c.status;
+        const attachmentCount = Array.isArray(c.attachments) ? c.attachments.filter((a: string) => a).length : 0;
+        completionMap[c.chatter_id] = { status: c.status, attachmentCount };
       });
 
       // Build user progress list
       const userProgressList: UserProgress[] = chatterProfiles.map((p: any) => {
-        const count = progressMap[p.id] || 0;
-        const completionStatus = completionMap[p.id];
+        let count = progressMap[p.id] || 0;
+        const completion = completionMap[p.id];
+        const completionStatus = completion?.status;
+
+        // If submitted/completed but progress table shows 0, use attachments count or progressTarget as fallback
+        if (completionStatus && (completionStatus === 'verified' || completionStatus === 'approved' || completionStatus === 'pending')) {
+          if (count === 0) {
+            // Use attachment count from completion, or fall back to progressTarget (submission requires meeting target)
+            count = completion.attachmentCount > 0 ? completion.attachmentCount : progressTarget;
+          }
+        }
 
         let status: UserProgress['status'] = 'not_started';
         if (completionStatus === 'verified' || completionStatus === 'approved') {
