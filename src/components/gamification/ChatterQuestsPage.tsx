@@ -2,19 +2,21 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Medal, Crown, Swords } from 'lucide-react';
+import { Loader2, Trophy, Medal, Crown, Swords, Clock } from 'lucide-react';
 import { useGamification, QuestAssignment } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import QuestDetailsModal from './QuestDetailsModal';
 import QuestSlotCard from './QuestSlotCard';
+import ShiftQuestSlots from './ShiftQuestSlots';
 import { useDailyQuestSlots } from '@/hooks/useDailyQuestSlots';
 import { useWeeklyQuestSlots } from '@/hooks/useWeeklyQuestSlots';
 import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
+import { useShiftQuests } from '@/hooks/useShiftQuests';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { getEffectiveGameDate } from '@/utils/gameDate';
 
-type QuestType = 'daily' | 'weekly' | 'monthly';
+type QuestType = 'daily' | 'weekly' | 'monthly' | 'shift';
 
 type CompletionStatus = 'pending' | 'verified' | 'rejected' | null;
 
