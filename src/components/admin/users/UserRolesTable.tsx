@@ -81,7 +81,6 @@ const UserRolesTable: React.FC<UserRolesTableProps> = ({
                 className={
                   user.status === "Active" ? "bg-green-500" : 
                   user.status === "Paused" ? "bg-amber-500" : 
-                  user.status === "Archived" ? "bg-orange-500" :
                   "bg-red-500"
                 }
               >
@@ -100,7 +99,7 @@ const UserRolesTable: React.FC<UserRolesTableProps> = ({
                   <span className="sr-only">Edit</span>
                 </Button>
                 
-                {onArchiveUser && user.status !== "Archived" && user.status !== "Inactive" && (
+                {onArchiveUser && user.status !== "Inactive" && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
