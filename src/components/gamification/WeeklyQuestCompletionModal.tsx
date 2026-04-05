@@ -168,6 +168,9 @@ const WeeklyQuestCompletionModal: React.FC<WeeklyQuestCompletionModalProps> = ({
         console.error('Error marking slot completed:', slotError);
       }
 
+      // Notify admins (fire-and-forget)
+      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'weekly');
+
       toast({
         title: "Quest Submitted! 🎉",
         description: "Your completion is pending admin review.",
