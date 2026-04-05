@@ -363,7 +363,7 @@ const ChatterQuestsPage: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as QuestType)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-card/80 border border-border/50 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-4 bg-card/80 border border-border/50 h-auto p-1">
           <TabsTrigger 
             value="daily" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
@@ -397,6 +397,19 @@ const ChatterQuestsPage: React.FC = () => {
               {monthlyStats.completed}/{monthlyStats.total}
             </Badge>
           </TabsTrigger>
+          {shift.myShift && (
+            <TabsTrigger 
+              value="shift" 
+              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              <Clock className="h-4 w-4" />
+              <span>Shift</span>
+              <Badge variant="outline" className="ml-1 text-xs bg-background/50">
+                {shift.myShift}
+              </Badge>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="daily" className="mt-6">
@@ -416,6 +429,12 @@ const ChatterQuestsPage: React.FC = () => {
             {renderSlotCards('monthly')}
           </div>
         </TabsContent>
+
+        {shift.myShift && (
+          <TabsContent value="shift" className="mt-6">
+            <ShiftQuestSlots />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Quest Details Modal */}
