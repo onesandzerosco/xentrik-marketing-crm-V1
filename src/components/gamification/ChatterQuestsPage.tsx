@@ -413,11 +413,6 @@ const ChatterQuestsPage: React.FC = () => {
           </div>
         </TabsContent>
 
-        {shift.myShift && (
-          <TabsContent value="shift" className="mt-6">
-            <ShiftQuestSlots />
-          </TabsContent>
-        )}
       </Tabs>
 
       {/* Quest Details Modal */}
