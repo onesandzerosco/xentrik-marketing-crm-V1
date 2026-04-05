@@ -104,6 +104,7 @@ export const useDailyQuestSlots = () => {
       .from('gamification_quest_assignments')
       .select(`
         quest_id,
+        department,
         quest:gamification_quests (*)
       `)
       .eq('start_date', today)
