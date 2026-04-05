@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, UserMinus, UserX } from "lucide-react";
+import { Pencil, Archive, UserX } from "lucide-react";
 
 interface UserRolesTableProps {
   users: Employee[];
