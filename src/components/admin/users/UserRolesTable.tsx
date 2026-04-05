@@ -100,16 +100,16 @@ const UserRolesTable: React.FC<UserRolesTableProps> = ({
                   <span className="sr-only">Edit</span>
                 </Button>
                 
-                {onSuspendUser && user.status !== "Suspended" && user.status !== "Inactive" && (
+                {onArchiveUser && user.status !== "Archived" && user.status !== "Inactive" && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => onSuspendUser(user)}
+                    onClick={() => onArchiveUser(user)}
                     className="hover:bg-transparent p-0 h-8 w-8 text-amber-500 hover:text-amber-600"
-                    title="Suspend User"
+                    title="Archive User"
                   >
-                    <UserMinus className="h-4 w-4" />
-                    <span className="sr-only">Suspend</span>
+                    <Archive className="h-4 w-4" />
+                    <span className="sr-only">Archive</span>
                   </Button>
                 )}
                 
