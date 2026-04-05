@@ -195,7 +195,6 @@ const EditTeamMemberModal: React.FC<EditTeamMemberModalProps> = ({
                           <SelectItem value="Active">Active</SelectItem>
                           <SelectItem value="Paused">Paused</SelectItem>
                           <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Suspended">Suspended</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
