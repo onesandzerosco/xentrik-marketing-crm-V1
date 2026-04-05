@@ -14,7 +14,7 @@ import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { getEffectiveGameDate } from '@/utils/gameDate';
 
-type QuestType = 'daily' | 'weekly' | 'monthly' | 'shift';
+type QuestType = 'daily' | 'weekly' | 'monthly';
 type SlotQuestType = 'daily' | 'weekly' | 'monthly';
 
 type CompletionStatus = 'pending' | 'verified' | 'rejected' | null;
