@@ -99,7 +99,7 @@ const UserRolesTable: React.FC<UserRolesTableProps> = ({
                   <span className="sr-only">Edit</span>
                 </Button>
                 
-                {onArchiveUser && user.status !== "Archived" && user.status !== "Inactive" && (
+                {onArchiveUser && user.status !== "Inactive" && (
                   <Button 
                     variant="ghost" 
                     size="sm" 
