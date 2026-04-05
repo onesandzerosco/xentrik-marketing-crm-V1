@@ -25,7 +25,7 @@ import MonthlyQuestSlots from './MonthlyQuestSlots';
 import AdminDailyQuestSlots from './AdminDailyQuestSlots';
 import AdminWeeklyQuestSlots from './AdminWeeklyQuestSlots';
 import AdminMonthlyQuestSlots from './AdminMonthlyQuestSlots';
-import AdminShiftQuestSlots from './AdminShiftQuestSlots';
+
 
 interface QuestsPanelProps {
   isAdmin: boolean;
