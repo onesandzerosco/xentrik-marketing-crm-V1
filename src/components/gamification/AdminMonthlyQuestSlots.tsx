@@ -111,16 +111,22 @@ const AdminMonthlyQuestSlots: React.FC<AdminMonthlyQuestSlotsProps> = ({ onRemov
       {/* Quest Cards */}
       <div className="grid gap-3">
         {assignments.map((assignment) => (
-          <QuestSlotCard
-            key={assignment.id}
-            quest={assignment.quest}
-            questType="monthly"
-            status={null}
-            hasRerolled={false}
-            isRerolling={false}
-            isAdminView={true}
-            onRemoveAssignment={onRemoveAssignment ? () => onRemoveAssignment(assignment.quest_id) : undefined}
-          />
+          <div key={assignment.id} className="relative">
+            <QuestSlotCard
+              quest={assignment.quest}
+              questType="monthly"
+              status={null}
+              hasRerolled={false}
+              isRerolling={false}
+              isAdminView={true}
+              onRemoveAssignment={onRemoveAssignment ? () => onRemoveAssignment(assignment.quest_id) : undefined}
+            />
+            {assignment.department && (
+              <Badge variant="outline" className="absolute top-2 right-2 text-xs">
+                {assignment.department}
+              </Badge>
+            )}
+          </div>
         ))}
       </div>
     </div>

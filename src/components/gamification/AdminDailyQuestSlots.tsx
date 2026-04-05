@@ -108,16 +108,22 @@ const AdminDailyQuestSlots: React.FC<AdminDailyQuestSlotsProps> = ({ onRemoveAss
       {/* Quest Cards Grid */}
       <div className="grid gap-3 sm:grid-cols-2">
         {assignments.map((assignment) => (
-          <QuestSlotCard
-            key={assignment.id}
-            quest={assignment.quest}
-            questType="daily"
-            status={null}
-            hasRerolled={false}
-            isRerolling={false}
-            isAdminView={true}
-            onRemoveAssignment={onRemoveAssignment ? () => onRemoveAssignment(assignment.quest_id) : undefined}
-          />
+          <div key={assignment.id} className="relative">
+            <QuestSlotCard
+              quest={assignment.quest}
+              questType="daily"
+              status={null}
+              hasRerolled={false}
+              isRerolling={false}
+              isAdminView={true}
+              onRemoveAssignment={onRemoveAssignment ? () => onRemoveAssignment(assignment.quest_id) : undefined}
+            />
+            {assignment.department && (
+              <Badge variant="outline" className="absolute top-2 right-2 text-xs">
+                {assignment.department}
+              </Badge>
+            )}
+          </div>
         ))}
       </div>
     </div>
