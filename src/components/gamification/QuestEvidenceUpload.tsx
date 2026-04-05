@@ -34,6 +34,8 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slots, setSlots] = useState<ProgressSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [isBatchUploading, setIsBatchUploading] = useState(false);
 
   const quest = assignment.quest;
   
