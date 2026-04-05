@@ -359,7 +359,7 @@ const ChatterQuestsPage: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as QuestType)} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-card/80 border border-border/50 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-3 bg-card/80 border border-border/50 h-auto p-1">
           <TabsTrigger 
             value="daily" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
