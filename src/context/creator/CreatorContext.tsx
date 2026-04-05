@@ -190,6 +190,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addCreator,
       updateCreator,
       deleteCreator,
+      restoreCreator,
       isDeleting,
       getCreator,
       getCreatorStats,
