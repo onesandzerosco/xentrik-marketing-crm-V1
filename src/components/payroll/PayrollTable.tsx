@@ -51,6 +51,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [showPayrollModal, setShowPayrollModal] = useState(false);
   const [chatterName, setChatterName] = useState<string>('');
+  const [modelSearchFilter, setModelSearchFilter] = useState('');
   const [chatterDepartment, setChatterDepartment] = useState<string | null | undefined>(undefined);
   const [chatterRole, setChatterRole] = useState<string | null>(null);
   const [chatterRoles, setChatterRoles] = useState<string[] | null>(null);
