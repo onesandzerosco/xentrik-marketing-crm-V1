@@ -764,6 +764,7 @@ export type Database = {
           created_at: string
           custom_word: string | null
           custom_word_description: string | null
+          department: string | null
           end_date: string
           id: string
           quest_id: string
@@ -774,6 +775,7 @@ export type Database = {
           created_at?: string
           custom_word?: string | null
           custom_word_description?: string | null
+          department?: string | null
           end_date: string
           id?: string
           quest_id: string
@@ -784,6 +786,7 @@ export type Database = {
           created_at?: string
           custom_word?: string | null
           custom_word_description?: string | null
+          department?: string | null
           end_date?: string
           id?: string
           quest_id?: string
