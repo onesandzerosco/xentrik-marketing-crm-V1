@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Medal, Crown, Swords, Clock } from 'lucide-react';
+import { Loader2, Trophy, Medal, Crown, Swords } from 'lucide-react';
 import { useGamification, QuestAssignment } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
