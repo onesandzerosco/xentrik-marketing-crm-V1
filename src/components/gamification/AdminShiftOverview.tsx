@@ -147,9 +147,7 @@ const AdminShiftOverview: React.FC = () => {
                 )}
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+      })}
     </div>
   );
 };
