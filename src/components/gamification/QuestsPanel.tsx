@@ -726,6 +726,10 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                 <Crown className="h-4 w-4 text-purple-500" />
                 Monthly Quests
               </TabsTrigger>
+              <TabsTrigger value="shift" className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-green-500" />
+                Shift Quests
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="daily">
@@ -760,6 +764,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                   onQuestComplete={handleQuestSubmitComplete} 
                 />
               )}
+            </TabsContent>
+            <TabsContent value="shift">
+              <AdminShiftQuestSlots />
             </TabsContent>
           </Tabs>
 
