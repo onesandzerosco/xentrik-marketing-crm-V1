@@ -169,7 +169,9 @@ const MonthlyQuestCompletionModal: React.FC<MonthlyQuestCompletionModalProps> = 
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'monthly');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'monthly')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

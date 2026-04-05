@@ -176,7 +176,9 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'daily');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'daily')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

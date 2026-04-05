@@ -238,7 +238,9 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 
       // Notify admins (fire-and-forget)
       const questType = (quest.quest_type || 'daily') as 'daily' | 'weekly' | 'monthly';
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, questType);
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, questType)
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

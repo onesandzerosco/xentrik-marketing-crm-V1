@@ -169,7 +169,9 @@ const WeeklyQuestCompletionModal: React.FC<WeeklyQuestCompletionModalProps> = ({
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'weekly');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'weekly')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",
