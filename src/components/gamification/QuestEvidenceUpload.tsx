@@ -90,8 +90,9 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
   if (!quest) return null;
 
   const filledSlots = slots.filter(s => s.attachment_url !== null).length;
+  const emptySlotCount = progressTarget - filledSlots - pendingFiles.length;
   const progressPercentage = Math.min((filledSlots / progressTarget) * 100, 100);
-  const canSubmit = filledSlots >= progressTarget;
+  const canSubmit = filledSlots >= progressTarget && pendingFiles.length === 0 && !isBatchUploading;
 
   // Check if this is a Word of the Day quest
   const isWordOfDayQuest = quest.title?.toLowerCase().includes('word of the day');
