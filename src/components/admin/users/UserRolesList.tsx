@@ -42,7 +42,7 @@ const UserRolesList: React.FC = () => {
         <UserRolesTable 
           users={users} 
           onEditUser={handleEdit}
-          onSuspendUser={handleSuspend}
+          onArchiveUser={handleArchive}
           onDeleteUser={handleDelete}
         />
       </div>
