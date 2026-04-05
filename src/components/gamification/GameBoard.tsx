@@ -12,6 +12,7 @@ import { getRankCrownColor } from './PlayerCard';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { getEffectiveGameDate } from '@/utils/gameDate';
+import AdminShiftOverview from './AdminShiftOverview';
 
 interface GameBoardProps {
   isAdmin: boolean;
