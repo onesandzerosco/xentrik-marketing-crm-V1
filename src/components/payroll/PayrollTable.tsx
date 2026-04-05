@@ -413,18 +413,34 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
     );
   }
 
+  const filteredModels = models.filter(m =>
+    modelSearchFilter === '' || m.model_name.toLowerCase().includes(modelSearchFilter.toLowerCase())
+  );
+
   return (
     <div className="space-y-4">
-      {canEdit && !isSalesLocked && (
-        <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2">
+        {/* Search filter for models */}
+        {models.length > 0 && (
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search models..."
+              value={modelSearchFilter}
+              onChange={(e) => setModelSearchFilter(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+        )}
+        {canEdit && !isSalesLocked && (
           <AddModelDropdown
             chatterId={effectiveChatterId}
             weekStart={weekStart}
             onModelAdded={fetchData}
             disabled={!canEdit || isSalesLocked}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="overflow-x-auto">
         <Table>
