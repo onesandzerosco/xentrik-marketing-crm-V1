@@ -64,9 +64,10 @@ const TasksRewards: React.FC = () => {
   const visibleNavItems = isAdmin ? adminNavItems : playerNavItems;
 
   const renderContent = () => {
-    // Admin can ONLY access control-panel
     if (isAdmin) {
-      // Redirect admin to control-panel if they're on any other tab
+      if (activeTab === 'game-board') {
+        return <GameBoard isAdmin={isAdmin} />;
+      }
       if (activeTab !== 'control-panel') {
         navigate('/tasks-rewards/control-panel', { replace: true });
         return <QuestsPanel isAdmin={isAdmin} />;
