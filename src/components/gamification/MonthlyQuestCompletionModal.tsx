@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { MonthlyQuestSlot } from '@/hooks/useMonthlyQuestSlots';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface MonthlyQuestCompletionModalProps {
   open: boolean;
