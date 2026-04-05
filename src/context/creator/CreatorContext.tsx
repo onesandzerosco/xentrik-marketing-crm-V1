@@ -27,7 +27,7 @@ export const CreatorProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { addActivity } = useActivities();
   const { toast } = useToast();
   
-  const { addCreator, updateCreator, deleteCreator, isDeleting } = useCreatorActions(creators, setCreators, addActivity);
+  const { addCreator, updateCreator, deleteCreator, restoreCreator, isDeleting } = useCreatorActions(creators, setCreators, addActivity);
   const { filterCreators } = useCreatorFilters(creators);
 
   // Load creators from Supabase
