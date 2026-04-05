@@ -7,7 +7,7 @@ export interface TeamMember {
   email: string;
   role: "Admin" | "Manager" | "Employee";
   roles: TeamMemberRole[];
-  status: "Active" | "Inactive" | "Paused" | "Suspended";
+  status: "Active" | "Inactive" | "Paused" | "Suspended" | "Archived";
   teams: ("A" | "B" | "C")[];
   telegram?: string;
   phoneNumber?: string;
