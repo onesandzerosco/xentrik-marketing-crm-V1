@@ -10,7 +10,7 @@ export const useUserRoles = () => {
   const [selectedUser, setSelectedUser] = useState<Employee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isActionDialogOpen, setIsActionDialogOpen] = useState<boolean>(false);
-  const [pendingAction, setPendingAction] = useState<'suspend' | 'delete' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'archive' | 'delete' | null>(null);
   const { toast } = useToast();
 
   // Sort users by role priority: Admin > Manager > Employee
