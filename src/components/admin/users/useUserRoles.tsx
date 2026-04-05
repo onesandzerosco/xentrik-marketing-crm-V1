@@ -84,9 +84,9 @@ export const useUserRoles = () => {
     setIsModalOpen(true);
   };
 
-  const handleSuspend = (user: Employee) => {
+  const handleArchive = (user: Employee) => {
     setSelectedUser(user);
-    setPendingAction('suspend');
+    setPendingAction('archive');
     setIsActionDialogOpen(true);
   };
 
