@@ -176,7 +176,7 @@ const ChatterQuestsPage: React.FC = () => {
   // CRITICAL: We create "personal" assignments that are isolated per-user.
   // These are identified by having assigned_by = user.id (not null/admin ID).
   // Re-rolled quests get their own personal assignments that don't affect other players.
-  const ensureAssignmentForQuest = async (questId: string, questType: QuestType) => {
+  const ensureAssignmentForQuest = async (questId: string, questType: SlotQuestType) => {
     if (!user) return null;
 
     const period = (() => {
