@@ -48,16 +48,17 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [controlPanelTab, setControlPanelTab] = useState<'quests' | 'supply'>('quests');
   const [isCreating, setIsCreating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly' | 'shift'>('daily');
+  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
   const [newQuest, setNewQuest] = useState({
     title: '',
     description: '',
-    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly' | 'shift',
+    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly',
     xp_reward: 10,
     banana_reward: 5,
     progress_target: 1
   });
   const [selectedQuestForAssign, setSelectedQuestForAssign] = useState<string>('');
+  const [assignDepartment, setAssignDepartment] = useState<string>('all');
   const [assignCustomWord, setAssignCustomWord] = useState('');
   const [assignCustomWordDescription, setAssignCustomWordDescription] = useState('');
   
