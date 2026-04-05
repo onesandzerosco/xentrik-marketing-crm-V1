@@ -60,10 +60,10 @@ const DeleteCreatorDialog: React.FC<DeleteCreatorDialogProps> = ({
             {isDeleting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Deleting...
+                Archiving...
               </>
             ) : (
-              "Delete"
+              "Archive"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
