@@ -393,19 +393,6 @@ const ChatterQuestsPage: React.FC = () => {
               {monthlyStats.completed}/{monthlyStats.total}
             </Badge>
           </TabsTrigger>
-          {shift.myShift && (
-            <TabsTrigger 
-              value="shift" 
-              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
-            >
-              <Clock className="h-4 w-4" />
-              <span>Shift</span>
-              <Badge variant="outline" className="ml-1 text-xs bg-background/50">
-                {shift.myShift}
-              </Badge>
-            </TabsTrigger>
-          )}
         </TabsList>
 
         <TabsContent value="daily" className="mt-6">
