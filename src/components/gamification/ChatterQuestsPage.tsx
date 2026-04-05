@@ -17,6 +17,7 @@ import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-f
 import { getEffectiveGameDate } from '@/utils/gameDate';
 
 type QuestType = 'daily' | 'weekly' | 'monthly' | 'shift';
+type SlotQuestType = 'daily' | 'weekly' | 'monthly';
 
 type CompletionStatus = 'pending' | 'verified' | 'rejected' | null;
 
