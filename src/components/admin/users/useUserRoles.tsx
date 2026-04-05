@@ -102,21 +102,27 @@ export const useUserRoles = () => {
     try {
       setLoading(true);
       
-      if (pendingAction === 'suspend') {
-        // Update user status to Suspended
+      if (pendingAction === 'archive') {
+        // Archive: set status to Archived and if they have a creator record, set active=false
         const { error } = await supabase
           .from('profiles')
-          .update({ status: 'Suspended' })
+          .update({ status: 'Archived' })
           .eq('id', selectedUser.id);
 
         if (error) {
-          console.error('Suspend error:', error);
-          throw new Error(`Failed to suspend user: ${error.message}`);
+          console.error('Archive error:', error);
+          throw new Error(`Failed to archive user: ${error.message}`);
         }
+
+        // Also archive their creator record if it exists
+        await supabase
+          .from('creators')
+          .update({ active: false, updated_at: new Date().toISOString() })
+          .eq('id', selectedUser.id);
 
         toast({
           title: "Success",
-          description: `${selectedUser.name} has been suspended`,
+          description: `${selectedUser.name} has been archived`,
         });
       } else if (pendingAction === 'delete') {
         // Call the edge function to delete the user by email
