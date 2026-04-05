@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, ChevronDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, ChevronDown, Search } from 'lucide-react';
 import { useCreators } from '@/context/creator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +25,7 @@ export const AddModelDropdown: React.FC<AddModelDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [availableCreators, setAvailableCreators] = useState<typeof creators>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
