@@ -178,7 +178,7 @@ export const useUserRoles = () => {
     pendingAction,
     fetchUsers,
     handleEdit,
-    handleSuspend,
+    handleArchive,
     handleDelete,
     handleConfirmAction
   };

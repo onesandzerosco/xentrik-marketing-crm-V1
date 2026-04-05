@@ -88,7 +88,7 @@ const RoleBasedUsersList: React.FC = () => {
         onOpenChange={setIsActionDialogOpen}
         onConfirm={handleConfirmAction}
         employee={selectedUser}
-        action={pendingAction || 'suspend'}
+        action={pendingAction || 'archive'}
       />
     </>
   );

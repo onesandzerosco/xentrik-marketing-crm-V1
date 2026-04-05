@@ -44,7 +44,7 @@ const EmployeeActionsDialog: React.FC<EmployeeActionsDialogProps> = ({
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={onConfirm}
-            className={action === 'delete' ? "bg-destructive text-destructive-foreground" : "bg-amber-500 text-black"}
+            className={action === 'delete' ? "bg-destructive text-destructive-foreground" : "bg-amber-500 text-foreground"}
           >
             {actionText}
           </AlertDialogAction>
