@@ -25,6 +25,7 @@ import MonthlyQuestSlots from './MonthlyQuestSlots';
 import AdminDailyQuestSlots from './AdminDailyQuestSlots';
 import AdminWeeklyQuestSlots from './AdminWeeklyQuestSlots';
 import AdminMonthlyQuestSlots from './AdminMonthlyQuestSlots';
+import AdminShiftQuestSlots from './AdminShiftQuestSlots';
 
 interface QuestsPanelProps {
   isAdmin: boolean;
@@ -47,11 +48,11 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [controlPanelTab, setControlPanelTab] = useState<'quests' | 'supply'>('quests');
   const [isCreating, setIsCreating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly' | 'shift'>('daily');
   const [newQuest, setNewQuest] = useState({
     title: '',
     description: '',
-    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly',
+    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly' | 'shift',
     xp_reward: 10,
     banana_reward: 5,
     progress_target: 1
@@ -534,7 +535,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           <Label>Quest Type</Label>
                           <Select 
                             value={newQuest.quest_type}
-                            onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setNewQuest({ ...newQuest, quest_type: v })}
+                            onValueChange={(v: 'daily' | 'weekly' | 'monthly' | 'shift') => setNewQuest({ ...newQuest, quest_type: v })}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -543,6 +544,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                               <SelectItem value="daily">Daily</SelectItem>
                               <SelectItem value="weekly">Weekly</SelectItem>
                               <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="shift">Shift</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -724,6 +726,10 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                 <Crown className="h-4 w-4 text-purple-500" />
                 Monthly Quests
               </TabsTrigger>
+              <TabsTrigger value="shift" className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-green-500" />
+                Shift Quests
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="daily">
@@ -759,6 +765,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                 />
               )}
             </TabsContent>
+            <TabsContent value="shift">
+              <AdminShiftQuestSlots />
+            </TabsContent>
           </Tabs>
 
           {/* All Quests Table for Admin - Tabbed by Category */}
@@ -774,8 +783,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                     <TabsTrigger value="daily">Daily</TabsTrigger>
                     <TabsTrigger value="weekly">Weekly</TabsTrigger>
                     <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                    <TabsTrigger value="shift">Shift</TabsTrigger>
                   </TabsList>
-                  {['daily', 'weekly', 'monthly'].map(type => (
+                  {['daily', 'weekly', 'monthly', 'shift'].map(type => (
                     <TabsContent key={type} value={type}>
                       <Table>
                         <TableHeader>

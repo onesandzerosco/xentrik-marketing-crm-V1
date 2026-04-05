@@ -2,19 +2,22 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Trophy, Medal, Crown, Swords } from 'lucide-react';
+import { Loader2, Trophy, Medal, Crown, Swords, Clock } from 'lucide-react';
 import { useGamification, QuestAssignment } from '@/hooks/useGamification';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import QuestDetailsModal from './QuestDetailsModal';
 import QuestSlotCard from './QuestSlotCard';
+import ShiftQuestSlots from './ShiftQuestSlots';
 import { useDailyQuestSlots } from '@/hooks/useDailyQuestSlots';
 import { useWeeklyQuestSlots } from '@/hooks/useWeeklyQuestSlots';
 import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
+import { useShiftQuests } from '@/hooks/useShiftQuests';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { getEffectiveGameDate } from '@/utils/gameDate';
 
-type QuestType = 'daily' | 'weekly' | 'monthly';
+type QuestType = 'daily' | 'weekly' | 'monthly' | 'shift';
+type SlotQuestType = 'daily' | 'weekly' | 'monthly';
 
 type CompletionStatus = 'pending' | 'verified' | 'rejected' | null;
 
@@ -31,6 +34,7 @@ const ChatterQuestsPage: React.FC = () => {
   const daily = useDailyQuestSlots();
   const weekly = useWeeklyQuestSlots();
   const monthly = useMonthlyQuestSlots();
+  const shift = useShiftQuests();
 
   const [activeTab, setActiveTab] = useState<QuestType>('daily');
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
@@ -172,7 +176,7 @@ const ChatterQuestsPage: React.FC = () => {
   // CRITICAL: We create "personal" assignments that are isolated per-user.
   // These are identified by having assigned_by = user.id (not null/admin ID).
   // Re-rolled quests get their own personal assignments that don't affect other players.
-  const ensureAssignmentForQuest = async (questId: string, questType: QuestType) => {
+  const ensureAssignmentForQuest = async (questId: string, questType: SlotQuestType) => {
     if (!user) return null;
 
     const period = (() => {
@@ -241,7 +245,7 @@ const ChatterQuestsPage: React.FC = () => {
     return created as any as QuestAssignment;
   };
 
-  const handleViewQuest = async (questId: string, questType: QuestType) => {
+  const handleViewQuest = async (questId: string, questType: SlotQuestType) => {
     const assignment = await ensureAssignmentForQuest(questId, questType);
     if (!assignment) return;
 
@@ -287,7 +291,7 @@ const ChatterQuestsPage: React.FC = () => {
     );
   }
 
-  const renderSlotCards = (questType: QuestType) => {
+  const renderSlotCards = (questType: SlotQuestType) => {
     const slots = allSlots[questType];
 
     if (slots.length === 0) {
@@ -359,7 +363,7 @@ const ChatterQuestsPage: React.FC = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as QuestType)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-card/80 border border-border/50 h-auto p-1">
+        <TabsList className="grid w-full grid-cols-4 bg-card/80 border border-border/50 h-auto p-1">
           <TabsTrigger 
             value="daily" 
             className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
@@ -393,6 +397,19 @@ const ChatterQuestsPage: React.FC = () => {
               {monthlyStats.completed}/{monthlyStats.total}
             </Badge>
           </TabsTrigger>
+          {shift.myShift && (
+            <TabsTrigger 
+              value="shift" 
+              className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 flex items-center gap-2 py-3"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
+              <Clock className="h-4 w-4" />
+              <span>Shift</span>
+              <Badge variant="outline" className="ml-1 text-xs bg-background/50">
+                {shift.myShift}
+              </Badge>
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="daily" className="mt-6">
@@ -412,6 +429,12 @@ const ChatterQuestsPage: React.FC = () => {
             {renderSlotCards('monthly')}
           </div>
         </TabsContent>
+
+        {shift.myShift && (
+          <TabsContent value="shift" className="mt-6">
+            <ShiftQuestSlots />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Quest Details Modal */}
