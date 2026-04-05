@@ -38,6 +38,7 @@ const AdminDailyQuestSlots: React.FC<AdminDailyQuestSlotsProps> = ({ onRemoveAss
           quest_id,
           start_date,
           end_date,
+          department,
           quest:gamification_quests (*)
         `)
         .eq('start_date', today)
