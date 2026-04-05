@@ -81,7 +81,10 @@ const AdminShiftOverview: React.FC = () => {
   }
 
   const getShiftAssignments = (shift: string) => {
-    return assignments.filter(a => a.department === shift);
+    return assignments.filter(a => {
+      const effectiveDept = a.department || '2PM';
+      return effectiveDept === shift;
+    });
   };
 
   const typeOrder = { daily: 0, weekly: 1, monthly: 2 };
