@@ -47,11 +47,11 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
   const [controlPanelTab, setControlPanelTab] = useState<'quests' | 'supply'>('quests');
   const [isCreating, setIsCreating] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+  const [selectedQuestType, setSelectedQuestType] = useState<'daily' | 'weekly' | 'monthly' | 'shift'>('daily');
   const [newQuest, setNewQuest] = useState({
     title: '',
     description: '',
-    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly',
+    quest_type: 'daily' as 'daily' | 'weekly' | 'monthly' | 'shift',
     xp_reward: 10,
     banana_reward: 5,
     progress_target: 1
