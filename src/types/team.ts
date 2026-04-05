@@ -35,6 +35,6 @@ export type TeamMemberFormValues = {
 export interface TeamFilters {
   roles: TeamMemberRole[];
   teams: ("A" | "B" | "C")[];
-  status: ("Active" | "Inactive" | "Paused" | "Suspended" | "Archived")[];
+  status: ("Active" | "Inactive" | "Paused")[];
   searchQuery: string;
 }
