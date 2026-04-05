@@ -434,10 +434,74 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
           )}
         </div>
 
+        {/* Batch Upload Button */}
+        {emptySlotCount > 0 && pendingFiles.length === 0 && !isBatchUploading && (
+          <div>
+            <label className="cursor-pointer">
+              <Button variant="outline" className="w-full gap-2" asChild>
+                <span>
+                  <Upload className="h-4 w-4" />
+                  Select Files ({slots.filter(s => s.attachment_url === null).length} slots remaining)
+                </span>
+              </Button>
+              <Input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleMultiFileSelect}
+              />
+            </label>
+          </div>
+        )}
+
+        {/* Pending Files Preview */}
+        {pendingFiles.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-foreground">
+              {pendingFiles.length} file{pendingFiles.length > 1 ? 's' : ''} selected
+            </p>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {pendingFiles.map((file, i) => (
+                <div key={i} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileImage className="h-4 w-4 text-primary shrink-0" />
+                    <span className="text-sm text-foreground truncate">{file.name}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 shrink-0"
+                    onClick={() => removePendingFile(i)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={uploadPendingFiles}
+                disabled={isBatchUploading}
+                className="flex-1 gap-2"
+              >
+                {isBatchUploading ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
+                ) : (
+                  <><Upload className="h-4 w-4" /> Upload {pendingFiles.length} file{pendingFiles.length > 1 ? 's' : ''}</>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setPendingFiles([])}>
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Upload Slots Grid */}
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Upload {progressTarget} screenshot{progressTarget > 1 ? 's' : ''} as proof of completing the quest
+            {filledSlots}/{progressTarget} screenshot{progressTarget > 1 ? 's' : ''} uploaded
           </p>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
