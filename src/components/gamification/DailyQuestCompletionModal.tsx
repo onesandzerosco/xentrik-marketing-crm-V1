@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface DailyQuestCompletionModalProps {
   open: boolean;
