@@ -22,9 +22,7 @@ import QuestReviewModal from './QuestReviewModal';
 import DailyQuestSlots from './DailyQuestSlots';
 import WeeklyQuestSlots from './WeeklyQuestSlots';
 import MonthlyQuestSlots from './MonthlyQuestSlots';
-import AdminDailyQuestSlots from './AdminDailyQuestSlots';
-import AdminWeeklyQuestSlots from './AdminWeeklyQuestSlots';
-import AdminMonthlyQuestSlots from './AdminMonthlyQuestSlots';
+import AdminControlPanelShiftView from './AdminControlPanelShiftView';
 
 
 interface QuestsPanelProps {
@@ -728,57 +726,45 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
             </Card>
           )}
 
-          {/* Quest Category Sub-tabs */}
-          <Tabs defaultValue="daily" className="w-full">
-            <TabsList className="w-auto justify-start mb-4">
-              <TabsTrigger value="daily" className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-yellow-500" />
-                Daily Quests
-              </TabsTrigger>
-              <TabsTrigger value="weekly" className="flex items-center gap-2">
-                <Medal className="h-4 w-4 text-blue-500" />
-                Weekly Quests
-              </TabsTrigger>
-              <TabsTrigger value="monthly" className="flex items-center gap-2">
-                <Crown className="h-4 w-4 text-purple-500" />
-                Monthly Quests
-              </TabsTrigger>
-            </TabsList>
+          {/* Quest display: Admin sees shift-based grouping, Players see type tabs */}
+          {isAdmin ? (
+            <AdminControlPanelShiftView 
+              onRemoveAssignment={handleRemoveAssignmentByQuestId}
+            />
+          ) : (
+            <Tabs defaultValue="daily" className="w-full">
+              <TabsList className="w-auto justify-start mb-4">
+                <TabsTrigger value="daily" className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  Daily Quests
+                </TabsTrigger>
+                <TabsTrigger value="weekly" className="flex items-center gap-2">
+                  <Medal className="h-4 w-4 text-blue-500" />
+                  Weekly Quests
+                </TabsTrigger>
+                <TabsTrigger value="monthly" className="flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-purple-500" />
+                  Monthly Quests
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="daily">
-              {isAdmin ? (
-                <AdminDailyQuestSlots 
-                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
-                />
-              ) : (
+              <TabsContent value="daily">
                 <DailyQuestSlots 
                   onQuestComplete={handleQuestSubmitComplete} 
                 />
-              )}
-            </TabsContent>
-            <TabsContent value="weekly">
-              {isAdmin ? (
-                <AdminWeeklyQuestSlots 
-                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
-                />
-              ) : (
+              </TabsContent>
+              <TabsContent value="weekly">
                 <WeeklyQuestSlots 
                   onQuestComplete={handleQuestSubmitComplete} 
                 />
-              )}
-            </TabsContent>
-            <TabsContent value="monthly">
-              {isAdmin ? (
-                <AdminMonthlyQuestSlots 
-                  onRemoveAssignment={handleRemoveAssignmentByQuestId}
-                />
-              ) : (
+              </TabsContent>
+              <TabsContent value="monthly">
                 <MonthlyQuestSlots 
                   onQuestComplete={handleQuestSubmitComplete} 
                 />
-              )}
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+            </Tabs>
+          )}
 
           {/* All Quests Table for Admin - Tabbed by Category */}
           {isAdmin && (
