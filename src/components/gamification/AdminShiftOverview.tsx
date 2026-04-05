@@ -104,7 +104,7 @@ const AdminShiftOverview: React.FC = () => {
 
                 {shiftAssignments.length === 0 ? (
                   <p className="text-muted-foreground text-sm italic py-4 text-center">
-                    No tasks given by shiftlead yet
+                    No tasks assigned yet
                   </p>
                 ) : (
                   <div className="space-y-3">

@@ -229,7 +229,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           Game Board
         </h1>
         <p className="text-muted-foreground text-base mt-1">
-          Welcome back, Chatter. Status report follows.
+          {isAdmin ? 'Admin overview — shift task assignments.' : 'Welcome back, Chatter. Status report follows.'}
         </p>
       </div>
 
