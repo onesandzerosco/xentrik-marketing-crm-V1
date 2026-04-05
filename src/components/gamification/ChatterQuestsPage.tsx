@@ -33,6 +33,7 @@ const ChatterQuestsPage: React.FC = () => {
   const daily = useDailyQuestSlots();
   const weekly = useWeeklyQuestSlots();
   const monthly = useMonthlyQuestSlots();
+  const shift = useShiftQuests();
 
   const [activeTab, setActiveTab] = useState<QuestType>('daily');
   const [selectedAssignment, setSelectedAssignment] = useState<QuestAssignment | null>(null);
