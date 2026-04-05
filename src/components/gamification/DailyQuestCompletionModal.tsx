@@ -175,6 +175,9 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         console.error('Error marking slot completed:', slotError);
       }
 
+      // Notify admins (fire-and-forget)
+      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'daily');
+
       toast({
         title: "Quest Submitted! 🎉",
         description: "Your completion is pending admin review.",
