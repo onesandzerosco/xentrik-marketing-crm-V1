@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { WeeklyQuestSlot } from '@/hooks/useWeeklyQuestSlots';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface WeeklyQuestCompletionModalProps {
   open: boolean;
