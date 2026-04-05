@@ -624,7 +624,20 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                             </SelectContent>
                           </Select>
                         </div>
-                        {selectedQuestForAssign && (() => {
+                        <div className="space-y-2">
+                          <Label>Department</Label>
+                          <Select value={assignDepartment} onValueChange={setAssignDepartment}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Departments</SelectItem>
+                              <SelectItem value="6AM">6AM</SelectItem>
+                              <SelectItem value="2PM">2PM</SelectItem>
+                              <SelectItem value="10PM">10PM</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <p className="text-xs text-muted-foreground">Choose which department sees this quest</p>
                           const selectedQuest = quests.find(q => q.id === selectedQuestForAssign);
                           const isWordQuest = selectedQuest?.title?.toLowerCase().includes('word of the day') ||
                                               selectedQuest?.game_name?.toLowerCase().includes('ability rotation') ||
