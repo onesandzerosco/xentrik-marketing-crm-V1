@@ -486,9 +486,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
           </Card>
         </div>
       </div>
-
-      {/* Admin Shift Overview */}
-      {isAdmin && <AdminShiftOverview />}
     </div>
   );
 };
