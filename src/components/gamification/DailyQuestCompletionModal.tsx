@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface DailyQuestCompletionModalProps {
   open: boolean;
@@ -176,7 +176,9 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'daily');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'daily')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

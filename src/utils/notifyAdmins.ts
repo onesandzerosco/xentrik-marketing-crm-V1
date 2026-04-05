@@ -4,6 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
  * Notify all admin users about a quest submission.
  * Inserts a notification row for each admin.
  */
+/**
+ * Resolve a user's display name from their profile.
+ * Returns the profile name, or the provided fallback.
+ */
+export const resolveDisplayName = async (userId: string, fallback: string): Promise<string> => {
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', userId)
+      .single();
+    return data?.name || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export const notifyAdminsOfQuestSubmission = async (
   submitterName: string,
   questTitle: string,

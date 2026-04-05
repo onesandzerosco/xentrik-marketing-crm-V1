@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { QuestAssignment } from '@/hooks/useGamification';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface QuestEvidenceUploadProps {
   assignment: QuestAssignment;
@@ -238,7 +238,9 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 
       // Notify admins (fire-and-forget)
       const questType = (quest.quest_type || 'daily') as 'daily' | 'weekly' | 'monthly';
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, questType);
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, questType)
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

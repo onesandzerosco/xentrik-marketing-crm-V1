@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { MonthlyQuestSlot } from '@/hooks/useMonthlyQuestSlots';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface MonthlyQuestCompletionModalProps {
   open: boolean;
@@ -169,7 +169,9 @@ const MonthlyQuestCompletionModal: React.FC<MonthlyQuestCompletionModalProps> = 
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'monthly');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'monthly')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",

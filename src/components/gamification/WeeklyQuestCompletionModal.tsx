@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { WeeklyQuestSlot } from '@/hooks/useWeeklyQuestSlots';
 import { format, startOfWeek, endOfWeek } from 'date-fns';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface WeeklyQuestCompletionModalProps {
   open: boolean;
@@ -169,7 +169,9 @@ const WeeklyQuestCompletionModal: React.FC<WeeklyQuestCompletionModalProps> = ({
       }
 
       // Notify admins (fire-and-forget)
-      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'weekly');
+      resolveDisplayName(user.id, user.email || 'A chatter').then(name =>
+        notifyAdminsOfQuestSubmission(name, quest.title, 'weekly')
+      );
 
       toast({
         title: "Quest Submitted! 🎉",
