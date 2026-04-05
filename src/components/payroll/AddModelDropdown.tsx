@@ -25,6 +25,7 @@ export const AddModelDropdown: React.FC<AddModelDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [availableCreators, setAvailableCreators] = useState<typeof creators>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
