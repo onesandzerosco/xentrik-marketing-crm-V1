@@ -87,21 +87,10 @@ const AdminShiftOverview: React.FC = () => {
   const typeOrder = { daily: 0, weekly: 1, monthly: 2 };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <div className="w-1.5 h-7 bg-primary rounded-full" />
-        <h2
-          className="text-2xl font-bold uppercase tracking-wide"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
-        >
-          Shift Task Overview
-        </h2>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {SHIFTS.map(shift => {
-          const shiftAssignments = getShiftAssignments(shift)
-            .sort((a, b) => (typeOrder[a.quest.quest_type as keyof typeof typeOrder] ?? 9) - (typeOrder[b.quest.quest_type as keyof typeof typeOrder] ?? 9));
+    <div className="space-y-4">
+      {SHIFTS.map(shift => {
+        const shiftAssignments = getShiftAssignments(shift)
+          .sort((a, b) => (typeOrder[a.quest.quest_type as keyof typeof typeOrder] ?? 9) - (typeOrder[b.quest.quest_type as keyof typeof typeOrder] ?? 9));
 
           return (
             <Card key={shift} className="bg-card/80 border-border/50">
