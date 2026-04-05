@@ -459,9 +459,18 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {models.map((model) => (
+            {filteredModels.map((model) => (
               <TableRow key={model.model_name}>
-                <TableCell className="font-medium">{model.model_name}</TableCell>
+                <TableCell className="font-medium max-w-[160px]">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="block truncate">{model.model_name}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>{model.model_name}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
                 {DAYS_OF_WEEK.map(day => (
                   <TableCell key={day.value} className="text-center">
                     <Input
