@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { MonthlyQuestSlot } from '@/hooks/useMonthlyQuestSlots';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
 
 interface MonthlyQuestCompletionModalProps {
   open: boolean;
@@ -166,6 +167,9 @@ const MonthlyQuestCompletionModal: React.FC<MonthlyQuestCompletionModalProps> = 
       if (slotError) {
         console.error('Error marking slot completed:', slotError);
       }
+
+      // Notify admins (fire-and-forget)
+      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'monthly');
 
       toast({
         title: "Quest Submitted! 🎉",

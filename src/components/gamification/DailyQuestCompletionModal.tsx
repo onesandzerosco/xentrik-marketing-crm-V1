@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DailyQuestSlot } from '@/hooks/useDailyQuestSlots';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
+import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
 
 interface DailyQuestCompletionModalProps {
   open: boolean;
@@ -173,6 +174,9 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
       if (slotError) {
         console.error('Error marking slot completed:', slotError);
       }
+
+      // Notify admins (fire-and-forget)
+      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, 'daily');
 
       toast({
         title: "Quest Submitted! 🎉",

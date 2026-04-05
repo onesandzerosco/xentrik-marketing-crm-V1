@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { QuestAssignment } from '@/hooks/useGamification';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
+import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
 
 interface QuestEvidenceUploadProps {
   assignment: QuestAssignment;
@@ -234,6 +235,10 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
         }
         throw new Error('Failed to submit completion');
       }
+
+      // Notify admins (fire-and-forget)
+      const questType = (quest.quest_type || 'daily') as 'daily' | 'weekly' | 'monthly';
+      notifyAdminsOfQuestSubmission(user.email || 'A chatter', quest.title, questType);
 
       toast({
         title: "Quest Submitted! 🎉",

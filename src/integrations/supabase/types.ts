@@ -1328,6 +1328,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          read: boolean
+          recipient_id: string
+          related_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          recipient_id: string
+          related_id?: string | null
+          title: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          recipient_id?: string
+          related_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       onboarding_submissions: {
         Row: {
           data: Json
