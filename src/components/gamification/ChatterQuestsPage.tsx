@@ -8,11 +8,9 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import QuestDetailsModal from './QuestDetailsModal';
 import QuestSlotCard from './QuestSlotCard';
-import ShiftQuestSlots from './ShiftQuestSlots';
 import { useDailyQuestSlots } from '@/hooks/useDailyQuestSlots';
 import { useWeeklyQuestSlots } from '@/hooks/useWeeklyQuestSlots';
 import { useMonthlyQuestSlots } from '@/hooks/useMonthlyQuestSlots';
-import { useShiftQuests } from '@/hooks/useShiftQuests';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { getEffectiveGameDate } from '@/utils/gameDate';
 
