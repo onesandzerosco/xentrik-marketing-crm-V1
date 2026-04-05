@@ -124,6 +124,26 @@ const DailyQuestCompletionModal: React.FC<DailyQuestCompletionModalProps> = ({
         assignmentId = newAssignment.id;
       }
 
+      // Save progress rows for each uploaded file (mirrors QuestEvidenceUpload pattern)
+      if (attachmentUrls.length > 0) {
+        for (let i = 0; i < attachmentUrls.length; i++) {
+          const { error: progressError } = await supabase
+            .from('gamification_quest_progress')
+            .upsert({
+              quest_assignment_id: assignmentId,
+              chatter_id: user.id,
+              slot_number: i,
+              attachment_url: attachmentUrls[i],
+            }, {
+              onConflict: 'quest_assignment_id,chatter_id,slot_number'
+            });
+
+          if (progressError) {
+            console.error('Error saving progress row:', progressError);
+          }
+        }
+      }
+
       // Now create the completion record
       const { error: completionError } = await supabase
         .from('gamification_quest_completions')

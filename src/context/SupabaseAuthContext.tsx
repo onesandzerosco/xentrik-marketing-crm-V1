@@ -290,7 +290,7 @@ export const SupabaseAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       // Force signOut which will invalidate all sessions
       try {
-        const { error } = await supabase.auth.signOut({ scope: 'global' });
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
         
         if (error) {
           console.error("Supabase signOut error:", error);
