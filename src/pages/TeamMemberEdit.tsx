@@ -6,7 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
-import { TeamMemberRole } from '@/types/employee';
+import { TeamMemberRole, EmployeeStatus } from '@/types/employee';
 import TeamMemberEditHeader from '@/components/team/TeamMemberEditHeader';
 import TeamMemberEditForm from '@/components/team/TeamMemberEditForm';
 import { teamMemberFormSchema, TeamMemberFormValues } from '@/schemas/teamMemberSchema';
