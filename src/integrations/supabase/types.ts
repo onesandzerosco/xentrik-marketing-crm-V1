@@ -995,6 +995,82 @@ export type Database = {
         }
         Relationships: []
       }
+      gamification_shift_quest_assignments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          quest_id: string
+          shift: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          quest_id: string
+          shift: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          quest_id?: string
+          shift?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_shift_quest_assignments_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_quests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gamification_shift_quest_completions: {
+        Row: {
+          attachments: string[] | null
+          chatter_id: string
+          id: string
+          shift_assignment_id: string
+          status: string
+          submitted_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          chatter_id: string
+          id?: string
+          shift_assignment_id: string
+          status?: string
+          submitted_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          attachments?: string[] | null
+          chatter_id?: string
+          id?: string
+          shift_assignment_id?: string
+          status?: string
+          submitted_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gamification_shift_quest_completions_shift_assignment_id_fkey"
+            columns: ["shift_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_shift_quest_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gamification_shop_items: {
         Row: {
           banana_cost: number
