@@ -514,7 +514,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                 )}
               </TableRow>
             ))}
-            {models.length > 0 && (
+            {filteredModels.length > 0 && (
               <TableRow className="border-t-2">
                 <TableCell className="font-bold">Daily Total</TableCell>
                 {DAYS_OF_WEEK.map(day => (
