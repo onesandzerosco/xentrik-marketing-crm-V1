@@ -81,7 +81,7 @@ const UserRolesTable: React.FC<UserRolesTableProps> = ({
                 className={
                   user.status === "Active" ? "bg-green-500" : 
                   user.status === "Paused" ? "bg-amber-500" : 
-                  user.status === "Suspended" ? "bg-orange-500" :
+                  user.status === "Archived" ? "bg-orange-500" :
                   "bg-red-500"
                 }
               >
