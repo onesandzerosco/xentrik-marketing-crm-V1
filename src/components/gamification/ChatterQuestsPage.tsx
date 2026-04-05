@@ -291,7 +291,7 @@ const ChatterQuestsPage: React.FC = () => {
     );
   }
 
-  const renderSlotCards = (questType: QuestType) => {
+  const renderSlotCards = (questType: SlotQuestType) => {
     const slots = allSlots[questType];
 
     if (slots.length === 0) {
