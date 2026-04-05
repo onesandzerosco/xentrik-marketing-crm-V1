@@ -534,7 +534,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                           <Label>Quest Type</Label>
                           <Select 
                             value={newQuest.quest_type}
-                            onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setNewQuest({ ...newQuest, quest_type: v })}
+                            onValueChange={(v: 'daily' | 'weekly' | 'monthly' | 'shift') => setNewQuest({ ...newQuest, quest_type: v })}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -543,6 +543,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                               <SelectItem value="daily">Daily</SelectItem>
                               <SelectItem value="weekly">Weekly</SelectItem>
                               <SelectItem value="monthly">Monthly</SelectItem>
+                              <SelectItem value="shift">Shift</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
