@@ -150,7 +150,7 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
       if (error) throw error;
 
       toast({ title: "Success", description: "Quest created successfully!" });
-      setNewQuest({ title: '', description: '', quest_type: 'daily', xp_reward: 10, banana_reward: 5, progress_target: 1 });
+      setNewQuest({ title: '', description: '', quest_type: 'daily' as 'daily' | 'weekly' | 'monthly', xp_reward: 10, banana_reward: 5, progress_target: 1 });
       refetch.quests();
     } catch (error) {
       console.error('Error creating quest:', error);
