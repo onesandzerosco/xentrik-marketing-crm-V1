@@ -245,7 +245,7 @@ const ChatterQuestsPage: React.FC = () => {
     return created as any as QuestAssignment;
   };
 
-  const handleViewQuest = async (questId: string, questType: QuestType) => {
+  const handleViewQuest = async (questId: string, questType: SlotQuestType) => {
     const assignment = await ensureAssignmentForQuest(questId, questType);
     if (!assignment) return;
 
