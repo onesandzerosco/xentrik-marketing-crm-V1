@@ -12,6 +12,7 @@ const CreatorContext = createContext<CreatorContextType>({
   addCreator: async () => undefined,
   updateCreator: () => {},
   deleteCreator: async () => false,
+  restoreCreator: async () => false,
   isDeleting: false,
   getCreator: () => undefined,
   getCreatorStats: () => undefined,
