@@ -41,6 +41,7 @@ const AdminMonthlyQuestSlots: React.FC<AdminMonthlyQuestSlotsProps> = ({ onRemov
           quest_id,
           start_date,
           end_date,
+          department,
           quest:gamification_quests (*)
         `)
         .lte('start_date', todayStr)
