@@ -791,9 +791,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                     <TabsTrigger value="daily">Daily</TabsTrigger>
                     <TabsTrigger value="weekly">Weekly</TabsTrigger>
                     <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                    <TabsTrigger value="shift">Shift</TabsTrigger>
-                  </TabsList>
-                  {['daily', 'weekly', 'monthly', 'shift'].map(type => (
                     <TabsContent key={type} value={type}>
                       <Table>
                         <TableHeader>
