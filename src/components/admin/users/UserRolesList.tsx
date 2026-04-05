@@ -20,7 +20,7 @@ const UserRolesList: React.FC = () => {
     pendingAction,
     fetchUsers,
     handleEdit,
-    handleSuspend,
+    handleArchive,
     handleDelete,
     handleConfirmAction
   } = useUserRoles();
