@@ -16,6 +16,7 @@ interface AdminAssignment {
   quest_id: string;
   start_date: string;
   end_date: string;
+  department?: string | null;
   quest?: Quest;
 }
 
