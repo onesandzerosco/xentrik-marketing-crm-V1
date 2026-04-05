@@ -103,10 +103,10 @@ export const useUserRoles = () => {
       setLoading(true);
       
       if (pendingAction === 'archive') {
-        // Archive: set status to Archived and if they have a creator record, set active=false
+        // Archive: set creators.active = false (don't change profiles.status — DB constraint only allows Active/Inactive/Paused)
         const { error } = await supabase
-          .from('profiles')
-          .update({ status: 'Archived' })
+          .from('creators')
+          .update({ active: false, updated_at: new Date().toISOString() })
           .eq('id', selectedUser.id);
 
         if (error) {
@@ -114,10 +114,10 @@ export const useUserRoles = () => {
           throw new Error(`Failed to archive user: ${error.message}`);
         }
 
-        // Also archive their creator record if it exists
+        // Set profile status to Inactive (valid DB value) to reflect archived state
         await supabase
-          .from('creators')
-          .update({ active: false, updated_at: new Date().toISOString() })
+          .from('profiles')
+          .update({ status: 'Inactive' })
           .eq('id', selectedUser.id);
 
         toast({
