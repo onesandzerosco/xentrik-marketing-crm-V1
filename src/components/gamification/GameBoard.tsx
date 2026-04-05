@@ -339,77 +339,77 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sortedQuestCards.map(card => {
-              const config = questTypeConfig[card.questType];
-              const IconComponent = config.icon;
-              const isCompleted = card.completed;
-              const progressTarget = card.quest?.progress_target || 1;
-              // Use actual progress from questProgress map, or full if completed
-              const currentProgress = isCompleted ? progressTarget : (questProgress[card.questId] || 0);
-              
-              return (
-                <Card 
-                  key={card.id} 
-                  className={`bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 ${isCompleted ? 'opacity-60' : ''}`}
-                >
-                  <CardContent className="p-4">
-                    {/* Type Badge & Rewards */}
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs uppercase tracking-wider ${config.badgeClass}`}
-                        style={{ fontFamily: "'Orbitron', sans-serif" }}
-                      >
-                        <IconComponent className="h-3 w-3 mr-1" />
-                        {config.label}
-                      </Badge>
-                      <div className="flex items-center gap-2">
-                        <span 
-                          className="text-sm font-bold text-primary"
+          {isAdmin ? (
+            <AdminShiftOverview />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sortedQuestCards.map(card => {
+                const config = questTypeConfig[card.questType];
+                const IconComponent = config.icon;
+                const isCompleted = card.completed;
+                const progressTarget = card.quest?.progress_target || 1;
+                const currentProgress = isCompleted ? progressTarget : (questProgress[card.questId] || 0);
+                
+                return (
+                  <Card 
+                    key={card.id} 
+                    className={`bg-card/80 border-border/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50 ${isCompleted ? 'opacity-60' : ''}`}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs uppercase tracking-wider ${config.badgeClass}`}
                           style={{ fontFamily: "'Orbitron', sans-serif" }}
                         >
-                          {card.quest?.xp_reward} XP
-                        </span>
-                        <span className="text-sm text-yellow-500">🍌{card.quest?.banana_reward}</span>
+                          <IconComponent className="h-3 w-3 mr-1" />
+                          {config.label}
+                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <span 
+                            className="text-sm font-bold text-primary"
+                            style={{ fontFamily: "'Orbitron', sans-serif" }}
+                          >
+                            {card.quest?.xp_reward} XP
+                          </span>
+                          <span className="text-sm text-yellow-500">🍌{card.quest?.banana_reward}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Game Name */}
-                    <h3 
-                      className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
-                      style={{ fontFamily: "'Orbitron', sans-serif" }}
-                    >
-                      {card.quest?.game_name || card.quest?.title}
-                    </h3>
+                      <h3 
+                        className="text-lg font-bold uppercase text-foreground leading-tight mb-3"
+                        style={{ fontFamily: "'Orbitron', sans-serif" }}
+                      >
+                        {card.quest?.game_name || card.quest?.title}
+                      </h3>
 
-                    {/* Progress with target from DB */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
-                        <span>Progress</span>
-                        <span className="flex items-center gap-2">
-                          {currentProgress} / {progressTarget}
-                          {isCompleted && <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0">✓</Badge>}
-                        </span>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground uppercase">
+                          <span>Progress</span>
+                          <span className="flex items-center gap-2">
+                            {currentProgress} / {progressTarget}
+                            {isCompleted && <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0">✓</Badge>}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={(currentProgress / progressTarget) * 100} 
+                          className="h-2" 
+                        />
                       </div>
-                      <Progress 
-                        value={(currentProgress / progressTarget) * 100} 
-                        className="h-2" 
-                      />
-                    </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {sortedQuestCards.length === 0 && (
+                <Card className="bg-card/80 border-border/50 col-span-2">
+                  <CardContent className="p-8 text-center">
+                    <p className="text-muted-foreground">No active directives at this time.</p>
                   </CardContent>
                 </Card>
-              );
-            })}
-
-            {sortedQuestCards.length === 0 && (
-              <Card className="bg-card/80 border-border/50 col-span-2">
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No active directives at this time.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Leaderboard - Right Column (Full) */}
