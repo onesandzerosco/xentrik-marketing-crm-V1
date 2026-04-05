@@ -51,6 +51,7 @@ const TasksRewards: React.FC = () => {
   // Admin ONLY sees Control Panel
   // Non-admin sees Game Board, Quests, Supply Depot
   const adminNavItems = [
+    { id: 'game-board', label: 'Game Board', icon: Gamepad2, path: '/tasks-rewards' },
     { id: 'control-panel', label: 'Control Panel', icon: Settings, path: '/tasks-rewards/control-panel' },
   ];
 
