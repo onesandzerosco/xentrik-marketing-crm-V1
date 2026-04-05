@@ -776,9 +776,6 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                 />
               )}
             </TabsContent>
-            <TabsContent value="shift">
-              <AdminShiftQuestSlots />
-            </TabsContent>
           </Tabs>
 
           {/* All Quests Table for Admin - Tabbed by Category */}
