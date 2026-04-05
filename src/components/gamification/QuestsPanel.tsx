@@ -22,9 +22,7 @@ import QuestReviewModal from './QuestReviewModal';
 import DailyQuestSlots from './DailyQuestSlots';
 import WeeklyQuestSlots from './WeeklyQuestSlots';
 import MonthlyQuestSlots from './MonthlyQuestSlots';
-import AdminDailyQuestSlots from './AdminDailyQuestSlots';
-import AdminWeeklyQuestSlots from './AdminWeeklyQuestSlots';
-import AdminMonthlyQuestSlots from './AdminMonthlyQuestSlots';
+import AdminControlPanelShiftView from './AdminControlPanelShiftView';
 
 
 interface QuestsPanelProps {
