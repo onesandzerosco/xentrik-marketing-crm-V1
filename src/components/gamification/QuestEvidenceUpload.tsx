@@ -157,11 +157,102 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
     }
   };
 
+  // Handle selecting multiple files at once
+  const handleMultiFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const emptyCount = slots.filter(s => s.attachment_url === null).length - pendingFiles.length;
+    const files = Array.from(e.target.files).slice(0, emptyCount);
+    
+    if (files.length === 0) {
+      toast({ title: "No empty slots", description: "All slots are already filled.", variant: "destructive" });
+      return;
+    }
+    
+    setPendingFiles(prev => [...prev, ...files].slice(0, slots.filter(s => s.attachment_url === null).length));
+    // Reset input so same files can be re-selected
+    e.target.value = '';
+  };
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPendingFiles = async () => {
+    if (!user || pendingFiles.length === 0) return;
+    
+    setIsBatchUploading(true);
+    
+    // Find empty slot indices
+    const emptyIndices = slots
+      .map((s, i) => s.attachment_url === null ? i : -1)
+      .filter(i => i >= 0);
+    
+    let successCount = 0;
+    
+    for (let i = 0; i < pendingFiles.length && i < emptyIndices.length; i++) {
+      const slotIndex = emptyIndices[i];
+      const file = pendingFiles[i];
+      
+      // Mark slot as uploading
+      setSlots(prev => prev.map((s, idx) => idx === slotIndex ? { ...s, isUploading: true } : s));
+      
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${assignment.id}/slot_${slotIndex}_${Date.now()}_${i}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('quest-submissions')
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('quest-submissions')
+          .getPublicUrl(fileName);
+
+        const publicUrl = urlData.publicUrl;
+
+        const { error: dbError } = await supabase
+          .from('gamification_quest_progress')
+          .upsert({
+            quest_assignment_id: assignment.id,
+            chatter_id: user.id,
+            slot_number: slotIndex,
+            attachment_url: publicUrl,
+          }, {
+            onConflict: 'quest_assignment_id,chatter_id,slot_number'
+          });
+
+        if (dbError) throw dbError;
+
+        setSlots(prev => prev.map((s, idx) => 
+          idx === slotIndex ? { ...s, attachment_url: publicUrl, isUploading: false } : s
+        ));
+        successCount++;
+      } catch (error: any) {
+        console.error(`Upload error for slot ${slotIndex}:`, error);
+        setSlots(prev => prev.map((s, idx) => 
+          idx === slotIndex ? { ...s, isUploading: false } : s
+        ));
+      }
+    }
+    
+    setPendingFiles([]);
+    setIsBatchUploading(false);
+    
+    if (successCount > 0) {
+      toast({
+        title: `${successCount} file${successCount > 1 ? 's' : ''} uploaded!`,
+        description: `Progress: ${filledSlots + successCount}/${progressTarget}`,
+      });
+    }
+  };
+
   const handleRemoveSlot = async (slotIndex: number) => {
     if (!user) return;
 
     try {
-      // Delete from database
       const { error } = await supabase
         .from('gamification_quest_progress')
         .delete()
@@ -171,14 +262,11 @@ const QuestEvidenceUpload: React.FC<QuestEvidenceUploadProps> = ({
 
       if (error) throw error;
 
-      // Update local state
       setSlots(prev => prev.map((s, i) => 
         i === slotIndex ? { ...s, attachment_url: null } : s
       ));
 
-      toast({
-        title: "Screenshot removed",
-      });
+      toast({ title: "Screenshot removed" });
     } catch (error: any) {
       console.error('Remove error:', error);
       toast({
