@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Trophy, Medal, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getEffectiveGameDate } from '@/utils/gameDate';
+import AdminQuestProgressModal from './AdminQuestProgressModal';
 
 const SHIFTS = ['6AM', '2PM', '10PM'] as const;
 
@@ -44,6 +45,11 @@ const AdminShiftOverview: React.FC = () => {
   const [assignments, setAssignments] = useState<AssignmentWithQuest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const today = useMemo(() => getEffectiveGameDate(), []);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<AssignmentWithQuest | null>(null);
+  const [selectedShift, setSelectedShift] = useState<string>('');
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -89,11 +95,18 @@ const AdminShiftOverview: React.FC = () => {
 
   const typeOrder = { daily: 0, weekly: 1, monthly: 2 };
 
+  const handleCardClick = (assignment: AssignmentWithQuest, shift: string) => {
+    setSelectedAssignment(assignment);
+    setSelectedShift(shift);
+    setModalOpen(true);
+  };
+
   return (
-    <div className="space-y-4">
-      {SHIFTS.map(shift => {
-        const shiftAssignments = getShiftAssignments(shift)
-          .sort((a, b) => (typeOrder[a.quest.quest_type as keyof typeof typeOrder] ?? 9) - (typeOrder[b.quest.quest_type as keyof typeof typeOrder] ?? 9));
+    <>
+      <div className="space-y-4">
+        {SHIFTS.map(shift => {
+          const shiftAssignments = getShiftAssignments(shift)
+            .sort((a, b) => (typeOrder[a.quest.quest_type as keyof typeof typeOrder] ?? 9) - (typeOrder[b.quest.quest_type as keyof typeof typeOrder] ?? 9));
 
           return (
             <Card key={shift} className="bg-card/80 border-border/50">
@@ -119,7 +132,8 @@ const AdminShiftOverview: React.FC = () => {
                       return (
                         <div
                           key={a.id}
-                          className="rounded-lg border border-border/30 bg-background/50 p-3 space-y-2"
+                          className="rounded-lg border border-border/30 bg-background/50 p-3 space-y-2 cursor-pointer transition-all duration-200 hover:border-primary/50 hover:shadow-md hover:shadow-primary/10 hover:scale-[1.01]"
+                          onClick={() => handleCardClick(a, shift)}
                         >
                           <div className="flex items-center justify-between">
                             <Badge
@@ -152,7 +166,21 @@ const AdminShiftOverview: React.FC = () => {
             </Card>
           );
         })}
-    </div>
+      </div>
+
+      {/* Quest Progress Modal */}
+      {selectedAssignment && (
+        <AdminQuestProgressModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          assignmentId={selectedAssignment.id}
+          questName={selectedAssignment.quest.game_name || selectedAssignment.quest.title}
+          questType={selectedAssignment.quest.quest_type}
+          progressTarget={selectedAssignment.quest.progress_target}
+          shift={selectedShift}
+        />
+      )}
+    </>
   );
 };
 
