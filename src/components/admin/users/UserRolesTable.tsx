@@ -16,14 +16,14 @@ import { Pencil, Archive, UserX } from "lucide-react";
 interface UserRolesTableProps {
   users: Employee[];
   onEditUser: (user: Employee) => void;
-  onSuspendUser?: (user: Employee) => void;
+  onArchiveUser?: (user: Employee) => void;
   onDeleteUser?: (user: Employee) => void;
 }
 
 const UserRolesTable: React.FC<UserRolesTableProps> = ({ 
   users,
   onEditUser,
-  onSuspendUser,
+  onArchiveUser,
   onDeleteUser
 }) => {
   return (
