@@ -638,6 +638,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
                             </SelectContent>
                           </Select>
                           <p className="text-xs text-muted-foreground">Choose which department sees this quest</p>
+                        </div>
+                        {selectedQuestForAssign && (() => {
                           const selectedQuest = quests.find(q => q.id === selectedQuestForAssign);
                           const isWordQuest = selectedQuest?.title?.toLowerCase().includes('word of the day') ||
                                               selectedQuest?.game_name?.toLowerCase().includes('ability rotation') ||
