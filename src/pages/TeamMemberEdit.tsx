@@ -65,7 +65,7 @@ const TeamMemberEdit = () => {
           email: data.email || '',
           role: (data.role || 'Employee') as "Admin" | "Manager" | "Employee",
           roles: (data.roles || []) as TeamMemberRole[],
-          status: (data.status || 'Active') as "Active" | "Inactive" | "Paused" | "Suspended",
+          status: (data.status || 'Active') as EmployeeStatus,
           teams: [],
           telegram: data.telegram,
           phoneNumber: data.phone_number,
