@@ -115,9 +115,9 @@ export const useWeeklyQuestSlots = () => {
       return;
     }
 
-    // Filter to only weekly quests matching user's department
+    // Filter to only weekly quests matching user's department (NULL department defaults to 2PM)
     const weeklyAssignment = (weeklyAssignments || []).find(
-      (a: any) => a.quest?.quest_type === 'weekly' && (!a.department || a.department === userDepartment)
+      (a: any) => a.quest?.quest_type === 'weekly' && ((a.department || '2PM') === userDepartment)
     );
 
     if (!weeklyAssignment) {

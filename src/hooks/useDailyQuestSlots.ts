@@ -119,14 +119,12 @@ export const useDailyQuestSlots = () => {
       return;
     }
 
-    // Filter to only daily quests AND matching department (null = all departments)
+    // Filter to only daily quests AND matching department (NULL department defaults to 2PM)
     const dailyAssignments = (todayAssignments || []).filter(
       (a: any) => a.quest?.quest_type === 'daily'
     ).filter((a: any) => {
-      // If assignment has no department, it's for everyone
-      // If assignment has a department, only show to matching users
-      const assignmentDept = (a as any).department;
-      if (!assignmentDept) return true;
+      // NULL department defaults to 2PM shift
+      const assignmentDept = (a as any).department || '2PM';
       return assignmentDept === userDepartment;
     });
 

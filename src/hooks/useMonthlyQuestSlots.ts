@@ -115,9 +115,9 @@ export const useMonthlyQuestSlots = () => {
       return;
     }
 
-    // Filter to only monthly quests matching user's department
+    // Filter to only monthly quests matching user's department (NULL department defaults to 2PM)
     const monthlyAssignment = (monthlyAssignments || []).find(
-      (a: any) => a.quest?.quest_type === 'monthly' && (!a.department || a.department === userDepartment)
+      (a: any) => a.quest?.quest_type === 'monthly' && ((a.department || '2PM') === userDepartment)
     );
 
     if (!monthlyAssignment) {
