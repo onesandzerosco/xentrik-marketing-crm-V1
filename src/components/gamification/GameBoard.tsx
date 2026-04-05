@@ -233,87 +233,89 @@ const GameBoard: React.FC<GameBoardProps> = ({ isAdmin }) => {
         </p>
       </div>
 
-      {/* Stats Grid - 4 Panels */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Rank Panel - colored by rank, crown only */}
-        <Card 
-          className="border-2"
-          style={{ 
-            backgroundColor: `${rankCrownColor}15`,
-            borderColor: `${rankCrownColor}50`
-          }}
-        >
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
-            <div className="flex flex-col items-center justify-center gap-1">
-              <Crown 
-                className="h-8 w-8" 
-                style={{ color: rankCrownColor }}
-                fill={rankCrownColor}
-                strokeWidth={1.5}
-              />
+      {/* Stats Grid - 4 Panels (hidden for admin) */}
+      {!isAdmin && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Rank Panel - colored by rank, crown only */}
+          <Card 
+            className="border-2"
+            style={{ 
+              backgroundColor: `${rankCrownColor}15`,
+              borderColor: `${rankCrownColor}50`
+            }}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Current Rank</p>
+              <div className="flex flex-col items-center justify-center gap-1">
+                <Crown 
+                  className="h-8 w-8" 
+                  style={{ color: rankCrownColor }}
+                  fill={rankCrownColor}
+                  strokeWidth={1.5}
+                />
+                <p 
+                  className="text-lg font-bold uppercase"
+                  style={{ 
+                    fontFamily: "'Orbitron', sans-serif",
+                    color: rankCrownColor
+                  }}
+                >
+                  {currentRank?.name || 'Unranked'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leaderboard Position Panel - colored by position */}
+          <Card 
+            className="border-2"
+            style={{ 
+              backgroundColor: positionColor ? `${positionColor}15` : 'rgba(var(--card), 0.8)',
+              borderColor: positionColor ? `${positionColor}50` : 'rgba(var(--border), 0.5)'
+            }}
+          >
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Leaderboard</p>
               <p 
-                className="text-lg font-bold uppercase"
+                className="text-3xl font-bold"
                 style={{ 
                   fontFamily: "'Orbitron', sans-serif",
-                  color: rankCrownColor
+                  color: positionColor || rankCrownColor
                 }}
               >
-                {currentRank?.name || 'Unranked'}
+                #{myPosition || '-'}
               </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Leaderboard Position Panel - colored by position */}
-        <Card 
-          className="border-2"
-          style={{ 
-            backgroundColor: positionColor ? `${positionColor}15` : 'rgba(var(--card), 0.8)',
-            borderColor: positionColor ? `${positionColor}50` : 'rgba(var(--border), 0.5)'
-          }}
-        >
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Leaderboard</p>
-            <p 
-              className="text-3xl font-bold"
-              style={{ 
-                fontFamily: "'Orbitron', sans-serif",
-                color: positionColor || rankCrownColor
-              }}
-            >
-              #{myPosition || '-'}
-            </p>
-          </CardContent>
-        </Card>
+          {/* Banana Count Panel */}
+          <Card className="bg-card/80 border-border/50">
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Bananas</p>
+              <p className="text-3xl font-bold text-yellow-500 flex items-center justify-center gap-2">
+                <span>🍌</span>
+                <span style={{ fontFamily: "'Orbitron', sans-serif" }}>{myStats?.banana_balance || 0}</span>
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Banana Count Panel */}
-        <Card className="bg-card/80 border-border/50">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Bananas</p>
-            <p className="text-3xl font-bold text-yellow-500 flex items-center justify-center gap-2">
-              <span>🍌</span>
-              <span style={{ fontFamily: "'Orbitron', sans-serif" }}>{myStats?.banana_balance || 0}</span>
-            </p>
-          </CardContent>
-        </Card>
+          {/* XP Count Panel */}
+          <Card className="bg-card/80 border-border/50">
+            <CardContent className="p-4 text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total XP</p>
+              <p 
+                className="text-3xl font-bold text-primary"
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
+              >
+                {myStats?.total_xp || 0}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        {/* XP Count Panel */}
-        <Card className="bg-card/80 border-border/50">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Total XP</p>
-            <p 
-              className="text-3xl font-bold text-primary"
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
-            >
-              {myStats?.total_xp || 0}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Progress to Next Rank */}
-      {nextRank && (
+      {/* Progress to Next Rank (hidden for admin) */}
+      {!isAdmin && nextRank && (
         <Card className="bg-card/80 border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">

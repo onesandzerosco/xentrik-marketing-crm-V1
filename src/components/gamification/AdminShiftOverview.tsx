@@ -110,7 +110,7 @@ const AdminShiftOverview: React.FC = () => {
                     No tasks assigned yet
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {shiftAssignments.map(a => {
                       const config = questTypeConfig[a.quest.quest_type as keyof typeof questTypeConfig];
                       if (!config) return null;
