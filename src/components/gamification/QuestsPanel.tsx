@@ -215,7 +215,8 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
           quest_id: selectedQuestForAssign,
           start_date: startDateStr,
           end_date: endDateStr,
-          assigned_by: null // NULL = admin/global assignment, visible to all players
+          assigned_by: null, // NULL = admin/global assignment, visible to all players
+          department: assignDepartment === 'all' ? null : assignDepartment
         };
 
       // Add custom word if provided (for Word of the Day / Ability Rotation quests)
@@ -230,8 +231,9 @@ const QuestsPanel: React.FC<QuestsPanelProps> = ({ isAdmin }) => {
 
       if (error) throw error;
 
-      toast({ title: "Success", description: "Quest assigned successfully!" });
+      toast({ title: "Success", description: `Quest assigned successfully${assignDepartment !== 'all' ? ` to ${assignDepartment} department` : ''}!` });
       setSelectedQuestForAssign('');
+      setAssignDepartment('all');
       setAssignCustomWord('');
       setAssignCustomWordDescription('');
       refetch.activeAssignments();
