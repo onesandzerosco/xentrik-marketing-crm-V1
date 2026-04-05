@@ -46,7 +46,7 @@ const RoleBasedUsersList: React.FC = () => {
           <AdminUsersTable 
             users={users} 
             onEditUser={handleEdit}
-            onSuspendUser={handleSuspend}
+            onArchiveUser={handleArchive}
             onDeleteUser={handleDelete}
           />
         </div>
@@ -58,7 +58,7 @@ const RoleBasedUsersList: React.FC = () => {
           <CreatorUsersTable 
             users={users} 
             onEditUser={handleEdit}
-            onSuspendUser={handleSuspend}
+            onArchiveUser={handleArchive}
             onDeleteUser={handleDelete}
           />
         </div>
@@ -70,7 +70,7 @@ const RoleBasedUsersList: React.FC = () => {
           <OtherRolesUsersTable 
             users={users} 
             onEditUser={handleEdit}
-            onSuspendUser={handleSuspend}
+            onArchiveUser={handleArchive}
             onDeleteUser={handleDelete}
           />
         </div>
