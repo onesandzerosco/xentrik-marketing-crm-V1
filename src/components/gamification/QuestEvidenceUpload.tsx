@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { QuestAssignment } from '@/hooks/useGamification';
 import { useEffectiveWord } from '@/hooks/useEffectiveWord';
-import { notifyAdminsOfQuestSubmission } from '@/utils/notifyAdmins';
+import { notifyAdminsOfQuestSubmission, resolveDisplayName } from '@/utils/notifyAdmins';
 
 interface QuestEvidenceUploadProps {
   assignment: QuestAssignment;
