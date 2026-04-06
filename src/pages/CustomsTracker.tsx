@@ -150,9 +150,15 @@ const CustomsTracker = () => {
   });
 
   // Filter customs by model name
-  const filteredCustoms = customs.filter(custom =>
-    modelFilter === '' || custom.model_name.toLowerCase().includes(modelFilter.toLowerCase())
-  );
+  const filteredCustoms = customs.filter(custom => {
+    if (modelFilter === '') return true;
+    const q = modelFilter.toLowerCase();
+    return (
+      custom.model_name.toLowerCase().includes(q) ||
+      custom.fan_display_name.toLowerCase().includes(q) ||
+      (custom.fan_username && custom.fan_username.toLowerCase().includes(q))
+    );
+  });
 
   const handleUpdateDownpayment = (customId: string, newDownpayment: number) => {
     updateDownpaymentMutation.mutate({ customId, newDownpayment });
